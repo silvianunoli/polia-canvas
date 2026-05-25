@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { gerarSistemaControle, type SistemaControle } from "@/lib/routine.functions";
+import { gerarRoteiroFechamento, type RoteiroFechamento } from "@/lib/sales.functions";
 
-export const Route = createFileRoute("/_authenticated/etapa/6")({
+export const Route = createFileRoute("/_authenticated/etapa/7")({
   head: () => ({
     meta: [
-      { title: "Etapa 6 — Sua Rotina · Pólia" },
-      { name: "description", content: "Organize sua produção, controle e reposição." },
+      { title: "Etapa 7 — Suas Vendas · Pólia" },
+      { name: "description", content: "Monte seu fluxo de vendas do primeiro contato ao sim." },
     ],
   }),
   beforeLoad: async () => {
@@ -20,49 +20,49 @@ export const Route = createFileRoute("/_authenticated/etapa/6")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_6_completed_at")
+      .select("etapa_atual, star_7_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 6) {
+    if ((profile.etapa_atual ?? 1) < 7) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_6_completed_at) {
+    if (profile.star_7_completed_at) {
       throw redirect({ to: "/painel" });
     }
   },
-  component: Etapa6Page,
+  component: Etapa7Page,
 });
 
-type ProfileE6 = {
+type ProfileE7 = {
   display_name: string | null;
   business_name: string | null;
-  production_capacity: string | null;
-  tracking_system: string | null;
-  restock_triggers: string | null;
-  routine_finalized_at: string | null;
-  star_6_completed_at: string | null;
+  awareness_source: string | null;
+  decision_trigger: string | null;
+  closing_method: string | null;
+  sales_finalized_at: string | null;
+  star_7_completed_at: string | null;
   streak: number | null;
 };
 
-const STORAGE_KEY = "polia:etapa6:step";
+const STORAGE_KEY = "polia:etapa7:step";
 
-function Etapa6Page() {
+function Etapa7Page() {
   const navigate = useNavigate();
-  const gerar = useServerFn(gerarSistemaControle);
+  const gerar = useServerFn(gerarRoteiroFechamento);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileE6 | null>(null);
+  const [profile, setProfile] = useState<ProfileE7 | null>(null);
   const [step, setStep] = useState<number>(1);
   const [loaded, setLoaded] = useState(false);
 
-  const [capacidade, setCapacidade] = useState("");
-  const [controle, setControle] = useState("");
-  const [reposicao, setReposicao] = useState("");
+  const [descoberta, setDescoberta] = useState("");
+  const [decisao, setDecisao] = useState("");
+  const [fechamento, setFechamento] = useState("");
 
-  const [sistema, setSistema] = useState<SistemaControle | null>(null);
-  const [loadingSistema, setLoadingSistema] = useState(false);
-  const [sistemaError, setSistemaError] = useState<string | null>(null);
+  const [roteiro, setRoteiro] = useState<RoteiroFechamento | null>(null);
+  const [loadingRoteiro, setLoadingRoteiro] = useState(false);
+  const [roteiroError, setRoteiroError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,42 +74,42 @@ function Etapa6Page() {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "display_name, business_name, production_capacity, tracking_system, restock_triggers, routine_finalized_at, star_6_completed_at, streak",
+          "display_name, business_name, awareness_source, decision_trigger, closing_method, sales_finalized_at, star_7_completed_at, streak",
         )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
       if (p) {
-        setProfile(p as ProfileE6);
-        setCapacidade(p.production_capacity ?? "");
-        setControle(p.tracking_system ?? "");
-        setReposicao(p.restock_triggers ?? "");
+        setProfile(p as ProfileE7);
+        setDescoberta(p.awareness_source ?? "");
+        setDecisao(p.decision_trigger ?? "");
+        setFechamento(p.closing_method ?? "");
 
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if ((p as ProfileE6).routine_finalized_at) {
+        } else if ((p as ProfileE7).sales_finalized_at) {
           setStep(5);
-        } else if (p.restock_triggers) {
+        } else if (p.closing_method) {
           setStep(4);
-        } else if (p.tracking_system) {
+        } else if (p.decision_trigger) {
           setStep(4);
-        } else if (p.production_capacity) {
+        } else if (p.awareness_source) {
           setStep(3);
         } else {
           setStep(1);
         }
 
-        if ((p as ProfileE6).routine_finalized_at) {
+        if ((p as ProfileE7).sales_finalized_at) {
           const { data: ent } = await supabase
             .from("entregaveis")
             .select("conteudo")
             .eq("user_id", uid)
-            .eq("tipo", "sistema_controle")
+            .eq("tipo", "roteiro_fechamento")
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (mounted && ent?.conteudo) setSistema(ent.conteudo as unknown as SistemaControle);
+          if (mounted && ent?.conteudo) setRoteiro(ent.conteudo as unknown as RoteiroFechamento);
         }
       }
       setLoaded(true);
@@ -126,7 +126,7 @@ function Etapa6Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE6>) => {
+    async (campos: Partial<ProfileE7>) => {
       if (!userId) return;
       const payload: Record<string, string> = {};
       for (const [k, v] of Object.entries(campos)) {
@@ -137,44 +137,44 @@ function Etapa6Page() {
     [userId],
   );
 
-  const gerarSistema = useCallback(async () => {
-    await autoSave({ restock_triggers: reposicao });
+  const gerarRoteiroAcao = useCallback(async () => {
+    await autoSave({ closing_method: fechamento });
     setStep(5);
-    setLoadingSistema(true);
-    setSistemaError(null);
+    setLoadingRoteiro(true);
+    setRoteiroError(null);
     const result = await gerar({
       data: {
-        production_capacity: capacidade,
-        tracking_system: controle,
-        restock_triggers: reposicao,
+        awareness_source: descoberta,
+        decision_trigger: decisao,
+        closing_method: fechamento,
         business_name: profile?.business_name ?? undefined,
       },
     });
-    setLoadingSistema(false);
-    if (result.error || !result.sistema) {
-      setSistemaError(result.error || "Erro desconhecido.");
+    setLoadingRoteiro(false);
+    if (result.error || !result.roteiro) {
+      setRoteiroError(result.error || "Erro desconhecido.");
       return;
     }
-    setSistema(result.sistema);
-  }, [autoSave, gerar, capacidade, controle, reposicao, profile?.business_name]);
+    setRoteiro(result.roteiro);
+  }, [autoSave, gerar, descoberta, decisao, fechamento, profile?.business_name]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId || !sistema) return;
+    if (!userId || !roteiro) return;
     await supabase.from("entregaveis").insert({
       user_id: userId,
-      titulo: "Sistema de Controle",
-      tipo: "sistema_controle",
-      fase: "Construção",
-      etapa: 6,
-      conteudo: sistema as never,
+      titulo: "Roteiro de Fechamento",
+      tipo: "roteiro_fechamento",
+      fase: "Venda",
+      etapa: 7,
+      conteudo: roteiro as never,
       status: "concluido",
     });
     await supabase
       .from("profiles")
-      .update({ routine_finalized_at: new Date().toISOString() } as never)
+      .update({ sales_finalized_at: new Date().toISOString() } as never)
       .eq("id", userId);
     setStep(6);
-  }, [userId, sistema]);
+  }, [userId, roteiro]);
 
   const concludedRef = useRef(false);
   useEffect(() => {
@@ -184,33 +184,33 @@ function Etapa6Page() {
       await supabase
         .from("profiles")
         .update({
-          star_6_completed_at: new Date().toISOString(),
-          orbit_vitrine_active: true,
-          etapa_atual: 7,
+          star_7_completed_at: new Date().toISOString(),
+          orbit_sales_unlocked: true,
+          etapa_atual: 8,
           streak: (profile?.streak ?? 0) + 1,
         } as never)
         .eq("id", userId);
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Sexta estrela acesa",
-        descricao: "Montou o sistema de controle. Sua Vitrine está ativada.",
+        titulo: "Sétima estrela acesa",
+        descricao: "Montou o roteiro de fechamento. Suas Vendas e Clientes está desbloqueado.",
         xp: 50,
         tipo: "etapa",
       });
 
-      const tarefasE7 = [
-        "Mapear como as clientes chegam até você",
-        "Identificar o momento em que ela decide comprar",
-        "Criar resposta padrão pra primeira mensagem",
-        "Definir o que leva ela a fechar na hora",
-        "Listar as objeções mais comuns que você já ouviu",
+      const tarefasE8 = [
+        "Criar protocolo de boas-vindas pra nova cliente",
+        "Definir tempo de resposta padrão",
+        "Escrever FAQ das dúvidas mais comuns",
+        "Montar fluxo de acompanhamento pós-venda",
+        "Definir como pedir avaliação sem constranger",
       ];
       await supabase.from("tarefas").insert(
-        tarefasE7.map((titulo) => ({
+        tarefasE8.map((titulo) => ({
           user_id: userId,
           titulo,
-          etapa: 7,
+          etapa: 8,
           status: "a_fazer",
           fonte: "sistema",
         })),
@@ -246,19 +246,19 @@ function Etapa6Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="saber quanto você produz é saber quanto você pode vender."
-              titulo={<>Quanto você consegue produzir por mês?</>}
-              label="SUA CAPACIDADE DE PRODUÇÃO"
-              placeholder="Ex: Consigo fazer até 200 convites por semana trabalhando 4h por dia. Em época de festa (out-dez) chego a 300. Não consigo fazer mais do que 2 pedidos grandes ao mesmo tempo sem atrasar."
+              caveat="toda venda começa com uma descoberta."
+              titulo={<>Como a cliente chega até você?</>}
+              label="COMO ELA TE DESCOBRE"
+              placeholder="Ex: Maioria vem pelo Instagram. Algumas por indicação de quem já comprou. Umas poucas pelo Google quando pesquisam 'convite de casamento SP'. Indicação converte muito mais rápido."
               maxLength={300}
-              ajuda="inclui o ritmo normal e o limite que você sente na prática."
-              raposaEstado="Atenta · sentada escutando"
-              raposaTexto="Vender mais do que você consegue entregar prejudica sua reputação. Conhecer seu limite é poder dizer sim com segurança."
-              valor={capacidade}
-              setValor={setCapacidade}
-              onAutoSave={() => autoSave({ production_capacity: capacidade })}
+              ajuda="pode ter mais de um canal. conta o que você percebe na prática."
+              raposaEstado="Atenta · escutando"
+              raposaTexto="O canal onde ela te descobre diz muito sobre o que a convence. Indicação pede um fluxo. Instagram pede outro."
+              valor={descoberta}
+              setValor={setDescoberta}
+              onAutoSave={() => autoSave({ awareness_source: descoberta })}
               onContinuar={() => {
-                autoSave({ production_capacity: capacidade });
+                autoSave({ awareness_source: descoberta });
                 setStep(3);
               }}
               minLen={15}
@@ -266,20 +266,20 @@ function Etapa6Page() {
           )}
           {step === 3 && (
             <PerguntaBlock
-              caveat="o que não é controlado, não cresce."
-              titulo={<>Como você controla o que tem<br />e o que entra?</>}
-              label="SEU SISTEMA DE CONTROLE"
-              placeholder="Ex: Anoto os pedidos num caderno e marco quando entrego. Materiais controlo por estimativa. Às vezes fico sem ribbon e preciso parar. Quero montar uma planilha mas ainda não comecei."
+              caveat="entre o interesse e o sim, tem um momento decisivo."
+              titulo={<>O que faz ela decidir comprar?</>}
+              label="O QUE A CONVENCE"
+              placeholder="Ex: Quando vê o portfólio ela já começa a imaginar. O que fecha mesmo é quando mando exemplos parecidos com o estilo da festa dela. Às vezes uma cliente me marca num story de casamento que amou e pronto, ela já está convencida."
               maxLength={400}
-              ajuda="pode ser caderno, foto, aplicativo, planilha ou intuição. conta como é de verdade."
+              ajuda="pensa numa venda recente que fechou rápido. o que aconteceu antes do sim?"
               raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="Não precisa ser um sistema sofisticado. O melhor controle é aquele que você usa."
-              valor={controle}
-              setValor={setControle}
-              onAutoSave={() => autoSave({ tracking_system: controle })}
+              raposaTexto="O gatilho de decisão é onde você deve concentrar sua energia de vendas. Vale ouro entender esse momento."
+              valor={decisao}
+              setValor={setDecisao}
+              onAutoSave={() => autoSave({ decision_trigger: decisao })}
               onVoltar={() => setStep(2)}
               onContinuar={() => {
-                autoSave({ tracking_system: controle });
+                autoSave({ decision_trigger: decisao });
                 setStep(4);
               }}
               minLen={20}
@@ -287,20 +287,20 @@ function Etapa6Page() {
           )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="ficar sem material no meio de um pedido é um pesadelo que dá pra evitar."
-              titulo={<>Quando você percebe que precisa repor?</>}
-              label="SEU GATILHO DE REPOSIÇÃO"
-              placeholder="Ex: Quando o estoque de papel cai pela metade eu já peço. Ribbon repõe todo mês automaticamente. Fita e caixa ainda faço por demanda e às vezes atrasa."
+              caveat="a arte de fechar é deixar o próximo passo óbvio."
+              titulo={<>Como você finaliza a venda?</>}
+              label="SEU JEITO DE FECHAR"
+              placeholder="Ex: Mando o orçamento pelo WhatsApp com prazo de 48h pra confirmar. Peço 50% de sinal via Pix pra garantir a data. Quando a cliente demora, mando uma mensagem gentil lembrando a disponibilidade."
               maxLength={300}
-              ajuda="conta como acontece hoje, mesmo que você saiba que não é o ideal."
+              ajuda="inclui como você manda o orçamento, como recebe o pagamento e como confirma o pedido."
               raposaEstado="Animada · em pé"
-              raposaTexto="Um sistema de reposição simples evita atrasos, clientes frustradas e noites perdidas esperando entrega."
-              valor={reposicao}
-              setValor={setReposicao}
-              onAutoSave={() => autoSave({ restock_triggers: reposicao })}
+              raposaTexto="Deixar a próxima ação clara elimina o 'vou pensar' e transforma interesse em venda."
+              valor={fechamento}
+              setValor={setFechamento}
+              onAutoSave={() => autoSave({ closing_method: fechamento })}
               onVoltar={() => setStep(3)}
-              onContinuar={() => gerarSistema()}
-              continuarLabel="Montar meu sistema  →"
+              onContinuar={() => gerarRoteiroAcao()}
+              continuarLabel="Montar meu roteiro  →"
               minLen={15}
             />
           )}
@@ -308,69 +308,69 @@ function Etapa6Page() {
       )}
 
       {step === 5 && (
-        <SistemaTela
-          loading={loadingSistema}
-          sistema={sistema}
-          error={sistemaError}
+        <RoteiroTela
+          loading={loadingRoteiro}
+          roteiro={roteiro}
+          error={roteiroError}
           businessName={profile?.business_name ?? ""}
           onAjustar={() => setStep(4)}
           onContinuar={salvarEntregavelEAvancar}
-          onRetry={() => gerarSistema()}
+          onRetry={() => gerarRoteiroAcao()}
         />
       )}
 
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa7={() => navigate({ to: "/etapa/7" })}
+          onEtapa8={() => navigate({ to: "/painel" })}
         />
       )}
     </>
   );
 }
 
-/* ============== E6.1 — CAPA COSMIC ============== */
+/* ============== E7.1 — CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
-    { num: "1", titulo: "Capacidade", sub: "quanto produz" },
-    { num: "2", titulo: "Organização", sub: "como controla" },
-    { num: "3", titulo: "Reposição", sub: "quando refaz" },
+    { num: "1", titulo: "Encontro", sub: "como ela chega até você" },
+    { num: "2", titulo: "Decisão", sub: "o que a faz querer" },
+    { num: "3", titulo: "Fechamento", sub: "como ela compra" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 6 DE 11 · SUA ROTINA
+          ETAPA 7 DE 11 · SUAS VENDAS
         </p>
 
         <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L6 Vertical</p>
+          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L7 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">pronta pra atender.</p>
+        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">aqui é onde o dinheiro entra.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          O fluxo por trás
+          Como ela decide
           <br />
-          da venda.
+          e fecha.
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra organizar quanto você consegue produzir, como organiza e quando reabastece.
+          3 perguntas pra montar seu fluxo de vendas do primeiro contato ao sim.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
           {cards.map((c) => (
             <div
               key={c.num}
-              className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-[rgba(36,36,66,0.45)] p-[20px] text-center"
+              className="w-[220px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-[rgba(36,36,66,0.45)] p-[20px] text-center"
             >
               <p className="font-serif text-[#C96B3E] text-[30px] leading-none">{c.num}</p>
               <p className="font-serif text-[#FDF8F5] text-[20px] mt-2">{c.titulo}</p>
-              <p className="font-handwritten text-[rgba(216,210,204,0.8)] text-[16px] mt-1">{c.sub}</p>
+              <p className="font-handwritten text-[rgba(216,210,204,0.8)] text-[15px] mt-1">{c.sub}</p>
             </div>
           ))}
         </div>
@@ -380,7 +380,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos organizar  →
+          Vamos montar meu fluxo  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
@@ -391,7 +391,7 @@ function Capa({ onStart }: { onStart: () => void }) {
   );
 }
 
-/* ============== Layout E6.2-E6.4 ============== */
+/* ============== Layout E7.2-E7.4 ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -404,9 +404,9 @@ function PerguntaLayout({
   children: React.ReactNode;
 }) {
   const passos = [
-    { num: 1, label: "Capacidade" },
-    { num: 2, label: "Organização" },
-    { num: 3, label: "Reposição" },
+    { num: 1, label: "Encontro" },
+    { num: 2, label: "Decisão" },
+    { num: 3, label: "Fechamento" },
   ];
   const activeIndex = step - 2;
 
@@ -416,12 +416,12 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 6 · SUA ROTINA
+            ETAPA 7 · SUAS VENDAS
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Sua produção
+            Do primeiro contato
             <br />
-            tem ritmo.
+            ao sim.
           </h2>
           <hr className="border-[#EAE2D8] my-6" />
           <div className="flex flex-col gap-5">
@@ -456,7 +456,7 @@ function PerguntaLayout({
           <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
             depois vem
             <br />
-            o seu sistema de controle
+            o seu roteiro de fechamento
           </p>
         </aside>
 
@@ -554,10 +554,10 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E6.5 — Sistema de Controle (COSMIC) ============== */
-function SistemaTela({
+/* ============== E7.5 — Roteiro de Fechamento (COSMIC) ============== */
+function RoteiroTela({
   loading,
-  sistema,
+  roteiro,
   error,
   businessName,
   onAjustar,
@@ -565,7 +565,7 @@ function SistemaTela({
   onRetry,
 }: {
   loading: boolean;
-  sistema: SistemaControle | null;
+  roteiro: RoteiroFechamento | null;
   error: string | null;
   businessName: string;
   onAjustar: () => void;
@@ -579,7 +579,7 @@ function SistemaTela({
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
-              montando seu sistema de controle...
+              desenhando seu roteiro de fechamento...
             </p>
             <div className="mt-6 flex gap-2">
               {[0, 1, 2].map((i) => (
@@ -606,61 +606,61 @@ function SistemaTela({
           </>
         )}
 
-        {!loading && !error && sistema && (
+        {!loading && !error && roteiro && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 6 · SUA ROTINA
+              ENTREGÁVEL · ETAPA 7 · SUAS VENDAS
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha a ordem que a gente montou.</p>
+            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha seu roteiro pronto.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
-              Seu sistema de controle
+              Seu roteiro de fechamento
               <br />
-              tá pronto.
+              tá desenhado.
             </h1>
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                SISTEMA DE CONTROLE · {(businessName || "Sua marca").toUpperCase()}
+                ROTEIRO DE FECHAMENTO · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como sua produção funciona</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Do primeiro contato ao sim</p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SUA CAPACIDADE
+                1. COMO ELA TE DESCOBRE
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {sistema.capacidade_resumida}
+                {roteiro.passo_descoberta}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SEU CONTROLE HOJE
+                2. O QUE A CONVENCE
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {sistema.controle_atual}
+                {roteiro.passo_decisao}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                QUANDO REPOR
+                3. COMO VOCÊ FECHA
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {sistema.gatilho_reposicao}
+                {roteiro.passo_fechamento}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                PRÓXIMO PASSO RECOMENDADO
+                SUA MENSAGEM DE FECHAMENTO SUGERIDA
               </p>
-              <p className="font-handwritten text-[#C96B3E] text-[18px] mt-2">
-                {sistema.proximo_passo}
+              <p className="font-handwritten text-[#C96B3E] text-[18px] leading-[26px] mt-2">
+                &ldquo;{roteiro.mensagem_fechamento}&rdquo;
               </p>
 
               <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
-                salvo em Sua Vitrine · você edita quando quiser
+                salvo em Suas Vendas e Clientes · você edita quando quiser
               </p>
             </div>
 
@@ -686,16 +686,16 @@ function SistemaTela({
   );
 }
 
-/* ============== E6.6 — Conclusão estrela 6 + Sua Vitrine ativada ============== */
-function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa7: () => void }) {
+/* ============== E7.6 — Conclusão estrela 7 + Suas Vendas e Clientes desbloqueado ============== */
+function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa8: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
     { n: 2, label: "Identidade", estado: "acesa" },
     { n: 3, label: "Modelo", estado: "acesa" },
     { n: 4, label: "Presença", estado: "acesa" },
     { n: 5, label: "Conteúdo", estado: "acesa" },
-    { n: 6, label: "Rotina", estado: "agora" },
-    { n: 7, label: "Vendas", estado: "dim" },
+    { n: 6, label: "Rotina", estado: "acesa" },
+    { n: 7, label: "Vendas", estado: "agora" },
     { n: 8, label: "Clientes", estado: "dim" },
     { n: 9, label: "Audiência", estado: "dim" },
     { n: 10, label: "Crescimento", estado: "dim" },
@@ -707,15 +707,15 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
       <CosmicBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 6 · SUA ROTINA · CONCLUÍDA
+          ETAPA 7 · SUAS VENDAS · CONCLUÍDA
         </p>
 
         <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
-          sua produção tem ritmo. agora tem controle também.
+          agora você tem um fluxo. não só intuição.
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua sexta estrela
+          Sua sétima estrela
           <br />
           tá acesa.
         </h1>
@@ -775,18 +775,15 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
 
         <div className="mt-12 w-full max-w-[620px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
           <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            ATIVADA · LUA ORBITANDO
+            DESBLOQUEADO · LUA ORBITANDO
           </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Sua Vitrine</p>
+          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Suas Vendas e Clientes</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Sua vitrine completa: produto, presença e sistema de controle. Pronta pra receber qualquer cliente.
+            Onde você acompanha pedidos, organiza clientes e gerencia sua agenda de atendimento.
           </p>
         </div>
 
         <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
-        <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-2">
-          fase de construção concluída. agora é hora de vender.
-        </p>
 
         <div className="mt-10 flex flex-col gap-4 md:flex-row">
           <button
@@ -796,11 +793,11 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
             Ver meu painel
           </button>
           <button
-            onClick={onEtapa7}
+            onClick={onEtapa8}
             className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
             style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
           >
-            Começar Etapa 7  →
+            Começar Etapa 8  →
           </button>
         </div>
       </div>
