@@ -169,7 +169,9 @@ export type Database = {
           onboarding_completed_at: string | null
           orbit_brand_alive_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
+          orbit_sales_unlocked: boolean
           orbit_vitrine_unlocked: boolean
+          positioning_finalized_at: string | null
           positioning_statement: string | null
           problem_solved: string | null
           problem_urgency: string | null
@@ -203,7 +205,9 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_sales_unlocked?: boolean
           orbit_vitrine_unlocked?: boolean
+          positioning_finalized_at?: string | null
           positioning_statement?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
@@ -237,7 +241,9 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_sales_unlocked?: boolean
           orbit_vitrine_unlocked?: boolean
+          positioning_finalized_at?: string | null
           positioning_statement?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
