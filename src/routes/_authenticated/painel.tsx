@@ -305,12 +305,12 @@ function PainelPage() {
             </p>
           </div>
           <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:items-end">
-            <Link
-              to="/jornada"
+            <a
+              href="/jornada"
               className="whitespace-nowrap rounded-xl bg-polia-creme px-8 py-3 text-center font-sans text-[16px] font-semibold text-polia-terracota transition-colors hover:bg-white"
             >
               Continuar →
-            </Link>
+            </a>
             <span className="text-center font-handwritten text-[13px] text-polia-creme/60 md:text-right">
               ou começar agora
             </span>
