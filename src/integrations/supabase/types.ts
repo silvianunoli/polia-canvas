@@ -159,6 +159,7 @@ export type Database = {
           business_why: string | null
           competitors: string | null
           created_at: string
+          delivery_method: string | null
           differentiators: string | null
           display_name: string | null
           etapa_atual: number
@@ -173,12 +174,16 @@ export type Database = {
           orbit_vitrine_unlocked: boolean
           positioning_finalized_at: string | null
           positioning_statement: string | null
+          price_range: string | null
           problem_solved: string | null
           problem_urgency: string | null
+          product_description: string | null
+          product_finalized_at: string | null
           profile_story: string | null
           star_1_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
+          star_4_completed_at: string | null
           streak: number
           target_customer: string | null
           updated_at: string
@@ -195,6 +200,7 @@ export type Database = {
           business_why?: string | null
           competitors?: string | null
           created_at?: string
+          delivery_method?: string | null
           differentiators?: string | null
           display_name?: string | null
           etapa_atual?: number
@@ -209,12 +215,16 @@ export type Database = {
           orbit_vitrine_unlocked?: boolean
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
+          price_range?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
+          product_description?: string | null
+          product_finalized_at?: string | null
           profile_story?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
+          star_4_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           updated_at?: string
@@ -231,6 +241,7 @@ export type Database = {
           business_why?: string | null
           competitors?: string | null
           created_at?: string
+          delivery_method?: string | null
           differentiators?: string | null
           display_name?: string | null
           etapa_atual?: number
@@ -245,12 +256,16 @@ export type Database = {
           orbit_vitrine_unlocked?: boolean
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
+          price_range?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
+          product_description?: string | null
+          product_finalized_at?: string | null
           profile_story?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
+          star_4_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           updated_at?: string
