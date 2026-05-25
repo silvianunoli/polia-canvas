@@ -1,16 +1,15 @@
-import { Link } from "@tanstack/react-router";
-
 interface NavLinkItem {
   to: string;
   label: string;
+  exists: boolean;
 }
 
 const links: NavLinkItem[] = [
-  { to: "/painel", label: "Painel" },
-  { to: "/jornada", label: "Jornada" },
-  { to: "/tarefas", label: "Tarefas" },
-  { to: "/clientes", label: "Clientes" },
-  { to: "/financeiro", label: "Financeiro" },
+  { to: "/painel", label: "Painel", exists: true },
+  { to: "/jornada", label: "Jornada", exists: false },
+  { to: "/tarefas", label: "Tarefas", exists: false },
+  { to: "/clientes", label: "Clientes", exists: false },
+  { to: "/financeiro", label: "Financeiro", exists: false },
 ];
 
 export function PainelNav({
@@ -38,19 +37,22 @@ export function PainelNav({
 
         {/* Links */}
         <nav className="hidden items-center gap-7 md:flex">
-          {links.map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="font-sans text-[14px] font-medium text-polia-noite opacity-60 transition hover:opacity-100"
-              activeProps={{
-                className:
-                  "font-sans text-[14px] font-medium text-polia-terracota opacity-100 border-b-2 border-polia-terracota pb-[2px]",
-              }}
-            >
-              {l.label}
-            </Link>
-          ))}
+          {links.map((l) => {
+            const isActive = l.to === "/painel";
+            return (
+              <a
+                key={l.to}
+                href={l.to}
+                className={
+                  isActive
+                    ? "border-b-2 border-polia-terracota pb-[2px] font-sans text-[14px] font-medium text-polia-terracota"
+                    : "font-sans text-[14px] font-medium text-polia-noite opacity-60 transition hover:opacity-100"
+                }
+              >
+                {l.label}
+              </a>
+            );
+          })}
         </nav>
 
         {/* Right side */}
