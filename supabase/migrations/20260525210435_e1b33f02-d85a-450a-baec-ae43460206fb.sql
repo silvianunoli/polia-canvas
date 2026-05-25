@@ -1,0 +1,1 @@
+UPDATE public.profiles SET etapa_atual = 2, star_1_completed_at = now() WHERE id = 'f751d9e3-fb01-4356-9daf-d52469a703df' AND star_1_completed_at IS NULL;
