@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { CosmicButton } from "@/components/cosmic/CosmicButton";
 import { supabase } from "@/integrations/supabase/client";
