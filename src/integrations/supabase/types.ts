@@ -172,15 +172,20 @@ export type Database = {
           etapa_atual: number
           full_name: string | null
           growth_finalized_at: string | null
+          growth_vision: string | null
           id: string
           issue_handling: string | null
+          jornada_completed_at: string | null
           key_number_1: string | null
+          key_partners: string | null
           loyalty_strategy: string | null
           main_channel: string | null
           mini_pitch: string | null
+          network_finalized_at: string | null
           onboarding_completed: boolean
           onboarding_completed_at: string | null
           orbit_brand_alive_unlocked: boolean
+          orbit_financial_active: boolean
           orbit_financial_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
           orbit_sales_active: boolean
@@ -206,6 +211,7 @@ export type Database = {
           scroll_stoppers: string | null
           star_1_completed_at: string | null
           star_10_completed_at: string | null
+          star_11_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
           star_4_completed_at: string | null
@@ -216,6 +222,7 @@ export type Database = {
           star_9_completed_at: string | null
           streak: number
           target_customer: string | null
+          timeline_goal: string | null
           tracking_system: string | null
           updated_at: string
           visual_presence: string | null
@@ -246,15 +253,20 @@ export type Database = {
           etapa_atual?: number
           full_name?: string | null
           growth_finalized_at?: string | null
+          growth_vision?: string | null
           id: string
           issue_handling?: string | null
+          jornada_completed_at?: string | null
           key_number_1?: string | null
+          key_partners?: string | null
           loyalty_strategy?: string | null
           main_channel?: string | null
           mini_pitch?: string | null
+          network_finalized_at?: string | null
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
+          orbit_financial_active?: boolean
           orbit_financial_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           orbit_sales_active?: boolean
@@ -280,6 +292,7 @@ export type Database = {
           scroll_stoppers?: string | null
           star_1_completed_at?: string | null
           star_10_completed_at?: string | null
+          star_11_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
@@ -290,6 +303,7 @@ export type Database = {
           star_9_completed_at?: string | null
           streak?: number
           target_customer?: string | null
+          timeline_goal?: string | null
           tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
@@ -320,15 +334,20 @@ export type Database = {
           etapa_atual?: number
           full_name?: string | null
           growth_finalized_at?: string | null
+          growth_vision?: string | null
           id?: string
           issue_handling?: string | null
+          jornada_completed_at?: string | null
           key_number_1?: string | null
+          key_partners?: string | null
           loyalty_strategy?: string | null
           main_channel?: string | null
           mini_pitch?: string | null
+          network_finalized_at?: string | null
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
+          orbit_financial_active?: boolean
           orbit_financial_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           orbit_sales_active?: boolean
@@ -354,6 +373,7 @@ export type Database = {
           scroll_stoppers?: string | null
           star_1_completed_at?: string | null
           star_10_completed_at?: string | null
+          star_11_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
@@ -364,6 +384,7 @@ export type Database = {
           star_9_completed_at?: string | null
           streak?: number
           target_customer?: string | null
+          timeline_goal?: string | null
           tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
