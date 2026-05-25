@@ -209,7 +209,7 @@ function BibliotecaPage() {
                 complete a Etapa 1 pra criar o primeiro.
               </p>
               <button
-                onClick={() => navigate({ to: "/etapa/$id", params: { id: "1" } })}
+                onClick={() => navigate({ to: "/etapa/1" })}
                 className="font-sans text-[#C96B3E] text-[14px] hover:underline"
               >
                 Ir pra Etapa 1
