@@ -145,7 +145,7 @@ function VitrinePage() {
         {/* Chips de completude */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {chips.map((item) => {
-            const done = !!(profile as Record<string, string | null> | null)?.[item.campo];
+            const done = !!(profile as unknown as Record<string, string | null> | null)?.[item.campo];
             return (
               <div
                 key={item.etapa}
