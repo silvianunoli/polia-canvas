@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { gerarFichaProduto, type FichaProduto } from "@/lib/product.functions";
+import { gerarGuiaPresenca, type GuiaPresenca } from "@/lib/presence.functions";
 
-export const Route = createFileRoute("/_authenticated/etapa/4")({
+export const Route = createFileRoute("/_authenticated/etapa/5")({
   head: () => ({
     meta: [
-      { title: "Etapa 4 — Presença Digital · Pólia" },
-      { name: "description", content: "Monte a ficha do seu produto ou serviço." },
+      { title: "Etapa 5 — Conteúdo · Pólia" },
+      { name: "description", content: "Monte sua primeira impressão online." },
     ],
   }),
   beforeLoad: async () => {
@@ -20,49 +20,49 @@ export const Route = createFileRoute("/_authenticated/etapa/4")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_4_completed_at")
+      .select("etapa_atual, star_5_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 4) {
+    if ((profile.etapa_atual ?? 1) < 5) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_4_completed_at) {
+    if (profile.star_5_completed_at) {
       throw redirect({ to: "/painel" });
     }
   },
-  component: Etapa4Page,
+  component: Etapa5Page,
 });
 
-type ProfileE4 = {
+type ProfileE5 = {
   display_name: string | null;
   business_name: string | null;
-  product_description: string | null;
-  delivery_method: string | null;
-  price_range: string | null;
-  product_finalized_at: string | null;
-  star_4_completed_at: string | null;
+  main_channel: string | null;
+  visual_presence: string | null;
+  purchase_path: string | null;
+  presence_finalized_at: string | null;
+  star_5_completed_at: string | null;
   streak: number | null;
 };
 
-const STORAGE_KEY = "polia:etapa4:step";
+const STORAGE_KEY = "polia:etapa5:step";
 
-function Etapa4Page() {
+function Etapa5Page() {
   const navigate = useNavigate();
-  const gerar = useServerFn(gerarFichaProduto);
+  const gerar = useServerFn(gerarGuiaPresenca);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileE4 | null>(null);
+  const [profile, setProfile] = useState<ProfileE5 | null>(null);
   const [step, setStep] = useState<number>(1);
   const [loaded, setLoaded] = useState(false);
 
-  const [productDescription, setProductDescription] = useState("");
-  const [deliveryMethod, setDeliveryMethod] = useState("");
-  const [priceRange, setPriceRange] = useState("");
+  const [mainChannel, setMainChannel] = useState("");
+  const [visualPresence, setVisualPresence] = useState("");
+  const [purchasePath, setPurchasePath] = useState("");
 
-  const [ficha, setFicha] = useState<FichaProduto | null>(null);
-  const [loadingFicha, setLoadingFicha] = useState(false);
-  const [fichaError, setFichaError] = useState<string | null>(null);
+  const [guia, setGuia] = useState<GuiaPresenca | null>(null);
+  const [loadingGuia, setLoadingGuia] = useState(false);
+  const [guiaError, setGuiaError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,42 +74,42 @@ function Etapa4Page() {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "display_name, business_name, product_description, delivery_method, price_range, product_finalized_at, star_4_completed_at, streak",
+          "display_name, business_name, main_channel, visual_presence, purchase_path, presence_finalized_at, star_5_completed_at, streak",
         )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
       if (p) {
-        setProfile(p as ProfileE4);
-        setProductDescription(p.product_description ?? "");
-        setDeliveryMethod(p.delivery_method ?? "");
-        setPriceRange(p.price_range ?? "");
+        setProfile(p as ProfileE5);
+        setMainChannel(p.main_channel ?? "");
+        setVisualPresence(p.visual_presence ?? "");
+        setPurchasePath(p.purchase_path ?? "");
 
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if ((p as ProfileE4).product_finalized_at) {
+        } else if ((p as ProfileE5).presence_finalized_at) {
           setStep(5);
-        } else if (p.price_range) {
+        } else if (p.purchase_path) {
           setStep(4);
-        } else if (p.delivery_method) {
+        } else if (p.visual_presence) {
           setStep(4);
-        } else if (p.product_description) {
+        } else if (p.main_channel) {
           setStep(3);
         } else {
           setStep(1);
         }
 
-        if ((p as ProfileE4).product_finalized_at) {
+        if ((p as ProfileE5).presence_finalized_at) {
           const { data: ent } = await supabase
             .from("entregaveis")
             .select("conteudo")
             .eq("user_id", uid)
-            .eq("tipo", "ficha_produto")
+            .eq("tipo", "guia_presenca")
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (mounted && ent?.conteudo) setFicha(ent.conteudo as unknown as FichaProduto);
+          if (mounted && ent?.conteudo) setGuia(ent.conteudo as unknown as GuiaPresenca);
         }
       }
       setLoaded(true);
@@ -126,7 +126,7 @@ function Etapa4Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE4>) => {
+    async (campos: Partial<ProfileE5>) => {
       if (!userId) return;
       const payload: Record<string, string> = {};
       for (const [k, v] of Object.entries(campos)) {
@@ -137,44 +137,44 @@ function Etapa4Page() {
     [userId],
   );
 
-  const gerarFicha = useCallback(async () => {
-    await autoSave({ price_range: priceRange });
+  const gerarGuia = useCallback(async () => {
+    await autoSave({ purchase_path: purchasePath });
     setStep(5);
-    setLoadingFicha(true);
-    setFichaError(null);
+    setLoadingGuia(true);
+    setGuiaError(null);
     const result = await gerar({
       data: {
-        product_description: productDescription,
-        delivery_method: deliveryMethod,
-        price_range: priceRange,
+        main_channel: mainChannel,
+        visual_presence: visualPresence,
+        purchase_path: purchasePath,
         business_name: profile?.business_name ?? undefined,
       },
     });
-    setLoadingFicha(false);
-    if (result.error || !result.ficha) {
-      setFichaError(result.error || "Erro desconhecido.");
+    setLoadingGuia(false);
+    if (result.error || !result.guia) {
+      setGuiaError(result.error || "Erro desconhecido.");
       return;
     }
-    setFicha(result.ficha);
-  }, [autoSave, gerar, productDescription, deliveryMethod, priceRange, profile?.business_name]);
+    setGuia(result.guia);
+  }, [autoSave, gerar, mainChannel, visualPresence, purchasePath, profile?.business_name]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId || !ficha) return;
+    if (!userId || !guia) return;
     await supabase.from("entregaveis").insert({
       user_id: userId,
-      titulo: "Ficha de Produto",
-      tipo: "ficha_produto",
+      titulo: "Guia de Primeira Impressão",
+      tipo: "guia_presenca",
       fase: "Construção",
-      etapa: 4,
-      conteudo: ficha as never,
+      etapa: 5,
+      conteudo: guia as never,
       status: "concluido",
     });
     await supabase
       .from("profiles")
-      .update({ product_finalized_at: new Date().toISOString() } as never)
+      .update({ presence_finalized_at: new Date().toISOString() } as never)
       .eq("id", userId);
     setStep(6);
-  }, [userId, ficha]);
+  }, [userId, guia]);
 
   const concludedRef = useRef(false);
   useEffect(() => {
@@ -184,32 +184,32 @@ function Etapa4Page() {
       await supabase
         .from("profiles")
         .update({
-          star_4_completed_at: new Date().toISOString(),
-          etapa_atual: 5,
+          star_5_completed_at: new Date().toISOString(),
+          etapa_atual: 6,
           streak: (profile?.streak ?? 0) + 1,
         } as never)
         .eq("id", userId);
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Quarta estrela acesa",
-        descricao: "Montou a ficha de produto.",
+        titulo: "Quinta estrela acesa",
+        descricao: "Montou o guia de primeira impressão.",
         xp: 50,
         tipo: "etapa",
       });
 
-      const tarefasE5 = [
-        "Escolher canal principal de presença",
-        "Escrever bio com posicionamento",
-        "Organizar fotos do produto",
-        "Criar link de contato ou loja",
-        "Publicar a primeira postagem",
+      const tarefasE6 = [
+        "Revisar bio com novo posicionamento",
+        "Organizar destaques do Instagram",
+        "Criar modelo de resposta pra DM",
+        "Testar o caminho de compra com uma amiga",
+        "Mapear capacidade de atendimento mensal",
       ];
       await supabase.from("tarefas").insert(
-        tarefasE5.map((titulo) => ({
+        tarefasE6.map((titulo) => ({
           user_id: userId,
           titulo,
-          etapa: 5,
+          etapa: 6,
           status: "a_fazer",
           fonte: "sistema",
         })),
@@ -245,118 +245,118 @@ function Etapa4Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="o que você faz é único. a gente só vai registrar isso."
-              titulo={<>O que você vende?</>}
-              label="SEU PRODUTO OU SERVIÇO"
-              placeholder="Ex: Faço convites de casamento 100% autorais. Cada peça é única, feita a mão ou em impressão especial, entregue com envelope personalizado. Aceito encomendas pra festas, aniversários e empresas."
-              maxLength={400}
-              ajuda="descreve como você explicaria pra uma amiga que nunca te viu trabalhar."
-              raposaEstado="Atenta · sentada escutando"
-              raposaTexto="Seja específica. 'Faço produtos artesanais' diz pouco. 'Faço velas aromáticas com cascas de frutas nativas' diz tudo."
-              valor={productDescription}
-              setValor={setProductDescription}
-              onAutoSave={() => autoSave({ product_description: productDescription })}
-              onContinuar={() => {
-                autoSave({ product_description: productDescription });
-                setStep(3);
-              }}
-              minLen={20}
-            />
-          )}
-          {step === 3 && (
-            <PerguntaBlock
-              caveat="a forma de entregar faz parte da experiência."
-              titulo={<>Como a cliente recebe<br />o que comprou?</>}
-              label="SEU MODO DE ENTREGA"
-              placeholder="Ex: Entrego pessoalmente em SP capital ou envio pelos Correios com rastreio. Prazo de 10 dias úteis após confirmação do pagamento. Sempre mando foto antes de embalar."
+              caveat="antes de fazer conteúdo, você precisa saber onde está."
+              titulo={<>Onde sua cliente te encontra hoje?</>}
+              label="SEU CANAL PRINCIPAL"
+              placeholder="Ex: Instagram @carlajoias. Tenho 1.400 seguidores e posto 3x por semana. Também uso WhatsApp Business pra atendimento. Tenho uma página no Facebook mas quase não mexo mais."
               maxLength={300}
-              ajuda="inclui prazo, logística e qualquer detalhe que a cliente precisa saber antes de comprar."
-              raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="A entrega é a última memória que a cliente tem do processo. Vale caprichar nessa resposta."
-              valor={deliveryMethod}
-              setValor={setDeliveryMethod}
-              onAutoSave={() => autoSave({ delivery_method: deliveryMethod })}
-              onVoltar={() => setStep(2)}
+              ajuda="pode listar todos. a gente vai identificar o principal."
+              raposaEstado="Atenta · sentada escutando"
+              raposaTexto="Presença em muitos lugares de forma fraca perde pra presença em poucos lugares de forma forte."
+              valor={mainChannel}
+              setValor={setMainChannel}
+              onAutoSave={() => autoSave({ main_channel: mainChannel })}
               onContinuar={() => {
-                autoSave({ delivery_method: deliveryMethod });
-                setStep(4);
+                autoSave({ main_channel: mainChannel });
+                setStep(3);
               }}
               minLen={15}
             />
           )}
+          {step === 3 && (
+            <PerguntaBlock
+              caveat="a primeira impressão é o que faz ela parar ou rolar."
+              titulo={<>Como você aparece pra quem<br />ainda não te conhece?</>}
+              label="SUA APARÊNCIA ONLINE"
+              placeholder="Ex: Feed com fotos de produto em fundo neutro, sempre com boa luz. Stories com processo de criação e bastidores. Bio direta: 'Convites autorais com alma. SP.' Link pro catálogo em PDF. Às vezes apareço em vídeo mostrando os materiais."
+              maxLength={400}
+              ajuda="descreve o que alguém vê nos primeiros 10 segundos no seu perfil."
+              raposaEstado="Curiosa · cabeça inclinada"
+              raposaTexto="Consistência vence perfeição. Uma conta simples e coerente converte mais do que um feed bonito sem identidade."
+              valor={visualPresence}
+              setValor={setVisualPresence}
+              onAutoSave={() => autoSave({ visual_presence: visualPresence })}
+              onVoltar={() => setStep(2)}
+              onContinuar={() => {
+                autoSave({ visual_presence: visualPresence });
+                setStep(4);
+              }}
+              minLen={20}
+            />
+          )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="preço é informação, não vergonha."
-              titulo={<>Quanto você cobra?</>}
-              label="SEU PREÇO E FORMA DE PAGAMENTO"
-              placeholder="Ex: Convites a partir de R$ 8 por unidade (pedido mínimo 50 unidades). Aceito Pix e cartão parcelado em até 3x. Sinal de 50% pra confirmar e o restante na entrega."
+              caveat="o caminho mais curto da descoberta à compra."
+              titulo={<>Como a cliente compra de você?</>}
+              label="SEU CAMINHO DE COMPRA"
+              placeholder="Ex: Ela vê o post, manda DM, eu mando o catálogo pelo WhatsApp, ela escolhe, paga Pix e começo. Ou entra no link da bio, preenche o formulário e eu respondo em 24h."
               maxLength={200}
-              ajuda="não precisa ser a tabela completa. só o suficiente pra ela saber se cabe no bolso."
+              ajuda="quanto menos passos, mais ela compra. descreve como é hoje."
               raposaEstado="Animada · em pé"
-              raposaTexto="Cobrar pelo valor que você entrega não é ganância. É respeito pelo seu trabalho."
-              valor={priceRange}
-              setValor={setPriceRange}
-              onAutoSave={() => autoSave({ price_range: priceRange })}
+              raposaTexto="Cada passo a mais no caminho de compra perde parte das interessadas. Simples é melhor."
+              valor={purchasePath}
+              setValor={setPurchasePath}
+              onAutoSave={() => autoSave({ purchase_path: purchasePath })}
               onVoltar={() => setStep(3)}
-              onContinuar={() => gerarFicha()}
-              continuarLabel="Montar minha ficha  →"
-              minLen={10}
+              onContinuar={() => gerarGuia()}
+              continuarLabel="Montar minha primeira impressão  →"
+              minLen={15}
             />
           )}
         </PerguntaLayout>
       )}
 
       {step === 5 && (
-        <FichaTela
-          loading={loadingFicha}
-          ficha={ficha}
-          error={fichaError}
+        <GuiaTela
+          loading={loadingGuia}
+          guia={guia}
+          error={guiaError}
           businessName={profile?.business_name ?? ""}
           onAjustar={() => setStep(4)}
           onContinuar={salvarEntregavelEAvancar}
-          onRetry={() => gerarFicha()}
+          onRetry={() => gerarGuia()}
         />
       )}
 
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa5={() => navigate({ to: "/etapa/5" })}
+          onEtapa6={() => navigate({ to: "/painel" })}
         />
       )}
     </>
   );
 }
 
-/* ============== E4.1 — CAPA COSMIC ============== */
+/* ============== E5.1 — CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
-    { num: "1", titulo: "Produto", sub: "o que você oferece" },
-    { num: "2", titulo: "Entrega", sub: "como chega à cliente" },
-    { num: "3", titulo: "Valor", sub: "quanto você cobra" },
+    { num: "1", titulo: "Canal", sub: "onde você está" },
+    { num: "2", titulo: "Aparência", sub: "como você parece" },
+    { num: "3", titulo: "Caminho", sub: "como ela compra" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 4 DE 11 · PRESENÇA DIGITAL
+          ETAPA 5 DE 11 · CONTEÚDO
         </p>
 
         <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L4 Vertical</p>
+          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L5 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">agora o mundo vai te ver.</p>
+        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">onde te acham, como você aparece.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          O que você vende e como entrega.
+          Sua vitrine online começa aqui.
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra montar a ficha do seu produto ou serviço.
+          3 perguntas pra montar como você aparece e como a cliente chega até você.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
@@ -377,7 +377,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos montar sua ficha  →
+          Vamos montar minha vitrine  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
@@ -388,7 +388,7 @@ function Capa({ onStart }: { onStart: () => void }) {
   );
 }
 
-/* ============== Layout E4.2-E4.4 ============== */
+/* ============== Layout E5.2-E5.4 ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -401,9 +401,9 @@ function PerguntaLayout({
   children: React.ReactNode;
 }) {
   const passos = [
-    { num: 1, label: "Produto" },
-    { num: 2, label: "Entrega" },
-    { num: 3, label: "Valor" },
+    { num: 1, label: "Canal" },
+    { num: 2, label: "Aparência" },
+    { num: 3, label: "Caminho" },
   ];
   const activeIndex = step - 2;
 
@@ -413,12 +413,12 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 4 · PRESENÇA DIGITAL
+            ETAPA 5 · CONTEÚDO
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Sua ficha
+            Sua primeira
             <br />
-            de produto.
+            impressão.
           </h2>
           <hr className="border-[#EAE2D8] my-6" />
           <div className="flex flex-col gap-5">
@@ -453,7 +453,7 @@ function PerguntaLayout({
           <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
             depois vem
             <br />
-            a sua ficha de produto
+            a sua primeira impressão
           </p>
         </aside>
 
@@ -551,10 +551,10 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E4.5 — Ficha de Produto (COSMIC) ============== */
-function FichaTela({
+/* ============== E5.5 — Guia de Primeira Impressão (COSMIC) ============== */
+function GuiaTela({
   loading,
-  ficha,
+  guia,
   error,
   businessName,
   onAjustar,
@@ -562,7 +562,7 @@ function FichaTela({
   onRetry,
 }: {
   loading: boolean;
-  ficha: FichaProduto | null;
+  guia: GuiaPresenca | null;
   error: string | null;
   businessName: string;
   onAjustar: () => void;
@@ -576,7 +576,7 @@ function FichaTela({
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
-              montando sua ficha...
+              montando sua primeira impressão...
             </p>
             <div className="mt-6 flex gap-2">
               {[0, 1, 2].map((i) => (
@@ -603,54 +603,58 @@ function FichaTela({
           </>
         )}
 
-        {!loading && !error && ficha && (
+        {!loading && !error && guia && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 4 · PRESENÇA DIGITAL
+              ENTREGÁVEL · ETAPA 5 · CONTEÚDO
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha sua ficha pronta.</p>
+            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha como você aparece pro mundo.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
-              Sua ficha de produto
+              Sua primeira impressão
               <br />
-              tá no ar.
+              tá desenhada.
             </h1>
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                FICHA DE PRODUTO · {(businessName || "Sua marca").toUpperCase()}
+                GUIA DE PRESENÇA · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">O que você vende</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como você aparece e como te acham</p>
               <hr className="border-[#EAE2D8] my-5" />
 
-              <p className="font-sans text-[#1A1A2E] text-[16px] leading-[26px]">
-                {ficha.descricao_refinada}
+              <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
+                SEU CANAL PRINCIPAL
               </p>
-
-              <hr className="border-[#EAE2D8] my-5" />
-
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                <div>
-                  <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                    COMO ENTREGA
-                  </p>
-                  <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                    {ficha.entrega}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                    A PARTIR DE
-                  </p>
-                  <p className="font-serif text-[#C96B3E] text-[22px] mt-2">{ficha.preco_destaque}</p>
-                </div>
-              </div>
+              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
+                {guia.canal_principal}
+              </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                IDEAL PARA
+                COMO VOCÊ APARECE
               </p>
-              <p className="font-handwritten text-[#C96B3E] text-[18px] mt-2">{ficha.cliente_ideal}</p>
+              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
+                {guia.aparencia_guia}
+              </p>
+
+              <hr className="border-[#EAE2D8] my-5" />
+
+              <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
+                COMO A CLIENTE COMPRA
+              </p>
+              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2 whitespace-pre-line">
+                {guia.caminho_resumido}
+              </p>
+
+              <hr className="border-[#EAE2D8] my-5" />
+
+              <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
+                SUA BIO SUGERIDA
+              </p>
+              <p className="font-handwritten text-[#C96B3E] text-[18px] mt-2">
+                "{guia.bio_sugerida}"
+              </p>
 
               <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
                 salvo em Sua Vitrine · você edita quando quiser
@@ -679,14 +683,14 @@ function FichaTela({
   );
 }
 
-/* ============== E4.6 — Conclusão estrela 4 ============== */
-function Conclusao({ onVerPainel, onEtapa5 }: { onVerPainel: () => void; onEtapa5: () => void }) {
+/* ============== E5.6 — Conclusão estrela 5 ============== */
+function Conclusao({ onVerPainel, onEtapa6 }: { onVerPainel: () => void; onEtapa6: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
     { n: 2, label: "Identidade", estado: "acesa" },
     { n: 3, label: "Modelo", estado: "acesa" },
-    { n: 4, label: "Presença", estado: "agora" },
-    { n: 5, label: "Conteúdo", estado: "dim" },
+    { n: 4, label: "Presença", estado: "acesa" },
+    { n: 5, label: "Conteúdo", estado: "agora" },
     { n: 6, label: "Rotina", estado: "dim" },
     { n: 7, label: "Vendas", estado: "dim" },
     { n: 8, label: "Clientes", estado: "dim" },
@@ -700,15 +704,15 @@ function Conclusao({ onVerPainel, onEtapa5 }: { onVerPainel: () => void; onEtapa
       <CosmicBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 4 · PRESENÇA DIGITAL · CONCLUÍDA
+          ETAPA 5 · CONTEÚDO · CONCLUÍDA
         </p>
 
         <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
-          agora elas sabem o que você faz.
+          agora elas sabem onde te achar.
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[68px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua quarta estrela
+          Sua quinta estrela
           <br />
           tá acesa.
         </h1>
@@ -772,7 +776,7 @@ function Conclusao({ onVerPainel, onEtapa5 }: { onVerPainel: () => void; onEtapa
           </p>
           <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Sua Vitrine</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Sua ficha de produto foi adicionada. Agora sua vitrine online começa a tomar forma.
+            Sua guia de presença e o caminho de compra foram adicionados.
           </p>
         </div>
 
@@ -789,11 +793,11 @@ function Conclusao({ onVerPainel, onEtapa5 }: { onVerPainel: () => void; onEtapa
             Ver meu painel
           </button>
           <button
-            onClick={onEtapa5}
+            onClick={onEtapa6}
             className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
             style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
           >
-            Começar Etapa 5  →
+            Começar Etapa 6  →
           </button>
         </div>
       </div>
