@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
@@ -18,6 +19,11 @@ import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthVerificacaoRoute = AuthVerificacaoRouteImport.update({
+  id: '/auth/verificacao',
+  path: '/auth/verificacao',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRedefinirRoute = AuthRedefinirRouteImport.update({
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,6 +80,7 @@ export interface FileRouteTypes {
     | '/auth/esqueci'
     | '/auth/login'
     | '/auth/redefinir'
+    | '/auth/verificacao'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -78,6 +88,7 @@ export interface FileRouteTypes {
     | '/auth/esqueci'
     | '/auth/login'
     | '/auth/redefinir'
+    | '/auth/verificacao'
   id:
     | '__root__'
     | '/'
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/auth/esqueci'
     | '/auth/login'
     | '/auth/redefinir'
+    | '/auth/verificacao'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -93,6 +105,7 @@ export interface RootRouteChildren {
   AuthEsqueciRoute: typeof AuthEsqueciRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRedefinirRoute: typeof AuthRedefinirRoute
+  AuthVerificacaoRoute: typeof AuthVerificacaoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -102,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/verificacao': {
+      id: '/auth/verificacao'
+      path: '/auth/verificacao'
+      fullPath: '/auth/verificacao'
+      preLoaderRoute: typeof AuthVerificacaoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/redefinir': {
@@ -141,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthEsqueciRoute: AuthEsqueciRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRedefinirRoute: AuthRedefinirRoute,
+  AuthVerificacaoRoute: AuthVerificacaoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
