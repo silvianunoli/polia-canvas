@@ -16,6 +16,7 @@ import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
@@ -64,6 +65,11 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   id: '/auth/cadastro',
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/jornada': typeof AuthenticatedJornadaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/tarefas': typeof AuthenticatedTarefasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -163,6 +170,7 @@ export interface FileRoutesByTo {
   '/jornada': typeof AuthenticatedJornadaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/tarefas': typeof AuthenticatedTarefasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -187,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/jornada'
     | '/onboarding'
     | '/painel'
+    | '/tarefas'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -233,6 +243,7 @@ export interface FileRouteTypes {
     | '/jornada'
     | '/onboarding'
     | '/painel'
+    | '/tarefas'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jornada'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
+    | '/_authenticated/tarefas'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/cadastro'
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/tarefas': {
+      id: '/_authenticated/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof AuthenticatedTarefasRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/painel': {
       id: '/_authenticated/painel'
@@ -440,6 +459,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
   AuthenticatedEtapa10Route: typeof AuthenticatedEtapa10Route
   AuthenticatedEtapa11Route: typeof AuthenticatedEtapa11Route
@@ -457,6 +477,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
   AuthenticatedEtapa10Route: AuthenticatedEtapa10Route,
   AuthenticatedEtapa11Route: AuthenticatedEtapa11Route,
