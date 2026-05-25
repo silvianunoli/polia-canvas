@@ -24,6 +24,7 @@ import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedBibliotecaIndexRouteImport } from './routes/_authenticated/biblioteca.index'
 import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
@@ -35,6 +36,7 @@ import { Route as AuthenticatedEtapa2RouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEtapa11RouteImport } from './routes/_authenticated/etapa.11'
 import { Route as AuthenticatedEtapa10RouteImport } from './routes/_authenticated/etapa.10'
 import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
+import { Route as AuthenticatedBibliotecaIdRouteImport } from './routes/_authenticated/biblioteca.$id'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -110,6 +112,12 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBibliotecaIndexRoute =
+  AuthenticatedBibliotecaIndexRouteImport.update({
+    id: '/biblioteca/',
+    path: '/biblioteca/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedEtapa9Route = AuthenticatedEtapa9RouteImport.update({
   id: '/etapa/9',
   path: '/etapa/9',
@@ -165,6 +173,12 @@ const AuthenticatedEtapa1Route = AuthenticatedEtapa1RouteImport.update({
   path: '/etapa/1',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedBibliotecaIdRoute =
+  AuthenticatedBibliotecaIdRouteImport.update({
+    id: '/biblioteca/$id',
+    path: '/biblioteca/$id',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -181,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
   '/etapa/11': typeof AuthenticatedEtapa11Route
@@ -192,6 +207,7 @@ export interface FileRoutesByFullPath {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -208,6 +224,7 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
   '/etapa/11': typeof AuthenticatedEtapa11Route
@@ -219,6 +236,7 @@ export interface FileRoutesByTo {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/biblioteca': typeof AuthenticatedBibliotecaIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -237,6 +255,7 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/_authenticated/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
   '/_authenticated/etapa/10': typeof AuthenticatedEtapa10Route
   '/_authenticated/etapa/11': typeof AuthenticatedEtapa11Route
@@ -248,6 +267,7 @@ export interface FileRoutesById {
   '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
   '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
   '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
+  '/_authenticated/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,6 +286,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/biblioteca/$id'
     | '/etapa/1'
     | '/etapa/10'
     | '/etapa/11'
@@ -277,6 +298,7 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/biblioteca/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -293,6 +315,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/biblioteca/$id'
     | '/etapa/1'
     | '/etapa/10'
     | '/etapa/11'
@@ -304,6 +327,7 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/biblioteca'
   id:
     | '__root__'
     | '/'
@@ -321,6 +345,7 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/_authenticated/biblioteca/$id'
     | '/_authenticated/etapa/1'
     | '/_authenticated/etapa/10'
     | '/_authenticated/etapa/11'
@@ -332,6 +357,7 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/7'
     | '/_authenticated/etapa/8'
     | '/_authenticated/etapa/9'
+    | '/_authenticated/biblioteca/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -451,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/biblioteca/': {
+      id: '/_authenticated/biblioteca/'
+      path: '/biblioteca'
+      fullPath: '/biblioteca/'
+      preLoaderRoute: typeof AuthenticatedBibliotecaIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/9': {
       id: '/_authenticated/etapa/9'
       path: '/etapa/9'
@@ -528,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEtapa1RouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/biblioteca/$id': {
+      id: '/_authenticated/biblioteca/$id'
+      path: '/biblioteca/$id'
+      fullPath: '/biblioteca/$id'
+      preLoaderRoute: typeof AuthenticatedBibliotecaIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -540,6 +580,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedVitrineRoute: typeof AuthenticatedVitrineRoute
+  AuthenticatedBibliotecaIdRoute: typeof AuthenticatedBibliotecaIdRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
   AuthenticatedEtapa10Route: typeof AuthenticatedEtapa10Route
   AuthenticatedEtapa11Route: typeof AuthenticatedEtapa11Route
@@ -551,6 +592,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEtapa7Route: typeof AuthenticatedEtapa7Route
   AuthenticatedEtapa8Route: typeof AuthenticatedEtapa8Route
   AuthenticatedEtapa9Route: typeof AuthenticatedEtapa9Route
+  AuthenticatedBibliotecaIndexRoute: typeof AuthenticatedBibliotecaIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -562,6 +604,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedVitrineRoute: AuthenticatedVitrineRoute,
+  AuthenticatedBibliotecaIdRoute: AuthenticatedBibliotecaIdRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
   AuthenticatedEtapa10Route: AuthenticatedEtapa10Route,
   AuthenticatedEtapa11Route: AuthenticatedEtapa11Route,
@@ -573,6 +616,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEtapa7Route: AuthenticatedEtapa7Route,
   AuthenticatedEtapa8Route: AuthenticatedEtapa8Route,
   AuthenticatedEtapa9Route: AuthenticatedEtapa9Route,
+  AuthenticatedBibliotecaIndexRoute: AuthenticatedBibliotecaIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -591,13 +635,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
