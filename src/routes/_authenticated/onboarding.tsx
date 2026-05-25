@@ -570,5 +570,3 @@ function Step5({ onFinish }: { onFinish: () => void }) {
   );
 }
 
-// keep Loader2 imported reference
-void Loader2;
