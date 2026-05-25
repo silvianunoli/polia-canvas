@@ -6,18 +6,21 @@ interface NavLinkItem {
 
 const links: NavLinkItem[] = [
   { to: "/painel", label: "Painel", exists: true },
-  { to: "/jornada", label: "Jornada", exists: false },
+  { to: "/jornada", label: "Jornada", exists: true },
   { to: "/tarefas", label: "Tarefas", exists: false },
   { to: "/clientes", label: "Clientes", exists: false },
   { to: "/financeiro", label: "Financeiro", exists: false },
 ];
 
+
 export function PainelNav({
   initial,
   streak,
+  navActive = "/painel",
 }: {
   initial: string;
   streak: number;
+  navActive?: string;
 }) {
   return (
     <header
@@ -38,7 +41,8 @@ export function PainelNav({
         {/* Links */}
         <nav className="hidden items-center gap-7 md:flex">
           {links.map((l) => {
-            const isActive = l.to === "/painel";
+            const isActive = l.to === navActive;
+
             return (
               <a
                 key={l.to}
