@@ -5,17 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Pólia — Design System
+ * Dois mundos visuais: Cósmico Imersivo (noite) e Clean com Acentos (creme).
+ * Todas as cores em oklch. Tokens semânticos mapeados em @theme inline.
  */
 
 @theme inline {
@@ -26,6 +18,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Semantic shadcn tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -59,77 +53,114 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Paleta Pólia — utilitários: bg-polia-terracota, text-polia-musgo, etc. */
+  --color-polia-terracota: var(--polia-terracota);
+  --color-polia-musgo: var(--polia-musgo);
+  --color-polia-noite: var(--polia-noite);
+  --color-polia-dourado: var(--polia-dourado);
+  --color-polia-creme: var(--polia-creme);
+  --color-polia-cinza-claro: var(--polia-cinza-claro);
+  --color-polia-sonho: var(--polia-sonho);
+  --color-polia-construcao: var(--polia-construcao);
+  --color-polia-venda: var(--polia-venda);
+  --color-polia-evolucao: var(--polia-evolucao);
+  --color-polia-estrela: var(--polia-estrela);
+  --color-polia-estrela-soft: var(--polia-estrela-soft);
+  --color-polia-terracota-glow: var(--polia-terracota-glow);
+
+  /* Tipografia: font-serif, font-sans, font-accent, font-handwritten */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "DM Serif Display", ui-serif, Georgia, serif;
+  --font-accent: "DM Sans", "Inter", sans-serif;
+  --font-handwritten: "Caveat", cursive;
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 0.75rem;
+
+  /* Paleta Pólia (oklch) */
+  --polia-terracota: oklch(0.652 0.137 45.5);       /* #C96B3E */
+  --polia-musgo: oklch(0.467 0.087 158.5);          /* #2D6A4F */
+  --polia-noite: oklch(0.196 0.04 280);             /* #1A1A2E */
+  --polia-dourado: oklch(0.733 0.092 80);           /* #C8A96E */
+  --polia-creme: oklch(0.976 0.009 60);             /* #FDF8F5 */
+  --polia-cinza-claro: oklch(0.969 0.005 280);      /* #F5F5FA */
+  --polia-sonho: oklch(0.566 0.196 354);            /* #C9407A */
+  --polia-construcao: oklch(0.575 0.131 240);       /* #1A7FAD */
+  --polia-venda: oklch(0.567 0.135 156);            /* #1A8F5C */
+  --polia-evolucao: oklch(0.502 0.197 295);         /* #6B50CC */
+  --polia-estrela: oklch(0.976 0.009 60);
+  --polia-estrela-soft: oklch(0.762 0.043 60);
+  --polia-terracota-glow: oklch(0.738 0.13 50);     /* #E89770 */
+
+  /* Tokens semânticos — Mundo 2 (clean, padrão) */
+  --background: var(--polia-creme);
+  --foreground: var(--polia-noite);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: var(--polia-noite);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
+  --popover-foreground: var(--polia-noite);
+  --primary: var(--polia-terracota);
+  --primary-foreground: var(--polia-creme);
+  --secondary: var(--polia-cinza-claro);
+  --secondary-foreground: var(--polia-noite);
+  --muted: var(--polia-cinza-claro);
+  --muted-foreground: oklch(0.5 0.02 280);
+  --accent: var(--polia-dourado);
+  --accent-foreground: var(--polia-noite);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --destructive-foreground: var(--polia-creme);
+  --border: oklch(0.9 0.01 60);
+  --input: oklch(0.92 0.008 60);
+  --ring: var(--polia-terracota);
+
+  --chart-1: var(--polia-terracota);
+  --chart-2: var(--polia-musgo);
+  --chart-3: var(--polia-dourado);
+  --chart-4: var(--polia-construcao);
+  --chart-5: var(--polia-evolucao);
+
+  --sidebar: var(--polia-creme);
+  --sidebar-foreground: var(--polia-noite);
+  --sidebar-primary: var(--polia-terracota);
+  --sidebar-primary-foreground: var(--polia-creme);
+  --sidebar-accent: var(--polia-cinza-claro);
+  --sidebar-accent-foreground: var(--polia-noite);
+  --sidebar-border: oklch(0.9 0.01 60);
+  --sidebar-ring: var(--polia-terracota);
 }
 
+/* Mundo 1 — Cósmico Imersivo. Aplique a classe .cosmic em um wrapper. */
+.cosmic,
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
+  --background: var(--polia-noite);
+  --foreground: var(--polia-creme);
+  --card: oklch(0.25 0.04 280);
+  --card-foreground: var(--polia-creme);
+  --popover: oklch(0.25 0.04 280);
+  --popover-foreground: var(--polia-creme);
+  --primary: var(--polia-terracota);
+  --primary-foreground: var(--polia-creme);
+  --secondary: oklch(0.28 0.04 280);
+  --secondary-foreground: var(--polia-creme);
+  --muted: oklch(0.28 0.04 280);
+  --muted-foreground: oklch(0.75 0.02 60);
+  --accent: var(--polia-dourado);
+  --accent-foreground: var(--polia-noite);
   --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --destructive-foreground: var(--polia-creme);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: var(--polia-terracota-glow);
+  --sidebar: var(--polia-noite);
+  --sidebar-foreground: var(--polia-creme);
+  --sidebar-primary: var(--polia-terracota);
+  --sidebar-primary-foreground: var(--polia-creme);
+  --sidebar-accent: oklch(0.28 0.04 280);
+  --sidebar-accent-foreground: var(--polia-creme);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: var(--polia-terracota-glow);
 }
 
 @layer base {
@@ -137,8 +168,17 @@
     border-color: var(--color-border);
   }
 
+  html,
   body {
+    font-family: var(--font-sans);
     background-color: var(--color-background);
     color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
   }
 }
