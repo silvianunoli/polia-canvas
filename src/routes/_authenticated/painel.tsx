@@ -533,12 +533,12 @@ function PainelPage() {
                 </div>
               ))}
             </div>
-            <Link
-              to="/tarefas"
+            <a
+              href="/tarefas"
               className="mt-4 inline-block font-sans text-[13px] text-polia-terracota hover:underline"
             >
               Tarefas →
-            </Link>
+            </a>
           </div>
 
           {/* Card 3 — Conquista */}
