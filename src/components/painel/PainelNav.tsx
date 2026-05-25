@@ -1,3 +1,13 @@
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "@tanstack/react-router";
+
 interface NavLinkItem {
   to: string;
   label: string;
@@ -11,6 +21,7 @@ const links: NavLinkItem[] = [
   { to: "/clientes", label: "Clientes", exists: true },
   { to: "/vitrine", label: "Vitrine", exists: true },
   { to: "/financeiro", label: "Financeiro", exists: false },
+  { to: "/biblioteca", label: "Biblioteca", exists: true },
 ];
 
 
