@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { gerarRoteiroFechamento, type RoteiroFechamento } from "@/lib/sales.functions";
+import { gerarProtocoloCuidado, type ProtocoloCuidado } from "@/lib/care.functions";
 
-export const Route = createFileRoute("/_authenticated/etapa/7")({
+export const Route = createFileRoute("/_authenticated/etapa/8")({
   head: () => ({
     meta: [
-      { title: "Etapa 7 — Suas Vendas · Pólia" },
-      { name: "description", content: "Monte seu fluxo de vendas do primeiro contato ao sim." },
+      { title: "Etapa 8 — Seus Clientes · Pólia" },
+      { name: "description", content: "Monte seu protocolo de cuidado com a cliente." },
     ],
   }),
   beforeLoad: async () => {
@@ -20,49 +20,49 @@ export const Route = createFileRoute("/_authenticated/etapa/7")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_7_completed_at")
+      .select("etapa_atual, star_8_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 7) {
+    if ((profile.etapa_atual ?? 1) < 8) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_7_completed_at) {
+    if (profile.star_8_completed_at) {
       throw redirect({ to: "/painel" });
     }
   },
-  component: Etapa7Page,
+  component: Etapa8Page,
 });
 
-type ProfileE7 = {
+type ProfileE8 = {
   display_name: string | null;
   business_name: string | null;
-  awareness_source: string | null;
-  decision_trigger: string | null;
-  closing_method: string | null;
-  sales_finalized_at: string | null;
-  star_7_completed_at: string | null;
+  welcome_protocol: string | null;
+  issue_handling: string | null;
+  loyalty_strategy: string | null;
+  care_finalized_at: string | null;
+  star_8_completed_at: string | null;
   streak: number | null;
 };
 
-const STORAGE_KEY = "polia:etapa7:step";
+const STORAGE_KEY = "polia:etapa8:step";
 
-function Etapa7Page() {
+function Etapa8Page() {
   const navigate = useNavigate();
-  const gerar = useServerFn(gerarRoteiroFechamento);
+  const gerar = useServerFn(gerarProtocoloCuidado);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileE7 | null>(null);
+  const [profile, setProfile] = useState<ProfileE8 | null>(null);
   const [step, setStep] = useState<number>(1);
   const [loaded, setLoaded] = useState(false);
 
-  const [descoberta, setDescoberta] = useState("");
-  const [decisao, setDecisao] = useState("");
-  const [fechamento, setFechamento] = useState("");
+  const [acolhimento, setAcolhimento] = useState("");
+  const [resolucao, setResolucao] = useState("");
+  const [fidelizacao, setFidelizacao] = useState("");
 
-  const [roteiro, setRoteiro] = useState<RoteiroFechamento | null>(null);
-  const [loadingRoteiro, setLoadingRoteiro] = useState(false);
-  const [roteiroError, setRoteiroError] = useState<string | null>(null);
+  const [protocolo, setProtocolo] = useState<ProtocoloCuidado | null>(null);
+  const [loadingProtocolo, setLoadingProtocolo] = useState(false);
+  const [protocoloError, setProtocoloError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,42 +74,42 @@ function Etapa7Page() {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "display_name, business_name, awareness_source, decision_trigger, closing_method, sales_finalized_at, star_7_completed_at, streak",
+          "display_name, business_name, welcome_protocol, issue_handling, loyalty_strategy, care_finalized_at, star_8_completed_at, streak",
         )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
       if (p) {
-        setProfile(p as ProfileE7);
-        setDescoberta(p.awareness_source ?? "");
-        setDecisao(p.decision_trigger ?? "");
-        setFechamento(p.closing_method ?? "");
+        setProfile(p as ProfileE8);
+        setAcolhimento(p.welcome_protocol ?? "");
+        setResolucao(p.issue_handling ?? "");
+        setFidelizacao(p.loyalty_strategy ?? "");
 
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if ((p as ProfileE7).sales_finalized_at) {
+        } else if ((p as ProfileE8).care_finalized_at) {
           setStep(5);
-        } else if (p.closing_method) {
+        } else if (p.loyalty_strategy) {
           setStep(4);
-        } else if (p.decision_trigger) {
+        } else if (p.issue_handling) {
           setStep(4);
-        } else if (p.awareness_source) {
+        } else if (p.welcome_protocol) {
           setStep(3);
         } else {
           setStep(1);
         }
 
-        if ((p as ProfileE7).sales_finalized_at) {
+        if ((p as ProfileE8).care_finalized_at) {
           const { data: ent } = await supabase
             .from("entregaveis")
             .select("conteudo")
             .eq("user_id", uid)
-            .eq("tipo", "roteiro_fechamento")
+            .eq("tipo", "protocolo_cuidado")
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (mounted && ent?.conteudo) setRoteiro(ent.conteudo as unknown as RoteiroFechamento);
+          if (mounted && ent?.conteudo) setProtocolo(ent.conteudo as unknown as ProtocoloCuidado);
         }
       }
       setLoaded(true);
@@ -126,7 +126,7 @@ function Etapa7Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE7>) => {
+    async (campos: Partial<ProfileE8>) => {
       if (!userId) return;
       const payload: Record<string, string> = {};
       for (const [k, v] of Object.entries(campos)) {
@@ -137,44 +137,44 @@ function Etapa7Page() {
     [userId],
   );
 
-  const gerarRoteiroAcao = useCallback(async () => {
-    await autoSave({ closing_method: fechamento });
+  const gerarProtocoloAcao = useCallback(async () => {
+    await autoSave({ loyalty_strategy: fidelizacao });
     setStep(5);
-    setLoadingRoteiro(true);
-    setRoteiroError(null);
+    setLoadingProtocolo(true);
+    setProtocoloError(null);
     const result = await gerar({
       data: {
-        awareness_source: descoberta,
-        decision_trigger: decisao,
-        closing_method: fechamento,
+        welcome_protocol: acolhimento,
+        issue_handling: resolucao,
+        loyalty_strategy: fidelizacao,
         business_name: profile?.business_name ?? undefined,
       },
     });
-    setLoadingRoteiro(false);
-    if (result.error || !result.roteiro) {
-      setRoteiroError(result.error || "Erro desconhecido.");
+    setLoadingProtocolo(false);
+    if (result.error || !result.protocolo) {
+      setProtocoloError(result.error || "Erro desconhecido.");
       return;
     }
-    setRoteiro(result.roteiro);
-  }, [autoSave, gerar, descoberta, decisao, fechamento, profile?.business_name]);
+    setProtocolo(result.protocolo);
+  }, [autoSave, gerar, acolhimento, resolucao, fidelizacao, profile?.business_name]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId || !roteiro) return;
+    if (!userId || !protocolo) return;
     await supabase.from("entregaveis").insert({
       user_id: userId,
-      titulo: "Roteiro de Fechamento",
-      tipo: "roteiro_fechamento",
+      titulo: "Protocolo de Cuidado",
+      tipo: "protocolo_cuidado",
       fase: "Venda",
-      etapa: 7,
-      conteudo: roteiro as never,
+      etapa: 8,
+      conteudo: protocolo as never,
       status: "concluido",
     });
     await supabase
       .from("profiles")
-      .update({ sales_finalized_at: new Date().toISOString() } as never)
+      .update({ care_finalized_at: new Date().toISOString() } as never)
       .eq("id", userId);
     setStep(6);
-  }, [userId, roteiro]);
+  }, [userId, protocolo]);
 
   const concludedRef = useRef(false);
   useEffect(() => {
@@ -184,33 +184,32 @@ function Etapa7Page() {
       await supabase
         .from("profiles")
         .update({
-          star_7_completed_at: new Date().toISOString(),
-          orbit_sales_unlocked: true,
-          etapa_atual: 8,
+          star_8_completed_at: new Date().toISOString(),
+          etapa_atual: 9,
           streak: (profile?.streak ?? 0) + 1,
         } as never)
         .eq("id", userId);
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Sétima estrela acesa",
-        descricao: "Montou o roteiro de fechamento. Suas Vendas e Clientes está desbloqueado.",
+        titulo: "Oitava estrela acesa",
+        descricao: "Montou o protocolo de cuidado. Suas Vendas e Clientes ficou mais completo.",
         xp: 50,
         tipo: "etapa",
       });
 
-      const tarefasE8 = [
-        "Criar protocolo de boas-vindas pra nova cliente",
-        "Definir tempo de resposta padrão",
-        "Escrever FAQ das dúvidas mais comuns",
-        "Montar fluxo de acompanhamento pós-venda",
-        "Definir como pedir avaliação sem constranger",
+      const tarefasE9 = [
+        "Mapear o que sua cliente consome no Instagram",
+        "Listar 3 tipos de conteúdo que param o scroll",
+        "Escolher frequência de postagem realista",
+        "Criar modelo de legenda com posicionamento",
+        "Testar um formato de conteúdo novo",
       ];
       await supabase.from("tarefas").insert(
-        tarefasE8.map((titulo) => ({
+        tarefasE9.map((titulo) => ({
           user_id: userId,
           titulo,
-          etapa: 8,
+          etapa: 9,
           status: "a_fazer",
           fonte: "sistema",
         })),
@@ -246,19 +245,19 @@ function Etapa7Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="toda venda começa com uma descoberta."
-              titulo={<>Como a cliente chega até você?</>}
-              label="COMO ELA TE DESCOBRE"
-              placeholder="Ex: Maioria vem pelo Instagram. Algumas por indicação de quem já comprou. Umas poucas pelo Google quando pesquisam 'convite de casamento SP'. Indicação converte muito mais rápido."
+              caveat="a primeira experiência pós-compra define se ela volta."
+              titulo={<>Como você recebe uma nova cliente?</>}
+              label="SEU PROTOCOLO DE BOAS-VINDAS"
+              placeholder="Ex: Quando confirmo o pagamento, mando uma mensagem agradecendo e dou o prazo exato de entrega. Quando o pedido tá pronto, mando foto antes de embalar. Entrego com bilhetinho escrito à mão."
               maxLength={300}
-              ajuda="pode ter mais de um canal. conta o que você percebe na prática."
+              ajuda="pensa no que você faz desde o pagamento até a entrega. cada detalhe conta."
               raposaEstado="Atenta · escutando"
-              raposaTexto="O canal onde ela te descobre diz muito sobre o que a convence. Indicação pede um fluxo. Instagram pede outro."
-              valor={descoberta}
-              setValor={setDescoberta}
-              onAutoSave={() => autoSave({ awareness_source: descoberta })}
+              raposaTexto="Uma boas-vindas bem feita já começa a construir a próxima compra. É o início da fidelização."
+              valor={acolhimento}
+              setValor={setAcolhimento}
+              onAutoSave={() => autoSave({ welcome_protocol: acolhimento })}
               onContinuar={() => {
-                autoSave({ awareness_source: descoberta });
+                autoSave({ welcome_protocol: acolhimento });
                 setStep(3);
               }}
               minLen={15}
@@ -266,20 +265,20 @@ function Etapa7Page() {
           )}
           {step === 3 && (
             <PerguntaBlock
-              caveat="entre o interesse e o sim, tem um momento decisivo."
-              titulo={<>O que faz ela decidir comprar?</>}
-              label="O QUE A CONVENCE"
-              placeholder="Ex: Quando vê o portfólio ela já começa a imaginar. O que fecha mesmo é quando mando exemplos parecidos com o estilo da festa dela. Às vezes uma cliente me marca num story de casamento que amou e pronto, ela já está convencida."
+              caveat="problema bem resolvido vira cliente fiel."
+              titulo={<>Como você resolve quando algo dá errado?</>}
+              label="SEU JEITO DE RESOLVER"
+              placeholder="Ex: Se der problema na entrega, ligo pessoalmente, não mando mensagem. Se o produto chegou com defeito, refaço sem cobrar. Nunca deixo uma reclamação mais de 2h sem resposta. Prefiro perder dinheiro a perder a reputação."
               maxLength={400}
-              ajuda="pensa numa venda recente que fechou rápido. o que aconteceu antes do sim?"
+              ajuda="pode ter sido uma situação real que te ensinou como lidar. usa ela."
               raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="O gatilho de decisão é onde você deve concentrar sua energia de vendas. Vale ouro entender esse momento."
-              valor={decisao}
-              setValor={setDecisao}
-              onAutoSave={() => autoSave({ decision_trigger: decisao })}
+              raposaTexto="A forma como você resolve um problema diz mais sobre você do que a forma como faz a venda."
+              valor={resolucao}
+              setValor={setResolucao}
+              onAutoSave={() => autoSave({ issue_handling: resolucao })}
               onVoltar={() => setStep(2)}
               onContinuar={() => {
-                autoSave({ decision_trigger: decisao });
+                autoSave({ issue_handling: resolucao });
                 setStep(4);
               }}
               minLen={20}
@@ -287,20 +286,20 @@ function Etapa7Page() {
           )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="a arte de fechar é deixar o próximo passo óbvio."
-              titulo={<>Como você finaliza a venda?</>}
-              label="SEU JEITO DE FECHAR"
-              placeholder="Ex: Mando o orçamento pelo WhatsApp com prazo de 48h pra confirmar. Peço 50% de sinal via Pix pra garantir a data. Quando a cliente demora, mando uma mensagem gentil lembrando a disponibilidade."
+              caveat="cliente fiel indica antes mesmo de comprar de novo."
+              titulo={<>O que faz ela voltar e te indicar?</>}
+              label="SEU JEITO DE FIDELIZAR"
+              placeholder="Ex: Mando mensagem no aniversário das clientes que casaram. Dou desconto pra quem indica uma amiga. Guardo o perfil e o gosto de cada uma pra lembrar nas próximas encomendas. Faço questão de perguntar se ficou feliz depois da entrega."
               maxLength={300}
-              ajuda="inclui como você manda o orçamento, como recebe o pagamento e como confirma o pedido."
+              ajuda="o que você já faz hoje e o que você gostaria de fazer."
               raposaEstado="Animada · em pé"
-              raposaTexto="Deixar a próxima ação clara elimina o 'vou pensar' e transforma interesse em venda."
-              valor={fechamento}
-              setValor={setFechamento}
-              onAutoSave={() => autoSave({ closing_method: fechamento })}
+              raposaTexto="Clientes fidelizadas custam 5x menos pra vender do que clientes novas. Vale cada gesto."
+              valor={fidelizacao}
+              setValor={setFidelizacao}
+              onAutoSave={() => autoSave({ loyalty_strategy: fidelizacao })}
               onVoltar={() => setStep(3)}
-              onContinuar={() => gerarRoteiroAcao()}
-              continuarLabel="Montar meu roteiro  →"
+              onContinuar={() => gerarProtocoloAcao()}
+              continuarLabel="Montar meu protocolo  →"
               minLen={15}
             />
           )}
@@ -308,58 +307,58 @@ function Etapa7Page() {
       )}
 
       {step === 5 && (
-        <RoteiroTela
-          loading={loadingRoteiro}
-          roteiro={roteiro}
-          error={roteiroError}
+        <ProtocoloTela
+          loading={loadingProtocolo}
+          protocolo={protocolo}
+          error={protocoloError}
           businessName={profile?.business_name ?? ""}
           onAjustar={() => setStep(4)}
           onContinuar={salvarEntregavelEAvancar}
-          onRetry={() => gerarRoteiroAcao()}
+          onRetry={() => gerarProtocoloAcao()}
         />
       )}
 
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa8={() => navigate({ to: "/etapa/8" })}
+          onEtapa9={() => navigate({ to: "/painel" })}
         />
       )}
     </>
   );
 }
 
-/* ============== E7.1 — CAPA COSMIC ============== */
+/* ============== E8.1 — CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
-    { num: "1", titulo: "Encontro", sub: "como ela chega até você" },
-    { num: "2", titulo: "Decisão", sub: "o que a faz querer" },
-    { num: "3", titulo: "Fechamento", sub: "como ela compra" },
+    { num: "1", titulo: "Acolhimento", sub: "como você recebe" },
+    { num: "2", titulo: "Resolução", sub: "como você responde" },
+    { num: "3", titulo: "Fidelização", sub: "como ela volta" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 7 DE 11 · SUAS VENDAS
+          ETAPA 8 DE 11 · SEUS CLIENTES
         </p>
 
         <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L7 Vertical</p>
+          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L8 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">aqui é onde o dinheiro entra.</p>
+        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">essa é a parte que faz ela voltar.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          Como ela decide
+          Como você cuida
           <br />
-          e fecha.
+          de quem já comprou.
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra montar seu fluxo de vendas do primeiro contato ao sim.
+          3 perguntas pra montar seu protocolo de cuidado com a cliente.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
@@ -380,7 +379,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos montar meu fluxo  →
+          Vamos cuidar  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
@@ -391,7 +390,7 @@ function Capa({ onStart }: { onStart: () => void }) {
   );
 }
 
-/* ============== Layout E7.2-E7.4 ============== */
+/* ============== Layout E8.2-E8.4 ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -404,9 +403,9 @@ function PerguntaLayout({
   children: React.ReactNode;
 }) {
   const passos = [
-    { num: 1, label: "Encontro" },
-    { num: 2, label: "Decisão" },
-    { num: 3, label: "Fechamento" },
+    { num: 1, label: "Acolhimento" },
+    { num: 2, label: "Resolução" },
+    { num: 3, label: "Fidelização" },
   ];
   const activeIndex = step - 2;
 
@@ -416,12 +415,12 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 7 · SUAS VENDAS
+            ETAPA 8 · SEUS CLIENTES
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Do primeiro contato
+            Como você cuida
             <br />
-            ao sim.
+            de quem volta.
           </h2>
           <hr className="border-[#EAE2D8] my-6" />
           <div className="flex flex-col gap-5">
@@ -456,7 +455,7 @@ function PerguntaLayout({
           <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
             depois vem
             <br />
-            o seu roteiro de fechamento
+            o seu protocolo de cuidado
           </p>
         </aside>
 
@@ -554,10 +553,10 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E7.5 — Roteiro de Fechamento (COSMIC) ============== */
-function RoteiroTela({
+/* ============== E8.5 — Protocolo de Cuidado (COSMIC) ============== */
+function ProtocoloTela({
   loading,
-  roteiro,
+  protocolo,
   error,
   businessName,
   onAjustar,
@@ -565,7 +564,7 @@ function RoteiroTela({
   onRetry,
 }: {
   loading: boolean;
-  roteiro: RoteiroFechamento | null;
+  protocolo: ProtocoloCuidado | null;
   error: string | null;
   businessName: string;
   onAjustar: () => void;
@@ -579,7 +578,7 @@ function RoteiroTela({
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
-              desenhando seu roteiro de fechamento...
+              desenhando seu protocolo de cuidado...
             </p>
             <div className="mt-6 flex gap-2">
               {[0, 1, 2].map((i) => (
@@ -606,57 +605,57 @@ function RoteiroTela({
           </>
         )}
 
-        {!loading && !error && roteiro && (
+        {!loading && !error && protocolo && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 7 · SUAS VENDAS
+              ENTREGÁVEL · ETAPA 8 · SEUS CLIENTES
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha seu roteiro pronto.</p>
+            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha o cuidado que você já tem.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
-              Seu roteiro de fechamento
+              Seu protocolo de cuidado
               <br />
-              tá desenhado.
+              tá pronto.
             </h1>
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                ROTEIRO DE FECHAMENTO · {(businessName || "Sua marca").toUpperCase()}
+                PROTOCOLO DE CUIDADO · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Do primeiro contato ao sim</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como você cuida de quem confia em você</p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                1. COMO ELA TE DESCOBRE
+                BOAS-VINDAS
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {roteiro.passo_descoberta}
+                {protocolo.boas_vindas}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                2. O QUE A CONVENCE
+                QUANDO ALGO DÁ ERRADO
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {roteiro.passo_decisao}
+                {protocolo.resolucao}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                3. COMO VOCÊ FECHA
+                COMO FIDELIZA
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {roteiro.passo_fechamento}
+                {protocolo.fidelizacao}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SUA MENSAGEM DE FECHAMENTO SUGERIDA
+                MENSAGEM DE ACOMPANHAMENTO SUGERIDA
               </p>
               <p className="font-handwritten text-[#C96B3E] text-[18px] leading-[26px] mt-2">
-                &ldquo;{roteiro.mensagem_fechamento}&rdquo;
+                &ldquo;{protocolo.mensagem_pos_entrega}&rdquo;
               </p>
 
               <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
@@ -686,8 +685,8 @@ function RoteiroTela({
   );
 }
 
-/* ============== E7.6 — Conclusão estrela 7 + Suas Vendas e Clientes desbloqueado ============== */
-function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa8: () => void }) {
+/* ============== E8.6 — Conclusão estrela 8 ============== */
+function Conclusao({ onVerPainel, onEtapa9 }: { onVerPainel: () => void; onEtapa9: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
     { n: 2, label: "Identidade", estado: "acesa" },
@@ -695,8 +694,8 @@ function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa
     { n: 4, label: "Presença", estado: "acesa" },
     { n: 5, label: "Conteúdo", estado: "acesa" },
     { n: 6, label: "Rotina", estado: "acesa" },
-    { n: 7, label: "Vendas", estado: "agora" },
-    { n: 8, label: "Clientes", estado: "dim" },
+    { n: 7, label: "Vendas", estado: "acesa" },
+    { n: 8, label: "Clientes", estado: "agora" },
     { n: 9, label: "Audiência", estado: "dim" },
     { n: 10, label: "Crescimento", estado: "dim" },
     { n: 11, label: "Rede", estado: "dim" },
@@ -707,15 +706,15 @@ function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa
       <CosmicBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 7 · SUAS VENDAS · CONCLUÍDA
+          ETAPA 8 · SEUS CLIENTES · CONCLUÍDA
         </p>
 
         <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
-          agora você tem um fluxo. não só intuição.
+          agora você cuida de quem compra e de quem vai comprar.
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua sétima estrela
+          Sua oitava estrela
           <br />
           tá acesa.
         </h1>
@@ -775,11 +774,11 @@ function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa
 
         <div className="mt-12 w-full max-w-[620px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
           <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            DESBLOQUEADO · LUA ORBITANDO
+            ALIMENTADO · SUAS VENDAS E CLIENTES
           </p>
           <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Suas Vendas e Clientes</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Onde você acompanha pedidos, organiza clientes e gerencia sua agenda de atendimento.
+            Seu protocolo de cuidado foi adicionado. Agora você tem fluxo de vendas e de atendimento juntos.
           </p>
         </div>
 
@@ -793,11 +792,11 @@ function Conclusao({ onVerPainel, onEtapa8 }: { onVerPainel: () => void; onEtapa
             Ver meu painel
           </button>
           <button
-            onClick={onEtapa8}
+            onClick={onEtapa9}
             className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
             style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
           >
-            Começar Etapa 8  →
+            Começar Etapa 9  →
           </button>
         </div>
       </div>

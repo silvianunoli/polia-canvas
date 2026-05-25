@@ -158,6 +158,7 @@ export type Database = {
           business_stage: string | null
           business_type: string | null
           business_why: string | null
+          care_finalized_at: string | null
           closing_method: string | null
           competitors: string | null
           created_at: string
@@ -168,6 +169,8 @@ export type Database = {
           etapa_atual: number
           full_name: string | null
           id: string
+          issue_handling: string | null
+          loyalty_strategy: string | null
           main_channel: string | null
           mini_pitch: string | null
           onboarding_completed: boolean
@@ -198,11 +201,13 @@ export type Database = {
           star_5_completed_at: string | null
           star_6_completed_at: string | null
           star_7_completed_at: string | null
+          star_8_completed_at: string | null
           streak: number
           target_customer: string | null
           tracking_system: string | null
           updated_at: string
           visual_presence: string | null
+          welcome_protocol: string | null
         }
         Insert: {
           awareness_source?: string | null
@@ -215,6 +220,7 @@ export type Database = {
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
+          care_finalized_at?: string | null
           closing_method?: string | null
           competitors?: string | null
           created_at?: string
@@ -225,6 +231,8 @@ export type Database = {
           etapa_atual?: number
           full_name?: string | null
           id: string
+          issue_handling?: string | null
+          loyalty_strategy?: string | null
           main_channel?: string | null
           mini_pitch?: string | null
           onboarding_completed?: boolean
@@ -255,11 +263,13 @@ export type Database = {
           star_5_completed_at?: string | null
           star_6_completed_at?: string | null
           star_7_completed_at?: string | null
+          star_8_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
+          welcome_protocol?: string | null
         }
         Update: {
           awareness_source?: string | null
@@ -272,6 +282,7 @@ export type Database = {
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
+          care_finalized_at?: string | null
           closing_method?: string | null
           competitors?: string | null
           created_at?: string
@@ -282,6 +293,8 @@ export type Database = {
           etapa_atual?: number
           full_name?: string | null
           id?: string
+          issue_handling?: string | null
+          loyalty_strategy?: string | null
           main_channel?: string | null
           mini_pitch?: string | null
           onboarding_completed?: boolean
@@ -312,11 +325,13 @@ export type Database = {
           star_5_completed_at?: string | null
           star_6_completed_at?: string | null
           star_7_completed_at?: string | null
+          star_8_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
+          welcome_protocol?: string | null
         }
         Relationships: []
       }

@@ -18,6 +18,7 @@ import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
 import { Route as AuthenticatedEtapa6RouteImport } from './routes/_authenticated/etapa.6'
 import { Route as AuthenticatedEtapa5RouteImport } from './routes/_authenticated/etapa.5'
@@ -68,6 +69,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
+  id: '/etapa/8',
+  path: '/etapa/8',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEtapa7Route = AuthenticatedEtapa7RouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/etapa/5': typeof AuthenticatedEtapa5Route
   '/etapa/6': typeof AuthenticatedEtapa6Route
   '/etapa/7': typeof AuthenticatedEtapa7Route
+  '/etapa/8': typeof AuthenticatedEtapa8Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/etapa/5': typeof AuthenticatedEtapa5Route
   '/etapa/6': typeof AuthenticatedEtapa6Route
   '/etapa/7': typeof AuthenticatedEtapa7Route
+  '/etapa/8': typeof AuthenticatedEtapa8Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/etapa/5': typeof AuthenticatedEtapa5Route
   '/_authenticated/etapa/6': typeof AuthenticatedEtapa6Route
   '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
+  '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/etapa/5'
     | '/etapa/6'
     | '/etapa/7'
+    | '/etapa/8'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/etapa/5'
     | '/etapa/6'
     | '/etapa/7'
+    | '/etapa/8'
   id:
     | '__root__'
     | '/'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/5'
     | '/_authenticated/etapa/6'
     | '/_authenticated/etapa/7'
+    | '/_authenticated/etapa/8'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/etapa/8': {
+      id: '/_authenticated/etapa/8'
+      path: '/etapa/8'
+      fullPath: '/etapa/8'
+      preLoaderRoute: typeof AuthenticatedEtapa8RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/7': {
       id: '/_authenticated/etapa/7'
       path: '/etapa/7'
@@ -351,6 +370,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEtapa5Route: typeof AuthenticatedEtapa5Route
   AuthenticatedEtapa6Route: typeof AuthenticatedEtapa6Route
   AuthenticatedEtapa7Route: typeof AuthenticatedEtapa7Route
+  AuthenticatedEtapa8Route: typeof AuthenticatedEtapa8Route
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -363,6 +383,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEtapa5Route: AuthenticatedEtapa5Route,
   AuthenticatedEtapa6Route: AuthenticatedEtapa6Route,
   AuthenticatedEtapa7Route: AuthenticatedEtapa7Route,
+  AuthenticatedEtapa8Route: AuthenticatedEtapa8Route,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
