@@ -76,11 +76,6 @@ const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
   path: '/etapa/8',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
-  id: '/etapa/8',
-  path: '/etapa/8',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedEtapa7Route = AuthenticatedEtapa7RouteImport.update({
   id: '/etapa/7',
   path: '/etapa/7',
