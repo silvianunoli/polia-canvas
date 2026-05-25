@@ -329,12 +329,12 @@ function PainelPage() {
             <h2 className="font-serif text-[28px] text-polia-creme md:text-[36px]">
               Cada etapa acende uma estrela
             </h2>
-            <Link
-              to="/jornada"
+            <a
+              href="/jornada"
               className="font-sans text-[14px] text-polia-terracota hover:underline"
             >
               Ver constelação completa →
-            </Link>
+            </a>
           </div>
           <p className="mb-10 font-sans text-[15px] text-polia-creme/80">
             Seu céu continua crescendo com você. As ferramentas que você ganha ficam pra sempre.
