@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      conquistas: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          tipo: string | null
+          titulo: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          tipo?: string | null
+          titulo?: string
+          user_id?: string
+          xp?: number
+        }
+        Relationships: []
+      }
+      entregaveis: {
+        Row: {
+          conteudo: Json | null
+          created_at: string
+          etapa: number
+          fase: string
+          id: string
+          status: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          conteudo?: Json | null
+          created_at?: string
+          etapa: number
+          fase: string
+          id?: string
+          status?: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: Json | null
+          created_at?: string
+          etapa?: number
+          fase?: string
+          id?: string
+          status?: string
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       etapa1_entregavel: {
         Row: {
           bio_curta: string | null
@@ -146,6 +212,42 @@ export type Database = {
           star_3_completed_at?: string | null
           target_customer?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      tarefas: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          etapa: number | null
+          fonte: string
+          id: string
+          status: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          etapa?: number | null
+          fonte?: string
+          id?: string
+          status?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          etapa?: number | null
+          fonte?: string
+          id?: string
+          status?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
