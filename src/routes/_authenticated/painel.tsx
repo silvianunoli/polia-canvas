@@ -901,13 +901,12 @@ function EntregavelCard({
             {etapa} · há {tempo}
           </p>
         </div>
-        <Link
-          to="/painel"
-          search={{ entregavel: id } as never}
+        <a
+          href={`/biblioteca/${id}`}
           className="font-sans text-[13px] text-polia-terracota hover:underline"
         >
           abrir →
-        </Link>
+        </a>
       </div>
     </div>
   );
