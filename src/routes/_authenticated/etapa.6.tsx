@@ -322,7 +322,7 @@ function Etapa6Page() {
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa7={() => navigate({ to: "/painel" })}
+          onEtapa7={() => navigate({ to: "/etapa/7" })}
         />
       )}
     </>
