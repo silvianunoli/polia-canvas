@@ -152,13 +152,17 @@ export type Database = {
           brand_visual_style: string | null
           brand_voice: string | null
           business_name: string | null
+          business_stage: string | null
+          business_type: string | null
           competitors: string | null
           created_at: string
           differentiators: string | null
+          display_name: string | null
           full_name: string | null
           id: string
           mini_pitch: string | null
           onboarding_completed: boolean
+          onboarding_completed_at: string | null
           orbit_marca_viva_unlocked: boolean
           positioning_statement: string | null
           problem_solved: string | null
@@ -174,13 +178,17 @@ export type Database = {
           brand_visual_style?: string | null
           brand_voice?: string | null
           business_name?: string | null
+          business_stage?: string | null
+          business_type?: string | null
           competitors?: string | null
           created_at?: string
           differentiators?: string | null
+          display_name?: string | null
           full_name?: string | null
           id: string
           mini_pitch?: string | null
           onboarding_completed?: boolean
+          onboarding_completed_at?: string | null
           orbit_marca_viva_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
@@ -196,13 +204,17 @@ export type Database = {
           brand_visual_style?: string | null
           brand_voice?: string | null
           business_name?: string | null
+          business_stage?: string | null
+          business_type?: string | null
           competitors?: string | null
           created_at?: string
           differentiators?: string | null
+          display_name?: string | null
           full_name?: string | null
           id?: string
           mini_pitch?: string | null
           onboarding_completed?: boolean
+          onboarding_completed_at?: string | null
           orbit_marca_viva_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
