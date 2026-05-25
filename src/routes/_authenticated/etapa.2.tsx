@@ -171,7 +171,7 @@ function Etapa2Page() {
       tipo: "voz_de_marca",
       fase: "Sonho",
       etapa: 2,
-      conteudo: vozMarca as unknown as Record<string, unknown>,
+      conteudo: vozMarca as never,
       status: "concluido",
     });
     await supabase
