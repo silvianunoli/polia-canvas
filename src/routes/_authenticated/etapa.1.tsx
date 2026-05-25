@@ -116,11 +116,12 @@ function Etapa1Page() {
   const autoSave = useCallback(
     async (campos: Partial<ProfileE1>) => {
       if (!userId) return;
-      const payload: Record<string, string> = {};
+      const payload: Partial<ProfileE1> = {};
       for (const [k, v] of Object.entries(campos)) {
-        if (typeof v === "string") payload[k] = v;
+        if (typeof v === "string") (payload as Record<string, string>)[k] = v;
       }
       await supabase.from("profiles").update(payload).eq("id", userId);
+
     },
     [userId],
   );
