@@ -84,11 +84,47 @@ export function PainelNav({
               {streak} {streak === 1 ? "dia" : "dias"}
             </span>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme">
-            {initial}
-          </div>
+          <AvatarMenu initial={initial} />
         </div>
       </div>
     </header>
+  );
+}
+
+function AvatarMenu({ initial }: { initial: string }) {
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth/login" });
+  };
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          aria-label="Abrir menu"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme outline-none focus-visible:ring-2 focus-visible:ring-polia-terracota/40"
+        >
+          {initial}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-48 bg-white border border-[rgba(26,26,46,0.08)] rounded-xl shadow-md p-1"
+      >
+        <DropdownMenuItem
+          onSelect={() => navigate({ to: "/configuracoes" })}
+          className="font-sans text-[14px] text-[#1A1A2E] px-3 py-2 rounded-lg cursor-pointer focus:bg-[rgba(26,26,46,0.04)]"
+        >
+          Configurações
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="my-1 bg-[rgba(26,26,46,0.06)]" />
+        <DropdownMenuItem
+          onSelect={handleLogout}
+          className="font-sans text-[14px] text-[#1A1A2E] opacity-70 px-3 py-2 rounded-lg cursor-pointer focus:bg-[rgba(26,26,46,0.04)]"
+        >
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
