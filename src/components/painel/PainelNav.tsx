@@ -16,9 +16,11 @@ const links: NavLinkItem[] = [
 export function PainelNav({
   initial,
   streak,
+  navActive = "/painel",
 }: {
   initial: string;
   streak: number;
+  navActive?: string;
 }) {
   return (
     <header
@@ -39,7 +41,8 @@ export function PainelNav({
         {/* Links */}
         <nav className="hidden items-center gap-7 md:flex">
           {links.map((l) => {
-            const isActive = l.to === "/painel";
+            const isActive = l.to === navActive;
+
             return (
               <a
                 key={l.to}
