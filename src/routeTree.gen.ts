@@ -16,6 +16,7 @@ import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedVitrineRouteImport } from './routes/_authenticated/vitrine'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -68,6 +69,11 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   id: '/auth/cadastro',
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedVitrineRoute = AuthenticatedVitrineRouteImport.update({
+  id: '/vitrine',
+  path: '/vitrine',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   id: '/tarefas',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vitrine': typeof AuthenticatedVitrineRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vitrine': typeof AuthenticatedVitrineRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -223,6 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
+  '/_authenticated/vitrine': typeof AuthenticatedVitrineRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/painel'
     | '/tarefas'
+    | '/vitrine'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/painel'
     | '/tarefas'
+    | '/vitrine'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
     | '/_authenticated/tarefas'
+    | '/_authenticated/vitrine'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -382,6 +394,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/cadastro'
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/vitrine': {
+      id: '/_authenticated/vitrine'
+      path: '/vitrine'
+      fullPath: '/vitrine'
+      preLoaderRoute: typeof AuthenticatedVitrineRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/tarefas': {
       id: '/_authenticated/tarefas'
@@ -520,6 +539,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
+  AuthenticatedVitrineRoute: typeof AuthenticatedVitrineRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
   AuthenticatedEtapa10Route: typeof AuthenticatedEtapa10Route
   AuthenticatedEtapa11Route: typeof AuthenticatedEtapa11Route
@@ -541,6 +561,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
+  AuthenticatedVitrineRoute: AuthenticatedVitrineRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
   AuthenticatedEtapa10Route: AuthenticatedEtapa10Route,
   AuthenticatedEtapa11Route: AuthenticatedEtapa11Route,
@@ -570,3 +591,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
