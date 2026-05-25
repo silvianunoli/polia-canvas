@@ -148,6 +148,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          audience_content_types: string | null
           awareness_source: string | null
           brand_feeling: string | null
           brand_visual_style: string | null
@@ -161,6 +162,7 @@ export type Database = {
           care_finalized_at: string | null
           closing_method: string | null
           competitors: string | null
+          content_finalized_at: string | null
           created_at: string
           decision_trigger: string | null
           delivery_method: string | null
@@ -177,6 +179,7 @@ export type Database = {
           onboarding_completed_at: string | null
           orbit_brand_alive_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
+          orbit_sales_active: boolean
           orbit_sales_unlocked: boolean
           orbit_vitrine_active: boolean
           orbit_vitrine_unlocked: boolean
@@ -190,10 +193,12 @@ export type Database = {
           product_finalized_at: string | null
           production_capacity: string | null
           profile_story: string | null
+          publishing_rhythm: string | null
           purchase_path: string | null
           restock_triggers: string | null
           routine_finalized_at: string | null
           sales_finalized_at: string | null
+          scroll_stoppers: string | null
           star_1_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
@@ -202,6 +207,7 @@ export type Database = {
           star_6_completed_at: string | null
           star_7_completed_at: string | null
           star_8_completed_at: string | null
+          star_9_completed_at: string | null
           streak: number
           target_customer: string | null
           tracking_system: string | null
@@ -210,6 +216,7 @@ export type Database = {
           welcome_protocol: string | null
         }
         Insert: {
+          audience_content_types?: string | null
           awareness_source?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
@@ -223,6 +230,7 @@ export type Database = {
           care_finalized_at?: string | null
           closing_method?: string | null
           competitors?: string | null
+          content_finalized_at?: string | null
           created_at?: string
           decision_trigger?: string | null
           delivery_method?: string | null
@@ -239,6 +247,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_sales_active?: boolean
           orbit_sales_unlocked?: boolean
           orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
@@ -252,10 +261,12 @@ export type Database = {
           product_finalized_at?: string | null
           production_capacity?: string | null
           profile_story?: string | null
+          publishing_rhythm?: string | null
           purchase_path?: string | null
           restock_triggers?: string | null
           routine_finalized_at?: string | null
           sales_finalized_at?: string | null
+          scroll_stoppers?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
@@ -264,6 +275,7 @@ export type Database = {
           star_6_completed_at?: string | null
           star_7_completed_at?: string | null
           star_8_completed_at?: string | null
+          star_9_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
@@ -272,6 +284,7 @@ export type Database = {
           welcome_protocol?: string | null
         }
         Update: {
+          audience_content_types?: string | null
           awareness_source?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
@@ -285,6 +298,7 @@ export type Database = {
           care_finalized_at?: string | null
           closing_method?: string | null
           competitors?: string | null
+          content_finalized_at?: string | null
           created_at?: string
           decision_trigger?: string | null
           delivery_method?: string | null
@@ -301,6 +315,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_sales_active?: boolean
           orbit_sales_unlocked?: boolean
           orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
@@ -314,10 +329,12 @@ export type Database = {
           product_finalized_at?: string | null
           production_capacity?: string | null
           profile_story?: string | null
+          publishing_rhythm?: string | null
           purchase_path?: string | null
           restock_triggers?: string | null
           routine_finalized_at?: string | null
           sales_finalized_at?: string | null
+          scroll_stoppers?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
@@ -326,6 +343,7 @@ export type Database = {
           star_6_completed_at?: string | null
           star_7_completed_at?: string | null
           star_8_completed_at?: string | null
+          star_9_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
