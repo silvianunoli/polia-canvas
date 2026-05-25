@@ -146,6 +146,39 @@ export type Database = {
         }
         Relationships: []
       }
+      financeiro_mensal: {
+        Row: {
+          ano: number
+          created_at: string
+          id: string
+          mes: number
+          meta: number
+          receita: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ano: number
+          created_at?: string
+          id?: string
+          mes: number
+          meta?: number
+          receita?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ano?: number
+          created_at?: string
+          id?: string
+          mes?: number
+          meta?: number
+          receita?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           action_triggers: string | null
