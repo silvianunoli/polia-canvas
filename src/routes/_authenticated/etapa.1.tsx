@@ -113,20 +113,19 @@ function Etapa1Page() {
     }
   }, [step, loaded]);
 
-  type TextUpdate = {
-    profile_story?: string;
-    business_why?: string;
-    problem_solved?: string;
-    problem_urgency?: string;
-    target_customer?: string;
-  };
   const autoSave = useCallback(
-    async (campos: TextUpdate) => {
+    async (campos: Partial<ProfileE1>) => {
       if (!userId) return;
-      await supabase.from("profiles").update(campos).eq("id", userId);
+      const payload: Partial<ProfileE1> = {};
+      for (const [k, v] of Object.entries(campos)) {
+        if (typeof v === "string") (payload as Record<string, string>)[k] = v;
+      }
+      await supabase.from("profiles").update(payload as never).eq("id", userId);
+
     },
     [userId],
   );
+
 
   const salvarEVoltar = useCallback(async () => {
     await autoSave({ profile_story: profileStory, business_why: businessWhy, problem_solved: problemSolved, problem_urgency: problemUrgency, target_customer: targetCustomer });
