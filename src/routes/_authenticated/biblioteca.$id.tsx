@@ -215,7 +215,7 @@ function BibliotecaDetalhePage() {
     const novoConteudo = { ...(entregavel.conteudo || {}), ...rascunho };
     const { error } = await supabase
       .from("entregaveis")
-      .update({ conteudo: novoConteudo })
+      .update({ conteudo: novoConteudo as never })
       .eq("id", entregavel.id);
     setSalvando(false);
     if (!error) {
