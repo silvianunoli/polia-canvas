@@ -172,6 +172,7 @@ export type Database = {
           orbit_brand_alive_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
           orbit_sales_unlocked: boolean
+          orbit_vitrine_active: boolean
           orbit_vitrine_unlocked: boolean
           positioning_finalized_at: string | null
           positioning_statement: string | null
@@ -181,15 +182,20 @@ export type Database = {
           problem_urgency: string | null
           product_description: string | null
           product_finalized_at: string | null
+          production_capacity: string | null
           profile_story: string | null
           purchase_path: string | null
+          restock_triggers: string | null
+          routine_finalized_at: string | null
           star_1_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
           star_4_completed_at: string | null
           star_5_completed_at: string | null
+          star_6_completed_at: string | null
           streak: number
           target_customer: string | null
+          tracking_system: string | null
           updated_at: string
           visual_presence: string | null
         }
@@ -218,6 +224,7 @@ export type Database = {
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           orbit_sales_unlocked?: boolean
+          orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
@@ -227,15 +234,20 @@ export type Database = {
           problem_urgency?: string | null
           product_description?: string | null
           product_finalized_at?: string | null
+          production_capacity?: string | null
           profile_story?: string | null
           purchase_path?: string | null
+          restock_triggers?: string | null
+          routine_finalized_at?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
           star_5_completed_at?: string | null
+          star_6_completed_at?: string | null
           streak?: number
           target_customer?: string | null
+          tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
         }
@@ -264,6 +276,7 @@ export type Database = {
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           orbit_sales_unlocked?: boolean
+          orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
@@ -273,15 +286,20 @@ export type Database = {
           problem_urgency?: string | null
           product_description?: string | null
           product_finalized_at?: string | null
+          production_capacity?: string | null
           profile_story?: string | null
           purchase_path?: string | null
+          restock_triggers?: string | null
+          routine_finalized_at?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
           star_5_completed_at?: string | null
+          star_6_completed_at?: string | null
           streak?: number
           target_customer?: string | null
+          tracking_system?: string | null
           updated_at?: string
           visual_presence?: string | null
         }
