@@ -9,13 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -46,9 +52,15 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -57,6 +69,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/painel': typeof AuthenticatedPainelRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -66,6 +79,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -76,6 +91,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/painel'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -84,6 +100,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/painel'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -92,6 +109,8 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/_authenticated/painel'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -101,6 +120,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthEsqueciRoute: typeof AuthEsqueciRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -110,6 +130,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -152,11 +179,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthEsqueciRoute: AuthEsqueciRoute,
   AuthLoginRoute: AuthLoginRoute,
@@ -166,3 +213,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
