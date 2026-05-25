@@ -6,11 +6,12 @@ interface NavLinkItem {
 
 const links: NavLinkItem[] = [
   { to: "/painel", label: "Painel", exists: true },
-  { to: "/jornada", label: "Jornada", exists: false },
+  { to: "/jornada", label: "Jornada", exists: true },
   { to: "/tarefas", label: "Tarefas", exists: false },
   { to: "/clientes", label: "Clientes", exists: false },
   { to: "/financeiro", label: "Financeiro", exists: false },
 ];
+
 
 export function PainelNav({
   initial,
