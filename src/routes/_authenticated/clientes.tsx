@@ -622,8 +622,11 @@ function ModalCliente({
       status_pedido: statusPedido || null,
       notas: notas.trim() || null,
     };
-    const { error } = await (supabase.from("clientes" as never) as never)
-      .insert(payload);
+    const { error } = await (
+      supabase.from("clientes" as never) as unknown as {
+        insert: (p: Record<string, unknown>) => Promise<{ error: unknown }>;
+      }
+    ).insert(payload);
     setSalvando(false);
     if (error) {
       setErro((error as { message?: string }).message || "Erro ao salvar.");
