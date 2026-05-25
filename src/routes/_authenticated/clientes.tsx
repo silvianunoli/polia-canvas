@@ -100,7 +100,16 @@ function ClientesPage() {
             .eq("user_id", userId!)
             .in("etapa", [7, 8, 9])
             .eq("status", "concluido"),
-          (supabase.from("clientes" as never) as never)
+          (supabase.from("clientes" as never) as unknown as {
+            select: (s: string) => {
+              eq: (c: string, v: string) => {
+                order: (
+                  c: string,
+                  o: { ascending: boolean },
+                ) => Promise<{ data: Cliente[] | null }>;
+              };
+            };
+          })
             .select("*")
             .eq("user_id", userId!)
             .order("created_at", { ascending: false }),
