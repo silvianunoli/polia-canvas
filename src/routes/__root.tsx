@@ -120,7 +120,7 @@ function RootComponent() {
   const router = useRouter();
   const { queryClient } = Route.useRouteContext();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
