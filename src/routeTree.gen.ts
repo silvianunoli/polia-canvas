@@ -9,38 +9,146 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
+import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
+import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
+import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 
+const AuthenticatedRoute = AuthenticatedRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerificacaoRoute = AuthVerificacaoRouteImport.update({
+  id: '/auth/verificacao',
+  path: '/auth/verificacao',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRedefinirRoute = AuthRedefinirRouteImport.update({
+  id: '/auth/redefinir',
+  path: '/auth/redefinir',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLoginRoute = AuthLoginRouteImport.update({
+  id: '/auth/login',
+  path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthEsqueciRoute = AuthEsqueciRouteImport.update({
+  id: '/auth/esqueci',
+  path: '/auth/esqueci',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCadastroRoute = AuthCadastroRouteImport.update({
+  id: '/auth/cadastro',
+  path: '/auth/cadastro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
+  id: '/painel',
+  path: '/painel',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/esqueci': typeof AuthEsqueciRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/onboarding': typeof AuthenticatedOnboardingRoute
+  '/painel': typeof AuthenticatedPainelRoute
+  '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/esqueci': typeof AuthEsqueciRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
+  '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/esqueci': typeof AuthEsqueciRoute
+  '/auth/login': typeof AuthLoginRoute
+  '/auth/redefinir': typeof AuthRedefinirRoute
+  '/auth/verificacao': typeof AuthVerificacaoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/onboarding'
+    | '/painel'
+    | '/auth/cadastro'
+    | '/auth/esqueci'
+    | '/auth/login'
+    | '/auth/redefinir'
+    | '/auth/verificacao'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/onboarding'
+    | '/painel'
+    | '/auth/cadastro'
+    | '/auth/esqueci'
+    | '/auth/login'
+    | '/auth/redefinir'
+    | '/auth/verificacao'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/_authenticated/onboarding'
+    | '/_authenticated/painel'
+    | '/auth/cadastro'
+    | '/auth/esqueci'
+    | '/auth/login'
+    | '/auth/redefinir'
+    | '/auth/verificacao'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  AuthCadastroRoute: typeof AuthCadastroRoute
+  AuthEsqueciRoute: typeof AuthEsqueciRoute
+  AuthLoginRoute: typeof AuthLoginRoute
+  AuthRedefinirRoute: typeof AuthRedefinirRoute
+  AuthVerificacaoRoute: typeof AuthVerificacaoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +156,80 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verificacao': {
+      id: '/auth/verificacao'
+      path: '/auth/verificacao'
+      fullPath: '/auth/verificacao'
+      preLoaderRoute: typeof AuthVerificacaoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/redefinir': {
+      id: '/auth/redefinir'
+      path: '/auth/redefinir'
+      fullPath: '/auth/redefinir'
+      preLoaderRoute: typeof AuthRedefinirRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/login': {
+      id: '/auth/login'
+      path: '/auth/login'
+      fullPath: '/auth/login'
+      preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/esqueci': {
+      id: '/auth/esqueci'
+      path: '/auth/esqueci'
+      fullPath: '/auth/esqueci'
+      preLoaderRoute: typeof AuthEsqueciRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/cadastro': {
+      id: '/auth/cadastro'
+      path: '/auth/cadastro'
+      fullPath: '/auth/cadastro'
+      preLoaderRoute: typeof AuthCadastroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/painel': {
+      id: '/_authenticated/painel'
+      path: '/painel'
+      fullPath: '/painel'
+      preLoaderRoute: typeof AuthenticatedPainelRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
+interface AuthenticatedRouteChildren {
+  AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+}
+
+const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+}
+
+const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
+  AuthenticatedRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  AuthCadastroRoute: AuthCadastroRoute,
+  AuthEsqueciRoute: AuthEsqueciRoute,
+  AuthLoginRoute: AuthLoginRoute,
+  AuthRedefinirRoute: AuthRedefinirRoute,
+  AuthVerificacaoRoute: AuthVerificacaoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
