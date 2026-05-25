@@ -154,22 +154,27 @@ export type Database = {
           business_name: string | null
           business_stage: string | null
           business_type: string | null
+          business_why: string | null
           competitors: string | null
           created_at: string
           differentiators: string | null
           display_name: string | null
+          etapa_atual: number
           full_name: string | null
           id: string
           mini_pitch: string | null
           onboarding_completed: boolean
           onboarding_completed_at: string | null
+          orbit_brand_alive_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
           positioning_statement: string | null
           problem_solved: string | null
+          problem_urgency: string | null
           profile_story: string | null
           star_1_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
+          streak: number
           target_customer: string | null
           updated_at: string
         }
@@ -180,22 +185,27 @@ export type Database = {
           business_name?: string | null
           business_stage?: string | null
           business_type?: string | null
+          business_why?: string | null
           competitors?: string | null
           created_at?: string
           differentiators?: string | null
           display_name?: string | null
+          etapa_atual?: number
           full_name?: string | null
           id: string
           mini_pitch?: string | null
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
+          orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
+          problem_urgency?: string | null
           profile_story?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
+          streak?: number
           target_customer?: string | null
           updated_at?: string
         }
@@ -206,22 +216,27 @@ export type Database = {
           business_name?: string | null
           business_stage?: string | null
           business_type?: string | null
+          business_why?: string | null
           competitors?: string | null
           created_at?: string
           differentiators?: string | null
           display_name?: string | null
+          etapa_atual?: number
           full_name?: string | null
           id?: string
           mini_pitch?: string | null
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
+          orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
+          problem_urgency?: string | null
           profile_story?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
+          streak?: number
           target_customer?: string | null
           updated_at?: string
         }
