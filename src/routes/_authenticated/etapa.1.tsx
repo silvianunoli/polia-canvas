@@ -114,7 +114,7 @@ function Etapa1Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE1>) => {
+    async (campos: Record<string, string | null>) => {
       if (!userId) return;
       await supabase.from("profiles").update(campos).eq("id", userId);
     },
@@ -480,12 +480,12 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
 }
 
 function RaposaECard({ step }: { step: number }) {
-  const estados = {
+  const estados: Record<number, { estado: string; pose: string; titulo: string; body: string }> = {
     2: { estado: "Atenta", pose: "sentada escutando", titulo: "Sua história não precisa ser épica.", body: "Conta o que te incomodava antes, o que te chamou pra esse caminho, e o que você descobriu sobre você fazendo isso." },
     3: { estado: "Curiosa", pose: "cabeça inclinada, olhos atentos", titulo: "Especificidade vence eloquência.", body: "Quanto mais específica a dor, mais o cliente se reconhece. 'Tô cansada' é fraco. 'Termino o dia sem saber se trabalhei ou só apaguei incêndio' é forte." },
     4: { estado: "Animada", pose: "em pé, empolgada", titulo: "Nicho não é limitação.", body: "Quanto mais você fala com uma pessoa específica, mais pessoas se reconhecem. Isso é contra-intuitivo, mas é verdade." },
-  } as const;
-  const s = (estados as Record<number, (typeof estados)[2]>)[step] ?? estados[2];
+  };
+  const s = estados[step] ?? estados[2];
 
   return (
     <div className="flex flex-col gap-4">
