@@ -113,8 +113,15 @@ function Etapa1Page() {
     }
   }, [step, loaded]);
 
+  type TextUpdate = {
+    profile_story?: string;
+    business_why?: string;
+    problem_solved?: string;
+    problem_urgency?: string;
+    target_customer?: string;
+  };
   const autoSave = useCallback(
-    async (campos: Record<string, string | null>) => {
+    async (campos: TextUpdate) => {
       if (!userId) return;
       await supabase.from("profiles").update(campos).eq("id", userId);
     },
