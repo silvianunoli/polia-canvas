@@ -148,6 +148,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          awareness_source: string | null
           brand_feeling: string | null
           brand_visual_style: string | null
           brand_voice: string | null
@@ -157,8 +158,10 @@ export type Database = {
           business_stage: string | null
           business_type: string | null
           business_why: string | null
+          closing_method: string | null
           competitors: string | null
           created_at: string
+          decision_trigger: string | null
           delivery_method: string | null
           differentiators: string | null
           display_name: string | null
@@ -187,12 +190,14 @@ export type Database = {
           purchase_path: string | null
           restock_triggers: string | null
           routine_finalized_at: string | null
+          sales_finalized_at: string | null
           star_1_completed_at: string | null
           star_2_completed_at: string | null
           star_3_completed_at: string | null
           star_4_completed_at: string | null
           star_5_completed_at: string | null
           star_6_completed_at: string | null
+          star_7_completed_at: string | null
           streak: number
           target_customer: string | null
           tracking_system: string | null
@@ -200,6 +205,7 @@ export type Database = {
           visual_presence: string | null
         }
         Insert: {
+          awareness_source?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null
@@ -209,8 +215,10 @@ export type Database = {
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
+          closing_method?: string | null
           competitors?: string | null
           created_at?: string
+          decision_trigger?: string | null
           delivery_method?: string | null
           differentiators?: string | null
           display_name?: string | null
@@ -239,12 +247,14 @@ export type Database = {
           purchase_path?: string | null
           restock_triggers?: string | null
           routine_finalized_at?: string | null
+          sales_finalized_at?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
           star_5_completed_at?: string | null
           star_6_completed_at?: string | null
+          star_7_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
@@ -252,6 +262,7 @@ export type Database = {
           visual_presence?: string | null
         }
         Update: {
+          awareness_source?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null
@@ -261,8 +272,10 @@ export type Database = {
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
+          closing_method?: string | null
           competitors?: string | null
           created_at?: string
+          decision_trigger?: string | null
           delivery_method?: string | null
           differentiators?: string | null
           display_name?: string | null
@@ -291,12 +304,14 @@ export type Database = {
           purchase_path?: string | null
           restock_triggers?: string | null
           routine_finalized_at?: string | null
+          sales_finalized_at?: string | null
           star_1_completed_at?: string | null
           star_2_completed_at?: string | null
           star_3_completed_at?: string | null
           star_4_completed_at?: string | null
           star_5_completed_at?: string | null
           star_6_completed_at?: string | null
+          star_7_completed_at?: string | null
           streak?: number
           target_customer?: string | null
           tracking_system?: string | null
