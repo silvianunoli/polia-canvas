@@ -369,10 +369,11 @@ function ReceitaMetaSection({
   const upsertCampo = async (campo: "receita" | "meta", valor: number) => {
     if (!userId) return;
     if (rowId) {
-      await supabase
-        .from("financeiro_mensal")
-        .update({ [campo]: valor, updated_at: new Date().toISOString() })
-        .eq("id", rowId);
+      const patch =
+        campo === "receita"
+          ? { receita: valor, updated_at: new Date().toISOString() }
+          : { meta: valor, updated_at: new Date().toISOString() };
+      await supabase.from("financeiro_mensal").update(patch).eq("id", rowId);
     } else {
       await supabase.from("financeiro_mensal").insert({
         user_id: userId,
