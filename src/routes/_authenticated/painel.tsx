@@ -522,7 +522,7 @@ function PainelPage() {
                     c.items.slice(0, 3).map((t) => (
                       <div
                         key={t.id}
-                        className="mb-1.5 rounded-lg bg-polia-cinzaClaro px-2 py-1.5"
+                        className="mb-1.5 rounded-lg bg-polia-cinza-claro px-2 py-1.5"
                       >
                         <p className="truncate font-sans text-[12px] leading-tight text-polia-noite">
                           {t.titulo}
@@ -618,7 +618,7 @@ function PainelPage() {
       </section>
 
       {/* SEÇÃO 9 — ESTRELAS QUE TE ESPERAM */}
-      <section className="bg-polia-cinzaClaro px-6 py-12 md:px-12">
+      <section className="bg-polia-cinza-claro px-6 py-12 md:px-12">
         <div className="mx-auto max-w-[1280px]">
           <h2 className="mb-1 font-serif text-[24px] text-polia-noite md:text-[28px]">
             Estrelas que te esperam
