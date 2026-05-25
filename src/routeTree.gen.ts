@@ -26,6 +26,7 @@ import { Route as AuthenticatedEtapa5RouteImport } from './routes/_authenticated
 import { Route as AuthenticatedEtapa4RouteImport } from './routes/_authenticated/etapa.4'
 import { Route as AuthenticatedEtapa3RouteImport } from './routes/_authenticated/etapa.3'
 import { Route as AuthenticatedEtapa2RouteImport } from './routes/_authenticated/etapa.2'
+import { Route as AuthenticatedEtapa11RouteImport } from './routes/_authenticated/etapa.11'
 import { Route as AuthenticatedEtapa10RouteImport } from './routes/_authenticated/etapa.10'
 import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
 
@@ -113,6 +114,11 @@ const AuthenticatedEtapa2Route = AuthenticatedEtapa2RouteImport.update({
   path: '/etapa/2',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEtapa11Route = AuthenticatedEtapa11RouteImport.update({
+  id: '/etapa/11',
+  path: '/etapa/11',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedEtapa10Route = AuthenticatedEtapa10RouteImport.update({
   id: '/etapa/10',
   path: '/etapa/10',
@@ -135,6 +141,7 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
+  '/etapa/11': typeof AuthenticatedEtapa11Route
   '/etapa/2': typeof AuthenticatedEtapa2Route
   '/etapa/3': typeof AuthenticatedEtapa3Route
   '/etapa/4': typeof AuthenticatedEtapa4Route
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
+  '/etapa/11': typeof AuthenticatedEtapa11Route
   '/etapa/2': typeof AuthenticatedEtapa2Route
   '/etapa/3': typeof AuthenticatedEtapa3Route
   '/etapa/4': typeof AuthenticatedEtapa4Route
@@ -177,6 +185,7 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
   '/_authenticated/etapa/10': typeof AuthenticatedEtapa10Route
+  '/_authenticated/etapa/11': typeof AuthenticatedEtapa11Route
   '/_authenticated/etapa/2': typeof AuthenticatedEtapa2Route
   '/_authenticated/etapa/3': typeof AuthenticatedEtapa3Route
   '/_authenticated/etapa/4': typeof AuthenticatedEtapa4Route
@@ -199,6 +208,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/etapa/1'
     | '/etapa/10'
+    | '/etapa/11'
     | '/etapa/2'
     | '/etapa/3'
     | '/etapa/4'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/etapa/1'
     | '/etapa/10'
+    | '/etapa/11'
     | '/etapa/2'
     | '/etapa/3'
     | '/etapa/4'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/_authenticated/etapa/1'
     | '/_authenticated/etapa/10'
+    | '/_authenticated/etapa/11'
     | '/_authenticated/etapa/2'
     | '/_authenticated/etapa/3'
     | '/_authenticated/etapa/4'
@@ -381,6 +393,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEtapa2RouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/etapa/11': {
+      id: '/_authenticated/etapa/11'
+      path: '/etapa/11'
+      fullPath: '/etapa/11'
+      preLoaderRoute: typeof AuthenticatedEtapa11RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/10': {
       id: '/_authenticated/etapa/10'
       path: '/etapa/10'
@@ -403,6 +422,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
   AuthenticatedEtapa10Route: typeof AuthenticatedEtapa10Route
+  AuthenticatedEtapa11Route: typeof AuthenticatedEtapa11Route
   AuthenticatedEtapa2Route: typeof AuthenticatedEtapa2Route
   AuthenticatedEtapa3Route: typeof AuthenticatedEtapa3Route
   AuthenticatedEtapa4Route: typeof AuthenticatedEtapa4Route
@@ -418,6 +438,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
   AuthenticatedEtapa10Route: AuthenticatedEtapa10Route,
+  AuthenticatedEtapa11Route: AuthenticatedEtapa11Route,
   AuthenticatedEtapa2Route: AuthenticatedEtapa2Route,
   AuthenticatedEtapa3Route: AuthenticatedEtapa3Route,
   AuthenticatedEtapa4Route: AuthenticatedEtapa4Route,
