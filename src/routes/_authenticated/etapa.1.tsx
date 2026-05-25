@@ -576,7 +576,7 @@ function Pergunta1({
   setProfileStory: (v: string) => void;
   businessWhy: string;
   setBusinessWhy: (v: string) => void;
-  onAutoSave: (c: Partial<ProfileE1>) => void;
+  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
@@ -637,7 +637,7 @@ function Pergunta2({
   setProblemSolved: (v: string) => void;
   problemUrgency: string;
   setProblemUrgency: (v: string) => void;
-  onAutoSave: (c: Partial<ProfileE1>) => void;
+  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
@@ -692,7 +692,7 @@ function Pergunta3({
 }: {
   targetCustomer: string;
   setTargetCustomer: (v: string) => void;
-  onAutoSave: (c: Partial<ProfileE1>) => void;
+  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
