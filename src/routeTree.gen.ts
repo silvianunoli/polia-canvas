@@ -19,6 +19,7 @@ import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authenticated/marca-viva'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -81,6 +82,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMarcaVivaRoute = AuthenticatedMarcaVivaRouteImport.update({
+  id: '/marca-viva',
+  path: '/marca-viva',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
@@ -211,6 +219,7 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/financeiro'
     | '/jornada'
+    | '/marca-viva'
     | '/onboarding'
     | '/painel'
     | '/tarefas'
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/financeiro'
     | '/jornada'
+    | '/marca-viva'
     | '/onboarding'
     | '/painel'
     | '/tarefas'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/financeiro'
     | '/_authenticated/jornada'
+    | '/_authenticated/marca-viva'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
     | '/_authenticated/tarefas'
@@ -390,6 +402,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/marca-viva': {
+      id: '/_authenticated/marca-viva'
+      path: '/marca-viva'
+      fullPath: '/marca-viva'
+      preLoaderRoute: typeof AuthenticatedMarcaVivaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/jornada': {
@@ -497,6 +516,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
+  AuthenticatedMarcaVivaRoute: typeof AuthenticatedMarcaVivaRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
@@ -517,6 +537,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
+  AuthenticatedMarcaVivaRoute: AuthenticatedMarcaVivaRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
