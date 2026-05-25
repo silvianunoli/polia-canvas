@@ -8,7 +8,7 @@ const links: NavLinkItem[] = [
   { to: "/painel", label: "Painel", exists: true },
   { to: "/jornada", label: "Jornada", exists: true },
   { to: "/tarefas", label: "Tarefas", exists: true },
-  { to: "/clientes", label: "Clientes", exists: false },
+  { to: "/clientes", label: "Clientes", exists: true },
   { to: "/financeiro", label: "Financeiro", exists: false },
 ];
 
