@@ -151,6 +151,8 @@ export type Database = {
           brand_feeling: string | null
           brand_visual_style: string | null
           brand_voice: string | null
+          brand_voice_finalized_at: string | null
+          brand_voice_yes: string | null
           business_name: string | null
           business_stage: string | null
           business_type: string | null
@@ -167,6 +169,7 @@ export type Database = {
           onboarding_completed_at: string | null
           orbit_brand_alive_unlocked: boolean
           orbit_marca_viva_unlocked: boolean
+          orbit_vitrine_unlocked: boolean
           positioning_statement: string | null
           problem_solved: string | null
           problem_urgency: string | null
@@ -182,6 +185,8 @@ export type Database = {
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null
+          brand_voice_finalized_at?: string | null
+          brand_voice_yes?: string | null
           business_name?: string | null
           business_stage?: string | null
           business_type?: string | null
@@ -198,6 +203,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_vitrine_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
@@ -213,6 +219,8 @@ export type Database = {
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null
+          brand_voice_finalized_at?: string | null
+          brand_voice_yes?: string | null
           business_name?: string | null
           business_stage?: string | null
           business_type?: string | null
@@ -229,6 +237,7 @@ export type Database = {
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
           orbit_marca_viva_unlocked?: boolean
+          orbit_vitrine_unlocked?: boolean
           positioning_statement?: string | null
           problem_solved?: string | null
           problem_urgency?: string | null
