@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { gerarPlanoConteudo, type PlanoConteudo } from "@/lib/content.functions";
+import { gerarPainelNumeros, type PainelNumeros } from "@/lib/growth.functions";
 
-export const Route = createFileRoute("/_authenticated/etapa/9")({
+export const Route = createFileRoute("/_authenticated/etapa/10")({
   head: () => ({
     meta: [
-      { title: "Etapa 9 — Sua Audiência · Pólia" },
-      { name: "description", content: "Monte seu plano de conteúdo." },
+      { title: "Etapa 10 — Crescimento · Pólia" },
+      { name: "description", content: "Monte seu painel de 3 números." },
     ],
   }),
   beforeLoad: async () => {
@@ -20,49 +20,49 @@ export const Route = createFileRoute("/_authenticated/etapa/9")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_9_completed_at")
+      .select("etapa_atual, star_10_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 9) {
+    if ((profile.etapa_atual ?? 1) < 10) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_9_completed_at) {
+    if (profile.star_10_completed_at) {
       throw redirect({ to: "/painel" });
     }
   },
-  component: Etapa9Page,
+  component: Etapa10Page,
 });
 
-type ProfileE9 = {
+type ProfileE10 = {
   display_name: string | null;
   business_name: string | null;
-  audience_content_types: string | null;
-  scroll_stoppers: string | null;
-  publishing_rhythm: string | null;
-  content_finalized_at: string | null;
-  star_9_completed_at: string | null;
+  key_number_1: string | null;
+  review_rhythm: string | null;
+  action_triggers: string | null;
+  growth_finalized_at: string | null;
+  star_10_completed_at: string | null;
   streak: number | null;
 };
 
-const STORAGE_KEY = "polia:etapa9:step";
+const STORAGE_KEY = "polia:etapa10:step";
 
-function Etapa9Page() {
+function Etapa10Page() {
   const navigate = useNavigate();
-  const gerar = useServerFn(gerarPlanoConteudo);
+  const gerar = useServerFn(gerarPainelNumeros);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileE9 | null>(null);
+  const [profile, setProfile] = useState<ProfileE10 | null>(null);
   const [step, setStep] = useState<number>(1);
   const [loaded, setLoaded] = useState(false);
 
-  const [consumo, setConsumo] = useState("");
-  const [parada, setParada] = useState("");
+  const [numero, setNumero] = useState("");
   const [ritmo, setRitmo] = useState("");
+  const [acao, setAcao] = useState("");
 
-  const [plano, setPlano] = useState<PlanoConteudo | null>(null);
-  const [loadingPlano, setLoadingPlano] = useState(false);
-  const [planoError, setPlanoError] = useState<string | null>(null);
+  const [painel, setPainel] = useState<PainelNumeros | null>(null);
+  const [loadingPainel, setLoadingPainel] = useState(false);
+  const [painelError, setPainelError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,42 +74,42 @@ function Etapa9Page() {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "display_name, business_name, audience_content_types, scroll_stoppers, publishing_rhythm, content_finalized_at, star_9_completed_at, streak",
+          "display_name, business_name, key_number_1, review_rhythm, action_triggers, growth_finalized_at, star_10_completed_at, streak",
         )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
       if (p) {
-        setProfile(p as ProfileE9);
-        setConsumo(p.audience_content_types ?? "");
-        setParada(p.scroll_stoppers ?? "");
-        setRitmo(p.publishing_rhythm ?? "");
+        setProfile(p as ProfileE10);
+        setNumero(p.key_number_1 ?? "");
+        setRitmo(p.review_rhythm ?? "");
+        setAcao(p.action_triggers ?? "");
 
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if ((p as ProfileE9).content_finalized_at) {
+        } else if ((p as ProfileE10).growth_finalized_at) {
           setStep(5);
-        } else if (p.publishing_rhythm) {
+        } else if (p.action_triggers) {
           setStep(4);
-        } else if (p.scroll_stoppers) {
+        } else if (p.review_rhythm) {
           setStep(4);
-        } else if (p.audience_content_types) {
+        } else if (p.key_number_1) {
           setStep(3);
         } else {
           setStep(1);
         }
 
-        if ((p as ProfileE9).content_finalized_at) {
+        if ((p as ProfileE10).growth_finalized_at) {
           const { data: ent } = await supabase
             .from("entregaveis")
             .select("conteudo")
             .eq("user_id", uid)
-            .eq("tipo", "plano_conteudo")
+            .eq("tipo", "painel_numeros")
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (mounted && ent?.conteudo) setPlano(ent.conteudo as unknown as PlanoConteudo);
+          if (mounted && ent?.conteudo) setPainel(ent.conteudo as unknown as PainelNumeros);
         }
       }
       setLoaded(true);
@@ -126,7 +126,7 @@ function Etapa9Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE9>) => {
+    async (campos: Partial<ProfileE10>) => {
       if (!userId) return;
       const payload: Record<string, string> = {};
       for (const [k, v] of Object.entries(campos)) {
@@ -137,44 +137,44 @@ function Etapa9Page() {
     [userId],
   );
 
-  const gerarPlanoAcao = useCallback(async () => {
-    await autoSave({ publishing_rhythm: ritmo });
+  const gerarPainelAcao = useCallback(async () => {
+    await autoSave({ action_triggers: acao });
     setStep(5);
-    setLoadingPlano(true);
-    setPlanoError(null);
+    setLoadingPainel(true);
+    setPainelError(null);
     const result = await gerar({
       data: {
-        audience_content_types: consumo,
-        scroll_stoppers: parada,
-        publishing_rhythm: ritmo,
+        key_number_1: numero,
+        review_rhythm: ritmo,
+        action_triggers: acao,
         business_name: profile?.business_name ?? undefined,
       },
     });
-    setLoadingPlano(false);
-    if (result.error || !result.plano) {
-      setPlanoError(result.error || "Erro desconhecido.");
+    setLoadingPainel(false);
+    if (result.error || !result.painel) {
+      setPainelError(result.error || "Erro desconhecido.");
       return;
     }
-    setPlano(result.plano);
-  }, [autoSave, gerar, consumo, parada, ritmo, profile?.business_name]);
+    setPainel(result.painel);
+  }, [autoSave, gerar, numero, ritmo, acao, profile?.business_name]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId || !plano) return;
+    if (!userId || !painel) return;
     await supabase.from("entregaveis").insert({
       user_id: userId,
-      titulo: "Plano de Conteúdo",
-      tipo: "plano_conteudo",
-      fase: "Venda",
-      etapa: 9,
-      conteudo: plano as never,
+      titulo: "Painel de 3 Números",
+      tipo: "painel_numeros",
+      fase: "Evolução",
+      etapa: 10,
+      conteudo: painel as never,
       status: "concluido",
     });
     await supabase
       .from("profiles")
-      .update({ content_finalized_at: new Date().toISOString() } as never)
+      .update({ growth_finalized_at: new Date().toISOString() } as never)
       .eq("id", userId);
     setStep(6);
-  }, [userId, plano]);
+  }, [userId, painel]);
 
   const concludedRef = useRef(false);
   useEffect(() => {
@@ -184,33 +184,33 @@ function Etapa9Page() {
       await supabase
         .from("profiles")
         .update({
-          star_9_completed_at: new Date().toISOString(),
-          orbit_sales_active: true,
-          etapa_atual: 10,
+          star_10_completed_at: new Date().toISOString(),
+          orbit_financial_unlocked: true,
+          etapa_atual: 11,
           streak: (profile?.streak ?? 0) + 1,
         } as never)
         .eq("id", userId);
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Nona estrela acesa",
-        descricao: "Desenhou o plano de conteúdo. Suas Vendas e Clientes tá ativa.",
+        titulo: "Décima estrela acesa",
+        descricao: "Montou o painel de 3 números. Seu Painel Financeiro desbloqueado.",
         xp: 50,
         tipo: "etapa",
       });
 
-      const tarefasE10 = [
-        "Escolher 3 números pra acompanhar toda semana",
-        "Calcular receita do último mês",
-        "Identificar produto ou serviço que mais vende",
-        "Definir meta de faturamento para o próximo mês",
-        "Criar rotina semanal de olhada nos números",
+      const tarefasE11 = [
+        "Mapear quem você quer ter por perto no negócio",
+        "Listar 2-3 pessoas que te inspiram ou te apoiam",
+        "Escrever onde você quer estar daqui a 1 ano",
+        "Pensar em quem pode te ajudar a chegar lá",
+        "Definir o primeiro passo concreto da sua rede",
       ];
       await supabase.from("tarefas").insert(
-        tarefasE10.map((titulo) => ({
+        tarefasE11.map((titulo) => ({
           user_id: userId,
           titulo,
-          etapa: 10,
+          etapa: 11,
           status: "a_fazer",
           fonte: "sistema",
         })),
@@ -246,19 +246,19 @@ function Etapa9Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="você não faz conteúdo pra todo mundo. só pra ela."
-              titulo={<>O que sua cliente ideal consome online?</>}
-              label="O QUE ELA VÊ E CURTE"
-              placeholder="Ex: Adora ver bastidores de produção artesanal. Segue noivas que mostram o processo de planejamento. Consome vídeos curtos de antes e depois. Odeia propaganda direta. Gosta de conteúdo que parece dica de amiga."
+              caveat="um número claro vale mais que dez planilhas."
+              titulo={<>Qual número diz se o seu negócio tá indo bem?</>}
+              label="O QUE MAIS IMPORTA AGORA"
+              placeholder="Ex: Faturamento mensal — quero chegar em R$8.000. Também olho quantos pedidos novos chegam por semana. Às vezes olho o número de seguidoras novas, mas sei que não é o que paga as contas. O número que mais me diz se tô crescendo é o faturamento mesmo."
               maxLength={400}
-              ajuda="pensa na sua melhor cliente. o que ela posta, curte e salva?"
+              ajuda="pode ser mais de um. conta o que você já acompanha hoje, mesmo que de forma informal."
               raposaEstado="Atenta · escutando"
-              raposaTexto="Fazer conteúdo é conversar com ela no idioma que ela já fala. Você não ensina, você reconhece."
-              valor={consumo}
-              setValor={setConsumo}
-              onAutoSave={() => autoSave({ audience_content_types: consumo })}
+              raposaTexto="Não precisa ser sofisticado. O número certo é aquele que, quando muda, você sente no bolso ou na rotina."
+              valor={numero}
+              setValor={setNumero}
+              onAutoSave={() => autoSave({ key_number_1: numero })}
               onContinuar={() => {
-                autoSave({ audience_content_types: consumo });
+                autoSave({ key_number_1: numero });
                 setStep(3);
               }}
               minLen={20}
@@ -266,100 +266,100 @@ function Etapa9Page() {
           )}
           {step === 3 && (
             <PerguntaBlock
-              caveat="o que faz o dedo parar de rolar é ouro."
-              titulo={<>O que faz ela parar no seu conteúdo?</>}
-              label="O QUE PARA O SCROLL"
-              placeholder="Ex: Foto com resultado impactante logo na primeira imagem. Vídeo que começa mostrando o produto pronto. Pergunta que ela nunca parou pra se fazer sobre casamento. Processo detalhado que mostra cuidado e técnica."
-              maxLength={400}
-              ajuda="pensa num post seu que funcionou bem. o que tinha de diferente?"
+              caveat="olhar os números toda semana muda tudo."
+              titulo={<>Com que frequência você olha pro seu negócio?</>}
+              label="SEU RITMO DE REVISÃO"
+              placeholder="Ex: Faço o balanço do mês todo dia 1. Durante o mês, olho só quando bate uma ansiedade. Nunca fiz uma revisão formal — vou no feeling. Gostaria de sentar uma vez por semana pra ver como tá."
+              maxLength={300}
+              ajuda="conta como é hoje, não o que você acha que deveria fazer."
               raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="Nos primeiros 2 segundos ela decide se fica ou rola. Tudo que você faz antes disso é invisível."
-              valor={parada}
-              setValor={setParada}
-              onAutoSave={() => autoSave({ scroll_stoppers: parada })}
+              raposaTexto="15 minutos por semana olhando os mesmos 3 números transforma intuição em decisão."
+              valor={ritmo}
+              setValor={setRitmo}
+              onAutoSave={() => autoSave({ review_rhythm: ritmo })}
               onVoltar={() => setStep(2)}
               onContinuar={() => {
-                autoSave({ scroll_stoppers: parada });
+                autoSave({ review_rhythm: ritmo });
                 setStep(4);
               }}
-              minLen={20}
+              minLen={15}
             />
           )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="frequência bate perfeição. sempre."
-              titulo={<>Com que frequência você aparece?</>}
-              label="SEU RITMO DE PUBLICAÇÃO"
-              placeholder="Ex: Consigo postar 3x por semana no feed e stories todos os dias. Mas quando tá cheio de pedido, fico sem postar por 2 semanas. Fico travada por não saber o que escrever."
+              caveat="número sem ação é só ansiedade."
+              titulo={<>O que você faz quando as coisas mudam?</>}
+              label="SEUS GATILHOS DE AÇÃO"
+              placeholder="Ex: Quando fico 2 semanas sem pedido novo, começo a postar mais. Se o faturamento cai dois meses seguidos, sei que preciso lançar algo ou fazer promoção. Quando tá cheio, paro de aceitar pedido urgente. Ainda não tenho uma regra clara — reajo quando bate o desespero."
               maxLength={400}
-              ajuda="conta o que é real hoje, não o que você acha que deveria ser."
+              ajuda="pensa num momento em que o negócio mudou de ritmo. o que você fez?"
               raposaEstado="Animada · em pé"
-              raposaTexto="Consistência de 2x semana por um ano supera um calendário perfeito que dura 3 meses."
-              valor={ritmo}
-              setValor={setRitmo}
-              onAutoSave={() => autoSave({ publishing_rhythm: ritmo })}
+              raposaTexto="Ter um gatilho definido antes que o problema chegue é a diferença entre reagir e decidir."
+              valor={acao}
+              setValor={setAcao}
+              onAutoSave={() => autoSave({ action_triggers: acao })}
               onVoltar={() => setStep(3)}
-              onContinuar={() => gerarPlanoAcao()}
-              continuarLabel="Montar meu plano  →"
-              minLen={15}
+              onContinuar={() => gerarPainelAcao()}
+              continuarLabel="Montar meu painel  →"
+              minLen={20}
             />
           )}
         </PerguntaLayout>
       )}
 
       {step === 5 && (
-        <PlanoTela
-          loading={loadingPlano}
-          plano={plano}
-          error={planoError}
+        <PainelTela
+          loading={loadingPainel}
+          painel={painel}
+          error={painelError}
           businessName={profile?.business_name ?? ""}
           onAjustar={() => setStep(4)}
           onContinuar={salvarEntregavelEAvancar}
-          onRetry={() => gerarPlanoAcao()}
+          onRetry={() => gerarPainelAcao()}
         />
       )}
 
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa10={() => navigate({ to: "/etapa/10" })}
+          onEtapa11={() => navigate({ to: "/painel" })}
         />
       )}
     </>
   );
 }
 
-/* ============== E9.1 — CAPA COSMIC ============== */
+/* ============== E10.1 — CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
-    { num: "1", titulo: "Consumo", sub: "o que ela vê" },
-    { num: "2", titulo: "Parada", sub: "o que faz parar" },
-    { num: "3", titulo: "Caminho", sub: "como chega nela" },
+    { num: "1", titulo: "Número", sub: "o que medir" },
+    { num: "2", titulo: "Ritmo", sub: "quando olhar" },
+    { num: "3", titulo: "Ação", sub: "o que fazer" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 9 DE 11 · SUA AUDIÊNCIA
+          ETAPA 10 DE 11 · CRESCIMENTO
         </p>
 
         <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L9 Vertical</p>
+          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L10 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">hora de ser encontrada.</p>
+        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">o que você mede, você move.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          Conteúdo é
+          3 números que
           <br />
-          convite.
+          importam hoje.
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra desenhar o que ela consome, o que faz ela parar, e como você chega até ela.
+          3 perguntas pra escolher o que acompanhar, quando olhar e o que fazer quando muda.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
@@ -380,7 +380,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos atrair  →
+          Vamos escolher  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
@@ -391,7 +391,7 @@ function Capa({ onStart }: { onStart: () => void }) {
   );
 }
 
-/* ============== Layout E9.2-E9.4 ============== */
+/* ============== Layout E10.2-E10.4 ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -404,9 +404,9 @@ function PerguntaLayout({
   children: React.ReactNode;
 }) {
   const passos = [
-    { num: 1, label: "Consumo" },
-    { num: 2, label: "Parada" },
-    { num: 3, label: "Caminho" },
+    { num: 1, label: "Número" },
+    { num: 2, label: "Ritmo" },
+    { num: 3, label: "Ação" },
   ];
   const activeIndex = step - 2;
 
@@ -416,12 +416,12 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 9 · SUA AUDIÊNCIA
+            ETAPA 10 · CRESCIMENTO
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Conteúdo é
+            3 números que
             <br />
-            convite.
+            importam hoje.
           </h2>
           <hr className="border-[#EAE2D8] my-6" />
           <div className="flex flex-col gap-5">
@@ -456,7 +456,7 @@ function PerguntaLayout({
           <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
             depois vem
             <br />
-            o seu plano de conteúdo
+            o seu painel de 3 números
           </p>
         </aside>
 
@@ -554,10 +554,10 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E9.5 — Plano de Conteúdo (COSMIC) ============== */
-function PlanoTela({
+/* ============== E10.5 — Painel de 3 Números (COSMIC) ============== */
+function PainelTela({
   loading,
-  plano,
+  painel,
   error,
   businessName,
   onAjustar,
@@ -565,7 +565,7 @@ function PlanoTela({
   onRetry,
 }: {
   loading: boolean;
-  plano: PlanoConteudo | null;
+  painel: PainelNumeros | null;
   error: string | null;
   businessName: string;
   onAjustar: () => void;
@@ -579,7 +579,7 @@ function PlanoTela({
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
-              desenhando seu plano de conteúdo...
+              montando seu painel de 3 números...
             </p>
             <div className="mt-6 flex gap-2">
               {[0, 1, 2].map((i) => (
@@ -606,65 +606,70 @@ function PlanoTela({
           </>
         )}
 
-        {!loading && !error && plano && (
+        {!loading && !error && painel && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 9 · SUA AUDIÊNCIA
+              ENTREGÁVEL · ETAPA 10 · CRESCIMENTO
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha seu plano de conteúdo.</p>
+            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha o que você vai acompanhar.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
-              Seu plano de conteúdo
+              Seu painel de 3 números
               <br />
-              tá desenhado.
+              tá pronto.
             </h1>
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                PLANO DE CONTEÚDO · {(businessName || "Sua marca").toUpperCase()}
+                PAINEL DE 3 NÚMEROS · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como você atrai quem precisa de você</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">O que você mede pra crescer</p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                O QUE ELA QUER VER
+                NÚMERO 1
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {plano.tipos_conteudo}
+                {painel.numero_1}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                O QUE PARA O SCROLL
+                NÚMERO 2
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {plano.gatilhos_parada}
+                {painel.numero_2}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SEU RITMO IDEAL
+                NÚMERO 3
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {plano.ritmo_sugerido}
+                {painel.numero_3}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                3 IDEIAS DE CONTEÚDO PARA COMEÇAR
+                SEU RITMO DE REVISÃO
               </p>
-              <div className="mt-2 flex flex-col gap-2">
-                {plano.ideias.map((ideia, i) => (
-                  <p key={i} className="font-handwritten text-[#C96B3E] text-[16px] leading-[24px]">
-                    {ideia}
-                  </p>
-                ))}
-              </div>
+              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
+                {painel.ritmo_recomendado}
+              </p>
+
+              <hr className="border-[#EAE2D8] my-5" />
+
+              <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
+                QUANDO AGIR
+              </p>
+              <p className="font-handwritten text-[#C96B3E] text-[16px] leading-[24px] mt-2">
+                {painel.gatilho_principal}
+              </p>
 
               <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
-                salvo em Suas Vendas e Clientes · você edita quando quiser
+                salvo em Seu Painel Financeiro · você edita quando quiser
               </p>
             </div>
 
@@ -690,8 +695,8 @@ function PlanoTela({
   );
 }
 
-/* ============== E9.6 — Conclusão estrela 9 ============== */
-function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtapa10: () => void }) {
+/* ============== E10.6 — Conclusão estrela 10 ============== */
+function Conclusao({ onVerPainel, onEtapa11 }: { onVerPainel: () => void; onEtapa11: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
     { n: 2, label: "Identidade", estado: "acesa" },
@@ -701,8 +706,8 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
     { n: 6, label: "Rotina", estado: "acesa" },
     { n: 7, label: "Vendas", estado: "acesa" },
     { n: 8, label: "Clientes", estado: "acesa" },
-    { n: 9, label: "Audiência", estado: "agora" },
-    { n: 10, label: "Crescimento", estado: "dim" },
+    { n: 9, label: "Audiência", estado: "acesa" },
+    { n: 10, label: "Crescimento", estado: "agora" },
     { n: 11, label: "Rede", estado: "dim" },
   ];
 
@@ -711,15 +716,15 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
       <CosmicBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 9 · SUA AUDIÊNCIA · CONCLUÍDA
+          ETAPA 10 · CRESCIMENTO · CONCLUÍDA
         </p>
 
         <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
-          agora você sabe como aparecer pra quem importa.
+          agora você sabe o que olhar e quando agir.
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua nona estrela
+          Sua décima estrela
           <br />
           tá acesa.
         </h1>
@@ -779,18 +784,18 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
 
         <div className="mt-12 w-full max-w-[620px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
           <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            ATIVADA · LUA ORBITANDO
+            DESBLOQUEADO · LUA ORBITANDO
           </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Suas Vendas e Clientes</p>
+          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Seu Painel Financeiro</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Seu fluxo de vendas, protocolo de cuidado e plano de conteúdo reunidos. Pronta pra fase de Evolução.
+            Seus 3 números reunidos num painel vivo. Acompanhe, decida e cresça com clareza.
           </p>
         </div>
 
         <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.85)] text-[16px] mt-3">
-          fase de venda completa. agora é hora de crescer.
+          uma etapa pra terminar. e depois, ela é toda sua.
         </p>
 
         <div className="mt-10 flex flex-col gap-4 md:flex-row">
@@ -801,11 +806,11 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
             Ver meu painel
           </button>
           <button
-            onClick={onEtapa10}
+            onClick={onEtapa11}
             className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
             style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
           >
-            Começar Etapa 10  →
+            Começar Etapa 11  →
           </button>
         </div>
       </div>
