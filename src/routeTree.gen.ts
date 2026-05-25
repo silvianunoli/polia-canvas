@@ -18,6 +18,7 @@ import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedEtapa6RouteImport } from './routes/_authenticated/etapa.6'
 import { Route as AuthenticatedEtapa5RouteImport } from './routes/_authenticated/etapa.5'
 import { Route as AuthenticatedEtapa4RouteImport } from './routes/_authenticated/etapa.4'
 import { Route as AuthenticatedEtapa3RouteImport } from './routes/_authenticated/etapa.3'
@@ -68,6 +69,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEtapa6Route = AuthenticatedEtapa6RouteImport.update({
+  id: '/etapa/6',
+  path: '/etapa/6',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedEtapa5Route = AuthenticatedEtapa5RouteImport.update({
   id: '/etapa/5',
   path: '/etapa/5',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/etapa/3': typeof AuthenticatedEtapa3Route
   '/etapa/4': typeof AuthenticatedEtapa4Route
   '/etapa/5': typeof AuthenticatedEtapa5Route
+  '/etapa/6': typeof AuthenticatedEtapa6Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/etapa/3': typeof AuthenticatedEtapa3Route
   '/etapa/4': typeof AuthenticatedEtapa4Route
   '/etapa/5': typeof AuthenticatedEtapa5Route
+  '/etapa/6': typeof AuthenticatedEtapa6Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/etapa/3': typeof AuthenticatedEtapa3Route
   '/_authenticated/etapa/4': typeof AuthenticatedEtapa4Route
   '/_authenticated/etapa/5': typeof AuthenticatedEtapa5Route
+  '/_authenticated/etapa/6': typeof AuthenticatedEtapa6Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/etapa/3'
     | '/etapa/4'
     | '/etapa/5'
+    | '/etapa/6'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/etapa/3'
     | '/etapa/4'
     | '/etapa/5'
+    | '/etapa/6'
   id:
     | '__root__'
     | '/'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/3'
     | '/_authenticated/etapa/4'
     | '/_authenticated/etapa/5'
+    | '/_authenticated/etapa/6'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -265,6 +277,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/etapa/6': {
+      id: '/_authenticated/etapa/6'
+      path: '/etapa/6'
+      fullPath: '/etapa/6'
+      preLoaderRoute: typeof AuthenticatedEtapa6RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/5': {
       id: '/_authenticated/etapa/5'
       path: '/etapa/5'
@@ -311,6 +330,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEtapa3Route: typeof AuthenticatedEtapa3Route
   AuthenticatedEtapa4Route: typeof AuthenticatedEtapa4Route
   AuthenticatedEtapa5Route: typeof AuthenticatedEtapa5Route
+  AuthenticatedEtapa6Route: typeof AuthenticatedEtapa6Route
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -321,6 +341,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEtapa3Route: AuthenticatedEtapa3Route,
   AuthenticatedEtapa4Route: AuthenticatedEtapa4Route,
   AuthenticatedEtapa5Route: AuthenticatedEtapa5Route,
+  AuthenticatedEtapa6Route: AuthenticatedEtapa6Route,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

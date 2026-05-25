@@ -4,13 +4,13 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { gerarGuiaPresenca, type GuiaPresenca } from "@/lib/presence.functions";
+import { gerarSistemaControle, type SistemaControle } from "@/lib/routine.functions";
 
-export const Route = createFileRoute("/_authenticated/etapa/5")({
+export const Route = createFileRoute("/_authenticated/etapa/6")({
   head: () => ({
     meta: [
-      { title: "Etapa 5 — Conteúdo · Pólia" },
-      { name: "description", content: "Monte sua primeira impressão online." },
+      { title: "Etapa 6 — Sua Rotina · Pólia" },
+      { name: "description", content: "Organize sua produção, controle e reposição." },
     ],
   }),
   beforeLoad: async () => {
@@ -20,49 +20,49 @@ export const Route = createFileRoute("/_authenticated/etapa/5")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_5_completed_at")
+      .select("etapa_atual, star_6_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 5) {
+    if ((profile.etapa_atual ?? 1) < 6) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_5_completed_at) {
+    if (profile.star_6_completed_at) {
       throw redirect({ to: "/painel" });
     }
   },
-  component: Etapa5Page,
+  component: Etapa6Page,
 });
 
-type ProfileE5 = {
+type ProfileE6 = {
   display_name: string | null;
   business_name: string | null;
-  main_channel: string | null;
-  visual_presence: string | null;
-  purchase_path: string | null;
-  presence_finalized_at: string | null;
-  star_5_completed_at: string | null;
+  production_capacity: string | null;
+  tracking_system: string | null;
+  restock_triggers: string | null;
+  routine_finalized_at: string | null;
+  star_6_completed_at: string | null;
   streak: number | null;
 };
 
-const STORAGE_KEY = "polia:etapa5:step";
+const STORAGE_KEY = "polia:etapa6:step";
 
-function Etapa5Page() {
+function Etapa6Page() {
   const navigate = useNavigate();
-  const gerar = useServerFn(gerarGuiaPresenca);
+  const gerar = useServerFn(gerarSistemaControle);
 
   const [userId, setUserId] = useState<string | null>(null);
-  const [profile, setProfile] = useState<ProfileE5 | null>(null);
+  const [profile, setProfile] = useState<ProfileE6 | null>(null);
   const [step, setStep] = useState<number>(1);
   const [loaded, setLoaded] = useState(false);
 
-  const [mainChannel, setMainChannel] = useState("");
-  const [visualPresence, setVisualPresence] = useState("");
-  const [purchasePath, setPurchasePath] = useState("");
+  const [capacidade, setCapacidade] = useState("");
+  const [controle, setControle] = useState("");
+  const [reposicao, setReposicao] = useState("");
 
-  const [guia, setGuia] = useState<GuiaPresenca | null>(null);
-  const [loadingGuia, setLoadingGuia] = useState(false);
-  const [guiaError, setGuiaError] = useState<string | null>(null);
+  const [sistema, setSistema] = useState<SistemaControle | null>(null);
+  const [loadingSistema, setLoadingSistema] = useState(false);
+  const [sistemaError, setSistemaError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,42 +74,42 @@ function Etapa5Page() {
       const { data: p } = await supabase
         .from("profiles")
         .select(
-          "display_name, business_name, main_channel, visual_presence, purchase_path, presence_finalized_at, star_5_completed_at, streak",
+          "display_name, business_name, production_capacity, tracking_system, restock_triggers, routine_finalized_at, star_6_completed_at, streak",
         )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
       if (p) {
-        setProfile(p as ProfileE5);
-        setMainChannel(p.main_channel ?? "");
-        setVisualPresence(p.visual_presence ?? "");
-        setPurchasePath(p.purchase_path ?? "");
+        setProfile(p as ProfileE6);
+        setCapacidade(p.production_capacity ?? "");
+        setControle(p.tracking_system ?? "");
+        setReposicao(p.restock_triggers ?? "");
 
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if ((p as ProfileE5).presence_finalized_at) {
+        } else if ((p as ProfileE6).routine_finalized_at) {
           setStep(5);
-        } else if (p.purchase_path) {
+        } else if (p.restock_triggers) {
           setStep(4);
-        } else if (p.visual_presence) {
+        } else if (p.tracking_system) {
           setStep(4);
-        } else if (p.main_channel) {
+        } else if (p.production_capacity) {
           setStep(3);
         } else {
           setStep(1);
         }
 
-        if ((p as ProfileE5).presence_finalized_at) {
+        if ((p as ProfileE6).routine_finalized_at) {
           const { data: ent } = await supabase
             .from("entregaveis")
             .select("conteudo")
             .eq("user_id", uid)
-            .eq("tipo", "guia_presenca")
+            .eq("tipo", "sistema_controle")
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          if (mounted && ent?.conteudo) setGuia(ent.conteudo as unknown as GuiaPresenca);
+          if (mounted && ent?.conteudo) setSistema(ent.conteudo as unknown as SistemaControle);
         }
       }
       setLoaded(true);
@@ -126,7 +126,7 @@ function Etapa5Page() {
   }, [step, loaded]);
 
   const autoSave = useCallback(
-    async (campos: Partial<ProfileE5>) => {
+    async (campos: Partial<ProfileE6>) => {
       if (!userId) return;
       const payload: Record<string, string> = {};
       for (const [k, v] of Object.entries(campos)) {
@@ -137,44 +137,44 @@ function Etapa5Page() {
     [userId],
   );
 
-  const gerarGuia = useCallback(async () => {
-    await autoSave({ purchase_path: purchasePath });
+  const gerarSistema = useCallback(async () => {
+    await autoSave({ restock_triggers: reposicao });
     setStep(5);
-    setLoadingGuia(true);
-    setGuiaError(null);
+    setLoadingSistema(true);
+    setSistemaError(null);
     const result = await gerar({
       data: {
-        main_channel: mainChannel,
-        visual_presence: visualPresence,
-        purchase_path: purchasePath,
+        production_capacity: capacidade,
+        tracking_system: controle,
+        restock_triggers: reposicao,
         business_name: profile?.business_name ?? undefined,
       },
     });
-    setLoadingGuia(false);
-    if (result.error || !result.guia) {
-      setGuiaError(result.error || "Erro desconhecido.");
+    setLoadingSistema(false);
+    if (result.error || !result.sistema) {
+      setSistemaError(result.error || "Erro desconhecido.");
       return;
     }
-    setGuia(result.guia);
-  }, [autoSave, gerar, mainChannel, visualPresence, purchasePath, profile?.business_name]);
+    setSistema(result.sistema);
+  }, [autoSave, gerar, capacidade, controle, reposicao, profile?.business_name]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId || !guia) return;
+    if (!userId || !sistema) return;
     await supabase.from("entregaveis").insert({
       user_id: userId,
-      titulo: "Guia de Primeira Impressão",
-      tipo: "guia_presenca",
+      titulo: "Sistema de Controle",
+      tipo: "sistema_controle",
       fase: "Construção",
-      etapa: 5,
-      conteudo: guia as never,
+      etapa: 6,
+      conteudo: sistema as never,
       status: "concluido",
     });
     await supabase
       .from("profiles")
-      .update({ presence_finalized_at: new Date().toISOString() } as never)
+      .update({ routine_finalized_at: new Date().toISOString() } as never)
       .eq("id", userId);
     setStep(6);
-  }, [userId, guia]);
+  }, [userId, sistema]);
 
   const concludedRef = useRef(false);
   useEffect(() => {
@@ -184,32 +184,33 @@ function Etapa5Page() {
       await supabase
         .from("profiles")
         .update({
-          star_5_completed_at: new Date().toISOString(),
-          etapa_atual: 6,
+          star_6_completed_at: new Date().toISOString(),
+          orbit_vitrine_active: true,
+          etapa_atual: 7,
           streak: (profile?.streak ?? 0) + 1,
         } as never)
         .eq("id", userId);
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Quinta estrela acesa",
-        descricao: "Montou o guia de primeira impressão.",
+        titulo: "Sexta estrela acesa",
+        descricao: "Montou o sistema de controle. Sua Vitrine está ativada.",
         xp: 50,
         tipo: "etapa",
       });
 
-      const tarefasE6 = [
-        "Revisar bio com novo posicionamento",
-        "Organizar destaques do Instagram",
-        "Criar modelo de resposta pra DM",
-        "Testar o caminho de compra com uma amiga",
-        "Mapear capacidade de atendimento mensal",
+      const tarefasE7 = [
+        "Mapear como as clientes chegam até você",
+        "Identificar o momento em que ela decide comprar",
+        "Criar resposta padrão pra primeira mensagem",
+        "Definir o que leva ela a fechar na hora",
+        "Listar as objeções mais comuns que você já ouviu",
       ];
       await supabase.from("tarefas").insert(
-        tarefasE6.map((titulo) => ({
+        tarefasE7.map((titulo) => ({
           user_id: userId,
           titulo,
-          etapa: 6,
+          etapa: 7,
           status: "a_fazer",
           fonte: "sistema",
         })),
@@ -245,19 +246,19 @@ function Etapa5Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="antes de fazer conteúdo, você precisa saber onde está."
-              titulo={<>Onde sua cliente te encontra hoje?</>}
-              label="SEU CANAL PRINCIPAL"
-              placeholder="Ex: Instagram @carlajoias. Tenho 1.400 seguidores e posto 3x por semana. Também uso WhatsApp Business pra atendimento. Tenho uma página no Facebook mas quase não mexo mais."
+              caveat="saber quanto você produz é saber quanto você pode vender."
+              titulo={<>Quanto você consegue produzir por mês?</>}
+              label="SUA CAPACIDADE DE PRODUÇÃO"
+              placeholder="Ex: Consigo fazer até 200 convites por semana trabalhando 4h por dia. Em época de festa (out-dez) chego a 300. Não consigo fazer mais do que 2 pedidos grandes ao mesmo tempo sem atrasar."
               maxLength={300}
-              ajuda="pode listar todos. a gente vai identificar o principal."
+              ajuda="inclui o ritmo normal e o limite que você sente na prática."
               raposaEstado="Atenta · sentada escutando"
-              raposaTexto="Presença em muitos lugares de forma fraca perde pra presença em poucos lugares de forma forte."
-              valor={mainChannel}
-              setValor={setMainChannel}
-              onAutoSave={() => autoSave({ main_channel: mainChannel })}
+              raposaTexto="Vender mais do que você consegue entregar prejudica sua reputação. Conhecer seu limite é poder dizer sim com segurança."
+              valor={capacidade}
+              setValor={setCapacidade}
+              onAutoSave={() => autoSave({ production_capacity: capacidade })}
               onContinuar={() => {
-                autoSave({ main_channel: mainChannel });
+                autoSave({ production_capacity: capacidade });
                 setStep(3);
               }}
               minLen={15}
@@ -265,20 +266,20 @@ function Etapa5Page() {
           )}
           {step === 3 && (
             <PerguntaBlock
-              caveat="a primeira impressão é o que faz ela parar ou rolar."
-              titulo={<>Como você aparece pra quem<br />ainda não te conhece?</>}
-              label="SUA APARÊNCIA ONLINE"
-              placeholder="Ex: Feed com fotos de produto em fundo neutro, sempre com boa luz. Stories com processo de criação e bastidores. Bio direta: 'Convites autorais com alma. SP.' Link pro catálogo em PDF. Às vezes apareço em vídeo mostrando os materiais."
+              caveat="o que não é controlado, não cresce."
+              titulo={<>Como você controla o que tem<br />e o que entra?</>}
+              label="SEU SISTEMA DE CONTROLE"
+              placeholder="Ex: Anoto os pedidos num caderno e marco quando entrego. Materiais controlo por estimativa. Às vezes fico sem ribbon e preciso parar. Quero montar uma planilha mas ainda não comecei."
               maxLength={400}
-              ajuda="descreve o que alguém vê nos primeiros 10 segundos no seu perfil."
+              ajuda="pode ser caderno, foto, aplicativo, planilha ou intuição. conta como é de verdade."
               raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="Consistência vence perfeição. Uma conta simples e coerente converte mais do que um feed bonito sem identidade."
-              valor={visualPresence}
-              setValor={setVisualPresence}
-              onAutoSave={() => autoSave({ visual_presence: visualPresence })}
+              raposaTexto="Não precisa ser um sistema sofisticado. O melhor controle é aquele que você usa."
+              valor={controle}
+              setValor={setControle}
+              onAutoSave={() => autoSave({ tracking_system: controle })}
               onVoltar={() => setStep(2)}
               onContinuar={() => {
-                autoSave({ visual_presence: visualPresence });
+                autoSave({ tracking_system: controle });
                 setStep(4);
               }}
               minLen={20}
@@ -286,20 +287,20 @@ function Etapa5Page() {
           )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="o caminho mais curto da descoberta à compra."
-              titulo={<>Como a cliente compra de você?</>}
-              label="SEU CAMINHO DE COMPRA"
-              placeholder="Ex: Ela vê o post, manda DM, eu mando o catálogo pelo WhatsApp, ela escolhe, paga Pix e começo. Ou entra no link da bio, preenche o formulário e eu respondo em 24h."
-              maxLength={200}
-              ajuda="quanto menos passos, mais ela compra. descreve como é hoje."
+              caveat="ficar sem material no meio de um pedido é um pesadelo que dá pra evitar."
+              titulo={<>Quando você percebe que precisa repor?</>}
+              label="SEU GATILHO DE REPOSIÇÃO"
+              placeholder="Ex: Quando o estoque de papel cai pela metade eu já peço. Ribbon repõe todo mês automaticamente. Fita e caixa ainda faço por demanda e às vezes atrasa."
+              maxLength={300}
+              ajuda="conta como acontece hoje, mesmo que você saiba que não é o ideal."
               raposaEstado="Animada · em pé"
-              raposaTexto="Cada passo a mais no caminho de compra perde parte das interessadas. Simples é melhor."
-              valor={purchasePath}
-              setValor={setPurchasePath}
-              onAutoSave={() => autoSave({ purchase_path: purchasePath })}
+              raposaTexto="Um sistema de reposição simples evita atrasos, clientes frustradas e noites perdidas esperando entrega."
+              valor={reposicao}
+              setValor={setReposicao}
+              onAutoSave={() => autoSave({ restock_triggers: reposicao })}
               onVoltar={() => setStep(3)}
-              onContinuar={() => gerarGuia()}
-              continuarLabel="Montar minha primeira impressão  →"
+              onContinuar={() => gerarSistema()}
+              continuarLabel="Montar meu sistema  →"
               minLen={15}
             />
           )}
@@ -307,56 +308,58 @@ function Etapa5Page() {
       )}
 
       {step === 5 && (
-        <GuiaTela
-          loading={loadingGuia}
-          guia={guia}
-          error={guiaError}
+        <SistemaTela
+          loading={loadingSistema}
+          sistema={sistema}
+          error={sistemaError}
           businessName={profile?.business_name ?? ""}
           onAjustar={() => setStep(4)}
           onContinuar={salvarEntregavelEAvancar}
-          onRetry={() => gerarGuia()}
+          onRetry={() => gerarSistema()}
         />
       )}
 
       {step === 6 && (
         <Conclusao
           onVerPainel={() => navigate({ to: "/painel" })}
-          onEtapa6={() => navigate({ to: "/etapa/6" })}
+          onEtapa7={() => navigate({ to: "/painel" })}
         />
       )}
     </>
   );
 }
 
-/* ============== E5.1 — CAPA COSMIC ============== */
+/* ============== E6.1 — CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
-    { num: "1", titulo: "Canal", sub: "onde você está" },
-    { num: "2", titulo: "Aparência", sub: "como você parece" },
-    { num: "3", titulo: "Caminho", sub: "como ela compra" },
+    { num: "1", titulo: "Capacidade", sub: "quanto produz" },
+    { num: "2", titulo: "Organização", sub: "como controla" },
+    { num: "3", titulo: "Reposição", sub: "quando refaz" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 5 DE 11 · CONTEÚDO
+          ETAPA 6 DE 11 · SUA ROTINA
         </p>
 
         <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L5 Vertical</p>
+          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L6 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">onde te acham, como você aparece.</p>
+        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">pronta pra atender.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          Sua vitrine online começa aqui.
+          O fluxo por trás
+          <br />
+          da venda.
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra montar como você aparece e como a cliente chega até você.
+          3 perguntas pra organizar quanto você consegue produzir, como organiza e quando reabastece.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
@@ -377,7 +380,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos montar minha vitrine  →
+          Vamos organizar  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
@@ -388,7 +391,7 @@ function Capa({ onStart }: { onStart: () => void }) {
   );
 }
 
-/* ============== Layout E5.2-E5.4 ============== */
+/* ============== Layout E6.2-E6.4 ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -401,9 +404,9 @@ function PerguntaLayout({
   children: React.ReactNode;
 }) {
   const passos = [
-    { num: 1, label: "Canal" },
-    { num: 2, label: "Aparência" },
-    { num: 3, label: "Caminho" },
+    { num: 1, label: "Capacidade" },
+    { num: 2, label: "Organização" },
+    { num: 3, label: "Reposição" },
   ];
   const activeIndex = step - 2;
 
@@ -413,12 +416,12 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 5 · CONTEÚDO
+            ETAPA 6 · SUA ROTINA
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Sua primeira
+            Sua produção
             <br />
-            impressão.
+            tem ritmo.
           </h2>
           <hr className="border-[#EAE2D8] my-6" />
           <div className="flex flex-col gap-5">
@@ -453,7 +456,7 @@ function PerguntaLayout({
           <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
             depois vem
             <br />
-            a sua primeira impressão
+            o seu sistema de controle
           </p>
         </aside>
 
@@ -551,10 +554,10 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E5.5 — Guia de Primeira Impressão (COSMIC) ============== */
-function GuiaTela({
+/* ============== E6.5 — Sistema de Controle (COSMIC) ============== */
+function SistemaTela({
   loading,
-  guia,
+  sistema,
   error,
   businessName,
   onAjustar,
@@ -562,7 +565,7 @@ function GuiaTela({
   onRetry,
 }: {
   loading: boolean;
-  guia: GuiaPresenca | null;
+  sistema: SistemaControle | null;
   error: string | null;
   businessName: string;
   onAjustar: () => void;
@@ -576,7 +579,7 @@ function GuiaTela({
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
-              montando sua primeira impressão...
+              montando seu sistema de controle...
             </p>
             <div className="mt-6 flex gap-2">
               {[0, 1, 2].map((i) => (
@@ -603,57 +606,57 @@ function GuiaTela({
           </>
         )}
 
-        {!loading && !error && guia && (
+        {!loading && !error && sistema && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 5 · CONTEÚDO
+              ENTREGÁVEL · ETAPA 6 · SUA ROTINA
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha como você aparece pro mundo.</p>
+            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha a ordem que a gente montou.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
-              Sua primeira impressão
+              Seu sistema de controle
               <br />
-              tá desenhada.
+              tá pronto.
             </h1>
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                GUIA DE PRESENÇA · {(businessName || "Sua marca").toUpperCase()}
+                SISTEMA DE CONTROLE · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como você aparece e como te acham</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como sua produção funciona</p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SEU CANAL PRINCIPAL
+                SUA CAPACIDADE
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {guia.canal_principal}
+                {sistema.capacidade_resumida}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                COMO VOCÊ APARECE
+                SEU CONTROLE HOJE
               </p>
               <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
-                {guia.aparencia_guia}
+                {sistema.controle_atual}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                COMO A CLIENTE COMPRA
+                QUANDO REPOR
               </p>
-              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2 whitespace-pre-line">
-                {guia.caminho_resumido}
+              <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
+                {sistema.gatilho_reposicao}
               </p>
 
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SUA BIO SUGERIDA
+                PRÓXIMO PASSO RECOMENDADO
               </p>
               <p className="font-handwritten text-[#C96B3E] text-[18px] mt-2">
-                "{guia.bio_sugerida}"
+                {sistema.proximo_passo}
               </p>
 
               <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
@@ -683,15 +686,15 @@ function GuiaTela({
   );
 }
 
-/* ============== E5.6 — Conclusão estrela 5 ============== */
-function Conclusao({ onVerPainel, onEtapa6 }: { onVerPainel: () => void; onEtapa6: () => void }) {
+/* ============== E6.6 — Conclusão estrela 6 + Sua Vitrine ativada ============== */
+function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa7: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
     { n: 2, label: "Identidade", estado: "acesa" },
     { n: 3, label: "Modelo", estado: "acesa" },
     { n: 4, label: "Presença", estado: "acesa" },
-    { n: 5, label: "Conteúdo", estado: "agora" },
-    { n: 6, label: "Rotina", estado: "dim" },
+    { n: 5, label: "Conteúdo", estado: "acesa" },
+    { n: 6, label: "Rotina", estado: "agora" },
     { n: 7, label: "Vendas", estado: "dim" },
     { n: 8, label: "Clientes", estado: "dim" },
     { n: 9, label: "Audiência", estado: "dim" },
@@ -704,15 +707,15 @@ function Conclusao({ onVerPainel, onEtapa6 }: { onVerPainel: () => void; onEtapa
       <CosmicBackground />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 5 · CONTEÚDO · CONCLUÍDA
+          ETAPA 6 · SUA ROTINA · CONCLUÍDA
         </p>
 
         <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
-          agora elas sabem onde te achar.
+          sua produção tem ritmo. agora tem controle também.
         </p>
 
-        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[68px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua quinta estrela
+        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
+          Sua sexta estrela
           <br />
           tá acesa.
         </h1>
@@ -770,19 +773,19 @@ function Conclusao({ onVerPainel, onEtapa6 }: { onVerPainel: () => void; onEtapa
           })}
         </div>
 
-        <div className="mt-12 w-full max-w-[560px] rounded-[20px] border border-[rgba(200,169,110,0.25)] bg-[rgba(200,169,110,0.08)] p-7 text-left">
+        <div className="mt-12 w-full max-w-[620px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
           <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            ALIMENTADO · SUA VITRINE
+            ATIVADA · LUA ORBITANDO
           </p>
           <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Sua Vitrine</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Sua guia de presença e o caminho de compra foram adicionados.
+            Sua vitrine completa: produto, presença e sistema de controle. Pronta pra receber qualquer cliente.
           </p>
         </div>
 
         <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-2">
-          quanto mais você preenche, mais a Pólia trabalha por você
+          fase de construção concluída. agora é hora de vender.
         </p>
 
         <div className="mt-10 flex flex-col gap-4 md:flex-row">
@@ -793,11 +796,11 @@ function Conclusao({ onVerPainel, onEtapa6 }: { onVerPainel: () => void; onEtapa
             Ver meu painel
           </button>
           <button
-            onClick={onEtapa6}
+            onClick={onEtapa7}
             className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
             style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
           >
-            Começar Etapa 6  →
+            Começar Etapa 7  →
           </button>
         </div>
       </div>
