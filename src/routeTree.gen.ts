@@ -18,6 +18,7 @@ import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedEtapa3RouteImport } from './routes/_authenticated/etapa.3'
 import { Route as AuthenticatedEtapa2RouteImport } from './routes/_authenticated/etapa.2'
 import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
 
@@ -65,6 +66,11 @@ const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   path: '/onboarding',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEtapa3Route = AuthenticatedEtapa3RouteImport.update({
+  id: '/etapa/3',
+  path: '/etapa/3',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedEtapa2Route = AuthenticatedEtapa2RouteImport.update({
   id: '/etapa/2',
   path: '/etapa/2',
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/2': typeof AuthenticatedEtapa2Route
+  '/etapa/3': typeof AuthenticatedEtapa3Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/2': typeof AuthenticatedEtapa2Route
+  '/etapa/3': typeof AuthenticatedEtapa3Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
   '/_authenticated/etapa/2': typeof AuthenticatedEtapa2Route
+  '/_authenticated/etapa/3': typeof AuthenticatedEtapa3Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/etapa/1'
     | '/etapa/2'
+    | '/etapa/3'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/etapa/1'
     | '/etapa/2'
+    | '/etapa/3'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/_authenticated/etapa/1'
     | '/_authenticated/etapa/2'
+    | '/_authenticated/etapa/3'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -229,6 +241,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/etapa/3': {
+      id: '/_authenticated/etapa/3'
+      path: '/etapa/3'
+      fullPath: '/etapa/3'
+      preLoaderRoute: typeof AuthenticatedEtapa3RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/2': {
       id: '/_authenticated/etapa/2'
       path: '/etapa/2'
@@ -251,6 +270,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
   AuthenticatedEtapa2Route: typeof AuthenticatedEtapa2Route
+  AuthenticatedEtapa3Route: typeof AuthenticatedEtapa3Route
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -258,6 +278,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
   AuthenticatedEtapa2Route: AuthenticatedEtapa2Route,
+  AuthenticatedEtapa3Route: AuthenticatedEtapa3Route,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
