@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
