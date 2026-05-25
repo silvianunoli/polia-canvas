@@ -120,7 +120,7 @@ function Etapa1Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") (payload as Record<string, string>)[k] = v;
       }
-      await supabase.from("profiles").update(payload).eq("id", userId);
+      await supabase.from("profiles").update(payload as never).eq("id", userId);
 
     },
     [userId],
