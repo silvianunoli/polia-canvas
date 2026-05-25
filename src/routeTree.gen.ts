@@ -18,6 +18,7 @@ import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
 import { Route as AuthenticatedEtapa6RouteImport } from './routes/_authenticated/etapa.6'
@@ -69,6 +70,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEtapa9Route = AuthenticatedEtapa9RouteImport.update({
+  id: '/etapa/9',
+  path: '/etapa/9',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/etapa/6': typeof AuthenticatedEtapa6Route
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
+  '/etapa/9': typeof AuthenticatedEtapa9Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/etapa/6': typeof AuthenticatedEtapa6Route
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
+  '/etapa/9': typeof AuthenticatedEtapa9Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/etapa/6': typeof AuthenticatedEtapa6Route
   '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
   '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
+  '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/etapa/6'
     | '/etapa/7'
     | '/etapa/8'
+    | '/etapa/9'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/etapa/6'
     | '/etapa/7'
     | '/etapa/8'
+    | '/etapa/9'
   id:
     | '__root__'
     | '/'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/6'
     | '/_authenticated/etapa/7'
     | '/_authenticated/etapa/8'
+    | '/_authenticated/etapa/9'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -301,6 +313,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/etapa/9': {
+      id: '/_authenticated/etapa/9'
+      path: '/etapa/9'
+      fullPath: '/etapa/9'
+      preLoaderRoute: typeof AuthenticatedEtapa9RouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/etapa/8': {
       id: '/_authenticated/etapa/8'
       path: '/etapa/8'
@@ -371,6 +390,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEtapa6Route: typeof AuthenticatedEtapa6Route
   AuthenticatedEtapa7Route: typeof AuthenticatedEtapa7Route
   AuthenticatedEtapa8Route: typeof AuthenticatedEtapa8Route
+  AuthenticatedEtapa9Route: typeof AuthenticatedEtapa9Route
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -384,6 +404,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEtapa6Route: AuthenticatedEtapa6Route,
   AuthenticatedEtapa7Route: AuthenticatedEtapa7Route,
   AuthenticatedEtapa8Route: AuthenticatedEtapa8Route,
+  AuthenticatedEtapa9Route: AuthenticatedEtapa9Route,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -402,13 +423,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
