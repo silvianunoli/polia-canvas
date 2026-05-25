@@ -229,9 +229,10 @@ function PainelPage() {
       <section className="bg-polia-creme px-6 pb-10 pt-12 md:px-12">
         <div className="mx-auto flex max-w-[1280px] flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="flex-1">
-            <p className="mb-2 font-handwritten text-[24px] text-polia-terracota">
+            <p className="mb-2 font-handwritten text-[24px] text-polia-terracota" suppressHydrationWarning>
               {getHeadlineSaudacao()}, {displayName}.
             </p>
+
             <h1 className="max-w-[640px] whitespace-pre-line font-serif text-[40px] leading-[1.1] text-polia-noite md:text-[60px]">
               {headline}
             </h1>
