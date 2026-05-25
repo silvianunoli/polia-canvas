@@ -19,7 +19,6 @@ import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
-import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
 import { Route as AuthenticatedEtapa6RouteImport } from './routes/_authenticated/etapa.6'
 import { Route as AuthenticatedEtapa5RouteImport } from './routes/_authenticated/etapa.5'
@@ -70,6 +69,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
+  id: '/etapa/8',
+  path: '/etapa/8',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
