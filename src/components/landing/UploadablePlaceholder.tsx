@@ -7,9 +7,10 @@ interface Props {
   width: number | string;
   height: number | string;
   description?: string;
+  fit?: "cover" | "contain";
 }
 
-export function UploadablePlaceholder({ id, label, width, height, description }: Props) {
+export function UploadablePlaceholder({ id, label, width, height, description, fit = "cover" }: Props) {
   const storageKey = `polia-asset-${id}`;
   const [image, setImage] = useState<string | null>(null);
   const [hover, setHover] = useState(false);
@@ -39,7 +40,7 @@ export function UploadablePlaceholder({ id, label, width, height, description }:
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/svg+xml,image/png,image/jpeg,image/webp"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -54,8 +55,8 @@ export function UploadablePlaceholder({ id, label, width, height, description }:
             style={{
               width: "100%",
               height: "100%",
-              borderRadius: 12,
-              objectFit: "cover",
+              borderRadius: fit === "contain" ? 0 : 12,
+              objectFit: fit,
             }}
           />
           <button

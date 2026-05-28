@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { PoliaButton } from "@/components/ui/PoliaButton";
+import { UploadablePlaceholder } from "@/components/landing/UploadablePlaceholder";
 
 interface NavbarProps {
   transparentOnTop?: boolean;
@@ -51,19 +52,17 @@ export function Navbar({ transparentOnTop = true }: NavbarProps) {
       >
         <Link
           to="/"
-          className="flex items-center justify-center"
-          style={{
-            width: 120,
-            height: 32,
-            border: "1px dashed var(--terracota)",
-          }}
+          style={{ display: "inline-block", lineHeight: 0 }}
+          aria-label="Pólia — início"
         >
-          <span
-            className="font-sans"
-            style={{ fontSize: 10, letterSpacing: "0.2em", color: "rgba(201,107,62,0.6)" }}
-          >
-            LOGO
-          </span>
+          <UploadablePlaceholder
+            id="logo-polia"
+            label="LOGO"
+            width={120}
+            height={32}
+            description="SVG 360x96px"
+            fit="contain"
+          />
         </Link>
 
         <div className="flex items-center" style={{ gap: 16 }}>

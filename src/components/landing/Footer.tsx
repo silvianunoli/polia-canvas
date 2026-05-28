@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { CSSProperties, ReactNode } from "react";
+import { UploadablePlaceholder } from "@/components/landing/UploadablePlaceholder";
 
 type FooterLink = { label: string; to?: string; href?: string };
 
@@ -114,25 +115,14 @@ export function Footer(): ReactNode {
           }}
         >
           <div style={{ maxWidth: 240 }}>
-            <div
-              className="flex items-center justify-center"
-              style={{
-                width: 110,
-                height: 28,
-                border: "1px dashed rgba(201,107,62,0.5)",
-              }}
-            >
-              <span
-                className="font-sans"
-                style={{
-                  fontSize: 10,
-                  letterSpacing: "0.2em",
-                  color: "rgba(201,107,62,0.5)",
-                }}
-              >
-                LOGO
-              </span>
-            </div>
+            <UploadablePlaceholder
+              id="logo-polia"
+              label="LOGO"
+              width={110}
+              height={28}
+              description="SVG 330x84px"
+              fit="contain"
+            />
             <p
               className="font-sans"
               style={{
