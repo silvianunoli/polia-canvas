@@ -182,3 +182,24 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* Landing page hex vars + utilities */
+:root {
+  --terracota: #C96B3E;
+  --verde-musgo: #2D6A4F;
+  --azul-noite: #1A1A2E;
+  --dourado: #C8A96E;
+  --creme: #FDF8F5;
+  --cinza-claro: #F5F5FA;
+  --creme-escuro: #F0E9E2;
+}
+.font-caveat { font-family: "Caveat", cursive; }
+
+@keyframes polia-pulse-dot {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+@keyframes polia-scroll-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.4); }
+}
