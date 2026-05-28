@@ -5,6 +5,7 @@ import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { JourneySection } from "@/components/landing/JourneySection";
+import { ProductRevealSection } from "@/components/landing/ProductRevealSection";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,6 +39,7 @@ function LandingPage() {
       <HeroSection preloader={isFirstVisit} />
       <ProblemSection />
       <JourneySection />
+      <ProductRevealSection />
     </div>
   );
 }
