@@ -11,7 +11,8 @@ import {
   SerifHeadline,
 } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
-import { CosmicButton } from "@/components/cosmic/CosmicButton";
+import { PoliaButton } from "@/components/ui/PoliaButton";
+import { Loader2 } from "lucide-react";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 
