@@ -181,6 +181,17 @@ export function Footer(): ReactNode {
             polia-canvas.lovable.app
           </span>
         </div>
+        <p
+          className="font-sans"
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.20)",
+            marginTop: 16,
+          }}
+        >
+          Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei
+          13.709/2018).
+        </p>
       </div>
     </footer>
   );
