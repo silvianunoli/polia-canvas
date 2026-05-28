@@ -37,8 +37,11 @@ function Contato() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.functions.invoke("enviar-contato", {
-      body: parsed.data,
+    const { error } = await supabase.from("contatos").insert({
+      nome: parsed.data.nome,
+      email: parsed.data.email,
+      assunto: parsed.data.assunto,
+      mensagem: parsed.data.mensagem,
     });
     if (error) {
       toast.error("Não deu pra enviar agora. Tenta direto em contato@polia.app");
