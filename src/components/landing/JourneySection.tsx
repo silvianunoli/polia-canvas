@@ -241,7 +241,7 @@ function FaseGroup({
   );
 }
 
-export default function JourneySection() {
+export function JourneySection() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
   const [pathLength, setPathLength] = useState(0);
