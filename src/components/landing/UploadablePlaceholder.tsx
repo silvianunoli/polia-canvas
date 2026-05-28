@@ -40,7 +40,7 @@ export function UploadablePlaceholder({ id, label, width, height, description, f
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept="image/svg+xml,image/png,image/jpeg,image/webp"
         className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0];
@@ -55,8 +55,8 @@ export function UploadablePlaceholder({ id, label, width, height, description, f
             style={{
               width: "100%",
               height: "100%",
-              borderRadius: 12,
-              objectFit: "cover",
+              borderRadius: fit === "contain" ? 0 : 12,
+              objectFit: fit,
             }}
           />
           <button
