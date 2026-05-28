@@ -158,7 +158,7 @@ export function FinalCTASection() {
         </motion.div>
       </motion.div>
 
-      <LandingFooter />
+
 
       <style>{`
         .polia-final-cta::before {
