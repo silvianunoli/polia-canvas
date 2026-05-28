@@ -24,12 +24,10 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    setIsFirstVisit(!sessionStorage.getItem("polia-visited"));
-  }, []);
+  const [isFirstVisit] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return !sessionStorage.getItem("polia-visited");
+  });
 
   return (
     <div style={{ background: "var(--azul-noite)", minHeight: "100vh" }}>
