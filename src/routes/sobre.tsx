@@ -626,7 +626,7 @@ function SobrePage() {
           </div>
         </motion.div>
 
-        <LandingFooter />
+        <Footer />
 
         <style>{`
           .polia-final-cta::before {
