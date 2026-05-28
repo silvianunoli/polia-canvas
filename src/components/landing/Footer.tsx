@@ -8,9 +8,9 @@ const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "PRODUTO",
     links: [
-      { label: "Como funciona", to: "/como-funciona" },
+      { label: "Como funciona", href: "/#jornada" },
       { label: "Preços", to: "/precos" },
-      { label: "Lista de espera", to: "/lista-de-espera" },
+      { label: "Manifesto", to: "/manifesto" },
       { label: "Sobre", to: "/sobre" },
     ],
   },
@@ -20,6 +20,13 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Manifesto", to: "/manifesto" },
       { label: "Blog", href: "#" },
       { label: "Sobre", to: "/sobre" },
+    ],
+  },
+  {
+    title: "PARTICIPE",
+    links: [
+      { label: "Lista de espera", href: "/#cta" },
+      { label: "Login", to: "/auth/login" },
     ],
   },
   {
@@ -174,6 +181,17 @@ export function Footer(): ReactNode {
             polia-canvas.lovable.app
           </span>
         </div>
+        <p
+          className="font-sans"
+          style={{
+            fontSize: 11,
+            color: "rgba(255,255,255,0.20)",
+            marginTop: 16,
+          }}
+        >
+          Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei
+          13.709/2018).
+        </p>
       </div>
     </footer>
   );
