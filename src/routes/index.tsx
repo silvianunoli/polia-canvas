@@ -54,6 +54,7 @@ function LandingPage() {
         </div>
         <FinalCTASection />
       </main>
+      <Footer />
     </div>
   );
 }
