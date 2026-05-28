@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute } from "@tanstack/react-router";
-import { PublicNav } from "@/components/public/PublicNav";
-import { PublicFooter } from "@/components/public/PublicFooter";
+import { Navbar } from "@/components/landing/Navbar";
+import { Footer } from "@/components/landing/Footer";
 
 export const Route = createFileRoute("/_public")({
   component: PublicLayout,
@@ -8,12 +8,15 @@ export const Route = createFileRoute("/_public")({
 
 function PublicLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDF8F5]">
-      <PublicNav />
-      <main className="flex-1">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "var(--azul-noite)" }}
+    >
+      <Navbar transparentOnTop={false} />
+      <main className="flex-1" style={{ paddingTop: 64 }}>
         <Outlet />
       </main>
-      <PublicFooter />
+      <Footer />
     </div>
   );
 }
