@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import StarField from "@/components/ui/StarField";
+import { StarField } from "@/components/ui/StarField";
 
 type Etapa = { n: number; nome: string; sub: string };
 type Fase = { nome: string; cor: string; etapas: Etapa[] };
