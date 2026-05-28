@@ -9,6 +9,7 @@ import { ProductRevealSection } from "@/components/landing/ProductRevealSection"
 import { DeliverablesSection } from "@/components/landing/DeliverablesSection";
 import { ManifestoSection } from "@/components/landing/ManifestoSection";
 import { FinalCTASection } from "@/components/landing/FinalCTASection";
+import { Footer } from "@/components/landing/Footer";
 import { ScrollProgress } from "@/components/landing/ScrollProgress";
 import { CursorDot } from "@/components/landing/CursorDot";
 
