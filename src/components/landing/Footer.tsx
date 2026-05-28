@@ -178,7 +178,7 @@ export function Footer(): ReactNode {
             className="font-sans"
             style={{ fontSize: 12, color: "rgba(255,255,255,0.20)" }}
           >
-            polia-canvas.lovable.app
+            &#8203;
           </span>
         </div>
         <p
