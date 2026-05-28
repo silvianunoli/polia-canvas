@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Preloader } from "@/components/landing/Preloader";
 import { Navbar } from "@/components/landing/Navbar";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { ProblemSection } from "@/components/landing/ProblemSection";
+import { JourneySection } from "@/components/landing/JourneySection";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,6 +36,8 @@ function LandingPage() {
       <Preloader />
       <Navbar />
       <HeroSection preloader={isFirstVisit} />
+      <ProblemSection />
+      <JourneySection />
     </div>
   );
 }
