@@ -117,11 +117,6 @@ function NotFoundComponent() {
 }
 
 function NotFoundStars() {
-  // Lazy import-free wrapper so SSR doesn't crash if canvas is missing.
-  const StarField = require("@/components/ui/StarField").StarField as React.FC<{
-    density?: number;
-    speed?: number;
-  }>;
   return <StarField density={40} speed={0.4} />;
 }
 
