@@ -141,7 +141,7 @@ function LoginPage() {
           disabled={loading}
           hint={
             <Link
-              to="/auth/esqueci"
+              to="/auth/esqueci-senha"
               className="font-sans text-[13px] text-[#C96B3E] hover:underline"
             >
               Esqueci minha senha
