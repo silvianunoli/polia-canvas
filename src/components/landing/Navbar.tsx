@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { PoliaButton } from "@/components/ui/PoliaButton";
+import { UploadablePlaceholder } from "@/components/landing/UploadablePlaceholder";
 
 interface NavbarProps {
   transparentOnTop?: boolean;
