@@ -11,6 +11,7 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { StarField } from "@/components/ui/StarField";
 
 import appCss from "../styles.css?url";
 
