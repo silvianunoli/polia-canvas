@@ -1,0 +1,1 @@
+UPDATE public.profiles SET is_admin = true WHERE id = (SELECT id FROM auth.users WHERE email ILIKE 'silviaoliveira7288@gmail.com' OR email ILIKE 'silviaioliveira7288@gmail.com');
