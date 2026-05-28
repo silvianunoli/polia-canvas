@@ -81,53 +81,90 @@ export function UploadablePlaceholder({ id, label, width, height, description, f
           </button>
         </>
       ) : (
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "1.5px dashed var(--terracota)",
-            background: "rgba(201,107,62,0.04)",
-            borderRadius: 12,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            padding: 16,
-            textAlign: "center",
-          }}
-        >
-          <ImagePlus size={32} color="rgba(201,107,62,0.4)" />
-          <div className="font-sans" style={{ fontSize: 12, color: "rgba(201,107,62,0.5)" }}>
-            {label}
-          </div>
-          {description && (
+        (() => {
+          const numericHeight = typeof height === "number" ? height : Number.parseInt(String(height), 10);
+          const compact = Number.isFinite(numericHeight) && numericHeight < 60;
+
+          if (compact) {
+            return (
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="font-sans"
+                title={description ? `${label} — ${description}` : label}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "1px dashed rgba(201,107,62,0.5)",
+                  background: hover ? "rgba(201,107,62,0.08)" : "rgba(201,107,62,0.03)",
+                  borderRadius: 4,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 6,
+                  padding: "0 8px",
+                  cursor: "pointer",
+                  color: "rgba(201,107,62,0.7)",
+                  fontSize: 10,
+                  letterSpacing: "0.2em",
+                  transition: "background 0.2s ease",
+                }}
+              >
+                <ImagePlus size={12} />
+                {label}
+              </button>
+            );
+          }
+
+          return (
             <div
-              className="font-sans"
-              style={{ fontSize: 10, color: "rgba(201,107,62,0.3)", marginTop: -4 }}
+              style={{
+                width: "100%",
+                height: "100%",
+                border: "1.5px dashed var(--terracota)",
+                background: "rgba(201,107,62,0.04)",
+                borderRadius: 12,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                padding: 16,
+                textAlign: "center",
+              }}
             >
-              {description}
+              <ImagePlus size={32} color="rgba(201,107,62,0.4)" />
+              <div className="font-sans" style={{ fontSize: 12, color: "rgba(201,107,62,0.5)" }}>
+                {label}
+              </div>
+              {description && (
+                <div
+                  className="font-sans"
+                  style={{ fontSize: 10, color: "rgba(201,107,62,0.3)", marginTop: -4 }}
+                >
+                  {description}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="font-sans"
+                style={{
+                  fontSize: 11,
+                  color: "var(--terracota)",
+                  border: "1px solid rgba(201,107,62,0.4)",
+                  padding: "6px 12px",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  background: "transparent",
+                  marginTop: 6,
+                }}
+              >
+                Enviar imagem
+              </button>
             </div>
-          )}
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            className="font-sans"
-            style={{
-              fontSize: 11,
-              color: "var(--terracota)",
-              border: "1px solid rgba(201,107,62,0.4)",
-              padding: "6px 12px",
-              borderRadius: 6,
-              cursor: "pointer",
-              background: "transparent",
-              marginTop: 6,
-            }}
-          >
-            Enviar imagem
-          </button>
-        </div>
-      )}
+          );
+        })()
     </div>
   );
 }
