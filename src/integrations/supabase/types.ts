@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          categoria: string | null
+          conteudo_md: string | null
+          created_at: string
+          id: string
+          publicado: boolean
+          publicado_em: string | null
+          resumo: string | null
+          slug: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          conteudo_md?: string | null
+          created_at?: string
+          id?: string
+          publicado?: boolean
+          publicado_em?: string | null
+          resumo?: string | null
+          slug: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          conteudo_md?: string | null
+          created_at?: string
+          id?: string
+          publicado?: boolean
+          publicado_em?: string | null
+          resumo?: string | null
+          slug?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           contato: string | null
@@ -209,6 +248,30 @@ export type Database = {
           receita?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      lista_espera: {
+        Row: {
+          criado_em: string
+          email: string
+          id: string
+          nome: string
+          tipo_negocio: string | null
+        }
+        Insert: {
+          criado_em?: string
+          email: string
+          id?: string
+          nome: string
+          tipo_negocio?: string | null
+        }
+        Update: {
+          criado_em?: string
+          email?: string
+          id?: string
+          nome?: string
+          tipo_negocio?: string | null
         }
         Relationships: []
       }

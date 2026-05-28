@@ -9,13 +9,23 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicIndexRouteImport } from './routes/_public.index'
 import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as PublicTermosRouteImport } from './routes/_public.termos'
+import { Route as PublicSobreRouteImport } from './routes/_public.sobre'
+import { Route as PublicPrivacidadeRouteImport } from './routes/_public.privacidade'
+import { Route as PublicPrecosRouteImport } from './routes/_public.precos'
+import { Route as PublicManifestoRouteImport } from './routes/_public.manifesto'
+import { Route as PublicListaDeEsperaRouteImport } from './routes/_public.lista-de-espera'
+import { Route as PublicContatoRouteImport } from './routes/_public.contato'
+import { Route as PublicComoFuncionaRouteImport } from './routes/_public.como-funciona'
+import { Route as PublicAjudaRouteImport } from './routes/_public.ajuda'
 import { Route as AuthenticatedVitrineRouteImport } from './routes/_authenticated/vitrine'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
@@ -25,7 +35,9 @@ import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as PublicBlogIndexRouteImport } from './routes/_public.blog.index'
 import { Route as AuthenticatedBibliotecaIndexRouteImport } from './routes/_authenticated/biblioteca.index'
+import { Route as PublicBlogSlugRouteImport } from './routes/_public.blog.$slug'
 import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
@@ -39,14 +51,18 @@ import { Route as AuthenticatedEtapa10RouteImport } from './routes/_authenticate
 import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
 import { Route as AuthenticatedBibliotecaIdRouteImport } from './routes/_authenticated/biblioteca.$id'
 
+const PublicRoute = PublicRouteImport.update({
+  id: '/_public',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
+const PublicIndexRoute = PublicIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => PublicRoute,
 } as any)
 const AuthVerificacaoRoute = AuthVerificacaoRouteImport.update({
   id: '/auth/verificacao',
@@ -72,6 +88,51 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   id: '/auth/cadastro',
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PublicTermosRoute = PublicTermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicSobreRoute = PublicSobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicPrivacidadeRoute = PublicPrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicPrecosRoute = PublicPrecosRouteImport.update({
+  id: '/precos',
+  path: '/precos',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicManifestoRoute = PublicManifestoRouteImport.update({
+  id: '/manifesto',
+  path: '/manifesto',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicListaDeEsperaRoute = PublicListaDeEsperaRouteImport.update({
+  id: '/lista-de-espera',
+  path: '/lista-de-espera',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicContatoRoute = PublicContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicComoFuncionaRoute = PublicComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => PublicRoute,
+} as any)
+const PublicAjudaRoute = PublicAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => PublicRoute,
 } as any)
 const AuthenticatedVitrineRoute = AuthenticatedVitrineRouteImport.update({
   id: '/vitrine',
@@ -119,12 +180,22 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const PublicBlogIndexRoute = PublicBlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => PublicRoute,
+} as any)
 const AuthenticatedBibliotecaIndexRoute =
   AuthenticatedBibliotecaIndexRouteImport.update({
     id: '/biblioteca/',
     path: '/biblioteca/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const PublicBlogSlugRoute = PublicBlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
+  getParentRoute: () => PublicRoute,
+} as any)
 const AuthenticatedEtapa9Route = AuthenticatedEtapa9RouteImport.update({
   id: '/etapa/9',
   path: '/etapa/9',
@@ -188,7 +259,7 @@ const AuthenticatedBibliotecaIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
+  '/': typeof PublicIndexRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -198,6 +269,15 @@ export interface FileRoutesByFullPath {
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
+  '/ajuda': typeof PublicAjudaRoute
+  '/como-funciona': typeof PublicComoFuncionaRoute
+  '/contato': typeof PublicContatoRoute
+  '/lista-de-espera': typeof PublicListaDeEsperaRoute
+  '/manifesto': typeof PublicManifestoRoute
+  '/precos': typeof PublicPrecosRoute
+  '/privacidade': typeof PublicPrivacidadeRoute
+  '/sobre': typeof PublicSobreRoute
+  '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -215,10 +295,12 @@ export interface FileRoutesByFullPath {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/blog/$slug': typeof PublicBlogSlugRoute
   '/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/blog/': typeof PublicBlogIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
+  '/': typeof PublicIndexRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -228,6 +310,15 @@ export interface FileRoutesByTo {
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
+  '/ajuda': typeof PublicAjudaRoute
+  '/como-funciona': typeof PublicComoFuncionaRoute
+  '/contato': typeof PublicContatoRoute
+  '/lista-de-espera': typeof PublicListaDeEsperaRoute
+  '/manifesto': typeof PublicManifestoRoute
+  '/precos': typeof PublicPrecosRoute
+  '/privacidade': typeof PublicPrivacidadeRoute
+  '/sobre': typeof PublicSobreRoute
+  '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
@@ -245,12 +336,14 @@ export interface FileRoutesByTo {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/blog/$slug': typeof PublicBlogSlugRoute
   '/biblioteca': typeof AuthenticatedBibliotecaIndexRoute
+  '/blog': typeof PublicBlogIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/_public': typeof PublicRouteWithChildren
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -260,11 +353,21 @@ export interface FileRoutesById {
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vitrine': typeof AuthenticatedVitrineRoute
+  '/_public/ajuda': typeof PublicAjudaRoute
+  '/_public/como-funciona': typeof PublicComoFuncionaRoute
+  '/_public/contato': typeof PublicContatoRoute
+  '/_public/lista-de-espera': typeof PublicListaDeEsperaRoute
+  '/_public/manifesto': typeof PublicManifestoRoute
+  '/_public/precos': typeof PublicPrecosRoute
+  '/_public/privacidade': typeof PublicPrivacidadeRoute
+  '/_public/sobre': typeof PublicSobreRoute
+  '/_public/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/_public/': typeof PublicIndexRoute
   '/_authenticated/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
   '/_authenticated/etapa/10': typeof AuthenticatedEtapa10Route
@@ -277,7 +380,9 @@ export interface FileRoutesById {
   '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
   '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
   '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
+  '/_public/blog/$slug': typeof PublicBlogSlugRoute
   '/_authenticated/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/_public/blog/': typeof PublicBlogIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -292,6 +397,15 @@ export interface FileRouteTypes {
     | '/painel'
     | '/tarefas'
     | '/vitrine'
+    | '/ajuda'
+    | '/como-funciona'
+    | '/contato'
+    | '/lista-de-espera'
+    | '/manifesto'
+    | '/precos'
+    | '/privacidade'
+    | '/sobre'
+    | '/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -309,7 +423,9 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/blog/$slug'
     | '/biblioteca/'
+    | '/blog/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -322,6 +438,15 @@ export interface FileRouteTypes {
     | '/painel'
     | '/tarefas'
     | '/vitrine'
+    | '/ajuda'
+    | '/como-funciona'
+    | '/contato'
+    | '/lista-de-espera'
+    | '/manifesto'
+    | '/precos'
+    | '/privacidade'
+    | '/sobre'
+    | '/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
@@ -339,11 +464,13 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/blog/$slug'
     | '/biblioteca'
+    | '/blog'
   id:
     | '__root__'
-    | '/'
     | '/_authenticated'
+    | '/_public'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
@@ -353,11 +480,21 @@ export interface FileRouteTypes {
     | '/_authenticated/painel'
     | '/_authenticated/tarefas'
     | '/_authenticated/vitrine'
+    | '/_public/ajuda'
+    | '/_public/como-funciona'
+    | '/_public/contato'
+    | '/_public/lista-de-espera'
+    | '/_public/manifesto'
+    | '/_public/precos'
+    | '/_public/privacidade'
+    | '/_public/sobre'
+    | '/_public/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/_public/'
     | '/_authenticated/biblioteca/$id'
     | '/_authenticated/etapa/1'
     | '/_authenticated/etapa/10'
@@ -370,12 +507,14 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/7'
     | '/_authenticated/etapa/8'
     | '/_authenticated/etapa/9'
+    | '/_public/blog/$slug'
     | '/_authenticated/biblioteca/'
+    | '/_public/blog/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  PublicRoute: typeof PublicRouteWithChildren
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthEsqueciRoute: typeof AuthEsqueciRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -385,6 +524,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/_public': {
+      id: '/_public'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof PublicRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
@@ -392,12 +538,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
+    '/_public/': {
+      id: '/_public/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof PublicIndexRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/auth/verificacao': {
       id: '/auth/verificacao'
@@ -433,6 +579,69 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/cadastro'
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_public/termos': {
+      id: '/_public/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof PublicTermosRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/sobre': {
+      id: '/_public/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof PublicSobreRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/privacidade': {
+      id: '/_public/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PublicPrivacidadeRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/precos': {
+      id: '/_public/precos'
+      path: '/precos'
+      fullPath: '/precos'
+      preLoaderRoute: typeof PublicPrecosRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/manifesto': {
+      id: '/_public/manifesto'
+      path: '/manifesto'
+      fullPath: '/manifesto'
+      preLoaderRoute: typeof PublicManifestoRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/lista-de-espera': {
+      id: '/_public/lista-de-espera'
+      path: '/lista-de-espera'
+      fullPath: '/lista-de-espera'
+      preLoaderRoute: typeof PublicListaDeEsperaRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/contato': {
+      id: '/_public/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof PublicContatoRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/como-funciona': {
+      id: '/_public/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof PublicComoFuncionaRouteImport
+      parentRoute: typeof PublicRoute
+    }
+    '/_public/ajuda': {
+      id: '/_public/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof PublicAjudaRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_authenticated/vitrine': {
       id: '/_authenticated/vitrine'
@@ -497,12 +706,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_public/blog/': {
+      id: '/_public/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof PublicBlogIndexRouteImport
+      parentRoute: typeof PublicRoute
+    }
     '/_authenticated/biblioteca/': {
       id: '/_authenticated/biblioteca/'
       path: '/biblioteca'
       fullPath: '/biblioteca/'
       preLoaderRoute: typeof AuthenticatedBibliotecaIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_public/blog/$slug': {
+      id: '/_public/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof PublicBlogSlugRouteImport
+      parentRoute: typeof PublicRoute
     }
     '/_authenticated/etapa/9': {
       id: '/_authenticated/etapa/9'
@@ -645,9 +868,42 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface PublicRouteChildren {
+  PublicAjudaRoute: typeof PublicAjudaRoute
+  PublicComoFuncionaRoute: typeof PublicComoFuncionaRoute
+  PublicContatoRoute: typeof PublicContatoRoute
+  PublicListaDeEsperaRoute: typeof PublicListaDeEsperaRoute
+  PublicManifestoRoute: typeof PublicManifestoRoute
+  PublicPrecosRoute: typeof PublicPrecosRoute
+  PublicPrivacidadeRoute: typeof PublicPrivacidadeRoute
+  PublicSobreRoute: typeof PublicSobreRoute
+  PublicTermosRoute: typeof PublicTermosRoute
+  PublicIndexRoute: typeof PublicIndexRoute
+  PublicBlogSlugRoute: typeof PublicBlogSlugRoute
+  PublicBlogIndexRoute: typeof PublicBlogIndexRoute
+}
+
+const PublicRouteChildren: PublicRouteChildren = {
+  PublicAjudaRoute: PublicAjudaRoute,
+  PublicComoFuncionaRoute: PublicComoFuncionaRoute,
+  PublicContatoRoute: PublicContatoRoute,
+  PublicListaDeEsperaRoute: PublicListaDeEsperaRoute,
+  PublicManifestoRoute: PublicManifestoRoute,
+  PublicPrecosRoute: PublicPrecosRoute,
+  PublicPrivacidadeRoute: PublicPrivacidadeRoute,
+  PublicSobreRoute: PublicSobreRoute,
+  PublicTermosRoute: PublicTermosRoute,
+  PublicIndexRoute: PublicIndexRoute,
+  PublicBlogSlugRoute: PublicBlogSlugRoute,
+  PublicBlogIndexRoute: PublicBlogIndexRoute,
+}
+
+const PublicRouteWithChildren =
+  PublicRoute._addFileChildren(PublicRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  PublicRoute: PublicRouteWithChildren,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthEsqueciRoute: AuthEsqueciRoute,
   AuthLoginRoute: AuthLoginRoute,
@@ -657,13 +913,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
