@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { StarField } from "@/components/ui/StarField";
 import { UploadablePlaceholder } from "./UploadablePlaceholder";
+import { LandingFooter } from "./LandingFooter";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function FinalCTASection() {
@@ -157,76 +158,7 @@ export function FinalCTASection() {
         </motion.div>
       </motion.div>
 
-      {/* Rodapé */}
-      <div
-        style={{
-          marginTop: 80,
-          paddingTop: 40,
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          maxWidth: 1200,
-          margin: "80px auto 0",
-          padding: "40px 0 0",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: 24,
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <div style={{ textAlign: "left" }}>
-          <div
-            style={{
-              width: 100,
-              height: 26,
-              border: "1px dashed rgba(255,255,255,0.2)",
-              borderRadius: 4,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 10,
-              color: "rgba(255,255,255,0.3)",
-              marginBottom: 8,
-            }}
-          >
-            LOGO
-          </div>
-          <div
-            className="font-caveat"
-            style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}
-          >
-            2026 Pólia. Feito com carinho.
-          </div>
-        </div>
-
-        <div
-          className="font-sans"
-          style={{
-            display: "flex",
-            gap: 32,
-            fontSize: 13,
-            color: "rgba(255,255,255,0.40)",
-          }}
-        >
-          <Link to="/termos" style={{ color: "inherit", textDecoration: "none" }}>
-            Termos
-          </Link>
-          <Link to="/privacidade" style={{ color: "inherit", textDecoration: "none" }}>
-            Privacidade
-          </Link>
-          <Link to="/contato" style={{ color: "inherit", textDecoration: "none" }}>
-            Contato
-          </Link>
-        </div>
-
-        <div
-          className="font-caveat"
-          style={{ fontSize: 16, color: "rgba(255,255,255,0.35)" }}
-        >
-          voar é um ato de coragem.
-        </div>
-      </div>
+      <LandingFooter />
 
       <style>{`
         .polia-final-cta::before {
