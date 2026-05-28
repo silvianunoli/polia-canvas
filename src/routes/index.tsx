@@ -6,6 +6,9 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { ProblemSection } from "@/components/landing/ProblemSection";
 import { JourneySection } from "@/components/landing/JourneySection";
 import { ProductRevealSection } from "@/components/landing/ProductRevealSection";
+import { DeliverablesSection } from "@/components/landing/DeliverablesSection";
+import { ManifestoSection } from "@/components/landing/ManifestoSection";
+import { FinalCTASection } from "@/components/landing/FinalCTASection";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,6 +43,9 @@ function LandingPage() {
       <ProblemSection />
       <JourneySection />
       <ProductRevealSection />
+      <DeliverablesSection />
+      <ManifestoSection />
+      <FinalCTASection />
     </div>
   );
 }
