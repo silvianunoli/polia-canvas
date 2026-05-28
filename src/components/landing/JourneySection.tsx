@@ -1,113 +1,250 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { StarField } from "@/components/ui/StarField";
 
-interface Etapa {
-  numero: number;
-  nome: string;
-  subtitulo: string;
-  fase: string;
-  corFase: string;
-}
+type Etapa = { n: number; nome: string; sub: string };
+type Fase = { nome: string; cor: string; etapas: Etapa[] };
 
-const etapas: Etapa[] = [
-  { numero: 1, nome: "Descoberta", subtitulo: "Quem você é. Quem você quer alcançar.", fase: "Sonho", corFase: "#C9407A" },
-  { numero: 2, nome: "Identidade do seu negócio", subtitulo: "Que cara, que vibe, que palavras te representam.", fase: "Sonho", corFase: "#C9407A" },
-  { numero: 3, nome: "Modelo de Negócio", subtitulo: "Por que você existe, pra quem e por que escolheriam você.", fase: "Sonho", corFase: "#C9407A" },
-  { numero: 4, nome: "Presença digital", subtitulo: "O que você vende, como entrega e quanto cobra.", fase: "Construção", corFase: "#1A7FAD" },
-  { numero: 5, nome: "Conteúdo", subtitulo: "Onde te acham, como você aparece e como compram.", fase: "Construção", corFase: "#1A7FAD" },
-  { numero: 6, nome: "Sua rotina", subtitulo: "Quanto você produz, como organiza e quando repõe.", fase: "Construção", corFase: "#1A7FAD" },
-  { numero: 7, nome: "Suas vendas", subtitulo: "Como ela sabe, se decide e fecha.", fase: "Venda", corFase: "#1A8F5C" },
-  { numero: 8, nome: "Seus clientes", subtitulo: "Como acolhe, resolve e fideliza.", fase: "Venda", corFase: "#1A8F5C" },
-  { numero: 9, nome: "Sua audiência", subtitulo: "O que ela consome, o que para o scroll, como você chega.", fase: "Venda", corFase: "#1A8F5C" },
-  { numero: 10, nome: "Crescimento", subtitulo: "Que número, quando olhar, o que fazer.", fase: "Evolução", corFase: "#6B50CC" },
-  { numero: 11, nome: "Sua rede", subtitulo: "Onde você quer estar, com quem, em quanto.", fase: "Evolução", corFase: "#6B50CC" },
+const fases: Fase[] = [
+  {
+    nome: "Sonho",
+    cor: "#C9407A",
+    etapas: [
+      { n: 1, nome: "Descoberta", sub: "Quem você é. Quem você quer alcançar." },
+      { n: 2, nome: "Identidade do seu negócio", sub: "Que cara, que vibe, que palavras te representam." },
+      { n: 3, nome: "Modelo de Negócio", sub: "Por que você existe, pra quem e por que escolheriam você." },
+    ],
+  },
+  {
+    nome: "Construção",
+    cor: "#1A7FAD",
+    etapas: [
+      { n: 4, nome: "Presença digital", sub: "O que você vende, como entrega e quanto cobra." },
+      { n: 5, nome: "Conteúdo", sub: "Onde te acham, como você aparece e como compram." },
+      { n: 6, nome: "Sua rotina", sub: "Quanto você produz, como organiza e quando repõe." },
+    ],
+  },
+  {
+    nome: "Venda",
+    cor: "#1A8F5C",
+    etapas: [
+      { n: 7, nome: "Suas vendas", sub: "Como ela sabe, se decide e fecha." },
+      { n: 8, nome: "Seus clientes", sub: "Como acolhe, resolve e fideliza." },
+      { n: 9, nome: "Sua audiência", sub: "O que ela consome, o que para o scroll, como você chega." },
+    ],
+  },
+  {
+    nome: "Evolução",
+    cor: "#6B50CC",
+    etapas: [
+      { n: 10, nome: "Crescimento", sub: "Que número, quando olhar, o que fazer." },
+      { n: 11, nome: "Sua rede", sub: "Onde você quer estar, com quem, em quanto." },
+    ],
+  },
 ];
 
-const CARD_WIDTH = 220;
-const CARD_GAP = 80;
-const TRACK_PADDING = 80;
-const LEFT_TITLE_OFFSET = 320;
+function hexA(hex: string, a: number) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
 
-function StarIcon({ color, size = 20 }: { color: string; size?: number }) {
+function EtapaNode({
+  etapa,
+  cor,
+  isLeft,
+  delay,
+  isMobile,
+}: {
+  etapa: Etapa;
+  cor: string;
+  isLeft: boolean;
+  delay: number;
+  isMobile: boolean;
+}) {
+  const [hover, setHover] = useState(false);
+  const [inView, setInView] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => e.isIntersecting && setInView(true),
+      { rootMargin: "-80px" }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
+  const colStart = isMobile ? 1 : isLeft ? 1 : 3;
+  const justify = isMobile ? "flex-start" : isLeft ? "flex-end" : "flex-start";
+
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M12 2l2.39 7.36H22l-6.18 4.49L18.21 21 12 16.5 5.79 21l2.39-7.15L2 9.36h7.61z" />
-    </svg>
+    <div
+      ref={ref}
+      style={{
+        gridColumn: colStart,
+        gridRow: 1,
+        display: "flex",
+        justifyContent: justify,
+        position: "relative",
+        marginLeft: isMobile ? 52 : 0,
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, x: isMobile ? 20 : isLeft ? -20 : 20 }}
+        whileInView={{ opacity: 1, x: 0 }}
+        viewport={{ once: true, margin: "-80px" }}
+        transition={{ delay, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        style={{
+          padding: "20px 24px",
+          background: hover ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+          border: `1px solid ${hover ? hexA(cor, 0.4) : "rgba(255,255,255,0.07)"}`,
+          borderRadius: 12,
+          maxWidth: 340,
+          transform: hover ? "translateY(-2px)" : "translateY(0)",
+          transition: "background 0.25s, border-color 0.25s, transform 0.25s",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: 10,
+            color: cor,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            marginBottom: 6,
+            fontWeight: 500,
+          }}
+        >
+          Etapa {String(etapa.n).padStart(2, "0")}
+        </div>
+        <div
+          style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 22,
+            color: "#fff",
+            lineHeight: 1.2,
+          }}
+        >
+          {etapa.nome}
+        </div>
+        <div
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: 13,
+            color: "rgba(255,255,255,0.45)",
+            lineHeight: 1.55,
+            marginTop: 6,
+          }}
+        >
+          {etapa.sub}
+        </div>
+      </motion.div>
+
+      {/* Ponto na linha central */}
+      <div
+        style={{
+          position: "absolute",
+          top: "50%",
+          left: isMobile ? 20 : "50%",
+          transform: isMobile
+            ? `translate(-50%, -50%) scale(${inView ? 1 : 0})`
+            : `translate(-50%, -50%) scale(${inView ? 1 : 0})`,
+          width: 14,
+          height: 14,
+          borderRadius: "50%",
+          background: cor,
+          boxShadow: inView ? `0 0 0 4px ${hexA(cor, 0.2)}` : "none",
+          transition: "transform 0.5s cubic-bezier(0.22,1,0.36,1), box-shadow 0.5s",
+          zIndex: 2,
+          marginLeft: isMobile ? 0 : undefined,
+        }}
+      />
+    </div>
   );
 }
 
-function EtapaCard({ etapa, isLast }: { etapa: Etapa; isLast: boolean }) {
+function FaseGroup({
+  fase,
+  startIdx,
+  isMobile,
+}: {
+  fase: Fase;
+  startIdx: number;
+  isMobile: boolean;
+}) {
   return (
-    <div style={{ flexShrink: 0, width: CARD_WIDTH, position: "relative" }}>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div
+    <div style={{ marginBottom: 80 }}>
+      {/* Badge */}
+      <div
+        style={{
+          textAlign: "center",
+          marginBottom: 32,
+          position: "relative",
+          zIndex: 3,
+        }}
+      >
+        <motion.span
+          animate={{ scale: [1, 1.04, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           style={{
-            width: 48,
-            height: 48,
-            borderRadius: "50%",
-            border: `1.5px solid ${etapa.corFase}80`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            background: "rgba(26,26,46,0.6)",
+            display: "inline-block",
+            fontFamily: "Inter, sans-serif",
+            fontSize: 11,
+            color: "#fff",
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            background: hexA(fase.cor, 0.25),
+            border: `1px solid ${hexA(fase.cor, 0.4)}`,
+            padding: "6px 14px",
+            borderRadius: 999,
+            fontWeight: 500,
           }}
         >
-          <StarIcon color={etapa.corFase} />
-        </div>
-        {!isLast && (
-          <div
-            style={{
-              width: CARD_GAP,
-              height: 1,
-              background: `linear-gradient(90deg, ${etapa.corFase}66, transparent)`,
-            }}
-          />
-        )}
+          {fase.nome}
+        </motion.span>
       </div>
-      <p
-        className="font-sans"
-        style={{
-          fontSize: 11,
-          color: etapa.corFase,
-          marginTop: 16,
-          letterSpacing: "0.08em",
-        }}
-      >
-        ETAPA {String(etapa.numero).padStart(2, "0")}
-      </p>
-      <h3
-        className="font-serif"
-        style={{
-          fontSize: 18,
-          color: "#fff",
-          lineHeight: 1.25,
-          marginTop: 6,
-          maxWidth: 180,
-        }}
-      >
-        {etapa.nome}
-      </h3>
-      <p
-        className="font-sans"
-        style={{
-          fontSize: 13,
-          color: "rgba(255,255,255,0.45)",
-          lineHeight: 1.5,
-          marginTop: 8,
-          maxWidth: 180,
-        }}
-      >
-        {etapa.subtitulo}
-      </p>
+
+      {/* Etapas */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        {fase.etapas.map((etapa, i) => {
+          const globalIdx = startIdx + i;
+          const isLeft = globalIdx % 2 === 0;
+          return (
+            <div
+              key={etapa.n}
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 48px 1fr",
+                alignItems: "center",
+                position: "relative",
+              }}
+            >
+              <EtapaNode
+                etapa={etapa}
+                cor={fase.cor}
+                isLeft={isLeft}
+                delay={i * 0.12}
+                isMobile={isMobile}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
 export function JourneySection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const progressFillRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
+  const [pathLength, setPathLength] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -118,270 +255,187 @@ export function JourneySection() {
   }, []);
 
   useEffect(() => {
-    if (isMobile) return;
-    let raf = 0;
-    const update = () => {
-      const section = sectionRef.current;
-      const track = trackRef.current;
-      if (!section || !track) return;
-      const rect = section.getBoundingClientRect();
-      const winH = window.innerHeight;
-      const total = section.offsetHeight - winH;
-      const scrolled = Math.min(Math.max(-rect.top, 0), total);
-      const progress = total > 0 ? scrolled / total : 0;
-      const trackWidth = track.scrollWidth;
-      const maxTranslate = Math.max(0, trackWidth - window.innerWidth + LEFT_TITLE_OFFSET);
-      const tx = progress * maxTranslate;
-      track.style.transform = `translate3d(${-tx}px, -50%, 0)`;
-      if (progressFillRef.current) {
-        progressFillRef.current.style.height = `${progress * 100}%`;
-      }
-    };
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    if (pathRef.current) {
+      setPathLength(pathRef.current.getTotalLength());
+    }
   }, [isMobile]);
 
-  // Phase badge positions (above cards 1, 4, 7, 10 → indexes 0,3,6,9)
-  const phaseAnchors = [0, 3, 6, 9];
+  useEffect(() => {
+    const onScroll = () => {
+      const el = containerRef.current;
+      const path = pathRef.current;
+      if (!el || !path || !pathLength) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const total = rect.height + vh;
+      const scrolled = vh - rect.top;
+      const progress = Math.min(1, Math.max(0, scrolled / total));
+      path.style.strokeDashoffset = String(pathLength * (1 - progress));
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [pathLength]);
 
-  const trackWidth = etapas.length * CARD_WIDTH + (etapas.length - 1) * CARD_GAP + TRACK_PADDING * 2;
-
-  // SVG path through star centers
-  // Star center x relative to track: TRACK_PADDING + i*(CARD_WIDTH+CARD_GAP) + 24
-  const starY = 80; // arbitrary baseline within svg
-  const starPoints = etapas.map((_, i) => ({
-    x: TRACK_PADDING + i * (CARD_WIDTH + CARD_GAP) + 24,
-    y: starY + Math.sin(i * 0.9) * 18,
-  }));
-  const pathD = starPoints
-    .map((p, i) => {
-      if (i === 0) return `M ${p.x} ${p.y}`;
-      const prev = starPoints[i - 1];
-      const cx = (prev.x + p.x) / 2;
-      return `Q ${cx} ${prev.y}, ${p.x} ${p.y}`;
-    })
-    .join(" ");
-
-  if (isMobile) {
-    return (
-      <section style={{ background: "var(--azul-noite)", padding: "80px 24px", position: "relative" }}>
-        <StarField density={50} speed={0.4} />
-        <div style={{ position: "relative", zIndex: 2, maxWidth: 600, margin: "0 auto" }}>
-          <p className="font-caveat" style={{ fontSize: 20, color: "var(--terracota)" }}>sua jornada</p>
-          <h2 className="font-serif" style={{ fontSize: 36, color: "#fff", lineHeight: 1.15, marginTop: 4 }}>
-            11 etapas. 4 fases.
-          </h2>
-          <p className="font-sans" style={{ fontSize: 15, color: "rgba(255,255,255,0.55)", marginTop: 12, lineHeight: 1.6 }}>
-            Cada etapa gera algo real que fica com você pra sempre.
-          </p>
-          <div style={{ marginTop: 48, display: "flex", flexDirection: "column", gap: 32 }}>
-            {etapas.map((e) => (
-              <EtapaCard key={e.numero} etapa={e} isLast />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  let startIdx = 0;
 
   return (
     <section
-      ref={sectionRef}
       style={{
+        background: "var(--azul-noite)",
+        padding: "120px 0 160px",
         position: "relative",
-        height: `${etapas.length * 120}vh`,
+        overflow: "hidden",
       }}
     >
-      <div
-        style={{
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-          overflow: "hidden",
-          background: "var(--azul-noite)",
-        }}
-      >
-        <StarField density={80} speed={0.4} />
+      <StarField density={60} speed={0.3} />
 
-        {/* Glow orb */}
+      {/* Contador decorativo */}
+      {!isMobile && (
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: 600,
-            height: 600,
-            background: "radial-gradient(circle, rgba(200,169,110,0.06) 0%, transparent 60%)",
+            top: 120,
+            right: 60,
+            textAlign: "right",
             pointerEvents: "none",
             zIndex: 1,
-          }}
-        />
-
-        {/* Left fixed title */}
-        <div
-          style={{
-            position: "absolute",
-            left: 60,
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 10,
-            maxWidth: 260,
-          }}
-        >
-          <p className="font-caveat" style={{ fontSize: 20, color: "var(--terracota)", margin: 0 }}>
-            sua jornada
-          </p>
-          <h2
-            className="font-serif"
-            style={{ fontSize: 42, color: "#fff", lineHeight: 1.15, margin: "4px 0 0" }}
-          >
-            11 etapas. 4 fases.
-          </h2>
-          <p
-            className="font-sans"
-            style={{
-              fontSize: 15,
-              color: "rgba(255,255,255,0.55)",
-              marginTop: 12,
-              lineHeight: 1.6,
-            }}
-          >
-            Cada etapa gera algo real que fica com você pra sempre.
-          </p>
-        </div>
-
-        {/* Track */}
-        <div
-          ref={trackRef}
-          style={{
-            position: "absolute",
-            left: LEFT_TITLE_OFFSET,
-            top: "50%",
-            transform: "translate3d(0, -50%, 0)",
-            display: "flex",
-            alignItems: "center",
-            gap: 0,
-            padding: `0 ${TRACK_PADDING}px`,
-            willChange: "transform",
-          }}
-        >
-          {/* SVG connector */}
-          <svg
-            width={trackWidth}
-            height={200}
-            style={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
-              zIndex: 1,
-              pointerEvents: "none",
-            }}
-          >
-            <path
-              d={pathD}
-              stroke="rgba(200,169,110,0.25)"
-              strokeWidth={1.5}
-              fill="none"
-              strokeDasharray="6 4"
-              transform={`translate(0, ${100 - starY})`}
-            />
-          </svg>
-
-          {/* Phase badges */}
-          {phaseAnchors.map((idx) => {
-            const e = etapas[idx];
-            const left = TRACK_PADDING + idx * (CARD_WIDTH + CARD_GAP);
-            return (
-              <div
-                key={`badge-${idx}`}
-                style={{
-                  position: "absolute",
-                  left,
-                  top: -60,
-                  zIndex: 10,
-                }}
-              >
-                <span
-                  className="font-sans"
-                  style={{
-                    fontSize: 10,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                    color: "#fff",
-                    background: `${e.corFase}33`,
-                    border: `1px solid ${e.corFase}4D`,
-                    padding: "4px 10px",
-                    borderRadius: 999,
-                  }}
-                >
-                  {e.fase}
-                </span>
-              </div>
-            );
-          })}
-
-          {etapas.map((e, i) => (
-            <div key={e.numero} style={{ position: "relative", zIndex: 2 }}>
-              <EtapaCard etapa={e} isLast={i === etapas.length - 1} />
-            </div>
-          ))}
-        </div>
-
-        {/* Scroll progress indicator */}
-        <div
-          style={{
-            position: "absolute",
-            right: 40,
-            bottom: 60,
-            zIndex: 20,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 10,
           }}
         >
           <div
             style={{
-              width: 2,
-              height: 80,
-              background: "rgba(255,255,255,0.10)",
-              borderRadius: 99,
-              overflow: "hidden",
-              position: "relative",
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: 120,
+              color: "rgba(255,255,255,0.04)",
+              lineHeight: 1,
             }}
           >
-            <div
-              ref={progressFillRef}
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "0%",
-                background: "var(--terracota)",
-                borderRadius: 99,
-              }}
-            />
+            11
           </div>
-          <span
-            className="font-sans"
-            style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}
+          <div
+            style={{
+              fontFamily: "Inter, sans-serif",
+              fontSize: 11,
+              color: "rgba(255,255,255,0.20)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+            }}
           >
-            role para explorar
-          </span>
+            etapas
+          </div>
         </div>
+      )}
+
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        style={{
+          textAlign: "center",
+          padding: "0 24px",
+          marginBottom: 80,
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Inter, sans-serif",
+            fontSize: 11,
+            color: "rgba(255,255,255,0.40)",
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            marginBottom: 16,
+            fontWeight: 500,
+          }}
+        >
+          A Jornada
+        </div>
+        <h2
+          style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 48,
+            color: "#fff",
+            lineHeight: 1.1,
+            margin: 0,
+          }}
+        >
+          11 etapas. 4 fases.
+        </h2>
+        <div
+          style={{
+            fontFamily: "'Caveat', cursive",
+            fontSize: 22,
+            color: "var(--terracota)",
+            marginTop: 12,
+          }}
+        >
+          Um negócio que é seu.
+        </div>
+      </motion.div>
+
+      {/* Timeline container */}
+      <div
+        ref={containerRef}
+        style={{
+          maxWidth: 900,
+          margin: "0 auto",
+          padding: "0 24px",
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        {/* SVG line */}
+        <svg
+          width="2"
+          height="100%"
+          style={{
+            position: "absolute",
+            left: isMobile ? 32 : "50%",
+            top: 0,
+            height: "100%",
+            transform: isMobile ? "none" : "translateX(-50%)",
+            overflow: "visible",
+            pointerEvents: "none",
+          }}
+          preserveAspectRatio="none"
+        >
+          <line
+            x1="1"
+            y1="0"
+            x2="1"
+            y2="100%"
+            stroke="rgba(255,255,255,0.10)"
+            strokeWidth="1.5"
+          />
+          <path
+            ref={pathRef}
+            d="M 1 0 L 1 10000"
+            stroke={hexA("#C96B3E", 0.6)}
+            strokeWidth="1.5"
+            fill="none"
+            style={{
+              strokeDasharray: pathLength,
+              strokeDashoffset: pathLength,
+              transition: "stroke-dashoffset 0.1s linear",
+            }}
+          />
+        </svg>
+
+        {fases.map((fase) => {
+          const group = (
+            <FaseGroup
+              key={fase.nome}
+              fase={fase}
+              startIdx={startIdx}
+              isMobile={isMobile}
+            />
+          );
+          startIdx += fase.etapas.length;
+          return group;
+        })}
       </div>
     </section>
   );
