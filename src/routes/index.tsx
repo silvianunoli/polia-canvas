@@ -50,6 +50,7 @@ function LandingPage() {
         </div>
         <ProductRevealSection />
         <DeliverablesSection />
+        <PricingSection />
         <div id="manifesto">
           <ManifestoSection />
         </div>
