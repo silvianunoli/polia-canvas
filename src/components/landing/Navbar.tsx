@@ -42,35 +42,19 @@ export function Navbar() {
           </span>
         </div>
 
-        <div className="hidden md:flex items-center" style={{ gap: 40 }}>
-          {[
-            { label: "Como funciona", to: "/como-funciona" },
-            { label: "Manifesto", to: "/manifesto" },
-            { label: "Preços", to: "/precos" },
-            { label: "Blog", to: "/blog" },
-          ].map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="font-sans transition-colors"
-              style={{ fontSize: 14, color: "rgba(255,255,255,0.8)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.8)")}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </div>
-
-        <div className="flex items-center" style={{ gap: 20 }}>
+        <div className="flex items-center" style={{ gap: 16 }}>
           <Link
             to="/auth/login"
-            className="font-sans hidden sm:inline-block transition-colors"
-            style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}
+            className="font-sans hidden sm:inline-block"
+            style={{
+              fontSize: 14,
+              color: "rgba(255,255,255,0.7)",
+              transition: "color 0.2s ease",
+            }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,1)")}
             onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
           >
-            Entrar
+            Login
           </Link>
           <Link
             to="/lista-de-espera"
