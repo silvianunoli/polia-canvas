@@ -9,21 +9,20 @@ import { ProductRevealSection } from "@/components/landing/ProductRevealSection"
 import { DeliverablesSection } from "@/components/landing/DeliverablesSection";
 import { ManifestoSection } from "@/components/landing/ManifestoSection";
 import { FinalCTASection } from "@/components/landing/FinalCTASection";
+import { ScrollProgress } from "@/components/landing/ScrollProgress";
+import { CursorDot } from "@/components/landing/CursorDot";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pólia — Para mulheres que constroem" },
+      { title: "Pólia — Seu negócio tem uma direção agora." },
       {
         name: "description",
         content:
-          "Plataforma guiada com 11 etapas para mulheres empreendedoras brasileiras estruturarem seu negócio com base sólida.",
+          "A Pólia guia mulheres empreendedoras pelas 11 etapas que todo negócio precisa percorrer. Comece com clareza. Construa com direção.",
       },
-      { property: "og:title", content: "Pólia — Para mulheres que constroem" },
-      {
-        property: "og:description",
-        content: "11 etapas guiadas para estruturar seu negócio. Lançamento maio/2026.",
-      },
+      { property: "og:title", content: "Pólia — Seu negócio tem uma direção agora." },
+      { property: "og:description", content: "11 etapas. 4 fases. Um negócio que é seu." },
     ],
   }),
   component: LandingPage,
@@ -38,14 +37,22 @@ function LandingPage() {
   return (
     <div style={{ background: "var(--azul-noite)", minHeight: "100vh" }}>
       <Preloader />
+      <ScrollProgress />
+      <CursorDot />
       <Navbar />
-      <HeroSection preloader={isFirstVisit} />
-      <ProblemSection />
-      <JourneySection />
-      <ProductRevealSection />
-      <DeliverablesSection />
-      <ManifestoSection />
-      <FinalCTASection />
+      <main>
+        <HeroSection preloader={isFirstVisit} />
+        <ProblemSection />
+        <div id="como-funciona">
+          <JourneySection />
+        </div>
+        <ProductRevealSection />
+        <DeliverablesSection />
+        <div id="manifesto">
+          <ManifestoSection />
+        </div>
+        <FinalCTASection />
+      </main>
     </div>
   );
 }

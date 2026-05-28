@@ -11,29 +11,113 @@ import {
 } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { StarField } from "@/components/ui/StarField";
 
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div
+      style={{
+        background: "var(--azul-noite)",
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      <NotFoundStars />
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          maxWidth: 480,
+          padding: 24,
+        }}
+      >
+        <div
+          className="font-caveat"
+          style={{ fontSize: 20, color: "var(--terracota)", marginBottom: 20 }}
+        >
+          ops.
+        </div>
+        <div style={{ position: "relative" }}>
+          <div
+            className="font-serif"
+            aria-hidden
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -55%)",
+              fontSize: 160,
+              lineHeight: 1,
+              color: "rgba(255,255,255,0.08)",
+              pointerEvents: "none",
+              userSelect: "none",
+            }}
+          >
+            404
+          </div>
+          <h1
+            className="font-serif"
+            style={{
+              position: "relative",
+              fontSize: 40,
+              lineHeight: 1.2,
+              color: "#fff",
+              margin: 0,
+            }}
+          >
+            Essa estrela ainda não existe.
+          </h1>
+        </div>
+        <p
+          className="font-sans"
+          style={{
+            fontSize: 17,
+            color: "rgba(255,255,255,0.55)",
+            marginTop: 16,
+            lineHeight: 1.6,
+          }}
+        >
+          Mas a sua jornada continua por aqui.
         </p>
-        <div className="mt-6">
+        <p
+          className="font-caveat"
+          style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", marginTop: 8 }}
+        >
+          Deixa a Pólia te guiar de volta.
+        </p>
+        <div style={{ marginTop: 40 }}>
           <Link
             to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            className="font-sans"
+            style={{
+              background: "var(--terracota)",
+              color: "#fff",
+              fontSize: 17,
+              fontWeight: 600,
+              padding: "18px 48px",
+              borderRadius: 12,
+              display: "inline-block",
+              textDecoration: "none",
+              boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
+            }}
           >
-            Go home
+            Voltar ao início
           </Link>
         </div>
       </div>
     </div>
   );
+}
+
+function NotFoundStars() {
+  return <StarField density={40} speed={0.4} />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
