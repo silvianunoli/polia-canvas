@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 interface NavLinkItem {
   to: string;
