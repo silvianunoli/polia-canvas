@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 
 interface NavLinkItem {
   to: string;
@@ -93,6 +94,23 @@ export function PainelNav({
 
 function AvatarMenu({ initial }: { initial: string }) {
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (active && data?.is_admin) setIsAdmin(true);
+    })();
+    return () => { active = false; };
+  }, []);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/auth/login" });
@@ -117,6 +135,17 @@ function AvatarMenu({ initial }: { initial: string }) {
         >
           Configurações
         </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator className="my-1 bg-[rgba(26,26,46,0.06)]" />
+            <DropdownMenuItem
+              onSelect={() => navigate({ to: "/admin" })}
+              className="font-sans text-[14px] text-polia-terracota font-medium px-3 py-2 rounded-lg cursor-pointer focus:bg-[rgba(26,26,46,0.04)]"
+            >
+              Administração
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator className="my-1 bg-[rgba(26,26,46,0.06)]" />
         <DropdownMenuItem
           onSelect={handleLogout}
