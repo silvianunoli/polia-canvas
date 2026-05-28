@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as PublicIndexRouteImport } from './routes/_public.index'
 import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
@@ -70,11 +69,6 @@ const PublicRoute = PublicRouteImport.update({
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any)
-const PublicIndexRoute = PublicIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PublicRoute,
 } as any)
 const AuthVerificacaoRoute = AuthVerificacaoRouteImport.update({
   id: '/auth/verificacao',
@@ -337,7 +331,7 @@ const AuthenticatedAdminChamadosIdRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof PublicIndexRoute
+  '/': typeof PublicRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -390,7 +384,7 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof PublicIndexRoute
+  '/': typeof PublicRouteWithChildren
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -469,7 +463,6 @@ export interface FileRoutesById {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
-  '/_public/': typeof PublicIndexRoute
   '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
   '/_authenticated/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
@@ -631,7 +624,6 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
-    | '/_public/'
     | '/_authenticated/admin/cms'
     | '/_authenticated/admin/comunicacao'
     | '/_authenticated/admin/feedback'
@@ -685,13 +677,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_public/': {
-      id: '/_public/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof PublicIndexRouteImport
-      parentRoute: typeof PublicRoute
     }
     '/auth/verificacao': {
       id: '/auth/verificacao'
@@ -1143,7 +1128,6 @@ interface PublicRouteChildren {
   PublicPrivacidadeRoute: typeof PublicPrivacidadeRoute
   PublicSobreRoute: typeof PublicSobreRoute
   PublicTermosRoute: typeof PublicTermosRoute
-  PublicIndexRoute: typeof PublicIndexRoute
   PublicBlogSlugRoute: typeof PublicBlogSlugRoute
   PublicBlogIndexRoute: typeof PublicBlogIndexRoute
 }
@@ -1158,7 +1142,6 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicPrivacidadeRoute: PublicPrivacidadeRoute,
   PublicSobreRoute: PublicSobreRoute,
   PublicTermosRoute: PublicTermosRoute,
-  PublicIndexRoute: PublicIndexRoute,
   PublicBlogSlugRoute: PublicBlogSlugRoute,
   PublicBlogIndexRoute: PublicBlogIndexRoute,
 }
@@ -1178,3 +1161,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
