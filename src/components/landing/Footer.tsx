@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { CSSProperties, ReactNode } from "react";
+import { UploadablePlaceholder } from "@/components/landing/UploadablePlaceholder";
 
 type FooterLink = { label: string; to?: string; href?: string };
 
