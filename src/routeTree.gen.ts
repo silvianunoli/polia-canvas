@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,7 +19,6 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as PublicTermosRouteImport } from './routes/_public.termos'
-import { Route as PublicSobreRouteImport } from './routes/_public.sobre'
 import { Route as PublicPrivacidadeRouteImport } from './routes/_public.privacidade'
 import { Route as PublicPrecosRouteImport } from './routes/_public.precos'
 import { Route as PublicManifestoRouteImport } from './routes/_public.manifesto'
@@ -63,6 +63,11 @@ import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
 import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_authenticated/admin.chamados.$id'
 
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
   getParentRoute: () => rootRouteImport,
@@ -104,11 +109,6 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
 const PublicTermosRoute = PublicTermosRouteImport.update({
   id: '/termos',
   path: '/termos',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicSobreRoute = PublicSobreRouteImport.update({
-  id: '/sobre',
-  path: '/sobre',
   getParentRoute: () => PublicRoute,
 } as any)
 const PublicPrivacidadeRoute = PublicPrivacidadeRouteImport.update({
@@ -338,6 +338,7 @@ const AuthenticatedAdminChamadosIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -355,7 +356,6 @@ export interface FileRoutesByFullPath {
   '/manifesto': typeof PublicManifestoRoute
   '/precos': typeof PublicPrecosRoute
   '/privacidade': typeof PublicPrivacidadeRoute
-  '/sobre': typeof PublicSobreRoute
   '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
@@ -391,6 +391,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sobre': typeof SobreRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -407,7 +408,6 @@ export interface FileRoutesByTo {
   '/manifesto': typeof PublicManifestoRoute
   '/precos': typeof PublicPrecosRoute
   '/privacidade': typeof PublicPrivacidadeRoute
-  '/sobre': typeof PublicSobreRoute
   '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
@@ -446,6 +446,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/sobre': typeof SobreRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -463,7 +464,6 @@ export interface FileRoutesById {
   '/_public/manifesto': typeof PublicManifestoRoute
   '/_public/precos': typeof PublicPrecosRoute
   '/_public/privacidade': typeof PublicPrivacidadeRoute
-  '/_public/sobre': typeof PublicSobreRoute
   '/_public/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci': typeof AuthEsqueciRoute
@@ -501,6 +501,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/sobre'
     | '/admin'
     | '/clientes'
     | '/configuracoes'
@@ -518,7 +519,6 @@ export interface FileRouteTypes {
     | '/manifesto'
     | '/precos'
     | '/privacidade'
-    | '/sobre'
     | '/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
@@ -554,6 +554,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/sobre'
     | '/clientes'
     | '/configuracoes'
     | '/financeiro'
@@ -570,7 +571,6 @@ export interface FileRouteTypes {
     | '/manifesto'
     | '/precos'
     | '/privacidade'
-    | '/sobre'
     | '/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
@@ -608,6 +608,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_public'
+    | '/sobre'
     | '/_authenticated/admin'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
@@ -625,7 +626,6 @@ export interface FileRouteTypes {
     | '/_public/manifesto'
     | '/_public/precos'
     | '/_public/privacidade'
-    | '/_public/sobre'
     | '/_public/termos'
     | '/auth/cadastro'
     | '/auth/esqueci'
@@ -664,6 +664,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  SobreRoute: typeof SobreRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthEsqueciRoute: typeof AuthEsqueciRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -673,6 +674,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_public': {
       id: '/_public'
       path: ''
@@ -734,13 +742,6 @@ declare module '@tanstack/react-router' {
       path: '/termos'
       fullPath: '/termos'
       preLoaderRoute: typeof PublicTermosRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/sobre': {
-      id: '/_public/sobre'
-      path: '/sobre'
-      fullPath: '/sobre'
-      preLoaderRoute: typeof PublicSobreRouteImport
       parentRoute: typeof PublicRoute
     }
     '/_public/privacidade': {
@@ -1142,7 +1143,6 @@ interface PublicRouteChildren {
   PublicManifestoRoute: typeof PublicManifestoRoute
   PublicPrecosRoute: typeof PublicPrecosRoute
   PublicPrivacidadeRoute: typeof PublicPrivacidadeRoute
-  PublicSobreRoute: typeof PublicSobreRoute
   PublicTermosRoute: typeof PublicTermosRoute
   PublicBlogSlugRoute: typeof PublicBlogSlugRoute
   PublicBlogIndexRoute: typeof PublicBlogIndexRoute
@@ -1156,7 +1156,6 @@ const PublicRouteChildren: PublicRouteChildren = {
   PublicManifestoRoute: PublicManifestoRoute,
   PublicPrecosRoute: PublicPrecosRoute,
   PublicPrivacidadeRoute: PublicPrivacidadeRoute,
-  PublicSobreRoute: PublicSobreRoute,
   PublicTermosRoute: PublicTermosRoute,
   PublicBlogSlugRoute: PublicBlogSlugRoute,
   PublicBlogIndexRoute: PublicBlogIndexRoute,
@@ -1169,6 +1168,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  SobreRoute: SobreRoute,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthEsqueciRoute: AuthEsqueciRoute,
   AuthLoginRoute: AuthLoginRoute,
@@ -1178,13 +1178,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
