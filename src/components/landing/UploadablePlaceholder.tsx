@@ -165,6 +165,7 @@ export function UploadablePlaceholder({ id, label, width, height, description, f
             </div>
           );
         })()
+      )}
     </div>
   );
 }
