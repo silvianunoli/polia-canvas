@@ -8,9 +8,9 @@ const columns: { title: string; links: FooterLink[] }[] = [
   {
     title: "PRODUTO",
     links: [
-      { label: "Como funciona", to: "/como-funciona" },
+      { label: "Como funciona", to: "/#jornada" },
       { label: "Preços", to: "/precos" },
-      { label: "Lista de espera", to: "/lista-de-espera" },
+      { label: "Manifesto", to: "/manifesto" },
       { label: "Sobre", to: "/sobre" },
     ],
   },
@@ -20,6 +20,13 @@ const columns: { title: string; links: FooterLink[] }[] = [
       { label: "Manifesto", to: "/manifesto" },
       { label: "Blog", href: "#" },
       { label: "Sobre", to: "/sobre" },
+    ],
+  },
+  {
+    title: "PARTICIPE",
+    links: [
+      { label: "Lista de espera", to: "/#cta" },
+      { label: "Login", to: "/auth/login" },
     ],
   },
   {
