@@ -35,8 +35,10 @@ import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as PublicBlogIndexRouteImport } from './routes/_public.blog.index'
 import { Route as AuthenticatedBibliotecaIndexRouteImport } from './routes/_authenticated/biblioteca.index'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as PublicBlogSlugRouteImport } from './routes/_public.blog.$slug'
 import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
@@ -50,6 +52,16 @@ import { Route as AuthenticatedEtapa11RouteImport } from './routes/_authenticate
 import { Route as AuthenticatedEtapa10RouteImport } from './routes/_authenticated/etapa.10'
 import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
 import { Route as AuthenticatedBibliotecaIdRouteImport } from './routes/_authenticated/biblioteca.$id'
+import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
+import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authenticated/admin.funil'
+import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
+import { Route as AuthenticatedAdminFeedbackRouteImport } from './routes/_authenticated/admin.feedback'
+import { Route as AuthenticatedAdminComunicacaoRouteImport } from './routes/_authenticated/admin.comunicacao'
+import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
+import { Route as AuthenticatedAdminUsuariosIndexRouteImport } from './routes/_authenticated/admin.usuarios.index'
+import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_authenticated/admin.chamados.index'
+import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
+import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_authenticated/admin.chamados.$id'
 
 const PublicRoute = PublicRouteImport.update({
   id: '/_public',
@@ -180,6 +192,11 @@ const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   path: '/clientes',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const PublicBlogIndexRoute = PublicBlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
@@ -191,6 +208,11 @@ const AuthenticatedBibliotecaIndexRoute =
     path: '/biblioteca/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const PublicBlogSlugRoute = PublicBlogSlugRouteImport.update({
   id: '/blog/$slug',
   path: '/blog/$slug',
@@ -257,9 +279,66 @@ const AuthenticatedBibliotecaIdRoute =
     path: '/biblioteca/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminFunilRoute = AuthenticatedAdminFunilRouteImport.update({
+  id: '/funil',
+  path: '/funil',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminFlagsRoute = AuthenticatedAdminFlagsRouteImport.update({
+  id: '/flags',
+  path: '/flags',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminFeedbackRoute =
+  AuthenticatedAdminFeedbackRouteImport.update({
+    id: '/feedback',
+    path: '/feedback',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminComunicacaoRoute =
+  AuthenticatedAdminComunicacaoRouteImport.update({
+    id: '/comunicacao',
+    path: '/comunicacao',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCmsRoute = AuthenticatedAdminCmsRouteImport.update({
+  id: '/cms',
+  path: '/cms',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminUsuariosIndexRoute =
+  AuthenticatedAdminUsuariosIndexRouteImport.update({
+    id: '/usuarios/',
+    path: '/usuarios/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminChamadosIndexRoute =
+  AuthenticatedAdminChamadosIndexRouteImport.update({
+    id: '/chamados/',
+    path: '/chamados/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUsuariosIdRoute =
+  AuthenticatedAdminUsuariosIdRouteImport.update({
+    id: '/usuarios/$id',
+    path: '/usuarios/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminChamadosIdRoute =
+  AuthenticatedAdminChamadosIdRouteImport.update({
+    id: '/chamados/$id',
+    path: '/chamados/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof PublicIndexRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -283,6 +362,12 @@ export interface FileRoutesByFullPath {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/admin/cms': typeof AuthenticatedAdminCmsRoute
+  '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
+  '/admin/flags': typeof AuthenticatedAdminFlagsRoute
+  '/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
@@ -296,8 +381,13 @@ export interface FileRoutesByFullPath {
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
   '/blog/$slug': typeof PublicBlogSlugRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
   '/blog/': typeof PublicBlogIndexRoute
+  '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
+  '/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof PublicIndexRoute
@@ -324,6 +414,12 @@ export interface FileRoutesByTo {
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/admin/cms': typeof AuthenticatedAdminCmsRoute
+  '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
+  '/admin/flags': typeof AuthenticatedAdminFlagsRoute
+  '/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/etapa/1': typeof AuthenticatedEtapa1Route
   '/etapa/10': typeof AuthenticatedEtapa10Route
@@ -337,13 +433,19 @@ export interface FileRoutesByTo {
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
   '/blog/$slug': typeof PublicBlogSlugRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/biblioteca': typeof AuthenticatedBibliotecaIndexRoute
   '/blog': typeof PublicBlogIndexRoute
+  '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/admin/chamados': typeof AuthenticatedAdminChamadosIndexRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
@@ -368,6 +470,12 @@ export interface FileRoutesById {
   '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/_public/': typeof PublicIndexRoute
+  '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
+  '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/_authenticated/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
+  '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
+  '/_authenticated/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
   '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
   '/_authenticated/etapa/10': typeof AuthenticatedEtapa10Route
@@ -381,13 +489,19 @@ export interface FileRoutesById {
   '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
   '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
   '/_public/blog/$slug': typeof PublicBlogSlugRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
   '/_public/blog/': typeof PublicBlogIndexRoute
+  '/_authenticated/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/_authenticated/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
+  '/_authenticated/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/clientes'
     | '/configuracoes'
     | '/financeiro'
@@ -411,6 +525,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/admin/cms'
+    | '/admin/comunicacao'
+    | '/admin/feedback'
+    | '/admin/flags'
+    | '/admin/funil'
+    | '/admin/logs'
     | '/biblioteca/$id'
     | '/etapa/1'
     | '/etapa/10'
@@ -424,8 +544,13 @@ export interface FileRouteTypes {
     | '/etapa/8'
     | '/etapa/9'
     | '/blog/$slug'
+    | '/admin/'
     | '/biblioteca/'
     | '/blog/'
+    | '/admin/chamados/$id'
+    | '/admin/usuarios/$id'
+    | '/admin/chamados/'
+    | '/admin/usuarios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -452,6 +577,12 @@ export interface FileRouteTypes {
     | '/auth/login'
     | '/auth/redefinir'
     | '/auth/verificacao'
+    | '/admin/cms'
+    | '/admin/comunicacao'
+    | '/admin/feedback'
+    | '/admin/flags'
+    | '/admin/funil'
+    | '/admin/logs'
     | '/biblioteca/$id'
     | '/etapa/1'
     | '/etapa/10'
@@ -465,12 +596,18 @@ export interface FileRouteTypes {
     | '/etapa/8'
     | '/etapa/9'
     | '/blog/$slug'
+    | '/admin'
     | '/biblioteca'
     | '/blog'
+    | '/admin/chamados/$id'
+    | '/admin/usuarios/$id'
+    | '/admin/chamados'
+    | '/admin/usuarios'
   id:
     | '__root__'
     | '/_authenticated'
     | '/_public'
+    | '/_authenticated/admin'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
@@ -495,6 +632,12 @@ export interface FileRouteTypes {
     | '/auth/redefinir'
     | '/auth/verificacao'
     | '/_public/'
+    | '/_authenticated/admin/cms'
+    | '/_authenticated/admin/comunicacao'
+    | '/_authenticated/admin/feedback'
+    | '/_authenticated/admin/flags'
+    | '/_authenticated/admin/funil'
+    | '/_authenticated/admin/logs'
     | '/_authenticated/biblioteca/$id'
     | '/_authenticated/etapa/1'
     | '/_authenticated/etapa/10'
@@ -508,8 +651,13 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/8'
     | '/_authenticated/etapa/9'
     | '/_public/blog/$slug'
+    | '/_authenticated/admin/'
     | '/_authenticated/biblioteca/'
     | '/_public/blog/'
+    | '/_authenticated/admin/chamados/$id'
+    | '/_authenticated/admin/usuarios/$id'
+    | '/_authenticated/admin/chamados/'
+    | '/_authenticated/admin/usuarios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -706,6 +854,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_public/blog/': {
       id: '/_public/blog/'
       path: '/blog'
@@ -719,6 +874,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/biblioteca/'
       preLoaderRoute: typeof AuthenticatedBibliotecaIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_public/blog/$slug': {
       id: '/_public/blog/$slug'
@@ -811,10 +973,112 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBibliotecaIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/logs': {
+      id: '/_authenticated/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/funil': {
+      id: '/_authenticated/admin/funil'
+      path: '/funil'
+      fullPath: '/admin/funil'
+      preLoaderRoute: typeof AuthenticatedAdminFunilRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/flags': {
+      id: '/_authenticated/admin/flags'
+      path: '/flags'
+      fullPath: '/admin/flags'
+      preLoaderRoute: typeof AuthenticatedAdminFlagsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/feedback': {
+      id: '/_authenticated/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AuthenticatedAdminFeedbackRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/comunicacao': {
+      id: '/_authenticated/admin/comunicacao'
+      path: '/comunicacao'
+      fullPath: '/admin/comunicacao'
+      preLoaderRoute: typeof AuthenticatedAdminComunicacaoRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/cms': {
+      id: '/_authenticated/admin/cms'
+      path: '/cms'
+      fullPath: '/admin/cms'
+      preLoaderRoute: typeof AuthenticatedAdminCmsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/usuarios/': {
+      id: '/_authenticated/admin/usuarios/'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios/'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/chamados/': {
+      id: '/_authenticated/admin/chamados/'
+      path: '/chamados'
+      fullPath: '/admin/chamados/'
+      preLoaderRoute: typeof AuthenticatedAdminChamadosIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/usuarios/$id': {
+      id: '/_authenticated/admin/usuarios/$id'
+      path: '/usuarios/$id'
+      fullPath: '/admin/usuarios/$id'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/chamados/$id': {
+      id: '/_authenticated/admin/chamados/$id'
+      path: '/chamados/$id'
+      fullPath: '/admin/chamados/$id'
+      preLoaderRoute: typeof AuthenticatedAdminChamadosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminCmsRoute: typeof AuthenticatedAdminCmsRoute
+  AuthenticatedAdminComunicacaoRoute: typeof AuthenticatedAdminComunicacaoRoute
+  AuthenticatedAdminFeedbackRoute: typeof AuthenticatedAdminFeedbackRoute
+  AuthenticatedAdminFlagsRoute: typeof AuthenticatedAdminFlagsRoute
+  AuthenticatedAdminFunilRoute: typeof AuthenticatedAdminFunilRoute
+  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
+  AuthenticatedAdminUsuariosIdRoute: typeof AuthenticatedAdminUsuariosIdRoute
+  AuthenticatedAdminChamadosIndexRoute: typeof AuthenticatedAdminChamadosIndexRoute
+  AuthenticatedAdminUsuariosIndexRoute: typeof AuthenticatedAdminUsuariosIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminCmsRoute: AuthenticatedAdminCmsRoute,
+  AuthenticatedAdminComunicacaoRoute: AuthenticatedAdminComunicacaoRoute,
+  AuthenticatedAdminFeedbackRoute: AuthenticatedAdminFeedbackRoute,
+  AuthenticatedAdminFlagsRoute: AuthenticatedAdminFlagsRoute,
+  AuthenticatedAdminFunilRoute: AuthenticatedAdminFunilRoute,
+  AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
+  AuthenticatedAdminUsuariosIdRoute: AuthenticatedAdminUsuariosIdRoute,
+  AuthenticatedAdminChamadosIndexRoute: AuthenticatedAdminChamadosIndexRoute,
+  AuthenticatedAdminUsuariosIndexRoute: AuthenticatedAdminUsuariosIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
@@ -840,6 +1104,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
@@ -913,13 +1178,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

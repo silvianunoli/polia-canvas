@@ -116,6 +116,63 @@ export type Database = {
         }
         Relationships: []
       }
+      contatos: {
+        Row: {
+          assunto: string
+          created_at: string
+          email: string
+          id: string
+          mensagem: string
+          nome: string
+        }
+        Insert: {
+          assunto: string
+          created_at?: string
+          email: string
+          id?: string
+          mensagem: string
+          nome: string
+        }
+        Update: {
+          assunto?: string
+          created_at?: string
+          email?: string
+          id?: string
+          mensagem?: string
+          nome?: string
+        }
+        Relationships: []
+      }
+      edge_function_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          function_name: string
+          id: string
+          latency_ms: number | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          status: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       entregaveis: {
         Row: {
           conteudo: Json | null
@@ -218,6 +275,60 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          id: string
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          id?: string
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      feedback_responses: {
+        Row: {
+          comment: string | null
+          context_ref: string
+          created_at: string
+          id: string
+          score: number
+          trigger_type: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          context_ref: string
+          created_at?: string
+          id?: string
+          score: number
+          trigger_type: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          context_ref?: string
+          created_at?: string
+          id?: string
+          score?: number
+          trigger_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       financeiro_mensal: {
         Row: {
           ano: number
@@ -303,6 +414,7 @@ export type Database = {
           growth_finalized_at: string | null
           growth_vision: string | null
           id: string
+          is_admin: boolean
           issue_handling: string | null
           jornada_completed_at: string | null
           key_number_1: string | null
@@ -384,6 +496,7 @@ export type Database = {
           growth_finalized_at?: string | null
           growth_vision?: string | null
           id: string
+          is_admin?: boolean
           issue_handling?: string | null
           jornada_completed_at?: string | null
           key_number_1?: string | null
@@ -465,6 +578,7 @@ export type Database = {
           growth_finalized_at?: string | null
           growth_vision?: string | null
           id?: string
+          is_admin?: boolean
           issue_handling?: string | null
           jornada_completed_at?: string | null
           key_number_1?: string | null
@@ -557,6 +671,80 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_messages: {
+        Row: {
+          author_id: string
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          author_id: string
+          author_role: string
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          module_ref: string | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          module_ref?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          module_ref?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profile: {
         Row: {
           created_at: string
@@ -616,7 +804,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
