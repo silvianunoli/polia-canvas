@@ -1,32 +1,56 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
+import { PoliaButton } from "@/components/ui/PoliaButton";
 
-export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
+interface NavbarProps {
+  transparentOnTop?: boolean;
+}
+
+export function Navbar({ transparentOnTop = true }: NavbarProps) {
+  const location = useLocation();
+  const [scrolled, setScrolled] = useState(!transparentOnTop);
 
   useEffect(() => {
+    if (!transparentOnTop) {
+      setScrolled(true);
+      return;
+    }
     const onScroll = () => setScrolled(window.scrollY > 60);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  }, [transparentOnTop]);
+
+  const pathname = location.pathname;
+  if (pathname === "/auth/login" || pathname === "/auth/cadastro") {
+    return null;
+  }
+
+  const isSolid = scrolled || !transparentOnTop;
 
   return (
     <nav
       className="fixed top-0 left-0 right-0 z-[100]"
       style={{
         transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)",
-        background: scrolled ? "rgba(26,26,46,0.88)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.07)" : "1px solid transparent",
+        background: isSolid
+          ? transparentOnTop
+            ? "rgba(26,26,46,0.88)"
+            : "rgba(26,26,46,0.95)"
+          : "transparent",
+        backdropFilter: isSolid ? "blur(16px) saturate(180%)" : "none",
+        WebkitBackdropFilter: isSolid ? "blur(16px) saturate(180%)" : "none",
+        borderBottom: isSolid
+          ? "1px solid rgba(255,255,255,0.07)"
+          : "1px solid transparent",
       }}
     >
       <div
         className="mx-auto flex items-center justify-between"
         style={{ maxWidth: 1200, padding: "0 24px", height: 64 }}
       >
-        <div
+        <Link
+          to="/"
           className="flex items-center justify-center"
           style={{
             width: 120,
@@ -40,7 +64,7 @@ export function Navbar() {
           >
             LOGO
           </span>
-        </div>
+        </Link>
 
         <div className="flex items-center" style={{ gap: 16 }}>
           <Link
@@ -56,28 +80,9 @@ export function Navbar() {
           >
             Login
           </Link>
-          <Link
-            to="/lista-de-espera"
-            className="font-sans font-semibold transition-all"
-            style={{
-              background: "var(--terracota)",
-              color: "#fff",
-              fontSize: 14,
-              padding: "10px 20px",
-              borderRadius: 8,
-              display: "inline-block",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.filter = "brightness(1.08)";
-              e.currentTarget.style.transform = "translateY(-1px)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.filter = "none";
-              e.currentTarget.style.transform = "none";
-            }}
-          >
+          <PoliaButton href="/lista-de-espera" variant="primary" size="default">
             Entrar na lista
-          </Link>
+          </PoliaButton>
         </div>
       </div>
     </nav>

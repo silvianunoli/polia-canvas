@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "@tanstack/react-router";
 import { StarField } from "@/components/ui/StarField";
 import { UploadablePlaceholder } from "./UploadablePlaceholder";
-import { LandingFooter } from "./LandingFooter";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function FinalCTASection() {
@@ -158,7 +158,7 @@ export function FinalCTASection() {
         </motion.div>
       </motion.div>
 
-      <LandingFooter />
+
 
       <style>{`
         .polia-final-cta::before {

@@ -4,7 +4,7 @@ import { Compass, Heart, Star, Users } from "lucide-react";
 import { Navbar } from "@/components/landing/Navbar";
 import { StarField } from "@/components/ui/StarField";
 import { UploadablePlaceholder } from "@/components/landing/UploadablePlaceholder";
-import { LandingFooter } from "@/components/landing/LandingFooter";
+import { Footer } from "@/components/landing/Footer";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({
@@ -626,7 +626,7 @@ function SobrePage() {
           </div>
         </motion.div>
 
-        <LandingFooter />
+        <Footer />
 
         <style>{`
           .polia-final-cta::before {
