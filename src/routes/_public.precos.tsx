@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 
 export const Route = createFileRoute("/_public/precos")({
   head: () => ({
@@ -16,15 +16,42 @@ export const Route = createFileRoute("/_public/precos")({
 function Precos() {
   return (
     <>
-      <section className="bg-[#1A1A2E] py-24 text-center">
+      {/* Voltar */}
+      <div style={{ background: "var(--azul-noite)", paddingTop: 80 }}>
+        <div className="max-w-3xl mx-auto px-6">
+          <Link
+            to="/"
+            className="font-sans inline-flex items-center gap-2"
+            style={{
+              fontSize: 14,
+              color: "rgba(255,255,255,0.50)",
+              textDecoration: "none",
+              transition: "color 0.2s ease",
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.80)")
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.50)")
+            }
+          >
+            <ArrowLeft size={16} />
+            Voltar
+          </Link>
+        </div>
+      </div>
+
+      <section className="bg-[#1A1A2E] py-20 text-center">
         <div className="max-w-3xl mx-auto px-6">
           <p className="font-sans font-semibold text-[#E89770] text-[12px] uppercase tracking-[0.18em] mb-4">
             Preços
           </p>
-          <h1 className="font-serif text-[#FDF8F5] text-[40px] md:text-[56px] leading-tight mb-6">
+          <h1 className="font-serif text-[#FDF8F5] text-[40px] md:text-[56px] leading-tight mb-4">
             Simples. Justo. Feito pra quem está começando.
           </h1>
-          <p className="font-handwritten text-[#E89770] text-[20px]">gratuito durante o beta.</p>
+          <p className="font-handwritten text-[#E89770] text-[18px]">
+            na landing tem o resumo. aqui tem tudo.
+          </p>
         </div>
       </section>
 
