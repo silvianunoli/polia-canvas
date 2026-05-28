@@ -167,9 +167,10 @@ function LoginPage() {
         )}
 
         <div className="mt-2">
-          <CosmicButton type="submit" loading={loading}>
+          <PoliaButton type="submit" fullWidth disabled={loading}>
+            {loading && <Loader2 size={20} className="animate-spin" />}
             {loading ? "Entrando..." : "Entrar →"}
-          </CosmicButton>
+          </PoliaButton>
         </div>
       </form>
 
