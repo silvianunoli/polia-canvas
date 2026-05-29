@@ -58,20 +58,24 @@ export function ConstelacaoVisual({
   onStarClick,
 }: ConstelacaoVisualProps) {
   return (
-    <div className="relative w-full overflow-x-auto pb-4">
-      <div className="flex min-w-[900px] items-start justify-between gap-6">
+    <div className="relative w-full overflow-hidden pb-2">
+      <div className="grid w-full grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
         {phases.map((phase) => (
-          <div key={phase.label} className="flex-1">
+          <div key={phase.label} className="min-w-0">
             {/* Phase label */}
             <div
-              className="mb-8 inline-block rounded-full px-3 py-1 font-accent text-[10px] font-bold tracking-[1.5px] text-polia-creme"
+              className="mb-6 inline-block rounded-full px-3 py-1 font-accent text-[10px] font-bold tracking-[1.5px] text-polia-creme"
               style={{ background: phase.color }}
             >
               {phase.label}
             </div>
 
             {/* Stars row */}
-            <div className="flex items-start justify-around gap-2">
+            <div
+              className={`grid items-start gap-x-2 gap-y-5 ${
+                phase.stars.length === 2 ? "grid-cols-2" : "grid-cols-3"
+              }`}
+            >
               {phase.stars.map((star) => {
                 const isDone = star.etapa < etapaAtual;
                 const isCurrent = star.etapa === etapaAtual;
@@ -99,16 +103,16 @@ export function ConstelacaoVisual({
                     onClick={handleClick}
                     title={title}
                     aria-label={title}
-                    className={`relative flex w-[110px] flex-col items-center bg-transparent border-0 p-0 transition-transform ${
+                    className={`relative flex min-w-0 flex-col items-center border-0 bg-transparent p-0 transition-transform ${
                       handleClick
                         ? "cursor-pointer hover:-translate-y-0.5"
                         : "cursor-default"
                     }`}
                   >
                     {/* Top label slot (fixed height to align all circles) */}
-                    <div className="flex h-6 items-end justify-center">
+                    <div className="flex h-10 items-end justify-center">
                       {isCurrent && (
-                        <span className="whitespace-nowrap font-handwritten text-[17px] leading-none text-polia-terracota">
+                        <span className="max-w-[88px] text-center font-handwritten text-[18px] leading-[0.95] text-polia-terracota md:max-w-none md:whitespace-nowrap">
                           você tá aqui agora
                         </span>
                       )}
@@ -145,7 +149,7 @@ export function ConstelacaoVisual({
 
                     {/* Name */}
                     <span
-                      className={`mt-3 text-center font-sans text-[12px] text-polia-creme ${
+                      className={`mt-3 text-center font-sans text-[12px] font-semibold leading-tight text-polia-creme ${
                         isFuture ? "opacity-40" : "opacity-100"
                       }`}
                     >
@@ -153,14 +157,14 @@ export function ConstelacaoVisual({
                     </span>
 
                     {/* Bottom label slot */}
-                    <div className="mt-1 flex h-5 items-start justify-center">
+                    <div className="mt-1 flex min-h-6 items-start justify-center">
                       {isCurrent && (
-                        <span className="whitespace-nowrap font-handwritten text-[16px] leading-none text-polia-terracota">
+                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-terracota">
                           acendendo agora
                         </span>
                       )}
                       {isFuture && (
-                        <span className="whitespace-nowrap font-handwritten text-[16px] leading-none text-polia-creme opacity-50">
+                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-creme opacity-60">
                           ainda vai brilhar
                         </span>
                       )}

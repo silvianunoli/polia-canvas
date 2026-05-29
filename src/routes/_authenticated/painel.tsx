@@ -433,11 +433,11 @@ function PainelPage() {
             Sua semana de colheita
           </h2>
           <div className="flex flex-col items-start gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="-mx-2 flex w-full gap-3 overflow-x-auto px-2 md:flex-1 md:overflow-visible">
+            <div className="grid w-full grid-cols-7 gap-1.5 sm:gap-3 md:flex-1">
               {dias.map((d, i) => (
                 <div
                   key={i}
-                  className={`flex min-w-[80px] flex-col items-center gap-1 rounded-xl p-4 ${
+                  className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 py-3 sm:p-4 ${
                     d.isHoje ? "bg-polia-terracota" : "border border-[rgba(26,26,46,0.06)] bg-white"
                   }`}
                 >
@@ -449,21 +449,21 @@ function PainelPage() {
                     {d.abrev}
                   </span>
                   <span
-                    className={`font-serif text-[28px] ${
+                    className={`font-serif text-[22px] sm:text-[28px] ${
                       d.isHoje ? "text-polia-creme" : "text-polia-noite"
                     }`}
                   >
                     {d.numero}
                   </span>
                   <span
-                    className={`font-sans text-[18px] font-semibold ${
+                    className={`font-sans text-[16px] font-semibold sm:text-[18px] ${
                       d.isHoje ? "text-polia-creme" : "text-polia-noite"
                     }`}
                   >
                     {d.tarefas}
                   </span>
                   <span
-                    className={`whitespace-nowrap font-handwritten text-[14px] ${
+                    className={`text-center font-handwritten text-[14px] leading-none ${
                       d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
                     }`}
                   >
