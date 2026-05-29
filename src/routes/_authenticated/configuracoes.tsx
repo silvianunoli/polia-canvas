@@ -147,6 +147,7 @@ function ConfiguracoesPage() {
                 </p>
               </div>
             </Campo>
+            <Campo label="SEU NOME">
               <input
                 type="text"
                 value={nome}
