@@ -189,11 +189,62 @@
   --verde-musgo: #2D6A4F;
   --azul-noite: #1A1A2E;
   --dourado: #C8A96E;
+  --dourado-escuro: #9A7728;
   --creme: #FDF8F5;
   --cinza-claro: #F5F5FA;
   --creme-escuro: #F0E9E2;
 }
-.font-caveat { font-family: "Caveat", cursive; }
+
+/* Caveat: nunca < 14px (legibilidade dos bilhetes decorativos) */
+.font-caveat,
+.font-handwritten {
+  font-family: "Caveat", cursive;
+}
+.font-caveat,
+.font-handwritten {
+  font-size: max(14px, 1em);
+}
+
+/* Caveat contrast utilities (WCAG AA) */
+.caveat-on-light {
+  font-family: "Caveat", cursive;
+  color: #9A7728; /* ~5:1 sobre creme */
+}
+.caveat-on-dark {
+  font-family: "Caveat", cursive;
+  color: #C8A96E; /* dourado original — bom contraste sobre azul-noite */
+}
+
+/* Focus ring global — WCAG 2.1 AA */
+*:focus-visible {
+  outline: 2px solid #C96B3E;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.cosmic *:focus-visible,
+.dark *:focus-visible,
+[data-theme="immersive"] *:focus-visible {
+  outline-color: #C8A96E;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 8px;
+  top: 8px;
+  background: #C96B3E;
+  color: #FDF8F5;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+}
 
 @keyframes polia-pulse-dot {
   0%, 100% { opacity: 0.35; transform: scale(1); }
@@ -203,3 +254,4 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.4); }
 }
+
