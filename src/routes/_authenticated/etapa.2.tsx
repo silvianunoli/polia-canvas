@@ -333,7 +333,7 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <p className="font-handwritten text-[#E89770] text-[26px] mt-10">agora vamos dar forma.</p>
 
-        <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
+        <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Sua marca precisa de uma alma.
         </h1>
 
@@ -484,7 +484,7 @@ function PerguntaBlock({
   return (
     <div>
       <p className="font-handwritten text-[#C96B3E] text-[22px] mt-2">{caveat}</p>
-      <h1 className="font-serif text-[#1A1A2E] text-[40px] md:text-[48px] leading-[1.18] mt-3">
+      <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[30px] md:text-[48px] leading-[1.18] mt-3">
         {titulo}
       </h1>
 
@@ -682,7 +682,7 @@ function VozMarcaTela({
               ENTREGÁVEL · ETAPA 2 · BRANDING
             </p>
             <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha o que a gente fez juntas.</p>
-            <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
+            <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Sua voz de marca
               <br />
               tá definida.

@@ -337,7 +337,7 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <p className="font-handwritten text-[#E89770] text-[26px] mt-10">você não chega lá sozinha.</p>
 
-        <h1 className="font-serif text-[#FDF8F5] text-[44px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
+        <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Onde você quer
           <br />
           estar. Com quem.
@@ -490,7 +490,7 @@ function PerguntaBlock({
   return (
     <div>
       <p className="font-handwritten text-[#C96B3E] text-[22px] mt-2">{caveat}</p>
-      <h1 className="font-serif text-[#1A1A2E] text-[40px] md:text-[48px] leading-[1.18] mt-3">
+      <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[30px] md:text-[48px] leading-[1.18] mt-3">
         {titulo}
       </h1>
 
@@ -598,7 +598,7 @@ function PlanoTela({
               ENTREGÁVEL · ETAPA 11 · SUA REDE
             </p>
             <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha o que você construiu.</p>
-            <h1 className="font-serif text-[#FDF8F5] text-[42px] md:text-[52px] leading-[1.1] mt-3">
+            <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Seu plano de crescimento
               <br />
               tá desenhado.
