@@ -505,7 +505,7 @@ function PerguntaBlock({
   return (
     <div>
       <p className="font-handwritten text-[#C96B3E] text-[22px] mt-2">{caveat}</p>
-      <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[30px] md:text-[48px] leading-[1.18] mt-3">
+      <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[48px] leading-[1.18] mt-3">
         {titulo}
       </h1>
 

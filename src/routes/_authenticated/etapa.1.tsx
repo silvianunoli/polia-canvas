@@ -549,7 +549,7 @@ function Label({ children }: { children: React.ReactNode }) {
 
 function HeadlineDuas({ a, b }: { a: string; b: string }) {
   return (
-    <div className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[30px] md:text-[48px] leading-[1.2] mt-3">
+    <div className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[48px] leading-[1.2] mt-3">
       <p>{a}</p>
       <p>{b}</p>
     </div>
@@ -760,7 +760,7 @@ function MiniPitchTela({
           ETAPA 1 · DESCOBERTA
         </p>
         <p className="font-handwritten text-[#C96B3E] text-[26px] text-center mt-2">olha o que a gente montou juntas.</p>
-        <h2 className="font-serif text-[#1A1A2E] text-[28px] sm:text-[34px] md:text-[30px] md:text-[48px] leading-[1.2] text-center mt-2">
+        <h2 className="font-serif text-[#1A1A2E] text-[28px] sm:text-[34px] md:text-[48px] leading-[1.2] text-center mt-2">
           Seu primeiro mini-pitch.
         </h2>
         <p className="font-sans text-[#6A6A7E] text-[15px] text-center mt-3 mx-auto max-w-[600px]">
