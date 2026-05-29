@@ -308,12 +308,12 @@ function Capa({ onStart }: { onStart: () => void }) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
           ETAPA 1 DE 11 · DESCOBERTA
         </p>
 
-        <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
+        <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
           <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L2 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
@@ -347,7 +347,7 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <button
           onClick={onStart}
-          className="mt-14 relative h-[56px] rounded-[14px] bg-[#C96B3E] px-10 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+          className="mt-10 md:mt-14 relative h-[56px] rounded-[14px] bg-[#C96B3E] px-10 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
           Bora descobrir →
@@ -386,7 +386,7 @@ function PerguntaLayout({
   return (
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <EtapaNav streak={streak} initial={initial} />
-      <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
+      <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         {/* Sidebar esquerda */}
         <aside className="hidden w-[290px] shrink-0 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
@@ -755,7 +755,7 @@ function MiniPitchTela({
   return (
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <EtapaNav streak={streak} initial={initial} />
-      <div className="mx-auto max-w-[860px] px-6 py-16">
+      <div className="mx-auto max-w-[860px] px-6 py-10 md:py-16">
         <p className="font-accent text-[10px] font-bold tracking-[2px] text-[#C8A96E] uppercase text-center">
           ETAPA 1 · DESCOBERTA
         </p>
@@ -846,7 +846,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
           ETAPA 1 · DESCOBERTA · CONCLUÍDA
         </p>
@@ -872,7 +872,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
         </div>
 
         {/* Card desbloqueio */}
-        <div className="mt-14 w-full max-w-[560px] rounded-[20px] border border-[rgba(232,151,112,0.35)] bg-[rgba(36,36,66,0.55)] p-7 backdrop-blur-sm">
+        <div className="mt-10 md:mt-14 w-full max-w-[560px] rounded-[20px] border border-[rgba(232,151,112,0.35)] bg-[rgba(36,36,66,0.55)] p-7 backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <div className="relative flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-[rgba(232,151,112,0.6)]">
               <div className="h-3 w-3 rounded-full bg-[#E89770]" style={{ boxShadow: "0 0 12px rgba(232,151,112,0.8)" }} />
@@ -888,7 +888,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
         </div>
 
         {/* Mantra */}
-        <p className="font-handwritten text-[#FDF8F5] text-[28px] mt-14">A Pólia não acaba. Ela só fica mais sua.</p>
+        <p className="font-handwritten text-[#FDF8F5] text-[28px] mt-10 md:mt-14">A Pólia não acaba. Ela só fica mais sua.</p>
         <p className="font-sans text-[rgba(216,210,204,0.6)] text-[13px] mt-2">cada vez que você volta, encontra mais de você aqui</p>
 
         {/* CTAs */}

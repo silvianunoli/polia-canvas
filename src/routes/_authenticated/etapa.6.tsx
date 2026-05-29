@@ -340,12 +340,12 @@ function Capa({ onStart }: { onStart: () => void }) {
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
           ETAPA 6 DE 11 · SUA ROTINA
         </p>
 
-        <div className="mt-10 flex h-[180px] w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
+        <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
           <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L6 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
@@ -378,7 +378,7 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <button
           onClick={onStart}
-          className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+          className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
           Vamos organizar  →
@@ -415,7 +415,7 @@ function PerguntaLayout({
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} />
       <EtapaTopBar etapa={6} fase="CONSTRUÇÃO" nome="Gestão" variant="dark" />
-      <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
+      <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
             ETAPA 6 · SUA ROTINA
@@ -577,7 +577,7 @@ function SistemaTela({
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         {loading && (
           <>
             <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
@@ -722,7 +722,7 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
           tá acesa.
         </h1>
 
-        <div className="mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
+        <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
           {estrelas.map((e) => {
             const acesa = e.estado === "acesa";
             const agora = e.estado === "agora";
