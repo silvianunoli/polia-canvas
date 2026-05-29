@@ -165,11 +165,11 @@ function BibliotecaPage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} navActive="/biblioteca" />
 
-      <main className="mx-auto max-w-[1280px] px-12 pt-10 pb-16">
+      <main className="mx-auto max-w-[1280px] px-6 pt-8 pb-12 md:px-12 md:pt-10 md:pb-16">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_240px]">
           <div>
             <div className="mb-8">
-              <h1 className="font-serif text-[#1A1A2E] text-[44px] leading-tight mb-2">
+              <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight mb-2 md:text-[44px]">
                 Seus entregáveis.
               </h1>
               <p className="font-handwritten text-[#C96B3E] text-[18px]">
