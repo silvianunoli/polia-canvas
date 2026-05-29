@@ -255,8 +255,9 @@ function TarefasPage() {
         </div>
       </section>
 
-      {/* KANBAN */}
-      <section className="px-6 pb-16 pt-4 md:px-12">
+      {/* KANBAN — desktop */}
+      <section className="hidden md:block px-6 pb-16 pt-4 md:px-12">
+
         <div className="mx-auto max-w-[1280px]">
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
             {COLUNAS.map((col) => {
