@@ -171,7 +171,7 @@ function TarefasPage() {
           <h1 className="mb-1 font-serif text-[40px] leading-tight text-[#1A1A2E]">
             Seu fluxo de hoje.
           </h1>
-          <p className="font-handwritten text-[18px] text-[#C96B3E]">
+          <p className="caveat-decorativo text-[#C96B3E]">
             {pluralizeKanban(counts)}
           </p>
 
@@ -308,7 +308,7 @@ function TarefasPage() {
 
                   {lista.length === 0 ? (
                     <div className="rounded-xl border-2 border-dashed border-[rgba(26,26,46,0.08)] p-8 text-center">
-                      <p className="font-handwritten text-[15px] text-[#1A1A2E] opacity-30">
+                      <p className="caveat-decorativo text-[#1A1A2E] opacity-30">
                         {col.id === "a_fazer" && "nada por aqui ainda."}
                         {col.id === "brotando" &&
                           "mova uma tarefa pra cá quando começar."}
@@ -454,7 +454,7 @@ function CardTarefa({
               {colId === "a_fazer" ? "Brotar" : "Florescer"}
             </button>
           ) : (
-            <span className="font-handwritten text-[12px] text-[#2D6A4F]">
+            <span className="caveat-decorativo text-[#2D6A4F]">
               feita
             </span>
           )}

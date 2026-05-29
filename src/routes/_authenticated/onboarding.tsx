@@ -115,7 +115,7 @@ function LogoPlaceholder({ size = 180 }: { size?: number }) {
 
 function Caveat({ children, size = 28 }: { children: React.ReactNode; size?: number }) {
   return (
-    <p className="text-center font-handwritten text-[#E89770]" style={{ fontSize: size, lineHeight: 1.15 }}>
+    <p className="text-center caveat-decorativo text-[#E89770]" style={{ fontSize: size, lineHeight: 1.15 }}>
       {children}
     </p>
   );
@@ -201,7 +201,7 @@ function FoxPlaceholder() {
       <span className="font-sans font-semibold uppercase text-[#E89770]" style={{ fontSize: 10, letterSpacing: 1.5 }}>
         Placeholder · Raposa
       </span>
-      <span className="font-handwritten text-[#E89770]" style={{ fontSize: 22 }}>
+      <span className="caveat-decorativo text-[#E89770]" style={{ fontSize: 22 }}>
         Estado: Orientando
       </span>
       <span className="font-sans text-[#D8D2CC]" style={{ fontSize: 10 }}>
@@ -248,7 +248,7 @@ function Step2({
       </div>
       <PrimaryCTA onClick={onNext} disabled={!value}>Continuar  →</PrimaryCTA>
       {!value && (
-        <p className="text-center font-handwritten text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
+        <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
           escolhe uma pra continuar
         </p>
       )}
@@ -330,7 +330,7 @@ function Step3({
       </div>
       <PrimaryCTA onClick={onNext} disabled={!value}>Continuar  →</PrimaryCTA>
       {!value && (
-        <p className="text-center font-handwritten text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
+        <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
           escolhe um pra continuar
         </p>
       )}
@@ -409,7 +409,7 @@ function Step4({
         />
       </div>
 
-      <p className="text-center font-handwritten text-[rgba(232,151,112,0.7)]" style={{ fontSize: 16 }}>
+      <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 16 }}>
         depois você pode trocar nos ajustes do perfil
       </p>
 
@@ -541,7 +541,7 @@ function Step5({ onFinish }: { onFinish: () => void }) {
                   {label}
                 </span>
                 {active && (
-                  <span className="font-handwritten text-[#E89770]" style={{ fontSize: 14 }}>
+                  <span className="caveat-decorativo text-[#E89770]" style={{ fontSize: 14 }}>
                     acendendo agora
                   </span>
                 )}
@@ -554,7 +554,7 @@ function Step5({ onFinish }: { onFinish: () => void }) {
       <p className="text-center font-serif text-[#C96B3E]" style={{ fontSize: 22 }}>
         A Pólia não acaba. Ela só fica mais sua.
       </p>
-      <p className="text-center font-handwritten text-[rgba(232,151,112,0.8)]" style={{ fontSize: 18 }}>
+      <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.8)]" style={{ fontSize: 18 }}>
         cada vez que você volta, encontra mais de você aqui
       </p>
 

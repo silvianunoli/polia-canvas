@@ -340,10 +340,10 @@ function BibliotecaDetalhePage() {
                                 [campo.chave]: e.target.value,
                               }))
                             }
-                            className="w-full font-handwritten text-[#1A1A2E] text-[18px] leading-relaxed bg-transparent resize-none outline-none min-h-[80px]"
+                            className="w-full caveat-decorativo text-[#1A1A2E] leading-relaxed bg-transparent resize-none outline-none min-h-[80px]"
                           />
                         ) : (
-                          <p className="font-handwritten text-[#1A1A2E] text-[19px] leading-relaxed">
+                          <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
                             "{(valor as string) ?? ""}"
                           </p>
                         )}
@@ -371,11 +371,11 @@ function BibliotecaDetalhePage() {
                                       [campo.chave]: nova,
                                     }));
                                   }}
-                                  className="flex-1 font-handwritten text-[#1A1A2E] text-[16px] bg-transparent resize-none outline-none border-b border-[rgba(26,26,46,0.1)] pb-1"
+                                  className="flex-1 caveat-decorativo text-[#1A1A2E] bg-transparent resize-none outline-none border-b border-[rgba(26,26,46,0.1)] pb-1"
                                   rows={1}
                                 />
                               ) : (
-                                <p className="font-handwritten text-[#1A1A2E] text-[16px] leading-snug">
+                                <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
                                   {renderListaItem(item)}
                                 </p>
                               )}

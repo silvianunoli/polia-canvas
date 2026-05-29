@@ -43,7 +43,7 @@ function Manifesto() {
               {p}
             </p>
           ))}
-          <p className="font-handwritten text-[#E89770] text-[32px] md:text-[40px] text-center pt-8">
+          <p className="caveat-informacional text-[#E89770] text-[32px] md: text-center pt-8">
             voar é um ato de coragem.
           </p>
         </div>

@@ -123,7 +123,7 @@ function ConfiguracoesPage() {
           <h1 className="font-serif text-[#1A1A2E] text-[40px] leading-tight mb-2">
             Configurações
           </h1>
-          <p className="font-handwritten text-[#C96B3E] text-[18px]">
+          <p className="caveat-decorativo text-[#C96B3E]">
             seu perfil e seu negócio, do jeito que você quer.
           </p>
         </div>
@@ -179,7 +179,7 @@ function ConfiguracoesPage() {
                 placeholder="Ex: Ateliê da Aimer · Estúdio Florescer · Doces da Lua"
                 className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] placeholder:text-[#1A1A2E] placeholder:opacity-30 focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
               />
-              <p className="mt-1.5 font-handwritten text-[14px] text-polia-noite/50">
+              <p className="mt-1.5 caveat-decorativo text-polia-noite/50">
                 pode trocar depois — só vale como você chama hoje.
               </p>
             </Campo>
@@ -313,7 +313,7 @@ function ConfiguracoesPage() {
             </div>
           )}
           {senhaOk && (
-            <p className="font-handwritten text-[#C96B3E] text-[14px] mt-3">
+            <p className="caveat-decorativo text-[#C96B3E] mt-3">
               senha atualizada.
             </p>
           )}
@@ -322,7 +322,7 @@ function ConfiguracoesPage() {
         {/* SALVAR PERFIL */}
         <div className="flex items-center justify-end gap-4 mt-10">
           <span
-            className={`font-handwritten text-[#C96B3E] text-[14px] transition-opacity duration-300 ${
+            className={`caveat-decorativo text-[#C96B3E] text-[14px] transition-opacity duration-300 ${
               salvo ? "opacity-100" : "opacity-0"
             }`}
           >

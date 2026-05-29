@@ -227,7 +227,7 @@ function Etapa9Page() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="font-handwritten text-[#C96B3E] text-[22px]">carregando...</p>
+        <p className="caveat-informacional text-[#C96B3E]">carregando...</p>
       </div>
     );
   }
@@ -347,11 +347,11 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L9 Vertical</p>
+          <p className="caveat-decorativo text-[#E89770] mt-1">Lockup L9 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">hora de ser encontrada.</p>
+        <p className="caveat-informacional text-[#E89770] mt-10">hora de ser encontrada.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Conteúdo é
@@ -371,7 +371,7 @@ function Capa({ onStart }: { onStart: () => void }) {
             >
               <p className="font-serif text-[#C96B3E] text-[30px] leading-none">{c.num}</p>
               <p className="font-serif text-[#FDF8F5] text-[20px] mt-2">{c.titulo}</p>
-              <p className="font-handwritten text-[rgba(216,210,204,0.8)] text-[15px] mt-1">{c.sub}</p>
+              <p className="caveat-decorativo text-[rgba(216,210,204,0.8)] mt-1">{c.sub}</p>
             </div>
           ))}
         </div>
@@ -384,7 +384,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           Vamos atrair  →
         </button>
 
-        <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
+        <p className="caveat-decorativo text-[rgba(232,151,112,0.75)] mt-4">
           leva uns 15 minutinhos. dá pra pausar quando quiser.
         </p>
       </div>
@@ -455,7 +455,7 @@ function PerguntaLayout({
             })}
           </div>
           <hr className="border-[#EAE2D8] my-6" />
-          <p className="font-handwritten text-[#6A6A7E] text-[16px] leading-[22px]">
+          <p className="caveat-decorativo text-[#6A6A7E] leading-[22px]">
             depois vem
             <br />
             o seu plano de conteúdo
@@ -505,7 +505,7 @@ function PerguntaBlock({
   const podeAvancar = valor.trim().length >= minLen;
   return (
     <div>
-      <p className="font-handwritten text-[#C96B3E] text-[22px] mt-2">{caveat}</p>
+      <p className="caveat-informacional text-[#C96B3E] mt-2">{caveat}</p>
       <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[48px] leading-[1.18] mt-3">
         {titulo}
       </h1>
@@ -521,14 +521,14 @@ function PerguntaBlock({
         placeholder={placeholder}
         className="mt-3 w-full max-w-[720px] min-h-[140px] rounded-[12px] border border-[#EAE2D8] bg-white p-4 font-sans text-[15px] text-[#1A1A2E] placeholder:text-[#A8A2A0] focus:outline-none focus:ring-2 focus:ring-[#C96B3E]/30"
       />
-      <p className="font-handwritten text-[rgba(42,42,62,0.6)] text-[16px] mt-2">{ajuda}</p>
+      <p className="caveat-decorativo text-[rgba(42,42,62,0.6)] mt-2">{ajuda}</p>
 
       <hr className="border-[#EAE2D8] my-8 max-w-[720px]" />
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
           <p className="font-accent text-[8px] font-bold tracking-[1px] text-[#C96B3E]">RAPOSA</p>
-          <p className="font-handwritten text-[#6A6A7E] text-[10px] leading-tight mt-1">{raposaEstado}</p>
+          <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
       </div>
@@ -580,7 +580,7 @@ function PlanoTela({
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         {loading && (
           <>
-            <p className="font-handwritten text-[#E89770] text-[24px] animate-pulse">
+            <p className="caveat-informacional text-[#E89770] animate-pulse">
               desenhando seu plano de conteúdo...
             </p>
             <div className="mt-6 flex gap-2">
@@ -613,7 +613,7 @@ function PlanoTela({
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
               ENTREGÁVEL · ETAPA 9 · SUA AUDIÊNCIA
             </p>
-            <p className="font-handwritten text-[#E89770] text-[28px] mt-4">olha seu plano de conteúdo.</p>
+            <p className="caveat-informacional text-[#E89770] mt-4">olha seu plano de conteúdo.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Seu plano de conteúdo
               <br />
@@ -659,13 +659,13 @@ function PlanoTela({
               </p>
               <div className="mt-2 flex flex-col gap-2">
                 {plano.ideias.map((ideia, i) => (
-                  <p key={i} className="font-handwritten text-[#C96B3E] text-[16px] leading-[24px]">
+                  <p key={i} className="caveat-decorativo text-[#C96B3E] leading-[24px]">
                     {ideia}
                   </p>
                 ))}
               </div>
 
-              <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[14px] mt-5 text-right">
+              <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-5 text-right">
                 salvo em Suas Vendas e Clientes · você edita quando quiser
               </p>
             </div>
@@ -716,7 +716,7 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
           ETAPA 9 · SUA AUDIÊNCIA · CONCLUÍDA
         </p>
 
-        <p className="font-handwritten text-[#E89770] text-[28px] mt-10">
+        <p className="caveat-informacional text-[#E89770] mt-10">
           agora você sabe como aparecer pra quem importa.
         </p>
 
@@ -765,14 +765,14 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
                   )}
                 </div>
                 <p
-                  className={`font-handwritten text-[11px] mt-2 ${
+                  className={`caveat-decorativo text-[11px] mt-2 ${
                     acesa || agora ? "text-[#FDF8F5]" : "text-[rgba(253,248,245,0.45)]"
                   }`}
                 >
                   {e.label}
                 </p>
                 {agora && (
-                  <p className="font-handwritten text-[10px] text-[#E89770] mt-1 animate-pulse">acesa agora</p>
+                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">acesa agora</p>
                 )}
               </div>
             );
@@ -791,7 +791,7 @@ function Conclusao({ onVerPainel, onEtapa10 }: { onVerPainel: () => void; onEtap
 
         <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
 
-        <p className="font-handwritten text-[rgba(232,151,112,0.85)] text-[16px] mt-3">
+        <p className="caveat-decorativo text-[rgba(232,151,112,0.85)] mt-3">
           fase de venda completa. agora é hora de crescer.
         </p>
 

@@ -101,7 +101,7 @@ export function FinalCTASection() {
 
         <motion.p
           variants={{ hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0 } }}
-          className="font-caveat"
+          className="caveat-decorativo"
           style={{
             fontSize: 18,
             color: "rgba(255,255,255,0.40)",

@@ -133,7 +133,7 @@ export function ProblemSection() {
             A Pólia não te ensina. Ela te mostra o caminho.
           </motion.h2>
           <motion.p
-            className="font-caveat"
+            className="caveat-decorativo"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-100px" }}

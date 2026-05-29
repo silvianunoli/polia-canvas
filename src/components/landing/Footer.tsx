@@ -143,7 +143,7 @@ export function Footer(): ReactNode {
               o mundo saiba.
             </p>
             <p
-              className="font-caveat"
+              className="caveat-decorativo"
               style={{
                 fontSize: 15,
                 color: "rgba(255,255,255,0.25)",

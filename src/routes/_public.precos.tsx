@@ -49,7 +49,7 @@ function Precos() {
           <h1 className="font-serif text-[#FDF8F5] text-[40px] md:text-[56px] leading-tight mb-4">
             Simples. Justo. Feito pra quem está começando.
           </h1>
-          <p className="font-handwritten text-[#E89770] text-[18px]">
+          <p className="caveat-decorativo text-[#E89770]">
             na landing tem o resumo. aqui tem tudo.
           </p>
         </div>

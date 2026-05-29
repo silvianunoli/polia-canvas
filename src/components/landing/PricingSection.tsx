@@ -51,7 +51,7 @@ export function PricingSection() {
             Durante o beta, é gratuito.
           </h2>
           <p
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{
               fontSize: 22,
               color: "var(--terracota)",

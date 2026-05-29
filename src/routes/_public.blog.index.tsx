@@ -87,7 +87,7 @@ function BlogList() {
                   className="group bg-white rounded-2xl overflow-hidden border border-[#1A1A2E]/8 hover:shadow-lg transition-shadow"
                 >
                   <div className="aspect-video bg-gradient-to-br from-[#C96B3E]/15 to-[#C9407A]/15 flex items-center justify-center">
-                    <p className="font-handwritten text-[#C96B3E] text-[28px]">{post.categoria ?? "Pólia"}</p>
+                    <p className="caveat-informacional text-[#C96B3E]">{post.categoria ?? "Pólia"}</p>
                   </div>
                   <div className="p-6">
                     {post.categoria && (

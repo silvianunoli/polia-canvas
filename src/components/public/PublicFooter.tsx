@@ -51,7 +51,7 @@ export function PublicFooter() {
           <p className="font-sans text-[#FDF8F5]/40 text-[12px]">
             2026 Pólia. Feito com carinho para mulheres que constroem.
           </p>
-          <p className="font-handwritten text-[#C96B3E] text-[18px]">
+          <p className="caveat-decorativo text-[#C96B3E]">
             voar é um ato de coragem.
           </p>
         </div>

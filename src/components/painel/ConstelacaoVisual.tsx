@@ -130,7 +130,7 @@ export function ConstelacaoVisual({
                     {/* Top label slot (fixed height to align all circles) */}
                     <div className="flex h-10 items-end justify-center">
                       {isCurrent && (
-                        <span className="max-w-[88px] text-center font-handwritten text-[18px] leading-[0.95] text-polia-terracota md:max-w-none md:whitespace-nowrap">
+                        <span className="max-w-[88px] text-center caveat-decorativo leading-[0.95] text-polia-terracota md:max-w-none md:whitespace-nowrap">
                           você tá aqui agora
                         </span>
                       )}
@@ -177,12 +177,12 @@ export function ConstelacaoVisual({
                     {/* Bottom label slot */}
                     <div className="mt-1 flex min-h-6 items-start justify-center">
                       {isCurrent && (
-                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-terracota">
+                        <span className="text-center caveat-decorativo leading-none text-polia-terracota">
                           acendendo agora
                         </span>
                       )}
                       {isFuture && (
-                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-creme">
+                        <span className="text-center caveat-decorativo leading-none text-polia-creme">
                           ainda vai brilhar
                         </span>
                       )}

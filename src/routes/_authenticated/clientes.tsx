@@ -155,7 +155,7 @@ function ClientesPage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-40">
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
           carregando...
         </p>
       </div>
@@ -182,7 +182,7 @@ function ClientesPage() {
         >
           Continuar minha jornada →
         </button>
-        <p className="font-handwritten text-[#D8D2CC] text-[14px] mt-4">
+        <p className="caveat-decorativo text-[#D8D2CC] mt-4">
           falta pouco.
         </p>
       </div>
@@ -203,7 +203,7 @@ function ClientesPage() {
             <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               Do primeiro contato ao sim.
             </h1>
-            <p className="font-handwritten text-[#C96B3E] text-[17px] mt-2">
+            <p className="caveat-decorativo text-[#C96B3E] mt-2">
               {orbitActive
                 ? "fluxo completo: vendas, cuidado e conteúdo."
                 : "vendas e cuidado montados. conteúdo vem na Etapa 9."}
@@ -331,7 +331,7 @@ function TabClientes({
 
       {clientes.length === 0 ? (
         <div className="text-center py-16 border-2 border-dashed border-[rgba(26,26,46,0.08)] rounded-2xl">
-          <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-35">
+          <p className="caveat-decorativo text-[#1A1A2E] opacity-35">
             adicione sua primeira cliente aqui.
           </p>
         </div>
@@ -412,7 +412,7 @@ function CardEntregavel({
           <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C96B3E] mb-2">
             {destaque.label}
           </p>
-          <p className="font-handwritten text-[#1A1A2E] text-[17px] leading-relaxed">
+          <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
             "{destaque.texto}"
           </p>
         </div>
@@ -584,7 +584,7 @@ function TabEntregavelE9({
             <span className="font-serif text-[#C96B3E] text-[18px] leading-none mt-0.5">
               {i + 1}
             </span>
-            <p className="font-handwritten text-[#1A1A2E] text-[16px] leading-snug">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
               {ideia}
             </p>
           </div>

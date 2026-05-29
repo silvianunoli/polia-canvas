@@ -22,7 +22,7 @@ export function PoliaFooter() {
       className="bg-polia-noite px-6 py-10 text-center md:px-12"
     >
       <div className="mx-auto flex max-w-[1280px] flex-col items-center gap-4">
-        <p className="font-handwritten text-[18px] leading-snug text-polia-creme/85 md:text-[20px]">
+        <p className="caveat-decorativo text-[18px] leading-snug text-polia-creme/85 md:">
           {mantra}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 font-sans text-[12px] text-polia-creme/55">

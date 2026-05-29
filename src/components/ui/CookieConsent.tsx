@@ -63,12 +63,10 @@ export function CookieConsent() {
           >
             <div className="min-w-0 flex-1 sm:min-w-[280px]">
               <div
-                className="font-handwritten"
+                className="caveat-decorativo"
                 style={{
-                  fontSize: 17,
                   color: "var(--terracota, #C96B3E)",
                   marginBottom: 4,
-                  lineHeight: 1.1,
                 }}
               >
                 sobre cookies
