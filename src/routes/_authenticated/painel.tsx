@@ -313,7 +313,7 @@ function PainelPage() {
             >
               Continuar →
             </a>
-            <span className="text-center font-handwritten text-[13px] text-polia-creme/60 md:text-right">
+            <span className="text-center font-handwritten text-[14px] text-polia-creme/60 md:text-right">
               ou começar agora
             </span>
           </div>
