@@ -48,7 +48,15 @@ const phases: Phase[] = [
   },
 ];
 
-export function ConstelacaoVisual({ etapaAtual }: { etapaAtual: number }) {
+interface ConstelacaoVisualProps {
+  etapaAtual: number;
+  onStarClick?: (etapa: number, state: "done" | "current" | "future") => void;
+}
+
+export function ConstelacaoVisual({
+  etapaAtual,
+  onStarClick,
+}: ConstelacaoVisualProps) {
   return (
     <div className="relative w-full overflow-x-auto pb-4">
       <div className="flex min-w-[900px] items-start justify-between gap-6">
@@ -68,14 +76,37 @@ export function ConstelacaoVisual({ etapaAtual }: { etapaAtual: number }) {
                 const isDone = star.etapa < etapaAtual;
                 const isCurrent = star.etapa === etapaAtual;
                 const isFuture = star.etapa > etapaAtual;
+                const state: "done" | "current" | "future" = isDone
+                  ? "done"
+                  : isCurrent
+                    ? "current"
+                    : "future";
+
+                const handleClick = onStarClick
+                  ? () => onStarClick(star.etapa, state)
+                  : undefined;
+
+                const title = isCurrent
+                  ? `Continuar na Etapa ${star.etapa}`
+                  : isDone
+                    ? `Etapa ${star.etapa} — concluída`
+                    : `Etapa ${star.etapa} — ainda vai brilhar`;
 
                 return (
-                  <div
+                  <button
                     key={star.etapa}
-                    className="relative flex flex-col items-center"
+                    type="button"
+                    onClick={handleClick}
+                    title={title}
+                    aria-label={title}
+                    className={`relative flex flex-col items-center bg-transparent border-0 p-0 transition-transform ${
+                      handleClick
+                        ? "cursor-pointer hover:-translate-y-0.5"
+                        : "cursor-default"
+                    }`}
                   >
                     {isCurrent && (
-                      <span className="mb-1 whitespace-nowrap font-handwritten text-[12px] text-polia-terracota">
+                      <span className="mb-1 whitespace-nowrap font-handwritten text-[14px] text-polia-terracota">
                         você tá aqui agora
                       </span>
                     )}
@@ -128,16 +159,16 @@ export function ConstelacaoVisual({ etapaAtual }: { etapaAtual: number }) {
 
                     {/* Sub label */}
                     {isCurrent && (
-                      <span className="mt-1 font-handwritten text-[11px] text-polia-terracota">
+                      <span className="mt-1 font-handwritten text-[14px] text-polia-terracota">
                         acendendo agora
                       </span>
                     )}
                     {isFuture && (
-                      <span className="mt-1 font-handwritten text-[11px] text-polia-creme opacity-40">
+                      <span className="mt-1 font-handwritten text-[14px] text-polia-creme opacity-40">
                         ainda vai brilhar
                       </span>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
