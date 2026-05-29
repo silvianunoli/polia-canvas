@@ -7,6 +7,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { CosmicSky } from "@/components/painel/CosmicSky";
 import { ConstelacaoVisual } from "@/components/painel/ConstelacaoVisual";
+import { pluralizeKanban } from "@/lib/kanban";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -264,8 +265,16 @@ function PainelPage() {
               <StatBlock
                 label="HOJE"
                 valueClass="font-sans text-[16px] font-semibold text-polia-noite"
-                value={`${tarefasAFazer.length} sementes pra plantar`}
-                sub={`${tarefasBrotando.length} brotando, ${tarefasFloresceram.length} já floresceram`}
+                value={
+                  tarefasAFazer.length + tarefasBrotando.length + tarefasFloresceram.length === 0
+                    ? "nada brotando ainda"
+                    : pluralizeKanban({
+                        a_fazer: tarefasAFazer.length,
+                        brotando: tarefasBrotando.length,
+                        floresceu: tarefasFloresceram.length,
+                      })
+                }
+                sub="seu fluxo da semana"
               />
             </div>
           </div>

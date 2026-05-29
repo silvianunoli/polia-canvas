@@ -194,13 +194,13 @@ function ClientesPage() {
       <PainelNav initial={initial} streak={streak} navActive="/clientes" />
 
       {/* Cabeçalho */}
-      <div className="px-12 pt-10">
-        <div className="flex items-end justify-between mb-8 max-w-[1280px] mx-auto">
+      <div className="px-6 pt-8 md:px-12 md:pt-10">
+        <div className="flex flex-col gap-6 mb-8 max-w-[1280px] mx-auto md:flex-row md:items-end md:justify-between">
           <div>
             <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-2">
               SUAS VENDAS E CLIENTES
             </p>
-            <h1 className="font-serif text-[#1A1A2E] text-[44px] leading-tight">
+            <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               Do primeiro contato ao sim.
             </h1>
             <p className="font-handwritten text-[#C96B3E] text-[17px] mt-2">
@@ -209,20 +209,12 @@ function ClientesPage() {
                 : "vendas e cuidado montados. conteúdo vem na Etapa 9."}
             </p>
           </div>
-          <div className="w-[100px] h-[110px] border border-dashed border-[#C96B3E] rounded-2xl flex flex-col items-center justify-center gap-1 bg-[rgba(201,107,62,0.04)]">
-            <span className="font-accent text-[#C96B3E] text-[8px] tracking-[1px] font-bold">
-              RAPOSA
-            </span>
-            <span className="font-sans text-[#C96B3E] text-[8px] opacity-70">
-              ANIMADA
-            </span>
-          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="px-12">
-        <div className="flex gap-1 border-b border-[rgba(26,26,46,0.08)] max-w-[1280px] mx-auto">
+      <div className="px-6 md:px-12">
+        <div className="flex gap-1 border-b border-[rgba(26,26,46,0.08)] max-w-[1280px] mx-auto overflow-x-auto">
           {(
             [
               { id: "clientes", label: "Clientes", bloqueado: false },
@@ -256,7 +248,7 @@ function ClientesPage() {
       </div>
 
       {/* Conteúdo das tabs */}
-      <div className="px-12 py-10">
+      <div className="px-6 py-8 md:px-12 md:py-10">
         {tabAtiva === "clientes" ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 max-w-[1280px] mx-auto">
             <TabClientes
