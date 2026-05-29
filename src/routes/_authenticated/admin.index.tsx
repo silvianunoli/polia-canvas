@@ -6,6 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({
+    meta: [{ title: "Admin · Pólia" }],
+  }),
   component: AdminHome,
 });
 
@@ -89,7 +92,7 @@ function AdminHome() {
 
   const metricas: { label: string; sigla?: string; tooltip?: string; valor: string | number; ok: boolean; desc: string }[] = [
     { label: "Ativação", sigla: "D7", tooltip: "em 7 dias depois do cadastro", valor: `${stats.ativacao_d7}%`, ok: stats.ativacao_d7 >= 40, desc: "completaram E1 em 7 dias" },
-    { label: "Mediana de Etapa", valor: `E${stats.mediana_etapa}`, ok: true, desc: "onde metade das ativas está" },
+    { label: "Mediana de Etapa", tooltip: "etapa onde metade das ativas está", valor: `E${stats.mediana_etapa}`, ok: true, desc: "onde metade das ativas está" },
     { label: "Ativas", sigla: "WAU-2", tooltip: "ativas nas últimas 2 semanas com ação real", valor: stats.wau2, ok: true, desc: "últ. 14 dias com ação real" },
     { label: "Retenção", sigla: "D30", tooltip: "trinta dias depois do cadastro", valor: `${stats.retencao_d30}%`, ok: stats.retencao_d30 >= 35, desc: "coorte do mês anterior" },
     { label: "Total cadastros", valor: stats.total_cadastros, ok: true, desc: "desde o início" },
@@ -124,10 +127,10 @@ function AdminHome() {
           <div key={item.label} className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]">
             <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2 flex items-center gap-1">
               <span>{item.label}{item.sigla ? ` ${item.sigla}` : ""}</span>
-              {item.sigla && item.tooltip && (
+              {item.tooltip && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <button type="button" aria-label={`O que é ${item.sigla}`} className="inline-flex items-center justify-center min-h-[20px] min-w-[20px] text-[#1A1A2E]/40 hover:text-[#1A1A2E]/70">
+                    <button type="button" aria-label={`O que é ${item.sigla ?? item.label}`} className="inline-flex items-center justify-center min-h-[20px] min-w-[20px] text-[#1A1A2E]/40 hover:text-[#1A1A2E]/70">
                       <HelpCircle size={11} />
                     </button>
                   </TooltipTrigger>
