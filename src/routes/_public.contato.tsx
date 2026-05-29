@@ -138,7 +138,7 @@ function Contato() {
               <p className="font-sans text-[#1A1A2E] text-[15px] opacity-60 mb-2">
                 Respondemos em até 2 dias úteis.
               </p>
-              <p className="font-handwritten text-[#C96B3E] text-[20px]">obrigada por escrever.</p>
+              <p className="caveat-decorativo text-[#C96B3E]">obrigada por escrever.</p>
             </div>
           )}
 

@@ -172,7 +172,7 @@ function BibliotecaPage() {
               <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight mb-2 md:text-[44px]">
                 Seus entregáveis.
               </h1>
-              <p className="font-handwritten text-[#C96B3E] text-[18px]">
+              <p className="caveat-decorativo text-[#C96B3E]">
                 tudo que você construiu fica aqui. pra sempre.
               </p>
               <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mt-2">
@@ -205,7 +205,7 @@ function BibliotecaPage() {
                 <p className="font-serif text-[#1A1A2E] text-[24px] opacity-30 mb-3">
                   seus entregáveis aparecem aqui.
                 </p>
-                <p className="font-handwritten text-[#C96B3E] text-[16px] mb-6">
+                <p className="caveat-decorativo text-[#C96B3E] mb-6">
                   complete a Etapa 1 pra criar o primeiro.
                 </p>
                 <button
@@ -217,7 +217,7 @@ function BibliotecaPage() {
               </div>
             ) : entregaveisFiltrados.length === 0 ? (
               <div className="text-center py-16">
-                <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-35">
+                <p className="caveat-decorativo text-[#1A1A2E] opacity-35">
                   nenhum entregável da fase {faseAtiva} ainda.
                 </p>
               </div>

@@ -120,7 +120,7 @@ function ListaEspera() {
             <p className="font-sans text-[#FDF8F5]/70 text-[16px] mb-3">
               Vamos te avisar por email quando a Pólia abrir. Pode fechar essa aba.
             </p>
-            <p className="font-handwritten text-[#E89770] text-[22px]">até breve.</p>
+            <p className="caveat-informacional text-[#E89770]">até breve.</p>
           </div>
         )}
 

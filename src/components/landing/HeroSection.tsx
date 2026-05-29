@@ -129,7 +129,7 @@ export function HeroSection({ preloader = false }: HeroSectionProps) {
           transition={{ duration: 0.8, delay: leftDelay, ease: [0.22, 1, 0.36, 1] }}
         >
           <p
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{ fontSize: 22, color: "var(--terracota)", marginBottom: 16 }}
           >
             Chegou a hora.

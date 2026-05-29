@@ -71,7 +71,7 @@ export function ProductRevealSection() {
               Seu painel acompanha cada etapa que você conclui e mostra exatamente o que vem a seguir.
             </p>
             <p
-              className="font-caveat"
+              className="caveat-decorativo"
               style={{ fontSize: 20, color: "var(--terracota)", marginTop: 24 }}
             >
               Você nunca vai ficar perdida de novo.
@@ -209,7 +209,7 @@ export function ProductRevealSection() {
               Você não termina com mais perguntas. Termina com um entregável na mão, pronto pra usar no seu negócio.
             </p>
             <p
-              className="font-caveat"
+              className="caveat-decorativo"
               style={{ fontSize: 20, color: "var(--terracota)", marginTop: 24 }}
             >
               Algo concreto. Algo seu.
@@ -305,7 +305,7 @@ export function ProductRevealSection() {
               Cada entregável que você gera fica salvo na sua biblioteca pessoal. Você edita, atualiza e usa quando quiser.
             </p>
             <p
-              className="font-caveat"
+              className="caveat-decorativo"
               style={{
                 fontSize: 24,
                 color: "var(--terracota)",

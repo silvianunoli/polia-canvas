@@ -42,7 +42,7 @@ export function SidebarAside({
             {label}
           </p>
           {caveat && (
-            <p className="mb-3 font-handwritten text-[16px] leading-snug text-polia-noite">
+            <p className="mb-3 caveat-decorativo leading-snug text-polia-noite">
               {caveat}
             </p>
           )}

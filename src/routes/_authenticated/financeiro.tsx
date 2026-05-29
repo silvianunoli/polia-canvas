@@ -149,7 +149,7 @@ function FinanceiroPage() {
           >
             Continuar minha jornada →
           </button>
-          <p className="mt-4 font-handwritten text-[14px] text-[#D8D2CC]">
+          <p className="mt-4 caveat-decorativo text-[#D8D2CC]">
             quase lá.
           </p>
         </div>
@@ -176,7 +176,7 @@ function FinanceiroPage() {
           <h1 className="font-serif text-[28px] leading-tight text-[#1A1A2E] md:text-[44px]">
             O que você mede, cresce.
           </h1>
-          <p className="mt-2 font-handwritten text-[17px] text-[#C96B3E]">
+          <p className="mt-2 caveat-decorativo text-[#C96B3E]">
             {active
               ? "painel completo: números, crescimento e rede."
               : "painel de números montado. plano de crescimento vem na Etapa 11."}
@@ -247,7 +247,7 @@ function FinanceiroPage() {
                 <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
                   QUANDO AGIR
                 </p>
-                <p className="font-handwritten text-[17px] leading-snug text-[#1A1A2E]">
+                <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
                   {painelData.gatilho_principal ?? "—"}
                 </p>
               </div>
@@ -326,7 +326,7 @@ function FinanceiroPage() {
                   <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
                     SUA AFIRMAÇÃO
                   </p>
-                  <p className="font-handwritten text-[20px] leading-snug text-[#1A1A2E]">
+                  <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
                     "{planoData.afirmacao}"
                   </p>
                 </div>
@@ -494,13 +494,13 @@ function ReceitaMetaSection({
           </button>
         )}
         {receita > 0 && meta > 0 && receita < meta && (
-          <p className="mt-4 font-handwritten text-[14px] text-[#1A1A2E]">
+          <p className="mt-4 caveat-decorativo text-[#1A1A2E]">
             falta R$ {(meta - receita).toLocaleString("pt-BR")} pra fechar a
             meta
           </p>
         )}
         {receita >= meta && meta > 0 && (
-          <p className="mt-4 font-handwritten text-[14px] text-[#2D6A4F]">
+          <p className="mt-4 caveat-decorativo text-[#2D6A4F]">
             meta batida esse mês.
           </p>
         )}

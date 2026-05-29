@@ -101,7 +101,7 @@ function RedefinirSenhaPage() {
         <div className="flex flex-col items-center text-center">
           <Star size={40} color="#C8A96E" />
           <h2 className="mt-5 font-serif text-[28px] text-[#FDF8F5]">Senha atualizada.</h2>
-          <p className="mt-2 font-handwritten text-[20px] text-[#E89770]">
+          <p className="mt-2 caveat-decorativo text-[#E89770]">
             você está pronta.
           </p>
           <p

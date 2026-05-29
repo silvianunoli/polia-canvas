@@ -225,7 +225,7 @@ function JornadaPage() {
               pra sempre.
             </p>
 
-            <p className="mt-8 font-handwritten text-[16px] text-[#D8D2CC]">
+            <p className="mt-8 caveat-decorativo text-[#D8D2CC]">
               {fraseInferior}
             </p>
           </div>
@@ -285,7 +285,7 @@ function JornadaPage() {
                     <h3 className="font-serif text-[28px] text-[#FDF8F5]">
                       {estrelaExpandida.nome}
                     </h3>
-                    <p className="mt-1 font-handwritten text-[14px] text-[#D8D2CC]">
+                    <p className="mt-1 caveat-decorativo text-[#D8D2CC]">
                       concluída em{" "}
                       {completados[estrelaExpandida.n]
                         ? formatarData(completados[estrelaExpandida.n]!)
@@ -320,7 +320,7 @@ function JornadaPage() {
                     </a>
                   </div>
                 ) : (
-                  <p className="font-handwritten text-[14px] text-[#D8D2CC]">
+                  <p className="caveat-decorativo text-[#D8D2CC]">
                     nenhum entregável vinculado a essa etapa ainda.
                   </p>
                 )}
@@ -346,7 +346,7 @@ function JornadaPage() {
             <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#D8D2CC] opacity-50">
               FERRAMENTAS QUE VIVEM COM VOCÊ
             </p>
-            <p className="mb-8 font-handwritten text-[16px] text-[#C96B3E]">
+            <p className="mb-8 caveat-decorativo text-[#C96B3E]">
               cada fase completa, uma ferramenta entra em órbita.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -391,7 +391,7 @@ function JornadaPage() {
             </div>
 
             {entregaveis.length === 0 ? (
-              <p className="py-12 text-center font-handwritten text-[18px] text-[#D8D2CC] opacity-40">
+              <p className="py-12 text-center caveat-decorativo text-[#D8D2CC] opacity-40">
                 seu primeiro entregável aparece quando você completa a Etapa 1.
               </p>
             ) : (
@@ -456,7 +456,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[14px] text-[#C8A96E]">
+        <span className="caveat-decorativo text-[#C8A96E]">
           concluída
         </span>
       </button>
@@ -478,7 +478,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[14px] text-[#C96B3E]">
+        <span className="caveat-decorativo text-[#C96B3E]">
           acendendo agora
         </span>
       </button>
@@ -492,7 +492,7 @@ function EstrelaItem({
       <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#D8D2CC]">
         {nome}
       </span>
-      <span className="font-handwritten text-[14px] text-[#D8D2CC]">
+      <span className="caveat-decorativo text-[#D8D2CC]">
         ainda vai brilhar
       </span>
     </div>

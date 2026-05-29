@@ -84,7 +84,7 @@ function MarcaVivaPage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-40">
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
           carregando...
         </p>
       </div>
@@ -133,7 +133,7 @@ function MarcaVivaPage() {
             <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               {profile.business_name || "Seu negócio"}
             </h1>
-            <p className="font-handwritten text-[#C96B3E] text-[17px] mt-2">
+            <p className="caveat-decorativo text-[#C96B3E] mt-2">
               identidade, voz e posicionamento.
             </p>
           </div>
@@ -245,7 +245,7 @@ function CardMiniPitch({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SEU PITCH COMPLETO
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[19px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               "{pitchTexto}"
             </p>
           </div>
@@ -317,7 +317,7 @@ function CardVozMarca({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SUA VOZ EM UMA FRASE
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[19px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               "{voz.frase}"
             </p>
           </div>
@@ -406,7 +406,7 @@ function CardMapa({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SEU ANGULO UNICO
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[18px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               "{mapa.anguloUnico}"
             </p>
           </div>

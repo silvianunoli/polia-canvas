@@ -125,7 +125,7 @@ function SobrePage() {
             Um começo honesto para negócios reais.
           </h1>
           <div
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{
               fontSize: 22,
               color: "var(--terracota)",
@@ -245,7 +245,7 @@ function SobrePage() {
                   merece começar certo.
                 </p>
                 <p
-                  className="font-caveat"
+                  className="caveat-decorativo"
                   style={{
                     fontSize: 20,
                     color: "var(--terracota)",
@@ -288,7 +288,7 @@ function SobrePage() {
               72% das empreendedoras brasileiras começam sem planejamento.
             </h3>
             <p
-              className="font-caveat"
+              className="caveat-decorativo"
               style={{
                 fontSize: 22,
                 color: "var(--terracota)",
@@ -420,7 +420,7 @@ function SobrePage() {
             Como a Pólia nasceu.
           </h2>
           <p
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{
               fontSize: 20,
               color: "var(--terracota)",
@@ -569,7 +569,7 @@ function SobrePage() {
           style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto" }}
         >
           <div
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{ fontSize: 24, color: "var(--terracota)" }}
           >
             pronta pra começar?

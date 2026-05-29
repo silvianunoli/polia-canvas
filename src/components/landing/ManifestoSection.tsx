@@ -101,7 +101,7 @@ export function ManifestoSection() {
         <div style={{ height: 64 }} />
 
         <div
-          className="font-caveat"
+          className="caveat-decorativo"
           style={{ fontSize: caveatSize, color: "var(--terracota)" }}
         >
           <span style={reveal(600)}>E a Pólia começa com você.</span>
@@ -129,7 +129,7 @@ export function ManifestoSection() {
         <div style={reveal(1300)}>
           <Link
             to="/manifesto"
-            className="font-caveat polia-manifesto-link"
+            className="caveat-decorativo polia-manifesto-link"
             style={{
               fontSize: 20,
               color: "rgba(255,255,255,0.50)",

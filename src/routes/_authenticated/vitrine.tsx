@@ -85,7 +85,7 @@ function VitrinePage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-40">
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
           carregando...
         </p>
       </div>
@@ -138,7 +138,7 @@ function VitrinePage() {
           <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
             O que você vende. Como aparece. Como produz.
           </h1>
-          <p className="font-handwritten text-[#C96B3E] text-[17px] mt-2">
+          <p className="caveat-decorativo text-[#C96B3E] mt-2">
             {vitrineAtiva
               ? "vitrine completa: produto, presença e controle."
               : "produto e presença prontos. sistema de controle vem na Etapa 6."}
@@ -275,7 +275,7 @@ function CardFichaProduto({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A7FAD] opacity-70 mb-2">
               CLIENTE IDEAL
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[18px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               "{ficha.cliente_ideal}"
             </p>
           </div>
@@ -368,7 +368,7 @@ function CardGuiaImpressao({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A7FAD] opacity-70 mb-2">
               SUA BIO SUGERIDA
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[19px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               "{guia.bio_sugerida}"
             </p>
           </div>
@@ -461,7 +461,7 @@ function CardSistemaControle({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A7FAD] opacity-70 mb-2">
               PROXIMO PASSO
             </p>
-            <p className="font-handwritten text-[#1A1A2E] text-[18px] leading-relaxed">
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
               {sistema.proximo_passo}
             </p>
           </div>

@@ -67,7 +67,7 @@ export function LandingFooter() {
             LOGO
           </div>
           <div
-            className="font-caveat"
+            className="caveat-decorativo"
             style={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}
           >
             2026 Pólia. Feito com carinho.
@@ -129,7 +129,7 @@ export function LandingFooter() {
           © 2026 Pólia
         </div>
         <div
-          className="font-caveat"
+          className="caveat-decorativo"
           style={{ fontSize: 16, color: "rgba(255,255,255,0.35)" }}
         >
           voar é um ato de coragem.

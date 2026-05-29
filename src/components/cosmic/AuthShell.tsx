@@ -28,7 +28,7 @@ export function AuthShell({ children, maxWidth = 440 }: AuthShellProps) {
 export function CaveatEyebrow({ children, size = 28 }: { children: ReactNode; size?: number }) {
   return (
     <p
-      className="mb-2 text-center font-handwritten text-[#E89770]"
+      className="mb-2 text-center caveat-decorativo text-[#E89770]"
       style={{ fontSize: size, lineHeight: 1.1 }}
     >
       {children}

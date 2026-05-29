@@ -215,7 +215,7 @@ function Etapa1Page() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="font-handwritten text-[#C96B3E] text-[22px]">carregando...</p>
+        <p className="caveat-informacional text-[#C96B3E]">carregando...</p>
       </div>
     );
   }
@@ -315,12 +315,12 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="font-handwritten text-[#E89770] text-[18px] mt-1">Lockup L2 Vertical</p>
+          <p className="caveat-decorativo text-[#E89770] mt-1">Lockup L2 Vertical</p>
           <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
           <p className="font-sans text-[9px] text-[rgba(216,210,204,0.45)]">SVG · upload no Lovable</p>
         </div>
 
-        <p className="font-handwritten text-[#E89770] text-[26px] mt-10">
+        <p className="caveat-informacional text-[#E89770] mt-10">
           é hora de descobrir o que tá dentro.
         </p>
 
@@ -353,7 +353,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           Bora descobrir →
         </button>
 
-        <p className="font-handwritten text-[rgba(216,210,204,0.6)] text-[16px] mt-4">
+        <p className="caveat-decorativo text-[rgba(216,210,204,0.6)] mt-4">
           leva uns 10 minutinhos. dá pra pausar quando quiser.
         </p>
       </div>
@@ -419,7 +419,7 @@ function PerguntaLayout({
                     >
                       {p.label}
                     </p>
-                    <p className="font-handwritten text-[#C96B3E] text-[15px] mt-1">
+                    <p className="caveat-decorativo text-[#C96B3E] mt-1">
                       {isDone ? "feito" : isActive ? "atual" : p.estado}
                     </p>
                   </div>
@@ -427,7 +427,7 @@ function PerguntaLayout({
               );
             })}
           </div>
-          <p className="font-handwritten text-[rgba(106,106,126,0.7)] text-[15px] mt-8">
+          <p className="caveat-decorativo text-[rgba(106,106,126,0.7)] mt-8">
             depois vem o seu mini-pitch
           </p>
         </aside>
@@ -498,7 +498,7 @@ function RaposaECard({ step }: { step: number }) {
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-1.5 rounded-[18px] border-[1.5px] border-dashed border-[rgba(232,151,112,0.5)] bg-[#FAF4EF] px-[18px] py-[22px]">
         <p className="font-accent text-[#C96B3E] text-[10px] font-bold tracking-[1.5px]">PLACEHOLDER · RAPOSA</p>
-        <p className="font-handwritten text-[#C96B3E] text-[22px]">Estado: {s.estado}</p>
+        <p className="caveat-informacional text-[#C96B3E]">Estado: {s.estado}</p>
         <p className="font-sans text-[#6A6A7E] text-[10px]">PNG transparente · 200×260</p>
         <p className="font-sans text-[#9A958E] text-[9px]">Pose: {s.pose}</p>
       </div>
@@ -584,7 +584,7 @@ function Pergunta1({
   return (
     <>
       <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 1 DE 3</p>
-      <p className="font-handwritten text-[#C96B3E] text-[20px] mt-3">vamos com calma. responde como conversaria com uma amiga.</p>
+      <p className="caveat-decorativo text-[#C96B3E] mt-3">vamos com calma. responde como conversaria com uma amiga.</p>
       <HeadlineDuas a="Quem é você" b="antes do negócio?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         Sua história, o que te trouxe até aqui, o que você ama fazer mesmo se ninguém pagasse.
@@ -601,7 +601,7 @@ function Pergunta1({
           placeholder="Pode escrever do jeito que pensa. Eu organizo depois."
           className="w-full rounded-[14px] border-[1.5px] border-[#EAE2D8] bg-white px-[18px] py-[14px] font-sans text-[14px] text-[#1A1A2E] placeholder:text-[rgba(154,149,142,0.7)] focus:outline-none focus:border-[#C96B3E] transition-colors resize-none"
         />
-        <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[15px] mt-2 mb-5">
+        <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2 mb-5">
           não precisa ser perfeito. é só pra eu te conhecer.
         </p>
       </div>
@@ -645,7 +645,7 @@ function Pergunta2({
   return (
     <>
       <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 2 DE 3</p>
-      <p className="font-handwritten text-[#C96B3E] text-[20px] mt-3">essa é a parte que mais importa. pensa em quem vai sentir falta.</p>
+      <p className="caveat-decorativo text-[#C96B3E] mt-3">essa é a parte que mais importa. pensa em quem vai sentir falta.</p>
       <HeadlineDuas a="Qual dor" b="você cura?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         O que tá errado no mundo do seu cliente antes de você entrar nele? Por que isso é importante o suficiente pra ele resolver?
@@ -662,7 +662,7 @@ function Pergunta2({
           placeholder="Ex: Mulher na faixa dos 30 que abriu negócio próprio, ama o que faz, mas se sente perdida porque tudo que aprende online é genérico, gringo, ou pra empresa grande."
           className="w-full rounded-[14px] border-[1.5px] border-[#EAE2D8] bg-white px-[18px] py-[14px] font-sans text-[14px] text-[#1A1A2E] placeholder:text-[rgba(154,149,142,0.7)] focus:outline-none focus:border-[#C96B3E] transition-colors resize-none"
         />
-        <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[15px] mt-2 mb-5">não tem dor errada. tem dor não-vista.</p>
+        <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2 mb-5">não tem dor errada. tem dor não-vista.</p>
       </div>
 
       <div className="mt-2">
@@ -700,7 +700,7 @@ function Pergunta3({
   return (
     <>
       <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 3 DE 3</p>
-      <p className="font-handwritten text-[#C96B3E] text-[20px] mt-3">pensa numa pessoa real. alguém que você conheça ou imagina conhecer.</p>
+      <p className="caveat-decorativo text-[#C96B3E] mt-3">pensa numa pessoa real. alguém que você conheça ou imagina conhecer.</p>
       <HeadlineDuas a="Pra quem" b="você fala?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         Quem é a pessoa que você quer ajudar? Quanto mais específica, mais fácil eu monto seu mini-pitch.
@@ -717,7 +717,7 @@ function Pergunta3({
           placeholder="Ex: Mãe de 2 filhos, 35 anos, que vende artesanato no Instagram mas cobra barato porque tem medo de assustar os seguidores. Ama o que faz mas não se sente 'profissional' ainda."
           className="w-full rounded-[14px] border-[1.5px] border-[#EAE2D8] bg-white px-[18px] py-[14px] font-sans text-[14px] text-[#1A1A2E] placeholder:text-[rgba(154,149,142,0.7)] focus:outline-none focus:border-[#C96B3E] transition-colors resize-none"
         />
-        <p className="font-handwritten text-[rgba(201,107,62,0.85)] text-[15px] mt-2">
+        <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2">
           se vier mais de uma pessoa na cabeça, escolhe a que você mais quer ajudar.
         </p>
       </div>
@@ -759,7 +759,7 @@ function MiniPitchTela({
         <p className="font-accent text-[10px] font-bold tracking-[2px] text-[#C8A96E] uppercase text-center">
           ETAPA 1 · DESCOBERTA
         </p>
-        <p className="font-handwritten text-[#C96B3E] text-[26px] text-center mt-2">olha o que a gente montou juntas.</p>
+        <p className="caveat-informacional text-[#C96B3E] text-center mt-2">olha o que a gente montou juntas.</p>
         <h2 className="font-serif text-[#1A1A2E] text-[28px] sm:text-[34px] md:text-[48px] leading-[1.2] text-center mt-2">
           Seu primeiro mini-pitch.
         </h2>
@@ -779,7 +779,7 @@ function MiniPitchTela({
               ))}
             </div>
             <style>{`@keyframes bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }`}</style>
-            <p className="font-handwritten text-[#C96B3E] text-[22px] mt-6">montando seu mini-pitch...</p>
+            <p className="caveat-informacional text-[#C96B3E] mt-6">montando seu mini-pitch...</p>
             <p className="font-sans text-[#9A958E] text-[14px] mt-2">uns 5 segundinhos</p>
           </div>
         ) : (
@@ -850,7 +850,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
           ETAPA 1 · DESCOBERTA · CONCLUÍDA
         </p>
-        <p className="font-handwritten text-[#E89770] text-[30px] mt-6">olha o que aconteceu agora.</p>
+        <p className="caveat-informacional text-[#E89770] mt-6">olha o que aconteceu agora.</p>
         <div className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.1] mt-2 max-w-[900px]">
           <p>Sua primeira estrela</p>
           <p>tá acesa.</p>
@@ -866,7 +866,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
               />
               <p className={`font-sans text-[10px] font-semibold ${e.ativa ? "text-[#E89770]" : "text-[rgba(216,210,204,0.5)]"}`}>{e.num}</p>
               <p className={`font-sans text-[9px] leading-[11px] text-center max-w-[80px] ${e.ativa ? "text-[#FDF8F5]" : "text-[rgba(216,210,204,0.55)]"}`}>{e.nome}</p>
-              {e.ativa && <p className="font-handwritten text-[#E89770] text-[14px]">acesa pra sempre</p>}
+              {e.ativa && <p className="caveat-decorativo text-[#E89770]">acesa pra sempre</p>}
             </div>
           ))}
         </div>
@@ -888,7 +888,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
         </div>
 
         {/* Mantra */}
-        <p className="font-handwritten text-[#FDF8F5] text-[28px] mt-10 md:mt-14">A Pólia não acaba. Ela só fica mais sua.</p>
+        <p className="caveat-informacional text-[#FDF8F5] mt-10 md:mt-14">A Pólia não acaba. Ela só fica mais sua.</p>
         <p className="font-sans text-[rgba(216,210,204,0.6)] text-[13px] mt-2">cada vez que você volta, encontra mais de você aqui</p>
 
         {/* CTAs */}
