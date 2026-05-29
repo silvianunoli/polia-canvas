@@ -176,6 +176,6 @@ function AdminHome() {
           </Link>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }
