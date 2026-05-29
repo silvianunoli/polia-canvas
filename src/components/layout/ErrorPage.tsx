@@ -157,20 +157,21 @@ export function ErrorPage({
           />
         </div>
 
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative", paddingTop: 24 }}>
           <div
             aria-hidden
             style={{
               position: "absolute",
-              top: "50%",
+              top: 0,
               left: "50%",
-              transform: "translate(-50%, -55%)",
+              transform: "translateX(-50%)",
               fontFamily: "DM Serif Display, serif",
-              fontSize: 160,
+              fontSize: 96,
               lineHeight: 1,
-              color: "rgba(255,255,255,0.06)",
+              color: "rgba(255,255,255,0.07)",
               pointerEvents: "none",
               userSelect: "none",
+              letterSpacing: "-0.04em",
             }}
           >
             {code}
@@ -179,10 +180,11 @@ export function ErrorPage({
             style={{
               position: "relative",
               fontFamily: "DM Serif Display, serif",
-              fontSize: 40,
+              fontSize: 36,
               lineHeight: 1.15,
               color: "#FDF8F5",
               margin: 0,
+              marginTop: 24,
             }}
           >
             {title ?? copy.title}

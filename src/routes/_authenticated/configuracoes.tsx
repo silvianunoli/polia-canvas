@@ -176,8 +176,12 @@ function ConfiguracoesPage() {
                 value={nomeNegocio}
                 onChange={(e) => setNomeNegocio(e.target.value)}
                 maxLength={80}
-                className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
+                placeholder="Ex: Ateliê da Aimer · Estúdio Florescer · Doces da Lua"
+                className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] placeholder:text-[#1A1A2E] placeholder:opacity-30 focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
               />
+              <p className="mt-1.5 font-handwritten text-[14px] text-polia-noite/50">
+                pode trocar depois — só vale como você chama hoje.
+              </p>
             </Campo>
             <Campo label="TIPO DE NEGÓCIO">
               <div className="grid grid-cols-2 gap-3">
