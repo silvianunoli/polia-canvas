@@ -10,7 +10,7 @@ import { gerarPainelNumeros, type PainelNumeros } from "@/lib/growth.functions";
 export const Route = createFileRoute("/_authenticated/etapa/10")({
   head: () => ({
     meta: [
-      { title: "Etapa 10 — Crescimento · Pólia" },
+      { title: "Etapa 10 · Crescimento · Pólia" },
       { name: "description", content: "Monte seu painel de 3 números." },
     ],
   }),

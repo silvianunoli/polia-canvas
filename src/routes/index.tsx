@@ -17,7 +17,7 @@ import { CursorDot } from "@/components/landing/CursorDot";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pólia — Seu negócio tem uma direção agora." },
+      { title: "Pólia · Seu negócio tem uma direção agora." },
       {
         name: "description",
         content:

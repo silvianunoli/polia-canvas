@@ -10,7 +10,7 @@ import { gerarSistemaControle, type SistemaControle } from "@/lib/routine.functi
 export const Route = createFileRoute("/_authenticated/etapa/6")({
   head: () => ({
     meta: [
-      { title: "Etapa 6 — Sua Rotina · Pólia" },
+      { title: "Etapa 6 · Sua Rotina · Pólia" },
       { name: "description", content: "Organize sua produção, controle e reposição." },
     ],
   }),

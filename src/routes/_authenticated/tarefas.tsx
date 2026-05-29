@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { pluralizeKanban } from "@/lib/kanban";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({
@@ -253,8 +255,9 @@ function TarefasPage() {
         </div>
       </section>
 
-      {/* KANBAN */}
-      <section className="px-6 pb-16 pt-4 md:px-12">
+      {/* KANBAN — desktop */}
+      <section className="hidden md:block px-6 pb-16 pt-4 md:px-12">
+
         <div className="mx-auto max-w-[1280px]">
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
             {COLUNAS.map((col) => {
@@ -338,6 +341,50 @@ function TarefasPage() {
           </div>
         </div>
       </section>
+
+      {/* MOBILE — tabs em vez de kanban */}
+      <section className="md:hidden px-4 pb-16 pt-4">
+        <Tabs defaultValue="a_fazer" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-[rgba(26,26,46,0.04)]">
+            {COLUNAS.map((col) => {
+              const n = tarefasFiltradas.filter((t) => t.status === col.id).length;
+              return (
+                <TabsTrigger key={col.id} value={col.id} className="min-h-[44px] text-[12px]">
+                  {col.label} ({n})
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+          {COLUNAS.map((col) => {
+            const lista = tarefasFiltradas.filter((t) => t.status === col.id);
+            return (
+              <TabsContent key={col.id} value={col.id} className="mt-4 space-y-3">
+                {lista.length === 0 ? (
+                  <div className="rounded-xl border-2 border-dashed border-[rgba(26,26,46,0.08)] p-8 text-center">
+                    <p className="caveat-decorativo text-[#1A1A2E] opacity-30">
+                      {col.id === "a_fazer" && "nada por aqui ainda."}
+                      {col.id === "brotando" && "mova uma tarefa pra cá quando começar."}
+                      {col.id === "floresceu" && "suas conquistas aparecem aqui."}
+                    </p>
+                  </div>
+                ) : (
+                  lista.map((t) => (
+                    <TarefaCardMobile
+                      key={t.id}
+                      tarefa={t}
+                      colId={col.id}
+                      onMover={(s) => moverTarefa(t.id, s)}
+                      onDeletar={() => deletarTarefa(t.id)}
+                    />
+                  ))
+                )}
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      </section>
+
+
 
       {/* MODAL */}
       {modalAberto && (
@@ -473,3 +520,85 @@ function CardTarefa({
     </div>
   );
 }
+
+function TarefaCardMobile({
+  tarefa,
+  colId,
+  onMover,
+  onDeletar,
+}: {
+  tarefa: Tarefa;
+  colId: Status;
+  onMover: (s: Status) => void;
+  onDeletar: () => void;
+}) {
+  const btn =
+    "min-h-[44px] rounded-full border px-3 py-2 font-sans text-[12px] transition-colors";
+  return (
+    <div className="rounded-xl border border-[rgba(26,26,46,0.06)] bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center gap-2">
+        {tarefa.etapa ? (
+          <span className="rounded-full bg-[rgba(26,26,46,0.06)] px-2 py-0.5 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-50">
+            Etapa {tarefa.etapa}
+          </span>
+        ) : (
+          <span className="rounded-full bg-[rgba(201,107,62,0.08)] px-2 py-0.5 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+            Minha
+          </span>
+        )}
+      </div>
+      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">
+        {tarefa.titulo}
+      </p>
+      {tarefa.descricao && (
+        <p className="mb-3 font-sans text-[12px] leading-relaxed text-[#1A1A2E] opacity-50">
+          {tarefa.descricao}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {colId === "a_fazer" && (
+          <button
+            onClick={() => onMover("brotando")}
+            className={`${btn} border-[#C96B3E] text-[#C96B3E]`}
+          >
+            começar ↗
+          </button>
+        )}
+        {colId === "brotando" && (
+          <>
+            <button
+              onClick={() => onMover("a_fazer")}
+              className={`${btn} border-[rgba(26,26,46,0.2)] text-[#1A1A2E]`}
+            >
+              voltar
+            </button>
+            <button
+              onClick={() => onMover("floresceu")}
+              className={`${btn} border-[#2D6A4F] text-[#2D6A4F]`}
+            >
+              floresceu ✓
+            </button>
+          </>
+        )}
+        {colId === "floresceu" && (
+          <button
+            onClick={() => onMover("brotando")}
+            className={`${btn} border-[rgba(26,26,46,0.2)] text-[#1A1A2E]`}
+          >
+            desfazer
+          </button>
+        )}
+        {tarefa.fonte === "manual" && (
+          <button
+            onClick={onDeletar}
+            aria-label="Remover tarefa"
+            className={`${btn} ml-auto border-transparent text-[#1A1A2E] opacity-50`}
+          >
+            remover
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+

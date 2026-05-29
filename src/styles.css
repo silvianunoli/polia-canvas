@@ -198,10 +198,22 @@
 /* Caveat: piso de legibilidade. A altura-x da Caveat é menor que Inter, então
    travamos um piso maior e impedimos opacity em texto handwritten global. */
 .font-caveat,
-.font-handwritten {
+.font-handwritten,
+[class*="font-caveat"],
+[class*="font-handwritten"] {
   font-family: "Caveat", cursive;
-  font-size: max(16px, 1em);
+  font-size: max(18px, var(--caveat-size, 18px));
+  opacity: 1 !important;
 }
+@media (max-width: 768px) {
+  .font-caveat,
+  .font-handwritten,
+  [class*="font-caveat"],
+  [class*="font-handwritten"] {
+    font-size: max(20px, var(--caveat-size, 20px));
+  }
+}
+
 
 /* Caveat tokens — três tamanhos canônicos, opacity travada em 1.
    Use SEMPRE uma destas três classes em texto Caveat decorativo. */

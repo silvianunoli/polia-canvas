@@ -87,8 +87,12 @@ export function ConstelacaoVisual({
                     : "future";
 
                 const handleClick = onStarClick
-                  ? () => onStarClick(star.etapa, state)
+                  ? () => {
+                      if (isFuture) return;
+                      onStarClick(star.etapa, state);
+                    }
                   : undefined;
+
 
                 const title = isCurrent
                   ? `Continuar na Etapa ${star.etapa}`

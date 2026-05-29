@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminHome,
@@ -85,21 +88,27 @@ function AdminHome() {
   }, []);
 
   const metricas: { label: string; sigla?: string; tooltip?: string; valor: string | number; ok: boolean; desc: string }[] = [
-    { label: "Ativação", sigla: "D7", tooltip: "D7 = primeiros 7 dias desde o cadastro", valor: `${stats.ativacao_d7}%`, ok: stats.ativacao_d7 >= 40, desc: "completaram E1 em 7 dias" },
+    { label: "Ativação", sigla: "D7", tooltip: "em 7 dias depois do cadastro", valor: `${stats.ativacao_d7}%`, ok: stats.ativacao_d7 >= 40, desc: "completaram E1 em 7 dias" },
     { label: "Mediana de Etapa", valor: `E${stats.mediana_etapa}`, ok: true, desc: "onde metade das ativas está" },
-    { label: "Ativas", sigla: "WAU-2", tooltip: "WAU-2 = Weekly Active Users nas últimas 2 semanas", valor: stats.wau2, ok: true, desc: "últ. 14 dias com ação real" },
-    { label: "Retenção", sigla: "D30", tooltip: "D30 = 30 dias após o cadastro", valor: `${stats.retencao_d30}%`, ok: stats.retencao_d30 >= 35, desc: "coorte do mês anterior" },
+    { label: "Ativas", sigla: "WAU-2", tooltip: "ativas nas últimas 2 semanas com ação real", valor: stats.wau2, ok: true, desc: "últ. 14 dias com ação real" },
+    { label: "Retenção", sigla: "D30", tooltip: "trinta dias depois do cadastro", valor: `${stats.retencao_d30}%`, ok: stats.retencao_d30 >= 35, desc: "coorte do mês anterior" },
     { label: "Total cadastros", valor: stats.total_cadastros, ok: true, desc: "desde o início" },
   ];
 
+
   return (
-    <>
+    <TooltipProvider delayDuration={150}>
       <div className="bg-[#1A1A2E] rounded-2xl p-8 mb-6">
-        <p className="font-mono text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2">
-          NORTH STAR ·{" "}
-          <abbr title="ECUA-M = Etapas Completadas por Usuária Ativa no Mês" className="cursor-help no-underline decoration-dotted decoration-from-font underline-offset-2 hover:underline">
-            ECUA-M
-          </abbr>
+        <p className="font-mono text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2 flex items-center gap-1.5">
+          <span>NORTH STAR · ECUA-M</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" aria-label="O que é ECUA-M" className="inline-flex items-center justify-center min-h-[24px] min-w-[24px] text-[#C96B3E]/70 hover:text-[#C96B3E]">
+                <HelpCircle size={14} />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>etapas completadas por usuária ativa este mês</TooltipContent>
+          </Tooltip>
         </p>
         <p className="font-serif text-[#FDF8F5] text-[56px] leading-none mb-1">{stats.ecua_m.toFixed(1)}</p>
         <p className="font-sans text-[#D8D2CC] text-[14px] opacity-60">
@@ -113,15 +122,17 @@ function AdminHome() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
         {metricas.map((item) => (
           <div key={item.label} className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]">
-            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
-              {item.label}
-              {item.sigla && (
-                <>
-                  {" "}
-                  <abbr title={item.tooltip} className="cursor-help no-underline decoration-dotted decoration-from-font underline-offset-2 hover:underline">
-                    {item.sigla}
-                  </abbr>
-                </>
+            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2 flex items-center gap-1">
+              <span>{item.label}{item.sigla ? ` ${item.sigla}` : ""}</span>
+              {item.sigla && item.tooltip && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" aria-label={`O que é ${item.sigla}`} className="inline-flex items-center justify-center min-h-[20px] min-w-[20px] text-[#1A1A2E]/40 hover:text-[#1A1A2E]/70">
+                      <HelpCircle size={11} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>{item.tooltip}</TooltipContent>
+                </Tooltip>
               )}
             </p>
             <p className={`font-serif text-[32px] leading-none mb-1 ${item.ok ? "text-[#2D6A4F]" : "text-[#C0392B]"}`}>{item.valor}</p>
@@ -129,6 +140,7 @@ function AdminHome() {
           </div>
         ))}
       </div>
+
 
       <div className="space-y-3 mb-6">
         <p className="font-mono text-[10px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40">ATENÇÃO IMEDIATA</p>
@@ -164,6 +176,6 @@ function AdminHome() {
           </Link>
         </div>
       </div>
-    </>
+    </TooltipProvider>
   );
 }

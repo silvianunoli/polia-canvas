@@ -10,7 +10,7 @@ import { gerarPlanoCrescimento, type PlanoCrescimento } from "@/lib/network.func
 export const Route = createFileRoute("/_authenticated/etapa/11")({
   head: () => ({
     meta: [
-      { title: "Etapa 11 — Sua Rede · Pólia" },
+      { title: "Etapa 11 · Sua Rede · Pólia" },
       { name: "description", content: "Desenhe sua visão, sua rede e seu próximo passo." },
     ],
   }),

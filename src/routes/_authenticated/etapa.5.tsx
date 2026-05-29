@@ -10,7 +10,7 @@ import { gerarGuiaPresenca, type GuiaPresenca } from "@/lib/presence.functions";
 export const Route = createFileRoute("/_authenticated/etapa/5")({
   head: () => ({
     meta: [
-      { title: "Etapa 5 — Conteúdo · Pólia" },
+      { title: "Etapa 5 · Conteúdo · Pólia" },
       { name: "description", content: "Monte sua primeira impressão online." },
     ],
   }),

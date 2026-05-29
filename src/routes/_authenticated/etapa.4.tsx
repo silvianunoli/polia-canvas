@@ -10,7 +10,7 @@ import { gerarFichaProduto, type FichaProduto } from "@/lib/product.functions";
 export const Route = createFileRoute("/_authenticated/etapa/4")({
   head: () => ({
     meta: [
-      { title: "Etapa 4 — Presença Digital · Pólia" },
+      { title: "Etapa 4 · Presença Digital · Pólia" },
       { name: "description", content: "Monte a ficha do seu produto ou serviço." },
     ],
   }),

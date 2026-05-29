@@ -10,7 +10,7 @@ import { gerarMiniPitch } from "@/lib/minipitch.functions";
 export const Route = createFileRoute("/_authenticated/etapa/1")({
   head: () => ({
     meta: [
-      { title: "Etapa 1 — Descoberta · Pólia" },
+      { title: "Etapa 1 · Descoberta · Pólia" },
       { name: "description", content: "Descubra quem você é antes do negócio. Monte seu primeiro mini-pitch." },
     ],
   }),
