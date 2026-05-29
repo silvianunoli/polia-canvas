@@ -7,55 +7,58 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { PlaceholderImage } from "@/components/PlaceholderImage";
+import { useUserMeta } from "@/hooks/useUserMeta";
 
 interface NavLinkItem {
   to: string;
   label: string;
-  exists: boolean;
 }
 
 const links: NavLinkItem[] = [
-  { to: "/painel", label: "Painel", exists: true },
-  { to: "/jornada", label: "Jornada", exists: true },
-  { to: "/tarefas", label: "Tarefas", exists: true },
-  { to: "/clientes", label: "Clientes", exists: true },
-  { to: "/vitrine", label: "Vitrine", exists: true },
-  { to: "/financeiro", label: "Financeiro", exists: false },
-  { to: "/biblioteca", label: "Biblioteca", exists: true },
+  { to: "/painel", label: "Painel" },
+  { to: "/jornada", label: "Jornada" },
+  { to: "/tarefas", label: "Tarefas" },
+  { to: "/clientes", label: "Vendas e clientes" },
+  { to: "/vitrine", label: "Vitrine" },
+  { to: "/financeiro", label: "Financeiro" },
+  { to: "/biblioteca", label: "Entregáveis" },
 ];
 
-
+/**
+ * Header global das rotas autenticadas.
+ * Aceita `initial` e `streak` por compatibilidade, mas a fonte real
+ * vem de useUserMeta — garante consistência entre rotas.
+ */
 export function PainelNav({
-  initial,
-  streak,
   navActive = "/painel",
 }: {
-  initial: string;
-  streak: number;
+  initial?: string;
+  streak?: number;
   navActive?: string;
 }) {
+  const meta = useUserMeta();
+  const streak = meta.streak;
+
   return (
     <header
       className="sticky top-0 z-30 h-14 w-full bg-[#FDF8F5]"
       style={{ borderBottom: "1px solid rgba(26,26,46,0.08)" }}
     >
       <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-6">
-        {/* Logo placeholder */}
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-polia-terracota bg-transparent px-4 py-1.5">
-          <span className="font-accent text-[9px] font-bold tracking-[1.5px] text-polia-dourado">
-            PLACEHOLDER · LOGO
-          </span>
-          <span className="font-sans text-[8px] text-polia-noite opacity-40">
-            120×32
-          </span>
-        </div>
+        {/* Logo */}
+        <PlaceholderImage
+          slot="logo-header"
+          width={120}
+          height={32}
+          description="logo Pólia"
+          rounded={6}
+        />
 
         {/* Links */}
         <nav className="hidden items-center gap-7 md:flex">
           {links.map((l) => {
-            const isActive = l.to === navActive;
-
+            const isActive = navActive === l.to || navActive.startsWith(l.to + "/");
             return (
               <a
                 key={l.to}
@@ -77,52 +80,71 @@ export function PainelNav({
           <div
             className="flex items-center gap-1.5 rounded-full px-3 py-1"
             style={{
-              background: "rgba(200,169,110,0.12)",
-              border: "1px solid rgba(200,169,110,0.3)",
+              background:
+                streak > 0 ? "rgba(201,107,62,0.10)" : "rgba(26,26,46,0.05)",
+              border:
+                streak > 0
+                  ? "1px solid rgba(201,107,62,0.25)"
+                  : "1px solid rgba(26,26,46,0.10)",
             }}
           >
-            <span className="font-sans text-[13px] font-semibold text-polia-dourado">
+            <span
+              className="font-sans text-[13px] font-semibold"
+              style={{
+                color: streak > 0 ? "#C96B3E" : "rgba(26,26,46,0.55)",
+              }}
+            >
               {streak} {streak === 1 ? "dia" : "dias"}
             </span>
           </div>
-          <AvatarMenu initial={initial} />
+          <AvatarMenu initial={meta.initial} isAdmin={meta.isAdmin} avatarUrl={meta.avatarUrl} />
         </div>
       </div>
     </header>
   );
 }
 
-function AvatarMenu({ initial }: { initial: string }) {
+function AvatarMenu({
+  initial,
+  isAdmin,
+  avatarUrl,
+}: {
+  initial: string;
+  isAdmin: boolean;
+  avatarUrl: string | null;
+}) {
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (active && data?.is_admin) setIsAdmin(true);
-    })();
-    return () => { active = false; };
-  }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/auth/login" });
   };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Abrir menu"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme outline-none focus-visible:ring-2 focus-visible:ring-polia-terracota/40"
+          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme outline-none focus-visible:ring-2 focus-visible:ring-polia-terracota/40"
         >
-          {initial}
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <PlaceholderImage
+              slot="foto-perfil"
+              width={36}
+              height={36}
+              rounded={999}
+              fit="cover"
+            />
+          )}
+          {!avatarUrl && (
+            <span style={{ display: "none" }}>{initial}</span>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

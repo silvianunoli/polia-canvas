@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { StarField } from "@/components/ui/StarField";
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { ErrorPage } from "@/components/layout/ErrorPage";
 
 import appCss from "../styles.css?url";
 
