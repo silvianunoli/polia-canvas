@@ -171,26 +171,24 @@ function VitrinePage() {
           </div>
         </div>
 
-        {/* CARD — FICHA DE PRODUTO (E4) */}
-        <CardFichaProduto
-          entregavel={e4}
-          done={!!profile?.star_4_completed_at}
-          onIr={() => navigate({ to: "/etapa/4" })}
-        />
-
-        {/* CARD — GUIA DE PRIMEIRA IMPRESSÃO (E5) */}
-        <CardGuiaImpressao
-          entregavel={e5}
-          done={!!profile?.star_5_completed_at}
-          onIr={() => navigate({ to: "/etapa/5" })}
-        />
-
-        {/* CARD — SISTEMA DE CONTROLE (E6) */}
-        <CardSistemaControle
-          entregavel={e6}
-          done={!!profile?.star_6_completed_at}
-          onIr={() => navigate({ to: "/etapa/6" })}
-        />
+        {/* Grid de 3 vitrines lado a lado em desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch [&>div]:!max-w-none [&>div]:!mb-0 [&>div]:h-full">
+          <CardFichaProduto
+            entregavel={e4}
+            done={!!profile?.star_4_completed_at}
+            onIr={() => navigate({ to: "/etapa/4" })}
+          />
+          <CardGuiaImpressao
+            entregavel={e5}
+            done={!!profile?.star_5_completed_at}
+            onIr={() => navigate({ to: "/etapa/5" })}
+          />
+          <CardSistemaControle
+            entregavel={e6}
+            done={!!profile?.star_6_completed_at}
+            onIr={() => navigate({ to: "/etapa/6" })}
+          />
+        </div>
       </div>
     </div>
   );

@@ -456,7 +456,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[11px] text-[#C8A96E] opacity-70">
+        <span className="font-handwritten text-[14px] text-[#C8A96E] opacity-70">
           concluída
         </span>
       </button>
@@ -478,7 +478,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[12px] text-[#C96B3E]">
+        <span className="font-handwritten text-[14px] text-[#C96B3E]">
           acendendo agora
         </span>
       </button>
@@ -492,7 +492,7 @@ function EstrelaItem({
       <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#D8D2CC]">
         {nome}
       </span>
-      <span className="font-handwritten text-[11px] text-[#D8D2CC]">
+      <span className="font-handwritten text-[14px] text-[#D8D2CC]">
         ainda vai brilhar
       </span>
     </div>

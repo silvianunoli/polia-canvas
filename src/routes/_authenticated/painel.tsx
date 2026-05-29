@@ -213,7 +213,13 @@ function PainelPage() {
     RECADOS_POR_ETAPA[etapaAtual] ??
     "Continue de onde parou. Cada passo que você dá fica no seu céu.\n\nA Pólia tá aqui.";
 
-  const conquista = dados?.conquistas?.[0];
+  const conquistaUltima = dados?.conquistas?.[0];
+  const seteDiasAtras = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const conquistaAtual =
+    conquistaUltima && new Date(conquistaUltima.created_at).getTime() >= seteDiasAtras
+      ? conquistaUltima
+      : null;
+  const conquistaAnterior = conquistaAtual ? null : conquistaUltima ?? null;
 
   const subtituloNegocio =
     businessType === "produto"
@@ -313,7 +319,7 @@ function PainelPage() {
             >
               Continuar →
             </a>
-            <span className="text-center font-handwritten text-[13px] text-polia-creme/60 md:text-right">
+            <span className="text-center font-handwritten text-[14px] text-polia-creme/60 md:text-right">
               ou começar agora
             </span>
           </div>
@@ -457,7 +463,7 @@ function PainelPage() {
                     {d.tarefas}
                   </span>
                   <span
-                    className={`whitespace-nowrap font-handwritten text-[12px] ${
+                    className={`whitespace-nowrap font-handwritten text-[14px] ${
                       d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
                     }`}
                   >
@@ -476,7 +482,7 @@ function PainelPage() {
               <p className="mb-1 font-sans text-[14px] text-polia-noite opacity-60">
                 sementes plantadas
               </p>
-              <p className="font-handwritten text-[13px] text-polia-noite opacity-40">
+              <p className="font-handwritten text-[14px] text-polia-noite opacity-40">
                 recorde anterior: {Math.max(totalSemana, 0)}
               </p>
             </div>
@@ -526,7 +532,7 @@ function PainelPage() {
                     {c.col}
                   </p>
                   {c.items.length === 0 ? (
-                    <p className="font-handwritten text-[12px] text-polia-noite opacity-30">
+                    <p className="font-handwritten text-[14px] text-polia-noite opacity-30">
                       vazio
                     </p>
                   ) : (
@@ -560,7 +566,7 @@ function PainelPage() {
             <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] text-polia-dourado">
               CONQUISTA DA SEMANA
             </p>
-            {conquista ? (
+            {conquistaAtual ? (
               <>
                 <div
                   className="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
@@ -569,18 +575,30 @@ function PainelPage() {
                   <Star className="text-polia-dourado" size={24} fill="currentColor" />
                 </div>
                 <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite">
-                  {conquista.titulo}
+                  {conquistaAtual.titulo}
                 </p>
-                <p className="mb-3 font-sans text-[13px] font-semibold text-polia-musgo">
-                  +{conquista.xp} XP
+                <p className="mb-3 font-sans text-[14px] font-semibold text-polia-musgo">
+                  +{conquistaAtual.xp} XP
                 </p>
                 <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-70">
-                  {conquista.descricao ?? "Você plantou algo que vai dar fruto."}
+                  {conquistaAtual.descricao ?? "Você plantou algo que vai dar fruto."}
+                </p>
+              </>
+            ) : conquistaAnterior ? (
+              <>
+                <p className="mb-2 font-handwritten text-[14px] text-polia-dourado">
+                  última conquista
+                </p>
+                <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite opacity-80">
+                  {conquistaAnterior.titulo}
+                </p>
+                <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-60">
+                  {conquistaAnterior.descricao ?? "Guardada no seu céu."}
                 </p>
               </>
             ) : (
-              <p className="font-handwritten text-[16px] text-polia-noite opacity-40">
-                sua próxima conquista tá bem pertinho.
+              <p className="font-handwritten text-[16px] text-polia-dourado">
+                sua primeira conquista mora aqui · acende uma estrela pra começar.
               </p>
             )}
           </div>
@@ -706,7 +724,7 @@ function StatBlock({
       </span>
       <span className={valueClass}>{value}</span>
       <span
-        className={`font-handwritten text-[13px] ${subColor ?? "text-polia-noite opacity-60"}`}
+        className={`font-handwritten text-[14px] ${subColor ?? "text-polia-noite opacity-60"}`}
       >
         {sub}
       </span>
@@ -774,7 +792,7 @@ function OrbitCard({
         {tags}
       </p>
       <p
-        className={`font-handwritten text-[12px] ${
+        className={`font-handwritten text-[14px] ${
           unlocked ? "text-polia-terracota" : "text-polia-creme opacity-50"
         }`}
       >
