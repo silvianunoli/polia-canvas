@@ -457,7 +457,7 @@ function PainelPage() {
                     {d.tarefas}
                   </span>
                   <span
-                    className={`whitespace-nowrap font-handwritten text-[12px] ${
+                    className={`whitespace-nowrap font-handwritten text-[14px] ${
                       d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
                     }`}
                   >
