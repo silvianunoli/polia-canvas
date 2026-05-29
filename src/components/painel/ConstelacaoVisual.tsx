@@ -71,7 +71,7 @@ export function ConstelacaoVisual({
             </div>
 
             {/* Stars row */}
-            <div className="flex items-end justify-around gap-2">
+            <div className="flex items-start justify-around gap-2">
               {phase.stars.map((star) => {
                 const isDone = star.etapa < etapaAtual;
                 const isCurrent = star.etapa === etapaAtual;
@@ -99,54 +99,49 @@ export function ConstelacaoVisual({
                     onClick={handleClick}
                     title={title}
                     aria-label={title}
-                    className={`relative flex flex-col items-center bg-transparent border-0 p-0 transition-transform ${
+                    className={`relative flex w-[110px] flex-col items-center bg-transparent border-0 p-0 transition-transform ${
                       handleClick
                         ? "cursor-pointer hover:-translate-y-0.5"
                         : "cursor-default"
                     }`}
                   >
-                    {isCurrent && (
-                      <span className="mb-2 whitespace-nowrap font-handwritten text-[17px] leading-none text-polia-terracota">
-                        você tá aqui agora
-                      </span>
-                    )}
+                    {/* Top label slot (fixed height to align all circles) */}
+                    <div className="flex h-6 items-end justify-center">
+                      {isCurrent && (
+                        <span className="whitespace-nowrap font-handwritten text-[17px] leading-none text-polia-terracota">
+                          você tá aqui agora
+                        </span>
+                      )}
+                    </div>
 
-                    {/* Star circle */}
-                    {isCurrent ? (
-                      <div className="relative">
+                    {/* Star slot (fixed 64px so circles share a baseline) */}
+                    <div className="mt-2 flex h-16 w-16 items-center justify-center">
+                      {isCurrent ? (
+                        <div className="relative h-14 w-14">
+                          <div
+                            className="absolute inset-0 animate-ping rounded-full bg-polia-terracota opacity-30"
+                            style={{ animationDuration: "2.4s" }}
+                          />
+                          <div
+                            className="relative h-full w-full rounded-full bg-polia-terracota"
+                            style={{ boxShadow: "0 0 24px rgba(232,151,112,0.7)" }}
+                          />
+                        </div>
+                      ) : isDone ? (
                         <div
-                          className="absolute inset-0 animate-ping rounded-full bg-polia-terracota opacity-30"
-                          style={{ animationDuration: "2.4s" }}
+                          className="h-12 w-12 rounded-full bg-polia-dourado"
+                          style={{ boxShadow: "0 0 16px rgba(200,169,110,0.5)" }}
                         />
+                      ) : (
                         <div
-                          className="relative rounded-full bg-polia-terracota"
+                          className="h-10 w-10 rounded-full"
                           style={{
-                            width: 56,
-                            height: 56,
-                            boxShadow: "0 0 24px rgba(232,151,112,0.7)",
+                            background: "rgba(255,255,255,0.08)",
+                            border: "1px solid rgba(255,255,255,0.15)",
                           }}
                         />
-                      </div>
-                    ) : isDone ? (
-                      <div
-                        className="rounded-full bg-polia-dourado"
-                        style={{
-                          width: 48,
-                          height: 48,
-                          boxShadow: "0 0 16px rgba(200,169,110,0.5)",
-                        }}
-                      />
-                    ) : (
-                      <div
-                        className="rounded-full"
-                        style={{
-                          width: 40,
-                          height: 40,
-                          background: "rgba(255,255,255,0.08)",
-                          border: "1px solid rgba(255,255,255,0.15)",
-                        }}
-                      />
-                    )}
+                      )}
+                    </div>
 
                     {/* Name */}
                     <span
@@ -157,17 +152,19 @@ export function ConstelacaoVisual({
                       {star.short}
                     </span>
 
-                    {/* Sub label */}
-                    {isCurrent && (
-                      <span className="mt-1 font-handwritten text-[16px] leading-tight text-polia-terracota">
-                        acendendo agora
-                      </span>
-                    )}
-                    {isFuture && (
-                      <span className="mt-1 font-handwritten text-[16px] leading-tight text-polia-creme opacity-50">
-                        ainda vai brilhar
-                      </span>
-                    )}
+                    {/* Bottom label slot */}
+                    <div className="mt-1 flex h-5 items-start justify-center">
+                      {isCurrent && (
+                        <span className="whitespace-nowrap font-handwritten text-[16px] leading-none text-polia-terracota">
+                          acendendo agora
+                        </span>
+                      )}
+                      {isFuture && (
+                        <span className="whitespace-nowrap font-handwritten text-[16px] leading-none text-polia-creme opacity-50">
+                          ainda vai brilhar
+                        </span>
+                      )}
+                    </div>
                   </button>
                 );
               })}
