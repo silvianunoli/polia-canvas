@@ -9,7 +9,7 @@ import { SidebarAside } from "@/components/layout/SidebarAside";
 export const Route = createFileRoute("/_authenticated/biblioteca/")({
   head: () => ({
     meta: [
-      { title: "Seus entregáveis — Pólia" },
+      { title: "Seus entregáveis · Pólia" },
       { name: "description", content: "Tudo que você construiu fica aqui." },
     ],
   }),

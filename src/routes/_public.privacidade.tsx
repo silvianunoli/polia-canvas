@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/_public/privacidade")({
   head: () => ({
     meta: [
-      { title: "Política de privacidade — Pólia" },
+      { title: "Política de privacidade · Pólia" },
       { name: "description", content: "Como a Pólia coleta, usa e protege seus dados." },
     ],
   }),

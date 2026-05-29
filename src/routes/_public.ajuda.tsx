@@ -4,9 +4,9 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 export const Route = createFileRoute("/_public/ajuda")({
   head: () => ({
     meta: [
-      { title: "Central de ajuda — Pólia" },
+      { title: "Central de ajuda · Pólia" },
       { name: "description", content: "Respostas pras perguntas mais comuns sobre a Pólia." },
-      { property: "og:title", content: "Central de ajuda — Pólia" },
+      { property: "og:title", content: "Central de ajuda · Pólia" },
       { property: "og:description", content: "Tudo o que você precisa saber pra começar." },
     ],
   }),

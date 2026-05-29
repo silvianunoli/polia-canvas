@@ -12,7 +12,7 @@ import { pluralizeKanban } from "@/lib/kanban";
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
-      { title: "Painel — Pólia" },
+      { title: "Painel · Pólia" },
       {
         name: "description",
         content:

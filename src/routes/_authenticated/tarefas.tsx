@@ -9,7 +9,7 @@ import { pluralizeKanban } from "@/lib/kanban";
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({
     meta: [
-      { title: "Tarefas — Pólia" },
+      { title: "Tarefas · Pólia" },
       {
         name: "description",
         content: "Seu fluxo de tarefas: sementes, brotos e o que já floresceu.",

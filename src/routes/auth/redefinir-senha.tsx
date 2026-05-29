@@ -14,7 +14,7 @@ import { PoliaButton } from "@/components/ui/PoliaButton";
 export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({
     meta: [
-      { title: "Nova senha — Pólia" },
+      { title: "Nova senha · Pólia" },
       { name: "description", content: "Defina uma nova senha para sua conta Pólia." },
     ],
   }),

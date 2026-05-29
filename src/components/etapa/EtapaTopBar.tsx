@@ -34,38 +34,39 @@ export function EtapaTopBar({
   const dim = variant === "dark" ? "opacity-60" : "opacity-50";
 
   return (
-    <div className="border-b border-[rgba(255,255,255,0.06)] bg-transparent">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-6 py-3 md:px-12">
-        <Link
-          to="/painel"
-          className={`group inline-flex items-center gap-1.5 font-sans text-[13px] transition-opacity ${dim} hover:opacity-100`}
-          style={{ color: textBase }}
-        >
-          <ArrowLeft
-            size={14}
-            className="transition-transform group-hover:-translate-x-0.5"
-          />
-          voltar ao painel
-        </Link>
+    <>
+      {/* Voltar ao painel — fixo no canto superior esquerdo, sempre visível */}
+      <Link
+        to="/painel"
+        aria-label="Voltar ao painel"
+        className="caveat-decorativo fixed top-6 left-6 z-50 inline-flex items-center gap-1.5 transition-opacity hover:opacity-80"
+        style={{ color: variant === "dark" ? "#C8A96E" : "#9A7728" }}
+      >
+        <ArrowLeft size={16} />
+        voltar ao painel
+      </Link>
 
-        <div className="flex items-center gap-2">
-          <span
-            className="rounded-full px-2.5 py-1 font-accent text-[10px] font-bold uppercase tracking-[1.5px]"
-            style={{
-              background: `${corFase}26`,
-              color: corFase,
-            }}
-          >
-            {fase} · Etapa {etapa}
-          </span>
-          <span
-            className={`font-sans text-[13px] ${dim}`}
-            style={{ color: textBase }}
-          >
-            {nome}
-          </span>
+      <div className="border-b border-[rgba(255,255,255,0.06)] bg-transparent">
+        <div className="mx-auto flex max-w-[1280px] items-center justify-end gap-4 px-6 py-3 md:px-12">
+          <div className="flex items-center gap-2">
+            <span
+              className="rounded-full px-2.5 py-1 font-accent text-[10px] font-bold uppercase tracking-[1.5px]"
+              style={{
+                background: `${corFase}26`,
+                color: corFase,
+              }}
+            >
+              {fase} · Etapa {etapa}
+            </span>
+            <span
+              className={`font-sans text-[13px] ${dim}`}
+              style={{ color: textBase }}
+            >
+              {nome}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

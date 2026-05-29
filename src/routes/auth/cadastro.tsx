@@ -17,12 +17,12 @@ import { GoogleButton } from "@/components/cosmic/GoogleButton";
 export const Route = createFileRoute("/auth/cadastro")({
   head: () => ({
     meta: [
-      { title: "Criar conta — Pólia" },
+      { title: "Criar conta · Pólia" },
       {
         name: "description",
         content: "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
-      { property: "og:title", content: "Criar conta — Pólia" },
+      { property: "og:title", content: "Criar conta · Pólia" },
       {
         property: "og:description",
         content: "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",

@@ -9,7 +9,7 @@ import { CosmicSky } from "@/components/painel/CosmicSky";
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({
     meta: [
-      { title: "Jornada — Pólia" },
+      { title: "Jornada · Pólia" },
       {
         name: "description",
         content:

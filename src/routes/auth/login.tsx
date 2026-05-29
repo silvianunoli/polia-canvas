@@ -19,9 +19,9 @@ import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 export const Route = createFileRoute("/auth/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — Pólia" },
+      { title: "Entrar · Pólia" },
       { name: "description", content: "Entre na sua conta Pólia para continuar de onde parou." },
-      { property: "og:title", content: "Entrar — Pólia" },
+      { property: "og:title", content: "Entrar · Pólia" },
       {
         property: "og:description",
         content: "Entre na sua conta Pólia para continuar de onde parou.",

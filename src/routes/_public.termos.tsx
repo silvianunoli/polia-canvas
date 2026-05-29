@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/_public/termos")({
   head: () => ({
     meta: [
-      { title: "Termos de uso — Pólia" },
+      { title: "Termos de uso · Pólia" },
       { name: "description", content: "Termos de uso da plataforma Pólia." },
     ],
   }),

@@ -9,7 +9,7 @@ import { SidebarAside } from "@/components/layout/SidebarAside";
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
-      { title: "Suas vendas e clientes — Pólia" },
+      { title: "Suas vendas e clientes · Pólia" },
       {
         name: "description",
         content:
