@@ -182,7 +182,7 @@ function ClientesPage() {
         >
           Continuar minha jornada →
         </button>
-        <p className="font-handwritten text-[#D8D2CC] text-[14px] mt-4 opacity-50">
+        <p className="font-handwritten text-[#D8D2CC] text-[14px] mt-4">
           falta pouco.
         </p>
       </div>

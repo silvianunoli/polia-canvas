@@ -29,12 +29,14 @@ import { Route as PublicContatoRouteImport } from './routes/_public.contato'
 import { Route as PublicComoFuncionaRouteImport } from './routes/_public.como-funciona'
 import { Route as PublicAjudaRouteImport } from './routes/_public.ajuda'
 import { Route as AuthenticatedVitrineRouteImport } from './routes/_authenticated/vitrine'
+import { Route as AuthenticatedVendasEClientesRouteImport } from './routes/_authenticated/vendas-e-clientes'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authenticated/marca-viva'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEntregaveisRouteImport } from './routes/_authenticated/entregaveis'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -163,6 +165,12 @@ const AuthenticatedVitrineRoute = AuthenticatedVitrineRouteImport.update({
   path: '/vitrine',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedVendasEClientesRoute =
+  AuthenticatedVendasEClientesRouteImport.update({
+    id: '/vendas-e-clientes',
+    path: '/vendas-e-clientes',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   id: '/tarefas',
   path: '/tarefas',
@@ -193,6 +201,12 @@ const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedEntregaveisRoute =
+  AuthenticatedEntregaveisRouteImport.update({
+    id: '/entregaveis',
+    path: '/entregaveis',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -354,12 +368,14 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
   '/ajuda': typeof PublicAjudaRoute
   '/como-funciona': typeof PublicComoFuncionaRoute
@@ -408,12 +424,14 @@ export interface FileRoutesByTo {
   '/sobre': typeof SobreRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
+  '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
   '/ajuda': typeof PublicAjudaRoute
   '/como-funciona': typeof PublicComoFuncionaRoute
@@ -466,12 +484,14 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/marca-viva': typeof AuthenticatedMarcaVivaRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
+  '/_authenticated/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/_authenticated/vitrine': typeof AuthenticatedVitrineRoute
   '/_public/ajuda': typeof PublicAjudaRoute
   '/_public/como-funciona': typeof PublicComoFuncionaRoute
@@ -523,12 +543,14 @@ export interface FileRouteTypes {
     | '/admin'
     | '/clientes'
     | '/configuracoes'
+    | '/entregaveis'
     | '/financeiro'
     | '/jornada'
     | '/marca-viva'
     | '/onboarding'
     | '/painel'
     | '/tarefas'
+    | '/vendas-e-clientes'
     | '/vitrine'
     | '/ajuda'
     | '/como-funciona'
@@ -577,12 +599,14 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/clientes'
     | '/configuracoes'
+    | '/entregaveis'
     | '/financeiro'
     | '/jornada'
     | '/marca-viva'
     | '/onboarding'
     | '/painel'
     | '/tarefas'
+    | '/vendas-e-clientes'
     | '/vitrine'
     | '/ajuda'
     | '/como-funciona'
@@ -634,12 +658,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/entregaveis'
     | '/_authenticated/financeiro'
     | '/_authenticated/jornada'
     | '/_authenticated/marca-viva'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
     | '/_authenticated/tarefas'
+    | '/_authenticated/vendas-e-clientes'
     | '/_authenticated/vitrine'
     | '/_public/ajuda'
     | '/_public/como-funciona'
@@ -840,6 +866,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVitrineRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/vendas-e-clientes': {
+      id: '/_authenticated/vendas-e-clientes'
+      path: '/vendas-e-clientes'
+      fullPath: '/vendas-e-clientes'
+      preLoaderRoute: typeof AuthenticatedVendasEClientesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/tarefas': {
       id: '/_authenticated/tarefas'
       path: '/tarefas'
@@ -880,6 +913,13 @@ declare module '@tanstack/react-router' {
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/entregaveis': {
+      id: '/_authenticated/entregaveis'
+      path: '/entregaveis'
+      fullPath: '/entregaveis'
+      preLoaderRoute: typeof AuthenticatedEntregaveisRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/configuracoes': {
@@ -1123,12 +1163,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedEntregaveisRoute: typeof AuthenticatedEntregaveisRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedMarcaVivaRoute: typeof AuthenticatedMarcaVivaRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
+  AuthenticatedVendasEClientesRoute: typeof AuthenticatedVendasEClientesRoute
   AuthenticatedVitrineRoute: typeof AuthenticatedVitrineRoute
   AuthenticatedBibliotecaIdRoute: typeof AuthenticatedBibliotecaIdRoute
   AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
@@ -1149,12 +1191,14 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedEntregaveisRoute: AuthenticatedEntregaveisRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedMarcaVivaRoute: AuthenticatedMarcaVivaRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
+  AuthenticatedVendasEClientesRoute: AuthenticatedVendasEClientesRoute,
   AuthenticatedVitrineRoute: AuthenticatedVitrineRoute,
   AuthenticatedBibliotecaIdRoute: AuthenticatedBibliotecaIdRoute,
   AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
