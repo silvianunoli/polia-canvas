@@ -137,25 +137,27 @@ export function PainelNav({
 
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Streak: ícone+tooltip mobile, badge completo desktop */}
+          {/* Streak: ícone+tooltip mobile, badge completo desktop.
+              streak>=1 → terracota sólido com texto branco (alto contraste);
+              streak=0  → outline neutro. */}
           <span
+            data-positive={streak > 0 ? "true" : "false"}
             title={`${streak} ${streak === 1 ? "dia" : "dias"} seguidos`}
             aria-label={`Streak: ${streak} ${streak === 1 ? "dia" : "dias"}`}
             className="flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-full px-2 sm:px-3"
-            style={{
-              background: streak > 0 ? "rgba(201,107,62,0.10)" : "rgba(26,26,46,0.05)",
-              border: streak > 0
-                ? "1px solid rgba(201,107,62,0.30)"
-                : "1px solid rgba(26,26,46,0.10)",
-            }}
+            style={
+              streak > 0
+                ? { background: "#C96B3E", border: "1px solid #C96B3E" }
+                : { background: "transparent", border: "1px solid rgba(14,23,49,0.30)" }
+            }
           >
             <Flame
               size={16}
-              className={streak > 0 ? "text-polia-terracota" : "text-[#0E1731]/50"}
+              className={streak > 0 ? "text-white" : "text-[#0E1731]/50"}
             />
             <span
               className="hidden font-sans text-[13px] font-bold sm:inline"
-              style={{ color: streak > 0 ? "#C96B3E" : "rgba(14,23,49,0.55)" }}
+              style={{ color: streak > 0 ? "#FFFFFF" : "rgba(14,23,49,0.55)" }}
             >
               {streak} {streak === 1 ? "dia" : "dias"}
             </span>
