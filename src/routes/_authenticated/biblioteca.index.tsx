@@ -9,7 +9,7 @@ import { SidebarAside } from "@/components/layout/SidebarAside";
 export const Route = createFileRoute("/_authenticated/biblioteca/")({
   head: () => ({
     meta: [
-      { title: "Seus entregáveis — Pólia" },
+      { title: "Seus entregáveis · Pólia" },
       { name: "description", content: "Tudo que você construiu fica aqui." },
     ],
   }),
@@ -205,7 +205,7 @@ function BibliotecaPage() {
                 <p className="font-serif text-[#1A1A2E] text-[24px] opacity-30 mb-3">
                   seus entregáveis aparecem aqui.
                 </p>
-                <p className="font-handwritten text-[#C96B3E] text-[16px] opacity-50 mb-6">
+                <p className="font-handwritten text-[#C96B3E] text-[16px] mb-6">
                   complete a Etapa 1 pra criar o primeiro.
                 </p>
                 <button

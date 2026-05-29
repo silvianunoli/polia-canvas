@@ -8,7 +8,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 export const Route = createFileRoute("/_authenticated/biblioteca/$id")({
   head: () => ({
     meta: [
-      { title: "Entregável — Pólia" },
+      { title: "Entregável · Pólia" },
       { name: "description", content: "Visualize e edite seu entregável." },
     ],
   }),

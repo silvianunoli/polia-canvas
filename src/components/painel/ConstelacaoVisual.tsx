@@ -182,7 +182,7 @@ export function ConstelacaoVisual({
                         </span>
                       )}
                       {isFuture && (
-                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-creme opacity-60">
+                        <span className="text-center font-handwritten text-[17px] leading-none text-polia-creme">
                           ainda vai brilhar
                         </span>
                       )}

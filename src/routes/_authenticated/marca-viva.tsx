@@ -8,7 +8,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 export const Route = createFileRoute("/_authenticated/marca-viva")({
   head: () => ({
     meta: [
-      { title: "Sua Marca Viva — Pólia" },
+      { title: "Sua Marca Viva · Pólia" },
       {
         name: "description",
         content:

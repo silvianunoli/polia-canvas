@@ -6,7 +6,7 @@ import { CosmicButton } from "@/components/cosmic/CosmicButton";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
-  head: () => ({ meta: [{ title: "Onboarding — Pólia" }] }),
+  head: () => ({ meta: [{ title: "Onboarding · Pólia" }] }),
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data: sess } = await supabase.auth.getSession();

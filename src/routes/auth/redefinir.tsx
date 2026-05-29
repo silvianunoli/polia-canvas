@@ -15,9 +15,9 @@ import { CosmicButton } from "@/components/cosmic/CosmicButton";
 export const Route = createFileRoute("/auth/redefinir")({
   head: () => ({
     meta: [
-      { title: "Nova senha — Pólia" },
+      { title: "Nova senha · Pólia" },
       { name: "description", content: "Defina uma nova senha para sua conta Pólia." },
-      { property: "og:title", content: "Nova senha — Pólia" },
+      { property: "og:title", content: "Nova senha · Pólia" },
       { property: "og:description", content: "Defina uma nova senha para sua conta Pólia." },
     ],
   }),

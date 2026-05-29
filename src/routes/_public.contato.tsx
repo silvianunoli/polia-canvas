@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_public/contato")({
   head: () => ({
     meta: [
-      { title: "Contato — Pólia" },
+      { title: "Contato · Pólia" },
       { name: "description", content: "Fala com a gente." },
     ],
   }),

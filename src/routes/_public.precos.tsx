@@ -4,9 +4,9 @@ import { ArrowLeft, Check } from "lucide-react";
 export const Route = createFileRoute("/_public/precos")({
   head: () => ({
     meta: [
-      { title: "Preços — Pólia" },
+      { title: "Preços · Pólia" },
       { name: "description", content: "Gratuito durante o beta. Simples, justo e feito pra quem está começando." },
-      { property: "og:title", content: "Preços — Pólia" },
+      { property: "og:title", content: "Preços · Pólia" },
       { property: "og:description", content: "Acesso beta gratuito. Lançamento maio/2026." },
     ],
   }),

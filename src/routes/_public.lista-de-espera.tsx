@@ -7,9 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_public/lista-de-espera")({
   head: () => ({
     meta: [
-      { title: "Lista de espera — Pólia" },
+      { title: "Lista de espera · Pólia" },
       { name: "description", content: "Seja uma das primeiras. Garanta acesso prioritário ao lançamento da Pólia em maio de 2026." },
-      { property: "og:title", content: "Lista de espera — Pólia" },
+      { property: "og:title", content: "Lista de espera · Pólia" },
       { property: "og:description", content: "Entre antes. Preço menor pra sempre." },
     ],
   }),

@@ -9,7 +9,7 @@ import { pluralizeKanban } from "@/lib/kanban";
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({
     meta: [
-      { title: "Tarefas — Pólia" },
+      { title: "Tarefas · Pólia" },
       {
         name: "description",
         content: "Seu fluxo de tarefas: sementes, brotos e o que já floresceu.",
@@ -218,10 +218,11 @@ function TarefasPage() {
               onClick={() =>
                 setFiltroFonte((f) => (f === "sistema" ? "" : "sistema"))
               }
-              className={`rounded-xl border px-4 py-2 font-sans text-[13px] transition-colors ${
+              aria-pressed={filtroFonte === "sistema"}
+              className={`min-h-11 rounded-full border px-4 py-2 font-sans text-[13px] font-medium transition-colors ${
                 filtroFonte === "sistema"
-                  ? "border-[#C96B3E] bg-[#C96B3E] text-[#FDF8F5]"
-                  : "border-[rgba(26,26,46,0.08)] bg-white text-[#1A1A2E]"
+                  ? "border-[#0E1731] bg-[#0E1731] text-white"
+                  : "border-[#0E1731]/30 bg-transparent text-[#0E1731] hover:bg-[#0E1731]/5"
               }`}
             >
               Do sistema
@@ -230,10 +231,11 @@ function TarefasPage() {
               onClick={() =>
                 setFiltroFonte((f) => (f === "manual" ? "" : "manual"))
               }
-              className={`rounded-xl border px-4 py-2 font-sans text-[13px] transition-colors ${
+              aria-pressed={filtroFonte === "manual"}
+              className={`min-h-11 rounded-full border px-4 py-2 font-sans text-[13px] font-medium transition-colors ${
                 filtroFonte === "manual"
-                  ? "border-[#C96B3E] bg-[#C96B3E] text-[#FDF8F5]"
-                  : "border-[rgba(26,26,46,0.08)] bg-white text-[#1A1A2E]"
+                  ? "border-[#0E1731] bg-[#0E1731] text-white"
+                  : "border-[#0E1731]/30 bg-transparent text-[#0E1731] hover:bg-[#0E1731]/5"
               }`}
             >
               Minhas

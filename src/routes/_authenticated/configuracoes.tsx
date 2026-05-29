@@ -9,7 +9,7 @@ import { PlaceholderImage } from "@/components/PlaceholderImage";
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Configurações — Pólia" },
+      { title: "Configurações · Pólia" },
       { name: "description", content: "Seu perfil e seu negócio, do jeito que você quer." },
     ],
   }),

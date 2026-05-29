@@ -8,7 +8,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({
     meta: [
-      { title: "Seu Painel Financeiro — Pólia" },
+      { title: "Seu Painel Financeiro · Pólia" },
       {
         name: "description",
         content:
@@ -149,7 +149,7 @@ function FinanceiroPage() {
           >
             Continuar minha jornada →
           </button>
-          <p className="mt-4 font-handwritten text-[14px] text-[#D8D2CC] opacity-50">
+          <p className="mt-4 font-handwritten text-[14px] text-[#D8D2CC]">
             quase lá.
           </p>
         </div>
@@ -494,7 +494,7 @@ function ReceitaMetaSection({
           </button>
         )}
         {receita > 0 && meta > 0 && receita < meta && (
-          <p className="mt-4 font-handwritten text-[14px] text-[#1A1A2E] opacity-50">
+          <p className="mt-4 font-handwritten text-[14px] text-[#1A1A2E]">
             falta R$ {(meta - receita).toLocaleString("pt-BR")} pra fechar a
             meta
           </p>

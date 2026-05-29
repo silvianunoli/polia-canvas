@@ -5,9 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/_public/blog/")({
   head: () => ({
     meta: [
-      { title: "Blog — Pólia" },
+      { title: "Blog · Pólia" },
       { name: "description", content: "Ideias pra quem constrói com as próprias mãos." },
-      { property: "og:title", content: "Blog — Pólia" },
+      { property: "og:title", content: "Blog · Pólia" },
       { property: "og:description", content: "Identidade, vendas, precificação, conteúdo e gestão." },
     ],
   }),

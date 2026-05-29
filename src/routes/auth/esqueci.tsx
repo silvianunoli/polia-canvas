@@ -16,12 +16,12 @@ import { CosmicButton } from "@/components/cosmic/CosmicButton";
 export const Route = createFileRoute("/auth/esqueci")({
   head: () => ({
     meta: [
-      { title: "Esqueci minha senha — Pólia" },
+      { title: "Esqueci minha senha · Pólia" },
       {
         name: "description",
         content: "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",
       },
-      { property: "og:title", content: "Esqueci minha senha — Pólia" },
+      { property: "og:title", content: "Esqueci minha senha · Pólia" },
       {
         property: "og:description",
         content: "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",

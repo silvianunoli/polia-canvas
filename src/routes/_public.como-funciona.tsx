@@ -3,9 +3,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/_public/como-funciona")({
   head: () => ({
     meta: [
-      { title: "Como funciona — Pólia" },
+      { title: "Como funciona · Pólia" },
       { name: "description", content: "11 etapas em 4 fases. Perguntas guiadas, IA de apoio e entregáveis que ficam com você." },
-      { property: "og:title", content: "Como funciona — Pólia" },
+      { property: "og:title", content: "Como funciona · Pólia" },
       { property: "og:description", content: "Uma jornada estruturada para o seu negócio, no seu ritmo." },
     ],
   }),

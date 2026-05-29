@@ -12,7 +12,7 @@ import { pluralizeKanban } from "@/lib/kanban";
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
-      { title: "Painel — Pólia" },
+      { title: "Painel · Pólia" },
       {
         name: "description",
         content:
@@ -589,7 +589,7 @@ function PainelPage() {
                 <p className="mb-3 font-sans text-[14px] font-semibold text-polia-musgo">
                   +{conquistaAtual.xp} XP
                 </p>
-                <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-70">
+                <p className="font-handwritten text-[16px] leading-snug text-polia-noite">
                   {conquistaAtual.descricao ?? "Você plantou algo que vai dar fruto."}
                 </p>
               </>
@@ -601,7 +601,7 @@ function PainelPage() {
                 <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite opacity-80">
                   {conquistaAnterior.titulo}
                 </p>
-                <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-60">
+                <p className="font-handwritten text-[16px] leading-snug text-polia-noite">
                   {conquistaAnterior.descricao ?? "Guardada no seu céu."}
                 </p>
               </>
@@ -733,7 +733,7 @@ function StatBlock({
       </span>
       <span className={valueClass}>{value}</span>
       <span
-        className={`font-handwritten text-[14px] ${subColor ?? "text-polia-noite opacity-60"}`}
+        className={`font-handwritten text-[14px] ${subColor ?? "text-polia-noite"}`}
       >
         {sub}
       </span>
@@ -826,7 +826,7 @@ function CardReceita() {
       <p className="mb-4 font-sans text-[13px] text-polia-noite opacity-50">
         ainda não tem dados aqui
       </p>
-      <p className="font-handwritten text-[14px] text-polia-noite opacity-60">
+      <p className="font-handwritten text-[14px] text-polia-noite">
         à medida que você avança, vai aparecendo
       </p>
     </div>
@@ -843,7 +843,7 @@ function CardPedidos() {
         PEDIDOS · PRODUTOS
       </p>
       <p className="mb-4 font-serif text-[28px] text-polia-noite">nenhum pedido ainda</p>
-      <p className="font-handwritten text-[14px] text-polia-noite opacity-60">
+      <p className="font-handwritten text-[14px] text-polia-noite">
         quando seus pedidos começarem, eles aparecem aqui.
       </p>
     </div>
@@ -864,7 +864,7 @@ function CardAgenda() {
           não conectado
         </span>
       </div>
-      <p className="py-8 text-center font-handwritten text-[14px] text-polia-noite opacity-50">
+      <p className="py-8 text-center font-handwritten text-[14px] text-polia-noite">
         conecta seu Google Calendar aqui pra ver tudo em um lugar
       </p>
     </div>
@@ -884,7 +884,7 @@ function CardClientes() {
       <p className="mb-6 font-sans text-[13px] text-polia-noite opacity-50">
         ativas esse mês
       </p>
-      <p className="font-handwritten text-[14px] text-polia-noite opacity-60">
+      <p className="font-handwritten text-[14px] text-polia-noite">
         à medida que você cadastrar, a casa começa a se preencher.
       </p>
     </div>

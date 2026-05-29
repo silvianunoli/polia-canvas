@@ -15,7 +15,7 @@ import { PoliaButton } from "@/components/ui/PoliaButton";
 export const Route = createFileRoute("/auth/esqueci-senha")({
   head: () => ({
     meta: [
-      { title: "Esqueci minha senha — Pólia" },
+      { title: "Esqueci minha senha · Pólia" },
       {
         name: "description",
         content:

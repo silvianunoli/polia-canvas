@@ -9,7 +9,7 @@ import { CosmicSky } from "@/components/painel/CosmicSky";
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({
     meta: [
-      { title: "Jornada — Pólia" },
+      { title: "Jornada · Pólia" },
       {
         name: "description",
         content:
@@ -64,25 +64,25 @@ const FERRAMENTAS: {
   tags: string;
 }[] = [
   {
-    nome: "Sua Marca Viva",
+    nome: "Sua marca viva",
     rota: "/marca-viva",
     desbloqueio: "orbit_brand_alive_unlocked",
     tags: "identidade, voz, posicionamento",
   },
   {
-    nome: "Sua Vitrine",
+    nome: "Sua vitrine",
     rota: "/vitrine",
     desbloqueio: "orbit_vitrine_active",
     tags: "presença, rotina, controle",
   },
   {
-    nome: "Suas Vendas e Clientes",
+    nome: "Suas vendas e clientes",
     rota: "/clientes",
     desbloqueio: "orbit_sales_active",
     tags: "vendas, cuidado, conteúdo",
   },
   {
-    nome: "Seu Painel Financeiro",
+    nome: "Seu painel financeiro",
     rota: "/financeiro",
     desbloqueio: "orbit_financial_active",
     tags: "números, crescimento, rede",
@@ -225,7 +225,7 @@ function JornadaPage() {
               pra sempre.
             </p>
 
-            <p className="mt-8 font-handwritten text-[16px] text-[#D8D2CC] opacity-70">
+            <p className="mt-8 font-handwritten text-[16px] text-[#D8D2CC]">
               {fraseInferior}
             </p>
           </div>
@@ -285,7 +285,7 @@ function JornadaPage() {
                     <h3 className="font-serif text-[28px] text-[#FDF8F5]">
                       {estrelaExpandida.nome}
                     </h3>
-                    <p className="mt-1 font-handwritten text-[14px] text-[#D8D2CC] opacity-70">
+                    <p className="mt-1 font-handwritten text-[14px] text-[#D8D2CC]">
                       concluída em{" "}
                       {completados[estrelaExpandida.n]
                         ? formatarData(completados[estrelaExpandida.n]!)
@@ -320,7 +320,7 @@ function JornadaPage() {
                     </a>
                   </div>
                 ) : (
-                  <p className="font-handwritten text-[14px] text-[#D8D2CC] opacity-50">
+                  <p className="font-handwritten text-[14px] text-[#D8D2CC]">
                     nenhum entregável vinculado a essa etapa ainda.
                   </p>
                 )}
@@ -456,7 +456,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[14px] text-[#C8A96E] opacity-70">
+        <span className="font-handwritten text-[14px] text-[#C8A96E]">
           concluída
         </span>
       </button>

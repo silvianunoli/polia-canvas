@@ -9,13 +9,13 @@ import { Footer } from "@/components/landing/Footer";
 export const Route = createFileRoute("/sobre")({
   head: () => ({
     meta: [
-      { title: "Sobre — Pólia" },
+      { title: "Sobre · Pólia" },
       {
         name: "description",
         content:
           "Por que a Pólia existe: um começo honesto para negócios reais, feito por quem sabe o que é começar do zero.",
       },
-      { property: "og:title", content: "Sobre — Pólia" },
+      { property: "og:title", content: "Sobre · Pólia" },
       { property: "og:description", content: "Um começo honesto para negócios reais." },
     ],
   }),

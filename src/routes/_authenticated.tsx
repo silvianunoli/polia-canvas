@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PoliaFooter } from "@/components/layout/PoliaFooter";
 
@@ -16,7 +16,18 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
+// Rotas que mostram o footer (admin/config/auth-like).
+// Rotas operacionais (Painel, Jornada, Tarefas, Clientes, Vitrine, Financeiro,
+// Biblioteca, Etapa) ficam sem footer pra evitar ruído no flow de trabalho.
+const FOOTER_PATHS = ["/configuracoes", "/admin"];
+
+function showFooterFor(pathname: string) {
+  return FOOTER_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 function AuthenticatedLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const withFooter = showFooterFor(pathname);
   return (
     <>
       <a href="#main-content" className="skip-link">
@@ -25,7 +36,7 @@ function AuthenticatedLayout() {
       <main id="main-content">
         <Outlet />
       </main>
-      <PoliaFooter />
+      {withFooter && <PoliaFooter />}
     </>
   );
 }
