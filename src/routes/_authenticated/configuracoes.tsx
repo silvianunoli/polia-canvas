@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { PlaceholderImage } from "@/components/PlaceholderImage";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
@@ -117,7 +118,7 @@ function ConfiguracoesPage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} />
 
-      <main className="mx-auto max-w-[720px] px-12 py-12">
+      <main className="mx-auto max-w-[880px] px-12 py-12">
         <div className="mb-10">
           <h1 className="font-serif text-[#1A1A2E] text-[40px] leading-tight mb-2">
             Configurações
@@ -130,6 +131,22 @@ function ConfiguracoesPage() {
         {/* SEÇÃO 1 — PERFIL */}
         <Secao titulo="Seu perfil">
           <div className="space-y-5">
+            <Campo label="FOTO DO PERFIL">
+              <div className="flex items-center gap-4">
+                <PlaceholderImage
+                  slot="avatar"
+                  width={72}
+                  height={72}
+                  rounded={9999}
+                  fit="cover"
+                  description="JPG, PNG ou WebP — quadrada de preferência"
+                  accept="image/png,image/jpeg,image/webp"
+                />
+                <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50 max-w-[280px]">
+                  arraste uma imagem ou clique pra escolher do seu computador.
+                </p>
+              </div>
+            </Campo>
             <Campo label="SEU NOME">
               <input
                 type="text"

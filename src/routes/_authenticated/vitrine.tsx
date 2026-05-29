@@ -114,11 +114,14 @@ function VitrinePage() {
     );
   }
 
-  const chips = [
-    { etapa: 4, campo: "star_4_completed_at", label: "Produto" },
-    { etapa: 5, campo: "star_5_completed_at", label: "Conteudo" },
-    { etapa: 6, campo: "star_6_completed_at", label: "Rotina" },
-  ];
+  const etapasDone = [4, 5, 6].filter(
+    (n) =>
+      !!(profile as unknown as Record<string, string | null> | null)?.[
+        `star_${n}_completed_at`
+      ],
+  ).length;
+  const totalEtapas = 3;
+  const faseCompleta = etapasDone === totalEtapas;
 
   const vitrineAtiva = !!(profile as { orbit_vitrine_active?: boolean } | null)?.orbit_vitrine_active;
 
@@ -142,25 +145,30 @@ function VitrinePage() {
           </p>
         </div>
 
-        {/* Chips de completude */}
-        <div className="flex gap-2 mb-8 flex-wrap">
-          {chips.map((item) => {
-            const done = !!(profile as unknown as Record<string, string | null> | null)?.[item.campo];
-            return (
-              <div
-                key={item.etapa}
-                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 border ${
-                  done
-                    ? "bg-[rgba(26,127,173,0.08)] border-[rgba(26,127,173,0.2)] text-[#1A7FAD]"
-                    : "bg-[rgba(26,26,46,0.04)] border-[rgba(26,26,46,0.08)] text-[#1A1A2E] opacity-35"
-                }`}
-              >
-                <span className="font-accent text-[9px] tracking-[1.5px] uppercase font-bold">
-                  {done ? `Etapa ${item.etapa}` : `Etapa ${item.etapa} · pendente`}
-                </span>
-              </div>
-            );
-          })}
+        {/* Chip único da fase CONSTRUÇÃO */}
+        <div className="mb-8">
+          <div
+            className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5"
+            style={{
+              background: "rgba(26,127,173,0.08)",
+              borderColor: "rgba(26,127,173,0.25)",
+              color: "#1A7FAD",
+            }}
+          >
+            {faseCompleta ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="3" y="11" width="18" height="11" rx="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            )}
+            <span className="font-accent text-[10px] tracking-[1.5px] uppercase font-bold">
+              CONSTRUÇÃO · {etapasDone}/{totalEtapas}
+            </span>
+          </div>
         </div>
 
         {/* CARD — FICHA DE PRODUTO (E4) */}

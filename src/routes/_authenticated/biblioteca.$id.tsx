@@ -248,7 +248,7 @@ function BibliotecaDetalhePage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} navActive="/biblioteca" />
 
-      <main className="mx-auto max-w-[1280px]">
+      <main className="mx-auto max-w-[880px]">
         <div className="flex items-center gap-2 px-12 pt-8 mb-6">
           <a
             href="/biblioteca"

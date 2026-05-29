@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,6 +92,7 @@ function startOfWeek(d: Date) {
 function PainelPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
+  const navigate = useNavigate();
 
   const userQuery = useQuery({
     queryKey: ["painel-dados", userId],
@@ -341,7 +342,16 @@ function PainelPage() {
             Seu céu continua crescendo com você. As ferramentas que você ganha ficam pra sempre.
           </p>
 
-          <ConstelacaoVisual etapaAtual={etapaAtual} />
+          <ConstelacaoVisual
+            etapaAtual={etapaAtual}
+            onStarClick={(etapa, state) => {
+              if (state === "current") {
+                navigate({ to: `/etapa/${etapa}` as "/etapa/1" });
+              } else {
+                navigate({ to: "/jornada" });
+              }
+            }}
+          />
 
           {/* FERRAMENTAS QUE ENTRAM NA ÓRBITA */}
           <div className="mt-12">

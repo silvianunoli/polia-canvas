@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { pluralizeKanban } from "@/lib/kanban";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({
@@ -171,8 +172,7 @@ function TarefasPage() {
             Seu fluxo de hoje.
           </h1>
           <p className="font-handwritten text-[18px] text-[#C96B3E]">
-            {counts.a_fazer} sementes pra plantar · {counts.brotando} brotando
-            · {counts.floresceu} já floresceram
+            {pluralizeKanban(counts)}
           </p>
 
           {/* FILTROS */}
