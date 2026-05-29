@@ -123,14 +123,14 @@ function MarcaVivaPage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} navActive="/painel" />
 
-      <div className="px-12 pt-10 pb-16 max-w-[1280px] mx-auto">
+      <div className="px-6 pt-8 pb-12 max-w-[1280px] mx-auto md:px-12 md:pt-10 md:pb-16">
         {/* Cabeçalho */}
         <div className="flex items-end justify-between mb-8">
           <div>
             <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-2">
               SUA MARCA VIVA
             </p>
-            <h1 className="font-serif text-[#1A1A2E] text-[44px] leading-tight">
+            <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               {profile.business_name || "Seu negócio"}
             </h1>
             <p className="font-handwritten text-[#C96B3E] text-[17px] mt-2">
