@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/funil")({
+  head: () => ({
+    meta: [{ title: "Funil de jornada · Pólia" }],
+  }),
   component: AdminFunil,
 });
 

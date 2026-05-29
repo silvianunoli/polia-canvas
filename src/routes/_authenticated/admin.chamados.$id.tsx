@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
+  head: () => ({
+    meta: [{ title: "Chamados · Pólia" }],
+  }),
   component: AdminTicket,
 });
 
