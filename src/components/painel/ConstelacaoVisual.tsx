@@ -106,7 +106,7 @@ export function ConstelacaoVisual({
                     }`}
                   >
                     {isCurrent && (
-                      <span className="mb-1 whitespace-nowrap font-handwritten text-[14px] text-polia-terracota">
+                      <span className="mb-2 whitespace-nowrap font-handwritten text-[17px] leading-none text-polia-terracota">
                         você tá aqui agora
                       </span>
                     )}
