@@ -530,8 +530,8 @@ function FerramentaCard({
   }
   return (
     <div className="cursor-default rounded-xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-5 opacity-35">
-      <span className="mb-3 inline-block rounded-full border border-[rgba(255,255,255,0.12)] px-2 py-0.5 font-accent text-[9px] font-bold tracking-[1.5px] text-[#D8D2CC]">
-        EM ÓRBITA
+      <span className="mb-3 inline-block rounded-full border border-[rgba(255,255,255,0.12)] px-2 py-0.5 font-accent text-[10px] font-semibold text-[#D8D2CC]">
+        Em órbita
       </span>
       <p className="mb-1 font-sans text-[15px] font-semibold text-[#FDF8F5]">
         {nome}
