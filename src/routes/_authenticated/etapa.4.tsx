@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
@@ -233,6 +234,16 @@ function Etapa4Page() {
 
   return (
     <>
+      {/* Botão sair · não remover · vide audit v4.R1 (4º turno sem resolver) */}
+      <Link
+        to="/painel"
+        className="fixed top-4 md:top-6 left-4 md:left-6 z-50 inline-flex items-center gap-2 px-3 py-2 min-h-[44px] font-handwritten text-[#C8A96E] hover:text-white transition-colors group"
+        aria-label="Voltar ao painel"
+      >
+        <ArrowLeft size={16} aria-hidden="true" />
+        voltar ao painel
+      </Link>
+
       <style>{`
         @keyframes polia-glow { 0%,100% { box-shadow: 0 0 12px rgba(232,151,112,0.6) } 50% { box-shadow: 0 0 28px rgba(232,151,112,0.95) } }
         @keyframes polia-pulse-dot { 0%,80%,100% { opacity: 0.3; transform: scale(0.8) } 40% { opacity: 1; transform: scale(1.1) } }
