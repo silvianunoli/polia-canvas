@@ -526,7 +526,7 @@ function PainelPage() {
                     {c.col}
                   </p>
                   {c.items.length === 0 ? (
-                    <p className="font-handwritten text-[12px] text-polia-noite opacity-30">
+                    <p className="font-handwritten text-[14px] text-polia-noite opacity-30">
                       vazio
                     </p>
                   ) : (
