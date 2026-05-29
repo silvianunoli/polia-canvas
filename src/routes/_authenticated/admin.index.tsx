@@ -88,12 +88,13 @@ function AdminHome() {
   }, []);
 
   const metricas: { label: string; sigla?: string; tooltip?: string; valor: string | number; ok: boolean; desc: string }[] = [
-    { label: "Ativação", sigla: "D7", tooltip: "D7 = primeiros 7 dias desde o cadastro", valor: `${stats.ativacao_d7}%`, ok: stats.ativacao_d7 >= 40, desc: "completaram E1 em 7 dias" },
+    { label: "Ativação", sigla: "D7", tooltip: "em 7 dias depois do cadastro", valor: `${stats.ativacao_d7}%`, ok: stats.ativacao_d7 >= 40, desc: "completaram E1 em 7 dias" },
     { label: "Mediana de Etapa", valor: `E${stats.mediana_etapa}`, ok: true, desc: "onde metade das ativas está" },
-    { label: "Ativas", sigla: "WAU-2", tooltip: "WAU-2 = Weekly Active Users nas últimas 2 semanas", valor: stats.wau2, ok: true, desc: "últ. 14 dias com ação real" },
-    { label: "Retenção", sigla: "D30", tooltip: "D30 = 30 dias após o cadastro", valor: `${stats.retencao_d30}%`, ok: stats.retencao_d30 >= 35, desc: "coorte do mês anterior" },
+    { label: "Ativas", sigla: "WAU-2", tooltip: "ativas nas últimas 2 semanas com ação real", valor: stats.wau2, ok: true, desc: "últ. 14 dias com ação real" },
+    { label: "Retenção", sigla: "D30", tooltip: "trinta dias depois do cadastro", valor: `${stats.retencao_d30}%`, ok: stats.retencao_d30 >= 35, desc: "coorte do mês anterior" },
     { label: "Total cadastros", valor: stats.total_cadastros, ok: true, desc: "desde o início" },
   ];
+
 
   return (
     <>
