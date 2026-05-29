@@ -117,7 +117,7 @@ function ConfiguracoesPage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} />
 
-      <main className="mx-auto max-w-[720px] px-12 py-12">
+      <main className="mx-auto max-w-[880px] px-12 py-12">
         <div className="mb-10">
           <h1 className="font-serif text-[#1A1A2E] text-[40px] leading-tight mb-2">
             Configurações

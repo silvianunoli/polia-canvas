@@ -225,18 +225,7 @@ function JornadaPage() {
               pra sempre.
             </p>
 
-            <div className="mt-8 flex max-w-[480px] items-center gap-4">
-              <div className="h-2 flex-1 rounded-full bg-[rgba(255,255,255,0.08)]">
-                <div
-                  className="h-2 rounded-full bg-[#C96B3E] transition-all"
-                  style={{ width: `${(etapasConcluidas / 11) * 100}%` }}
-                />
-              </div>
-              <span className="whitespace-nowrap font-sans text-[14px] font-semibold text-[#C96B3E]">
-                {etapasConcluidas}/11
-              </span>
-            </div>
-            <p className="mt-2 font-handwritten text-[14px] text-[#D8D2CC] opacity-60">
+            <p className="mt-8 font-handwritten text-[16px] text-[#D8D2CC] opacity-70">
               {fraseInferior}
             </p>
           </div>
