@@ -256,33 +256,43 @@ function ClientesPage() {
 
       {/* Conteúdo das tabs */}
       <div className="px-12 py-10">
-        <div className="max-w-[1280px] mx-auto">
-          {tabAtiva === "clientes" && (
+        {tabAtiva === "clientes" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 max-w-[1280px] mx-auto">
             <TabClientes
               clientes={clientes}
               onAdicionar={() => setModalClienteAberto(true)}
             />
-          )}
-          {tabAtiva === "vendas" && (
-            <TabEntregavelE7
-              entregavel={roteiro}
-              onIrEtapa={() => navigate({ to: "/etapa/7" })}
-            />
-          )}
-          {tabAtiva === "cuidado" && (
-            <TabEntregavelE8
-              entregavel={protocolo}
-              onIrEtapa={() => navigate({ to: "/etapa/8" })}
-            />
-          )}
-          {tabAtiva === "conteudo" && (
-            <TabEntregavelE9
-              entregavel={plano}
-              bloqueado={!orbitActive}
-              onIrEtapa={() => navigate({ to: "/etapa/9" })}
-            />
-          )}
-        </div>
+            <SidebarAside
+              caveat="cada nome aqui é uma história que começou com você."
+            >
+              <p className="font-sans text-[13px] text-polia-noite/70">
+                {clientes.length} {clientes.length === 1 ? "cliente cadastrada" : "clientes cadastradas"}.
+              </p>
+            </SidebarAside>
+          </div>
+        ) : (
+          <div className="max-w-[880px] mx-auto">
+            {tabAtiva === "vendas" && (
+              <TabEntregavelE7
+                entregavel={roteiro}
+                onIrEtapa={() => navigate({ to: "/etapa/7" })}
+              />
+            )}
+            {tabAtiva === "cuidado" && (
+              <TabEntregavelE8
+                entregavel={protocolo}
+                onIrEtapa={() => navigate({ to: "/etapa/8" })}
+              />
+            )}
+            {tabAtiva === "conteudo" && (
+              <TabEntregavelE9
+                entregavel={plano}
+                bloqueado={!orbitActive}
+                onIrEtapa={() => navigate({ to: "/etapa/9" })}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {modalClienteAberto && userId && (
