@@ -12,5 +12,16 @@ export const Route = createFileRoute("/_authenticated")({
       });
     }
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+function AuthenticatedLayout() {
+  return (
+    <>
+      <a href="#main-content" className="skip-link">
+        Pular para o conteúdo
+      </a>
+      <Outlet />
+    </>
+  );
+}
