@@ -378,7 +378,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos montar sua ficha  →
+          Vamos preencher os 3 espaços  →
         </button>
 
         <p className="font-handwritten text-[rgba(232,151,112,0.75)] text-[18px] mt-4">
