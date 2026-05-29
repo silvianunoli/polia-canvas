@@ -26,7 +26,7 @@ export function useUserMeta() {
       const [{ data: profile }, { data: tarefas }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, is_admin, avatar_url")
+          .select("full_name, is_admin")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
