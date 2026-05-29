@@ -594,11 +594,7 @@ function PainelPage() {
                   key={e.id}
                   fase={e.fase}
                   titulo={e.titulo}
-                  preview={
-                    typeof e.conteudo === "string"
-                      ? e.conteudo
-                      : JSON.stringify(e.conteudo ?? "")
-                  }
+                  preview={extractPreview(e.conteudo)}
                   etapa={`Etapa ${e.etapa}`}
                   tempo={tempoRelativo(e.created_at)}
                   id={e.id}
@@ -921,4 +917,34 @@ function tempoRelativo(iso: string) {
   if (dias < 30) return `${dias} dias`;
   const meses = Math.floor(dias / 30);
   return meses === 1 ? "1 mês" : `${meses} meses`;
+}
+
+/**
+ * Extrai um preview legível de qualquer payload de entregavel
+ * (string, objeto com declaracao/texto/conteudo/resumo, ou JSON arbitrário).
+ */
+function extractPreview(payload: unknown): string {
+  if (payload == null) return "";
+  if (typeof payload === "string") return payload;
+  if (typeof payload !== "object") return String(payload);
+  const obj = payload as Record<string, unknown>;
+  const preferKeys = [
+    "declaracao",
+    "resumo",
+    "texto",
+    "descricao",
+    "conteudo",
+    "title",
+    "titulo",
+    "summary",
+  ];
+  for (const k of preferKeys) {
+    const v = obj[k];
+    if (typeof v === "string" && v.trim()) return v;
+  }
+  // pega primeiro valor string que encontrar
+  for (const v of Object.values(obj)) {
+    if (typeof v === "string" && v.trim()) return v;
+  }
+  return "";
 }
