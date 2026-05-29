@@ -11,6 +11,7 @@ interface PlaceholderImageProps {
   fit?: "cover" | "contain";
   className?: string;
   rounded?: boolean | number;
+  silent?: boolean;
   onUpload?: (file: File) => Promise<string>;
 }
 
@@ -29,6 +30,7 @@ export function PlaceholderImage({
   fit = "contain",
   className,
   rounded = true,
+  silent = false,
   onUpload,
 }: PlaceholderImageProps) {
   const storageKey = `polia-asset-${slot}`;
