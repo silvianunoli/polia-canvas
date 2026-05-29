@@ -227,6 +227,21 @@
   outline-color: #C8A96E;
 }
 
+/* Utility classes — para casos onde o componente quer override explícito
+   (ex.: botão inline-styled em fundo cream que queira ring dourado). */
+.focus-ring-terracota:focus-visible {
+  outline: 2px solid #C96B3E !important;
+  outline-offset: 2px;
+}
+.focus-ring-dourado:focus-visible {
+  outline: 2px solid #C8A96E !important;
+  outline-offset: 2px;
+}
+.focus-ring-none:focus-visible {
+  outline: none !important;
+}
+
+
 /* Skip link */
 .skip-link {
   position: absolute;

@@ -96,11 +96,25 @@ export function ConstelacaoVisual({
                     ? `Etapa ${star.etapa} — concluída`
                     : `Etapa ${star.etapa} — ainda vai brilhar`;
 
+                const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+                  if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) return;
+                  e.preventDefault();
+                  const total = 11;
+                  let target = star.etapa;
+                  if (e.key === "ArrowRight" || e.key === "ArrowDown") target = star.etapa === total ? 1 : star.etapa + 1;
+                  else if (e.key === "ArrowLeft" || e.key === "ArrowUp") target = star.etapa === 1 ? total : star.etapa - 1;
+                  else if (e.key === "Home") target = 1;
+                  else if (e.key === "End") target = total;
+                  const next = document.querySelector<HTMLButtonElement>(`[data-constelacao-star="${target}"]`);
+                  next?.focus();
+                };
                 return (
                   <button
                     key={star.etapa}
                     type="button"
                     onClick={handleClick}
+                    onKeyDown={handleKeyDown}
+                    data-constelacao-star={star.etapa}
                     title={title}
                     aria-label={title}
                     aria-disabled={isFuture ? true : undefined}
@@ -111,6 +125,7 @@ export function ConstelacaoVisual({
                         : "cursor-default"
                     }`}
                   >
+
 
                     {/* Top label slot (fixed height to align all circles) */}
                     <div className="flex h-10 items-end justify-center">
