@@ -8,7 +8,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
-      { title: "Suas Vendas e Clientes — Pólia" },
+      { title: "Suas vendas e clientes — Pólia" },
       {
         name: "description",
         content:
