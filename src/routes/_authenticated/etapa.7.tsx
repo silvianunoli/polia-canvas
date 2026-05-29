@@ -10,7 +10,7 @@ import { gerarRoteiroFechamento, type RoteiroFechamento } from "@/lib/sales.func
 export const Route = createFileRoute("/_authenticated/etapa/7")({
   head: () => ({
     meta: [
-      { title: "Etapa 7 — Suas Vendas · Pólia" },
+      { title: "Etapa 7 · Suas Vendas · Pólia" },
       { name: "description", content: "Monte seu fluxo de vendas do primeiro contato ao sim." },
     ],
   }),

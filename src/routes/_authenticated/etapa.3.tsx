@@ -10,7 +10,7 @@ import { gerarMapaPosicionamento, type PositioningMap } from "@/lib/positioning.
 export const Route = createFileRoute("/_authenticated/etapa/3")({
   head: () => ({
     meta: [
-      { title: "Etapa 3 — Modelo de Negócio · Pólia" },
+      { title: "Etapa 3 · Modelo de Negócio · Pólia" },
       { name: "description", content: "Desenhe seu mapa competitivo e descubra seu lugar único." },
     ],
   }),

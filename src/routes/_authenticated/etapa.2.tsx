@@ -10,7 +10,7 @@ import { gerarVozMarca, type BrandVoiceJson } from "@/lib/brandvoice.functions";
 export const Route = createFileRoute("/_authenticated/etapa/2")({
   head: () => ({
     meta: [
-      { title: "Etapa 2 — Identidade · Pólia" },
+      { title: "Etapa 2 · Identidade · Pólia" },
       { name: "description", content: "Dê alma à sua marca: sentimento, olhar e voz." },
     ],
   }),

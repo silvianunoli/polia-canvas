@@ -10,7 +10,7 @@ import { gerarPlanoConteudo, type PlanoConteudo } from "@/lib/content.functions"
 export const Route = createFileRoute("/_authenticated/etapa/9")({
   head: () => ({
     meta: [
-      { title: "Etapa 9 — Sua Audiência · Pólia" },
+      { title: "Etapa 9 · Sua Audiência · Pólia" },
       { name: "description", content: "Monte seu plano de conteúdo." },
     ],
   }),

@@ -10,7 +10,7 @@ import { gerarProtocoloCuidado, type ProtocoloCuidado } from "@/lib/care.functio
 export const Route = createFileRoute("/_authenticated/etapa/8")({
   head: () => ({
     meta: [
-      { title: "Etapa 8 — Seus Clientes · Pólia" },
+      { title: "Etapa 8 · Seus Clientes · Pólia" },
       { name: "description", content: "Monte seu protocolo de cuidado com a cliente." },
     ],
   }),
