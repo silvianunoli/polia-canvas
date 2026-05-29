@@ -492,7 +492,7 @@ function EstrelaItem({
       <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#D8D2CC]">
         {nome}
       </span>
-      <span className="font-handwritten text-[11px] text-[#D8D2CC]">
+      <span className="font-handwritten text-[14px] text-[#D8D2CC]">
         ainda vai brilhar
       </span>
     </div>
