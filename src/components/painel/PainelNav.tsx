@@ -125,26 +125,9 @@ function AvatarMenu({
       <DropdownMenuTrigger asChild>
         <button
           aria-label="Abrir menu"
-          className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme outline-none focus-visible:ring-2 focus-visible:ring-polia-terracota/40"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-polia-terracota font-sans text-[14px] font-bold text-polia-creme outline-none focus-visible:ring-2 focus-visible:ring-polia-terracota/40"
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt=""
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <PlaceholderImage
-              slot="foto-perfil"
-              width={36}
-              height={36}
-              rounded={999}
-              fit="cover"
-            />
-          )}
-          {!avatarUrl && (
-            <span style={{ display: "none" }}>{initial}</span>
-          )}
+          {initial}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
