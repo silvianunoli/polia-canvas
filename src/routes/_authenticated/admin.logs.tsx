@@ -45,8 +45,8 @@ function AdminLogs() {
     <>
       <h1 className="font-serif text-[#1A1A2E] text-[40px] mb-6">Logs do sistema</h1>
       <h2 className="font-serif text-[#1A1A2E] text-[24px] mb-4">Edge Functions · últimas 24h</h2>
-      <div className="bg-white rounded-2xl border border-[rgba(26,26,46,0.06)] overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,46,0.06)] overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-[rgba(26,26,46,0.06)]">
               {["Função", "Chamadas", "Erros", "Latência média", "Status"].map((h) => (
