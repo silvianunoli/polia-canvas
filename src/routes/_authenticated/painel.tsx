@@ -774,7 +774,7 @@ function OrbitCard({
         {tags}
       </p>
       <p
-        className={`font-handwritten text-[12px] ${
+        className={`font-handwritten text-[14px] ${
           unlocked ? "text-polia-terracota" : "text-polia-creme opacity-50"
         }`}
       >
