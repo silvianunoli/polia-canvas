@@ -56,8 +56,8 @@ function AdminUsuarios() {
         />
       </div>
 
-      <div className="bg-white rounded-2xl border border-[rgba(26,26,46,0.06)] overflow-hidden">
-        <table className="w-full">
+      <div className="bg-white rounded-2xl border border-[rgba(26,26,46,0.06)] overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="border-b border-[rgba(26,26,46,0.06)]">
               {["Nome", "Etapa atual", "Streak", "Última atividade", "Desde"].map((h) => (

@@ -441,17 +441,18 @@ function CardTarefa({
         </p>
       )}
 
-      <div className="flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="flex items-center justify-between opacity-100 md:opacity-0 transition-opacity md:group-hover:opacity-100">
         <div className="flex gap-1">
           {colId !== "floresceu" ? (
             <button
               onClick={onMover}
-              className="rounded-lg border border-[rgba(201,107,62,0.3)] px-2 py-1 font-sans text-[11px] text-[#C96B3E] hover:bg-[rgba(201,107,62,0.06)]"
+              aria-label={colId === "a_fazer" ? "Brotar tarefa" : "Marcar como florescida"}
+              className="min-h-[44px] min-w-[44px] rounded-lg border border-[rgba(201,107,62,0.3)] px-3 py-2 font-sans text-[12px] text-[#C96B3E] hover:bg-[rgba(201,107,62,0.06)]"
             >
               {colId === "a_fazer" ? "Brotar" : "Florescer"}
             </button>
           ) : (
-            <span className="font-handwritten text-[11px] text-[#2D6A4F]">
+            <span className="font-handwritten text-[12px] text-[#2D6A4F]">
               feita
             </span>
           )}
@@ -459,12 +460,14 @@ function CardTarefa({
         {tarefa.fonte === "manual" && (
           <button
             onClick={onDeletar}
-            className="font-sans text-[11px] text-[#1A1A2E] opacity-30 hover:text-[#C9407A] hover:opacity-60"
+            aria-label="Remover tarefa"
+            className="min-h-[44px] min-w-[44px] px-2 font-sans text-[12px] text-[#1A1A2E] opacity-40 hover:text-[#C9407A] hover:opacity-70"
           >
             remover
           </button>
         )}
       </div>
+
     </div>
   );
 }

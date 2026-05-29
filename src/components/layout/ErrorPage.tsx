@@ -213,7 +213,7 @@ export function ErrorPage({
           Deixa a Pólia te guiar de volta.
         </p>
 
-        <div style={{ marginTop: 32 }}>
+        <div style={{ marginTop: 32, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
           {onCta ? (
             <button
               onClick={onCta}
@@ -228,6 +228,7 @@ export function ErrorPage({
                 border: "none",
                 cursor: "pointer",
                 boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
+                minHeight: 44,
               }}
             >
               {ctaLabel}
@@ -246,12 +247,31 @@ export function ErrorPage({
                 display: "inline-block",
                 textDecoration: "none",
                 boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
+                minHeight: 44,
               }}
             >
               {ctaLabel}
             </Link>
           )}
+          {ctaHref !== "/jornada" && (
+            <Link
+              to="/jornada"
+              style={{
+                fontFamily: "Inter, sans-serif",
+                fontSize: 14,
+                color: "rgba(253,248,245,0.65)",
+                textDecoration: "underline",
+                textUnderlineOffset: 4,
+                minHeight: 44,
+                display: "inline-flex",
+                alignItems: "center",
+              }}
+            >
+              voltar pra jornada
+            </Link>
+          )}
         </div>
+
       </div>
     </div>
   );
