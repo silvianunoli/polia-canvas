@@ -342,6 +342,50 @@ function TarefasPage() {
         </div>
       </section>
 
+      {/* MOBILE — tabs em vez de kanban */}
+      <section className="md:hidden px-4 pb-16 pt-4">
+        <Tabs defaultValue="a_fazer" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 bg-[rgba(26,26,46,0.04)]">
+            {COLUNAS.map((col) => {
+              const n = tarefasFiltradas.filter((t) => t.status === col.id).length;
+              return (
+                <TabsTrigger key={col.id} value={col.id} className="min-h-[44px] text-[12px]">
+                  {col.label} ({n})
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+          {COLUNAS.map((col) => {
+            const lista = tarefasFiltradas.filter((t) => t.status === col.id);
+            return (
+              <TabsContent key={col.id} value={col.id} className="mt-4 space-y-3">
+                {lista.length === 0 ? (
+                  <div className="rounded-xl border-2 border-dashed border-[rgba(26,26,46,0.08)] p-8 text-center">
+                    <p className="caveat-decorativo text-[#1A1A2E] opacity-30">
+                      {col.id === "a_fazer" && "nada por aqui ainda."}
+                      {col.id === "brotando" && "mova uma tarefa pra cá quando começar."}
+                      {col.id === "floresceu" && "suas conquistas aparecem aqui."}
+                    </p>
+                  </div>
+                ) : (
+                  lista.map((t) => (
+                    <TarefaCardMobile
+                      key={t.id}
+                      tarefa={t}
+                      colId={col.id}
+                      onMover={(s) => moverTarefa(t.id, s)}
+                      onDeletar={() => deletarTarefa(t.id)}
+                    />
+                  ))
+                )}
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      </section>
+
+
+
       {/* MODAL */}
       {modalAberto && (
         <div
