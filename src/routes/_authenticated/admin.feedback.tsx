@@ -3,6 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin/feedback")({
+  head: () => ({
+    meta: [{ title: "Feedback · Pólia" }],
+  }),
   component: AdminFeedback,
 });
 
