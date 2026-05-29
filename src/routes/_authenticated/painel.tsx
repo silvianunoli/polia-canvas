@@ -706,7 +706,7 @@ function StatBlock({
       </span>
       <span className={valueClass}>{value}</span>
       <span
-        className={`font-handwritten text-[13px] ${subColor ?? "text-polia-noite opacity-60"}`}
+        className={`font-handwritten text-[14px] ${subColor ?? "text-polia-noite opacity-60"}`}
       >
         {sub}
       </span>
