@@ -1,6 +1,6 @@
 // Util de pluralização para o kanban de Tarefas (Pólia).
 // Mantém a voz Caveat ("sementes pra plantar · brotando · já floresceram"),
-// concordando singular/plural conforme contagem.
+// com tratamento de zero para empty state acolhedor.
 
 export interface KanbanCounts {
   a_fazer: number;
@@ -8,14 +8,21 @@ export interface KanbanCounts {
   floresceu: number;
 }
 
-function p(n: number, sing: string, plur: string) {
-  return `${n} ${n === 1 ? sing : plur}`;
+function fazer(n: number) {
+  if (n === 0) return "nada pra plantar ainda";
+  if (n === 1) return "1 semente pra plantar";
+  return `${n} sementes pra plantar`;
+}
+function brotar(n: number) {
+  if (n === 0) return "nada brotando ainda";
+  return `${n} brotando`;
+}
+function florescer(n: number) {
+  if (n === 0) return "nada floresceu ainda";
+  if (n === 1) return "1 já floresceu";
+  return `${n} já floresceram`;
 }
 
 export function pluralizeKanban(counts: KanbanCounts): string {
-  const aFazer = p(counts.a_fazer, "semente pra plantar", "sementes pra plantar");
-  const brotando =
-    counts.brotando === 1 ? "1 brotando" : `${counts.brotando} brotando`;
-  const floresceu = p(counts.floresceu, "já floresceu", "já floresceram");
-  return `${aFazer} · ${brotando} · ${floresceu}`;
+  return `${fazer(counts.a_fazer)} · ${brotar(counts.brotando)} · ${florescer(counts.floresceu)}`;
 }

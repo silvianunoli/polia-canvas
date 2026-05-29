@@ -64,25 +64,25 @@ const FERRAMENTAS: {
   tags: string;
 }[] = [
   {
-    nome: "Sua Marca Viva",
+    nome: "Sua marca viva",
     rota: "/marca-viva",
     desbloqueio: "orbit_brand_alive_unlocked",
     tags: "identidade, voz, posicionamento",
   },
   {
-    nome: "Sua Vitrine",
+    nome: "Sua vitrine",
     rota: "/vitrine",
     desbloqueio: "orbit_vitrine_active",
     tags: "presença, rotina, controle",
   },
   {
-    nome: "Suas Vendas e Clientes",
+    nome: "Suas vendas e clientes",
     rota: "/clientes",
     desbloqueio: "orbit_sales_active",
     tags: "vendas, cuidado, conteúdo",
   },
   {
-    nome: "Seu Painel Financeiro",
+    nome: "Seu painel financeiro",
     rota: "/financeiro",
     desbloqueio: "orbit_financial_active",
     tags: "números, crescimento, rede",
