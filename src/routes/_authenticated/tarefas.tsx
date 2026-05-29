@@ -520,3 +520,85 @@ function CardTarefa({
     </div>
   );
 }
+
+function TarefaCardMobile({
+  tarefa,
+  colId,
+  onMover,
+  onDeletar,
+}: {
+  tarefa: Tarefa;
+  colId: Status;
+  onMover: (s: Status) => void;
+  onDeletar: () => void;
+}) {
+  const btn =
+    "min-h-[44px] rounded-full border px-3 py-2 font-sans text-[12px] transition-colors";
+  return (
+    <div className="rounded-xl border border-[rgba(26,26,46,0.06)] bg-white p-4 shadow-sm">
+      <div className="mb-2 flex items-center gap-2">
+        {tarefa.etapa ? (
+          <span className="rounded-full bg-[rgba(26,26,46,0.06)] px-2 py-0.5 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-50">
+            Etapa {tarefa.etapa}
+          </span>
+        ) : (
+          <span className="rounded-full bg-[rgba(201,107,62,0.08)] px-2 py-0.5 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+            Minha
+          </span>
+        )}
+      </div>
+      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">
+        {tarefa.titulo}
+      </p>
+      {tarefa.descricao && (
+        <p className="mb-3 font-sans text-[12px] leading-relaxed text-[#1A1A2E] opacity-50">
+          {tarefa.descricao}
+        </p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        {colId === "a_fazer" && (
+          <button
+            onClick={() => onMover("brotando")}
+            className={`${btn} border-[#C96B3E] text-[#C96B3E]`}
+          >
+            começar ↗
+          </button>
+        )}
+        {colId === "brotando" && (
+          <>
+            <button
+              onClick={() => onMover("a_fazer")}
+              className={`${btn} border-[rgba(26,26,46,0.2)] text-[#1A1A2E]`}
+            >
+              voltar
+            </button>
+            <button
+              onClick={() => onMover("floresceu")}
+              className={`${btn} border-[#2D6A4F] text-[#2D6A4F]`}
+            >
+              floresceu ✓
+            </button>
+          </>
+        )}
+        {colId === "floresceu" && (
+          <button
+            onClick={() => onMover("brotando")}
+            className={`${btn} border-[rgba(26,26,46,0.2)] text-[#1A1A2E]`}
+          >
+            desfazer
+          </button>
+        )}
+        {tarefa.fonte === "manual" && (
+          <button
+            onClick={onDeletar}
+            aria-label="Remover tarefa"
+            className={`${btn} ml-auto border-transparent text-[#1A1A2E] opacity-50`}
+          >
+            remover
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
