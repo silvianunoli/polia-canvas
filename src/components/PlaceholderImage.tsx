@@ -203,34 +203,36 @@ export function PlaceholderImage({
                 style={{
                   fontFamily: "Caveat, cursive",
                   fontSize: Math.min(width, height) > 60 ? 16 : 14,
-                  color: "#C8A96E",
+                  color: silent ? "transparent" : "#9A7728",
                   lineHeight: 1.1,
                 }}
               >
-                PLACEHOLDER · {slot}
+                {silent ? "" : `PLACEHOLDER · ${slot}`}
               </span>
-              {description && Math.min(width, height) > 60 && (
+              {!silent && description && Math.min(width, height) > 60 && (
                 <span
                   style={{
                     fontFamily: "Caveat, cursive",
                     fontSize: 14,
-                    color: "#C8A96E",
-                    opacity: 0.7,
+                    color: "#9A7728",
+                    opacity: 0.8,
                     lineHeight: 1.1,
                   }}
                 >
                   {description}
                 </span>
               )}
-              <span
-                style={{
-                  fontFamily: "ui-monospace, monospace",
-                  fontSize: 9,
-                  color: "rgba(26,26,46,0.35)",
-                }}
-              >
-                {width}×{height}
-              </span>
+              {!silent && (
+                <span
+                  style={{
+                    fontFamily: "ui-monospace, monospace",
+                    fontSize: 9,
+                    color: "rgba(26,26,46,0.45)",
+                  }}
+                >
+                  {width}×{height}
+                </span>
+              )}
             </>
           )}
         </button>
