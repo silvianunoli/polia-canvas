@@ -213,7 +213,13 @@ function PainelPage() {
     RECADOS_POR_ETAPA[etapaAtual] ??
     "Continue de onde parou. Cada passo que você dá fica no seu céu.\n\nA Pólia tá aqui.";
 
-  const conquista = dados?.conquistas?.[0];
+  const conquistaUltima = dados?.conquistas?.[0];
+  const seteDiasAtras = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const conquistaAtual =
+    conquistaUltima && new Date(conquistaUltima.created_at).getTime() >= seteDiasAtras
+      ? conquistaUltima
+      : null;
+  const conquistaAnterior = conquistaAtual ? null : conquistaUltima ?? null;
 
   const subtituloNegocio =
     businessType === "produto"
