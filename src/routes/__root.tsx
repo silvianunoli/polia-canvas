@@ -18,142 +18,21 @@ import { ErrorPage } from "@/components/layout/ErrorPage";
 import appCss from "../styles.css?url";
 
 function NotFoundComponent() {
-  return (
-    <div
-      style={{
-        background: "var(--azul-noite)",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      <NotFoundStars />
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 480,
-          padding: 24,
-        }}
-      >
-        <div
-          className="font-caveat"
-          style={{ fontSize: 20, color: "var(--terracota)", marginBottom: 20 }}
-        >
-          ops.
-        </div>
-        <div style={{ position: "relative" }}>
-          <div
-            className="font-serif"
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -55%)",
-              fontSize: 160,
-              lineHeight: 1,
-              color: "rgba(255,255,255,0.08)",
-              pointerEvents: "none",
-              userSelect: "none",
-            }}
-          >
-            404
-          </div>
-          <h1
-            className="font-serif"
-            style={{
-              position: "relative",
-              fontSize: 40,
-              lineHeight: 1.2,
-              color: "#fff",
-              margin: 0,
-            }}
-          >
-            Essa estrela ainda não existe.
-          </h1>
-        </div>
-        <p
-          className="font-sans"
-          style={{
-            fontSize: 17,
-            color: "rgba(255,255,255,0.55)",
-            marginTop: 16,
-            lineHeight: 1.6,
-          }}
-        >
-          Mas a sua jornada continua por aqui.
-        </p>
-        <p
-          className="font-caveat"
-          style={{ fontSize: 18, color: "rgba(255,255,255,0.40)", marginTop: 8 }}
-        >
-          Deixa a Pólia te guiar de volta.
-        </p>
-        <div style={{ marginTop: 40 }}>
-          <Link
-            to="/"
-            className="font-sans"
-            style={{
-              background: "var(--terracota)",
-              color: "#fff",
-              fontSize: 17,
-              fontWeight: 600,
-              padding: "18px 48px",
-              borderRadius: 12,
-              display: "inline-block",
-              textDecoration: "none",
-              boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
-            }}
-          >
-            Voltar ao início
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NotFoundStars() {
-  return <StarField density={40} speed={0.4} />;
+  return <ErrorPage code="404" />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
+    <ErrorPage
+      code="500"
+      ctaLabel="Tentar de novo"
+      onCta={() => {
+        router.invalidate();
+        reset();
+      }}
+    />
   );
 }
 
