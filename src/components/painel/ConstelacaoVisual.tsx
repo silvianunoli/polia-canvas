@@ -103,12 +103,15 @@ export function ConstelacaoVisual({
                     onClick={handleClick}
                     title={title}
                     aria-label={title}
-                    className={`relative flex min-w-0 flex-col items-center border-0 bg-transparent p-0 transition-transform ${
-                      handleClick
+                    aria-disabled={isFuture ? true : undefined}
+                    disabled={isFuture && !handleClick}
+                    className={`relative flex min-w-0 flex-col items-center border-0 bg-transparent p-0 min-h-[44px] min-w-[44px] transition-transform ${
+                      handleClick && !isFuture
                         ? "cursor-pointer hover:-translate-y-0.5"
                         : "cursor-default"
                     }`}
                   >
+
                     {/* Top label slot (fixed height to align all circles) */}
                     <div className="flex h-10 items-end justify-center">
                       {isCurrent && (
