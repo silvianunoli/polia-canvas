@@ -109,7 +109,7 @@ function AdminHome() {
         {metricas.map((item) => (
           <div key={item.label} className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]">
             <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">{item.label}</p>
-            <p className={`font-serif text-[32px] leading-none mb-1 ${item.ok ? "text-[#1A1A2E]" : "text-[#C9407A]"}`}>{item.valor}</p>
+            <p className={`font-serif text-[32px] leading-none mb-1 ${item.ok ? "text-[#2D6A4F]" : "text-[#C0392B]"}`}>{item.valor}</p>
             <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40">{item.desc}</p>
           </div>
         ))}
@@ -123,14 +123,14 @@ function AdminHome() {
           </div>
         ) : (
           alertasVermelhos.map((u) => (
-            <div key={u.id} className="bg-[rgba(201,64,122,0.06)] border border-[rgba(201,64,122,0.2)] rounded-xl p-4 flex items-center justify-between">
+            <div key={u.id} className="bg-[rgba(192,57,43,0.06)] border border-[rgba(192,57,43,0.20)] rounded-xl p-4 flex items-center justify-between">
               <div>
-                <p className="font-sans text-[#C9407A] text-[13px] font-medium">
-                  {u.nome} — parada há {u.dias_parada} dias na Etapa {u.etapa_atual}
+                <p className="font-sans text-[#C0392B] text-[13px] font-medium">
+                  {u.nome} · parada há {u.dias_parada} dias na Etapa {u.etapa_atual}
                 </p>
                 <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">última atividade: {u.ultima_atividade}</p>
               </div>
-              <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="font-sans text-[#C9407A] text-[12px] hover:underline">
+              <Link to="/admin/usuarios/$id" params={{ id: u.id }} className="font-sans text-[#C0392B] text-[12px] hover:underline">
                 Ver perfil →
               </Link>
             </div>
