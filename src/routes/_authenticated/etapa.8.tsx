@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { gerarProtocoloCuidado, type ProtocoloCuidado } from "@/lib/care.functions";
 
 export const Route = createFileRoute("/_authenticated/etapa/8")({
@@ -412,6 +413,7 @@ function PerguntaLayout({
   return (
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} />
+      <EtapaTopBar etapa={8} fase="VENDA" nome="Seus clientes" variant="light" />
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">

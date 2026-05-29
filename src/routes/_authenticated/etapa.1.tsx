@@ -3,6 +3,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { gerarMiniPitch } from "@/lib/minipitch.functions";
 
