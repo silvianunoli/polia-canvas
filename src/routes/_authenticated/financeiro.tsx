@@ -173,7 +173,7 @@ function FinanceiroPage() {
           <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
             SEU PAINEL FINANCEIRO
           </p>
-          <h1 className="font-serif text-[44px] leading-tight text-[#1A1A2E]">
+          <h1 className="font-serif text-[28px] leading-tight text-[#1A1A2E] md:text-[44px]">
             O que você mede, cresce.
           </h1>
           <p className="mt-2 font-handwritten text-[17px] text-[#C96B3E]">
@@ -432,7 +432,7 @@ function ReceitaMetaSection({
             onClick={() => setEditandoReceita(true)}
             className="group text-left"
           >
-            <p className="font-serif text-[40px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E]">
+            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E] md:text-[40px]">
               {receita > 0 ? `R$ ${receita.toLocaleString("pt-BR")}` : "R$ 0"}
             </p>
             <p className="mt-1 font-sans text-[11px] text-[#C96B3E] opacity-0 transition-opacity group-hover:opacity-100">
@@ -485,7 +485,7 @@ function ReceitaMetaSection({
             onClick={() => setEditandoMeta(true)}
             className="group text-left"
           >
-            <p className="font-serif text-[40px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E]">
+            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E] md:text-[40px]">
               {meta > 0 ? `R$ ${meta.toLocaleString("pt-BR")}` : "definir meta"}
             </p>
             <p className="mt-1 font-sans text-[11px] text-[#C96B3E] opacity-0 transition-opacity group-hover:opacity-100">
