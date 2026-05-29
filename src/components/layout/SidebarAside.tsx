@@ -27,11 +27,11 @@ export function SidebarAside({
       <div className="sticky top-24 flex flex-col gap-4">
         {showRaposa && (
           <PlaceholderImage
-            label="RAPOSA"
-            sub="estado calmo"
+            slot="raposa-aside"
+            description="raposa · estado calmo"
             width={180}
             height={180}
-            tone="terracota"
+            rounded={16}
           />
         )}
         <div
