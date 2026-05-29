@@ -362,10 +362,13 @@ function PainelPage() {
             onStarClick={(etapa, state) => {
               if (state === "current") {
                 navigate({ to: `/etapa/${etapa}` as "/etapa/1" });
-              } else {
-                navigate({ to: "/jornada" });
+              } else if (state === "done") {
+                // fallback: até backend retornar entregavelId, vai pra lista filtrada
+                navigate({ to: "/biblioteca", search: { etapa } as any });
               }
+              // future: não navega (tooltip "ainda vai brilhar" cuida do feedback)
             }}
+
           />
 
           {/* FERRAMENTAS QUE ENTRAM NA ÓRBITA */}
