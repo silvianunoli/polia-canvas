@@ -478,7 +478,7 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-[#FDF8F5]">
           {nome}
         </span>
-        <span className="font-handwritten text-[12px] text-[#C96B3E]">
+        <span className="font-handwritten text-[14px] text-[#C96B3E]">
           acendendo agora
         </span>
       </button>
