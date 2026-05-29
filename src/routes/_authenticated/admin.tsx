@@ -3,6 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({
+    meta: [{ title: "Admin · Pólia" }],
+  }),
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data: userData } = await supabase.auth.getUser();
