@@ -476,7 +476,7 @@ function PainelPage() {
               <p className="mb-1 font-sans text-[14px] text-polia-noite opacity-60">
                 sementes plantadas
               </p>
-              <p className="font-handwritten text-[13px] text-polia-noite opacity-40">
+              <p className="font-handwritten text-[14px] text-polia-noite opacity-40">
                 recorde anterior: {Math.max(totalSemana, 0)}
               </p>
             </div>
