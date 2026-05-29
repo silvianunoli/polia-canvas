@@ -76,7 +76,7 @@ export function useUserMeta() {
         displayName,
         isAdmin: !!profile?.is_admin,
         streak,
-        avatarUrl: (profile?.avatar_url as string | null) ?? null,
+        avatarUrl: null,
       };
     },
   });
