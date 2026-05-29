@@ -92,6 +92,7 @@ function startOfWeek(d: Date) {
 function PainelPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
+  const navigate = useNavigate();
 
   const userQuery = useQuery({
     queryKey: ["painel-dados", userId],
