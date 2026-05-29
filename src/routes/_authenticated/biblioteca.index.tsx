@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { SidebarAside } from "@/components/layout/SidebarAside";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/")({
   head: () => ({
@@ -164,96 +165,111 @@ function BibliotecaPage() {
     <div className="min-h-screen bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} navActive="/biblioteca" />
 
-      <main className="mx-auto max-w-[1280px]">
-        <div className="px-12 pt-10">
-          <div className="mb-8">
-            <h1 className="font-serif text-[#1A1A2E] text-[44px] leading-tight mb-2">
-              Seus entregáveis.
-            </h1>
-            <p className="font-handwritten text-[#C96B3E] text-[18px]">
-              tudo que você construiu fica aqui. pra sempre.
-            </p>
-            <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mt-2">
-              {total} {total === 1 ? "entregável" : "entregáveis"} criados
-            </p>
-          </div>
-
-          <div className="flex gap-2 mb-8 flex-wrap">
-            {FASES.map((fase) => (
-              <button
-                key={fase}
-                onClick={() => setFaseAtiva(fase)}
-                className={`font-sans text-[13px] px-4 py-2 rounded-xl border transition-colors ${
-                  faseAtiva === fase
-                    ? badgeAtivo(fase)
-                    : "bg-white text-[#1A1A2E] opacity-50 border-[rgba(26,26,46,0.08)] hover:opacity-80"
-                }`}
-              >
-                {fase}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="px-12 pb-16">
-          {dadosQuery.isLoading ? (
-            <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">
-              Carregando...
-            </p>
-          ) : total === 0 ? (
-            <div className="text-center py-24 border-2 border-dashed border-[rgba(26,26,46,0.06)] rounded-2xl">
-              <p className="font-serif text-[#1A1A2E] text-[24px] opacity-30 mb-3">
-                seus entregáveis aparecem aqui.
+      <main className="mx-auto max-w-[1280px] px-12 pt-10 pb-16">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_240px]">
+          <div>
+            <div className="mb-8">
+              <h1 className="font-serif text-[#1A1A2E] text-[44px] leading-tight mb-2">
+                Seus entregáveis.
+              </h1>
+              <p className="font-handwritten text-[#C96B3E] text-[18px]">
+                tudo que você construiu fica aqui. pra sempre.
               </p>
-              <p className="font-handwritten text-[#C96B3E] text-[16px] opacity-50 mb-6">
-                complete a Etapa 1 pra criar o primeiro.
-              </p>
-              <button
-                onClick={() => navigate({ to: "/etapa/1" })}
-                className="font-sans text-[#C96B3E] text-[14px] hover:underline"
-              >
-                Ir pra Etapa 1
-              </button>
-            </div>
-          ) : entregaveisFiltrados.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-35">
-                nenhum entregável da fase {faseAtiva} ainda.
+              <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mt-2">
+                {total} {total === 1 ? "entregável" : "entregáveis"} criados
               </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-3 gap-6">
-              {entregaveisFiltrados.map((entregavel) => (
-                <a
-                  key={entregavel.id}
-                  href={`/biblioteca/${entregavel.id}`}
-                  className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)] hover:border-[rgba(201,107,62,0.2)] hover:shadow-md transition-all cursor-pointer group block"
+
+            <div className="flex gap-2 mb-8 flex-wrap">
+              {FASES.map((fase) => (
+                <button
+                  key={fase}
+                  onClick={() => setFaseAtiva(fase)}
+                  className={`font-sans text-[13px] px-4 py-2 rounded-xl border transition-colors cursor-pointer ${
+                    faseAtiva === fase
+                      ? badgeAtivo(fase)
+                      : "bg-white text-[#1A1A2E] opacity-50 border-[rgba(26,26,46,0.08)] hover:opacity-80"
+                  }`}
                 >
-                  <span
-                    className={`inline-block font-accent text-[9px] tracking-[1.5px] uppercase font-bold px-3 py-1 rounded-full mb-4 ${badgeFase(
-                      entregavel.fase,
-                    )}`}
-                  >
-                    {entregavel.fase} · Etapa {entregavel.etapa}
-                  </span>
-                  <h3 className="font-serif text-[#1A1A2E] text-[20px] mb-3 group-hover:text-[#C96B3E] transition-colors">
-                    {entregavel.titulo}
-                  </h3>
-                  <p className="font-sans text-[#1A1A2E] text-[13px] leading-relaxed line-clamp-2 opacity-50 mb-4">
-                    {extrairPreview(entregavel.conteudo)}
-                  </p>
-                  <div className="flex items-center justify-between pt-4 border-t border-[rgba(26,26,46,0.05)]">
-                    <p className="font-sans text-[#1A1A2E] text-[11px] opacity-30">
-                      {formatarData(entregavel.created_at)}
-                    </p>
-                    <span className="font-sans text-[#C96B3E] text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">
-                      abrir
-                    </span>
-                  </div>
-                </a>
+                  {fase}
+                </button>
               ))}
             </div>
-          )}
+
+            {dadosQuery.isLoading ? (
+              <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">
+                Carregando...
+              </p>
+            ) : total === 0 ? (
+              <div className="text-center py-24 border-2 border-dashed border-[rgba(26,26,46,0.06)] rounded-2xl">
+                <p className="font-serif text-[#1A1A2E] text-[24px] opacity-30 mb-3">
+                  seus entregáveis aparecem aqui.
+                </p>
+                <p className="font-handwritten text-[#C96B3E] text-[16px] opacity-50 mb-6">
+                  complete a Etapa 1 pra criar o primeiro.
+                </p>
+                <button
+                  onClick={() => navigate({ to: "/etapa/1" })}
+                  className="font-sans text-[#C96B3E] text-[14px] hover:underline cursor-pointer"
+                >
+                  Ir pra Etapa 1
+                </button>
+              </div>
+            ) : entregaveisFiltrados.length === 0 ? (
+              <div className="text-center py-16">
+                <p className="font-handwritten text-[#1A1A2E] text-[18px] opacity-35">
+                  nenhum entregável da fase {faseAtiva} ainda.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                {entregaveisFiltrados.map((entregavel) => (
+                  <a
+                    key={entregavel.id}
+                    href={`/biblioteca/${entregavel.id}`}
+                    className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)] hover:border-[rgba(201,107,62,0.2)] hover:shadow-md transition-all cursor-pointer group block"
+                  >
+                    <span
+                      className={`inline-block font-accent text-[9px] tracking-[1.5px] uppercase font-bold px-3 py-1 rounded-full mb-4 ${badgeFase(
+                        entregavel.fase,
+                      )}`}
+                    >
+                      {entregavel.fase} · Etapa {entregavel.etapa}
+                    </span>
+                    <h3 className="font-serif text-[#1A1A2E] text-[20px] mb-3 group-hover:text-[#C96B3E] transition-colors">
+                      {entregavel.titulo}
+                    </h3>
+                    <p className="font-sans text-[#1A1A2E] text-[13px] leading-relaxed line-clamp-2 opacity-50 mb-4">
+                      {extrairPreview(entregavel.conteudo)}
+                    </p>
+                    <div className="flex items-center justify-between pt-4 border-t border-[rgba(26,26,46,0.05)]">
+                      <p className="font-sans text-[#1A1A2E] text-[11px] opacity-30">
+                        {formatarData(entregavel.created_at)}
+                      </p>
+                      <span className="font-sans text-[#C96B3E] text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">
+                        abrir
+                      </span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <SidebarAside
+            label="DICA DA RAPOSA"
+            caveat="filtre por fase pra revisitar marcos. cada entregável é um capítulo seu."
+          >
+            <p className="font-sans text-[13px] leading-relaxed text-polia-noite/70">
+              {total} entregável{total === 1 ? "" : "s"} no total
+              {faseAtiva !== "Todos" && (
+                <>
+                  <br />
+                  {entregaveisFiltrados.length} na fase {faseAtiva}
+                </>
+              )}
+            </p>
+          </SidebarAside>
         </div>
       </main>
     </div>
