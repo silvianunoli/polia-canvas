@@ -177,14 +177,22 @@ function TarefasPage() {
 
           {/* FILTROS */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 rounded-xl border border-[rgba(26,26,46,0.08)] bg-white px-4 py-2">
+            <div
+              className={`flex items-center gap-2 rounded-xl border px-4 py-2 transition-colors ${
+                filtroEtapa
+                  ? "border-[#C96B3E] bg-[rgba(201,107,62,0.06)]"
+                  : "border-[rgba(26,26,46,0.08)] bg-white"
+              }`}
+            >
               <span className="font-sans text-[13px] text-[#1A1A2E] opacity-50">
                 Etapa:
               </span>
               <select
                 value={filtroEtapa}
                 onChange={(e) => setFiltroEtapa(e.target.value)}
-                className="cursor-pointer bg-transparent font-sans text-[13px] text-[#1A1A2E] outline-none"
+                className={`cursor-pointer bg-transparent font-sans text-[13px] outline-none ${
+                  filtroEtapa ? "font-semibold text-[#C96B3E]" : "text-[#1A1A2E]"
+                }`}
               >
                 <option value="">Todas</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((n) => (
@@ -194,6 +202,16 @@ function TarefasPage() {
                 ))}
                 <option value="manual">Criadas por mim</option>
               </select>
+              {filtroEtapa && (
+                <button
+                  type="button"
+                  onClick={() => setFiltroEtapa("")}
+                  aria-label="Limpar filtro de etapa"
+                  className="ml-1 font-sans text-[14px] leading-none text-[#C96B3E] opacity-60 hover:opacity-100"
+                >
+                  ×
+                </button>
+              )}
             </div>
 
             <button
@@ -257,7 +275,7 @@ function TarefasPage() {
                       setOverCol(null);
                     }
                   }}
-                  className={`rounded-xl p-3 transition-colors ${
+                  className={`rounded-xl p-3 transition-colors min-h-[360px] ${
                     ativa
                       ? "border border-[rgba(201,107,62,0.4)] bg-[rgba(201,107,62,0.04)]"
                       : "border border-transparent"
