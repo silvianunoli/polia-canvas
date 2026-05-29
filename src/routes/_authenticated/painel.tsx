@@ -566,7 +566,7 @@ function PainelPage() {
             <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] text-polia-dourado">
               CONQUISTA DA SEMANA
             </p>
-            {conquista ? (
+            {conquistaAtual ? (
               <>
                 <div
                   className="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
@@ -575,18 +575,30 @@ function PainelPage() {
                   <Star className="text-polia-dourado" size={24} fill="currentColor" />
                 </div>
                 <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite">
-                  {conquista.titulo}
+                  {conquistaAtual.titulo}
                 </p>
-                <p className="mb-3 font-sans text-[13px] font-semibold text-polia-musgo">
-                  +{conquista.xp} XP
+                <p className="mb-3 font-sans text-[14px] font-semibold text-polia-musgo">
+                  +{conquistaAtual.xp} XP
                 </p>
                 <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-70">
-                  {conquista.descricao ?? "Você plantou algo que vai dar fruto."}
+                  {conquistaAtual.descricao ?? "Você plantou algo que vai dar fruto."}
+                </p>
+              </>
+            ) : conquistaAnterior ? (
+              <>
+                <p className="mb-2 font-handwritten text-[14px] text-polia-dourado">
+                  última conquista
+                </p>
+                <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite opacity-80">
+                  {conquistaAnterior.titulo}
+                </p>
+                <p className="font-handwritten text-[16px] leading-snug text-polia-noite opacity-60">
+                  {conquistaAnterior.descricao ?? "Guardada no seu céu."}
                 </p>
               </>
             ) : (
-              <p className="font-handwritten text-[16px] text-polia-noite opacity-40">
-                sua próxima conquista tá bem pertinho.
+              <p className="font-handwritten text-[16px] text-polia-dourado">
+                sua primeira conquista mora aqui · acende uma estrela pra começar.
               </p>
             )}
           </div>
