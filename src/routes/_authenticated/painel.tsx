@@ -475,12 +475,17 @@ function PainelPage() {
                     {d.tarefas}
                   </span>
                   <span
-                    className={`text-center caveat-decorativo text-[14px] leading-none ${
+                    className={`hidden sm:block text-center caveat-decorativo text-[14px] leading-none ${
                       d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
                     }`}
                   >
                     {d.isHoje ? "hoje plantei" : "sementes"}
                   </span>
+                  {d.isHoje && (
+                    <span className="sm:hidden text-center caveat-decorativo text-[14px] leading-none text-polia-creme/70">
+                      hoje
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

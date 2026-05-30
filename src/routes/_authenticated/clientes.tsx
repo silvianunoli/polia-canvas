@@ -214,7 +214,7 @@ function ClientesPage() {
 
       {/* Tabs */}
       <div className="px-6 md:px-12">
-        <div className="flex gap-1 border-b border-[rgba(26,26,46,0.08)] max-w-[1280px] mx-auto overflow-x-auto">
+        <div className="grid grid-cols-2 gap-2 md:flex md:gap-1 md:border-b md:border-[rgba(26,26,46,0.08)] max-w-[1280px] mx-auto">
           {(
             [
               { id: "clientes", label: "Clientes", bloqueado: false },
@@ -226,26 +226,30 @@ function ClientesPage() {
                 bloqueado: !orbitActive,
               },
             ] as { id: TabId; label: string; bloqueado: boolean }[]
-          ).map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setTabAtiva(tab.id)}
-              className={`font-sans text-[14px] px-5 py-3 border-b-2 transition-colors ${
-                tabAtiva === tab.id
-                  ? "border-[#C96B3E] text-[#C96B3E] font-semibold"
-                  : "border-transparent text-[#1A1A2E] opacity-50 hover:opacity-80"
-              }`}
-            >
-              {tab.label}
-              {tab.bloqueado && (
-                <span className="font-sans text-[10px] ml-2 opacity-50">
-                  · Etapa 9
-                </span>
-              )}
-            </button>
-          ))}
+          ).map((tab) => {
+            const ativo = tabAtiva === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setTabAtiva(tab.id)}
+                className={`font-sans text-[13px] md:text-[14px] px-3 md:px-5 py-2.5 md:py-3 rounded-lg md:rounded-none border md:border-0 md:border-b-2 transition-colors text-center ${
+                  ativo
+                    ? "border-[#C96B3E] text-[#C96B3E] font-semibold bg-[rgba(201,107,62,0.06)] md:bg-transparent"
+                    : "border-[rgba(26,26,46,0.1)] md:border-transparent text-[#1A1A2E] opacity-60 md:opacity-50 hover:opacity-80"
+                }`}
+              >
+                {tab.label}
+                {tab.bloqueado && (
+                  <span className="font-sans text-[10px] ml-2 opacity-50">
+                    · Etapa 9
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
+
 
       {/* Conteúdo das tabs */}
       <div className="px-6 py-8 md:px-12 md:py-10">
