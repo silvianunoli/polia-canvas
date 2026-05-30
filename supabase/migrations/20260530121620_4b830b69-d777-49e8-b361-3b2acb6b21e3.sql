@@ -1,0 +1,1 @@
+UPDATE public.profiles SET business_name = NULL WHERE id = 'f751d9e3-fb01-4356-9daf-d52469a703df';
