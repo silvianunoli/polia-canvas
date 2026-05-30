@@ -115,7 +115,7 @@ export function PainelNav({
         />
 
         {/* Desktop nav */}
-        <nav aria-label="Navegação principal" className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
           {links.map((l) => {
             const isActive = navActive === l.to || navActive.startsWith(l.to + "/");
             return (
