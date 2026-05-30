@@ -51,7 +51,7 @@ export function PainelNav({
             <button
               type="button"
               aria-label="Abrir menu"
-              className="flex h-11 w-11 items-center justify-center rounded-lg text-[#0E1731] hover:bg-[#0E1731]/5 md:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-[#0E1731] hover:bg-[#0E1731]/5 lg:hidden"
             >
               <Menu size={22} />
             </button>
@@ -115,7 +115,7 @@ export function PainelNav({
         />
 
         {/* Desktop nav */}
-        <nav aria-label="Navegação principal" className="hidden items-center gap-6 md:flex">
+        <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
           {links.map((l) => {
             const isActive = navActive === l.to || navActive.startsWith(l.to + "/");
             return (

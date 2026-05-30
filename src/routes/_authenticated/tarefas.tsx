@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -18,20 +18,6 @@ export const Route = createFileRoute("/_authenticated/tarefas")({
       },
     ],
   }),
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile && profile.onboarding_completed === false) {
-      throw redirect({ to: "/painel" });
-    }
-  },
   component: TarefasPage,
 });
 
