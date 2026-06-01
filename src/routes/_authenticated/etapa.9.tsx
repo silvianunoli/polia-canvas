@@ -22,11 +22,14 @@ export const Route = createFileRoute("/_authenticated/etapa/9")({
     if (!uid) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("etapa_atual, star_9_completed_at")
+      .select("etapa_atual, star_9_completed_at, star_8_completed_at")
       .eq("id", uid)
       .maybeSingle();
     if (!profile) return;
-    if ((profile.etapa_atual ?? 1) < 9) {
+    // Acessivel se a etapa anterior foi concluida (ou se essa etapa ja foi concluida — modo leitura)
+    const anteriorOk = !!(profile as Record<string, unknown>)["star_8_completed_at"];
+    const essaOk = !!(profile as Record<string, unknown>)["star_9_completed_at"];
+    if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
 },

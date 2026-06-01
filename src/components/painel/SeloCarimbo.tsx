@@ -20,89 +20,105 @@ const ROMANOS: Record<number, string> = {
 };
 
 /**
- * Selo de carimbo cartográfico — estampa circular estilo carimbo real,
- * com contorno duplo, numeral romano, e rotação determinística.
- * Substitui visualmente a "estrela acendendo" das telas de Conclusao.
+ * Selo de carimbo cartográfico — estampa circular estilo carimbo real.
+ * Texto curvado seguindo a circunferência (SVG textPath), numeral romano centralizado,
+ * rotação determinística leve.
  */
 export function SeloCarimbo({ numero, palavraMarco }: SeloCarimboProps) {
   const numeroRomano = ROMANOS[numero] ?? String(numero);
-  // Rotação determinística por número (-6° a +6°) — sem Math.random pra evitar SSR mismatch
-  const rotacao = ((numero * 7) % 13) - 6;
+  const rotacao = ((numero * 7) % 13) - 6; // -6 a +6, determinístico
+  const idTopo = `polia-selo-topo-${numero}`;
+  const idBase = `polia-selo-base-${numero}`;
 
   return (
     <div
       className="relative"
       style={{
-        width: 200,
-        height: 200,
+        width: 220,
+        height: 220,
         animation: "polia-carimbo 0.6s ease-out",
         transform: `rotate(${rotacao}deg)`,
       }}
-      aria-label={`Marco ${numero} conquistado`}
+      aria-label={`Marco ${numero} (${palavraMarco}) conquistado`}
     >
-      {/* Contorno externo sólido */}
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          border: `2.5px solid ${TERRACOTA}`,
-          opacity: 0.92,
-        }}
-      />
-      {/* Contorno interno tracejado */}
-      <div
-        className="absolute rounded-full"
-        style={{
-          top: 10,
-          left: 10,
-          right: 10,
-          bottom: 10,
-          border: `1px dashed ${TERRACOTA}`,
-          opacity: 0.6,
-        }}
-      />
+      <svg width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
+        <defs>
+          {/* Caminho do texto no topo: arco superior do círculo */}
+          <path
+            id={idTopo}
+            d="M 30,110 A 80,80 0 0 1 190,110"
+            fill="none"
+          />
+          {/* Caminho do texto na base: arco inferior do círculo */}
+          <path
+            id={idBase}
+            d="M 30,110 A 80,80 0 0 0 190,110"
+            fill="none"
+          />
+        </defs>
 
-      {/* Texto topo: MARCO · NOME */}
-      <div
-        className="absolute left-0 right-0 text-center font-accent font-bold uppercase"
-        style={{
-          top: 22,
-          color: TERRACOTA,
-          fontSize: 9,
-          letterSpacing: "2.5px",
-        }}
-      >
-        MARCO · {palavraMarco}
-      </div>
+        {/* Contorno externo sólido */}
+        <circle
+          cx="110"
+          cy="110"
+          r="98"
+          fill="none"
+          stroke={TERRACOTA}
+          strokeWidth="2.5"
+          opacity="0.92"
+        />
+        {/* Contorno interno tracejado */}
+        <circle
+          cx="110"
+          cy="110"
+          r="88"
+          fill="none"
+          stroke={TERRACOTA}
+          strokeWidth="1"
+          strokeDasharray="4 4"
+          opacity="0.6"
+        />
 
-      {/* Numeral romano centralizado */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span
-          className="font-serif"
-          style={{
-            fontSize: 64,
-            color: TERRACOTA,
-            fontWeight: 500,
-            letterSpacing: "0.03em",
-            lineHeight: 1,
-          }}
+        {/* Texto curvado no topo */}
+        <text
+          fontSize="10"
+          fontWeight="700"
+          letterSpacing="3"
+          fill={TERRACOTA}
+          fontFamily="system-ui, sans-serif"
+        >
+          <textPath href={`#${idTopo}`} startOffset="50%" textAnchor="middle">
+            MARCO · {palavraMarco}
+          </textPath>
+        </text>
+
+        {/* Numeral romano centralizado */}
+        <text
+          x="110"
+          y="128"
+          textAnchor="middle"
+          fontSize="68"
+          fontWeight="500"
+          fill={TERRACOTA}
+          fontFamily="'DM Serif Display', Georgia, serif"
         >
           {numeroRomano}
-        </span>
-      </div>
+        </text>
 
-      {/* Texto bottom: CONQUISTADO */}
-      <div
-        className="absolute left-0 right-0 text-center font-accent font-bold uppercase"
-        style={{
-          bottom: 22,
-          color: TERRACOTA,
-          fontSize: 8,
-          letterSpacing: "2px",
-          opacity: 0.85,
-        }}
-      >
-        CONQUISTADO
-      </div>
+        {/* Texto curvado na base */}
+        <text
+          fontSize="9"
+          fontWeight="700"
+          letterSpacing="2.5"
+          fill={TERRACOTA}
+          fontFamily="system-ui, sans-serif"
+          opacity="0.85"
+        >
+          <textPath href={`#${idBase}`} startOffset="50%" textAnchor="middle">
+            CONQUISTADO
+          </textPath>
+        </text>
+      </svg>
     </div>
   );
 }
