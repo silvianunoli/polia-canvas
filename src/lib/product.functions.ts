@@ -39,7 +39,7 @@ Gere a ficha de produto. A descrição refinada deve ter 2-3 frases em 1ª pesso
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
           tools: [
             {

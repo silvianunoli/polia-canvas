@@ -41,7 +41,7 @@ Gere o mapa de posicionamento. A declaração deve ter 2 a 3 frases, ser em prim
         method: "POST",
         headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [{ role: "user", content: prompt }],
           tools: [
             {
