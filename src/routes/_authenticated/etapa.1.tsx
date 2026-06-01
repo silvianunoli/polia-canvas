@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
+import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
 import { gerarMiniPitch } from "@/lib/minipitch.functions";
 
 export const Route = createFileRoute("/_authenticated/etapa/1")({
@@ -827,90 +828,21 @@ function MiniPitchTela({
 }
 
 /* ==================== E1.6 — Conclusão ==================== */
-
-const ETAPAS_CONST = [
-  { num: 1, nome: "Descoberta", ativa: true },
-  { num: 2, nome: "Identidade", ativa: false },
-  { num: 3, nome: "Modelo de Negócio", ativa: false },
-  { num: 4, nome: "Presença digital", ativa: false },
-  { num: 5, nome: "Conteúdo", ativa: false },
-  { num: 6, nome: "Sua rotina", ativa: false },
-  { num: 7, nome: "Suas vendas", ativa: false },
-  { num: 8, nome: "Seus clientes", ativa: false },
-  { num: 9, nome: "Sua audiência", ativa: false },
-  { num: 10, nome: "Crescimento", ativa: false },
-  { num: 11, nome: "Sua rede", ativa: false },
-];
-
 function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa2: () => void }) {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-          ETAPA 1 · DESCOBERTA · CONCLUÍDA
-        </p>
-        <p className="caveat-informacional text-[#E89770] mt-6">olha o que aconteceu agora.</p>
-        <div className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.1] mt-2 max-w-[900px]">
-          <p>Seu primeiro marco</p>
-          <p>tá aberto.</p>
-        </div>
-        <p className="caveat-decorativo text-[#E89770] mt-4 text-[18px] md:text-[20px]">
-          É o primeiro ponto do seu mapa.
-        </p>
-
-        {/* Mapa */}
-        <div className="mt-12 flex flex-wrap items-start justify-center gap-x-5 gap-y-6 md:gap-x-7">
-          {ETAPAS_CONST.map((e) => (
-            <div key={e.num} className="flex w-[80px] flex-col items-center gap-1">
-              <div
-                className={`${e.ativa ? "h-[20px] w-[20px] bg-[#E89770]" : "h-[14px] w-[14px] bg-[rgba(216,210,204,0.35)]"} rotate-45 transition-all`}
-                style={e.ativa ? { animation: "polia-glow 2s ease-in-out infinite", boxShadow: "0 0 12px rgba(232,151,112,0.6)" } : undefined}
-              />
-              <p className={`font-sans text-[10px] font-semibold ${e.ativa ? "text-[#E89770]" : "text-[rgba(216,210,204,0.5)]"}`}>{e.num}</p>
-              <p className={`font-sans text-[9px] leading-[11px] text-center max-w-[80px] ${e.ativa ? "text-[#FDF8F5]" : "text-[rgba(216,210,204,0.55)]"}`}>{e.nome}</p>
-              {e.ativa && <p className="caveat-decorativo text-[#E89770]">aberto agora</p>}
-            </div>
-          ))}
-        </div>
-
-        {/* Card desbloqueio */}
-        <div className="mt-10 md:mt-14 w-full max-w-[560px] rounded-[20px] border border-[rgba(232,151,112,0.35)] bg-[rgba(36,36,66,0.55)] p-7 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
-            <div className="relative flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-[rgba(232,151,112,0.6)]">
-              <div className="h-3 w-3 rounded-full bg-[#E89770]" style={{ boxShadow: "0 0 12px rgba(232,151,112,0.8)" }} />
-            </div>
-            <div className="flex-1 text-left">
-              <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">DESBLOQUEADO · LUA ORBITANDO</p>
-              <p className="font-serif text-[#FDF8F5] text-[22px] mt-1">Sua Marca Viva</p>
-              <p className="font-sans text-[rgba(216,210,204,0.75)] text-[13px] leading-[18px] mt-1">
-                Logo, cores, voz e manifesto. Fica na sua órbita — sempre ao seu alcance.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Mantra */}
-        <p className="caveat-informacional text-[#FDF8F5] mt-10 md:mt-14">A Pólia não acaba. Ela só fica mais sua.</p>
-        <p className="font-sans text-[rgba(216,210,204,0.6)] text-[13px] mt-2">cada vez que você volta, encontra mais de você aqui</p>
-
-        {/* CTAs */}
-        <div className="mt-10 flex flex-col items-center gap-4 md:flex-row md:gap-5">
-          <button
-            onClick={onVerPainel}
-            className="h-[48px] rounded-[12px] border border-[rgba(216,210,204,0.4)] px-6 font-sans text-[14px] font-medium text-[#FDF8F5] transition-colors hover:bg-[rgba(255,255,255,0.05)]"
-          >
-            Ver meu painel
-          </button>
-          <button
-            onClick={onEtapa2}
-            className="h-[54px] rounded-[14px] bg-[#C96B3E] px-8 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
-            style={{ boxShadow: "0 0 24px rgba(201,107,62,0.4)" }}
-          >
-            Começar Etapa 2 →
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConclusaoEtapa
+      numero={1}
+      nomeEtapa="Descoberta"
+      palavraHighlight="Descoberta"
+      palavraMarco="DESCOBERTA"
+      subtituloIntimo="É o primeiro ponto do seu mapa."
+      ferramentaDesbloqueada={{
+        titulo: "Sua Marca Viva",
+        descricao: "Logo, cores, voz e manifesto. Fica na sua órbita — sempre ao seu alcance.",
+      }}
+      proximaEtapaLabel="Começar Etapa 2 →"
+      onVerPainel={onVerPainel}
+      onProximaEtapa={onEtapa2}
+    />
   );
 }

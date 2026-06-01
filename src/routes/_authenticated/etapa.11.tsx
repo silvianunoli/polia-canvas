@@ -3,6 +3,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
+import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { gerarPlanoCrescimento, type PlanoCrescimento } from "@/lib/network.functions";
@@ -674,150 +675,19 @@ function PlanoTela({
 
 /* ============== E11.6 — Conclusão FINAL (11 marcos) ============== */
 function Conclusao({ onVerJornada, onVerPainel }: { onVerJornada: () => void; onVerPainel: () => void }) {
-  const estrelas = [
-    { n: 1, label: "Descoberta" },
-    { n: 2, label: "Identidade" },
-    { n: 3, label: "Modelo" },
-    { n: 4, label: "Presença" },
-    { n: 5, label: "Conteúdo" },
-    { n: 6, label: "Rotina" },
-    { n: 7, label: "Vendas" },
-    { n: 8, label: "Clientes" },
-    { n: 9, label: "Audiência" },
-    { n: 10, label: "Crescimento" },
-    { n: 11, label: "Rede", agora: true },
-  ];
-
-  const entregaveis = [
-    "Voz de Marca",
-    "Mapa de Posicionamento",
-    "Ficha de Produto",
-    "Guia de Primeira Impressão",
-    "Sistema de Controle",
-    "Roteiro de Fechamento",
-    "Protocolo de Cuidado",
-    "Plano de Conteúdo",
-    "Painel de 3 Números",
-    "Plano de Crescimento",
-  ];
-
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 11 · SUA REDE · CONCLUÍDA
-        </p>
-
-        <p className="caveat-informacional text-[#E89770] mt-10">
-          você chegou até aqui. tudo que você construiu é real.
-        </p>
-
-        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Seu décimo primeiro marco
-          <br />
-          tá aberto.
-        </h1>
-
-        <div className="mt-10 md:mt-14 flex w-full justify-center gap-5 overflow-x-auto pb-4">
-          {estrelas.map((e) => {
-            const agora = !!e.agora;
-            return (
-              <div key={e.n} className="flex w-[68px] shrink-0 flex-col items-center">
-                <div className="relative">
-                  <span
-                    className="text-[34px] leading-none text-[#C96B3E]"
-                    style={
-                      agora
-                        ? {
-                            animation: "polia-star-rise 700ms ease-out, polia-glow 1.8s ease-in-out infinite 700ms",
-                            display: "inline-block",
-                            textShadow: "0 0 24px rgba(232,151,112,0.95)",
-                          }
-                        : { textShadow: "0 0 14px rgba(201,107,62,0.7)" }
-                    }
-                  >
-                    ★
-                  </span>
-                  {agora && (
-                    <>
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/60"
-                        style={{ animation: "polia-ring 1.6s ease-out infinite" }}
-                      />
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/40"
-                        style={{ animation: "polia-ring 1.6s ease-out 0.3s infinite" }}
-                      />
-                    </>
-                  )}
-                </div>
-                <p className="caveat-decorativo mt-2 text-[#FDF8F5]">{e.label}</p>
-                {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 w-full max-w-[680px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
-          <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            ATIVADO · LUA ORBITANDO
-          </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Seu Painel Financeiro</p>
-          <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Seus números, seu plano de crescimento e sua rede reunidos. Um painel vivo que cresce com você.
-          </p>
-        </div>
-
-        <hr className="border-[rgba(232,151,112,0.25)] my-14 w-full max-w-[680px]" />
-
-        <h2 className="font-serif text-[#FDF8F5] text-[28px] md:text-[32px] leading-[1.2] max-w-[640px]">
-          A Pólia não acaba.
-          <br />
-          Ela só fica mais sua.
-        </h2>
-
-        <p className="caveat-decorativo text-[#D8D2CC] mt-5 max-w-[600px]">
-          você não terminou um curso. você construiu um negócio com intenção.
-        </p>
-
-        <div className="mt-10 md:mt-14 w-full max-w-[860px]">
-          <p className="font-accent text-[10px] font-bold tracking-[2px] text-[#C8A96E] uppercase mb-4">
-            SUAS FERRAMENTAS VIVAS
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-            {entregaveis.map((nome, i) => (
-              <div key={nome} className="flex items-center gap-3">
-                <span className="font-sans text-[13px] text-[#FDF8F5]">{nome}</span>
-                {i < entregaveis.length - 1 && (
-                  <span className="text-[#E89770]/40">·</span>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="caveat-decorativo text-[rgba(216,210,204,0.7)] mt-4">
-            tudo salvo e editável nas suas ferramentas vivas
-          </p>
-        </div>
-
-        <div className="mt-12 flex flex-col gap-4 md:flex-row">
-          <button
-            onClick={onVerPainel}
-            className="h-[54px] rounded-[12px] border border-[#E89770] bg-transparent px-6 font-sans text-[15px] font-semibold text-[#E89770] hover:bg-[#E89770]/10"
-          >
-            Ver meu painel
-          </button>
-          <button
-            onClick={onVerJornada}
-            className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
-            style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
-          >
-            Ver minha jornada  →
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConclusaoEtapa
+      numero={11}
+      nomeEtapa="Sua rede"
+      palavraHighlight="Conexões"
+      palavraMarco="CONEXÕES"
+      ferramentaDesbloqueada={{
+        titulo: "Seu Painel Financeiro",
+        descricao: "Seus números, seu plano de crescimento e sua rede reunidos. Um painel vivo que cresce com você.",
+      }}
+      proximaEtapaLabel="Ver minha jornada →"
+      onVerPainel={onVerPainel}
+      onProximaEtapa={onVerJornada}
+    />
   );
 }

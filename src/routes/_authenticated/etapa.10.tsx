@@ -3,6 +3,7 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
+import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { gerarPainelNumeros, type PainelNumeros } from "@/lib/growth.functions";
@@ -699,123 +700,19 @@ function PainelTela({
 
 /* ============== E10.6 — Conclusão marco 10 ============== */
 function Conclusao({ onVerPainel, onEtapa11 }: { onVerPainel: () => void; onEtapa11: () => void }) {
-  const estrelas = [
-    { n: 1, label: "Descoberta", estado: "acesa" },
-    { n: 2, label: "Identidade", estado: "acesa" },
-    { n: 3, label: "Modelo", estado: "acesa" },
-    { n: 4, label: "Presença", estado: "acesa" },
-    { n: 5, label: "Conteúdo", estado: "acesa" },
-    { n: 6, label: "Rotina", estado: "acesa" },
-    { n: 7, label: "Vendas", estado: "acesa" },
-    { n: 8, label: "Clientes", estado: "acesa" },
-    { n: 9, label: "Audiência", estado: "acesa" },
-    { n: 10, label: "Crescimento", estado: "agora" },
-    { n: 11, label: "Rede", estado: "dim" },
-  ];
-
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 10 · CRESCIMENTO · CONCLUÍDA
-        </p>
-
-        <p className="caveat-informacional text-[#E89770] mt-10">
-          agora você sabe o que olhar e quando agir.
-        </p>
-
-        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Seu décimo marco
-          <br />
-          tá aberto.
-        </h1>
-
-        <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
-          {estrelas.map((e) => {
-            const acesa = e.estado === "acesa";
-            const agora = e.estado === "agora";
-            return (
-              <div key={e.n} className="flex w-[68px] shrink-0 flex-col items-center">
-                <div className="relative">
-                  <span
-                    className={`text-[34px] leading-none ${
-                      acesa || agora ? "text-[#C96B3E]" : "text-[rgba(253,248,245,0.18)]"
-                    }`}
-                    style={
-                      agora
-                        ? {
-                            animation: "polia-star-rise 700ms ease-out, polia-glow 1.8s ease-in-out infinite 700ms",
-                            display: "inline-block",
-                            textShadow: "0 0 24px rgba(232,151,112,0.95)",
-                          }
-                        : acesa
-                          ? { textShadow: "0 0 14px rgba(201,107,62,0.7)" }
-                          : undefined
-                    }
-                  >
-                    ★
-                  </span>
-                  {agora && (
-                    <>
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/60"
-                        style={{ animation: "polia-ring 1.6s ease-out infinite" }}
-                      />
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/40"
-                        style={{ animation: "polia-ring 1.6s ease-out 0.3s infinite" }}
-                      />
-                    </>
-                  )}
-                </div>
-                <p
-                  className={`caveat-decorativo text-[11px] mt-2 ${
-                    acesa || agora ? "text-[#FDF8F5]" : "text-[rgba(253,248,245,0.45)]"
-                  }`}
-                >
-                  {e.label}
-                </p>
-                {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 w-full max-w-[620px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[rgba(200,169,110,0.1)] p-7 text-left">
-          <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            DESBLOQUEADO · LUA ORBITANDO
-          </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Seu Painel Financeiro</p>
-          <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Seus 3 números reunidos num painel vivo. Acompanhe, decida e cresça com clareza.
-          </p>
-        </div>
-
-        <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
-
-        <p className="caveat-decorativo text-[rgba(232,151,112,0.85)] mt-3">
-          uma etapa pra terminar. e depois, ela é toda sua.
-        </p>
-
-        <div className="mt-10 flex flex-col gap-4 md:flex-row">
-          <button
-            onClick={onVerPainel}
-            className="h-[54px] rounded-[12px] border border-[#E89770] bg-transparent px-6 font-sans text-[15px] font-semibold text-[#E89770] hover:bg-[#E89770]/10"
-          >
-            Ver meu painel
-          </button>
-          <button
-            onClick={onEtapa11}
-            className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
-            style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
-          >
-            Começar Etapa 11  →
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConclusaoEtapa
+      numero={10}
+      nomeEtapa="Seu futuro"
+      palavraHighlight="Futuro"
+      palavraMarco="FUTURO"
+      ferramentaDesbloqueada={{
+        titulo: "Seu Painel Financeiro",
+        descricao: "Seus 3 números reunidos num painel vivo. Acompanhe, decida e cresça com clareza.",
+      }}
+      proximaEtapaLabel="Começar Etapa 11 →"
+      onVerPainel={onVerPainel}
+      onProximaEtapa={onEtapa11}
+    />
   );
 }

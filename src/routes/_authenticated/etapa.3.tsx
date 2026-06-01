@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
+import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { gerarMapaPosicionamento, type PositioningMap } from "@/lib/positioning.functions";
@@ -10,8 +11,8 @@ import { gerarMapaPosicionamento, type PositioningMap } from "@/lib/positioning.
 export const Route = createFileRoute("/_authenticated/etapa/3")({
   head: () => ({
     meta: [
-      { title: "Etapa 3 · Modelo de Negócio · Pólia" },
-      { name: "description", content: "Desenhe seu mapa competitivo e descubra seu lugar único." },
+      { title: "Etapa 3 Â· Modelo de NegÃ³cio Â· PÃ³lia" },
+      { name: "description", content: "Desenhe seu mapa competitivo e descubra seu lugar Ãºnico." },
     ],
   }),
   beforeLoad: async () => {
@@ -201,10 +202,10 @@ function Etapa3Page() {
       });
 
       const tarefasE4 = [
-        "Escolher plataforma de presença digital",
+        "Escolher plataforma de presenÃ§a digital",
         "Escrever bio com meu posicionamento",
         "Definir foto de perfil e capa",
-        "Publicar minha primeira apresentação",
+        "Publicar minha primeira apresentaÃ§Ã£o",
         "Adicionar link de contato ao perfil",
       ];
       await supabase.from("tarefas").insert(
@@ -247,14 +248,14 @@ function Etapa3Page() {
         <PerguntaLayout step={step} streak={streak} initial={initial}>
           {step === 2 && (
             <PerguntaBlock
-              caveat="saber com quem você compete é saber quem você não é."
-              titulo={<>Quem mais faz<br />parecido com você?</>}
+              caveat="saber com quem vocÃª compete Ã© saber quem vocÃª nÃ£o Ã©."
+              titulo={<>Quem mais faz<br />parecido com vocÃª?</>}
               label="SEUS CONCORRENTES"
-              placeholder="Ex: Beatriz tem uma papelaria personalizada no Instagram com 20k seguidores. A Lua Designs faz convites no Canva mais barato. As grandes gráficas oferecem quantidade. Mas nenhuma tem minha abordagem de design autoral com atendimento próximo."
+              placeholder="Ex: Beatriz tem uma papelaria personalizada no Instagram com 20k seguidores. A Lua Designs faz convites no Canva mais barato. As grandes grÃ¡ficas oferecem quantidade. Mas nenhuma tem minha abordagem de design autoral com atendimento prÃ³ximo."
               maxLength={500}
-              ajuda="nome, canal, o que fazem. pode ser informal. é só pra gente mapear o terreno."
-              raposaEstado="Atenta · olhando pro lado"
-              raposaTexto="Concorrente não é inimigo. É referência de mercado. Quanto mais você conhece eles, mais claro fica onde só você pode estar."
+              ajuda="nome, canal, o que fazem. pode ser informal. Ã© sÃ³ pra gente mapear o terreno."
+              raposaEstado="Atenta Â· olhando pro lado"
+              raposaTexto="Concorrente nÃ£o Ã© inimigo. Ã‰ referÃªncia de mercado. Quanto mais vocÃª conhece eles, mais claro fica onde sÃ³ vocÃª pode estar."
               valor={competitors}
               setValor={setCompetitors}
               onAutoSave={() => autoSave({ competitors })}
@@ -266,14 +267,14 @@ function Etapa3Page() {
           )}
           {step === 3 && (
             <PerguntaBlock
-              caveat="essa é a pergunta que a maioria nunca para pra responder."
-              titulo={<>O que só<br />você faz?</>}
+              caveat="essa Ã© a pergunta que a maioria nunca para pra responder."
+              titulo={<>O que sÃ³<br />vocÃª faz?</>}
               label="SEU DIFERENCIAL REAL"
-              placeholder="Ex: Faço design de convites 100% autoral, nada de template. Cada peça nasce de uma conversa profunda com a cliente sobre a memória que ela quer criar. Entrego em até 5 dias e acompanho pessoalmente até a impressão final."
+              placeholder="Ex: FaÃ§o design de convites 100% autoral, nada de template. Cada peÃ§a nasce de uma conversa profunda com a cliente sobre a memÃ³ria que ela quer criar. Entrego em atÃ© 5 dias e acompanho pessoalmente atÃ© a impressÃ£o final."
               maxLength={500}
-              ajuda="pode ser o processo, a experiência, o resultado, o atendimento. qualquer coisa que faça uma cliente te escolher duas vezes."
-              raposaEstado="Curiosa · cabeça inclinada"
-              raposaTexto="Especificidade vence eloquência. 'Faço com carinho' não é diferencial. 'Entrego em 5 dias com revisão ilimitada' é."
+              ajuda="pode ser o processo, a experiÃªncia, o resultado, o atendimento. qualquer coisa que faÃ§a uma cliente te escolher duas vezes."
+              raposaEstado="Curiosa Â· cabeÃ§a inclinada"
+              raposaTexto="Especificidade vence eloquÃªncia. 'FaÃ§o com carinho' nÃ£o Ã© diferencial. 'Entrego em 5 dias com revisÃ£o ilimitada' Ã©."
               valor={differentiators}
               setValor={setDifferentiators}
               onAutoSave={() => autoSave({ differentiators })}
@@ -286,20 +287,20 @@ function Etapa3Page() {
           )}
           {step === 4 && (
             <PerguntaBlock
-              caveat="agora junta tudo numa frase. imperfeita tá ótimo."
-              titulo={<>Por que uma cliente<br />escolheria você?</>}
-              label="SUA RAZÃO DE SER ESCOLHIDA"
-              placeholder="Ex: Porque precisa de alguém que entenda que o convite não é só papel. É o começo de uma memória. E alguém que entregue isso com cuidado real, do conceito à impressão."
+              caveat="agora junta tudo numa frase. imperfeita tÃ¡ Ã³timo."
+              titulo={<>Por que uma cliente<br />escolheria vocÃª?</>}
+              label="SUA RAZÃƒO DE SER ESCOLHIDA"
+              placeholder="Ex: Porque precisa de alguÃ©m que entenda que o convite nÃ£o Ã© sÃ³ papel. Ã‰ o comeÃ§o de uma memÃ³ria. E alguÃ©m que entregue isso com cuidado real, do conceito Ã  impressÃ£o."
               maxLength={200}
-              ajuda="não precisa ser perfeito. a gente vai refinar isso no mapa."
-              raposaEstado="Animada · em pé"
-              raposaTexto="A melhor razão de ser escolhida não é sobre você. É sobre o que muda na vida da sua cliente quando ela te encontra."
+              ajuda="nÃ£o precisa ser perfeito. a gente vai refinar isso no mapa."
+              raposaEstado="Animada Â· em pÃ©"
+              raposaTexto="A melhor razÃ£o de ser escolhida nÃ£o Ã© sobre vocÃª. Ã‰ sobre o que muda na vida da sua cliente quando ela te encontra."
               valor={positioningStatement}
               setValor={setPositioningStatement}
               onAutoSave={() => autoSave({ positioning_statement: positioningStatement })}
               onVoltar={() => setStep(3)}
               onContinuar={() => gerarMapa()}
-              continuarLabel="Montar meu mapa  →"
+              continuarLabel="Montar meu mapa  â†’"
             />
           )}
         </PerguntaLayout>
@@ -327,35 +328,35 @@ function Etapa3Page() {
   );
 }
 
-/* ============== E3.1 — CAPA COSMIC ============== */
+/* ============== E3.1 â€” CAPA COSMIC ============== */
 function Capa({ onStart }: { onStart: () => void }) {
   const cards = [
     { num: "1", titulo: "Concorrentes", sub: "quem mais faz parecido" },
-    { num: "2", titulo: "Diferencial", sub: "o que só você faz" },
-    { num: "3", titulo: "Sua razão", sub: "por que te escolheriam" },
+    { num: "2", titulo: "Diferencial", sub: "o que sÃ³ vocÃª faz" },
+    { num: "3", titulo: "Sua razÃ£o", sub: "por que te escolheriam" },
   ];
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 3 DE 11 · MODELO DE NEGÓCIO
+          ETAPA 3 DE 11 Â· MODELO DE NEGÃ“CIO
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER Â· LOGO</p>
           <p className="caveat-decorativo text-[#E89770] mt-1">Lockup L3 Vertical</p>
-          <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
+          <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180Ã—180</p>
         </div>
 
         <p className="caveat-informacional text-[#E89770] mt-10">agora a gente vai te localizar.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
-          Onde você fica no mapa?
+          Onde vocÃª fica no mapa?
         </h1>
 
         <p className="font-sans text-[rgba(216,210,204,0.85)] text-[16px] mt-5 max-w-[640px]">
-          3 perguntas pra desenhar seu mapa competitivo e seu lugar único.
+          3 perguntas pra desenhar seu mapa competitivo e seu lugar Ãºnico.
         </p>
 
         <div className="mt-12 flex flex-col items-center gap-4 md:flex-row md:gap-6">
@@ -376,18 +377,18 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Quero meu mapa  →
+          Quero meu mapa  â†’
         </button>
 
         <p className="caveat-decorativo text-[rgba(232,151,112,0.75)] mt-4">
-          leva uns 15 minutinhos. dá pra pausar quando quiser.
+          leva uns 15 minutinhos. dÃ¡ pra pausar quando quiser.
         </p>
       </div>
     </div>
   );
 }
 
-/* ============== Layout E3.2-E3.4 (sidebar + área) ============== */
+/* ============== Layout E3.2-E3.4 (sidebar + Ã¡rea) ============== */
 function PerguntaLayout({
   step,
   streak,
@@ -402,7 +403,7 @@ function PerguntaLayout({
   const passos = [
     { num: 1, label: "Concorrentes" },
     { num: 2, label: "Diferencial" },
-    { num: 3, label: "Sua razão" },
+    { num: 3, label: "Sua razÃ£o" },
   ];
   const activeIndex = step - 2;
 
@@ -413,10 +414,10 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
-            ETAPA 3 · MODELO DE NEGÓCIO
+            ETAPA 3 Â· MODELO DE NEGÃ“CIO
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
-            Onde você fica
+            Onde vocÃª fica
             <br />
             no mapa.
           </h2>
@@ -453,7 +454,7 @@ function PerguntaLayout({
           <p className="caveat-decorativo text-[#6A6A7E] leading-[22px]">
             depois vem
             <br />
-            seu mapa único
+            seu mapa Ãºnico
           </p>
         </aside>
 
@@ -463,7 +464,7 @@ function PerguntaLayout({
   );
 }
 
-/* ============== Pergunta genérica ============== */
+/* ============== Pergunta genÃ©rica ============== */
 function PerguntaBlock({
   caveat,
   titulo,
@@ -478,7 +479,7 @@ function PerguntaBlock({
   onAutoSave,
   onVoltar,
   onContinuar,
-  continuarLabel = "Continuar  →",
+  continuarLabel = "Continuar  â†’",
   minLen = 20,
 }: {
   caveat: string;
@@ -551,7 +552,7 @@ function PerguntaBlock({
   );
 }
 
-/* ============== E3.5 — Mapa de Posicionamento (COSMIC) ============== */
+/* ============== E3.5 â€” Mapa de Posicionamento (COSMIC) ============== */
 function MapaTela({
   loading,
   mapa,
@@ -606,9 +607,9 @@ function MapaTela({
         {!loading && !error && mapa && (
           <>
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
-              ENTREGÁVEL · ETAPA 3 · MODELO DE NEGÓCIO
+              ENTREGÃVEL Â· ETAPA 3 Â· MODELO DE NEGÃ“CIO
             </p>
-            <p className="caveat-informacional text-[#E89770] mt-4">olha onde você fica.</p>
+            <p className="caveat-informacional text-[#E89770] mt-4">olha onde vocÃª fica.</p>
             <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Seu lugar
               <br />
@@ -617,9 +618,9 @@ function MapaTela({
 
             <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
-                MAPA DE POSICIONAMENTO · {(businessName || "Sua marca").toUpperCase()}
+                MAPA DE POSICIONAMENTO Â· {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Onde só você pode estar</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Onde sÃ³ vocÃª pode estar</p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-serif text-[#1A1A2E] text-[24px] md:text-[28px] leading-[1.4] text-center italic">
@@ -639,7 +640,7 @@ function MapaTela({
                 </div>
                 <div>
                   <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                    QUEM NÃO TE ALCANÇA
+                    QUEM NÃƒO TE ALCANÃ‡A
                   </p>
                   <p className="font-sans text-[#1A1A2E] text-[15px] leading-[24px] mt-2">
                     {mapa.naoAlcancam}
@@ -650,12 +651,12 @@ function MapaTela({
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
-                SEU ÂNGULO ÚNICO
+                SEU Ã‚NGULO ÃšNICO
               </p>
               <p className="caveat-decorativo text-[#C96B3E] mt-2">"{mapa.anguloUnico}"</p>
 
               <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-5 text-right">
-                salvo em Sua Marca Viva · você edita quando quiser
+                salvo em Sua Marca Viva Â· vocÃª edita quando quiser
               </p>
             </div>
 
@@ -671,7 +672,7 @@ function MapaTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Continuar pra fim da etapa  →
+                Continuar pra fim da etapa  â†’
               </button>
             </div>
           </>
@@ -681,133 +682,21 @@ function MapaTela({
   );
 }
 
-/* ============== E3.6 — Conclusão marco 3 ============== */
+/* ============== E3.6 â€” ConclusÃ£o marco 3 ============== */
 function Conclusao({ onVerPainel, onEtapa4 }: { onVerPainel: () => void; onEtapa4: () => void }) {
-  const estrelas = [
-    { n: 1, label: "Descoberta", estado: "acesa" },
-    { n: 2, label: "Identidade", estado: "acesa" },
-    { n: 3, label: "Modelo", estado: "agora" },
-    { n: 4, label: "Presença", estado: "dim" },
-    { n: 5, label: "Conteúdo", estado: "dim" },
-    { n: 6, label: "Rotina", estado: "dim" },
-    { n: 7, label: "Vendas", estado: "dim" },
-    { n: 8, label: "Clientes", estado: "dim" },
-    { n: 9, label: "Audiência", estado: "dim" },
-    { n: 10, label: "Crescimento", estado: "dim" },
-    { n: 11, label: "Rede", estado: "dim" },
-  ];
-
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 3 · MODELO DE NEGÓCIO · CONCLUÍDA
-        </p>
-
-        <p className="caveat-informacional text-[#E89770] mt-10">
-          agora todo mundo sabe onde você fica.
-        </p>
-
-        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[68px] leading-[1.06] mt-3 max-w-[820px]">
-          Seu terceiro marco
-          <br />
-          tá aberto.
-        </h1>
-
-        <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
-          {estrelas.map((e) => {
-            const acesa = e.estado === "acesa";
-            const agora = e.estado === "agora";
-            return (
-              <div key={e.n} className="flex w-[68px] shrink-0 flex-col items-center">
-                <div className="relative">
-                  <span
-                    className={`text-[34px] leading-none ${
-                      acesa || agora ? "text-[#C96B3E]" : "text-[rgba(253,248,245,0.18)]"
-                    }`}
-                    style={
-                      agora
-                        ? {
-                            animation: "polia-star-rise 700ms ease-out, polia-glow 1.8s ease-in-out infinite 700ms",
-                            display: "inline-block",
-                            textShadow: "0 0 24px rgba(232,151,112,0.95)",
-                          }
-                        : acesa
-                          ? { textShadow: "0 0 14px rgba(201,107,62,0.7)" }
-                          : undefined
-                    }
-                  >
-                    ★
-                  </span>
-                  {agora && (
-                    <>
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/60"
-                        style={{ animation: "polia-ring 1.6s ease-out infinite" }}
-                      />
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/40"
-                        style={{ animation: "polia-ring 1.6s ease-out 0.3s infinite" }}
-                      />
-                    </>
-                  )}
-                </div>
-                <p
-                  className={`caveat-decorativo text-[11px] mt-2 ${
-                    acesa || agora ? "text-[#FDF8F5]" : "text-[rgba(253,248,245,0.45)]"
-                  }`}
-                >
-                  {e.label}
-                </p>
-                {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 w-full max-w-[560px] rounded-[20px] border border-[rgba(200,169,110,0.25)] bg-[rgba(200,169,110,0.08)] p-7 text-left">
-          <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            DESBLOQUEADO · LUA ORBITANDO
-          </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Suas Vendas e Clientes</p>
-          <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Onde você gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Fica na sua órbita.
-          </p>
-        </div>
-
-        <div className="mt-6 w-full max-w-[560px] rounded-[20px] border border-[rgba(200,169,110,0.25)] bg-[rgba(200,169,110,0.05)] p-7 text-left">
-          <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            ATUALIZADO · SUA MARCA VIVA
-          </p>
-          <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Seu mapa de posicionamento foi adicionado à Sua Marca Viva. Acesse quando quiser revisar onde você está.
-          </p>
-        </div>
-
-        <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
-        <p className="caveat-decorativo text-[rgba(232,151,112,0.75)] mt-2">
-          cada etapa que você completa, a Pólia aprende mais sobre o seu negócio
-        </p>
-
-        <div className="mt-10 flex flex-col gap-4 md:flex-row">
-          <button
-            onClick={onVerPainel}
-            className="h-[54px] rounded-[12px] border border-[#E89770] bg-transparent px-6 font-sans text-[15px] font-semibold text-[#E89770] hover:bg-[#E89770]/10"
-          >
-            Ver meu painel
-          </button>
-          <button
-            onClick={onEtapa4}
-            className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
-            style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
-          >
-            Começar Etapa 4  →
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConclusaoEtapa
+      numero={3}
+      nomeEtapa="Modelo de negÃ³cio"
+      palavraHighlight="Modelo"
+      palavraMarco="MODELO"
+      ferramentaDesbloqueada={{
+        titulo: "Suas Vendas e Clientes",
+        descricao: "Onde vocÃª gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Fica na sua Ã³rbita.",
+      }}
+      proximaEtapaLabel="ComeÃ§ar Etapa 4 â†’"
+      onVerPainel={onVerPainel}
+      onProximaEtapa={onEtapa4}
+    />
   );
 }

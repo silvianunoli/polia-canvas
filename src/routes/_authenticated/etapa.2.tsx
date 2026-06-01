@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
+import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
 import { gerarVozMarca, type BrandVoiceJson } from "@/lib/brandvoice.functions";
 
 export const Route = createFileRoute("/_authenticated/etapa/2")({
@@ -768,120 +769,19 @@ function VozMarcaTela({
 
 /* ============== E2.6 — Conclusão marco 2 ============== */
 function Conclusao({ onVerPainel, onEtapa3 }: { onVerPainel: () => void; onEtapa3: () => void }) {
-  const estrelas = [
-    { n: 1, label: "Descoberta", estado: "acesa" },
-    { n: 2, label: "Identidade", estado: "agora" },
-    { n: 3, label: "Modelo", estado: "dim" },
-    { n: 4, label: "Presença", estado: "dim" },
-    { n: 5, label: "Conteúdo", estado: "dim" },
-    { n: 6, label: "Rotina", estado: "dim" },
-    { n: 7, label: "Vendas", estado: "dim" },
-    { n: 8, label: "Clientes", estado: "dim" },
-    { n: 9, label: "Audiência", estado: "dim" },
-    { n: 10, label: "Crescimento", estado: "dim" },
-    { n: 11, label: "Rede", estado: "dim" },
-  ];
-
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1100px] flex-col items-center px-6 py-20 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
-          ETAPA 2 · IDENTIDADE DO SEU NEGÓCIO · CONCLUÍDA
-        </p>
-
-        <p className="caveat-informacional text-[#E89770] mt-10">olha o que aconteceu agora.</p>
-
-        <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[68px] leading-[1.06] mt-3 max-w-[820px]">
-          Seu segundo marco
-          <br />
-          tá aberto.
-        </h1>
-
-        <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
-          {estrelas.map((e) => {
-            const acesa = e.estado === "acesa";
-            const agora = e.estado === "agora";
-            return (
-              <div key={e.n} className="flex w-[68px] shrink-0 flex-col items-center">
-                <div className="relative">
-                  <span
-                    className={`text-[34px] leading-none ${
-                      acesa || agora ? "text-[#C96B3E]" : "text-[rgba(253,248,245,0.18)]"
-                    }`}
-                    style={
-                      agora
-                        ? {
-                            animation: "polia-star-rise 700ms ease-out, polia-glow 1.8s ease-in-out infinite 700ms",
-                            display: "inline-block",
-                            textShadow: "0 0 24px rgba(232,151,112,0.95)",
-                          }
-                        : acesa
-                          ? { textShadow: "0 0 14px rgba(201,107,62,0.7)" }
-                          : undefined
-                    }
-                  >
-                    ★
-                  </span>
-                  {agora && (
-                    <>
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/60"
-                        style={{ animation: "polia-ring 1.6s ease-out infinite" }}
-                      />
-                      <span
-                        className="pointer-events-none absolute inset-0 rounded-full border border-[#E89770]/40"
-                        style={{ animation: "polia-ring 1.6s ease-out 0.3s infinite" }}
-                      />
-                    </>
-                  )}
-                </div>
-                <p
-                  className={`caveat-decorativo text-[11px] mt-2 ${
-                    acesa || agora ? "text-[#FDF8F5]" : "text-[rgba(253,248,245,0.45)]"
-                  }`}
-                >
-                  {e.label}
-                </p>
-                {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-12 w-full max-w-[560px] rounded-[20px] border border-[rgba(200,169,110,0.25)] bg-[rgba(200,169,110,0.08)] p-7 text-left">
-          <p className="font-accent text-[9px] font-bold tracking-[2px] text-[#C8A96E] uppercase">
-            DESBLOQUEADO · LUA ORBITANDO
-          </p>
-          <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Sua Vitrine</p>
-          <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Página de apresentação do seu negócio. Fica na sua órbita — anda com você.
-          </p>
-        </div>
-
-        <p className="font-serif text-[#C96B3E] text-[24px] mt-12">A Pólia não acaba. Ela só fica mais sua.</p>
-        <p className="caveat-decorativo text-[rgba(232,151,112,0.75)] mt-2">
-          cada vez que você volta, encontra mais de você aqui
-        </p>
-
-        <div className="mt-10 flex flex-col gap-4 md:flex-row">
-          <button
-            onClick={onVerPainel}
-            className="h-[54px] rounded-[12px] border border-[#E89770] bg-transparent px-6 font-sans text-[15px] font-semibold text-[#E89770] hover:bg-[#E89770]/10"
-          >
-            Ver meu painel
-          </button>
-          <button
-            onClick={onEtapa3}
-            className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
-            style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
-          >
-            Começar Etapa 3  →
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConclusaoEtapa
+      numero={2}
+      nomeEtapa="Identidade do seu negócio"
+      palavraHighlight="Identidade"
+      palavraMarco="IDENTIDADE"
+      ferramentaDesbloqueada={{
+        titulo: "Sua Vitrine",
+        descricao: "Página de apresentação do seu negócio. Fica na sua órbita — anda com você.",
+      }}
+      proximaEtapaLabel="Começar Etapa 3 →"
+      onVerPainel={onVerPainel}
+      onProximaEtapa={onEtapa3}
+    />
   );
 }
