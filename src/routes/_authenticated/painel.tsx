@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
@@ -165,9 +165,16 @@ function PainelPage() {
     return Math.max(1, Math.floor(diff / 86400000));
   }, [dados?.profile?.created_at]);
 
-  const headline = useMemo(() => {
+  // Hidratação: valores baseados em Date só após mount (evita SSR mismatch)
+  const [clientReady, setClientReady] = useState(false);
+  const [headline, setHeadline] = useState<string>(HEADLINES[0]);
+  const [saudacao, setSaudacao] = useState<string>("Olá");
+
+  useEffect(() => {
+    setClientReady(true);
     const seed = Math.floor(Date.now() / (1000 * 60 * 30));
-    return getHeadlineFrase(seed);
+    setHeadline(getHeadlineFrase(seed));
+    setSaudacao(getHeadlineSaudacao());
   }, []);
 
   const tarefas = dados?.tarefas ?? [];
@@ -180,12 +187,15 @@ function PainelPage() {
   const tituloProxima =
     proximaTarefa?.titulo ?? `Começar ${etapaInfo.nome.toLowerCase()}`;
 
-  // Semana
+  // Semana — só calcula no client (depende de new Date()), evita SSR mismatch
   const dias = useMemo(() => {
+    const abrevs = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+    if (!clientReady) {
+      return abrevs.map((abrev) => ({ abrev, numero: 0, tarefas: 0, isHoje: false }));
+    }
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const ini = startOfWeek(hoje);
-    const abrevs = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(ini);
       d.setDate(ini.getDate() + i);
@@ -205,7 +215,7 @@ function PainelPage() {
         isHoje: d.getTime() === hoje.getTime(),
       };
     });
-  }, [tarefas]);
+  }, [tarefas, clientReady]);
 
   const totalSemana = dias.reduce((acc, d) => acc + d.tarefas, 0);
 
@@ -237,7 +247,7 @@ function PainelPage() {
         <div className="mx-auto flex max-w-[1280px] flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div className="flex-1">
             <p className="mb-2 caveat-informacional text-polia-terracota" suppressHydrationWarning>
-              {getHeadlineSaudacao()}, {displayName}.
+              {saudacao}, {displayName}.
             </p>
 
             <h1 className="max-w-[640px] whitespace-pre-line font-serif text-[40px] leading-[1.1] text-polia-noite md:text-[60px]">
