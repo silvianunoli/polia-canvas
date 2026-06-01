@@ -41,6 +41,7 @@ type ProfileE1 = {
   problem_urgency: string | null;
   target_customer: string | null;
   streak: number | null;
+  star_1_completed_at: string | null;
 };
 
 const STORAGE_KEY = "polia:etapa1:step";
@@ -77,7 +78,7 @@ function Etapa1Page() {
       setUserId(uid);
       const { data: p } = await supabase
         .from("profiles")
-        .select("display_name, business_name, profile_story, business_why, problem_solved, problem_urgency, target_customer, streak")
+        .select("display_name, business_name, profile_story, business_why, problem_solved, problem_urgency, target_customer, streak, star_1_completed_at")
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
@@ -88,11 +89,29 @@ function Etapa1Page() {
         setProblemSolved(p.problem_solved ?? "");
         setProblemUrgency(p.problem_urgency ?? "");
         setTargetCustomer(p.target_customer ?? "");
+
+        // Carregar mini-pitch já gerado (se etapa concluída)
+        if ((p as ProfileE1).star_1_completed_at) {
+          const { data: ent } = await supabase
+            .from("entregaveis")
+            .select("conteudo")
+            .eq("user_id", uid)
+            .eq("tipo", "mini_pitch")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (mounted && ent?.conteudo) {
+            const c = ent.conteudo as { texto?: string };
+            setMiniPitch(c.texto ?? "");
+          }
+        }
+
         // Resume step
         const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
-        } else if (p.target_customer) setStep(5);
+        } else if ((p as ProfileE1).star_1_completed_at) setStep(6);
+        else if (p.target_customer) setStep(5);
         else if (p.problem_urgency) setStep(4);
         else if (p.problem_solved) setStep(3);
         else if (p.profile_story) setStep(2);
