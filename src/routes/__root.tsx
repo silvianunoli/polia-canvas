@@ -106,6 +106,7 @@ function RootComponent() {
       <Outlet />
       <Toaster richColors position="top-center" theme="light" />
       <CookieConsent />
+      <DiagnosticPanel />
     </QueryClientProvider>
   );
 }
