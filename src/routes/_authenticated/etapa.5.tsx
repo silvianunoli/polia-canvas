@@ -411,7 +411,7 @@ function PerguntaLayout({
   return (
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <PainelNav initial={initial} streak={streak} />
-      <EtapaTopBar etapa={5} fase="CONSTRUÇÃO" nome="Conteúdo" variant="dark" />
+      <EtapaTopBar etapa={5} fase="CONSTRUÇÃO" nome="Conteúdo" />
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
           <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">

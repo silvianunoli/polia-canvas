@@ -7,7 +7,7 @@ interface EtapaTopBarProps {
   nome: string;
   /** Cor da fase (token Pólia). Opcional — derivado da fase quando ausente. */
   cor?: string;
-  /** Variante de fundo. "dark" pra etapas com fundo escuro (1,2,3,4,5,6,10,11), "light" pra fundo creme. NOTA: variant dark será removida no Sprint 2 (todas viram light). */
+  /** Variante de fundo. Default "light" (virada terrena). "dark" mantido por retrocompat — será removido em sprint futuro. */
   variant?: "dark" | "light";
 }
 
@@ -27,7 +27,7 @@ export function EtapaTopBar({
   fase,
   nome,
   cor,
-  variant = "dark",
+  variant = "light",
 }: EtapaTopBarProps) {
   const corFase = cor ?? FASE_COR[fase];
   const textBase = variant === "dark" ? "#FDF8F5" : "#1A1A2E";

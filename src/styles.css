@@ -68,6 +68,13 @@
   --color-polia-estrela: var(--polia-estrela);
   --color-polia-estrela-soft: var(--polia-estrela-soft);
   --color-polia-terracota-glow: var(--polia-terracota-glow);
+  --color-polia-marco: var(--polia-marco);
+  --color-polia-marco-soft: var(--polia-marco-soft);
+  --color-polia-mostarda: var(--polia-mostarda);
+  --color-polia-mostarda-intenso: var(--polia-mostarda-intenso);
+  --color-polia-marrom: var(--polia-marrom);
+  --color-polia-cinza-areia: var(--polia-cinza-areia);
+  --color-polia-papel-creme: var(--polia-papel-creme);
 
   /* Tipografia: font-serif, font-sans, font-accent, font-handwritten */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -93,6 +100,15 @@
   --polia-estrela: oklch(0.976 0.009 60);
   --polia-estrela-soft: oklch(0.762 0.043 60);
   --polia-terracota-glow: oklch(0.738 0.13 50);     /* #E89770 */
+
+  /* Tokens territoriais — virada terrena 2026-06 */
+  --polia-marco: var(--polia-terracota);            /* círculo de marco preenchido */
+  --polia-marco-soft: var(--polia-terracota-glow);  /* halo/pulse marco em curso */
+  --polia-mostarda: oklch(0.78 0.10 80);            /* #D4A574 highlight palavra-chave */
+  --polia-mostarda-intenso: oklch(0.65 0.13 75);    /* #B8862E selos cerimoniais */
+  --polia-marrom: oklch(0.30 0.04 40);              /* #3A2A1F texto/marco concluído */
+  --polia-cinza-areia: oklch(0.80 0.02 60);         /* #C9BFB2 marco a-caminho */
+  --polia-papel-creme: oklch(0.96 0.012 70);        /* #F5EFE5 papel pautado */
 
   /* Tokens semânticos — Mundo 2 (clean, padrão) */
   --background: var(--polia-creme);
