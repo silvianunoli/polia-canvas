@@ -5,8 +5,7 @@ import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { CosmicSky } from "@/components/painel/CosmicSky";
-import { ConstelacaoVisual } from "@/components/painel/ConstelacaoVisual";
+import { TrilhaMarcos } from "@/components/painel/TrilhaMarcos";
 import { pluralizeKanban } from "@/lib/kanban";
 
 export const Route = createFileRoute("/_authenticated/painel")({
@@ -335,15 +334,14 @@ function PainelPage() {
         </div>
       </section>
 
-      {/* SEÇÃO 3 + 4 — CONSTELAÇÃO (Mundo 1) */}
-      <section className="relative bg-polia-noite px-6 py-16 md:px-12">
-        <CosmicSky density={22} />
+      {/* SEÇÃO 3 + 4 — MAPA (Território) */}
+      <section className="relative bg-polia-papel-creme px-6 py-16 md:px-12">
         <div className="relative mx-auto max-w-[1280px]">
           <p className="mb-3 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
             SEU MAPA TOMANDO FORMA
           </p>
           <div className="mb-2 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-            <h2 className="font-serif text-[28px] text-polia-creme md:text-[36px]">
+            <h2 className="font-serif text-[28px] text-polia-marrom md:text-[36px]">
               Cada etapa abre um marco
             </h2>
             <a
@@ -353,30 +351,27 @@ function PainelPage() {
               Ver mapa completo →
             </a>
           </div>
-          <p className="mb-10 font-sans text-[15px] text-polia-creme/80">
+          <p className="mb-10 font-sans text-[15px] text-polia-marrom/70">
             Seu mapa cresce com você. As ferramentas ficam girando junto.
           </p>
 
-          <ConstelacaoVisual
+          <TrilhaMarcos
             etapaAtual={etapaAtual}
-            onStarClick={(etapa, state) => {
+            onMarcoClick={(etapa, state) => {
               if (state === "current") {
                 navigate({ to: `/etapa/${etapa}` as "/etapa/1" });
               } else if (state === "done") {
-                // fallback: até backend retornar entregavelId, vai pra lista filtrada
                 navigate({ to: "/biblioteca", search: { etapa } as any });
               }
-              // future: não navega (tooltip "ainda vai brilhar" cuida do feedback)
             }}
-
           />
 
-          {/* FERRAMENTAS QUE ENTRAM NA ÓRBITA */}
+          {/* FERRAMENTAS QUE ANDAM COM VOCÊ */}
           <div className="mt-12">
-            <p className="mb-3 font-accent text-[11px] uppercase tracking-[2px] text-polia-creme/80">
+            <p className="mb-3 font-accent text-[11px] uppercase tracking-[2px] text-polia-marrom/70">
               FERRAMENTAS QUE ANDAM COM VOCÊ
             </p>
-            <p className="mb-8 font-sans text-[14px] text-polia-creme/60">
+            <p className="mb-8 font-sans text-[14px] text-polia-marrom/60">
               Toda fase que você completa, uma ferramenta entra na sua órbita e fica girando com você.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -695,22 +690,21 @@ function PainelPage() {
       </section>
 
       {/* SEÇÃO 10 — FOOTER MANTRA */}
-      <section className="relative overflow-hidden bg-polia-noite py-16 text-center">
-        <CosmicSky density={14} />
+      <section className="relative overflow-hidden bg-polia-papel-creme py-16 text-center">
         <div className="relative">
-          <div className="mb-8 flex justify-center gap-6 opacity-40">
+          <div className="mb-8 flex justify-center gap-6 opacity-50">
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-2 w-2 bg-polia-dourado"
+                className="h-2 w-2 bg-polia-mostarda"
                 style={{ transform: "rotate(45deg)" }}
               />
             ))}
           </div>
-          <p className="mb-4 font-serif text-[28px] text-polia-creme md:text-[36px]">
+          <p className="mb-4 font-serif text-[28px] text-polia-marrom md:text-[36px]">
             A Pólia não acaba. Ela só fica mais sua.
           </p>
-          <p className="caveat-decorativo text-[18px] text-polia-terracota opacity-80 md:">
+          <p className="caveat-decorativo text-[18px] text-polia-terracota opacity-80">
             cada vez que você volta, encontra mais de você aqui
           </p>
         </div>
@@ -771,21 +765,20 @@ function OrbitCard({
 }) {
   return (
     <div
-      className={`rounded-2xl p-6 ${unlocked ? "" : "opacity-40"}`}
+      className={`rounded-2xl bg-white p-6 ${unlocked ? "" : "opacity-50"}`}
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        border: "1px solid rgba(26,26,46,0.08)",
       }}
     >
       <div className="mb-4 flex items-center gap-2">
         <div
           className={`relative h-8 w-8 rounded-full border-2 ${
-            unlocked ? "border-polia-dourado" : "border-polia-creme/30"
+            unlocked ? "border-polia-terracota" : "border-polia-cinza-areia"
           }`}
         >
           {unlocked && (
             <div
-              className="absolute h-2 w-2 rounded-full bg-polia-dourado"
+              className="absolute h-2 w-2 rounded-full bg-polia-terracota"
               style={{ top: -2, left: "50%", transform: "translateX(-50%)" }}
             />
           )}
@@ -794,23 +787,23 @@ function OrbitCard({
           <span
             className="rounded-full px-2 py-0.5 font-sans text-[11px]"
             style={{
-              background: "rgba(44,106,79,0.3)",
-              color: "#5FBE8B",
+              background: "rgba(44,106,79,0.15)",
+              color: "#2D6A4F",
             }}
           >
-            1/1 ativa
+            anda com você
           </span>
         )}
       </div>
-      <p className="mb-1 font-sans text-[16px] font-semibold text-polia-creme">
+      <p className="mb-1 font-sans text-[16px] font-semibold text-polia-marrom">
         {title}
       </p>
-      <p className="mb-3 font-sans text-[12px] text-polia-creme opacity-60">
+      <p className="mb-3 font-sans text-[12px] text-polia-marrom opacity-60">
         {tags}
       </p>
       <p
         className={`caveat-decorativo text-[14px] ${
-          unlocked ? "text-polia-terracota" : "text-polia-creme opacity-50"
+          unlocked ? "text-polia-terracota" : "text-polia-marrom opacity-50"
         }`}
       >
         {sub}

@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { CosmicSky } from "@/components/painel/CosmicSky";
 
 export const Route = createFileRoute("/_authenticated/jornada")({
   head: () => ({
@@ -205,11 +204,10 @@ function JornadaPage() {
     expandida !== null ? entregavelPorEtapa[expandida] : null;
 
   return (
-    <div className="min-h-screen bg-[#1A1A2E]">
+    <div className="min-h-screen bg-polia-papel-creme">
       <PainelNav initial={initial} streak={0} navActive="/jornada" />
 
       <div className="relative">
-        <CosmicSky density={45} />
 
         {/* SEÇÃO 1 — CABEÇALHO */}
         <section className="relative px-6 pb-10 pt-16 md:px-12">
@@ -217,14 +215,14 @@ function JornadaPage() {
             <p className="mb-4 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
               SEU MAPA · {etapasConcluidas} DE 11 MARCOS ABERTOS
             </p>
-            <h1 className="mb-4 font-serif text-[40px] leading-[1.1] text-[#FDF8F5] md:text-[56px]">
+            <h1 className="mb-4 font-serif text-[40px] leading-[1.1] text-polia-marrom md:text-[56px]">
               Seu mapa tomando forma.
             </h1>
-            <p className="max-w-[560px] font-sans text-[17px] text-[#D8D2CC]">
+            <p className="max-w-[560px] font-sans text-[17px] text-polia-marrom/70">
               Cada marco aberto desenha um pedaço do seu mapa.
             </p>
 
-            <p className="mt-8 caveat-decorativo text-[#D8D2CC]">
+            <p className="mt-8 caveat-decorativo text-polia-terracota">
               {fraseInferior}
             </p>
           </div>
@@ -246,11 +244,11 @@ function JornadaPage() {
                     {fase.nome}
                   </span>
                   <div className="relative flex items-start justify-around gap-4">
-                    {/* Linha conectora */}
+                    {/* Linha conectora tracejada */}
                     {fase.etapas.length > 1 && (
                       <div
-                        className="pointer-events-none absolute top-[26px] left-[12%] right-[12%] h-px"
-                        style={{ background: "rgba(255,255,255,0.12)" }}
+                        className="pointer-events-none absolute top-[26px] left-[12%] right-[12%]"
+                        style={{ borderTop: "1.5px dashed rgba(201,107,62,0.35)" }}
                       />
                     )}
                     {fase.etapas.map((n) => {
@@ -275,16 +273,16 @@ function JornadaPage() {
 
             {/* SEÇÃO 3 — DETALHE EXPANDIDO */}
             {estrelaExpandida && (
-              <div className="mx-auto mt-12 max-w-[760px] rounded-2xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-8">
+              <div className="mx-auto mt-12 max-w-[760px] rounded-2xl border border-[rgba(26,26,46,0.08)] bg-white p-8">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div>
-                    <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
+                    <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-polia-terracota">
                       ETAPA {estrelaExpandida.n} · {estrelaExpandida.fase}
                     </p>
-                    <h3 className="font-serif text-[28px] text-[#FDF8F5]">
+                    <h3 className="font-serif text-[28px] text-polia-marrom">
                       {estrelaExpandida.nome}
                     </h3>
-                    <p className="mt-1 caveat-decorativo text-[#D8D2CC]">
+                    <p className="mt-1 caveat-decorativo text-polia-marrom/60">
                       concluída em{" "}
                       {completados[estrelaExpandida.n]
                         ? formatarData(completados[estrelaExpandida.n]!)
@@ -294,32 +292,32 @@ function JornadaPage() {
                   </div>
                   <button
                     onClick={() => setExpandida(null)}
-                    className="font-sans text-[14px] text-[#D8D2CC] opacity-40 transition-opacity hover:opacity-80"
+                    className="font-sans text-[14px] text-polia-marrom/50 transition-opacity hover:opacity-80"
                   >
                     fechar
                   </button>
                 </div>
 
                 {entregavelExpandido ? (
-                  <div className="rounded-xl border border-[rgba(232,151,112,0.15)] bg-[rgba(255,255,255,0.04)] p-5">
-                    <p className="mb-3 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+                  <div className="rounded-xl border border-[rgba(232,151,112,0.25)] bg-polia-papel-creme p-5">
+                    <p className="mb-3 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
                       ENTREGÁVEL
                     </p>
-                    <p className="mb-1 font-sans text-[16px] font-semibold text-[#FDF8F5]">
+                    <p className="mb-1 font-sans text-[16px] font-semibold text-polia-marrom">
                       {entregavelExpandido.titulo}
                     </p>
-                    <p className="line-clamp-3 font-sans text-[13px] leading-relaxed text-[#D8D2CC] opacity-70">
+                    <p className="line-clamp-3 font-sans text-[13px] leading-relaxed text-polia-marrom/70">
                       {previewEntregavel(entregavelExpandido.conteudo)}
                     </p>
                     <a
                       href={`/biblioteca/${entregavelExpandido.id}`}
-                      className="mt-3 inline-block font-sans text-[13px] text-[#C96B3E] hover:underline"
+                      className="mt-3 inline-block font-sans text-[13px] text-polia-terracota hover:underline"
                     >
                       Abrir entregável →
                     </a>
                   </div>
                 ) : (
-                  <p className="caveat-decorativo text-[#D8D2CC]">
+                  <p className="caveat-decorativo text-polia-marrom/60">
                     nenhum entregável vinculado a essa etapa ainda.
                   </p>
                 )}
@@ -328,7 +326,7 @@ function JornadaPage() {
                   <div className="mt-4 text-right">
                     <a
                       href={`/etapa/${etapaAtual}`}
-                      className="font-sans text-[14px] text-[#FDF8F5] opacity-60 hover:opacity-100"
+                      className="font-sans text-[14px] text-polia-marrom/70 hover:text-polia-marrom"
                     >
                       Continuar na Etapa {etapaAtual} →
                     </a>
@@ -342,10 +340,10 @@ function JornadaPage() {
         {/* SEÇÃO 4 — FERRAMENTAS VIVAS */}
         <section className="relative px-6 py-12 md:px-12">
           <div className="mx-auto max-w-[1280px]">
-            <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#D8D2CC] opacity-50">
+            <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-marrom/60">
               FERRAMENTAS QUE VIVEM COM VOCÊ
             </p>
-            <p className="mb-8 caveat-decorativo text-[#C96B3E]">
+            <p className="mb-8 caveat-decorativo text-polia-terracota">
               cada fase completa, uma ferramenta anda com você.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -370,10 +368,10 @@ function JornadaPage() {
           <div className="mx-auto max-w-[1280px]">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <h2 className="font-serif text-[32px] text-[#FDF8F5]">
+                <h2 className="font-serif text-[32px] text-polia-marrom">
                   Seus entregáveis
                 </h2>
-                <p className="mt-1 font-sans text-[14px] text-[#D8D2CC] opacity-60">
+                <p className="mt-1 font-sans text-[14px] text-polia-marrom/60">
                   {entregaveis.length}{" "}
                   {entregaveis.length === 1
                     ? "entregável criado"
@@ -383,14 +381,14 @@ function JornadaPage() {
               </div>
               <a
                 href="/biblioteca"
-                className="font-sans text-[14px] text-[#C96B3E] hover:underline"
+                className="font-sans text-[14px] text-polia-terracota hover:underline"
               >
                 Ver todos →
               </a>
             </div>
 
             {entregaveis.length === 0 ? (
-              <p className="py-12 text-center caveat-decorativo text-[#D8D2CC] opacity-40">
+              <p className="py-12 text-center caveat-decorativo text-polia-marrom/50">
                 seu primeiro entregável aparece quando você completa a Etapa 1.
               </p>
             ) : (
@@ -398,15 +396,15 @@ function JornadaPage() {
                 {entregaveis.slice(0, 3).map((e) => (
                   <div
                     key={e.id}
-                    className="rounded-xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-5"
+                    className="rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-5"
                   >
-                    <p className="mb-2 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+                    <p className="mb-2 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
                       ETAPA {e.etapa}
                     </p>
-                    <p className="mb-2 font-sans text-[15px] font-semibold text-[#FDF8F5]">
+                    <p className="mb-2 font-sans text-[15px] font-semibold text-polia-marrom">
                       {e.titulo}
                     </p>
-                    <p className="line-clamp-3 font-sans text-[13px] text-[#D8D2CC] opacity-70">
+                    <p className="line-clamp-3 font-sans text-[13px] text-polia-marrom/60">
                       {previewEntregavel(e.conteudo)}
                     </p>
                   </div>
@@ -416,13 +414,6 @@ function JornadaPage() {
           </div>
         </section>
       </div>
-
-      <style>{`
-        @keyframes pulse-star {
-          0%, 100% { box-shadow: 0 0 32px rgba(201,107,62,0.6); }
-          50%      { box-shadow: 0 0 48px rgba(201,107,62,0.85); }
-        }
-      `}</style>
     </div>
   );
 }
@@ -446,17 +437,28 @@ function EstrelaItem({
         onClick={onClick}
         className="relative z-10 flex flex-col items-center gap-2"
       >
-        <div
-          className="flex h-[52px] w-[52px] cursor-pointer items-center justify-center rounded-full bg-[#C8A96E] transition-transform hover:scale-105"
-          style={{ boxShadow: "0 0 20px rgba(200,169,110,0.45)" }}
-        >
-          <span className="font-serif text-[18px] text-[#1A1A2E]">{n}</span>
+        <div className="relative h-[52px] w-[52px]">
+          <div className="flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-polia-marrom transition-transform hover:scale-105">
+            <span className="font-serif text-[18px] text-polia-creme">{n}</span>
+          </div>
+          {/* Check terracota no canto */}
+          <div className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-polia-terracota">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+              <path
+                d="M2 5L4 7L8 3"
+                stroke="#FDF8F5"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
         </div>
-        <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#FDF8F5]">
+        <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-polia-marrom">
           {nome}
         </span>
-        <span className="caveat-decorativo text-[#C8A96E]">
-          concluída
+        <span className="caveat-decorativo text-polia-terracota">
+          conquistado
         </span>
       </button>
     );
@@ -467,31 +469,41 @@ function EstrelaItem({
         onClick={onClick}
         className="relative z-10 flex flex-col items-center gap-2"
       >
-        <div
-          className="relative flex h-[64px] w-[64px] cursor-pointer items-center justify-center rounded-full bg-[#C96B3E]"
-          style={{ animation: "pulse-star 2s infinite" }}
-        >
-          <span className="font-serif text-[22px] text-[#FDF8F5]">{n}</span>
-          <div className="absolute inset-[-4px] rounded-full border-2 border-[rgba(201,107,62,0.35)]" />
+        <div className="relative h-[64px] w-[64px]">
+          {/* Anel pulsante respiração */}
+          <div
+            className="absolute -inset-2 rounded-full"
+            style={{
+              border: "2px solid rgba(201,107,62,0.4)",
+              animation: "polia-respiracao 3s ease-in-out infinite",
+            }}
+          />
+          {/* Marco em curso: outline tracejado terracota, fundo creme */}
+          <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-polia-papel-creme" style={{ border: "2px dashed #C96B3E" }}>
+            <span className="font-serif text-[22px] text-polia-terracota">{n}</span>
+          </div>
         </div>
-        <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-[#FDF8F5]">
+        <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-polia-marrom">
           {nome}
         </span>
-        <span className="caveat-decorativo text-[#C96B3E]">
+        <span className="caveat-decorativo text-polia-terracota">
           abrindo agora
         </span>
       </button>
     );
   }
   return (
-    <div className="relative z-10 flex cursor-default flex-col items-center gap-2 opacity-35">
-      <div className="flex h-[44px] w-[44px] items-center justify-center rounded-full border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)]">
-        <span className="font-sans text-[16px] text-[#D8D2CC]">{n}</span>
+    <div className="relative z-10 flex cursor-default flex-col items-center gap-2 opacity-50">
+      <div
+        className="flex h-[44px] w-[44px] items-center justify-center rounded-full"
+        style={{ border: "1.5px solid #C9BFB2", background: "transparent" }}
+      >
+        <span className="font-serif text-[16px] text-polia-cinza-areia">{n}</span>
       </div>
-      <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-[#D8D2CC]">
+      <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-polia-marrom/60">
         {nome}
       </span>
-      <span className="caveat-decorativo text-[#D8D2CC]">
+      <span className="caveat-decorativo text-polia-cinza-areia">
         no seu horizonte
       </span>
     </div>
@@ -513,29 +525,29 @@ function FerramentaCard({
     return (
       <a
         href={rota}
-        className="block rounded-xl border border-[rgba(44,106,79,0.3)] bg-[rgba(44,106,79,0.12)] p-5 transition-colors hover:bg-[rgba(44,106,79,0.18)]"
+        className="block rounded-xl border border-[rgba(44,106,79,0.3)] bg-white p-5 transition-colors hover:bg-[rgba(44,106,79,0.06)]"
       >
-        <span className="mb-3 inline-block rounded-full bg-[rgba(44,106,79,0.4)] px-2 py-0.5 font-accent text-[9px] font-bold tracking-[1.5px] text-[#9ED9B5]">
+        <span className="mb-3 inline-block rounded-full bg-[rgba(44,106,79,0.2)] px-2 py-0.5 font-accent text-[9px] font-bold tracking-[1.5px] text-[#2D6A4F]">
           ATIVA
         </span>
-        <p className="mb-1 font-sans text-[15px] font-semibold text-[#FDF8F5]">
+        <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">
           {nome}
         </p>
-        <p className="font-sans text-[12px] text-[#D8D2CC] opacity-70">
+        <p className="font-sans text-[12px] text-polia-marrom/60">
           {tags}
         </p>
       </a>
     );
   }
   return (
-    <div className="cursor-default rounded-xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-5 opacity-35">
-      <span className="mb-3 inline-block rounded-full border border-[rgba(255,255,255,0.12)] px-2 py-0.5 font-accent text-[10px] font-semibold text-[#D8D2CC]">
+    <div className="cursor-default rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-5 opacity-60">
+      <span className="mb-3 inline-block rounded-full border border-polia-cinza-areia px-2 py-0.5 font-accent text-[10px] font-semibold text-polia-marrom/60">
         anda com você
       </span>
-      <p className="mb-1 font-sans text-[15px] font-semibold text-[#FDF8F5]">
+      <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">
         {nome}
       </p>
-      <p className="font-sans text-[12px] text-[#D8D2CC] opacity-70">{tags}</p>
+      <p className="font-sans text-[12px] text-polia-marrom/60">{tags}</p>
     </div>
   );
 }
