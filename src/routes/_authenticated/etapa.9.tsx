@@ -29,10 +29,7 @@ export const Route = createFileRoute("/_authenticated/etapa/9")({
     if ((profile.etapa_atual ?? 1) < 9) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_9_completed_at) {
-      throw redirect({ to: "/painel" });
-    }
-  },
+},
   component: Etapa9Page,
 });
 
@@ -181,6 +178,7 @@ function Etapa9Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
+    if (profile?.star_9_completed_at) { concludedRef.current = true; return; }
     concludedRef.current = true;
     (async () => {
       await supabase

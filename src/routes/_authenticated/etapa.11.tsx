@@ -29,10 +29,7 @@ export const Route = createFileRoute("/_authenticated/etapa/11")({
     if ((profile.etapa_atual ?? 1) < 11) {
       throw redirect({ to: "/painel" });
     }
-    if (profile.star_11_completed_at) {
-      throw redirect({ to: "/painel" });
-    }
-  },
+},
   component: Etapa11Page,
 });
 
@@ -181,6 +178,7 @@ function Etapa11Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
+    if (profile?.star_11_completed_at) { concludedRef.current = true; return; }
     concludedRef.current = true;
     (async () => {
       const nowIso = new Date().toISOString();
