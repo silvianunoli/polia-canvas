@@ -221,6 +221,9 @@ function JornadaPage() {
             <p className="max-w-[560px] font-sans text-[17px] text-polia-marrom/70">
               Cada marco aberto desenha um pedaço do seu mapa.
             </p>
+            <p className="mt-3 max-w-[560px] font-sans text-[14px] text-polia-marrom/55">
+              Clique em qualquer marco concluído pra ver o que você criou ali.
+            </p>
 
             <p className="mt-8 caveat-decorativo text-polia-terracota">
               {fraseInferior}
@@ -363,7 +366,7 @@ function JornadaPage() {
           </div>
         </section>
 
-        {/* SEÇÃO 5 — BIBLIOTECA */}
+        {/* SEÇÃO 5 — TODOS OS ENTREGÁVEIS DA JORNADA */}
         <section className="relative px-6 py-12 pb-24 md:px-12">
           <div className="mx-auto max-w-[1280px]">
             <div className="mb-6 flex items-end justify-between gap-4">
@@ -376,14 +379,14 @@ function JornadaPage() {
                   {entregaveis.length === 1
                     ? "entregável criado"
                     : "entregáveis criados"}{" "}
-                  na sua jornada
+                  na sua jornada — clique pra ler ou editar
                 </p>
               </div>
               <a
                 href="/biblioteca"
                 className="font-sans text-[14px] text-polia-terracota hover:underline"
               >
-                Ver todos →
+                Ir pra biblioteca completa →
               </a>
             </div>
 
@@ -392,23 +395,30 @@ function JornadaPage() {
                 seu primeiro entregável aparece quando você completa a Etapa 1.
               </p>
             ) : (
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {entregaveis.slice(0, 3).map((e) => (
-                  <div
-                    key={e.id}
-                    className="rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-5"
-                  >
-                    <p className="mb-2 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
-                      ETAPA {e.etapa}
-                    </p>
-                    <p className="mb-2 font-sans text-[15px] font-semibold text-polia-marrom">
-                      {e.titulo}
-                    </p>
-                    <p className="line-clamp-3 font-sans text-[13px] text-polia-marrom/60">
-                      {previewEntregavel(e.conteudo)}
-                    </p>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {entregaveis
+                  .slice()
+                  .sort((a, b) => (a.etapa ?? 0) - (b.etapa ?? 0))
+                  .map((e) => (
+                    <a
+                      key={e.id}
+                      href={`/biblioteca/${e.id}`}
+                      className="group rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-polia-terracota/40 hover:shadow-sm"
+                    >
+                      <p className="mb-2 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
+                        ETAPA {e.etapa}
+                      </p>
+                      <p className="mb-2 font-sans text-[15px] font-semibold text-polia-marrom">
+                        {e.titulo}
+                      </p>
+                      <p className="line-clamp-3 font-sans text-[13px] text-polia-marrom/60">
+                        {previewEntregavel(e.conteudo)}
+                      </p>
+                      <p className="mt-3 font-sans text-[12px] text-polia-terracota opacity-0 transition-opacity group-hover:opacity-100">
+                        abrir →
+                      </p>
+                    </a>
+                  ))}
               </div>
             )}
           </div>

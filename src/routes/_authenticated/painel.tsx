@@ -336,14 +336,17 @@ function PainelPage() {
           </div>
           <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:items-end">
             <a
-              href="/jornada"
+              href={`/etapa/${etapaAtual}`}
               className="whitespace-nowrap rounded-xl bg-polia-creme px-8 py-3 text-center font-sans text-[16px] font-semibold text-polia-terracota transition-colors hover:bg-white"
             >
-              Continuar →
+              Continuar de onde parei →
             </a>
-            <span className="text-center caveat-decorativo text-polia-creme/60 md:text-right">
-              ou começar agora
-            </span>
+            <a
+              href="/jornada"
+              className="text-center caveat-decorativo text-polia-creme/70 hover:text-polia-creme md:text-right"
+            >
+              ou ver o mapa completo
+            </a>
           </div>
         </div>
       </section>
