@@ -344,16 +344,13 @@ function PainelPage() {
         </div>
       </section>
 
-      {/* SEÇÃO 3 + 4 — MAPA (Território) */}
-      <section className="relative bg-polia-papel-creme px-6 py-16 md:px-12">
+      {/* SEÇÃO 3 — MAPA compacto (linka pra /jornada pra ver completo) */}
+      <section className="relative bg-polia-papel-creme px-6 py-12 md:px-12">
         <div className="relative mx-auto max-w-[1280px]">
-          <p className="mb-3 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
-            SEU MAPA TOMANDO FORMA
-          </p>
-          <div className="mb-2 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-            <h2 className="font-serif text-[28px] text-polia-marrom md:text-[36px]">
-              Cada etapa abre um marco
-            </h2>
+          <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
+            <p className="font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
+              SEU MAPA TOMANDO FORMA
+            </p>
             <a
               href="/jornada"
               className="font-sans text-[14px] text-polia-terracota hover:underline"
@@ -361,9 +358,6 @@ function PainelPage() {
               Ver mapa completo →
             </a>
           </div>
-          <p className="mb-10 font-sans text-[15px] text-polia-marrom/70">
-            Seu mapa cresce com você. As ferramentas ficam girando junto.
-          </p>
 
           <TrilhaMarcos
             etapaAtual={etapaAtual}
@@ -375,46 +369,6 @@ function PainelPage() {
               }
             }}
           />
-
-          {/* FERRAMENTAS QUE ANDAM COM VOCÊ */}
-          <div className="mt-12">
-            <p className="mb-3 font-accent text-[11px] uppercase tracking-[2px] text-polia-marrom/70">
-              FERRAMENTAS QUE ANDAM COM VOCÊ
-            </p>
-            <p className="mb-8 font-sans text-[14px] text-polia-marrom/60">
-              Toda fase que você completa, uma ferramenta entra na sua órbita e fica girando com você.
-            </p>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <OrbitCard
-                title="Sua marca viva"
-                tags="identidade, voz, manifesto"
-                unlocked={etapaAtual > 3}
-                sub={
-                  etapaAtual > 3
-                    ? "aberta quando você completou Sonho"
-                    : "abre quando você completar Sonho"
-                }
-              />
-              <OrbitCard
-                title="Sua vitrine"
-                tags="site, redes, estoque"
-                unlocked={etapaAtual > 6}
-                sub="abre quando você completar Construção"
-              />
-              <OrbitCard
-                title="Suas vendas e clientes"
-                tags="controle, agenda, histórico"
-                unlocked={etapaAtual > 9}
-                sub="abre quando você completar Venda"
-              />
-              <OrbitCard
-                title="Seu painel financeiro"
-                tags="controle, metas, sonhos"
-                unlocked={etapaAtual > 11}
-                sub="abre quando você completar Evolução"
-              />
-            </div>
-          </div>
         </div>
       </section>
 
