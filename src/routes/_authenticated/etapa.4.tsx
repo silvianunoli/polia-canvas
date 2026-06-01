@@ -194,7 +194,7 @@ function Etapa4Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Quarta estrela acesa",
+        titulo: "Presença acesa",
         descricao: "Montou a ficha de produto.",
         xp: 50,
         tipo: "etapa",

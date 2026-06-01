@@ -194,7 +194,7 @@ function Etapa3Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Terceira estrela acesa",
+        titulo: "Modelo aceso",
         descricao: "Desenhou o mapa de posicionamento.",
         xp: 50,
         tipo: "etapa",
@@ -774,7 +774,7 @@ function Conclusao({ onVerPainel, onEtapa4 }: { onVerPainel: () => void; onEtapa
           </p>
           <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Suas Vendas e Clientes</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Onde você gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Sempre disponível no céu.
+            Onde você gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Fica na sua órbita.
           </p>
         </div>
 

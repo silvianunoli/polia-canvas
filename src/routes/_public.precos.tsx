@@ -67,7 +67,7 @@ function Precos() {
             <ul className="space-y-3 mb-10">
               {[
                 "11 etapas completas com guia de IA",
-                "Entregáveis gerados e salvos pra sempre",
+                "Entregáveis salvos e sempre com você",
                 "4 ferramentas vivas: Marca, Vitrine, Vendas e Financeiro",
                 "Biblioteca editável de todos os entregáveis",
                 "Kanban de tarefas por etapa",

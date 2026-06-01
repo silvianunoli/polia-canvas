@@ -194,7 +194,7 @@ function Etapa7Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Sétima estrela acesa",
+        titulo: "Suas vendas acesas",
         descricao: "Montou o roteiro de fechamento. Suas Vendas e Clientes está desbloqueado.",
         xp: 50,
         tipo: "etapa",

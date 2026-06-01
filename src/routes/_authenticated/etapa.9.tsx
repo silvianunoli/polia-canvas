@@ -194,7 +194,7 @@ function Etapa9Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Nona estrela acesa",
+        titulo: "Sua audiência acesa",
         descricao: "Desenhou o plano de conteúdo. Suas Vendas e Clientes tá ativa.",
         xp: 50,
         tipo: "etapa",

@@ -194,7 +194,7 @@ function Etapa10Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Décima estrela acesa",
+        titulo: "Seu futuro aceso",
         descricao: "Montou o painel de 3 números. Seu Painel Financeiro desbloqueado.",
         xp: 50,
         tipo: "etapa",

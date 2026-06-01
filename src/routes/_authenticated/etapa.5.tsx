@@ -193,7 +193,7 @@ function Etapa5Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Quinta estrela acesa",
+        titulo: "Conteúdo aceso",
         descricao: "Montou o guia de primeira impressão.",
         xp: 50,
         tipo: "etapa",

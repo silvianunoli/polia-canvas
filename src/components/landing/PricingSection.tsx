@@ -5,7 +5,7 @@ import { PoliaButton } from "@/components/ui/PoliaButton";
 
 const benefits = [
   "11 etapas completas com guia de IA",
-  "Entregáveis gerados e salvos pra sempre",
+  "Entregáveis salvos e sempre com você",
   "4 ferramentas vivas: Marca, Vitrine, Vendas e Financeiro",
   "Sem limite de uso durante o beta",
   "Acesso prioritário ao plano definitivo",

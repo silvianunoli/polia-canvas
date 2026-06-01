@@ -199,7 +199,7 @@ function Etapa2Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Segunda estrela acesa",
+        titulo: "Identidade acesa",
         descricao: "Definiu a identidade e a voz da marca.",
         xp: 50,
         tipo: "etapa",
@@ -857,7 +857,7 @@ function Conclusao({ onVerPainel, onEtapa3 }: { onVerPainel: () => void; onEtapa
           </p>
           <p className="font-serif text-[#FDF8F5] text-[24px] mt-2">Sua Vitrine</p>
           <p className="font-sans text-[#D8D2CC] text-[15px] leading-[24px] mt-2">
-            Página de apresentação do seu negócio. Sempre disponível no céu — vive com você.
+            Página de apresentação do seu negócio. Fica na sua órbita — anda com você.
           </p>
         </div>
 

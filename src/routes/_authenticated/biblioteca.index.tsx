@@ -159,7 +159,7 @@ function BibliotecaPage() {
                 Seus entregáveis.
               </h1>
               <p className="caveat-decorativo text-[#C96B3E]">
-                tudo que você construiu fica aqui. pra sempre.
+                tudo que você construiu fica aqui. com você.
               </p>
               <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mt-2">
                 {total} {total === 1 ? "entregável" : "entregáveis"} criados

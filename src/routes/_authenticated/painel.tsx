@@ -212,7 +212,7 @@ function PainelPage() {
 
   const recadoEtapa =
     RECADOS_POR_ETAPA[etapaAtual] ??
-    "Continue de onde parou. Cada passo que você dá fica no seu céu.\n\nA Pólia tá aqui.";
+    "Continue de onde parou. Cada passo que você dá marca o seu mapa.\n\nA Pólia tá aqui.";
 
   const conquistaUltima = dados?.conquistas?.[0];
   const seteDiasAtras = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -354,7 +354,7 @@ function PainelPage() {
             </a>
           </div>
           <p className="mb-10 font-sans text-[15px] text-polia-creme/80">
-            Seu céu continua crescendo com você. As ferramentas que você ganha ficam pra sempre.
+            Seu mapa cresce com você. As ferramentas ficam girando junto.
           </p>
 
           <ConstelacaoVisual
@@ -377,7 +377,7 @@ function PainelPage() {
               FERRAMENTAS QUE ENTRAM NA ÓRBITA
             </p>
             <p className="mb-8 font-sans text-[14px] text-polia-creme/60">
-              Toda fase que você completa, uma ferramenta fica grande no seu céu pra sempre.
+              Toda fase que você completa, uma ferramenta entra na sua órbita e fica girando com você.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <OrbitCard
@@ -386,27 +386,27 @@ function PainelPage() {
                 unlocked={etapaAtual > 3}
                 sub={
                   etapaAtual > 3
-                    ? "desbloqueada ao completar Sonho"
-                    : "desbloqueie ao completar Sonho"
+                    ? "aberta quando você completou Sonho"
+                    : "abre quando você completar Sonho"
                 }
               />
               <OrbitCard
                 title="Sua vitrine"
                 tags="site, redes, estoque"
                 unlocked={etapaAtual > 6}
-                sub="desbloqueie ao completar Construção"
+                sub="abre quando você completar Construção"
               />
               <OrbitCard
                 title="Suas vendas e clientes"
                 tags="controle, agenda, histórico"
                 unlocked={etapaAtual > 9}
-                sub="desbloqueie ao completar Venda"
+                sub="abre quando você completar Venda"
               />
               <OrbitCard
                 title="Seu painel financeiro"
                 tags="controle, metas, sonhos"
                 unlocked={etapaAtual > 11}
-                sub="desbloqueie ao completar Evolução"
+                sub="abre quando você completar Evolução"
               />
             </div>
           </div>
@@ -610,7 +610,7 @@ function PainelPage() {
                   {conquistaAnterior.titulo}
                 </p>
                 <p className="caveat-decorativo leading-snug text-polia-noite">
-                  {conquistaAnterior.descricao ?? "Guardada no seu céu."}
+                  {conquistaAnterior.descricao ?? "Acesa na sua constelação."}
                 </p>
               </>
             ) : (

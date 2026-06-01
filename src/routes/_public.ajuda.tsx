@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_public/ajuda")({
 });
 
 const FAQ = [
-  { pergunta: "O que é a Pólia?", resposta: "A Pólia é uma plataforma guiada pra mulheres empreendedoras que querem estruturar seu negócio. São 11 etapas com perguntas, IA de apoio e entregáveis reais que ficam salvos pra você usar pra sempre." },
+  { pergunta: "O que é a Pólia?", resposta: "A Pólia é uma plataforma guiada pra mulheres empreendedoras que querem estruturar seu negócio. São 11 etapas com perguntas, IA de apoio e entregáveis reais que ficam com você pra usar sempre que precisar." },
   { pergunta: "Preciso ter experiência com tecnologia?", resposta: "Não. A Pólia foi feita pra ser simples. Se você sabe digitar uma mensagem de WhatsApp, você consegue usar a Pólia." },
   { pergunta: "Quanto tempo leva pra completar as etapas?", resposta: "Cada etapa leva entre 20 e 40 minutos. Você pode fazer no seu ritmo, pausar e voltar quando quiser. O progresso fica salvo." },
   { pergunta: "Os entregáveis gerados pela IA são meus?", resposta: "Sim. Tudo que a Pólia gera a partir das suas respostas é seu — você pode editar, exportar e usar como quiser." },

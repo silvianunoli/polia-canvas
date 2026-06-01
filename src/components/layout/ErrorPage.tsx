@@ -61,19 +61,19 @@ const COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Tempo esgotado",
   },
   "500": {
-    title: "O céu deu uma piscada.",
+    title: "A constelação piscou.",
     subtitle: "Não é você, sou eu. Já volto a brilhar.",
     raposa: "confusa",
     pageTitle: "Erro interno",
   },
   "502": {
-    title: "O céu deu uma piscada.",
+    title: "A constelação piscou.",
     subtitle: "Não é você, sou eu. Já volto a brilhar.",
     raposa: "confusa",
     pageTitle: "Servidor instável",
   },
   "503": {
-    title: "O céu deu uma piscada.",
+    title: "A constelação piscou.",
     subtitle: "Não é você, sou eu. Já volto a brilhar.",
     raposa: "confusa",
     pageTitle: "Servidor indisponível",

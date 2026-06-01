@@ -217,7 +217,7 @@ export function DeliverablesSection() {
               marginTop: 12,
             }}
           >
-            O que você constrói fica com você pra sempre.
+            O que você constrói anda com você.
           </h2>
           <p
             className="font-sans"

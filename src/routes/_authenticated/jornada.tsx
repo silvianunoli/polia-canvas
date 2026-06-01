@@ -218,11 +218,10 @@ function JornadaPage() {
               SUA JORNADA · {etapasConcluidas} DE 11 ESTRELAS ACESAS
             </p>
             <h1 className="mb-4 font-serif text-[40px] leading-[1.1] text-[#FDF8F5] md:text-[56px]">
-              Seu céu em formação.
+              Seu mapa tomando forma.
             </h1>
             <p className="max-w-[560px] font-sans text-[17px] text-[#D8D2CC]">
-              Cada etapa que você conclui acende uma estrela. Elas ficam aqui
-              pra sempre.
+              Cada estrela acesa marca um ponto no seu mapa.
             </p>
 
             <p className="mt-8 caveat-decorativo text-[#D8D2CC]">

@@ -194,7 +194,7 @@ function Etapa6Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Sexta estrela acesa",
+        titulo: "Gestão acesa",
         descricao: "Montou o sistema de controle. Sua Vitrine está ativada.",
         xp: 50,
         tipo: "etapa",

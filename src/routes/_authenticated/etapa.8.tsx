@@ -193,7 +193,7 @@ function Etapa8Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Oitava estrela acesa",
+        titulo: "Seus clientes acesos",
         descricao: "Montou o protocolo de cuidado. Suas Vendas e Clientes ficou mais completo.",
         xp: 50,
         tipo: "etapa",

@@ -48,7 +48,7 @@ function ComoFunciona() {
           {[
             { num: "01", titulo: "Perguntas certas", texto: "Cada etapa traz perguntas pensadas pra quem está começando — sem jargão, sem enrolação. Você pensa, você responde." },
             { num: "02", titulo: "IA que processa", texto: "Suas respostas viram entregáveis concretos: um pitch, uma ficha de produto, um roteiro de vendas. Gerados com o que você mesma escreveu." },
-            { num: "03", titulo: "Ferramentas vivas", texto: "Os entregáveis se organizam em 4 ferramentas vivas — hubs que crescem com você e ficam acessíveis pra sempre." },
+            { num: "03", titulo: "Ferramentas vivas", texto: "Os entregáveis se organizam em 4 ferramentas vivas — hubs que crescem com você. Sempre à mão." },
           ].map((item) => (
             <div key={item.num}>
               <p className="font-serif text-[#C96B3E] text-[48px] mb-4">{item.num}</p>

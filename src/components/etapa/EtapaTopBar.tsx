@@ -7,7 +7,7 @@ interface EtapaTopBarProps {
   nome: string;
   /** Cor da fase (token Pólia). Opcional — derivado da fase quando ausente. */
   cor?: string;
-  /** Variante de fundo. "dark" pra etapas em céu noturno (1,2,3,4,5,6,10,11), "light" pra fundo creme. */
+  /** Variante de fundo. "dark" pra etapas em noite estrelada (1,2,3,4,5,6,10,11), "light" pra fundo creme. */
   variant?: "dark" | "light";
 }
 
