@@ -193,7 +193,7 @@ function Etapa8Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Seus clientes acesos",
+        titulo: "Seus clientes abertos",
         descricao: "Montou o protocolo de cuidado. Suas Vendas e Clientes ficou mais completo.",
         xp: 50,
         tipo: "etapa",
@@ -687,7 +687,7 @@ function ProtocoloTela({
   );
 }
 
-/* ============== E8.6 — Conclusão estrela 8 ============== */
+/* ============== E8.6 — Conclusão marco 8 ============== */
 function Conclusao({ onVerPainel, onEtapa9 }: { onVerPainel: () => void; onEtapa9: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
@@ -716,9 +716,9 @@ function Conclusao({ onVerPainel, onEtapa9 }: { onVerPainel: () => void; onEtapa
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua oitava estrela
+          Seu oitavo marco
           <br />
-          tá acesa.
+          tá aberto.
         </h1>
 
         <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
@@ -767,7 +767,7 @@ function Conclusao({ onVerPainel, onEtapa9 }: { onVerPainel: () => void; onEtapa
                   {e.label}
                 </p>
                 {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">acesa agora</p>
+                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
                 )}
               </div>
             );

@@ -6,7 +6,7 @@
 
 /*
  * Pólia — Design System
- * Dois mundos visuais: Cósmico Imersivo (noite) e Clean com Acentos (creme).
+ * Mundo visual: Territorial Diurno (creme + terracota + mostarda + marrom).
  * Todas as cores em oklch. Tokens semânticos mapeados em @theme inline.
  */
 
@@ -131,7 +131,7 @@
   --sidebar-ring: var(--polia-terracota);
 }
 
-/* Mundo 1 — Cósmico Imersivo. Aplique a classe .cosmic em um wrapper. */
+/* Mundo Territorial — paleta padrão. NOTA: .cosmic será removida no Sprint 2 (virada terrena). */
 .cosmic,
 .dark {
   --background: var(--polia-noite);

@@ -194,7 +194,7 @@ function Etapa6Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Gestão acesa",
+        titulo: "Gestão aberta",
         descricao: "Montou o sistema de controle. Sua Vitrine está ativada.",
         xp: 50,
         tipo: "etapa",
@@ -688,7 +688,7 @@ function SistemaTela({
   );
 }
 
-/* ============== E6.6 — Conclusão estrela 6 + Sua Vitrine ativada ============== */
+/* ============== E6.6 — Conclusão marco 6 + Sua Vitrine ativada ============== */
 function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa7: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
@@ -717,9 +717,9 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua sexta estrela
+          Seu sexto marco
           <br />
-          tá acesa.
+          tá aberto.
         </h1>
 
         <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
@@ -768,7 +768,7 @@ function Conclusao({ onVerPainel, onEtapa7 }: { onVerPainel: () => void; onEtapa
                   {e.label}
                 </p>
                 {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">acesa agora</p>
+                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
                 )}
               </div>
             );

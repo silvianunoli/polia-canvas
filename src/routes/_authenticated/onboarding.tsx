@@ -498,9 +498,9 @@ function Step5({ onFinish }: { onFinish: () => void }) {
       <LogoPlaceholder />
       <Caveat size={30}>Pronto. Tá tudo no lugar.</Caveat>
       <Headline size={72}>
-        Sua primeira estrela vai
+        Seu primeiro marco vai
         <br />
-        acender agora.
+        abrir agora.
       </Headline>
 
       <div className="w-full overflow-x-auto py-6">
@@ -542,7 +542,7 @@ function Step5({ onFinish }: { onFinish: () => void }) {
                 </span>
                 {active && (
                   <span className="caveat-decorativo text-[#E89770]" style={{ fontSize: 14 }}>
-                    acendendo agora
+                    abrindo agora
                   </span>
                 )}
               </div>

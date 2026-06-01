@@ -1,5 +1,5 @@
 // Util de pluralização para o kanban de Tarefas (Pólia).
-// Voz literal e clara — mundo cósmico é o único mundo metafórico da marca.
+// Voz literal e clara — mundo territorial (mapa/trilha/marco/bússola) é o único mundo metafórico da marca.
 // Revertido de jardim (sementes/brotando/floresceram) em 2026-05-30.
 
 export interface KanbanCounts {

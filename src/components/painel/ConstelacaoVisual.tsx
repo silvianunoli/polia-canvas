@@ -98,7 +98,7 @@ export function ConstelacaoVisual({
                   ? `Continuar na Etapa ${star.etapa}`
                   : isDone
                     ? `Etapa ${star.etapa} — concluída`
-                    : `Etapa ${star.etapa} — ainda vai brilhar`;
+                    : `Etapa ${star.etapa} — no seu horizonte`;
 
                 const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
                   if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) return;
@@ -182,12 +182,12 @@ export function ConstelacaoVisual({
                     <div className="mt-1 flex min-h-6 items-start justify-center">
                       {isCurrent && (
                         <span className="text-center caveat-decorativo leading-none text-polia-terracota">
-                          acendendo agora
+                          abrindo agora
                         </span>
                       )}
                       {isFuture && (
                         <span className="text-center caveat-decorativo leading-none text-polia-creme">
-                          ainda vai brilhar
+                          no seu horizonte
                         </span>
                       )}
                     </div>

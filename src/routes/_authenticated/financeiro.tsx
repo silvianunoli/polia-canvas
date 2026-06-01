@@ -137,7 +137,7 @@ function FinanceiroPage() {
             SEU PAINEL FINANCEIRO
           </p>
           <h1 className="mb-4 max-w-[520px] font-serif text-[48px] leading-tight text-[#FDF8F5]">
-            Essa ferramenta entra em órbita quando você chegar na Etapa 10.
+            Essa ferramenta anda com você quando você chegar na Etapa 10.
           </h1>
           <p className="mb-8 max-w-[440px] font-sans text-[16px] text-[#D8D2CC]">
             Complete as etapas de Evolução pra montar seu painel de

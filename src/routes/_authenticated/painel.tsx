@@ -255,10 +255,10 @@ function PainelPage() {
               />
               <Divider />
               <StatBlock
-                label="PRÓXIMA ESTRELA"
+                label="PRÓXIMO MARCO"
                 valueClass="font-sans text-[16px] font-semibold text-polia-noite"
                 value={`${etapaInfo.nome} · ${etapaInfo.subtitulo}`}
-                sub={`${etapaInfo.tempoEstimado} pro brilhar`}
+                sub={`${etapaInfo.tempoEstimado} pra abrir`}
                 subColor="text-polia-musgo"
               />
               <Divider />
@@ -312,7 +312,7 @@ function PainelPage() {
         <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 px-6 py-8 md:flex-row md:items-center md:px-12">
           <div>
             <p className="mb-1 caveat-decorativo text-polia-creme/70">
-              Sua próxima estrela...
+              Seu próximo marco...
             </p>
             <h2 className="mb-2 font-serif text-[28px] leading-tight text-polia-creme md:text-[32px]">
               {tituloProxima}
@@ -340,17 +340,17 @@ function PainelPage() {
         <CosmicSky density={22} />
         <div className="relative mx-auto max-w-[1280px]">
           <p className="mb-3 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
-            SUA CONSTELAÇÃO EM FORMAÇÃO
+            SEU MAPA TOMANDO FORMA
           </p>
           <div className="mb-2 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
             <h2 className="font-serif text-[28px] text-polia-creme md:text-[36px]">
-              Cada etapa acende uma estrela
+              Cada etapa abre um marco
             </h2>
             <a
               href="/jornada"
               className="font-sans text-[14px] text-polia-terracota hover:underline"
             >
-              Ver constelação completa →
+              Ver mapa completo →
             </a>
           </div>
           <p className="mb-10 font-sans text-[15px] text-polia-creme/80">
@@ -374,7 +374,7 @@ function PainelPage() {
           {/* FERRAMENTAS QUE ENTRAM NA ÓRBITA */}
           <div className="mt-12">
             <p className="mb-3 font-accent text-[11px] uppercase tracking-[2px] text-polia-creme/80">
-              FERRAMENTAS QUE ENTRAM NA ÓRBITA
+              FERRAMENTAS QUE ANDAM COM VOCÊ
             </p>
             <p className="mb-8 font-sans text-[14px] text-polia-creme/60">
               Toda fase que você completa, uma ferramenta entra na sua órbita e fica girando com você.
@@ -615,7 +615,7 @@ function PainelPage() {
               </>
             ) : (
               <p className="caveat-decorativo text-polia-dourado">
-                sua primeira conquista mora aqui · acende uma estrela pra começar.
+                sua primeira conquista mora aqui · abra um marco pra começar.
               </p>
             )}
           </div>
@@ -663,7 +663,7 @@ function PainelPage() {
       <section className="bg-polia-cinza-claro px-6 py-12 md:px-12">
         <div className="mx-auto max-w-[1280px]">
           <h2 className="mb-1 font-serif text-[24px] text-polia-noite md:text-[28px]">
-            Estrelas que te esperam
+            Marcos no seu horizonte
           </h2>
           <p className="mb-8 font-sans text-[14px] text-polia-noite opacity-50">
             Os marcos do seu negócio que você vai chegar.

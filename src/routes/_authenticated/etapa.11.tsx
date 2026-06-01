@@ -195,7 +195,7 @@ function Etapa11Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Todas as estrelas acesas",
+        titulo: "Todos os marcos abertos",
         descricao: "Você fechou a jornada estruturada. A Pólia não acaba — ela fica mais sua.",
         xp: 200,
         tipo: "conclusao",
@@ -672,7 +672,7 @@ function PlanoTela({
   );
 }
 
-/* ============== E11.6 — Conclusão FINAL (11 estrelas) ============== */
+/* ============== E11.6 — Conclusão FINAL (11 marcos) ============== */
 function Conclusao({ onVerJornada, onVerPainel }: { onVerJornada: () => void; onVerPainel: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta" },
@@ -714,9 +714,9 @@ function Conclusao({ onVerJornada, onVerPainel }: { onVerJornada: () => void; on
         </p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua décima primeira estrela
+          Seu décimo primeiro marco
           <br />
-          tá acesa.
+          tá aberto.
         </h1>
 
         <div className="mt-10 md:mt-14 flex w-full justify-center gap-5 overflow-x-auto pb-4">
@@ -754,7 +754,7 @@ function Conclusao({ onVerJornada, onVerPainel }: { onVerJornada: () => void; on
                 </div>
                 <p className="caveat-decorativo mt-2 text-[#FDF8F5]">{e.label}</p>
                 {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">acesa agora</p>
+                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
                 )}
               </div>
             );

@@ -71,7 +71,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
         </p>
       </div>
       <p className="font-sans text-[15px] text-polia-creme/90">
-        {titulo ?? "acesa na sua constelação."}
+        {titulo ?? "aberta no seu território."}
       </p>
       {sub && (
         <p className="mt-2 caveat-decorativo text-polia-creme/60">

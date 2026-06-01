@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_authenticated/jornada")({
       {
         name: "description",
         content:
-          "Sua constelação completa. Cada etapa que você conclui acende uma estrela.",
+          "Seu mapa completo. Cada etapa que você conclui abre um marco no território.",
       },
     ],
   }),
@@ -194,10 +194,10 @@ function JornadaPage() {
 
   const fraseInferior =
     etapasConcluidas === 0
-      ? "sua primeira estrela tá esperando"
+      ? "seu primeiro marco tá te esperando"
       : etapasConcluidas === 11
-        ? "todas as estrelas acesas. a jornada é sua."
-        : `${11 - etapasConcluidas} estrelas ainda vão brilhar`;
+        ? "todos os marcos abertos. o mapa é seu."
+        : `${11 - etapasConcluidas} marcos no seu horizonte`;
 
   const estrelaExpandida =
     expandida !== null ? ESTRELAS.find((e) => e.n === expandida) : null;
@@ -215,13 +215,13 @@ function JornadaPage() {
         <section className="relative px-6 pb-10 pt-16 md:px-12">
           <div className="mx-auto max-w-[1280px]">
             <p className="mb-4 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
-              SUA JORNADA · {etapasConcluidas} DE 11 ESTRELAS ACESAS
+              SEU MAPA · {etapasConcluidas} DE 11 MARCOS ABERTOS
             </p>
             <h1 className="mb-4 font-serif text-[40px] leading-[1.1] text-[#FDF8F5] md:text-[56px]">
               Seu mapa tomando forma.
             </h1>
             <p className="max-w-[560px] font-sans text-[17px] text-[#D8D2CC]">
-              Cada estrela acesa marca um ponto no seu mapa.
+              Cada marco aberto desenha um pedaço do seu mapa.
             </p>
 
             <p className="mt-8 caveat-decorativo text-[#D8D2CC]">
@@ -230,7 +230,7 @@ function JornadaPage() {
           </div>
         </section>
 
-        {/* SEÇÃO 2 — CONSTELAÇÃO */}
+        {/* SEÇÃO 2 — MAPA */}
         <section className="relative px-6 pb-16 md:px-12">
           <div className="mx-auto max-w-[1280px]">
             <div className="flex flex-col gap-12 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
@@ -346,7 +346,7 @@ function JornadaPage() {
               FERRAMENTAS QUE VIVEM COM VOCÊ
             </p>
             <p className="mb-8 caveat-decorativo text-[#C96B3E]">
-              cada fase completa, uma ferramenta entra em órbita.
+              cada fase completa, uma ferramenta anda com você.
             </p>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               {FERRAMENTAS.map((f) => {
@@ -478,7 +478,7 @@ function EstrelaItem({
           {nome}
         </span>
         <span className="caveat-decorativo text-[#C96B3E]">
-          acendendo agora
+          abrindo agora
         </span>
       </button>
     );
@@ -492,7 +492,7 @@ function EstrelaItem({
         {nome}
       </span>
       <span className="caveat-decorativo text-[#D8D2CC]">
-        ainda vai brilhar
+        no seu horizonte
       </span>
     </div>
   );
@@ -530,7 +530,7 @@ function FerramentaCard({
   return (
     <div className="cursor-default rounded-xl border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] p-5 opacity-35">
       <span className="mb-3 inline-block rounded-full border border-[rgba(255,255,255,0.12)] px-2 py-0.5 font-accent text-[10px] font-semibold text-[#D8D2CC]">
-        Em órbita
+        anda com você
       </span>
       <p className="mb-1 font-sans text-[15px] font-semibold text-[#FDF8F5]">
         {nome}

@@ -182,7 +182,7 @@ function Etapa1Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Descoberta acesa",
+        titulo: "Descoberta aberta",
         descricao: "Concluiu a Descoberta e montou seu mini-pitch.",
         xp: 50,
         tipo: "etapa",
@@ -852,14 +852,14 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
         </p>
         <p className="caveat-informacional text-[#E89770] mt-6">olha o que aconteceu agora.</p>
         <div className="font-serif text-[#FDF8F5] text-[52px] md:text-[72px] leading-[1.1] mt-2 max-w-[900px]">
-          <p>Sua primeira estrela</p>
-          <p>tá acesa.</p>
+          <p>Seu primeiro marco</p>
+          <p>tá aberto.</p>
         </div>
         <p className="caveat-decorativo text-[#E89770] mt-4 text-[18px] md:text-[20px]">
           É o primeiro ponto do seu mapa.
         </p>
 
-        {/* Constelação */}
+        {/* Mapa */}
         <div className="mt-12 flex flex-wrap items-start justify-center gap-x-5 gap-y-6 md:gap-x-7">
           {ETAPAS_CONST.map((e) => (
             <div key={e.num} className="flex w-[80px] flex-col items-center gap-1">
@@ -869,7 +869,7 @@ function Conclusao({ onVerPainel, onEtapa2 }: { onVerPainel: () => void; onEtapa
               />
               <p className={`font-sans text-[10px] font-semibold ${e.ativa ? "text-[#E89770]" : "text-[rgba(216,210,204,0.5)]"}`}>{e.num}</p>
               <p className={`font-sans text-[9px] leading-[11px] text-center max-w-[80px] ${e.ativa ? "text-[#FDF8F5]" : "text-[rgba(216,210,204,0.55)]"}`}>{e.nome}</p>
-              {e.ativa && <p className="caveat-decorativo text-[#E89770]">acesa agora</p>}
+              {e.ativa && <p className="caveat-decorativo text-[#E89770]">aberto agora</p>}
             </div>
           ))}
         </div>

@@ -170,7 +170,7 @@ function ClientesPage() {
           SUAS VENDAS E CLIENTES
         </p>
         <h1 className="font-serif text-[#FDF8F5] text-[48px] leading-tight mb-4 max-w-[520px]">
-          Essa ferramenta entra em órbita quando você chegar na Etapa 7.
+          Essa ferramenta anda com você quando você chegar na Etapa 7.
         </h1>
         <p className="font-sans text-[#D8D2CC] text-[16px] max-w-[440px] mb-8">
           Complete as etapas de Venda pra montar seu fluxo de vendas, protocolo

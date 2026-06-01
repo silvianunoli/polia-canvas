@@ -99,7 +99,7 @@ function VitrinePage() {
           SUA VITRINE
         </p>
         <h1 className="font-serif text-[#FDF8F5] text-[48px] leading-tight mb-4 max-w-[520px]">
-          Essa ferramenta entra em órbita quando você completar a Etapa 2.
+          Essa ferramenta anda com você quando você completar a Etapa 2.
         </h1>
         <p className="font-sans text-[#D8D2CC] text-[16px] max-w-[440px] mb-8">
           Seu produto, presença online e sistema de controle reunidos num só lugar.

@@ -199,7 +199,7 @@ function Etapa2Page() {
 
       await supabase.from("conquistas").insert({
         user_id: userId,
-        titulo: "Identidade acesa",
+        titulo: "Identidade aberta",
         descricao: "Definiu a identidade e a voz da marca.",
         xp: 50,
         tipo: "etapa",
@@ -766,7 +766,7 @@ function VozMarcaTela({
   );
 }
 
-/* ============== E2.6 — Conclusão estrela 2 ============== */
+/* ============== E2.6 — Conclusão marco 2 ============== */
 function Conclusao({ onVerPainel, onEtapa3 }: { onVerPainel: () => void; onEtapa3: () => void }) {
   const estrelas = [
     { n: 1, label: "Descoberta", estado: "acesa" },
@@ -793,9 +793,9 @@ function Conclusao({ onVerPainel, onEtapa3 }: { onVerPainel: () => void; onEtapa
         <p className="caveat-informacional text-[#E89770] mt-10">olha o que aconteceu agora.</p>
 
         <h1 className="font-serif text-[#FDF8F5] text-[52px] md:text-[68px] leading-[1.06] mt-3 max-w-[820px]">
-          Sua segunda estrela
+          Seu segundo marco
           <br />
-          tá acesa.
+          tá aberto.
         </h1>
 
         <div className="mt-10 md:mt-14 flex w-full justify-center gap-6 overflow-x-auto pb-4">
@@ -844,7 +844,7 @@ function Conclusao({ onVerPainel, onEtapa3 }: { onVerPainel: () => void; onEtapa
                   {e.label}
                 </p>
                 {agora && (
-                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">acesa agora</p>
+                  <p className="caveat-decorativo text-[#E89770] mt-1 animate-pulse">aberto agora</p>
                 )}
               </div>
             );
