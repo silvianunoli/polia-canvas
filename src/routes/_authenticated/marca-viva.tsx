@@ -93,19 +93,19 @@ function MarcaVivaPage() {
 
   if (!profile?.orbit_brand_alive_unlocked) {
     return (
-      <div className="min-h-screen bg-[#1A1A2E] flex flex-col items-center justify-center text-center px-8">
-        <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-4">
+      <div className="min-h-screen bg-polia-papel-creme flex flex-col items-center justify-center text-center px-8">
+        <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-4">
           SUA MARCA VIVA
         </p>
-        <h1 className="font-serif text-[#FDF8F5] text-[48px] leading-tight mb-4 max-w-[520px]">
+        <h1 className="font-serif text-polia-marrom text-[48px] leading-tight mb-4 max-w-[520px]">
           Essa ferramenta anda com você quando você completar a Etapa 1.
         </h1>
-        <p className="font-sans text-[#D8D2CC] text-[16px] max-w-[440px] mb-8">
+        <p className="font-sans text-polia-marrom/70 text-[16px] max-w-[440px] mb-8">
           Sua identidade, voz e posicionamento reunidos num só lugar.
         </p>
         <button
           onClick={() => navigate({ to: "/etapa/1" })}
-          className="bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
+          className="bg-polia-terracota text-polia-creme font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
         >
           Começar Etapa 1 →
         </button>
@@ -127,13 +127,13 @@ function MarcaVivaPage() {
         {/* Cabeçalho */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-2">
+            <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-2">
               SUA MARCA VIVA
             </p>
             <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               {profile.business_name || "Seu negócio"}
             </h1>
-            <p className="caveat-decorativo text-[#C96B3E] mt-2">
+            <p className="caveat-decorativo text-polia-terracota mt-2">
               identidade, voz e posicionamento.
             </p>
           </div>
@@ -303,7 +303,7 @@ function CardVozMarca({
                 key={i}
                 className="bg-[rgba(26,26,46,0.03)] rounded-xl p-4 text-center border border-[rgba(26,26,46,0.06)]"
               >
-                <p className="font-serif text-[#C96B3E] text-[20px] mb-1">
+                <p className="font-serif text-polia-terracota text-[20px] mb-1">
                   {p.palavra}
                 </p>
                 <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40">
@@ -438,7 +438,7 @@ function EstadoVazio({
       </p>
       <button
         onClick={onClick}
-        className="font-sans text-[#C96B3E] text-[13px] hover:underline"
+        className="font-sans text-polia-terracota text-[13px] hover:underline"
       >
         {cta}
       </button>

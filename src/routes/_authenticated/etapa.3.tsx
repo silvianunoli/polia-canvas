@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -228,7 +228,7 @@ function Etapa3Page() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-informacional text-[#C96B3E]">carregando...</p>
+        <p className="caveat-informacional text-polia-terracota">carregando...</p>
       </div>
     );
   }
@@ -339,19 +339,19 @@ function Capa({ onStart }: { onStart: () => void }) {
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
+        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
           ETAPA 3 DE 11 Â· MODELO DE NEGÃ“CIO
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER Â· LOGO</p>
-          <p className="caveat-decorativo text-[#E89770] mt-1">Lockup L3 Vertical</p>
-          <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180Ã—180</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER Â· LOGO</p>
+          <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L3 Vertical</p>
+          <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180Ã—180</p>
         </div>
 
-        <p className="caveat-informacional text-[#E89770] mt-10">agora a gente vai te localizar.</p>
+        <p className="caveat-informacional text-polia-terracota mt-10">agora a gente vai te localizar.</p>
 
-        <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
+        <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Onde vocÃª fica no mapa?
         </h1>
 
@@ -363,24 +363,24 @@ function Capa({ onStart }: { onStart: () => void }) {
           {cards.map((c) => (
             <div
               key={c.num}
-              className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-[rgba(36,36,66,0.45)] p-[20px] text-center"
+              className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-white p-[20px] text-center"
             >
-              <p className="font-serif text-[#C96B3E] text-[30px] leading-none">{c.num}</p>
-              <p className="font-serif text-[#FDF8F5] text-[20px] mt-2">{c.titulo}</p>
-              <p className="caveat-decorativo text-[rgba(216,210,204,0.8)] mt-1">{c.sub}</p>
+              <p className="font-serif text-polia-terracota text-[30px] leading-none">{c.num}</p>
+              <p className="font-serif text-polia-marrom text-[20px] mt-2">{c.titulo}</p>
+              <p className="caveat-decorativo text-polia-marrom/80 mt-1">{c.sub}</p>
             </div>
           ))}
         </div>
 
         <button
           onClick={onStart}
-          className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+          className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
           Quero meu mapa  â†’
         </button>
 
-        <p className="caveat-decorativo text-[rgba(232,151,112,0.75)] mt-4">
+        <p className="caveat-decorativo text-polia-terracota/75 mt-4">
           leva uns 15 minutinhos. dÃ¡ pra pausar quando quiser.
         </p>
       </div>
@@ -413,7 +413,7 @@ function PerguntaLayout({
       <EtapaTopBar etapa={3} fase="SONHO" nome="Modelo" />
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         <aside className="hidden w-[280px] shrink-0 rounded-[16px] bg-[#F5F0EA] p-8 lg:block">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso uppercase">
             ETAPA 3 Â· MODELO DE NEGÃ“CIO
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[28px] leading-[34px] mt-2">
@@ -431,9 +431,9 @@ function PerguntaLayout({
                   <div
                     className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-bold ${
                       ativo
-                        ? "bg-[#C96B3E] text-[#FDF8F5]"
+                        ? "bg-[#C96B3E] text-polia-creme"
                         : feito
-                          ? "bg-[#C96B3E]/30 text-[#C96B3E]"
+                          ? "bg-[#C96B3E]/30 text-polia-terracota"
                           : "border border-[#C8C0B5] text-[#6A6A7E]"
                     }`}
                   >
@@ -501,7 +501,7 @@ function PerguntaBlock({
   const podeAvancar = valor.trim().length >= minLen;
   return (
     <div>
-      <p className="caveat-informacional text-[#C96B3E] mt-2">{caveat}</p>
+      <p className="caveat-informacional text-polia-terracota mt-2">{caveat}</p>
       <h1 className="font-serif text-[#1A1A2E] text-[26px] sm:text-[32px] md:text-[48px] leading-[1.18] mt-3">
         {titulo}
       </h1>
@@ -523,7 +523,7 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-[#C96B3E]">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -543,7 +543,7 @@ function PerguntaBlock({
         <button
           onClick={onContinuar}
           disabled={!podeAvancar}
-          className="h-[52px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] transition disabled:cursor-not-allowed disabled:opacity-40 enabled:hover:bg-[#B85A2D]"
+          className="h-[52px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme transition disabled:cursor-not-allowed disabled:opacity-40 enabled:hover:bg-[#B85A2D]"
         >
           {continuarLabel}
         </button>
@@ -576,7 +576,7 @@ function MapaTela({
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
         {loading && (
           <>
-            <p className="caveat-informacional text-[#E89770] animate-pulse">
+            <p className="caveat-informacional text-polia-terracota animate-pulse">
               desenhando seu mapa...
             </p>
             <div className="mt-6 flex gap-2">
@@ -593,11 +593,11 @@ function MapaTela({
 
         {!loading && error && (
           <>
-            <p className="font-serif text-[#FDF8F5] text-[28px]">Algo deu errado.</p>
-            <p className="font-sans text-[rgba(216,210,204,0.8)] text-[14px] mt-2">{error}</p>
+            <p className="font-serif text-polia-marrom text-[28px]">Algo deu errado.</p>
+            <p className="font-sans text-polia-marrom/80 text-[14px] mt-2">{error}</p>
             <button
               onClick={onRetry}
-              className="mt-6 h-[48px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5]"
+              className="mt-6 h-[48px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme"
             >
               Tenta de novo
             </button>
@@ -606,18 +606,18 @@ function MapaTela({
 
         {!loading && !error && mapa && (
           <>
-            <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.95)]">
+            <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
               ENTREGÃVEL Â· ETAPA 3 Â· MODELO DE NEGÃ“CIO
             </p>
-            <p className="caveat-informacional text-[#E89770] mt-4">olha onde vocÃª fica.</p>
-            <h1 className="font-serif text-[#FDF8F5] text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
+            <p className="caveat-informacional text-polia-terracota mt-4">olha onde vocÃª fica.</p>
+            <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Seu lugar
               <br />
               no mapa.
             </h1>
 
-            <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-[rgba(200,169,110,0.3)] bg-[#FAF4EF] p-8 text-left">
-              <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-[#C96B3E]">
+            <div className="mt-10 w-full max-w-[820px] rounded-[20px] border border-polia-mostarda/40 bg-[#FAF4EF] p-8 text-left">
+              <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-polia-terracota">
                 MAPA DE POSICIONAMENTO Â· {(businessName || "Sua marca").toUpperCase()}
               </p>
               <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Onde sÃ³ vocÃª pode estar</p>
@@ -653,7 +653,7 @@ function MapaTela({
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
                 SEU Ã‚NGULO ÃšNICO
               </p>
-              <p className="caveat-decorativo text-[#C96B3E] mt-2">"{mapa.anguloUnico}"</p>
+              <p className="caveat-decorativo text-polia-terracota mt-2">"{mapa.anguloUnico}"</p>
 
               <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-5 text-right">
                 salvo em Sua Marca Viva Â· vocÃª edita quando quiser
@@ -663,13 +663,13 @@ function MapaTela({
             <div className="mt-10 flex flex-col gap-4 md:flex-row">
               <button
                 onClick={onAjustar}
-                className="h-[54px] rounded-[12px] border border-[#E89770] bg-transparent px-6 font-sans text-[15px] font-semibold text-[#E89770] hover:bg-[#E89770]/10"
+                className="h-[54px] rounded-[12px] border border-polia-terracota bg-transparent px-6 font-sans text-[15px] font-semibold text-polia-terracota hover:bg-[#E89770]/10"
               >
                 Ajustar respostas
               </button>
               <button
                 onClick={onContinuar}
-                className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-[#FDF8F5] hover:bg-[#B85A2D]"
+                className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
                 Continuar pra fim da etapa  â†’

@@ -216,7 +216,7 @@ function Etapa1Page() {
   if (!loaded) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-informacional text-[#C96B3E]">carregando...</p>
+        <p className="caveat-informacional text-polia-terracota">carregando...</p>
       </div>
     );
   }
@@ -310,22 +310,22 @@ function Capa({ onStart }: { onStart: () => void }) {
     <div className="relative min-h-screen w-full overflow-hidden">
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-6 py-10 md:py-16 text-center">
-        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-[rgba(200,169,110,0.9)]">
+        <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
           ETAPA 1 DE 11 · DESCOBERTA
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#E89770]">PLACEHOLDER · LOGO</p>
-          <p className="caveat-decorativo text-[#E89770] mt-1">Lockup L2 Vertical</p>
-          <p className="font-sans text-[10px] text-[rgba(216,210,204,0.55)] mt-1">180×180</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L2 Vertical</p>
+          <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
           <p className="font-sans text-[9px] text-[rgba(216,210,204,0.45)]">SVG · upload no Lovable</p>
         </div>
 
-        <p className="caveat-informacional text-[#E89770] mt-10">
+        <p className="caveat-informacional text-polia-terracota mt-10">
           é hora de descobrir o que tá dentro.
         </p>
 
-        <h1 className="font-serif text-[#FDF8F5] text-[56px] md:text-[72px] leading-[1.05] mt-3 max-w-[900px]">
+        <h1 className="font-serif text-polia-marrom text-[56px] md:text-[72px] leading-[1.05] mt-3 max-w-[900px]">
           Vamos começar pelo começo: você.
         </h1>
 
@@ -337,10 +337,10 @@ function Capa({ onStart }: { onStart: () => void }) {
           {cards.map((c) => (
             <div
               key={c.num}
-              className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-[rgba(36,36,66,0.45)] p-[22px] text-center"
+              className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-white p-[22px] text-center"
             >
-              <p className="font-accent text-[#C8A96E] text-[12px] font-bold tracking-[1.5px]">{c.num}</p>
-              <p className="font-serif text-[#FDF8F5] text-[18px] mt-2">{c.titulo}</p>
+              <p className="font-accent text-polia-mostarda-intenso text-[12px] font-bold tracking-[1.5px]">{c.num}</p>
+              <p className="font-serif text-polia-marrom text-[18px] mt-2">{c.titulo}</p>
               <p className="font-sans text-[rgba(216,210,204,0.65)] text-[12px] mt-1">{c.sub}</p>
             </div>
           ))}
@@ -348,7 +348,7 @@ function Capa({ onStart }: { onStart: () => void }) {
 
         <button
           onClick={onStart}
-          className="mt-10 md:mt-14 relative h-[56px] rounded-[14px] bg-[#C96B3E] px-10 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+          className="mt-10 md:mt-14 relative h-[56px] rounded-[14px] bg-[#C96B3E] px-10 font-sans text-[16px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
           Começar →
@@ -390,7 +390,7 @@ function PerguntaLayout({
       <div className="mx-auto flex max-w-[1280px] gap-8 px-6 py-8 md:py-12 lg:gap-10">
         {/* Sidebar esquerda */}
         <aside className="hidden w-[290px] shrink-0 lg:block">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E] uppercase">
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso uppercase">
             ETAPA 1 · DESCOBERTA
           </p>
           <h2 className="font-serif text-[#1A1A2E] text-[32px] leading-[38px] mt-2">
@@ -420,7 +420,7 @@ function PerguntaLayout({
                     >
                       {p.label}
                     </p>
-                    <p className="caveat-decorativo text-[#C96B3E] mt-1">
+                    <p className="caveat-decorativo text-polia-terracota mt-1">
                       {isDone ? "feito" : isActive ? "atual" : p.estado}
                     </p>
                   </div>
@@ -457,7 +457,7 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
     <header className="sticky top-0 z-30 h-14 w-full bg-[#FDF8F5]" style={{ borderBottom: "1px solid rgba(26,26,46,0.08)" }}>
       <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-6">
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-[#C96B3E] px-4 py-1.5">
-          <span className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#C8A96E]">PLACEHOLDER · LOGO</span>
+          <span className="font-accent text-[9px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PLACEHOLDER · LOGO</span>
           <span className="font-sans text-[8px] text-[#1A1A2E] opacity-40">120×32</span>
         </div>
         <nav className="hidden items-center gap-7 md:flex">
@@ -467,7 +467,7 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
               href={l.href}
               className={
                 l.active
-                  ? "flex items-center gap-1.5 border-b-2 border-[#C96B3E] pb-[2px] font-sans text-[14px] font-medium text-[#C96B3E]"
+                  ? "flex items-center gap-1.5 border-b-2 border-[#C96B3E] pb-[2px] font-sans text-[14px] font-medium text-polia-terracota"
                   : "font-sans text-[14px] font-medium text-[#1A1A2E] opacity-60 transition hover:opacity-100"
               }
             >
@@ -478,9 +478,9 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
         </nav>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: "rgba(200,169,110,0.12)", border: "1px solid rgba(200,169,110,0.3)" }}>
-            <span className="font-sans text-[13px] font-semibold text-[#C8A96E]">{streak} {streak === 1 ? "dia" : "dias"}</span>
+            <span className="font-sans text-[13px] font-semibold text-polia-mostarda-intenso">{streak} {streak === 1 ? "dia" : "dias"}</span>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C96B3E] font-sans text-[14px] font-bold text-[#FDF8F5]">{initial}</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C96B3E] font-sans text-[14px] font-bold text-polia-creme">{initial}</div>
         </div>
       </div>
     </header>
@@ -498,13 +498,13 @@ function RaposaECard({ step }: { step: number }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-1.5 rounded-[18px] border-[1.5px] border-dashed border-[rgba(232,151,112,0.5)] bg-[#FAF4EF] px-[18px] py-[22px]">
-        <p className="font-accent text-[#C96B3E] text-[10px] font-bold tracking-[1.5px]">PLACEHOLDER · RAPOSA</p>
-        <p className="caveat-informacional text-[#C96B3E]">Estado: {s.estado}</p>
+        <p className="font-accent text-polia-terracota text-[10px] font-bold tracking-[1.5px]">PLACEHOLDER · RAPOSA</p>
+        <p className="caveat-informacional text-polia-terracota">Estado: {s.estado}</p>
         <p className="font-sans text-[#6A6A7E] text-[10px]">PNG transparente · 200×260</p>
         <p className="font-sans text-[#9A958E] text-[9px]">Pose: {s.pose}</p>
       </div>
       <div className="rounded-[18px] border border-[#EAE2D8] bg-white p-[22px]">
-        <p className="font-accent text-[#C8A96E] text-[10px] font-bold tracking-[1.5px] uppercase mb-3">DICA RÁPIDA</p>
+        <p className="font-accent text-polia-mostarda-intenso text-[10px] font-bold tracking-[1.5px] uppercase mb-3">DICA RÁPIDA</p>
         <p className="font-serif text-[#1A1A2E] text-[17px] leading-[22px] mb-2">{s.titulo}</p>
         <p className="font-sans text-[#6A6A7E] text-[12px] leading-[17px]">{s.body}</p>
       </div>
@@ -584,8 +584,8 @@ function Pergunta1({
   const pode = profileStory.length >= 30;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 1 DE 3</p>
-      <p className="caveat-decorativo text-[#C96B3E] mt-3">vamos com calma. responde como conversaria com uma amiga.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 1 DE 3</p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">vamos com calma. responde como conversaria com uma amiga.</p>
       <HeadlineDuas a="Quem é você" b="antes do negócio?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         Sua história, o que te trouxe até aqui, o que você ama fazer mesmo se ninguém pagasse.
@@ -645,8 +645,8 @@ function Pergunta2({
   const pode = problemSolved.length >= 30;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 2 DE 3</p>
-      <p className="caveat-decorativo text-[#C96B3E] mt-3">essa é a parte que mais importa. pensa em quem vai sentir falta.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 2 DE 3</p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">essa é a parte que mais importa. pensa em quem vai sentir falta.</p>
       <HeadlineDuas a="Qual dor" b="você cura?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         O que tá errado no mundo do seu cliente antes de você entrar nele? Por que isso é importante o suficiente pra ele resolver?
@@ -700,8 +700,8 @@ function Pergunta3({
   const pode = targetCustomer.length >= 20;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-[#C8A96E]">PERGUNTA 3 DE 3</p>
-      <p className="caveat-decorativo text-[#C96B3E] mt-3">pensa numa pessoa real. alguém que você conheça ou imagina conhecer.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 3 DE 3</p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">pensa numa pessoa real. alguém que você conheça ou imagina conhecer.</p>
       <HeadlineDuas a="Pra quem" b="você fala?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         Quem é a pessoa que você quer ajudar? Quanto mais específica, mais fácil eu monto seu mini-pitch.
@@ -757,10 +757,10 @@ function MiniPitchTela({
     <div className="min-h-screen w-full bg-[#FDF8F5]">
       <EtapaNav streak={streak} initial={initial} />
       <div className="mx-auto max-w-[860px] px-6 py-10 md:py-16">
-        <p className="font-accent text-[10px] font-bold tracking-[2px] text-[#C8A96E] uppercase text-center">
+        <p className="font-accent text-[10px] font-bold tracking-[2px] text-polia-mostarda-intenso uppercase text-center">
           ETAPA 1 · DESCOBERTA
         </p>
-        <p className="caveat-informacional text-[#C96B3E] text-center mt-2">olha o que a gente montou juntas.</p>
+        <p className="caveat-informacional text-polia-terracota text-center mt-2">olha o que a gente montou juntas.</p>
         <h2 className="font-serif text-[#1A1A2E] text-[28px] sm:text-[34px] md:text-[48px] leading-[1.2] text-center mt-2">
           Seu primeiro mini-pitch.
         </h2>
@@ -780,7 +780,7 @@ function MiniPitchTela({
               ))}
             </div>
             <style>{`@keyframes bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }`}</style>
-            <p className="caveat-informacional text-[#C96B3E] mt-6">montando seu mini-pitch...</p>
+            <p className="caveat-informacional text-polia-terracota mt-6">montando seu mini-pitch...</p>
             <p className="font-sans text-[#9A958E] text-[14px] mt-2">uns 5 segundinhos</p>
           </div>
         ) : (
@@ -810,13 +810,13 @@ function MiniPitchTela({
           <div className="mt-10 flex flex-col items-center justify-center gap-4 md:flex-row md:gap-6">
             <button
               onClick={onAjustar}
-              className="h-[48px] rounded-[12px] border-[1.5px] border-[#C96B3E] px-6 font-sans text-[15px] font-semibold text-[#C96B3E] transition-colors hover:bg-[rgba(201,107,62,0.06)]"
+              className="h-[48px] rounded-[12px] border-[1.5px] border-[#C96B3E] px-6 font-sans text-[15px] font-semibold text-polia-terracota transition-colors hover:bg-[rgba(201,107,62,0.06)]"
             >
               Ajustar respostas
             </button>
             <button
               onClick={onContinuar}
-              className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+              className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[16px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
             >
               Continuar pro fim da etapa →
             </button>

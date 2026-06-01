@@ -13,7 +13,7 @@ export function GoogleButton({ onClick, loading, disabled, label = "Continuar co
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)] font-sans text-[16px] text-[#D8D2CC] transition-colors hover:bg-[rgba(255,255,255,0.10)] disabled:opacity-60"
+      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[rgba(26,26,46,0.12)] bg-white font-sans text-[16px] text-polia-marrom/70 transition-colors hover:bg-polia-papel-creme disabled:opacity-60"
     >
       {loading ? (
         <Loader2 size={18} className="animate-spin" />

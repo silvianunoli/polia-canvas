@@ -233,7 +233,7 @@ function TarefasPage() {
 
             <button
               onClick={() => setModalAberto(true)}
-              className="rounded-xl bg-[#C96B3E] px-5 py-2.5 font-sans text-[14px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+              className="rounded-xl bg-polia-terracota px-5 py-2.5 font-sans text-[14px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
             >
               + Nova tarefa
             </button>
@@ -420,7 +420,7 @@ function TarefasPage() {
               <button
                 onClick={criarTarefa}
                 disabled={titulo.trim().length < 3}
-                className="h-[48px] flex-1 rounded-xl bg-[#C96B3E] font-sans text-[15px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D] disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-[48px] flex-1 rounded-xl bg-polia-terracota font-sans text-[15px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Criar tarefa
               </button>

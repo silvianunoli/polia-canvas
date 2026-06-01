@@ -34,10 +34,10 @@ export function LogoutModal({ open, onCancel, onConfirm, loading }: LogoutModalP
         className="w-full max-w-[380px] rounded-2xl border border-[rgba(201,107,62,0.25)] bg-[rgba(15,15,31,0.95)] p-8 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-center font-serif text-[32px] leading-tight text-[#FDF8F5]">
+        <h2 className="text-center font-serif text-[32px] leading-tight text-polia-marrom">
           Tem certeza que quer sair?
         </h2>
-        <p className="mt-3 text-center font-sans text-[15px] text-[#D8D2CC]/80">
+        <p className="mt-3 text-center font-sans text-[15px] text-polia-marrom/70/80">
           Seus dados ficam salvos. É só entrar de novo quando quiser continuar.
         </p>
         <div className="mt-7 flex flex-col gap-3">

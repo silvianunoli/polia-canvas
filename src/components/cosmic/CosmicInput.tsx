@@ -21,7 +21,7 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
         <div className="mb-1.5 flex items-end justify-between">
           <label
             htmlFor={inputId}
-            className="font-sans text-[13px] text-[#D8D2CC]/80"
+            className="font-sans text-[13px] text-polia-marrom/80"
           >
             {label}
           </label>
@@ -33,22 +33,22 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
             id={inputId}
             type={effectiveType}
             {...rest}
-            className={`h-[52px] w-full rounded-xl bg-[rgba(26,26,46,0.8)] px-4 ${
+            className={`h-[52px] w-full rounded-xl bg-white px-4 ${
               icon || isPassword ? "pr-11" : ""
-            } font-sans text-[16px] text-[#FDF8F5] placeholder:text-[#D8D2CC]/40 outline-none transition-all border ${
+            } font-sans text-[16px] text-polia-marrom placeholder:text-polia-marrom/40 outline-none transition-all border ${
               error
                 ? "border-[#E53E3E] focus:border-[#E53E3E] focus:shadow-[0_0_12px_rgba(229,62,62,0.25)]"
-                : "border-[rgba(201,107,62,0.4)] focus:border-[#C96B3E] focus:shadow-[0_0_12px_rgba(201,107,62,0.25)]"
+                : "border-[rgba(201,107,62,0.4)] focus:border-polia-terracota focus:shadow-[0_0_12px_rgba(201,107,62,0.25)]"
             } disabled:opacity-60`}
           />
           {(icon || isPassword || rightSlot) && (
-            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-[#D8D2CC]/50">
+            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-polia-marrom/50">
               {rightSlot}
               {isPassword ? (
                 <button
                   type="button"
                   onClick={() => setShow((v) => !v)}
-                  className="rounded-md p-1 transition-colors hover:text-[#FDF8F5] focus:outline-none focus:ring-2 focus:ring-[#C96B3E]/40"
+                  className="rounded-md p-1 transition-colors hover:text-polia-marrom focus:outline-none focus:ring-2 focus:ring-polia-terracota/40"
                   aria-label={show ? "Esconder senha" : "Mostrar senha"}
                   tabIndex={-1}
                 >
@@ -93,7 +93,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
           className="h-1 rounded-full transition-colors"
           style={{
             backgroundColor:
-              i < score ? colors[Math.min(score - 1, 3)] : "rgba(255,255,255,0.08)",
+              i < score ? colors[Math.min(score - 1, 3)] : "rgba(26,26,46,0.08)",
           }}
         />
       ))}

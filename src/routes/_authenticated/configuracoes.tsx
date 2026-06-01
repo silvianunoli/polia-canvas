@@ -305,7 +305,7 @@ function ConfiguracoesPage() {
                   disabled={
                     novaSenha.length < 8 || novaSenha !== confirmarSenha
                   }
-                  className="font-sans text-[13px] font-semibold text-[#FDF8F5] bg-[#C96B3E] rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-40"
+                  className="font-sans text-[13px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-40"
                 >
                   Salvar nova senha
                 </button>
@@ -332,7 +332,7 @@ function ConfiguracoesPage() {
             type="button"
             onClick={salvarPerfil}
             disabled={salvando}
-            className="font-sans text-[14px] font-semibold text-[#FDF8F5] bg-[#C96B3E] rounded-xl px-6 py-3 hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
+            className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-6 py-3 hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar alterações"}
           </button>

@@ -58,7 +58,7 @@ type TabId = "clientes" | "vendas" | "cuidado" | "conteudo";
 function statusPedidoCor(status: StatusPedido) {
   switch (status) {
     case "Em produção":
-      return "bg-[rgba(201,107,62,0.1)] text-[#C96B3E]";
+      return "bg-[rgba(201,107,62,0.1)] text-polia-terracota";
     case "Entregue":
       return "bg-[rgba(44,106,79,0.1)] text-[#2D6A4F]";
     case "Em espera":
@@ -165,24 +165,24 @@ function ClientesPage() {
   // ESTADO BLOQUEADO
   if (!orbitUnlocked) {
     return (
-      <div className="min-h-screen bg-[#1A1A2E] flex flex-col items-center justify-center text-center px-8">
-        <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-4">
+      <div className="min-h-screen bg-polia-papel-creme flex flex-col items-center justify-center text-center px-8">
+        <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-4">
           SUAS VENDAS E CLIENTES
         </p>
-        <h1 className="font-serif text-[#FDF8F5] text-[48px] leading-tight mb-4 max-w-[520px]">
+        <h1 className="font-serif text-polia-marrom text-[48px] leading-tight mb-4 max-w-[520px]">
           Essa ferramenta anda com você quando você chegar na Etapa 7.
         </h1>
-        <p className="font-sans text-[#D8D2CC] text-[16px] max-w-[440px] mb-8">
+        <p className="font-sans text-polia-marrom/70 text-[16px] max-w-[440px] mb-8">
           Complete as etapas de Venda pra montar seu fluxo de vendas, protocolo
           de cuidado e plano de conteúdo.
         </p>
         <button
           onClick={() => navigate({ to: `/etapa/${etapaAtual}` as string })}
-          className="bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
+          className="bg-polia-terracota text-polia-creme font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
         >
           Continuar minha jornada →
         </button>
-        <p className="caveat-decorativo text-[#D8D2CC] mt-4">
+        <p className="caveat-decorativo text-polia-marrom/70 mt-4">
           falta pouco.
         </p>
       </div>
@@ -197,13 +197,13 @@ function ClientesPage() {
       <div className="px-6 pt-8 md:px-12 md:pt-10">
         <div className="flex flex-col gap-6 mb-8 max-w-[1280px] mx-auto md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-2">
+            <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-2">
               SUAS VENDAS E CLIENTES
             </p>
             <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
               Do primeiro contato ao sim.
             </h1>
-            <p className="caveat-decorativo text-[#C96B3E] mt-2">
+            <p className="caveat-decorativo text-polia-terracota mt-2">
               {orbitActive
                 ? "fluxo completo: vendas, cuidado e conteúdo."
                 : "vendas e cuidado montados. conteúdo vem na Etapa 9."}
@@ -234,7 +234,7 @@ function ClientesPage() {
                 onClick={() => setTabAtiva(tab.id)}
                 className={`font-sans text-[13px] md:text-[14px] px-3 md:px-5 py-2.5 md:py-3 rounded-lg md:rounded-none border md:border-0 md:border-b-2 transition-colors text-center ${
                   ativo
-                    ? "border-[#C96B3E] text-[#C96B3E] font-semibold bg-[rgba(201,107,62,0.06)] md:bg-transparent"
+                    ? "border-[#C96B3E] text-polia-terracota font-semibold bg-[rgba(201,107,62,0.06)] md:bg-transparent"
                     : "border-[rgba(26,26,46,0.1)] md:border-transparent text-[#1A1A2E] opacity-60 md:opacity-50 hover:opacity-80"
                 }`}
               >
@@ -327,7 +327,7 @@ function TabClientes({
         </div>
         <button
           onClick={onAdicionar}
-          className="font-sans text-[14px] font-semibold text-[#FDF8F5] bg-[#C96B3E] px-5 py-2.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
+          className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota px-5 py-2.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
         >
           + Adicionar cliente
         </button>
@@ -347,7 +347,7 @@ function TabClientes({
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-full bg-[rgba(201,107,62,0.12)] flex items-center justify-center">
-                <span className="font-sans font-semibold text-[#C96B3E] text-[16px]">
+                <span className="font-sans font-semibold text-polia-terracota text-[16px]">
                   {cliente.nome.charAt(0).toUpperCase()}
                 </span>
               </div>
@@ -390,7 +390,7 @@ function CardEntregavel({
 }) {
   return (
     <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] max-w-[760px]">
-      <p className="font-accent text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2">
+      <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
         {selo}
       </p>
       <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">{titulo}</p>
@@ -413,7 +413,7 @@ function CardEntregavel({
       ))}
       {destaque && (
         <div className="mt-6 bg-[rgba(201,107,62,0.04)] border border-[rgba(201,107,62,0.15)] rounded-xl p-5">
-          <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C96B3E] mb-2">
+          <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-polia-terracota mb-2">
             {destaque.label}
           </p>
           <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
@@ -441,7 +441,7 @@ function EstadoVazioEntregavel({
       </p>
       <button
         onClick={onClick}
-        className="font-sans text-[#C96B3E] text-[14px] hover:underline"
+        className="font-sans text-polia-terracota text-[14px] hover:underline"
       >
         {ctaTexto}
       </button>
@@ -556,7 +556,7 @@ function TabEntregavelE9({
   };
   return (
     <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] max-w-[760px]">
-      <p className="font-accent text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2">
+      <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
         ENTREGÁVEL · ETAPA 9
       </p>
       <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">
@@ -585,7 +585,7 @@ function TabEntregavelE9({
         </p>
         {(c.ideias ?? []).map((ideia, i) => (
           <div key={i} className="flex gap-3 mb-3">
-            <span className="font-serif text-[#C96B3E] text-[18px] leading-none mt-0.5">
+            <span className="font-serif text-polia-terracota text-[18px] leading-none mt-0.5">
               {i + 1}
             </span>
             <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
@@ -658,7 +658,7 @@ function ModalCliente({
         className="bg-white rounded-2xl p-8 w-full max-w-[480px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="font-accent text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2">
+        <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
           NOVA CLIENTE
         </p>
         <h2 className="font-serif text-[#1A1A2E] text-[26px] mb-6">
@@ -698,7 +698,7 @@ function ModalCliente({
               onClick={() => setStatusPedido("")}
               className={`font-sans text-[12px] px-3 py-1.5 rounded-full border ${
                 statusPedido === ""
-                  ? "border-[#C96B3E] text-[#C96B3E]"
+                  ? "border-[#C96B3E] text-polia-terracota"
                   : "border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60"
               }`}
             >
@@ -710,7 +710,7 @@ function ModalCliente({
                 onClick={() => setStatusPedido(s)}
                 className={`font-sans text-[12px] px-3 py-1.5 rounded-full border ${
                   statusPedido === s
-                    ? "border-[#C96B3E] text-[#C96B3E]"
+                    ? "border-[#C96B3E] text-polia-terracota"
                     : "border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60"
                 }`}
               >
@@ -746,7 +746,7 @@ function ModalCliente({
           <button
             onClick={salvar}
             disabled={salvando}
-            className="font-sans text-[14px] font-semibold text-[#FDF8F5] bg-[#C96B3E] px-5 py-2 rounded-xl hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
+            className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota px-5 py-2 rounded-xl hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>

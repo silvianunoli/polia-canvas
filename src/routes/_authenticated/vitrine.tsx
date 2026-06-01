@@ -94,19 +94,19 @@ function VitrinePage() {
 
   if (!profile?.orbit_vitrine_unlocked) {
     return (
-      <div className="min-h-screen bg-[#1A1A2E] flex flex-col items-center justify-center text-center px-8">
-        <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-4">
+      <div className="min-h-screen bg-polia-papel-creme flex flex-col items-center justify-center text-center px-8">
+        <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-4">
           SUA VITRINE
         </p>
-        <h1 className="font-serif text-[#FDF8F5] text-[48px] leading-tight mb-4 max-w-[520px]">
+        <h1 className="font-serif text-polia-marrom text-[48px] leading-tight mb-4 max-w-[520px]">
           Essa ferramenta anda com você quando você completar a Etapa 2.
         </h1>
-        <p className="font-sans text-[#D8D2CC] text-[16px] max-w-[440px] mb-8">
+        <p className="font-sans text-polia-marrom/70 text-[16px] max-w-[440px] mb-8">
           Seu produto, presença online e sistema de controle reunidos num só lugar.
         </p>
         <button
           onClick={() => navigate({ to: `/etapa/${etapaAtual}` })}
-          className="bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
+          className="bg-polia-terracota text-polia-creme font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
         >
           Continuar minha jornada →
         </button>
@@ -132,13 +132,13 @@ function VitrinePage() {
       <div className="px-6 pt-8 pb-12 max-w-[1280px] mx-auto md:px-12 md:pt-10 md:pb-16">
         {/* Cabeçalho */}
         <div className="mb-8">
-          <p className="font-accent text-[#C96B3E] text-[11px] tracking-[2px] uppercase mb-2">
+          <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-2">
             SUA VITRINE
           </p>
           <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
             O que você vende. Como aparece. Como produz.
           </h1>
-          <p className="caveat-decorativo text-[#C96B3E] mt-2">
+          <p className="caveat-decorativo text-polia-terracota mt-2">
             {vitrineAtiva
               ? "vitrine completa: produto, presença e controle."
               : "produto e presença prontos. sistema de controle vem na Etapa 6."}
@@ -234,7 +234,7 @@ function CardFichaProduto({
         {temFicha && entregavel?.id && (
           <a
             href={`/biblioteca/${entregavel.id}`}
-            className="font-sans text-[#C96B3E] text-[13px] hover:underline"
+            className="font-sans text-polia-terracota text-[13px] hover:underline"
           >
             Editar →
           </a>
@@ -331,7 +331,7 @@ function CardGuiaImpressao({
         {temGuia && entregavel?.id && (
           <a
             href={`/biblioteca/${entregavel.id}`}
-            className="font-sans text-[#C96B3E] text-[13px] hover:underline"
+            className="font-sans text-polia-terracota text-[13px] hover:underline"
           >
             Editar →
           </a>
@@ -424,7 +424,7 @@ function CardSistemaControle({
         {temSistema && entregavel?.id && (
           <a
             href={`/biblioteca/${entregavel.id}`}
-            className="font-sans text-[#C96B3E] text-[13px] hover:underline"
+            className="font-sans text-polia-terracota text-[13px] hover:underline"
           >
             Editar →
           </a>
@@ -493,7 +493,7 @@ function EstadoVazio({
       </p>
       <button
         onClick={onClick}
-        className="font-sans text-[#C96B3E] text-[13px] hover:underline"
+        className="font-sans text-polia-terracota text-[13px] hover:underline"
       >
         {cta}
       </button>

@@ -45,7 +45,7 @@ function badgeFase(fase: string): string {
 function badgeAtivo(fase: Fase): string {
   switch (fase) {
     case "Todos":
-      return "bg-[#1A1A2E] text-[#FDF8F5] border-[#1A1A2E]";
+      return "bg-polia-terracota text-polia-creme border-polia-terracota";
     case "Sonho":
       return "bg-[rgba(201,64,122,0.12)] text-[#C9407A] border-[rgba(201,64,122,0.3)]";
     case "Construção":

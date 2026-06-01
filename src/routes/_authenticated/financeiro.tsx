@@ -130,26 +130,26 @@ function FinanceiroPage() {
 
   if (!unlocked) {
     return (
-      <div className="min-h-screen bg-[#1A1A2E]">
+      <div className="min-h-screen bg-polia-papel-creme">
         <PainelNav initial={initial} streak={0} navActive="/financeiro" />
         <div className="flex flex-col items-center justify-center px-8 py-32 text-center">
-          <p className="mb-4 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
+          <p className="mb-4 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
             SEU PAINEL FINANCEIRO
           </p>
-          <h1 className="mb-4 max-w-[520px] font-serif text-[48px] leading-tight text-[#FDF8F5]">
+          <h1 className="mb-4 max-w-[520px] font-serif text-[48px] leading-tight text-polia-marrom">
             Essa ferramenta anda com você quando você chegar na Etapa 10.
           </h1>
-          <p className="mb-8 max-w-[440px] font-sans text-[16px] text-[#D8D2CC]">
+          <p className="mb-8 max-w-[440px] font-sans text-[16px] text-polia-marrom/70">
             Complete as etapas de Evolução pra montar seu painel de
             acompanhamento e plano de crescimento.
           </p>
           <button
             onClick={() => navigate({ to: `/etapa/${etapaAtual}` as "/etapa/1" })}
-            className="rounded-xl bg-[#C96B3E] px-8 py-3.5 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
+            className="rounded-xl bg-[#C96B3E] px-8 py-3.5 font-sans text-[16px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           >
             Continuar minha jornada →
           </button>
-          <p className="mt-4 caveat-decorativo text-[#D8D2CC]">
+          <p className="mt-4 caveat-decorativo text-polia-marrom/70">
             quase lá.
           </p>
         </div>
@@ -170,13 +170,13 @@ function FinanceiroPage() {
       <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-12">
         {/* CABEÇALHO */}
         <div className="mb-8">
-          <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-[#C96B3E]">
+          <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
             SEU PAINEL FINANCEIRO
           </p>
           <h1 className="font-serif text-[28px] leading-tight text-[#1A1A2E] md:text-[44px]">
             O que você mede, cresce.
           </h1>
-          <p className="mt-2 caveat-decorativo text-[#C96B3E]">
+          <p className="mt-2 caveat-decorativo text-polia-terracota">
             {active
               ? "painel completo: números, crescimento e rede."
               : "painel de números montado. plano de crescimento vem na Etapa 11."}
@@ -208,7 +208,7 @@ function FinanceiroPage() {
               </div>
               <a
                 href={`/biblioteca/${painelEntregavel.id}`}
-                className="font-sans text-[13px] text-[#C96B3E] hover:underline"
+                className="font-sans text-[13px] text-polia-terracota hover:underline"
               >
                 Editar →
               </a>
@@ -224,7 +224,7 @@ function FinanceiroPage() {
                   key={item.ordem}
                   className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-6 shadow-sm"
                 >
-                  <p className="mb-3 font-serif text-[32px] leading-none text-[#C96B3E]">
+                  <p className="mb-3 font-serif text-[32px] leading-none text-polia-terracota">
                     {item.ordem}
                   </p>
                   <p className="font-sans text-[14px] leading-relaxed text-[#1A1A2E]">
@@ -244,7 +244,7 @@ function FinanceiroPage() {
                 </p>
               </div>
               <div className="rounded-2xl border border-[rgba(201,107,62,0.15)] bg-[rgba(201,107,62,0.04)] p-6">
-                <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+                <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
                   QUANDO AGIR
                 </p>
                 <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
@@ -260,7 +260,7 @@ function FinanceiroPage() {
             </p>
             <button
               onClick={() => navigate({ to: "/etapa/10" })}
-              className="font-sans text-[14px] text-[#C96B3E] hover:underline"
+              className="font-sans text-[14px] text-polia-terracota hover:underline"
             >
               Ir pra Etapa 10 →
             </button>
@@ -278,7 +278,7 @@ function FinanceiroPage() {
             </p>
             <button
               onClick={() => navigate({ to: "/etapa/11" })}
-              className="font-sans text-[14px] text-[#C96B3E] hover:underline"
+              className="font-sans text-[14px] text-polia-terracota hover:underline"
             >
               Ir pra Etapa 11 →
             </button>
@@ -296,7 +296,7 @@ function FinanceiroPage() {
               </div>
               <a
                 href={`/biblioteca/${planoEntregavel.id}`}
-                className="font-sans text-[13px] text-[#C96B3E] hover:underline"
+                className="font-sans text-[13px] text-polia-terracota hover:underline"
               >
                 Editar →
               </a>
@@ -323,7 +323,7 @@ function FinanceiroPage() {
 
               {planoData.afirmacao && (
                 <div className="mt-6 rounded-xl border border-[rgba(201,107,62,0.15)] bg-[rgba(201,107,62,0.04)] p-5">
-                  <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#C96B3E]">
+                  <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
                     SUA AFIRMAÇÃO
                   </p>
                   <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
@@ -422,7 +422,7 @@ function ReceitaMetaSection({
             />
             <button
               onClick={salvarReceita}
-              className="ml-2 font-sans text-[14px] font-semibold text-[#C96B3E]"
+              className="ml-2 font-sans text-[14px] font-semibold text-polia-terracota"
             >
               salvar
             </button>
@@ -432,10 +432,10 @@ function ReceitaMetaSection({
             onClick={() => setEditandoReceita(true)}
             className="group text-left"
           >
-            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E] md:text-[40px]">
+            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
               {receita > 0 ? `R$ ${receita.toLocaleString("pt-BR")}` : "R$ 0"}
             </p>
-            <p className="mt-1 font-sans text-[11px] text-[#C96B3E] opacity-0 transition-opacity group-hover:opacity-100">
+            <p className="mt-1 font-sans text-[11px] text-polia-terracota opacity-0 transition-opacity group-hover:opacity-100">
               clique pra atualizar
             </p>
           </button>
@@ -451,7 +451,7 @@ function ReceitaMetaSection({
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="font-sans text-[12px] font-semibold text-[#C96B3E]">
+            <p className="font-sans text-[12px] font-semibold text-polia-terracota">
               {Math.round(pct)}%
             </p>
           </>
@@ -475,7 +475,7 @@ function ReceitaMetaSection({
             />
             <button
               onClick={salvarMeta}
-              className="ml-2 font-sans text-[14px] font-semibold text-[#C96B3E]"
+              className="ml-2 font-sans text-[14px] font-semibold text-polia-terracota"
             >
               salvar
             </button>
@@ -485,10 +485,10 @@ function ReceitaMetaSection({
             onClick={() => setEditandoMeta(true)}
             className="group text-left"
           >
-            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-[#C96B3E] md:text-[40px]">
+            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
               {meta > 0 ? `R$ ${meta.toLocaleString("pt-BR")}` : "definir meta"}
             </p>
-            <p className="mt-1 font-sans text-[11px] text-[#C96B3E] opacity-0 transition-opacity group-hover:opacity-100">
+            <p className="mt-1 font-sans text-[11px] text-polia-terracota opacity-0 transition-opacity group-hover:opacity-100">
               clique pra editar
             </p>
           </button>

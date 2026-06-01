@@ -28,7 +28,7 @@ export function AuthShell({ children, maxWidth = 440 }: AuthShellProps) {
 export function CaveatEyebrow({ children, size = 28 }: { children: ReactNode; size?: number }) {
   return (
     <p
-      className="mb-2 text-center caveat-decorativo text-[#E89770]"
+      className="mb-2 text-center caveat-decorativo text-polia-terracota"
       style={{ fontSize: size, lineHeight: 1.1 }}
     >
       {children}
@@ -39,7 +39,7 @@ export function CaveatEyebrow({ children, size = 28 }: { children: ReactNode; si
 export function SerifHeadline({ children, size = 52 }: { children: ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-serif leading-[1.05] text-[#FDF8F5]"
+      className="text-center font-serif leading-[1.05] text-polia-marrom"
       style={{ fontSize: `clamp(${Math.round(size * 0.6)}px, 6vw, ${size}px)` }}
     >
       {children}
@@ -49,7 +49,7 @@ export function SerifHeadline({ children, size = 52 }: { children: ReactNode; si
 
 export function SubText({ children }: { children: ReactNode }) {
   return (
-    <p className="text-center font-sans text-[16px] leading-relaxed text-[#D8D2CC]/80">
+    <p className="text-center font-sans text-[16px] leading-relaxed text-polia-marrom/70">
       {children}
     </p>
   );
@@ -58,9 +58,9 @@ export function SubText({ children }: { children: ReactNode }) {
 export function Divider({ label = "ou" }: { label?: string }) {
   return (
     <div className="my-6 flex items-center gap-3" aria-hidden="true">
-      <div className="h-px flex-1 bg-[rgba(255,255,255,0.12)]" />
-      <span className="font-sans text-[13px] text-[#D8D2CC]/50">{label}</span>
-      <div className="h-px flex-1 bg-[rgba(255,255,255,0.12)]" />
+      <div className="h-px flex-1 bg-[rgba(26,26,46,0.12)]" />
+      <span className="font-sans text-[13px] text-polia-marrom/50">{label}</span>
+      <div className="h-px flex-1 bg-[rgba(26,26,46,0.12)]" />
     </div>
   );
 }

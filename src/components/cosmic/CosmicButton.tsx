@@ -19,7 +19,7 @@ export const CosmicButton = forwardRef<HTMLButtonElement, CosmicButtonProps>(
             ref={ref}
             disabled={loading || disabled}
             {...rest}
-            className={`relative inline-flex h-[58px] w-full items-center justify-center gap-2 rounded-xl bg-[#C96B3E] font-sans text-[18px] font-semibold text-[#FDF8F5] transition-all hover:bg-[#D6764A] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
+            className={`relative inline-flex h-[58px] w-full items-center justify-center gap-2 rounded-xl bg-polia-terracota font-sans text-[18px] font-semibold text-polia-creme transition-all hover:bg-[#D6764A] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed ${className}`}
           >
             {loading && <Loader2 size={20} className="animate-spin" />}
             {children}
@@ -33,7 +33,7 @@ export const CosmicButton = forwardRef<HTMLButtonElement, CosmicButtonProps>(
           ref={ref}
           disabled={loading || disabled}
           {...rest}
-          className={`inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.06)] font-sans text-[16px] text-[#D8D2CC] transition-colors hover:bg-[rgba(255,255,255,0.10)] disabled:opacity-60 ${className}`}
+          className={`inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[rgba(26,26,46,0.12)] bg-white font-sans text-[16px] text-polia-marrom transition-colors hover:bg-polia-papel-creme disabled:opacity-60 ${className}`}
         >
           {loading && <Loader2 size={18} className="animate-spin" />}
           {children}
@@ -45,7 +45,7 @@ export const CosmicButton = forwardRef<HTMLButtonElement, CosmicButtonProps>(
         ref={ref}
         disabled={loading || disabled}
         {...rest}
-        className={`inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-transparent border border-[rgba(255,255,255,0.15)] font-sans text-[16px] text-[#D8D2CC] transition-colors hover:bg-[rgba(255,255,255,0.05)] disabled:opacity-60 ${className}`}
+        className={`inline-flex h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-transparent border border-[rgba(26,26,46,0.15)] font-sans text-[16px] text-polia-marrom transition-colors hover:bg-[rgba(26,26,46,0.05)] disabled:opacity-60 ${className}`}
       >
         {loading && <Loader2 size={18} className="animate-spin" />}
         {children}

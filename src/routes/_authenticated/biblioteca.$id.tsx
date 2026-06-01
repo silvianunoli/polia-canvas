@@ -292,7 +292,7 @@ function BibliotecaDetalhePage() {
                   <button
                     onClick={salvarEdicao}
                     disabled={salvando}
-                    className="font-sans text-[13px] font-semibold text-[#FDF8F5] bg-[#C96B3E] rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
+                    className="font-sans text-[13px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
                   >
                     {salvando ? "Salvando..." : "Salvar"}
                   </button>

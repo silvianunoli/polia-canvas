@@ -81,7 +81,7 @@ function OnboardingPage() {
 function StepIndicator({ step }: { step: number }) {
   return (
     <p
-      className="text-center font-sans font-semibold uppercase text-[#C8A96E]/90"
+      className="text-center font-sans font-semibold uppercase text-polia-mostarda-intenso/90"
       style={{ fontSize: 11, letterSpacing: 2.5 }}
     >
       Passo {step} de 5
@@ -92,7 +92,7 @@ function StepIndicator({ step }: { step: number }) {
 function LogoPlaceholder({ size = 180 }: { size?: number }) {
   return (
     <div
-      className="mx-auto flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed bg-[rgba(36,36,66,0.4)] p-4 text-center"
+      className="mx-auto flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed bg-white p-4 text-center"
       style={{
         width: size === 180 ? 220 : size,
         height: size,
@@ -100,13 +100,13 @@ function LogoPlaceholder({ size = 180 }: { size?: number }) {
         borderWidth: 1.5,
       }}
     >
-      <span className="font-sans font-semibold uppercase text-[#C8A96E]" style={{ fontSize: 10, letterSpacing: 1.5 }}>
+      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.5 }}>
         Placeholder · Logo
       </span>
-      <span className="font-sans text-[#D8D2CC]" style={{ fontSize: 10 }}>
+      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 10 }}>
         Lockup L2 Vertical · 180×180
       </span>
-      <span className="font-sans text-[#D8D2CC]/70" style={{ fontSize: 9 }}>
+      <span className="font-sans text-polia-marrom/50" style={{ fontSize: 9 }}>
         SVG · upload no Lovable
       </span>
     </div>
@@ -115,7 +115,7 @@ function LogoPlaceholder({ size = 180 }: { size?: number }) {
 
 function Caveat({ children, size = 28 }: { children: React.ReactNode; size?: number }) {
   return (
-    <p className="text-center caveat-decorativo text-[#E89770]" style={{ fontSize: size, lineHeight: 1.15 }}>
+    <p className="text-center caveat-decorativo text-polia-terracota" style={{ fontSize: size, lineHeight: 1.15 }}>
       {children}
     </p>
   );
@@ -124,7 +124,7 @@ function Caveat({ children, size = 28 }: { children: React.ReactNode; size?: num
 function Headline({ children, size = 64 }: { children: React.ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-serif text-[#FDF8F5]"
+      className="text-center font-serif text-polia-marrom"
       style={{
         fontSize: `clamp(${Math.round(size * 0.55)}px, 6vw, ${size}px)`,
         lineHeight: 1.15,
@@ -138,7 +138,7 @@ function Headline({ children, size = 64 }: { children: React.ReactNode; size?: n
 function Body({ children, max = 600 }: { children: React.ReactNode; max?: number }) {
   return (
     <p
-      className="mx-auto text-center font-sans text-[#D8D2CC]"
+      className="mx-auto text-center font-sans text-polia-marrom/70"
       style={{ fontSize: 17, lineHeight: "28px", maxWidth: max }}
     >
       {children}
@@ -185,7 +185,7 @@ function Step1({ onNext }: { onNext: () => void }) {
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
       <PrimaryCTA onClick={onNext}>Começar  →</PrimaryCTA>
-      <p className="text-center font-sans text-[14px] text-[#D8D2CC]/65">Leva 3 minutinhos.</p>
+      <p className="text-center font-sans text-[14px] text-polia-marrom/55">Leva 3 minutinhos.</p>
       <FoxPlaceholder />
     </div>
   );
@@ -194,17 +194,17 @@ function Step1({ onNext }: { onNext: () => void }) {
 function FoxPlaceholder() {
   return (
     <div
-      className="mx-auto flex flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed bg-[rgba(36,36,66,0.5)] p-4 text-center"
+      className="mx-auto flex flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed bg-white p-4 text-center"
       style={{ width: 260, height: 220, borderColor: "rgba(232,151,112,0.6)", borderWidth: 1.5 }}
     >
-      <div className="rounded-full bg-[rgba(36,36,66,0.6)]" style={{ width: 54, height: 54 }} />
-      <span className="font-sans font-semibold uppercase text-[#E89770]" style={{ fontSize: 10, letterSpacing: 1.5 }}>
+      <div className="rounded-full bg-polia-cinza-areia/40" style={{ width: 54, height: 54 }} />
+      <span className="font-sans font-semibold uppercase text-polia-terracota" style={{ fontSize: 10, letterSpacing: 1.5 }}>
         Placeholder · Raposa
       </span>
-      <span className="caveat-decorativo text-[#E89770]" style={{ fontSize: 22 }}>
+      <span className="caveat-decorativo text-polia-terracota" style={{ fontSize: 22 }}>
         Estado: Orientando
       </span>
-      <span className="font-sans text-[#D8D2CC]" style={{ fontSize: 10 }}>
+      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 10 }}>
         PNG transparente · 220×260
       </span>
     </div>
@@ -281,13 +281,13 @@ function ChoiceCard({
         minHeight: 170,
       }}
     >
-      <span className="font-sans font-semibold uppercase text-[#C8A96E]" style={{ fontSize: 10, letterSpacing: 1.8 }}>
+      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.8 }}>
         {tag}
       </span>
-      <span className="font-serif text-[#FDF8F5]" style={{ fontSize: 22, lineHeight: "28px" }}>
+      <span className="font-serif text-polia-marrom" style={{ fontSize: 22, lineHeight: "28px" }}>
         {title}
       </span>
-      <span className="font-sans text-[#D8D2CC]" style={{ fontSize: 12, lineHeight: "17px" }}>
+      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 12, lineHeight: "17px" }}>
         {desc}
       </span>
     </button>
@@ -441,16 +441,16 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="font-sans font-semibold uppercase text-[#C8A96E]" style={{ fontSize: 10, letterSpacing: 1.8 }}>
+      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.8 }}>
         {label}
-        {required && <span className="ml-1 text-[#E89770]">*</span>}
+        {required && <span className="ml-1 text-polia-terracota">*</span>}
       </span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl px-[18px] font-sans text-[#FDF8F5] outline-none transition-all placeholder:text-[rgba(216,210,204,0.55)] focus:border-[#C96B3E]"
+        className="rounded-xl px-[18px] font-sans text-polia-marrom outline-none transition-all placeholder:text-polia-marrom/60 focus:border-[#C96B3E]"
         style={{
           height: 56,
           background: "rgba(36,36,66,0.55)",
@@ -541,7 +541,7 @@ function Step5({ onFinish }: { onFinish: () => void }) {
                   {label}
                 </span>
                 {active && (
-                  <span className="caveat-decorativo text-[#E89770]" style={{ fontSize: 14 }}>
+                  <span className="caveat-decorativo text-polia-terracota" style={{ fontSize: 14 }}>
                     abrindo agora
                   </span>
                 )}
@@ -551,7 +551,7 @@ function Step5({ onFinish }: { onFinish: () => void }) {
         </div>
       </div>
 
-      <p className="text-center font-serif text-[#C96B3E]" style={{ fontSize: 22 }}>
+      <p className="text-center font-serif text-polia-terracota" style={{ fontSize: 22 }}>
         A Pólia não acaba. Ela só fica mais sua.
       </p>
       <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.8)]" style={{ fontSize: 18 }}>
