@@ -14,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/tarefas")({
       { title: "Tarefas · Pólia" },
       {
         name: "description",
-        content: "Seu fluxo de tarefas: sementes, brotos e o que já floresceu.",
+        content: "Seu fluxo de tarefas: o que fazer, o que está em progresso e o que já está pronto.",
       },
     ],
   }),
@@ -35,8 +35,8 @@ interface Tarefa {
 
 const COLUNAS: { id: Status; label: string; cor: string; bg: string }[] = [
   { id: "a_fazer", label: "A fazer", cor: "#1A1A2E", bg: "rgba(26,26,46,0.06)" },
-  { id: "brotando", label: "Brotando", cor: "#1A7FAD", bg: "rgba(26,127,173,0.08)" },
-  { id: "floresceu", label: "Floresceram", cor: "#2D6A4F", bg: "rgba(44,106,79,0.08)" },
+  { id: "brotando", label: "Fazendo", cor: "#1A7FAD", bg: "rgba(26,127,173,0.08)" },
+  { id: "floresceu", label: "Prontas", cor: "#2D6A4F", bg: "rgba(44,106,79,0.08)" },
 ];
 
 const proximaColuna = (s: Status): Status =>

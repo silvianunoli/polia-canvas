@@ -442,7 +442,7 @@ function PainelPage() {
             ESSA SEMANA
           </p>
           <h2 className="mb-8 font-serif text-[28px] text-polia-noite md:text-[32px]">
-            Sua semana de colheita
+            Sua semana de trabalho
           </h2>
           <div className="flex flex-col items-start gap-6 md:flex-row md:items-end md:justify-between">
             <div className="grid w-full grid-cols-7 gap-1.5 sm:gap-3 md:flex-1">
@@ -479,7 +479,7 @@ function PainelPage() {
                       d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
                     }`}
                   >
-                    {d.isHoje ? "hoje plantei" : "sementes"}
+                    {d.isHoje ? "hoje" : "tarefas"}
                   </span>
                   {d.isHoje && (
                     <span className="sm:hidden text-center caveat-decorativo text-[14px] leading-none text-polia-creme/70">
@@ -497,7 +497,7 @@ function PainelPage() {
                 {totalSemana}
               </p>
               <p className="mb-1 font-sans text-[14px] text-polia-noite opacity-60">
-                sementes plantadas
+                tarefas prontas
               </p>
               <p className="caveat-decorativo text-polia-noite opacity-40">
                 recorde anterior: {Math.max(totalSemana, 0)}
@@ -541,8 +541,8 @@ function PainelPage() {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { col: "A fazer", items: tarefasAFazer },
-                { col: "Brotando", items: tarefasBrotando },
-                { col: "Floresceram", items: tarefasFloresceram },
+                { col: "Fazendo", items: tarefasBrotando },
+                { col: "Prontas", items: tarefasFloresceram },
               ].map((c) => (
                 <div key={c.col}>
                   <p className="mb-2 font-sans text-[11px] font-semibold text-polia-noite opacity-50">

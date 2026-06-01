@@ -1,6 +1,6 @@
 // Util de pluralização para o kanban de Tarefas (Pólia).
-// Mantém a voz Caveat ("sementes pra plantar · brotando · já floresceram"),
-// com tratamento de zero para empty state acolhedor.
+// Voz literal e clara — mundo cósmico é o único mundo metafórico da marca.
+// Revertido de jardim (sementes/brotando/floresceram) em 2026-05-30.
 
 export interface KanbanCounts {
   a_fazer: number;
@@ -9,18 +9,19 @@ export interface KanbanCounts {
 }
 
 function fazer(n: number) {
-  if (n === 0) return "nada pra plantar ainda";
-  if (n === 1) return "1 semente pra plantar";
-  return `${n} sementes pra plantar`;
+  if (n === 0) return "nada pra fazer ainda";
+  if (n === 1) return "1 tarefa pra fazer";
+  return `${n} tarefas pra fazer`;
 }
 function brotar(n: number) {
-  if (n === 0) return "nada brotando ainda";
-  return `${n} brotando`;
+  if (n === 0) return "nada em progresso";
+  if (n === 1) return "1 em progresso";
+  return `${n} em progresso`;
 }
 function florescer(n: number) {
-  if (n === 0) return "nada floresceu ainda";
-  if (n === 1) return "1 já floresceu";
-  return `${n} já floresceram`;
+  if (n === 0) return "nada pronto ainda";
+  if (n === 1) return "1 pronta";
+  return `${n} prontas`;
 }
 
 export function pluralizeKanban(counts: KanbanCounts): string {

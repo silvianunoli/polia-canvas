@@ -1,4 +1,4 @@
-import { Trophy, Sparkles, Sprout } from "lucide-react";
+import { Trophy, Sparkles, Star } from "lucide-react";
 
 export type ConquistaEstado = "vazio" | "atual" | "anterior";
 
@@ -19,16 +19,16 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
     return (
       <div className="rounded-2xl border border-dashed border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] p-6">
         <div className="mb-3 flex items-center gap-2">
-          <Sprout size={16} className="text-polia-creme/50" />
+          <Star size={16} className="text-polia-creme/50" />
           <p className="font-accent text-[10px] font-bold uppercase tracking-[2px] text-polia-creme/60">
             CONQUISTA DA SEMANA
           </p>
         </div>
         <p className="font-sans text-[14px] text-polia-creme/70">
-          sua primeira conquista aparece quando você fechar a primeira tarefa.
+          sua primeira conquista aparece quando você concluir a primeira tarefa.
         </p>
         <p className="mt-2 caveat-decorativo text-polia-creme/40">
-          tá tudo começando.
+          tudo começa aqui.
         </p>
       </div>
     );
@@ -50,7 +50,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
           </p>
         </div>
         <p className="font-sans text-[16px] font-semibold text-polia-creme">
-          {titulo ?? "você tá brilhando essa semana"}
+          {titulo ?? "essa semana você avançou."}
         </p>
         {sub && (
           <p className="mt-2 caveat-decorativo text-polia-terracota">
@@ -71,7 +71,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
         </p>
       </div>
       <p className="font-sans text-[15px] text-polia-creme/90">
-        {titulo ?? "uma conquista guardada no seu céu"}
+        {titulo ?? "guardada no seu céu."}
       </p>
       {sub && (
         <p className="mt-2 caveat-decorativo text-polia-creme/60">
