@@ -184,7 +184,7 @@ function Step1({ onNext }: { onNext: () => void }) {
         <Body>Vou te guiar do primeiro passo até seu primeiro entregável.</Body>
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
-      <PrimaryCTA onClick={onNext}>Bora começar  →</PrimaryCTA>
+      <PrimaryCTA onClick={onNext}>Começar  →</PrimaryCTA>
       <p className="text-center font-sans text-[14px] text-[#D8D2CC]/65">Leva 3 minutinhos.</p>
       <FoxPlaceholder />
     </div>

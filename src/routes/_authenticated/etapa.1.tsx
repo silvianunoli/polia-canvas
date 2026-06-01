@@ -350,7 +350,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[56px] rounded-[14px] bg-[#C96B3E] px-10 font-sans text-[16px] font-semibold text-[#FDF8F5] transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Bora descobrir →
+          Começar →
         </button>
 
         <p className="caveat-decorativo text-[rgba(216,210,204,0.6)] mt-4">
