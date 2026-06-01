@@ -147,9 +147,8 @@
   --sidebar-ring: var(--polia-terracota);
 }
 
-/* Mundo Territorial — paleta padrão. NOTA: .cosmic será removida no Sprint 2 (virada terrena). */
-.cosmic,
-.dark {
+/* Legacy: sobrescritas cósmicas (.cosmic / .dark). Mantidas só pra não quebrar AuthShell + Conclusao das etapas que ainda usam fundo noite. NÃO aplicar em containers raiz. */
+.cosmic {
   --background: var(--polia-noite);
   --foreground: var(--polia-creme);
   --card: oklch(0.25 0.04 280);
