@@ -689,7 +689,7 @@ function PainelTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Continuar pra fim da etapa  →
+                Conquistar esse marco  →
               </button>
             </div>
           </>

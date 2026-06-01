@@ -102,7 +102,7 @@ function PainelPage() {
         await Promise.all([
           supabase
             .from("profiles")
-            .select("full_name, business_name, created_at, onboarding_completed")
+            .select("full_name, business_name, created_at, onboarding_completed, etapa_atual")
             .eq("id", userId!)
             .maybeSingle(),
           supabase
@@ -154,7 +154,11 @@ function PainelPage() {
   }, [dados?.profile?.full_name, user?.user_metadata?.full_name]);
 
   const initial = displayName.charAt(0).toUpperCase() || "P";
-  const etapaAtual = dados?.progress?.etapa_atual ?? 1;
+  // Prioriza profile.etapa_atual (atualizado pelos useEffect das etapas) sobre user_progress (legado)
+  const etapaAtual =
+    (dados?.profile as { etapa_atual?: number } | null | undefined)?.etapa_atual ??
+    dados?.progress?.etapa_atual ??
+    1;
   const etapaInfo = NOMES_ETAPAS[etapaAtual] ?? NOMES_ETAPAS[1];
   const businessType = dados?.userProfile?.segmento ?? "hibrido";
   const streak = 0; // placeholder até existir cálculo
