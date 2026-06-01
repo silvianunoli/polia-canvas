@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { ErrorPage } from "@/components/layout/ErrorPage";
+import { DiagnosticPanel } from "@/components/DiagnosticPanel";
 
 import appCss from "../styles.css?url";
 
@@ -105,6 +106,7 @@ function RootComponent() {
       <Outlet />
       <Toaster richColors position="top-center" theme="light" />
       <CookieConsent />
+      <DiagnosticPanel />
     </QueryClientProvider>
   );
 }
