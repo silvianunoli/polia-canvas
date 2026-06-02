@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { SidebarAside } from "@/components/layout/SidebarAside";
+import { CadernoCard } from "@/components/caderno/CadernoCard";
+import { getMarginalia } from "@/lib/marginaliaText";
 
 export const Route = createFileRoute("/_authenticated/biblioteca/")({
   head: () => ({
@@ -209,35 +211,48 @@ function BibliotecaPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                {entregaveisFiltrados.map((entregavel) => (
-                  <a
-                    key={entregavel.id}
-                    href={`/biblioteca/${entregavel.id}`}
-                    className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)] hover:border-[rgba(201,107,62,0.2)] hover:shadow-md transition-all cursor-pointer group block"
-                  >
-                    <span
-                      className={`inline-block font-accent text-[9px] tracking-[1.5px] uppercase font-bold px-3 py-1 rounded-full mb-4 ${badgeFase(
-                        entregavel.fase,
-                      )}`}
+                {entregaveisFiltrados.map((entregavel) => {
+                  const marginalia = getMarginalia({
+                    primeiraVez: entregavel.created_at,
+                    ultimaVisita: entregavel.created_at,
+                    visitas: 2,
+                  });
+                  const seed = entregavel.id
+                    .split("")
+                    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                  return (
+                    <CadernoCard
+                      key={entregavel.id}
+                      dobrada
+                      marginalia={marginalia}
+                      seed={seed}
+                      className="group"
+                      onClick={() => navigate({ to: `/biblioteca/${entregavel.id}` })}
                     >
-                      {entregavel.fase} · Etapa {entregavel.etapa}
-                    </span>
-                    <h3 className="font-serif text-[#1A1A2E] text-[20px] mb-3 group-hover:text-[#C96B3E] transition-colors">
-                      {entregavel.titulo}
-                    </h3>
-                    <p className="font-sans text-[#1A1A2E] text-[13px] leading-relaxed line-clamp-2 opacity-50 mb-4">
-                      {extrairPreview(entregavel.conteudo)}
-                    </p>
-                    <div className="flex items-center justify-between pt-4 border-t border-[rgba(26,26,46,0.05)]">
-                      <p className="font-sans text-[#1A1A2E] text-[11px] opacity-30">
-                        {formatarData(entregavel.created_at)}
-                      </p>
-                      <span className="font-sans text-[#C96B3E] text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">
-                        abrir
+                      <span
+                        className={`inline-block font-accent text-[9px] tracking-[1.5px] uppercase font-bold px-3 py-1 rounded-full mb-4 ${badgeFase(
+                          entregavel.fase,
+                        )}`}
+                      >
+                        {entregavel.fase} · Etapa {entregavel.etapa}
                       </span>
-                    </div>
-                  </a>
-                ))}
+                      <h3 className="font-serif text-[#1A1A2E] text-[20px] mb-3 group-hover:text-[#C96B3E] transition-colors">
+                        {entregavel.titulo}
+                      </h3>
+                      <p className="font-sans text-[#1A1A2E] text-[13px] leading-relaxed line-clamp-2 opacity-50 mb-4">
+                        {extrairPreview(entregavel.conteudo)}
+                      </p>
+                      <div className="flex items-center justify-between pt-4 border-t border-[rgba(26,26,46,0.05)]">
+                        <p className="font-sans text-[#1A1A2E] text-[11px] opacity-30">
+                          {formatarData(entregavel.created_at)}
+                        </p>
+                        <span className="font-sans text-[#C96B3E] text-[12px] opacity-0 group-hover:opacity-100 transition-opacity">
+                          abrir
+                        </span>
+                      </div>
+                    </CadernoCard>
+                  );
+                })}
               </div>
             )}
           </div>
