@@ -6,7 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { TrilhaMarcos } from "@/components/painel/TrilhaMarcos";
+import { CadernoCard } from "@/components/caderno/CadernoCard";
 import { pluralizeKanban } from "@/lib/kanban";
+import { getMarginalia } from "@/lib/marginaliaText";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -608,6 +610,7 @@ function PainelPage() {
                   preview={extractPreview(e.conteudo)}
                   etapa={`Etapa ${e.etapa}`}
                   tempo={tempoRelativo(e.created_at)}
+                  createdAt={e.created_at}
                   id={e.id}
                 />
               ))}
@@ -876,6 +879,7 @@ function EntregavelCard({
   preview,
   etapa,
   tempo,
+  createdAt,
   id,
 }: {
   fase: string;
@@ -883,13 +887,20 @@ function EntregavelCard({
   preview: string;
   etapa: string;
   tempo: string;
+  createdAt: string;
   id: string;
 }) {
+  // Entregável é sempre "página visitada" (Aimer criou). Dobrinha permanente.
+  // Marginalia surge depois de 2+ dias da criação.
+  const marginalia = getMarginalia({
+    primeiraVez: createdAt,
+    ultimaVisita: createdAt,
+    visitas: 2,
+  });
+  const seed = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
+
   return (
-    <div
-      className="rounded-2xl bg-white p-6 shadow-sm"
-      style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-    >
+    <CadernoCard dobrada marginalia={marginalia} seed={seed}>
       <span
         className={`mb-4 inline-block rounded-full px-3 py-1 font-accent text-[10px] font-bold uppercase tracking-[1.5px] ${
           BADGE_FASE[fase] ?? BADGE_FASE.Sonho
@@ -914,7 +925,7 @@ function EntregavelCard({
           abrir →
         </a>
       </div>
-    </div>
+    </CadernoCard>
   );
 }
 
