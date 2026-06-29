@@ -73,7 +73,8 @@ Gere o plano de conteúdo. tipos_conteudo deve ter 2-3 frases sobre os tipos de 
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { plano: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { plano: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { plano: null, error: "Créditos esgotados." };
         return { plano: null, error: "Não consegui montar seu plano agora." };
       }

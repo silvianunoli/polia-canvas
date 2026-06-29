@@ -68,7 +68,8 @@ Gere o plano: visao_refinada são 2-3 frases que traduzem a visão dela de forma
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { plano: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { plano: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { plano: null, error: "Créditos esgotados." };
         return { plano: null, error: "Não consegui montar seu plano agora." };
       }

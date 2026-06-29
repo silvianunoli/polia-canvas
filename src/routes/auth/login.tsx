@@ -4,12 +4,7 @@ import { Mail } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  Divider,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, Divider, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { PoliaButton } from "@/components/ui/PoliaButton";
 import { Loader2 } from "lucide-react";

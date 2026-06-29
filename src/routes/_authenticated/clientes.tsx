@@ -81,47 +81,44 @@ function ClientesPage() {
     queryKey: ["clientes-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, progressRes, entregaveisRes, clientesRes] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select(
-              "full_name, etapa_atual, streak, orbit_sales_unlocked, orbit_sales_active",
-            )
-            .eq("id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("user_progress")
-            .select("etapa_atual")
-            .eq("user_id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("entregaveis")
-            .select("id, etapa, tipo, conteudo")
-            .eq("user_id", userId!)
-            .in("etapa", [7, 8, 9])
-            .eq("status", "concluido"),
-          (supabase.from("clientes" as never) as unknown as {
+      const [profileRes, progressRes, entregaveisRes, clientesRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, etapa_atual, streak, orbit_sales_unlocked, orbit_sales_active")
+          .eq("id", userId!)
+          .maybeSingle(),
+        supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
+        supabase
+          .from("entregaveis")
+          .select("id, etapa, tipo, conteudo")
+          .eq("user_id", userId!)
+          .in("etapa", [7, 8, 9])
+          .eq("status", "concluido"),
+        (
+          supabase.from("clientes" as never) as unknown as {
             select: (s: string) => {
-              eq: (c: string, v: string) => {
+              eq: (
+                c: string,
+                v: string,
+              ) => {
                 order: (
                   c: string,
                   o: { ascending: boolean },
                 ) => Promise<{ data: Cliente[] | null }>;
               };
             };
-          })
-            .select("*")
-            .eq("user_id", userId!)
-            .order("created_at", { ascending: false }),
-        ]);
+          }
+        )
+          .select("*")
+          .eq("user_id", userId!)
+          .order("created_at", { ascending: false }),
+      ]);
 
       const clientes = ((clientesRes as { data: Cliente[] | null }).data ?? []) as Cliente[];
 
       return {
         profile: profileRes.data,
-        etapaAtual:
-          progressRes.data?.etapa_atual ?? profileRes.data?.etapa_atual ?? 1,
+        etapaAtual: progressRes.data?.etapa_atual ?? profileRes.data?.etapa_atual ?? 1,
         entregaveis: (entregaveisRes.data ?? []) as Entregavel[],
         clientes,
       };
@@ -136,18 +133,9 @@ function ClientesPage() {
   const orbitUnlocked = profile?.orbit_sales_unlocked ?? false;
   const orbitActive = profile?.orbit_sales_active ?? false;
 
-  const roteiro = useMemo(
-    () => entregaveis.find((e) => e.etapa === 7),
-    [entregaveis],
-  );
-  const protocolo = useMemo(
-    () => entregaveis.find((e) => e.etapa === 8),
-    [entregaveis],
-  );
-  const plano = useMemo(
-    () => entregaveis.find((e) => e.etapa === 9),
-    [entregaveis],
-  );
+  const roteiro = useMemo(() => entregaveis.find((e) => e.etapa === 7), [entregaveis]);
+  const protocolo = useMemo(() => entregaveis.find((e) => e.etapa === 8), [entregaveis]);
+  const plano = useMemo(() => entregaveis.find((e) => e.etapa === 9), [entregaveis]);
 
   const initial = (profile?.full_name?.charAt(0) || "P").toUpperCase();
   const streak = (profile as { streak?: number } | null)?.streak ?? 0;
@@ -155,9 +143,7 @@ function ClientesPage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
-          carregando...
-        </p>
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">carregando...</p>
       </div>
     );
   }
@@ -173,8 +159,8 @@ function ClientesPage() {
           Essa ferramenta anda com você quando você chegar na Etapa 7.
         </h1>
         <p className="font-sans text-polia-marrom/70 text-[16px] max-w-[440px] mb-8">
-          Complete as etapas de Venda pra montar seu fluxo de vendas, protocolo
-          de cuidado e plano de conteúdo.
+          Complete as etapas de Venda pra montar seu fluxo de vendas, protocolo de cuidado e plano
+          de conteúdo.
         </p>
         <button
           onClick={() => navigate({ to: `/etapa/${etapaAtual}` as string })}
@@ -182,9 +168,7 @@ function ClientesPage() {
         >
           Continuar minha jornada →
         </button>
-        <p className="caveat-decorativo text-polia-marrom/70 mt-4">
-          falta pouco.
-        </p>
+        <p className="caveat-decorativo text-polia-marrom/70 mt-4">falta pouco.</p>
       </div>
     );
   }
@@ -240,9 +224,7 @@ function ClientesPage() {
               >
                 {tab.label}
                 {tab.bloqueado && (
-                  <span className="font-sans text-[10px] ml-2 opacity-50">
-                    · Etapa 9
-                  </span>
+                  <span className="font-sans text-[10px] ml-2 opacity-50">· Etapa 9</span>
                 )}
               </button>
             );
@@ -250,20 +232,15 @@ function ClientesPage() {
         </div>
       </div>
 
-
       {/* Conteúdo das tabs */}
       <div className="px-6 py-8 md:px-12 md:py-10">
         {tabAtiva === "clientes" ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 max-w-[1280px] mx-auto">
-            <TabClientes
-              clientes={clientes}
-              onAdicionar={() => setModalClienteAberto(true)}
-            />
-            <SidebarAside
-              caveat="cada nome aqui é uma história que começou com você."
-            >
+            <TabClientes clientes={clientes} onAdicionar={() => setModalClienteAberto(true)} />
+            <SidebarAside caveat="cada nome aqui é uma história que começou com você.">
               <p className="font-sans text-[13px] text-polia-noite/70">
-                {clientes.length} {clientes.length === 1 ? "cliente cadastrada" : "clientes cadastradas"}.
+                {clientes.length}{" "}
+                {clientes.length === 1 ? "cliente cadastrada" : "clientes cadastradas"}.
               </p>
             </SidebarAside>
           </div>
@@ -307,20 +284,12 @@ function ClientesPage() {
 }
 
 /* ============== TAB 1 — CLIENTES ============== */
-function TabClientes({
-  clientes,
-  onAdicionar,
-}: {
-  clientes: Cliente[];
-  onAdicionar: () => void;
-}) {
+function TabClientes({ clientes, onAdicionar }: { clientes: Cliente[]; onAdicionar: () => void }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif text-[#1A1A2E] text-[28px]">
-            Suas clientes
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[28px]">Suas clientes</h2>
           <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50 mt-1">
             {clientes.length} cadastradas
           </p>
@@ -352,9 +321,7 @@ function TabClientes({
                 </span>
               </div>
               <div>
-                <p className="font-sans text-[#1A1A2E] text-[15px] font-semibold">
-                  {cliente.nome}
-                </p>
+                <p className="font-sans text-[#1A1A2E] text-[15px] font-semibold">{cliente.nome}</p>
                 <p className="font-sans text-[#1A1A2E] text-[12px] opacity-40">
                   {cliente.contato || "sem contato"}
                 </p>
@@ -406,9 +373,7 @@ function CardEntregavel({
           <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
             {item.label}
           </p>
-          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">
-            {item.conteudo}
-          </p>
+          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">{item.conteudo}</p>
         </div>
       ))}
       {destaque && (
@@ -416,9 +381,7 @@ function CardEntregavel({
           <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-polia-terracota mb-2">
             {destaque.label}
           </p>
-          <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
-            "{destaque.texto}"
-          </p>
+          <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">"{destaque.texto}"</p>
         </div>
       )}
     </div>
@@ -436,9 +399,7 @@ function EstadoVazioEntregavel({
 }) {
   return (
     <div className="text-center py-16">
-      <p className="font-sans text-[#1A1A2E] text-[15px] opacity-40 mb-4">
-        {texto}
-      </p>
+      <p className="font-sans text-[#1A1A2E] text-[15px] opacity-40 mb-4">{texto}</p>
       <button
         onClick={onClick}
         className="font-sans text-polia-terracota text-[14px] hover:underline"
@@ -559,24 +520,17 @@ function TabEntregavelE9({
       <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
         ENTREGÁVEL · ETAPA 9
       </p>
-      <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">
-        Seu plano de conteúdo
-      </p>
+      <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">Seu plano de conteúdo</p>
       {[
         { label: "O QUE ELA QUER VER", conteudo: c.tipos_conteudo || "" },
         { label: "O QUE PARA O SCROLL", conteudo: c.gatilhos_parada || "" },
         { label: "SEU RITMO IDEAL", conteudo: c.ritmo_sugerido || "" },
       ].map((item) => (
-        <div
-          key={item.label}
-          className="mb-5 pb-5 border-b border-[rgba(26,26,46,0.06)]"
-        >
+        <div key={item.label} className="mb-5 pb-5 border-b border-[rgba(26,26,46,0.06)]">
           <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
             {item.label}
           </p>
-          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">
-            {item.conteudo}
-          </p>
+          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">{item.conteudo}</p>
         </div>
       ))}
       <div className="mt-6 pt-2">
@@ -588,9 +542,7 @@ function TabEntregavelE9({
             <span className="font-serif text-polia-terracota text-[18px] leading-none mt-0.5">
               {i + 1}
             </span>
-            <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
-              {ideia}
-            </p>
+            <p className="caveat-decorativo text-[#1A1A2E] leading-snug">{ideia}</p>
           </div>
         ))}
       </div>
@@ -642,12 +594,7 @@ function ModalCliente({
     onSaved();
   };
 
-  const statusOptions: StatusPedido[] = [
-    "Em espera",
-    "Em produção",
-    "Entregue",
-    "Atrasado",
-  ];
+  const statusOptions: StatusPedido[] = ["Em espera", "Em produção", "Entregue", "Atrasado"];
 
   return (
     <div
@@ -661,14 +608,10 @@ function ModalCliente({
         <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
           NOVA CLIENTE
         </p>
-        <h2 className="font-serif text-[#1A1A2E] text-[26px] mb-6">
-          Adicionar cliente
-        </h2>
+        <h2 className="font-serif text-[#1A1A2E] text-[26px] mb-6">Adicionar cliente</h2>
 
         <div className="mb-4">
-          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">
-            Nome
-          </label>
+          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">Nome</label>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -732,9 +675,7 @@ function ModalCliente({
           />
         </div>
 
-        {erro && (
-          <p className="font-sans text-[13px] text-[#C9407A] mb-3">{erro}</p>
-        )}
+        {erro && <p className="font-sans text-[13px] text-[#C9407A] mb-3">{erro}</p>}
 
         <div className="flex justify-end gap-3">
           <button

@@ -156,7 +156,8 @@ export function HeroSection({ preloader = false }: HeroSectionProps) {
               marginTop: 24,
             }}
           >
-            A Pólia guia você pelas 11 etapas que toda empreendedora precisa percorrer. Na ordem certa. No seu tempo.
+            A Pólia guia você pelas 11 etapas que toda empreendedora precisa percorrer. Na ordem
+            certa. No seu tempo.
           </p>
 
           <div className="flex flex-wrap items-center" style={{ gap: 16, marginTop: 40 }}>
@@ -240,8 +241,7 @@ export function HeroSection({ preloader = false }: HeroSectionProps) {
                   left: "10%",
                   right: "10%",
                   height: 40,
-                  background:
-                    "radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, transparent 70%)",
+                  background: "radial-gradient(ellipse, rgba(0,0,0,0.4) 0%, transparent 70%)",
                   filter: "blur(12px)",
                 }}
               />

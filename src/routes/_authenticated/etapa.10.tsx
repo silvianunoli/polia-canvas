@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/etapa/10")({
     if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
-},
+  },
   component: Etapa10Page,
 });
 
@@ -87,7 +87,8 @@ function Etapa10Page() {
         setRitmo(p.review_rhythm ?? "");
         setAcao(p.action_triggers ?? "");
 
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE10).growth_finalized_at) {
@@ -134,7 +135,10 @@ function Etapa10Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") payload[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
@@ -181,7 +185,10 @@ function Etapa10Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_10_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_10_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -348,12 +355,16 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L10 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
         </div>
 
-        <p className="caveat-informacional text-polia-terracota mt-10">o que você mede, você move.</p>
+        <p className="caveat-informacional text-polia-terracota mt-10">
+          o que você mede, você move.
+        </p>
 
         <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           3 números que
@@ -383,7 +394,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos escolher  →
+          Vamos escolher →
         </button>
 
         <p className="caveat-decorativo text-polia-terracota/75 mt-4">
@@ -459,8 +470,7 @@ function PerguntaLayout({
           <hr className="border-[#EAE2D8] my-6" />
           <p className="caveat-decorativo text-[#6A6A7E] leading-[22px]">
             depois vem
-            <br />
-            o seu painel de 3 números
+            <br />o seu painel de 3 números
           </p>
         </aside>
 
@@ -529,7 +539,9 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">
+            RAPOSA
+          </p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -615,7 +627,9 @@ function PainelTela({
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
               ENTREGÁVEL · ETAPA 10 · CRESCIMENTO
             </p>
-            <p className="caveat-informacional text-polia-terracota mt-4">olha o que você vai acompanhar.</p>
+            <p className="caveat-informacional text-polia-terracota mt-4">
+              olha o que você vai acompanhar.
+            </p>
             <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Seu painel de 3 números
               <br />
@@ -626,7 +640,9 @@ function PainelTela({
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-polia-terracota">
                 PAINEL DE 3 NÚMEROS · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">O que você mede pra crescer</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">
+                O que você mede pra crescer
+              </p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
@@ -689,7 +705,7 @@ function PainelTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Conquistar esse marco  →
+                Conquistar esse marco →
               </button>
             </div>
           </>
@@ -709,7 +725,8 @@ function Conclusao({ onVerPainel, onEtapa11 }: { onVerPainel: () => void; onEtap
       palavraMarco="FUTURO"
       ferramentaDesbloqueada={{
         titulo: "Seu Painel Financeiro",
-        descricao: "Seus 3 números reunidos num painel vivo. Acompanhe, decida e cresça com clareza.",
+        descricao:
+          "Seus 3 números reunidos num painel vivo. Acompanhe, decida e cresça com clareza.",
       }}
       proximaEtapaLabel="Começar Etapa 11 →"
       onVerPainel={onVerPainel}

@@ -11,8 +11,7 @@ export const Route = createFileRoute("/_authenticated/marca-viva")({
       { title: "Sua Marca Viva · Pólia" },
       {
         name: "description",
-        content:
-          "Sua identidade, voz e posicionamento reunidos num só lugar.",
+        content: "Sua identidade, voz e posicionamento reunidos num só lugar.",
       },
     ],
   }),
@@ -84,9 +83,7 @@ function MarcaVivaPage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
-          carregando...
-        </p>
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">carregando...</p>
       </div>
     );
   }
@@ -151,9 +148,7 @@ function MarcaVivaPage() {
               }`}
             >
               <span className="font-accent text-[9px] tracking-[1.5px] uppercase font-bold">
-                {item.done
-                  ? `Etapa ${item.etapa}`
-                  : `Etapa ${item.etapa} · pendente`}
+                {item.done ? `Etapa ${item.etapa}` : `Etapa ${item.etapa} · pendente`}
               </span>
             </div>
           ))}
@@ -198,8 +193,7 @@ function CardMiniPitch({
   };
   onIr: () => void;
 }) {
-  const pitchTexto =
-    (entregavel?.conteudo as { texto?: string } | null)?.texto ?? "";
+  const pitchTexto = (entregavel?.conteudo as { texto?: string } | null)?.texto ?? "";
   const temPitch = !!pitchTexto;
 
   return (
@@ -209,9 +203,7 @@ function CardMiniPitch({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#C9407A] opacity-70 mb-1">
             ETAPA 1 · SONHO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Seu mini-pitch
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Seu mini-pitch</h2>
         </div>
       </div>
 
@@ -245,9 +237,7 @@ function CardMiniPitch({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SEU PITCH COMPLETO
             </p>
-            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
-              "{pitchTexto}"
-            </p>
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">"{pitchTexto}"</p>
           </div>
         </>
       ) : (
@@ -271,9 +261,10 @@ function CardVozMarca({
   done: boolean;
   onIr: () => void;
 }) {
-  const voz = entregavel?.conteudo as
-    | { palavras?: { palavra: string; subtitulo: string }[]; frase?: string }
-    | null;
+  const voz = entregavel?.conteudo as {
+    palavras?: { palavra: string; subtitulo: string }[];
+    frase?: string;
+  } | null;
   const temVoz = !!voz?.frase;
 
   return (
@@ -289,9 +280,7 @@ function CardVozMarca({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#C9407A] opacity-70 mb-1">
             ETAPA 2 · SONHO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Sua voz de marca
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Sua voz de marca</h2>
         </div>
       </div>
 
@@ -303,12 +292,8 @@ function CardVozMarca({
                 key={i}
                 className="bg-[rgba(26,26,46,0.03)] rounded-xl p-4 text-center border border-[rgba(26,26,46,0.06)]"
               >
-                <p className="font-serif text-polia-terracota text-[20px] mb-1">
-                  {p.palavra}
-                </p>
-                <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40">
-                  {p.subtitulo}
-                </p>
+                <p className="font-serif text-polia-terracota text-[20px] mb-1">{p.palavra}</p>
+                <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40">{p.subtitulo}</p>
               </div>
             ))}
           </div>
@@ -317,9 +302,7 @@ function CardVozMarca({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SUA VOZ EM UMA FRASE
             </p>
-            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
-              "{voz.frase}"
-            </p>
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">"{voz.frase}"</p>
           </div>
         </>
       ) : (
@@ -343,14 +326,12 @@ function CardMapa({
   done: boolean;
   onIr: () => void;
 }) {
-  const mapa = entregavel?.conteudo as
-    | {
-        declaracao?: string;
-        diferencial?: string;
-        naoAlcancam?: string;
-        anguloUnico?: string;
-      }
-    | null;
+  const mapa = entregavel?.conteudo as {
+    declaracao?: string;
+    diferencial?: string;
+    naoAlcancam?: string;
+    anguloUnico?: string;
+  } | null;
   const temMapa = !!mapa?.declaracao;
 
   return (
@@ -366,9 +347,7 @@ function CardMapa({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#C9407A] opacity-70 mb-1">
             ETAPA 3 · SONHO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Seu mapa de posicionamento
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Seu mapa de posicionamento</h2>
         </div>
       </div>
 
@@ -406,9 +385,7 @@ function CardMapa({
             <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#C9407A] opacity-70 mb-2">
               SEU ANGULO UNICO
             </p>
-            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">
-              "{mapa.anguloUnico}"
-            </p>
+            <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">"{mapa.anguloUnico}"</p>
           </div>
         </>
       ) : (
@@ -422,20 +399,10 @@ function CardMapa({
   );
 }
 
-function EstadoVazio({
-  texto,
-  cta,
-  onClick,
-}: {
-  texto: string;
-  cta: string;
-  onClick: () => void;
-}) {
+function EstadoVazio({ texto, cta, onClick }: { texto: string; cta: string; onClick: () => void }) {
   return (
     <div className="text-center py-8">
-      <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mb-3">
-        {texto}
-      </p>
+      <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mb-3">{texto}</p>
       <button
         onClick={onClick}
         className="font-sans text-polia-terracota text-[13px] hover:underline"

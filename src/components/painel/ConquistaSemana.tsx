@@ -27,9 +27,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
         <p className="font-sans text-[14px] text-polia-creme/70">
           sua primeira conquista aparece quando você concluir a primeira tarefa.
         </p>
-        <p className="mt-2 caveat-decorativo text-polia-creme/40">
-          tudo começa aqui.
-        </p>
+        <p className="mt-2 caveat-decorativo text-polia-creme/40">tudo começa aqui.</p>
       </div>
     );
   }
@@ -52,11 +50,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
         <p className="font-sans text-[16px] font-semibold text-polia-creme">
           {titulo ?? "essa semana você avançou."}
         </p>
-        {sub && (
-          <p className="mt-2 caveat-decorativo text-polia-terracota">
-            {sub}
-          </p>
-        )}
+        {sub && <p className="mt-2 caveat-decorativo text-polia-terracota">{sub}</p>}
       </div>
     );
   }
@@ -73,11 +67,7 @@ export function ConquistaSemana({ estado, titulo, sub }: ConquistaSemanaProps) {
       <p className="font-sans text-[15px] text-polia-creme/90">
         {titulo ?? "aberta no seu território."}
       </p>
-      {sub && (
-        <p className="mt-2 caveat-decorativo text-polia-creme/60">
-          {sub}
-        </p>
-      )}
+      {sub && <p className="mt-2 caveat-decorativo text-polia-creme/60">{sub}</p>}
     </div>
   );
 }

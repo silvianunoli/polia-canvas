@@ -9,16 +9,28 @@ export function PublicNav() {
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
-          <Link to="/como-funciona" className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors">
+          <Link
+            to="/como-funciona"
+            className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors"
+          >
             Como funciona
           </Link>
-          <Link to="/manifesto" className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors">
+          <Link
+            to="/manifesto"
+            className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors"
+          >
             Manifesto
           </Link>
-          <Link to="/precos" className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors">
+          <Link
+            to="/precos"
+            className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors"
+          >
             Preços
           </Link>
-          <Link to="/blog" className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors">
+          <Link
+            to="/blog"
+            className="font-sans text-[#FDF8F5]/80 text-[14px] hover:text-[#FDF8F5] transition-colors"
+          >
             Blog
           </Link>
         </div>

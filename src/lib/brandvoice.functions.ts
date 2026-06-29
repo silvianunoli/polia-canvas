@@ -104,7 +104,8 @@ Responda APENAS com o JSON, sem markdown, sem explicações.`;
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { voz: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { voz: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { voz: null, error: "Créditos esgotados." };
         return { voz: null, error: "Não consegui montar a voz de marca agora." };
       }

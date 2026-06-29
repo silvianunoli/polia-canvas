@@ -68,7 +68,10 @@ function BlogPost() {
           <p className="font-sans text-[#FDF8F5]/70 text-[15px] mb-6 max-w-md mx-auto">
             A Pólia transforma o que você leu aqui em estrutura real pra o seu negócio.
           </p>
-          <Link to="/lista-de-espera" className="inline-block bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[15px] px-7 py-4 rounded-xl hover:bg-[#B85A2D] transition-colors">
+          <Link
+            to="/lista-de-espera"
+            className="inline-block bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[15px] px-7 py-4 rounded-xl hover:bg-[#B85A2D] transition-colors"
+          >
             Entrar na lista de espera
           </Link>
         </div>

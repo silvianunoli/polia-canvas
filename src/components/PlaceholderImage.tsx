@@ -78,9 +78,7 @@ export function PlaceholderImage({
             }
             setImage(data);
             // notify other tabs/components
-            window.dispatchEvent(
-              new StorageEvent("storage", { key: storageKey, newValue: data }),
-            );
+            window.dispatchEvent(new StorageEvent("storage", { key: storageKey, newValue: data }));
             resolve();
           };
           reader.onerror = () => reject(new Error("read"));
@@ -171,9 +169,7 @@ export function PlaceholderImage({
             width: "100%",
             height: "100%",
             border: "1px dashed rgba(201,107,62,0.30)",
-            background: hover
-              ? "rgba(201,107,62,0.10)"
-              : "rgba(253,248,245,0.6)",
+            background: hover ? "rgba(201,107,62,0.10)" : "rgba(253,248,245,0.6)",
             borderRadius,
             display: "flex",
             flexDirection: "column",
@@ -190,10 +186,7 @@ export function PlaceholderImage({
           {hover ? (
             <>
               <Upload size={Math.min(width, height) > 60 ? 18 : 12} color="#C96B3E" />
-              <span
-                className="font-sans"
-                style={{ fontSize: 11, color: "#C96B3E" }}
-              >
+              <span className="font-sans" style={{ fontSize: 11, color: "#C96B3E" }}>
                 clica pra subir SVG
               </span>
             </>

@@ -11,8 +11,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
       { title: "Seu Painel Financeiro · Pólia" },
       {
         name: "description",
-        content:
-          "Acompanhe receita, meta e plano de crescimento do seu negócio.",
+        content: "Acompanhe receita, meta e plano de crescimento do seu negócio.",
       },
     ],
   }),
@@ -68,35 +67,28 @@ function FinanceiroPage() {
     queryKey: ["financeiro", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, progressRes, finRes, entregaveisRes] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select(
-              "full_name, orbit_financial_unlocked, orbit_financial_active",
-            )
-            .eq("id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("user_progress")
-            .select("etapa_atual")
-            .eq("user_id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("financeiro_mensal")
-            .select("id, receita, meta")
-            .eq("user_id", userId!)
-            .eq("mes", mesAtual)
-            .eq("ano", anoAtual)
-            .maybeSingle(),
-          supabase
-            .from("entregaveis")
-            .select("id, etapa, tipo, conteudo")
-            .eq("user_id", userId!)
-            .in("etapa", [10, 11])
-            .eq("status", "concluido")
-            .order("created_at", { ascending: false }),
-        ]);
+      const [profileRes, progressRes, finRes, entregaveisRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, orbit_financial_unlocked, orbit_financial_active")
+          .eq("id", userId!)
+          .maybeSingle(),
+        supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
+        supabase
+          .from("financeiro_mensal")
+          .select("id, receita, meta")
+          .eq("user_id", userId!)
+          .eq("mes", mesAtual)
+          .eq("ano", anoAtual)
+          .maybeSingle(),
+        supabase
+          .from("entregaveis")
+          .select("id, etapa, tipo, conteudo")
+          .eq("user_id", userId!)
+          .in("etapa", [10, 11])
+          .eq("status", "concluido")
+          .order("created_at", { ascending: false }),
+      ]);
       return {
         profile: profileRes.data,
         progress: progressRes.data,
@@ -112,9 +104,7 @@ function FinanceiroPage() {
   const entregaveis = dadosQuery.data?.entregaveis ?? [];
 
   const initial =
-    (profile?.full_name ?? user?.user_metadata?.full_name ?? "P")
-      .charAt(0)
-      .toUpperCase() || "P";
+    (profile?.full_name ?? user?.user_metadata?.full_name ?? "P").charAt(0).toUpperCase() || "P";
 
   const unlocked = !!profile?.orbit_financial_unlocked;
   const active = !!profile?.orbit_financial_active;
@@ -140,8 +130,8 @@ function FinanceiroPage() {
             Essa ferramenta anda com você quando você chegar na Etapa 10.
           </h1>
           <p className="mb-8 max-w-[440px] font-sans text-[16px] text-polia-marrom/70">
-            Complete as etapas de Evolução pra montar seu painel de
-            acompanhamento e plano de crescimento.
+            Complete as etapas de Evolução pra montar seu painel de acompanhamento e plano de
+            crescimento.
           </p>
           <button
             onClick={() => navigate({ to: `/etapa/${etapaAtual}` as "/etapa/1" })}
@@ -149,9 +139,7 @@ function FinanceiroPage() {
           >
             Continuar minha jornada →
           </button>
-          <p className="mt-4 caveat-decorativo text-polia-marrom/70">
-            quase lá.
-          </p>
+          <p className="mt-4 caveat-decorativo text-polia-marrom/70">quase lá.</p>
         </div>
       </div>
     );
@@ -202,9 +190,7 @@ function FinanceiroPage() {
                 <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-[#1A1A2E] opacity-40">
                   ENTREGÁVEL · ETAPA 10
                 </p>
-                <h2 className="font-serif text-[32px] text-[#1A1A2E]">
-                  Painel de 3 números
-                </h2>
+                <h2 className="font-serif text-[32px] text-[#1A1A2E]">Painel de 3 números</h2>
               </div>
               <a
                 href={`/biblioteca/${painelEntregavel.id}`}
@@ -290,9 +276,7 @@ function FinanceiroPage() {
                 <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-[#1A1A2E] opacity-40">
                   ENTREGÁVEL · ETAPA 11
                 </p>
-                <h2 className="font-serif text-[32px] text-[#1A1A2E]">
-                  Plano de Crescimento
-                </h2>
+                <h2 className="font-serif text-[32px] text-[#1A1A2E]">Plano de Crescimento</h2>
               </div>
               <a
                 href={`/biblioteca/${planoEntregavel.id}`}
@@ -428,10 +412,7 @@ function ReceitaMetaSection({
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setEditandoReceita(true)}
-            className="group text-left"
-          >
+          <button onClick={() => setEditandoReceita(true)} className="group text-left">
             <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
               {receita > 0 ? `R$ ${receita.toLocaleString("pt-BR")}` : "R$ 0"}
             </p>
@@ -481,10 +462,7 @@ function ReceitaMetaSection({
             </button>
           </div>
         ) : (
-          <button
-            onClick={() => setEditandoMeta(true)}
-            className="group text-left"
-          >
+          <button onClick={() => setEditandoMeta(true)} className="group text-left">
             <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
               {meta > 0 ? `R$ ${meta.toLocaleString("pt-BR")}` : "definir meta"}
             </p>
@@ -495,14 +473,11 @@ function ReceitaMetaSection({
         )}
         {receita > 0 && meta > 0 && receita < meta && (
           <p className="mt-4 caveat-decorativo text-[#1A1A2E]">
-            falta R$ {(meta - receita).toLocaleString("pt-BR")} pra fechar a
-            meta
+            falta R$ {(meta - receita).toLocaleString("pt-BR")} pra fechar a meta
           </p>
         )}
         {receita >= meta && meta > 0 && (
-          <p className="mt-4 caveat-decorativo text-[#2D6A4F]">
-            meta batida esse mês.
-          </p>
+          <p className="mt-4 caveat-decorativo text-[#2D6A4F]">meta batida esse mês.</p>
         )}
       </div>
     </div>

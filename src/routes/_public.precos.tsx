@@ -5,7 +5,10 @@ export const Route = createFileRoute("/_public/precos")({
   head: () => ({
     meta: [
       { title: "Preços · Pólia" },
-      { name: "description", content: "Gratuito durante o beta. Simples, justo e feito pra quem está começando." },
+      {
+        name: "description",
+        content: "Gratuito durante o beta. Simples, justo e feito pra quem está começando.",
+      },
       { property: "og:title", content: "Preços · Pólia" },
       { property: "og:description", content: "Acesso beta gratuito. Lançamento maio/2026." },
     ],
@@ -28,12 +31,8 @@ function Precos() {
               textDecoration: "none",
               transition: "color 0.2s ease",
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.color = "rgba(255,255,255,0.80)")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.color = "rgba(255,255,255,0.50)")
-            }
+            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.80)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.50)")}
           >
             <ArrowLeft size={16} />
             Voltar
@@ -62,7 +61,9 @@ function Precos() {
               Acesso beta
             </p>
             <p className="font-serif text-[#1A1A2E] text-[56px] leading-none mb-1">Grátis</p>
-            <p className="font-sans text-[#1A1A2E]/55 text-[14px] mb-8">durante o período de lançamento</p>
+            <p className="font-sans text-[#1A1A2E]/55 text-[14px] mb-8">
+              durante o período de lançamento
+            </p>
 
             <ul className="space-y-3 mb-10">
               {[
@@ -80,7 +81,10 @@ function Precos() {
               ))}
             </ul>
 
-            <Link to="/lista-de-espera" className="block w-full text-center bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[15px] py-4 rounded-xl hover:bg-[#B85A2D] transition-colors">
+            <Link
+              to="/lista-de-espera"
+              className="block w-full text-center bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[15px] py-4 rounded-xl hover:bg-[#B85A2D] transition-colors"
+            >
               Entrar na lista de espera
             </Link>
           </div>

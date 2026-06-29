@@ -12,7 +12,10 @@ export const Route = createFileRoute("/_authenticated/etapa/1")({
   head: () => ({
     meta: [
       { title: "Etapa 1 · Descoberta · Pólia" },
-      { name: "description", content: "Descubra quem você é antes do negócio. Monte seu primeiro mini-pitch." },
+      {
+        name: "description",
+        content: "Descubra quem você é antes do negócio. Monte seu primeiro mini-pitch.",
+      },
     ],
   }),
   beforeLoad: async () => {
@@ -28,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/etapa/1")({
     if (profile && profile.onboarding_completed === false) {
       throw redirect({ to: "/onboarding" });
     }
-},
+  },
   component: Etapa1Page,
 });
 
@@ -78,7 +81,9 @@ function Etapa1Page() {
       setUserId(uid);
       const { data: p } = await supabase
         .from("profiles")
-        .select("display_name, business_name, profile_story, business_why, problem_solved, problem_urgency, target_customer, streak, star_1_completed_at")
+        .select(
+          "display_name, business_name, profile_story, business_why, problem_solved, problem_urgency, target_customer, streak, star_1_completed_at",
+        )
         .eq("id", uid)
         .maybeSingle();
       if (!mounted) return;
@@ -107,7 +112,8 @@ function Etapa1Page() {
         }
 
         // Resume step
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE1).star_1_completed_at) setStep(6);
@@ -138,17 +144,32 @@ function Etapa1Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") (payload as Record<string, string>)[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
-
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
 
-
   const salvarEVoltar = useCallback(async () => {
-    await autoSave({ profile_story: profileStory, business_why: businessWhy, problem_solved: problemSolved, problem_urgency: problemUrgency, target_customer: targetCustomer });
+    await autoSave({
+      profile_story: profileStory,
+      business_why: businessWhy,
+      problem_solved: problemSolved,
+      problem_urgency: problemUrgency,
+      target_customer: targetCustomer,
+    });
     navigate({ to: "/painel" });
-  }, [autoSave, profileStory, businessWhy, problemSolved, problemUrgency, targetCustomer, navigate]);
+  }, [
+    autoSave,
+    profileStory,
+    businessWhy,
+    problemSolved,
+    problemUrgency,
+    targetCustomer,
+    navigate,
+  ]);
 
   const iniciarGeracaoPitch = useCallback(async () => {
     await autoSave({ target_customer: targetCustomer });
@@ -185,7 +206,10 @@ function Etapa1Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_1_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_1_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -244,12 +268,7 @@ function Etapa1Page() {
       <style>{`@keyframes polia-glow { 0%,100% { box-shadow: 0 0 12px rgba(232,151,112,0.6) } 50% { box-shadow: 0 0 24px rgba(232,151,112,0.95) } }`}</style>
       {step === 1 && <Capa onStart={() => setStep(2)} />}
       {step === 2 && (
-        <PerguntaLayout
-          step={step}
-          profile={profile}
-          streak={streak}
-          initial={initial}
-        >
+        <PerguntaLayout step={step} profile={profile} streak={streak} initial={initial}>
           <Pergunta1
             profileStory={profileStory}
             setProfileStory={setProfileStory}
@@ -332,10 +351,14 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L2 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
-          <p className="font-sans text-[9px] text-[rgba(216,210,204,0.45)]">SVG · upload no Lovable</p>
+          <p className="font-sans text-[9px] text-[rgba(216,210,204,0.45)]">
+            SVG · upload no Lovable
+          </p>
         </div>
 
         <p className="caveat-informacional text-polia-terracota mt-10">
@@ -356,7 +379,9 @@ function Capa({ onStart }: { onStart: () => void }) {
               key={c.num}
               className="w-[200px] rounded-[14px] border border-[rgba(232,151,112,0.3)] bg-white p-[22px] text-center"
             >
-              <p className="font-accent text-polia-mostarda-intenso text-[12px] font-bold tracking-[1.5px]">{c.num}</p>
+              <p className="font-accent text-polia-mostarda-intenso text-[12px] font-bold tracking-[1.5px]">
+                {c.num}
+              </p>
               <p className="font-serif text-polia-marrom text-[18px] mt-2">{c.titulo}</p>
               <p className="font-sans text-[rgba(216,210,204,0.65)] text-[12px] mt-1">{c.sub}</p>
             </div>
@@ -471,10 +496,15 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
     { label: "Financeiro", href: "/painel", active: false },
   ];
   return (
-    <header className="sticky top-0 z-30 h-14 w-full bg-[#FDF8F5]" style={{ borderBottom: "1px solid rgba(26,26,46,0.08)" }}>
+    <header
+      className="sticky top-0 z-30 h-14 w-full bg-[#FDF8F5]"
+      style={{ borderBottom: "1px solid rgba(26,26,46,0.08)" }}
+    >
       <div className="mx-auto flex h-full max-w-[1280px] items-center justify-between px-6">
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-[#C96B3E] px-4 py-1.5">
-          <span className="font-accent text-[9px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PLACEHOLDER · LOGO</span>
+          <span className="font-accent text-[9px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">
+            PLACEHOLDER · LOGO
+          </span>
           <span className="font-sans text-[8px] text-[#1A1A2E] opacity-40">120×32</span>
         </div>
         <nav className="hidden items-center gap-7 md:flex">
@@ -494,10 +524,20 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
           ))}
         </nav>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 rounded-full px-3 py-1" style={{ background: "rgba(200,169,110,0.12)", border: "1px solid rgba(200,169,110,0.3)" }}>
-            <span className="font-sans text-[13px] font-semibold text-polia-mostarda-intenso">{streak} {streak === 1 ? "dia" : "dias"}</span>
+          <div
+            className="flex items-center gap-1.5 rounded-full px-3 py-1"
+            style={{
+              background: "rgba(200,169,110,0.12)",
+              border: "1px solid rgba(200,169,110,0.3)",
+            }}
+          >
+            <span className="font-sans text-[13px] font-semibold text-polia-mostarda-intenso">
+              {streak} {streak === 1 ? "dia" : "dias"}
+            </span>
           </div>
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C96B3E] font-sans text-[14px] font-bold text-polia-creme">{initial}</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#C96B3E] font-sans text-[14px] font-bold text-polia-creme">
+            {initial}
+          </div>
         </div>
       </div>
     </header>
@@ -506,22 +546,41 @@ function EtapaNav({ streak, initial }: { streak: number; initial: string }) {
 
 function RaposaECard({ step }: { step: number }) {
   const estados: Record<number, { estado: string; pose: string; titulo: string; body: string }> = {
-    2: { estado: "Atenta", pose: "sentada escutando", titulo: "Sua história não precisa ser épica.", body: "Conta o que te incomodava antes, o que te chamou pra esse caminho, e o que você descobriu sobre você fazendo isso." },
-    3: { estado: "Curiosa", pose: "cabeça inclinada, olhos atentos", titulo: "Especificidade vence eloquência.", body: "Quanto mais específica a dor, mais o cliente se reconhece. 'Tô cansada' é fraco. 'Termino o dia sem saber se trabalhei ou só apaguei incêndio' é forte." },
-    4: { estado: "Animada", pose: "em pé, empolgada", titulo: "Nicho não é limitação.", body: "Quanto mais você fala com uma pessoa específica, mais pessoas se reconhecem. Isso é contra-intuitivo, mas é verdade." },
+    2: {
+      estado: "Atenta",
+      pose: "sentada escutando",
+      titulo: "Sua história não precisa ser épica.",
+      body: "Conta o que te incomodava antes, o que te chamou pra esse caminho, e o que você descobriu sobre você fazendo isso.",
+    },
+    3: {
+      estado: "Curiosa",
+      pose: "cabeça inclinada, olhos atentos",
+      titulo: "Especificidade vence eloquência.",
+      body: "Quanto mais específica a dor, mais o cliente se reconhece. 'Tô cansada' é fraco. 'Termino o dia sem saber se trabalhei ou só apaguei incêndio' é forte.",
+    },
+    4: {
+      estado: "Animada",
+      pose: "em pé, empolgada",
+      titulo: "Nicho não é limitação.",
+      body: "Quanto mais você fala com uma pessoa específica, mais pessoas se reconhecem. Isso é contra-intuitivo, mas é verdade.",
+    },
   };
   const s = estados[step] ?? estados[2];
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col items-center gap-1.5 rounded-[18px] border-[1.5px] border-dashed border-[rgba(232,151,112,0.5)] bg-[#FAF4EF] px-[18px] py-[22px]">
-        <p className="font-accent text-polia-terracota text-[10px] font-bold tracking-[1.5px]">PLACEHOLDER · RAPOSA</p>
+        <p className="font-accent text-polia-terracota text-[10px] font-bold tracking-[1.5px]">
+          PLACEHOLDER · RAPOSA
+        </p>
         <p className="caveat-informacional text-polia-terracota">Estado: {s.estado}</p>
         <p className="font-sans text-[#6A6A7E] text-[10px]">PNG transparente · 200×260</p>
         <p className="font-sans text-[#9A958E] text-[9px]">Pose: {s.pose}</p>
       </div>
       <div className="rounded-[18px] border border-[#EAE2D8] bg-white p-[22px]">
-        <p className="font-accent text-polia-mostarda-intenso text-[10px] font-bold tracking-[1.5px] uppercase mb-3">DICA RÁPIDA</p>
+        <p className="font-accent text-polia-mostarda-intenso text-[10px] font-bold tracking-[1.5px] uppercase mb-3">
+          DICA RÁPIDA
+        </p>
         <p className="font-serif text-[#1A1A2E] text-[17px] leading-[22px] mb-2">{s.titulo}</p>
         <p className="font-sans text-[#6A6A7E] text-[12px] leading-[17px]">{s.body}</p>
       </div>
@@ -543,7 +602,10 @@ function Footer({
   return (
     <div className="mt-8 flex items-center justify-between gap-4">
       <div>
-        <button onClick={onSalvarVoltar} className="font-sans text-[14px] text-[#6A6A7E] transition-colors hover:text-[#1A1A2E]">
+        <button
+          onClick={onSalvarVoltar}
+          className="font-sans text-[14px] text-[#6A6A7E] transition-colors hover:text-[#1A1A2E]"
+        >
           Salvar e voltar depois
         </button>
         <p className="font-sans text-[#9A958E] text-[12px] mt-1">↻ salvo automaticamente</p>
@@ -552,7 +614,9 @@ function Footer({
         onClick={onContinuar}
         disabled={!podeAvancar}
         className={`relative h-[48px] w-[200px] rounded-[12px] font-sans text-[15px] font-semibold text-white transition-all ${
-          podeAvancar ? "bg-[#C96B3E] hover:bg-[#B85A2D]" : "bg-[#C96B3E] opacity-40 cursor-not-allowed"
+          podeAvancar
+            ? "bg-[#C96B3E] hover:bg-[#B85A2D]"
+            : "bg-[#C96B3E] opacity-40 cursor-not-allowed"
         }`}
       >
         Continuar →
@@ -562,7 +626,11 @@ function Footer({
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <p className="font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[#6A6A7E] mb-2">{children}</p>;
+  return (
+    <p className="font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[#6A6A7E] mb-2">
+      {children}
+    </p>
+  );
 }
 
 function HeadlineDuas({ a, b }: { a: string; b: string }) {
@@ -594,15 +662,25 @@ function Pergunta1({
   setProfileStory: (v: string) => void;
   businessWhy: string;
   setBusinessWhy: (v: string) => void;
-  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
+  onAutoSave: (c: {
+    profile_story?: string;
+    business_why?: string;
+    problem_solved?: string;
+    problem_urgency?: string;
+    target_customer?: string;
+  }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
   const pode = profileStory.length >= 30;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 1 DE 3</p>
-      <p className="caveat-decorativo text-polia-terracota mt-3">vamos com calma. responde como conversaria com uma amiga.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">
+        PERGUNTA 1 DE 3
+      </p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">
+        vamos com calma. responde como conversaria com uma amiga.
+      </p>
       <HeadlineDuas a="Quem é você" b="antes do negócio?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
         Sua história, o que te trouxe até aqui, o que você ama fazer mesmo se ninguém pagasse.
@@ -655,18 +733,29 @@ function Pergunta2({
   setProblemSolved: (v: string) => void;
   problemUrgency: string;
   setProblemUrgency: (v: string) => void;
-  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
+  onAutoSave: (c: {
+    profile_story?: string;
+    business_why?: string;
+    problem_solved?: string;
+    problem_urgency?: string;
+    target_customer?: string;
+  }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
   const pode = problemSolved.length >= 30;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 2 DE 3</p>
-      <p className="caveat-decorativo text-polia-terracota mt-3">essa é a parte que mais importa. pensa em quem vai sentir falta.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">
+        PERGUNTA 2 DE 3
+      </p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">
+        essa é a parte que mais importa. pensa em quem vai sentir falta.
+      </p>
       <HeadlineDuas a="Qual dor" b="você cura?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
-        O que tá errado no mundo do seu cliente antes de você entrar nele? Por que isso é importante o suficiente pra ele resolver?
+        O que tá errado no mundo do seu cliente antes de você entrar nele? Por que isso é importante
+        o suficiente pra ele resolver?
       </p>
 
       <div className="mt-7">
@@ -680,7 +769,9 @@ function Pergunta2({
           placeholder="Ex: Mulher na faixa dos 30 que abriu negócio próprio, ama o que faz, mas se sente perdida porque tudo que aprende online é genérico, gringo, ou pra empresa grande."
           className="w-full rounded-[14px] border-[1.5px] border-[#EAE2D8] bg-white px-[18px] py-[14px] font-sans text-[14px] text-[#1A1A2E] placeholder:text-[rgba(154,149,142,0.7)] focus:outline-none focus:border-[#C96B3E] transition-colors resize-none"
         />
-        <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2 mb-5">não tem dor errada. tem dor não-vista.</p>
+        <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2 mb-5">
+          não tem dor errada. tem dor não-vista.
+        </p>
       </div>
 
       <div className="mt-2">
@@ -710,18 +801,29 @@ function Pergunta3({
 }: {
   targetCustomer: string;
   setTargetCustomer: (v: string) => void;
-  onAutoSave: (c: { profile_story?: string; business_why?: string; problem_solved?: string; problem_urgency?: string; target_customer?: string; }) => void;
+  onAutoSave: (c: {
+    profile_story?: string;
+    business_why?: string;
+    problem_solved?: string;
+    problem_urgency?: string;
+    target_customer?: string;
+  }) => void;
   onContinuar: () => void;
   onSalvarVoltar: () => void;
 }) {
   const pode = targetCustomer.length >= 20;
   return (
     <>
-      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">PERGUNTA 3 DE 3</p>
-      <p className="caveat-decorativo text-polia-terracota mt-3">pensa numa pessoa real. alguém que você conheça ou imagina conhecer.</p>
+      <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-mostarda-intenso">
+        PERGUNTA 3 DE 3
+      </p>
+      <p className="caveat-decorativo text-polia-terracota mt-3">
+        pensa numa pessoa real. alguém que você conheça ou imagina conhecer.
+      </p>
       <HeadlineDuas a="Pra quem" b="você fala?" />
       <p className="font-sans text-[#6A6A7E] text-[15px] leading-[24px] mt-4">
-        Quem é a pessoa que você quer ajudar? Quanto mais específica, mais fácil eu monto seu mini-pitch.
+        Quem é a pessoa que você quer ajudar? Quanto mais específica, mais fácil eu monto seu
+        mini-pitch.
       </p>
 
       <div className="mt-7">
@@ -777,7 +879,9 @@ function MiniPitchTela({
         <p className="font-accent text-[10px] font-bold tracking-[2px] text-polia-mostarda-intenso uppercase text-center">
           ETAPA 1 · DESCOBERTA
         </p>
-        <p className="caveat-informacional text-polia-terracota text-center mt-2">olha o que a gente montou juntas.</p>
+        <p className="caveat-informacional text-polia-terracota text-center mt-2">
+          olha o que a gente montou juntas.
+        </p>
         <h2 className="font-serif text-[#1A1A2E] text-[28px] sm:text-[34px] md:text-[48px] leading-[1.2] text-center mt-2">
           Seu primeiro mini-pitch.
         </h2>
@@ -792,21 +896,31 @@ function MiniPitchTela({
                 <div
                   key={i}
                   className="h-3 w-3 rounded-full bg-[#C96B3E]"
-                  style={{ animation: `polia-bounce 1s infinite ${i * 0.15}s`, animationName: "bounce" }}
+                  style={{
+                    animation: `polia-bounce 1s infinite ${i * 0.15}s`,
+                    animationName: "bounce",
+                  }}
                 />
               ))}
             </div>
             <style>{`@keyframes bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }`}</style>
-            <p className="caveat-informacional text-polia-terracota mt-6">montando seu mini-pitch...</p>
+            <p className="caveat-informacional text-polia-terracota mt-6">
+              montando seu mini-pitch...
+            </p>
             <p className="font-sans text-[#9A958E] text-[14px] mt-2">uns 5 segundinhos</p>
           </div>
         ) : (
           <div className="mt-10 rounded-[24px] border border-[#EAE2D8] bg-white p-[32px] md:p-[48px] shadow-sm">
-            <p className="font-accent text-[#C9407A] text-[10px] font-bold tracking-[1.5px] uppercase mb-4">DESCOBERTA · ETAPA 1</p>
+            <p className="font-accent text-[#C9407A] text-[10px] font-bold tracking-[1.5px] uppercase mb-4">
+              DESCOBERTA · ETAPA 1
+            </p>
             {error ? (
               <>
                 <p className="font-serif text-[#1A1A2E] text-[22px] leading-[30px]">{error}</p>
-                <button onClick={onRetry} className="mt-6 h-[44px] rounded-[12px] bg-[#C96B3E] px-6 font-sans text-[14px] font-semibold text-white hover:bg-[#B85A2D] transition-colors">
+                <button
+                  onClick={onRetry}
+                  className="mt-6 h-[44px] rounded-[12px] bg-[#C96B3E] px-6 font-sans text-[14px] font-semibold text-white hover:bg-[#B85A2D] transition-colors"
+                >
                   Tentar de novo
                 </button>
               </>

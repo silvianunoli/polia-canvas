@@ -88,7 +88,16 @@ export function LandingFooter() {
             >
               {col.title}
             </div>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
               {col.links.map((l) => (
                 <li key={l.label}>
                   <Link
@@ -122,10 +131,7 @@ export function LandingFooter() {
           gap: 12,
         }}
       >
-        <div
-          className="font-sans"
-          style={{ fontSize: 12, color: "rgba(255,255,255,0.30)" }}
-        >
+        <div className="font-sans" style={{ fontSize: 12, color: "rgba(255,255,255,0.30)" }}>
           © 2026 Pólia
         </div>
         <div

@@ -11,8 +11,7 @@ export const Route = createFileRoute("/_authenticated/jornada")({
       { title: "Jornada · Pólia" },
       {
         name: "description",
-        content:
-          "Seu mapa completo. Cada etapa que você conclui abre um marco no território.",
+        content: "Seu mapa completo. Cada etapa que você conclui abre um marco no território.",
       },
     ],
   }),
@@ -136,11 +135,7 @@ function JornadaPage() {
           )
           .eq("id", userId!)
           .maybeSingle(),
-        supabase
-          .from("user_progress")
-          .select("etapa_atual")
-          .eq("user_id", userId!)
-          .maybeSingle(),
+        supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
         supabase
           .from("entregaveis")
           .select("id, titulo, etapa, fase, tipo, conteudo, created_at")
@@ -171,9 +166,7 @@ function JornadaPage() {
 
   const etapasConcluidas = Object.values(completados).filter(Boolean).length;
   const initial =
-    (profile?.full_name ?? user?.user_metadata?.full_name ?? "P")
-      .charAt(0)
-      .toUpperCase() || "P";
+    (profile?.full_name ?? user?.user_metadata?.full_name ?? "P").charAt(0).toUpperCase() || "P";
 
   const entregavelPorEtapa = useMemo(() => {
     const m: Record<number, (typeof entregaveis)[number]> = {};
@@ -198,17 +191,14 @@ function JornadaPage() {
         ? "todos os marcos abertos. o mapa é seu."
         : `${11 - etapasConcluidas} marcos no seu horizonte`;
 
-  const estrelaExpandida =
-    expandida !== null ? ESTRELAS.find((e) => e.n === expandida) : null;
-  const entregavelExpandido =
-    expandida !== null ? entregavelPorEtapa[expandida] : null;
+  const estrelaExpandida = expandida !== null ? ESTRELAS.find((e) => e.n === expandida) : null;
+  const entregavelExpandido = expandida !== null ? entregavelPorEtapa[expandida] : null;
 
   return (
     <div className="min-h-screen bg-polia-papel-creme">
       <PainelNav initial={initial} streak={0} navActive="/jornada" />
 
       <div className="relative">
-
         {/* SEÇÃO 1 — CABEÇALHO */}
         <section className="relative px-6 pb-10 pt-16 md:px-12">
           <div className="mx-auto max-w-[1280px]">
@@ -225,9 +215,7 @@ function JornadaPage() {
               Clique em qualquer marco concluído pra ver o que você criou ali.
             </p>
 
-            <p className="mt-8 caveat-decorativo text-polia-terracota">
-              {fraseInferior}
-            </p>
+            <p className="mt-8 caveat-decorativo text-polia-terracota">{fraseInferior}</p>
           </div>
         </section>
 
@@ -371,15 +359,11 @@ function JornadaPage() {
           <div className="mx-auto max-w-[1280px]">
             <div className="mb-6 flex items-end justify-between gap-4">
               <div>
-                <h2 className="font-serif text-[32px] text-polia-marrom">
-                  Seus entregáveis
-                </h2>
+                <h2 className="font-serif text-[32px] text-polia-marrom">Seus entregáveis</h2>
                 <p className="mt-1 font-sans text-[14px] text-polia-marrom/60">
                   {entregaveis.length}{" "}
-                  {entregaveis.length === 1
-                    ? "entregável criado"
-                    : "entregáveis criados"}{" "}
-                  na sua jornada — clique pra ler ou editar
+                  {entregaveis.length === 1 ? "entregável criado" : "entregáveis criados"} na sua
+                  jornada — clique pra ler ou editar
                 </p>
               </div>
               <a
@@ -443,10 +427,7 @@ function EstrelaItem({
 }) {
   if (concluida) {
     return (
-      <button
-        onClick={onClick}
-        className="relative z-10 flex flex-col items-center gap-2"
-      >
+      <button onClick={onClick} className="relative z-10 flex flex-col items-center gap-2">
         <div className="relative h-[52px] w-[52px]">
           <div className="flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-polia-marrom transition-transform hover:scale-105">
             <span className="font-serif text-[18px] text-polia-creme">{n}</span>
@@ -467,18 +448,13 @@ function EstrelaItem({
         <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-polia-marrom">
           {nome}
         </span>
-        <span className="caveat-decorativo text-polia-terracota">
-          conquistado
-        </span>
+        <span className="caveat-decorativo text-polia-terracota">conquistado</span>
       </button>
     );
   }
   if (atual) {
     return (
-      <button
-        onClick={onClick}
-        className="relative z-10 flex flex-col items-center gap-2"
-      >
+      <button onClick={onClick} className="relative z-10 flex flex-col items-center gap-2">
         <div className="relative h-[64px] w-[64px]">
           {/* Anel pulsante respiração */}
           <div
@@ -489,16 +465,17 @@ function EstrelaItem({
             }}
           />
           {/* Marco em curso: outline tracejado terracota, fundo creme */}
-          <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-polia-papel-creme" style={{ border: "2px dashed #C96B3E" }}>
+          <div
+            className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-polia-papel-creme"
+            style={{ border: "2px dashed #C96B3E" }}
+          >
             <span className="font-serif text-[22px] text-polia-terracota">{n}</span>
           </div>
         </div>
         <span className="max-w-[80px] text-center font-sans text-[11px] font-semibold leading-tight text-polia-marrom">
           {nome}
         </span>
-        <span className="caveat-decorativo text-polia-terracota">
-          abrindo agora
-        </span>
+        <span className="caveat-decorativo text-polia-terracota">abrindo agora</span>
       </button>
     );
   }
@@ -513,9 +490,7 @@ function EstrelaItem({
       <span className="max-w-[80px] text-center font-sans text-[11px] leading-tight text-polia-marrom/60">
         {nome}
       </span>
-      <span className="caveat-decorativo text-polia-cinza-areia">
-        no seu horizonte
-      </span>
+      <span className="caveat-decorativo text-polia-cinza-areia">no seu horizonte</span>
     </div>
   );
 }
@@ -540,12 +515,8 @@ function FerramentaCard({
         <span className="mb-3 inline-block rounded-full bg-[rgba(44,106,79,0.2)] px-2 py-0.5 font-accent text-[9px] font-bold tracking-[1.5px] text-[#2D6A4F]">
           ATIVA
         </span>
-        <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">
-          {nome}
-        </p>
-        <p className="font-sans text-[12px] text-polia-marrom/60">
-          {tags}
-        </p>
+        <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">{nome}</p>
+        <p className="font-sans text-[12px] text-polia-marrom/60">{tags}</p>
       </a>
     );
   }
@@ -554,9 +525,7 @@ function FerramentaCard({
       <span className="mb-3 inline-block rounded-full border border-polia-cinza-areia px-2 py-0.5 font-accent text-[10px] font-semibold text-polia-marrom/60">
         anda com você
       </span>
-      <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">
-        {nome}
-      </p>
+      <p className="mb-1 font-sans text-[15px] font-semibold text-polia-marrom">{nome}</p>
       <p className="font-sans text-[12px] text-polia-marrom/60">{tags}</p>
     </div>
   );

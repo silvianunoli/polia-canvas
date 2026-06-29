@@ -4,12 +4,7 @@ import { Mail, User } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  Divider,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, Divider, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput, PasswordStrength, passwordScore } from "@/components/cosmic/CosmicInput";
 import { CosmicButton } from "@/components/cosmic/CosmicButton";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
@@ -20,12 +15,14 @@ export const Route = createFileRoute("/auth/cadastro")({
       { title: "Criar conta · Pólia" },
       {
         name: "description",
-        content: "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+        content:
+          "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
       { property: "og:title", content: "Criar conta · Pólia" },
       {
         property: "og:description",
-        content: "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+        content:
+          "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
     ],
   }),

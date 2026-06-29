@@ -108,12 +108,7 @@ function DobrinhaOrelha() {
       {/* triângulo da face dobrada — tom papel-verso (mais escuro que face) */}
       <path d="M 22 0 L 22 14 L 8 0 Z" fill="#EFE7DA" />
       {/* linha-vinco diagonal */}
-      <path
-        d="M 8 0 L 22 14"
-        stroke="rgba(58, 42, 31, 0.18)"
-        strokeWidth="0.6"
-        fill="none"
-      />
+      <path d="M 8 0 L 22 14" stroke="rgba(58, 42, 31, 0.18)" strokeWidth="0.6" fill="none" />
     </svg>
   );
 }

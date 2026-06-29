@@ -12,7 +12,9 @@ export const Route = createFileRoute("/_authenticated/admin/chamados/")({
 function AdminChamados() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<any[]>([]);
-  const [filtroStatus, setFiltroStatus] = useState<"aberto" | "em_andamento" | "resolvido">("aberto");
+  const [filtroStatus, setFiltroStatus] = useState<"aberto" | "em_andamento" | "resolvido">(
+    "aberto",
+  );
   const [counts, setCounts] = useState({ aberto: 0, em_andamento: 0, resolvido: 0 });
 
   useEffect(() => {
@@ -32,8 +34,14 @@ function AdminChamados() {
 
       const [{ count: a }, { count: e }, { count: r }] = await Promise.all([
         supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "aberto"),
-        supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "em_andamento"),
-        supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "resolvido"),
+        supabase
+          .from("tickets")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "em_andamento"),
+        supabase
+          .from("tickets")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "resolvido"),
       ]);
       setCounts({ aberto: a ?? 0, em_andamento: e ?? 0, resolvido: r ?? 0 });
     })();
@@ -89,7 +97,9 @@ function AdminChamados() {
         ))}
         {tickets.length === 0 && (
           <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] text-center">
-            <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">Nenhum chamado nesse status.</p>
+            <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">
+              Nenhum chamado nesse status.
+            </p>
           </div>
         )}
       </div>

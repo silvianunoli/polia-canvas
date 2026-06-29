@@ -7,13 +7,13 @@ interface FerramentaDesbloqueada {
 }
 
 interface ConclusaoEtapaProps {
-  numero: number;                        // 1-11
-  nomeEtapa: string;                     // Ex: "Identidade do seu negócio"
-  palavraHighlight: string;              // Ex: "Identidade" (recebe highlight mostarda no titulo)
-  palavraMarco: string;                  // Ex: "IDENTIDADE" (vai dentro do selo)
-  subtituloIntimo?: string;              // Frase opcional íntima logo após o título (ex: "É o primeiro ponto do seu mapa.")
+  numero: number; // 1-11
+  nomeEtapa: string; // Ex: "Identidade do seu negócio"
+  palavraHighlight: string; // Ex: "Identidade" (recebe highlight mostarda no titulo)
+  palavraMarco: string; // Ex: "IDENTIDADE" (vai dentro do selo)
+  subtituloIntimo?: string; // Frase opcional íntima logo após o título (ex: "É o primeiro ponto do seu mapa.")
   ferramentaDesbloqueada?: FerramentaDesbloqueada;
-  proximaEtapaLabel?: string;            // Ex: "Começar Etapa 3 →"
+  proximaEtapaLabel?: string; // Ex: "Começar Etapa 3 →"
   onVerPainel: () => void;
   onProximaEtapa?: () => void;
 }
@@ -91,8 +91,7 @@ export function ConclusaoEtapa({
                         ? {
                             background: "#C96B3E",
                             color: "#FDF8F5",
-                            animation:
-                              "polia-respiracao 3s ease-in-out infinite",
+                            animation: "polia-respiracao 3s ease-in-out infinite",
                           }
                         : {
                             border: "1.5px solid #C9BFB2",

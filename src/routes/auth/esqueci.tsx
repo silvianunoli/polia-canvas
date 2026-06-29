@@ -4,12 +4,7 @@ import { Check, Mail } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  SerifHeadline,
-  SubText,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, SerifHeadline, SubText } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { CosmicButton } from "@/components/cosmic/CosmicButton";
 
@@ -19,12 +14,14 @@ export const Route = createFileRoute("/auth/esqueci")({
       { title: "Esqueci minha senha · Pólia" },
       {
         name: "description",
-        content: "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",
+        content:
+          "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",
       },
       { property: "og:title", content: "Esqueci minha senha · Pólia" },
       {
         property: "og:description",
-        content: "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",
+        content:
+          "Recupere o acesso à sua conta Pólia. Vamos te enviar um link para criar uma nova senha.",
       },
     ],
   }),
@@ -133,8 +130,8 @@ function EsqueciPage() {
           </div>
           <h2 className="mt-6 font-serif text-[36px] text-[#FDF8F5]">Link enviado.</h2>
           <p className="mt-3 font-sans text-[16px] text-[#D8D2CC]/80">
-            Mandei para <span className="font-medium text-[#FDF8F5]">{sent}</span>. Pode demorar
-            uns minutinhos. Não esquece de checar o spam.
+            Mandei para <span className="font-medium text-[#FDF8F5]">{sent}</span>. Pode demorar uns
+            minutinhos. Não esquece de checar o spam.
           </p>
           <button
             type="button"

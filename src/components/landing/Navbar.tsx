@@ -41,20 +41,14 @@ export function Navbar({ transparentOnTop = true }: NavbarProps) {
           : "transparent",
         backdropFilter: isSolid ? "blur(16px) saturate(180%)" : "none",
         WebkitBackdropFilter: isSolid ? "blur(16px) saturate(180%)" : "none",
-        borderBottom: isSolid
-          ? "1px solid rgba(255,255,255,0.07)"
-          : "1px solid transparent",
+        borderBottom: isSolid ? "1px solid rgba(255,255,255,0.07)" : "1px solid transparent",
       }}
     >
       <div
         className="mx-auto flex items-center justify-between"
         style={{ maxWidth: 1200, padding: "0 24px", height: 64 }}
       >
-        <Link
-          to="/"
-          style={{ display: "inline-block", lineHeight: 0 }}
-          aria-label="Pólia — início"
-        >
+        <Link to="/" style={{ display: "inline-block", lineHeight: 0 }} aria-label="Pólia — início">
           <UploadablePlaceholder
             id="logo-polia"
             label="LOGO"

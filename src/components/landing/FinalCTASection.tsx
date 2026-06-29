@@ -129,12 +129,11 @@ export function FinalCTASection() {
               position: "relative",
               overflow: "hidden",
               textDecoration: "none",
-              transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1)",
+              transition:
+                "transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s cubic-bezier(0.4,0,0.2,1)",
             }}
           >
-            <span style={{ position: "relative", zIndex: 1 }}>
-              Entrar na lista de espera
-            </span>
+            <span style={{ position: "relative", zIndex: 1 }}>Entrar na lista de espera</span>
           </Link>
         </motion.div>
 
@@ -157,8 +156,6 @@ export function FinalCTASection() {
           </Link>
         </motion.div>
       </motion.div>
-
-
 
       <style>{`
         .polia-final-cta::before {

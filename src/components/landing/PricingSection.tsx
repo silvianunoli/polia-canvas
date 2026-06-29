@@ -161,10 +161,7 @@ export function PricingSection() {
                   gap: 12,
                 }}
               >
-                <CheckCircle
-                  size={18}
-                  style={{ color: "var(--verde-musgo)", flexShrink: 0 }}
-                />
+                <CheckCircle size={18} style={{ color: "var(--verde-musgo)", flexShrink: 0 }} />
                 <span
                   className="font-sans"
                   style={{
@@ -192,8 +189,7 @@ export function PricingSection() {
                 marginTop: 16,
               }}
             >
-              Pós-beta: a partir de R$29/mês. Quem entrar agora garante o menor
-              preço.
+              Pós-beta: a partir de R$29/mês. Quem entrar agora garante o menor preço.
             </p>
             <Link
               to="/precos"
@@ -207,12 +203,8 @@ export function PricingSection() {
                 textDecoration: "none",
                 transition: "color 0.2s ease",
               }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.color = "var(--terracota)")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.color = "rgba(201,107,62,0.70)")
-              }
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--terracota)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(201,107,62,0.70)")}
             >
               Ver detalhes do plano pós-beta
             </Link>

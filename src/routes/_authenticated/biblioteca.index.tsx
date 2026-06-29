@@ -142,10 +142,11 @@ function BibliotecaPage() {
     return entregaveis.filter((e) => normalizarFase(e.fase) === faseAtiva);
   }, [entregaveis, faseAtiva]);
 
-  const initial =
-    (profile?.full_name?.trim()?.[0] ||
-      profile?.business_name?.trim()?.[0] ||
-      "P").toUpperCase();
+  const initial = (
+    profile?.full_name?.trim()?.[0] ||
+    profile?.business_name?.trim()?.[0] ||
+    "P"
+  ).toUpperCase();
   const streak = profile?.streak ?? 0;
   const total = entregaveis.length;
 
@@ -185,9 +186,7 @@ function BibliotecaPage() {
             </div>
 
             {dadosQuery.isLoading ? (
-              <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">
-                Carregando...
-              </p>
+              <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">Carregando...</p>
             ) : total === 0 ? (
               <div className="text-center py-24 border-2 border-dashed border-[rgba(26,26,46,0.06)] rounded-2xl">
                 <p className="font-serif text-[#1A1A2E] text-[24px] opacity-30 mb-3">
@@ -217,9 +216,7 @@ function BibliotecaPage() {
                     ultimaVisita: entregavel.created_at,
                     visitas: 2,
                   });
-                  const seed = entregavel.id
-                    .split("")
-                    .reduce((acc, c) => acc + c.charCodeAt(0), 0);
+                  const seed = entregavel.id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
                   return (
                     <CadernoCard
                       key={entregavel.id}

@@ -57,7 +57,13 @@ Gere o painel: numero_1 é o número principal que ela deve acompanhar (nome cla
                     ritmo_recomendado: { type: "string" },
                     gatilho_principal: { type: "string" },
                   },
-                  required: ["numero_1", "numero_2", "numero_3", "ritmo_recomendado", "gatilho_principal"],
+                  required: [
+                    "numero_1",
+                    "numero_2",
+                    "numero_3",
+                    "ritmo_recomendado",
+                    "gatilho_principal",
+                  ],
                   additionalProperties: false,
                 },
               },
@@ -70,7 +76,8 @@ Gere o painel: numero_1 é o número principal que ela deve acompanhar (nome cla
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { painel: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { painel: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { painel: null, error: "Créditos esgotados." };
         return { painel: null, error: "Não consegui montar seu painel agora." };
       }

@@ -3,11 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { PoliaButton } from "@/components/ui/PoliaButton";
-import {
-  getCookieConsent,
-  setCookieConsent,
-  type CookieConsentValue,
-} from "@/lib/cookieConsent";
+import { getCookieConsent, setCookieConsent, type CookieConsentValue } from "@/lib/cookieConsent";
 
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
@@ -81,9 +77,8 @@ export function CookieConsent() {
                   margin: 0,
                 }}
               >
-                A Pólia usa cookies essenciais pra funcionar e cookies de
-                análise pra entender como melhorar a sua experiência. Você
-                controla o que aceita. Leia nossa{" "}
+                A Pólia usa cookies essenciais pra funcionar e cookies de análise pra entender como
+                melhorar a sua experiência. Você controla o que aceita. Leia nossa{" "}
                 <Link
                   to="/privacidade"
                   className="text-[#C96B3E] underline-offset-2 transition-colors hover:text-white hover:underline"
@@ -120,9 +115,7 @@ export function CookieConsent() {
               >
                 Só essenciais
               </button>
-              <PoliaButton onClick={() => handle("accepted")}>
-                Aceitar tudo
-              </PoliaButton>
+              <PoliaButton onClick={() => handle("accepted")}>Aceitar tudo</PoliaButton>
             </div>
           </div>
         </motion.div>

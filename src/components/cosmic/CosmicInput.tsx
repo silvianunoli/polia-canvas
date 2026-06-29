@@ -19,10 +19,7 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
     return (
       <div className="w-full">
         <div className="mb-1.5 flex items-end justify-between">
-          <label
-            htmlFor={inputId}
-            className="font-sans text-[13px] text-polia-marrom/80"
-          >
+          <label htmlFor={inputId} className="font-sans text-[13px] text-polia-marrom/80">
             {label}
           </label>
           {hint}
@@ -60,9 +57,7 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
             </div>
           )}
         </div>
-        {error && (
-          <p className="mt-1.5 font-sans text-[13px] text-[#E53E3E]">{error}</p>
-        )}
+        {error && <p className="mt-1.5 font-sans text-[13px] text-[#E53E3E]">{error}</p>}
       </div>
     );
   },
@@ -92,8 +87,7 @@ export function PasswordStrength({ password }: PasswordStrengthProps) {
           key={i}
           className="h-1 rounded-full transition-colors"
           style={{
-            backgroundColor:
-              i < score ? colors[Math.min(score - 1, 3)] : "rgba(26,26,46,0.08)",
+            backgroundColor: i < score ? colors[Math.min(score - 1, 3)] : "rgba(26,26,46,0.08)",
           }}
         />
       ))}

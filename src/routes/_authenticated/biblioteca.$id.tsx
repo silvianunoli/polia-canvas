@@ -225,10 +225,11 @@ function BibliotecaDetalhePage() {
     }
   };
 
-  const initial =
-    (profile?.full_name?.trim()?.[0] ||
-      profile?.business_name?.trim()?.[0] ||
-      "P").toUpperCase();
+  const initial = (
+    profile?.full_name?.trim()?.[0] ||
+    profile?.business_name?.trim()?.[0] ||
+    "P"
+  ).toUpperCase();
   const streak = profile?.streak ?? 0;
 
   if (entregavelQuery.isLoading || !entregavel) {
@@ -236,9 +237,7 @@ function BibliotecaDetalhePage() {
       <div className="min-h-screen bg-[#FDF8F5]">
         <PainelNav initial={initial} streak={streak} navActive="/biblioteca" />
         <main className="mx-auto max-w-[1280px] px-12 pt-10">
-          <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">
-            Carregando...
-          </p>
+          <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40">Carregando...</p>
         </main>
       </div>
     );
@@ -320,9 +319,7 @@ function BibliotecaDetalhePage() {
                   <div
                     key={campo.chave}
                     className={`mb-6 pb-6 ${
-                      i < campos.length - 1
-                        ? "border-b border-[rgba(26,26,46,0.06)]"
-                        : ""
+                      i < campos.length - 1 ? "border-b border-[rgba(26,26,46,0.06)]" : ""
                     }`}
                   >
                     <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-3">
@@ -350,38 +347,34 @@ function BibliotecaDetalhePage() {
                       </div>
                     ) : campo.tipo === "lista" ? (
                       <div className="space-y-3">
-                        {(Array.isArray(valor) ? valor : []).map(
-                          (item: unknown, idx: number) => (
-                            <div key={idx} className="flex gap-3">
-                              <span className="font-serif text-[#C96B3E] text-[18px] leading-none mt-0.5">
-                                {idx + 1}
-                              </span>
-                              {editando ? (
-                                <textarea
-                                  defaultValue={renderListaItem(item)}
-                                  onChange={(e) => {
-                                    const nova = [
-                                      ...((conteudoAtual[
-                                        campo.chave
-                                      ] as unknown[]) ?? []),
-                                    ];
-                                    nova[idx] = e.target.value;
-                                    setRascunho((prev) => ({
-                                      ...prev,
-                                      [campo.chave]: nova,
-                                    }));
-                                  }}
-                                  className="flex-1 caveat-decorativo text-[#1A1A2E] bg-transparent resize-none outline-none border-b border-[rgba(26,26,46,0.1)] pb-1"
-                                  rows={1}
-                                />
-                              ) : (
-                                <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
-                                  {renderListaItem(item)}
-                                </p>
-                              )}
-                            </div>
-                          ),
-                        )}
+                        {(Array.isArray(valor) ? valor : []).map((item: unknown, idx: number) => (
+                          <div key={idx} className="flex gap-3">
+                            <span className="font-serif text-[#C96B3E] text-[18px] leading-none mt-0.5">
+                              {idx + 1}
+                            </span>
+                            {editando ? (
+                              <textarea
+                                defaultValue={renderListaItem(item)}
+                                onChange={(e) => {
+                                  const nova = [
+                                    ...((conteudoAtual[campo.chave] as unknown[]) ?? []),
+                                  ];
+                                  nova[idx] = e.target.value;
+                                  setRascunho((prev) => ({
+                                    ...prev,
+                                    [campo.chave]: nova,
+                                  }));
+                                }}
+                                className="flex-1 caveat-decorativo text-[#1A1A2E] bg-transparent resize-none outline-none border-b border-[rgba(26,26,46,0.1)] pb-1"
+                                rows={1}
+                              />
+                            ) : (
+                              <p className="caveat-decorativo text-[#1A1A2E] leading-snug">
+                                {renderListaItem(item)}
+                              </p>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     ) : editando ? (
                       <textarea
@@ -408,10 +401,7 @@ function BibliotecaDetalhePage() {
         </div>
 
         <div className="px-12 pb-12 mt-8">
-          <a
-            href="/biblioteca"
-            className="font-sans text-[#C96B3E] text-[13px] hover:underline"
-          >
+          <a href="/biblioteca" className="font-sans text-[#C96B3E] text-[13px] hover:underline">
             Voltar pra biblioteca
           </a>
         </div>

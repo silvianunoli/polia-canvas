@@ -229,10 +229,7 @@ export function PainelNav({
                 : { background: "transparent", border: "1px solid rgba(14,23,49,0.30)" }
             }
           >
-            <Flame
-              size={16}
-              className={streak > 0 ? "text-white" : "text-[#0E1731]/50"}
-            />
+            <Flame size={16} className={streak > 0 ? "text-white" : "text-[#0E1731]/50"} />
             <span
               className="hidden font-sans text-[13px] font-bold sm:inline"
               style={{ color: streak > 0 ? "#FFFFFF" : "rgba(14,23,49,0.55)" }}
@@ -247,13 +244,7 @@ export function PainelNav({
   );
 }
 
-function AvatarMenu({
-  initial,
-  isAdmin,
-}: {
-  initial: string;
-  isAdmin: boolean;
-}) {
+function AvatarMenu({ initial, isAdmin }: { initial: string; isAdmin: boolean }) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {

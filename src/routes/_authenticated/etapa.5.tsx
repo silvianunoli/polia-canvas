@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/etapa/5")({
     if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
-},
+  },
   component: Etapa5Page,
 });
 
@@ -87,7 +87,8 @@ function Etapa5Page() {
         setVisualPresence(p.visual_presence ?? "");
         setPurchasePath(p.purchase_path ?? "");
 
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE5).presence_finalized_at) {
@@ -134,7 +135,10 @@ function Etapa5Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") payload[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
@@ -181,7 +185,10 @@ function Etapa5Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_5_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_5_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -269,7 +276,13 @@ function Etapa5Page() {
           {step === 3 && (
             <PerguntaBlock
               caveat="a primeira impressão é o que faz ela parar ou rolar."
-              titulo={<>Como você aparece pra quem<br />ainda não te conhece?</>}
+              titulo={
+                <>
+                  Como você aparece pra quem
+                  <br />
+                  ainda não te conhece?
+                </>
+              }
               label="SUA APARÊNCIA ONLINE"
               placeholder="Ex: Feed com fotos de produto em fundo neutro, sempre com boa luz. Stories com processo de criação e bastidores. Bio direta: 'Convites autorais com alma. SP.' Link pro catálogo em PDF. Às vezes apareço em vídeo mostrando os materiais."
               maxLength={400}
@@ -347,12 +360,16 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L5 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
         </div>
 
-        <p className="caveat-informacional text-polia-terracota mt-10">onde te acham, como você aparece.</p>
+        <p className="caveat-informacional text-polia-terracota mt-10">
+          onde te acham, como você aparece.
+        </p>
 
         <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Sua vitrine online começa aqui.
@@ -380,7 +397,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos montar minha vitrine  →
+          Vamos montar minha vitrine →
         </button>
 
         <p className="caveat-decorativo text-polia-terracota/75 mt-4">
@@ -456,8 +473,7 @@ function PerguntaLayout({
           <hr className="border-[#EAE2D8] my-6" />
           <p className="caveat-decorativo text-[#6A6A7E] leading-[22px]">
             depois vem
-            <br />
-            a sua primeira impressão
+            <br />a sua primeira impressão
           </p>
         </aside>
 
@@ -526,7 +542,9 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">
+            RAPOSA
+          </p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -612,7 +630,9 @@ function GuiaTela({
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
               ENTREGÁVEL · ETAPA 5 · CONTEÚDO
             </p>
-            <p className="caveat-informacional text-polia-terracota mt-4">olha como você aparece pro mundo.</p>
+            <p className="caveat-informacional text-polia-terracota mt-4">
+              olha como você aparece pro mundo.
+            </p>
             <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Sua primeira impressão
               <br />
@@ -623,7 +643,9 @@ function GuiaTela({
               <p className="font-accent text-[10px] font-bold tracking-[1.8px] text-polia-terracota">
                 GUIA DE PRESENÇA · {(businessName || "Sua marca").toUpperCase()}
               </p>
-              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">Como você aparece e como te acham</p>
+              <p className="font-serif text-[#1A1A2E] text-[22px] mt-2">
+                Como você aparece e como te acham
+              </p>
               <hr className="border-[#EAE2D8] my-5" />
 
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
@@ -656,9 +678,7 @@ function GuiaTela({
               <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
                 SUA BIO SUGERIDA
               </p>
-              <p className="caveat-decorativo text-polia-terracota mt-2">
-                "{guia.bio_sugerida}"
-              </p>
+              <p className="caveat-decorativo text-polia-terracota mt-2">"{guia.bio_sugerida}"</p>
 
               <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-5 text-right">
                 salvo em Sua Vitrine · você edita quando quiser
@@ -677,7 +697,7 @@ function GuiaTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Conquistar esse marco  →
+                Conquistar esse marco →
               </button>
             </div>
           </>

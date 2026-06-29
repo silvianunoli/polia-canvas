@@ -8,7 +8,11 @@ export const Route = createFileRoute("/_public/lista-de-espera")({
   head: () => ({
     meta: [
       { title: "Lista de espera · Pólia" },
-      { name: "description", content: "Seja uma das primeiras. Garanta acesso prioritário ao lançamento da Pólia em maio de 2026." },
+      {
+        name: "description",
+        content:
+          "Seja uma das primeiras. Garanta acesso prioritário ao lançamento da Pólia em maio de 2026.",
+      },
       { property: "og:title", content: "Lista de espera · Pólia" },
       { property: "og:description", content: "Entre antes. Preço menor pra sempre." },
     ],
@@ -69,7 +73,8 @@ function ListaEspera() {
           Seja uma das primeiras.
         </h1>
         <p className="font-sans text-[#FDF8F5]/70 text-[16px] leading-relaxed text-center mb-10">
-          A Pólia abre pra um grupo pequeno em maio de 2026. Quem estiver na lista entra primeiro — e com o menor preço possível, pra sempre.
+          A Pólia abre pra um grupo pequeno em maio de 2026. Quem estiver na lista entra primeiro —
+          e com o menor preço possível, pra sempre.
         </p>
 
         {!enviado ? (
@@ -98,12 +103,24 @@ function ListaEspera() {
               required
               className="w-full bg-white/8 border border-white/12 rounded-xl px-5 py-4 font-sans text-[#FDF8F5] text-[15px] outline-none focus:border-[#C96B3E] transition-colors appearance-none"
             >
-              <option value="" disabled className="bg-[#1A1A2E]">O que você faz?</option>
-              <option value="artesanato" className="bg-[#1A1A2E]">Artesanato / trabalho manual</option>
-              <option value="alimentacao" className="bg-[#1A1A2E]">Alimentação artesanal</option>
-              <option value="moda" className="bg-[#1A1A2E]">Moda / costura / têxtil</option>
-              <option value="digital" className="bg-[#1A1A2E]">Produto ou serviço digital</option>
-              <option value="outro" className="bg-[#1A1A2E]">Outro</option>
+              <option value="" disabled className="bg-[#1A1A2E]">
+                O que você faz?
+              </option>
+              <option value="artesanato" className="bg-[#1A1A2E]">
+                Artesanato / trabalho manual
+              </option>
+              <option value="alimentacao" className="bg-[#1A1A2E]">
+                Alimentação artesanal
+              </option>
+              <option value="moda" className="bg-[#1A1A2E]">
+                Moda / costura / têxtil
+              </option>
+              <option value="digital" className="bg-[#1A1A2E]">
+                Produto ou serviço digital
+              </option>
+              <option value="outro" className="bg-[#1A1A2E]">
+                Outro
+              </option>
             </select>
 
             <button

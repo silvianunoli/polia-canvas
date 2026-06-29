@@ -25,7 +25,10 @@ function AdminLogs() {
   }, []);
 
   const stats = useMemo(() => {
-    const map = new Map<string, { chamadas: number; erros: number; soma_lat: number; com_lat: number }>();
+    const map = new Map<
+      string,
+      { chamadas: number; erros: number; soma_lat: number; com_lat: number }
+    >();
     logs.forEach((l: any) => {
       const cur = map.get(l.function_name) ?? { chamadas: 0, erros: 0, soma_lat: 0, com_lat: 0 };
       cur.chamadas++;
@@ -53,7 +56,10 @@ function AdminLogs() {
           <thead>
             <tr className="border-b border-[rgba(26,26,46,0.06)]">
               {["Função", "Chamadas", "Erros", "Latência média", "Status"].map((h) => (
-                <th key={h} className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 px-5 py-3 text-left">
+                <th
+                  key={h}
+                  className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 px-5 py-3 text-left"
+                >
                   {h}
                 </th>
               ))}
@@ -62,7 +68,10 @@ function AdminLogs() {
           <tbody>
             {stats.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center font-sans text-[#1A1A2E] text-[13px] opacity-40">
+                <td
+                  colSpan={5}
+                  className="px-5 py-8 text-center font-sans text-[#1A1A2E] text-[13px] opacity-40"
+                >
                   Nenhum log registrado nas últimas 24h.
                 </td>
               </tr>
@@ -71,14 +80,20 @@ function AdminLogs() {
               <tr key={fn.nome} className="border-b border-[rgba(26,26,46,0.04)]">
                 <td className="px-5 py-3 font-mono text-[#1A1A2E] text-[13px]">{fn.nome}</td>
                 <td className="px-5 py-3 font-sans text-[#1A1A2E] text-[13px]">{fn.chamadas}</td>
-                <td className={`px-5 py-3 font-sans text-[13px] ${fn.erros > 0 ? "text-[#C9407A]" : "text-[#2D6A4F]"}`}>
+                <td
+                  className={`px-5 py-3 font-sans text-[13px] ${fn.erros > 0 ? "text-[#C9407A]" : "text-[#2D6A4F]"}`}
+                >
                   {fn.erros}
                 </td>
-                <td className="px-5 py-3 font-sans text-[#1A1A2E] text-[13px] opacity-60">{fn.latencia_ms}ms</td>
+                <td className="px-5 py-3 font-sans text-[#1A1A2E] text-[13px] opacity-60">
+                  {fn.latencia_ms}ms
+                </td>
                 <td className="px-5 py-3">
                   <span
                     className={`font-mono text-[9px] tracking-[1px] uppercase px-2 py-0.5 rounded-full ${
-                      fn.erros === 0 ? "bg-[rgba(44,106,79,0.1)] text-[#2D6A4F]" : "bg-[rgba(201,64,122,0.1)] text-[#C9407A]"
+                      fn.erros === 0
+                        ? "bg-[rgba(44,106,79,0.1)] text-[#2D6A4F]"
+                        : "bg-[rgba(201,64,122,0.1)] text-[#C9407A]"
                     }`}
                   >
                     {fn.erros === 0 ? "ok" : "com erros"}

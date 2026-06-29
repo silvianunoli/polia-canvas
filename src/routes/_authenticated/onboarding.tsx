@@ -62,16 +62,8 @@ function OnboardingPage() {
               onNext={() => setStep(4)}
             />
           )}
-          {step === 4 && (
-            <Step4
-              state={state}
-              setState={setState}
-              onSuccess={() => setStep(5)}
-            />
-          )}
-          {step === 5 && (
-            <Step5 onFinish={() => navigate({ to: "/painel" })} />
-          )}
+          {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
+          {step === 5 && <Step5 onFinish={() => navigate({ to: "/painel" })} />}
         </div>
       </div>
     </div>
@@ -100,7 +92,10 @@ function LogoPlaceholder({ size = 180 }: { size?: number }) {
         borderWidth: 1.5,
       }}
     >
-      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.5 }}>
+      <span
+        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
+        style={{ fontSize: 10, letterSpacing: 1.5 }}
+      >
         Placeholder · Logo
       </span>
       <span className="font-sans text-polia-marrom/70" style={{ fontSize: 10 }}>
@@ -115,7 +110,10 @@ function LogoPlaceholder({ size = 180 }: { size?: number }) {
 
 function Caveat({ children, size = 28 }: { children: React.ReactNode; size?: number }) {
   return (
-    <p className="text-center caveat-decorativo text-polia-terracota" style={{ fontSize: size, lineHeight: 1.15 }}>
+    <p
+      className="text-center caveat-decorativo text-polia-terracota"
+      style={{ fontSize: size, lineHeight: 1.15 }}
+    >
       {children}
     </p>
   );
@@ -184,7 +182,7 @@ function Step1({ onNext }: { onNext: () => void }) {
         <Body>Vou te guiar do primeiro passo até seu primeiro entregável.</Body>
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
-      <PrimaryCTA onClick={onNext}>Começar  →</PrimaryCTA>
+      <PrimaryCTA onClick={onNext}>Começar →</PrimaryCTA>
       <p className="text-center font-sans text-[14px] text-polia-marrom/55">Leva 3 minutinhos.</p>
       <FoxPlaceholder />
     </div>
@@ -198,7 +196,10 @@ function FoxPlaceholder() {
       style={{ width: 260, height: 220, borderColor: "rgba(232,151,112,0.6)", borderWidth: 1.5 }}
     >
       <div className="rounded-full bg-polia-cinza-areia/40" style={{ width: 54, height: 54 }} />
-      <span className="font-sans font-semibold uppercase text-polia-terracota" style={{ fontSize: 10, letterSpacing: 1.5 }}>
+      <span
+        className="font-sans font-semibold uppercase text-polia-terracota"
+        style={{ fontSize: 10, letterSpacing: 1.5 }}
+      >
         Placeholder · Raposa
       </span>
       <span className="caveat-decorativo text-polia-terracota" style={{ fontSize: 22 }}>
@@ -213,10 +214,30 @@ function FoxPlaceholder() {
 
 /* ---------------- STEP 2 ---------------- */
 const BIZ_TYPES: { value: BusinessType; tag: string; title: string; desc: string }[] = [
-  { value: "produto_fisico", tag: "Produto Físico", title: "Algo que vai pelo correio", desc: "Roupa, comida, joia, cosmético, artesanato. Tem estoque, tem envio." },
-  { value: "produto_digital", tag: "Produto Digital", title: "Algo que se baixa ou se acessa", desc: "Curso, ebook, template, software, comunidade paga. Receita recorrente possível." },
-  { value: "servico", tag: "Serviço", title: "Você é quem entrega", desc: "Consultoria, terapia, design, aula, atendimento. Hora sua vira agenda." },
-  { value: "hibrido", tag: "Híbrido", title: "Mistura das duas coisas", desc: "Vende produto e atende. Junta digital com físico. A Pólia combina os dois." },
+  {
+    value: "produto_fisico",
+    tag: "Produto Físico",
+    title: "Algo que vai pelo correio",
+    desc: "Roupa, comida, joia, cosmético, artesanato. Tem estoque, tem envio.",
+  },
+  {
+    value: "produto_digital",
+    tag: "Produto Digital",
+    title: "Algo que se baixa ou se acessa",
+    desc: "Curso, ebook, template, software, comunidade paga. Receita recorrente possível.",
+  },
+  {
+    value: "servico",
+    tag: "Serviço",
+    title: "Você é quem entrega",
+    desc: "Consultoria, terapia, design, aula, atendimento. Hora sua vira agenda.",
+  },
+  {
+    value: "hibrido",
+    tag: "Híbrido",
+    title: "Mistura das duas coisas",
+    desc: "Vende produto e atende. Junta digital com físico. A Pólia combina os dois.",
+  },
 ];
 
 function Step2({
@@ -246,9 +267,14 @@ function Step2({
           />
         ))}
       </div>
-      <PrimaryCTA onClick={onNext} disabled={!value}>Continuar  →</PrimaryCTA>
+      <PrimaryCTA onClick={onNext} disabled={!value}>
+        Continuar →
+      </PrimaryCTA>
       {!value && (
-        <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
+        <p
+          className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
+          style={{ fontSize: 18 }}
+        >
           escolhe uma pra continuar
         </p>
       )}
@@ -281,7 +307,10 @@ function ChoiceCard({
         minHeight: 170,
       }}
     >
-      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.8 }}>
+      <span
+        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
+        style={{ fontSize: 10, letterSpacing: 1.8 }}
+      >
         {tag}
       </span>
       <span className="font-serif text-polia-marrom" style={{ fontSize: 22, lineHeight: "28px" }}>
@@ -296,9 +325,24 @@ function ChoiceCard({
 
 /* ---------------- STEP 3 ---------------- */
 const STAGES: { value: BusinessStage; tag: string; title: string; desc: string }[] = [
-  { value: "ideia", tag: "Só uma ideia", title: "Tô no ponto zero", desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia constrói tudo com você do começo." },
-  { value: "comecei", tag: "Já comecei", title: "Tô testando, mas tá solto", desc: "Já vendi pra alguém, já tem alguma coisa rodando, mas falta direção. A Pólia organiza o que existe." },
-  { value: "ja_vendo", tag: "Já vendo", title: "Quero profissionalizar", desc: "Negócio rodando, vendas acontecendo, mas falta sistema. A Pólia te ajuda a sair do improviso." },
+  {
+    value: "ideia",
+    tag: "Só uma ideia",
+    title: "Tô no ponto zero",
+    desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia constrói tudo com você do começo.",
+  },
+  {
+    value: "comecei",
+    tag: "Já comecei",
+    title: "Tô testando, mas tá solto",
+    desc: "Já vendi pra alguém, já tem alguma coisa rodando, mas falta direção. A Pólia organiza o que existe.",
+  },
+  {
+    value: "ja_vendo",
+    tag: "Já vendo",
+    title: "Quero profissionalizar",
+    desc: "Negócio rodando, vendas acontecendo, mas falta sistema. A Pólia te ajuda a sair do improviso.",
+  },
 ];
 
 function Step3({
@@ -328,9 +372,14 @@ function Step3({
           />
         ))}
       </div>
-      <PrimaryCTA onClick={onNext} disabled={!value}>Continuar  →</PrimaryCTA>
+      <PrimaryCTA onClick={onNext} disabled={!value}>
+        Continuar →
+      </PrimaryCTA>
       {!value && (
-        <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 18 }}>
+        <p
+          className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
+          style={{ fontSize: 18 }}
+        >
           escolhe um pra continuar
         </p>
       )}
@@ -363,20 +412,18 @@ function Step4({
       const userId = sess.session?.user.id;
       if (!userId) throw new Error("Sessão expirou");
 
-      const { error: upErr } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            id: userId,
-            business_type: state.business_type,
-            business_stage: state.business_stage,
-            display_name: displayTrim,
-            business_name: state.business_name.trim() || null,
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString(),
-          },
-          { onConflict: "id" },
-        );
+      const { error: upErr } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          business_type: state.business_type,
+          business_stage: state.business_stage,
+          display_name: displayTrim,
+          business_name: state.business_name.trim() || null,
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+        },
+        { onConflict: "id" },
+      );
       if (upErr) throw upErr;
       onSuccess();
     } catch (e) {
@@ -391,7 +438,9 @@ function Step4({
       <LogoPlaceholder />
       <Caveat>A gente tá quase lá.</Caveat>
       <Headline size={60}>Como você quer ser chamada?</Headline>
-      <Body max={800}>Vou te chamar pelo nome em todo lugar. Coloca o que eu escutar e te reconhecer.</Body>
+      <Body max={800}>
+        Vou te chamar pelo nome em todo lugar. Coloca o que eu escutar e te reconhecer.
+      </Body>
 
       <div className="flex w-full max-w-[440px] flex-col gap-5">
         <Field
@@ -409,7 +458,10 @@ function Step4({
         />
       </div>
 
-      <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]" style={{ fontSize: 16 }}>
+      <p
+        className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
+        style={{ fontSize: 16 }}
+      >
         depois você pode trocar nos ajustes do perfil
       </p>
 
@@ -441,7 +493,10 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="font-sans font-semibold uppercase text-polia-mostarda-intenso" style={{ fontSize: 10, letterSpacing: 1.8 }}>
+      <span
+        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
+        style={{ fontSize: 10, letterSpacing: 1.8 }}
+      >
         {label}
         {required && <span className="ml-1 text-polia-terracota">*</span>}
       </span>
@@ -472,8 +527,17 @@ function Field({
 
 /* ---------------- STEP 5 ---------------- */
 const STARS = [
-  "Descoberta", "Branding", "Posicionamento", "Produto", "Vitrine", "Estoque",
-  "Vendas", "Atendimento", "Marketing", "Métricas", "Evolução",
+  "Descoberta",
+  "Branding",
+  "Posicionamento",
+  "Produto",
+  "Vitrine",
+  "Estoque",
+  "Vendas",
+  "Atendimento",
+  "Marketing",
+  "Métricas",
+  "Evolução",
 ];
 
 function Star({ active }: { active: boolean }) {
@@ -528,7 +592,9 @@ function Step5({ onFinish }: { onFinish: () => void }) {
                       }}
                     />
                   )}
-                  <div className="relative"><Star active={active} /></div>
+                  <div className="relative">
+                    <Star active={active} />
+                  </div>
                 </div>
                 <span
                   className="text-center font-sans"
@@ -554,11 +620,14 @@ function Step5({ onFinish }: { onFinish: () => void }) {
       <p className="text-center font-serif text-polia-terracota" style={{ fontSize: 22 }}>
         A Pólia não acaba. Ela só fica mais sua.
       </p>
-      <p className="text-center caveat-decorativo text-[rgba(232,151,112,0.8)]" style={{ fontSize: 18 }}>
+      <p
+        className="text-center caveat-decorativo text-[rgba(232,151,112,0.8)]"
+        style={{ fontSize: 18 }}
+      >
         cada vez que você volta, encontra mais de você aqui
       </p>
 
-      <PrimaryCTA onClick={onFinish}>Começar minha jornada  →</PrimaryCTA>
+      <PrimaryCTA onClick={onFinish}>Começar minha jornada →</PrimaryCTA>
 
       <style>{`
         @keyframes polia-pulse {
@@ -569,4 +638,3 @@ function Step5({ onFinish }: { onFinish: () => void }) {
     </div>
   );
 }
-

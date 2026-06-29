@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/etapa/2")({
     if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
-},
+  },
   component: Etapa2Page,
 });
 
@@ -65,7 +65,9 @@ function Etapa2Page() {
   const [vozMarca, setVozMarca] = useState<BrandVoiceJson | null>(null);
   const [loadingVoz, setLoadingVoz] = useState(false);
   const [vozError, setVozError] = useState<string | null>(null);
-  const [varianteAtiva, setVarianteAtiva] = useState<"recomendada" | "poetica" | "direta">("recomendada");
+  const [varianteAtiva, setVarianteAtiva] = useState<"recomendada" | "poetica" | "direta">(
+    "recomendada",
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -88,7 +90,8 @@ function Etapa2Page() {
         setBrandVisualStyle(p.brand_visual_style ?? "");
         setBrandVoiceYes((p as ProfileE2).brand_voice_yes ?? "");
 
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE2).brand_voice_finalized_at) {
@@ -136,7 +139,10 @@ function Etapa2Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") payload[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
@@ -186,7 +192,10 @@ function Etapa2Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_2_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_2_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -328,7 +337,9 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L2 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
         </div>
@@ -507,7 +518,9 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">
+            RAPOSA
+          </p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -683,7 +696,9 @@ function VozMarcaTela({
             <p className="font-accent text-[11px] font-bold tracking-[2.5px] text-polia-mostarda-intenso">
               ENTREGÁVEL · ETAPA 2 · BRANDING
             </p>
-            <p className="caveat-informacional text-polia-terracota mt-4">olha o que a gente fez juntas.</p>
+            <p className="caveat-informacional text-polia-terracota mt-4">
+              olha o que a gente fez juntas.
+            </p>
             <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[34px] md:text-[52px] leading-[1.1] mt-3">
               Sua voz de marca
               <br />
@@ -700,7 +715,9 @@ function VozMarcaTela({
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 {voz.palavras.slice(0, 3).map((p, i) => (
                   <div key={i} className="text-center">
-                    <p className="font-serif text-[#1A1A2E] text-[32px] leading-none">{p.palavra}</p>
+                    <p className="font-serif text-[#1A1A2E] text-[32px] leading-none">
+                      {p.palavra}
+                    </p>
                     <p className="caveat-decorativo text-[rgba(201,107,62,0.85)] mt-2">
                       {p.subtitulo}
                     </p>
@@ -729,7 +746,11 @@ function VozMarcaTela({
                           : "border border-[#EAE2D8] bg-[#FDF8F5] text-[#6A6A7E]"
                       }`}
                     >
-                      {v === "recomendada" ? "Recomendada" : v === "poetica" ? "Mais poética" : "Mais direta"}
+                      {v === "recomendada"
+                        ? "Recomendada"
+                        : v === "poetica"
+                          ? "Mais poética"
+                          : "Mais direta"}
                     </button>
                   );
                 })}
@@ -758,7 +779,7 @@ function VozMarcaTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Conquistar esse marco  →
+                Conquistar esse marco →
               </button>
             </div>
           </>

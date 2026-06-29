@@ -139,8 +139,7 @@ export function Footer(): ReactNode {
                 lineHeight: 1.6,
               }}
             >
-              Para a mulher que constrói algo com as próprias mãos e quer que
-              o mundo saiba.
+              Para a mulher que constrói algo com as próprias mãos e quer que o mundo saiba.
             </p>
             <p
               className="caveat-decorativo"
@@ -168,16 +167,10 @@ export function Footer(): ReactNode {
             gap: 16,
           }}
         >
-          <span
-            className="font-sans"
-            style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}
-          >
+          <span className="font-sans" style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>
             2026 Pólia. Feito com carinho para mulheres que constroem.
           </span>
-          <span
-            className="font-sans"
-            style={{ fontSize: 12, color: "rgba(255,255,255,0.20)" }}
-          >
+          <span className="font-sans" style={{ fontSize: 12, color: "rgba(255,255,255,0.20)" }}>
             &#8203;
           </span>
         </div>
@@ -189,8 +182,7 @@ export function Footer(): ReactNode {
             marginTop: 16,
           }}
         >
-          Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei
-          13.709/2018).
+          Em conformidade com a Lei Geral de Proteção de Dados (LGPD — Lei 13.709/2018).
         </p>
       </div>
     </footer>

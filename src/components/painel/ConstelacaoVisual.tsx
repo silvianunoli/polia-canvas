@@ -53,10 +53,7 @@ interface ConstelacaoVisualProps {
   onStarClick?: (etapa: number, state: "done" | "current" | "future") => void;
 }
 
-export function ConstelacaoVisual({
-  etapaAtual,
-  onStarClick,
-}: ConstelacaoVisualProps) {
+export function ConstelacaoVisual({ etapaAtual, onStarClick }: ConstelacaoVisualProps) {
   return (
     <div className="relative w-full overflow-hidden pb-2">
       <div className="grid w-full grid-cols-1 gap-8 sm:grid-cols-2 xl:grid-cols-4">
@@ -93,7 +90,6 @@ export function ConstelacaoVisual({
                     }
                   : undefined;
 
-
                 const title = isCurrent
                   ? `Continuar na Etapa ${star.etapa}`
                   : isDone
@@ -101,15 +97,24 @@ export function ConstelacaoVisual({
                     : `Etapa ${star.etapa} — no seu horizonte`;
 
                 const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
-                  if (!["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) return;
+                  if (
+                    !["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown", "Home", "End"].includes(
+                      e.key,
+                    )
+                  )
+                    return;
                   e.preventDefault();
                   const total = 11;
                   let target = star.etapa;
-                  if (e.key === "ArrowRight" || e.key === "ArrowDown") target = star.etapa === total ? 1 : star.etapa + 1;
-                  else if (e.key === "ArrowLeft" || e.key === "ArrowUp") target = star.etapa === 1 ? total : star.etapa - 1;
+                  if (e.key === "ArrowRight" || e.key === "ArrowDown")
+                    target = star.etapa === total ? 1 : star.etapa + 1;
+                  else if (e.key === "ArrowLeft" || e.key === "ArrowUp")
+                    target = star.etapa === 1 ? total : star.etapa - 1;
                   else if (e.key === "Home") target = 1;
                   else if (e.key === "End") target = total;
-                  const next = document.querySelector<HTMLButtonElement>(`[data-constelacao-star="${target}"]`);
+                  const next = document.querySelector<HTMLButtonElement>(
+                    `[data-constelacao-star="${target}"]`,
+                  );
                   next?.focus();
                 };
                 return (
@@ -129,8 +134,6 @@ export function ConstelacaoVisual({
                         : "cursor-default"
                     }`}
                   >
-
-
                     {/* Top label slot (fixed height to align all circles) */}
                     <div className="flex h-10 items-end justify-center">
                       {isCurrent && (

@@ -50,10 +50,26 @@ const valores = [
 ];
 
 const marcos = [
-  { data: "Jan 2026", titulo: "A ideia vira problema real", desc: "Sil percebe que nenhuma ferramenta em PT-BR ocupa esse espaço." },
-  { data: "Mar 2026", titulo: "Discovery e ICP", desc: "10 entrevistas com mulheres empreendedoras. A Aimer ganha nome e rosto." },
-  { data: "Mai 2026", titulo: "Pólia nasce", desc: "Nome, identidade visual e as 11 etapas tomam forma." },
-  { data: "Em breve", titulo: "Primeiro coorte", desc: "10 a 15 mulheres testam a Pólia antes de todo mundo." },
+  {
+    data: "Jan 2026",
+    titulo: "A ideia vira problema real",
+    desc: "Sil percebe que nenhuma ferramenta em PT-BR ocupa esse espaço.",
+  },
+  {
+    data: "Mar 2026",
+    titulo: "Discovery e ICP",
+    desc: "10 entrevistas com mulheres empreendedoras. A Aimer ganha nome e rosto.",
+  },
+  {
+    data: "Mai 2026",
+    titulo: "Pólia nasce",
+    desc: "Nome, identidade visual e as 11 etapas tomam forma.",
+  },
+  {
+    data: "Em breve",
+    titulo: "Primeiro coorte",
+    desc: "10 a 15 mulheres testam a Pólia antes de todo mundo.",
+  },
 ];
 
 function SobrePage() {
@@ -239,10 +255,9 @@ function SobrePage() {
                     marginTop: 16,
                   }}
                 >
-                  Coloca aqui sua história em 3-4 parágrafos. O que você vivia antes
-                  de criar a Pólia. Qual era a dor que você sentia. O momento em que
-                  decidiu construir isso. Por que você acredita que toda mulher
-                  merece começar certo.
+                  Coloca aqui sua história em 3-4 parágrafos. O que você vivia antes de criar a
+                  Pólia. Qual era a dor que você sentia. O momento em que decidiu construir isso.
+                  Por que você acredita que toda mulher merece começar certo.
                 </p>
                 <p
                   className="caveat-decorativo"
@@ -307,8 +322,8 @@ function SobrePage() {
                 margin: "20px auto 0",
               }}
             >
-              60% dos negócios fecham antes de 2 anos. Não por falta de talento.
-              Por falta de estrutura, clareza e direção no começo certo.
+              60% dos negócios fecham antes de 2 anos. Não por falta de talento. Por falta de
+              estrutura, clareza e direção no começo certo.
             </p>
           </motion.div>
         </div>
@@ -568,10 +583,7 @@ function SobrePage() {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           style={{ position: "relative", zIndex: 1, maxWidth: 600, margin: "0 auto" }}
         >
-          <div
-            className="caveat-decorativo"
-            style={{ fontSize: 24, color: "var(--terracota)" }}
-          >
+          <div className="caveat-decorativo" style={{ fontSize: 24, color: "var(--terracota)" }}>
             pronta pra começar?
           </div>
           <h2
@@ -597,8 +609,8 @@ function SobrePage() {
               lineHeight: 1.6,
             }}
           >
-            Acesso gratuito durante o beta. Você ajuda a construir a Pólia e ainda
-            constrói o seu negócio junto.
+            Acesso gratuito durante o beta. Você ajuda a construir a Pólia e ainda constrói o seu
+            negócio junto.
           </p>
 
           <div style={{ marginTop: 40 }}>
@@ -619,9 +631,7 @@ function SobrePage() {
                 transition: "transform 0.25s cubic-bezier(0.4,0,0.2,1), box-shadow 0.25s",
               }}
             >
-              <span style={{ position: "relative", zIndex: 1 }}>
-                Entrar na lista de espera
-              </span>
+              <span style={{ position: "relative", zIndex: 1 }}>Entrar na lista de espera</span>
             </Link>
           </div>
         </motion.div>

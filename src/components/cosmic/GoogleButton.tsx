@@ -7,7 +7,12 @@ interface GoogleButtonProps {
   label?: string;
 }
 
-export function GoogleButton({ onClick, loading, disabled, label = "Continuar com o Google" }: GoogleButtonProps) {
+export function GoogleButton({
+  onClick,
+  loading,
+  disabled,
+  label = "Continuar com o Google",
+}: GoogleButtonProps) {
   return (
     <button
       type="button"

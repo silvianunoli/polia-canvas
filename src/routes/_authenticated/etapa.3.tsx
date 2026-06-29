@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/etapa/3")({
     if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
-},
+  },
   component: Etapa3Page,
 });
 
@@ -87,7 +87,8 @@ function Etapa3Page() {
         setDifferentiators(p.differentiators ?? "");
         setPositioningStatement(p.positioning_statement ?? "");
 
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE3).positioning_finalized_at) {
@@ -134,7 +135,10 @@ function Etapa3Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") payload[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
@@ -181,7 +185,10 @@ function Etapa3Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_3_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_3_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -250,7 +257,13 @@ function Etapa3Page() {
           {step === 2 && (
             <PerguntaBlock
               caveat="saber com quem você compete é saber quem você não é."
-              titulo={<>Quem mais faz<br />parecido com você?</>}
+              titulo={
+                <>
+                  Quem mais faz
+                  <br />
+                  parecido com você?
+                </>
+              }
               label="SEUS CONCORRENTES"
               placeholder="Ex: Beatriz tem uma papelaria personalizada no Instagram com 20k seguidores. A Lua Designs faz convites no Canva mais barato. As grandes gráficas oferecem quantidade. Mas nenhuma tem minha abordagem de design autoral com atendimento próximo."
               maxLength={500}
@@ -269,7 +282,13 @@ function Etapa3Page() {
           {step === 3 && (
             <PerguntaBlock
               caveat="essa é a pergunta que a maioria nunca para pra responder."
-              titulo={<>O que só<br />você faz?</>}
+              titulo={
+                <>
+                  O que só
+                  <br />
+                  você faz?
+                </>
+              }
               label="SEU DIFERENCIAL REAL"
               placeholder="Ex: Faço design de convites 100% autoral, nada de template. Cada peça nasce de uma conversa profunda com a cliente sobre a memória que ela quer criar. Entrego em até 5 dias e acompanho pessoalmente até a impressão final."
               maxLength={500}
@@ -289,7 +308,13 @@ function Etapa3Page() {
           {step === 4 && (
             <PerguntaBlock
               caveat="agora junta tudo numa frase. imperfeita tá ótimo."
-              titulo={<>Por que uma cliente<br />escolheria você?</>}
+              titulo={
+                <>
+                  Por que uma cliente
+                  <br />
+                  escolheria você?
+                </>
+              }
               label="SUA RAZÃO DE SER ESCOLHIDA"
               placeholder="Ex: Porque precisa de alguém que entenda que o convite não é só papel. É o começo de uma memória. E alguém que entregue isso com cuidado real, do conceito à impressão."
               maxLength={200}
@@ -345,12 +370,16 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L3 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
         </div>
 
-        <p className="caveat-informacional text-polia-terracota mt-10">agora a gente vai te localizar.</p>
+        <p className="caveat-informacional text-polia-terracota mt-10">
+          agora a gente vai te localizar.
+        </p>
 
         <h1 className="font-serif text-polia-marrom text-[28px] sm:text-[36px] md:text-[56px] leading-[1.08] mt-3 max-w-[820px]">
           Onde você fica no mapa?
@@ -378,7 +407,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Quero meu mapa  →
+          Quero meu mapa →
         </button>
 
         <p className="caveat-decorativo text-polia-terracota/75 mt-4">
@@ -524,7 +553,9 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">
+            RAPOSA
+          </p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -673,7 +704,7 @@ function MapaTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Conquistar esse marco  →
+                Conquistar esse marco →
               </button>
             </div>
           </>
@@ -693,7 +724,8 @@ function Conclusao({ onVerPainel, onEtapa4 }: { onVerPainel: () => void; onEtapa
       palavraMarco="MODELO"
       ferramentaDesbloqueada={{
         titulo: "Suas Vendas e Clientes",
-        descricao: "Onde você gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Fica na sua órbita.",
+        descricao:
+          "Onde você gerencia pedidos, acompanha clientes e organiza sua agenda de vendas. Fica na sua órbita.",
       }}
       proximaEtapaLabel="Começar Etapa 4 →"
       onVerPainel={onVerPainel}

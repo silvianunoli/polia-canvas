@@ -55,7 +55,12 @@ Gere o sistema de controle. capacidade_resumida deve ter 1-2 frases sobre a capa
                     gatilho_reposicao: { type: "string" },
                     proximo_passo: { type: "string" },
                   },
-                  required: ["capacidade_resumida", "controle_atual", "gatilho_reposicao", "proximo_passo"],
+                  required: [
+                    "capacidade_resumida",
+                    "controle_atual",
+                    "gatilho_reposicao",
+                    "proximo_passo",
+                  ],
                   additionalProperties: false,
                 },
               },
@@ -68,7 +73,8 @@ Gere o sistema de controle. capacidade_resumida deve ter 1-2 frases sobre a capa
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { sistema: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { sistema: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { sistema: null, error: "Créditos esgotados." };
         return { sistema: null, error: "Não consegui montar seu sistema agora." };
       }

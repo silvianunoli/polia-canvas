@@ -8,7 +8,10 @@ export const Route = createFileRoute("/_public/blog/")({
       { title: "Blog · Pólia" },
       { name: "description", content: "Ideias pra quem constrói com as próprias mãos." },
       { property: "og:title", content: "Blog · Pólia" },
-      { property: "og:description", content: "Identidade, vendas, precificação, conteúdo e gestão." },
+      {
+        property: "og:description",
+        content: "Identidade, vendas, precificação, conteúdo e gestão.",
+      },
     ],
   }),
   component: BlogList,
@@ -48,7 +51,9 @@ function BlogList() {
     <>
       <section className="bg-[#1A1A2E] py-24 text-center">
         <div className="max-w-3xl mx-auto px-6">
-          <p className="font-sans font-semibold text-[#E89770] text-[12px] uppercase tracking-[0.18em] mb-4">Blog</p>
+          <p className="font-sans font-semibold text-[#E89770] text-[12px] uppercase tracking-[0.18em] mb-4">
+            Blog
+          </p>
           <h1 className="font-serif text-[#FDF8F5] text-[40px] md:text-[56px] leading-tight">
             Ideias pra quem constrói com as próprias mãos.
           </h1>
@@ -87,7 +92,9 @@ function BlogList() {
                   className="group bg-white rounded-2xl overflow-hidden border border-[#1A1A2E]/8 hover:shadow-lg transition-shadow"
                 >
                   <div className="aspect-video bg-gradient-to-br from-[#C96B3E]/15 to-[#C9407A]/15 flex items-center justify-center">
-                    <p className="caveat-informacional text-[#C96B3E]">{post.categoria ?? "Pólia"}</p>
+                    <p className="caveat-informacional text-[#C96B3E]">
+                      {post.categoria ?? "Pólia"}
+                    </p>
                   </div>
                   <div className="p-6">
                     {post.categoria && (
@@ -99,7 +106,9 @@ function BlogList() {
                       {post.titulo}
                     </h3>
                     {post.resumo && (
-                      <p className="font-sans text-[#1A1A2E]/65 text-[14px] leading-relaxed">{post.resumo}</p>
+                      <p className="font-sans text-[#1A1A2E]/65 text-[14px] leading-relaxed">
+                        {post.resumo}
+                      </p>
                     )}
                   </div>
                 </Link>

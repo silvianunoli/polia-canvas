@@ -68,7 +68,8 @@ export function ProductRevealSection() {
                 maxWidth: 340,
               }}
             >
-              Seu painel acompanha cada etapa que você conclui e mostra exatamente o que vem a seguir.
+              Seu painel acompanha cada etapa que você conclui e mostra exatamente o que vem a
+              seguir.
             </p>
             <p
               className="caveat-decorativo"
@@ -107,8 +108,7 @@ export function ProductRevealSection() {
                 left: "5%",
                 right: "5%",
                 height: 48,
-                background:
-                  "radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%)",
+                background: "radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%)",
                 filter: "blur(16px)",
                 pointerEvents: "none",
               }}
@@ -160,8 +160,7 @@ export function ProductRevealSection() {
             style={{
               borderRadius: 16,
               overflow: "hidden",
-              boxShadow:
-                "0 0 0 1px rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.5)",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.5)",
               order: isMobile ? 2 : 1,
             }}
           >
@@ -181,9 +180,7 @@ export function ProductRevealSection() {
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             style={{ order: isMobile ? 1 : 2 }}
           >
-            <div style={{ ...superlabel, color: "rgba(255,255,255,0.40)" }}>
-              DENTRO DAS ETAPAS
-            </div>
+            <div style={{ ...superlabel, color: "rgba(255,255,255,0.40)" }}>DENTRO DAS ETAPAS</div>
             <h2
               className="font-serif"
               style={{
@@ -206,7 +203,8 @@ export function ProductRevealSection() {
                 maxWidth: 340,
               }}
             >
-              Você não termina com mais perguntas. Termina com um entregável na mão, pronto pra usar no seu negócio.
+              Você não termina com mais perguntas. Termina com um entregável na mão, pronto pra usar
+              no seu negócio.
             </p>
             <p
               className="caveat-decorativo"
@@ -229,10 +227,7 @@ export function ProductRevealSection() {
                 "IA que sugere com base no seu contexto",
                 "Entregável gerado automaticamente ao final",
               ].map((t) => (
-                <li
-                  key={t}
-                  style={{ display: "flex", alignItems: "center", gap: 10 }}
-                >
+                <li key={t} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <CheckCircle size={18} color="var(--verde-musgo)" />
                   <span
                     className="font-sans"
@@ -302,7 +297,8 @@ export function ProductRevealSection() {
                 margin: "20px auto 0",
               }}
             >
-              Cada entregável que você gera fica salvo na sua biblioteca pessoal. Você edita, atualiza e usa quando quiser.
+              Cada entregável que você gera fica salvo na sua biblioteca pessoal. Você edita,
+              atualiza e usa quando quiser.
             </p>
             <p
               className="caveat-decorativo"

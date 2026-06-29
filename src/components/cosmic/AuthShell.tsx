@@ -13,9 +13,7 @@ export function AuthShell({ children, maxWidth = 440 }: AuthShellProps) {
       <CosmicBackground />
       <div className="relative z-10 flex min-h-screen w-full flex-col items-center px-5 pb-16 pt-10">
         <CosmicLogo />
-        <main
-          className="mt-10 flex w-full flex-1 flex-col items-center"
-        >
+        <main className="mt-10 flex w-full flex-1 flex-col items-center">
           <div className="w-full" style={{ maxWidth }}>
             {children}
           </div>

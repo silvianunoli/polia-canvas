@@ -46,7 +46,10 @@ function AdminFeedback() {
           pct_dificil: total ? Math.round((s1 / total) * 100) : 0,
           pct_ok: total ? Math.round((s2 / total) * 100) : 0,
           pct_boa: total ? Math.round((s3 / total) * 100) : 0,
-          comentarios: items.filter((i) => i.comment).map((i) => i.comment).slice(0, 3),
+          comentarios: items
+            .filter((i) => i.comment)
+            .map((i) => i.comment)
+            .slice(0, 3),
         };
       })
       .sort((a, b) => a.ref.localeCompare(b.ref));
@@ -60,13 +63,20 @@ function AdminFeedback() {
       </p>
       <div className="space-y-3">
         {porEtapa.length === 0 && (
-          <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">Nenhum CSAT registrado ainda.</p>
+          <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">
+            Nenhum CSAT registrado ainda.
+          </p>
         )}
         {porEtapa.map((item) => (
-          <div key={item.ref} className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]">
+          <div
+            key={item.ref}
+            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]"
+          >
             <div className="flex items-center justify-between mb-3">
               <p className="font-sans text-[#1A1A2E] text-[14px] font-medium">{item.ref}</p>
-              <p className={`font-mono text-[10px] tracking-[1px] uppercase ${item.pct_dificil > 30 ? "text-[#C9407A]" : "text-[#2D6A4F]"}`}>
+              <p
+                className={`font-mono text-[10px] tracking-[1px] uppercase ${item.pct_dificil > 30 ? "text-[#C9407A]" : "text-[#2D6A4F]"}`}
+              >
                 {item.pct_dificil}% difícil
               </p>
             </div>
@@ -78,7 +88,10 @@ function AdminFeedback() {
               ].map((s) => (
                 <div key={s.label} className="flex-1">
                   <div className="h-2 rounded-full" style={{ backgroundColor: s.cor + "30" }}>
-                    <div className="h-2 rounded-full transition-all" style={{ width: `${s.pct}%`, backgroundColor: s.cor }} />
+                    <div
+                      className="h-2 rounded-full transition-all"
+                      style={{ width: `${s.pct}%`, backgroundColor: s.cor }}
+                    />
                   </div>
                   <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40 mt-1">
                     {s.label} · {s.count}

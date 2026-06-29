@@ -8,10 +8,7 @@ export const Route = createFileRoute("/_public")({
 
 function PublicLayout() {
   return (
-    <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "var(--azul-noite)" }}
-    >
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--azul-noite)" }}>
       <Navbar transparentOnTop={false} />
       <main className="flex-1" style={{ paddingTop: 64 }}>
         <Outlet />

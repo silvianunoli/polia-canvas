@@ -27,13 +27,15 @@ export function TerritorioCanvas() {
         style={{ opacity: 0.05 }}
       >
         <defs>
-          <pattern id="polia-topografia" x="0" y="0" width="240" height="240" patternUnits="userSpaceOnUse">
-            <path
-              d="M0 60 Q60 40 120 60 T240 60"
-              fill="none"
-              stroke="#3A2A1F"
-              strokeWidth="0.8"
-            />
+          <pattern
+            id="polia-topografia"
+            x="0"
+            y="0"
+            width="240"
+            height="240"
+            patternUnits="userSpaceOnUse"
+          >
+            <path d="M0 60 Q60 40 120 60 T240 60" fill="none" stroke="#3A2A1F" strokeWidth="0.8" />
             <path
               d="M0 120 Q60 100 120 120 T240 120"
               fill="none"

@@ -4,9 +4,7 @@ type ServerStatus = "checking" | "ok" | "error";
 
 export function DiagnosticPanel() {
   const [open, setOpen] = useState(false);
-  const [online, setOnline] = useState(
-    typeof navigator !== "undefined" ? navigator.onLine : true,
-  );
+  const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [serverStatus, setServerStatus] = useState<ServerStatus>("checking");
   const [serverCode, setServerCode] = useState<number | null>(null);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
@@ -67,11 +65,7 @@ export function DiagnosticPanel() {
   );
 
   const serverColor =
-    serverStatus === "ok"
-      ? "#22c55e"
-      : serverStatus === "error"
-        ? "#ef4444"
-        : "#eab308";
+    serverStatus === "ok" ? "#22c55e" : serverStatus === "error" ? "#ef4444" : "#eab308";
 
   return (
     <div
@@ -134,8 +128,7 @@ export function DiagnosticPanel() {
                   : `erro${serverCode ? ` (${serverCode})` : ""}`}
             </div>
             <div style={{ opacity: 0.8 }}>
-              Última verificação:{" "}
-              {lastCheck ? lastCheck.toLocaleTimeString() : "—"}
+              Última verificação: {lastCheck ? lastCheck.toLocaleTimeString() : "—"}
             </div>
             <div style={{ opacity: 0.8 }}>
               Última renderização: {renderedAt.toLocaleTimeString()}

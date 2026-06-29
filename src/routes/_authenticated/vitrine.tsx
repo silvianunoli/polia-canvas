@@ -11,8 +11,7 @@ export const Route = createFileRoute("/_authenticated/vitrine")({
       { title: "Sua Vitrine · Pólia" },
       {
         name: "description",
-        content:
-          "O que você vende, como aparece e como produz. Reunido num só lugar.",
+        content: "O que você vende, como aparece e como produz. Reunido num só lugar.",
       },
     ],
   }),
@@ -85,9 +84,7 @@ function VitrinePage() {
   if (dadosQuery.isLoading) {
     return (
       <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">
-          carregando...
-        </p>
+        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">carregando...</p>
       </div>
     );
   }
@@ -116,14 +113,13 @@ function VitrinePage() {
 
   const etapasDone = [4, 5, 6].filter(
     (n) =>
-      !!(profile as unknown as Record<string, string | null> | null)?.[
-        `star_${n}_completed_at`
-      ],
+      !!(profile as unknown as Record<string, string | null> | null)?.[`star_${n}_completed_at`],
   ).length;
   const totalEtapas = 3;
   const faseCompleta = etapasDone === totalEtapas;
 
-  const vitrineAtiva = !!(profile as { orbit_vitrine_active?: boolean } | null)?.orbit_vitrine_active;
+  const vitrineAtiva = !!(profile as { orbit_vitrine_active?: boolean } | null)
+    ?.orbit_vitrine_active;
 
   return (
     <div className="min-h-screen bg-[#FDF8F5]">
@@ -156,11 +152,31 @@ function VitrinePage() {
             }}
           >
             {faseCompleta ? (
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             ) : (
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
                 <rect x="3" y="11" width="18" height="11" rx="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
@@ -204,14 +220,12 @@ function CardFichaProduto({
   done: boolean;
   onIr: () => void;
 }) {
-  const ficha = entregavel?.conteudo as
-    | {
-        descricao_refinada?: string;
-        entrega?: string;
-        preco_destaque?: string;
-        cliente_ideal?: string;
-      }
-    | null;
+  const ficha = entregavel?.conteudo as {
+    descricao_refinada?: string;
+    entrega?: string;
+    preco_destaque?: string;
+    cliente_ideal?: string;
+  } | null;
   const temFicha = !!ficha?.descricao_refinada;
 
   return (
@@ -227,9 +241,7 @@ function CardFichaProduto({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#1A7FAD] opacity-70 mb-1">
             ETAPA 4 · CONSTRUÇÃO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Ficha de produto
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Ficha de produto</h2>
         </div>
         {temFicha && entregavel?.id && (
           <a
@@ -301,14 +313,12 @@ function CardGuiaImpressao({
   done: boolean;
   onIr: () => void;
 }) {
-  const guia = entregavel?.conteudo as
-    | {
-        canal_principal?: string;
-        aparencia_guia?: string;
-        caminho_resumido?: string;
-        bio_sugerida?: string;
-      }
-    | null;
+  const guia = entregavel?.conteudo as {
+    canal_principal?: string;
+    aparencia_guia?: string;
+    caminho_resumido?: string;
+    bio_sugerida?: string;
+  } | null;
   const temGuia = !!guia?.canal_principal;
 
   return (
@@ -324,9 +334,7 @@ function CardGuiaImpressao({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#1A7FAD] opacity-70 mb-1">
             ETAPA 5 · CONSTRUÇÃO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Guia de primeira impressão
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Guia de primeira impressão</h2>
         </div>
         {temGuia && entregavel?.id && (
           <a
@@ -394,14 +402,12 @@ function CardSistemaControle({
   done: boolean;
   onIr: () => void;
 }) {
-  const sistema = entregavel?.conteudo as
-    | {
-        capacidade_resumida?: string;
-        controle_atual?: string;
-        gatilho_reposicao?: string;
-        proximo_passo?: string;
-      }
-    | null;
+  const sistema = entregavel?.conteudo as {
+    capacidade_resumida?: string;
+    controle_atual?: string;
+    gatilho_reposicao?: string;
+    proximo_passo?: string;
+  } | null;
   const temSistema = !!sistema?.capacidade_resumida;
 
   return (
@@ -417,9 +423,7 @@ function CardSistemaControle({
           <p className="font-accent text-[9px] tracking-[2px] uppercase text-[#1A7FAD] opacity-70 mb-1">
             ETAPA 6 · CONSTRUÇÃO
           </p>
-          <h2 className="font-serif text-[#1A1A2E] text-[26px]">
-            Sistema de controle
-          </h2>
+          <h2 className="font-serif text-[#1A1A2E] text-[26px]">Sistema de controle</h2>
         </div>
         {temSistema && entregavel?.id && (
           <a
@@ -477,20 +481,10 @@ function CardSistemaControle({
   );
 }
 
-function EstadoVazio({
-  texto,
-  cta,
-  onClick,
-}: {
-  texto: string;
-  cta: string;
-  onClick: () => void;
-}) {
+function EstadoVazio({ texto, cta, onClick }: { texto: string; cta: string; onClick: () => void }) {
   return (
     <div className="text-center py-8">
-      <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mb-3">
-        {texto}
-      </p>
+      <p className="font-sans text-[#1A1A2E] text-[14px] opacity-40 mb-3">{texto}</p>
       <button
         onClick={onClick}
         className="font-sans text-polia-terracota text-[13px] hover:underline"

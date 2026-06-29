@@ -70,7 +70,8 @@ Gere o mapa de posicionamento. A declaração deve ter 2 a 3 frases, ser em prim
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { mapa: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { mapa: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { mapa: null, error: "Créditos esgotados." };
         return { mapa: null, error: "Não consegui montar seu mapa agora." };
       }

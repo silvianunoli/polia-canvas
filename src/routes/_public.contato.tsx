@@ -6,10 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_public/contato")({
   head: () => ({
-    meta: [
-      { title: "Contato · Pólia" },
-      { name: "description", content: "Fala com a gente." },
-    ],
+    meta: [{ title: "Contato · Pólia" }, { name: "description", content: "Fala com a gente." }],
   }),
   component: Contato,
 });
@@ -104,7 +101,9 @@ function Contato() {
                   required
                   className="w-full border border-[#1A1A2E]/15 rounded-xl px-5 py-4 font-sans text-[#1A1A2E] text-[15px] outline-none focus:border-[#C96B3E] transition-colors bg-white appearance-none"
                 >
-                  <option value="" disabled>Escolher assunto</option>
+                  <option value="" disabled>
+                    Escolher assunto
+                  </option>
                   <option value="duvida">Dúvida sobre a Pólia</option>
                   <option value="problema">Problema técnico</option>
                   <option value="parceria">Parceria ou imprensa</option>
@@ -144,7 +143,10 @@ function Contato() {
 
           <div className="mt-10 text-center">
             <p className="font-sans text-[#1A1A2E]/45 text-[13px] mb-1">Prefere email direto?</p>
-            <a href="mailto:contato@polia.app" className="font-sans text-[#C96B3E] text-[14px] hover:underline">
+            <a
+              href="mailto:contato@polia.app"
+              className="font-sans text-[#C96B3E] text-[14px] hover:underline"
+            >
               contato@polia.app
             </a>
           </div>

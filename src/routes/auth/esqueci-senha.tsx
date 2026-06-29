@@ -4,11 +4,7 @@ import { CheckCircle, Mail } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { PoliaButton } from "@/components/ui/PoliaButton";
 
@@ -27,11 +23,7 @@ export const Route = createFileRoute("/auth/esqueci-senha")({
 });
 
 const schema = z.object({
-  email: z
-    .string()
-    .trim()
-    .email("Esse e-mail não parece certo. Confere o formato.")
-    .max(255),
+  email: z.string().trim().email("Esse e-mail não parece certo. Confere o formato.").max(255),
 });
 
 function EsqueciSenhaPage() {
@@ -136,9 +128,7 @@ function EsqueciSenhaPage() {
         <div className="flex flex-col items-center text-center">
           <CheckCircle size={40} color="#2D6A4F" />
           <h2 className="mt-5 font-serif text-[28px] text-[#FDF8F5]">Link enviado.</h2>
-          <p className="mt-2 caveat-decorativo text-[#E89770]">
-            olha sua caixa de entrada.
-          </p>
+          <p className="mt-2 caveat-decorativo text-[#E89770]">olha sua caixa de entrada.</p>
           <p
             className="mt-3 font-sans text-[15px] leading-relaxed"
             style={{ color: "rgba(255,255,255,0.55)" }}
@@ -151,9 +141,7 @@ function EsqueciSenhaPage() {
             disabled={cooldown > 0 || loading}
             className="mt-6 font-sans text-[14px] text-[#C96B3E] underline underline-offset-2 disabled:opacity-50"
           >
-            {cooldown > 0
-              ? `Tentar novamente em ${cooldown}s`
-              : "Não chegou? Tentar novamente"}
+            {cooldown > 0 ? `Tentar novamente em ${cooldown}s` : "Não chegou? Tentar novamente"}
           </button>
           <Link
             to="/auth/login"

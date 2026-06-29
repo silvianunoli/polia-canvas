@@ -30,7 +30,9 @@ function AdminFunil() {
 
   useEffect(() => {
     (async () => {
-      const { data, count } = await supabase.from("profiles").select("etapa_atual,updated_at", { count: "exact" });
+      const { data, count } = await supabase
+        .from("profiles")
+        .select("etapa_atual,updated_at", { count: "exact" });
       const totalC = count ?? 0;
       setTotal(totalC);
       const arr = data ?? [];
@@ -48,7 +50,9 @@ function AdminFunil() {
       setEtapas(out);
 
       const dias14 = Date.now() - 14 * 86400000;
-      let prog = 0, estag = 0, sil = 0;
+      let prog = 0,
+        estag = 0,
+        sil = 0;
       arr.forEach((p: any) => {
         const ts = new Date(p.updated_at).getTime();
         if (ts < dias14) sil++;
@@ -64,7 +68,9 @@ function AdminFunil() {
       <h1 className="font-serif text-[#1A1A2E] text-[40px] mb-8">Funil de jornada</h1>
 
       <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] mb-6">
-        <p className="font-mono text-[9px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-6">PROGRESSO POR ETAPA</p>
+        <p className="font-mono text-[9px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-6">
+          PROGRESSO POR ETAPA
+        </p>
         {etapas.map((etapa, i) => (
           <div key={etapa.n} className="mb-4">
             <div className="flex items-center justify-between mb-1">
@@ -72,7 +78,9 @@ function AdminFunil() {
                 <span className="opacity-40 mr-2">E{etapa.n}</span> {etapa.nome}
               </p>
               <div className="flex items-center gap-4">
-                <p className="font-sans text-[#1A1A2E] text-[13px] opacity-60">{etapa.concluidas} usuárias</p>
+                <p className="font-sans text-[#1A1A2E] text-[13px] opacity-60">
+                  {etapa.concluidas} usuárias
+                </p>
                 {i > 0 && etapa.dropoff > 40 && (
                   <span className="font-mono text-[9px] tracking-[1px] uppercase text-[#C96B3E] bg-[rgba(201,107,62,0.08)] px-2 py-0.5 rounded-full">
                     -{etapa.dropoff}% drop
@@ -95,11 +103,29 @@ function AdminFunil() {
 
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Progressoras Ativas", desc: "etapa ≥ 2 e ativas em 14 dias", count: seg.progressoras, cor: "#2D6A4F" },
-          { label: "Estagnadas", desc: "ativas mas sem progredir", count: seg.estagnadas, cor: "#C96B3E" },
-          { label: "Silenciosas", desc: "sem acesso há mais de 14 dias", count: seg.silenciosas, cor: "#C9407A" },
+          {
+            label: "Progressoras Ativas",
+            desc: "etapa ≥ 2 e ativas em 14 dias",
+            count: seg.progressoras,
+            cor: "#2D6A4F",
+          },
+          {
+            label: "Estagnadas",
+            desc: "ativas mas sem progredir",
+            count: seg.estagnadas,
+            cor: "#C96B3E",
+          },
+          {
+            label: "Silenciosas",
+            desc: "sem acesso há mais de 14 dias",
+            count: seg.silenciosas,
+            cor: "#C9407A",
+          },
         ].map((s) => (
-          <div key={s.label} className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]">
+          <div
+            key={s.label}
+            className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]"
+          >
             <p className="font-serif text-[48px] leading-none mb-2" style={{ color: s.cor }}>
               {s.count}
             </p>

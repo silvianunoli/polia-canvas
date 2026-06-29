@@ -82,7 +82,10 @@ function DeliverableCard({ card, isMobile }: { card: Card; isMobile: boolean }) 
       >
         <div style={{ padding: 32, display: "flex", flexDirection: "column", gap: 12 }}>
           <DiamondIcon color={card.iconColor} />
-          <div className="font-serif" style={{ fontSize: 26, color: "var(--azul-noite)", lineHeight: 1.1 }}>
+          <div
+            className="font-serif"
+            style={{ fontSize: 26, color: "var(--azul-noite)", lineHeight: 1.1 }}
+          >
             {card.nome}
           </div>
           <div className="font-sans" style={{ fontSize: 14, color: "rgba(26,26,46,0.6)" }}>
@@ -229,7 +232,8 @@ export function DeliverablesSection() {
               margin: "16px auto 0",
             }}
           >
-            Cada fase da jornada desbloqueia uma ferramenta viva que você vai usar todo dia no seu negócio.
+            Cada fase da jornada desbloqueia uma ferramenta viva que você vai usar todo dia no seu
+            negócio.
           </p>
         </motion.div>
 

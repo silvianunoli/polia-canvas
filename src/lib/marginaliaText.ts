@@ -28,9 +28,7 @@ function diaDaSemana(iso?: string | null): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"][
-    d.getDay()
-  ];
+  return ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"][d.getDay()];
 }
 
 /**

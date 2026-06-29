@@ -48,10 +48,7 @@ function PainCard({ text, index }: { text: string; index: number }) {
       }}
     >
       <XCircle size={18} color="#E07B5A" style={{ flexShrink: 0 }} />
-      <span
-        className="font-sans"
-        style={{ fontSize: 15, color: "#4A3728", lineHeight: 1.5 }}
-      >
+      <span className="font-sans" style={{ fontSize: 15, color: "#4A3728", lineHeight: 1.5 }}>
         {text}
       </span>
     </div>
@@ -110,8 +107,7 @@ export function ProblemSection() {
           <div
             style={{
               height: 1,
-              background:
-                "linear-gradient(90deg, transparent, rgba(201,107,62,0.3), transparent)",
+              background: "linear-gradient(90deg, transparent, rgba(201,107,62,0.3), transparent)",
               maxWidth: 200,
               margin: "0 auto 56px",
             }}

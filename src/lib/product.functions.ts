@@ -68,7 +68,8 @@ Gere a ficha de produto. A descrição refinada deve ter 2-3 frases em 1ª pesso
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { ficha: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { ficha: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { ficha: null, error: "Créditos esgotados." };
         return { ficha: null, error: "Não consegui montar sua ficha agora." };
       }

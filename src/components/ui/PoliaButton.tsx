@@ -1,8 +1,10 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 
-export interface PoliaButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> {
+export interface PoliaButtonProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "children"
+> {
   children: ReactNode;
   onClick?: () => void;
   href?: string;
@@ -33,9 +35,7 @@ export const PoliaButton = forwardRef<HTMLButtonElement, PoliaButtonProps>(
     const widthClass = fullWidth ? "w-full" : "";
 
     const sizeClasses =
-      size === "large"
-        ? "h-[66px] px-8 text-[18px]"
-        : "h-[58px] px-6 text-[18px]";
+      size === "large" ? "h-[66px] px-8 text-[18px]" : "h-[58px] px-6 text-[18px]";
 
     if (variant === "ghost") {
       const ghostClasses = `relative inline-flex ${sizeClasses} ${widthClass} items-center justify-center gap-2 rounded-xl border border-[rgba(255,255,255,0.20)] bg-transparent font-sans font-semibold text-[#FDF8F5] transition-all hover:bg-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.30)] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed ${className}`;

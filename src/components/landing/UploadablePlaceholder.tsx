@@ -10,7 +10,14 @@ interface Props {
   fit?: "cover" | "contain";
 }
 
-export function UploadablePlaceholder({ id, label, width, height, description, fit = "cover" }: Props) {
+export function UploadablePlaceholder({
+  id,
+  label,
+  width,
+  height,
+  description,
+  fit = "cover",
+}: Props) {
   const storageKey = `polia-asset-${id}`;
   const [image, setImage] = useState<string | null>(null);
   const [hover, setHover] = useState(false);

@@ -3,15 +3,7 @@ import { StarField } from "@/components/ui/StarField";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export type ErrorCode =
-  | "400"
-  | "401"
-  | "403"
-  | "404"
-  | "408"
-  | "500"
-  | "502"
-  | "503";
+export type ErrorCode = "400" | "401" | "403" | "404" | "408" | "500" | "502" | "503";
 
 type RaposaState =
   | "feliz"
@@ -213,7 +205,15 @@ export function ErrorPage({
           Deixa a Pólia te guiar de volta.
         </p>
 
-        <div style={{ marginTop: 32, display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+        <div
+          style={{
+            marginTop: 32,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 16,
+          }}
+        >
           {onCta ? (
             <button
               onClick={onCta}
@@ -271,7 +271,6 @@ export function ErrorPage({
             </Link>
           )}
         </div>
-
       </div>
     </div>
   );

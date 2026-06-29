@@ -4,7 +4,10 @@ export const Route = createFileRoute("/_public/manifesto")({
   head: () => ({
     meta: [
       { title: "Manifesto · Pólia" },
-      { name: "description", content: "Para a mulher que constrói algo com as próprias mãos. O manifesto da Pólia." },
+      {
+        name: "description",
+        content: "Para a mulher que constrói algo com as próprias mãos. O manifesto da Pólia.",
+      },
       { property: "og:title", content: "Manifesto · Pólia" },
       { property: "og:description", content: "Voar é um ato de coragem." },
     ],

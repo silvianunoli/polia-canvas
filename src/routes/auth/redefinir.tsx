@@ -4,11 +4,7 @@ import { AlertTriangle, Check } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput, PasswordStrength } from "@/components/cosmic/CosmicInput";
 import { CosmicButton } from "@/components/cosmic/CosmicButton";
 
@@ -174,9 +170,7 @@ function RedefinirPage() {
           onChange={(e) => set("confirma", e.target.value)}
           error={errors.confirma}
           disabled={loading}
-          rightSlot={
-            senhasIguais ? <Check size={18} className="text-[#2D6A4F]" /> : undefined
-          }
+          rightSlot={senhasIguais ? <Check size={18} className="text-[#2D6A4F]" /> : undefined}
         />
 
         <div className="mt-2">

@@ -4,11 +4,7 @@ import { Mail } from "lucide-react";
 import { z } from "zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -81,8 +77,8 @@ function VerificacaoPage() {
 
         <p className="mt-7 text-center font-sans text-[17px] leading-relaxed text-[#D8D2CC]/90">
           Mandei um link de confirmação para{" "}
-          <span className="font-semibold text-[#FDF8F5]">{email ?? "seu e-mail"}</span>. Clica
-          nele para continuar.
+          <span className="font-semibold text-[#FDF8F5]">{email ?? "seu e-mail"}</span>. Clica nele
+          para continuar.
         </p>
         <p className="mt-2 text-center font-sans text-[14px] text-[#D8D2CC]/60">
           Pode demorar alguns minutinhos. Não esquece de checar o spam.

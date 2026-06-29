@@ -43,16 +43,33 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Pólia" },
-      { name: "description", content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras." },
+      {
+        name: "description",
+        content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras.",
+      },
       { name: "author", content: "Pólia" },
       { property: "og:title", content: "Pólia" },
-      { property: "og:description", content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras." },
+      {
+        property: "og:description",
+        content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:title", content: "Pólia" },
-      { name: "twitter:description", content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png" },
+      {
+        name: "twitter:description",
+        content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png",
+      },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

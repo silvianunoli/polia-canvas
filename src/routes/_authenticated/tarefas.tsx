@@ -7,14 +7,14 @@ import { PainelNav } from "@/components/painel/PainelNav";
 import { pluralizeKanban } from "@/lib/kanban";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
-
 export const Route = createFileRoute("/_authenticated/tarefas")({
   head: () => ({
     meta: [
       { title: "Tarefas · Pólia" },
       {
         name: "description",
-        content: "Seu fluxo de tarefas: o que fazer, o que está em progresso e o que já está pronto.",
+        content:
+          "Seu fluxo de tarefas: o que fazer, o que está em progresso e o que já está pronto.",
       },
     ],
   }),
@@ -39,8 +39,7 @@ const COLUNAS: { id: Status; label: string; cor: string; bg: string }[] = [
   { id: "floresceu", label: "Prontas", cor: "#2D6A4F", bg: "rgba(44,106,79,0.08)" },
 ];
 
-const proximaColuna = (s: Status): Status =>
-  s === "a_fazer" ? "brotando" : "floresceu";
+const proximaColuna = (s: Status): Status => (s === "a_fazer" ? "brotando" : "floresceu");
 
 function TarefasPage() {
   const { user } = useSupabaseSession();
@@ -104,15 +103,11 @@ function TarefasPage() {
   }, [tarefas]);
 
   const updateLocal = (mutator: (list: Tarefa[]) => Tarefa[]) => {
-    qc.setQueryData<Tarefa[]>(["tarefas", userId], (old) =>
-      mutator(old ?? []),
-    );
+    qc.setQueryData<Tarefa[]>(["tarefas", userId], (old) => mutator(old ?? []));
   };
 
   const moverTarefa = async (id: string, novoStatus: Status) => {
-    updateLocal((list) =>
-      list.map((t) => (t.id === id ? { ...t, status: novoStatus } : t)),
-    );
+    updateLocal((list) => list.map((t) => (t.id === id ? { ...t, status: novoStatus } : t)));
     await supabase
       .from("tarefas")
       .update({ status: novoStatus, updated_at: new Date().toISOString() })
@@ -160,9 +155,7 @@ function TarefasPage() {
           <h1 className="mb-1 font-serif text-[40px] leading-tight text-[#1A1A2E]">
             Seu fluxo de hoje.
           </h1>
-          <p className="caveat-decorativo text-[#C96B3E]">
-            {pluralizeKanban(counts)}
-          </p>
+          <p className="caveat-decorativo text-[#C96B3E]">{pluralizeKanban(counts)}</p>
 
           {/* FILTROS */}
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -173,9 +166,7 @@ function TarefasPage() {
                   : "border-[rgba(26,26,46,0.08)] bg-white"
               }`}
             >
-              <span className="font-sans text-[13px] text-[#1A1A2E] opacity-50">
-                Etapa:
-              </span>
+              <span className="font-sans text-[13px] text-[#1A1A2E] opacity-50">Etapa:</span>
               <select
                 value={filtroEtapa}
                 onChange={(e) => setFiltroEtapa(e.target.value)}
@@ -204,9 +195,7 @@ function TarefasPage() {
             </div>
 
             <button
-              onClick={() =>
-                setFiltroFonte((f) => (f === "sistema" ? "" : "sistema"))
-              }
+              onClick={() => setFiltroFonte((f) => (f === "sistema" ? "" : "sistema"))}
               aria-pressed={filtroFonte === "sistema"}
               className={`min-h-11 rounded-full border px-4 py-2 font-sans text-[13px] font-medium transition-colors ${
                 filtroFonte === "sistema"
@@ -217,9 +206,7 @@ function TarefasPage() {
               Do sistema
             </button>
             <button
-              onClick={() =>
-                setFiltroFonte((f) => (f === "manual" ? "" : "manual"))
-              }
+              onClick={() => setFiltroFonte((f) => (f === "manual" ? "" : "manual"))}
               aria-pressed={filtroFonte === "manual"}
               className={`min-h-11 rounded-full border px-4 py-2 font-sans text-[13px] font-medium transition-colors ${
                 filtroFonte === "manual"
@@ -244,13 +231,10 @@ function TarefasPage() {
 
       {/* KANBAN — desktop */}
       <section className="hidden md:block px-6 pb-16 pt-4 md:px-12">
-
         <div className="mx-auto max-w-[1280px]">
           <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-3">
             {COLUNAS.map((col) => {
-              const lista = tarefasFiltradas.filter(
-                (t) => t.status === col.id,
-              );
+              const lista = tarefasFiltradas.filter((t) => t.status === col.id);
               const ativa = overCol === col.id;
               return (
                 <div
@@ -300,10 +284,8 @@ function TarefasPage() {
                     <div className="rounded-xl border-2 border-dashed border-[rgba(26,26,46,0.08)] p-8 text-center">
                       <p className="caveat-decorativo text-[#1A1A2E] opacity-30">
                         {col.id === "a_fazer" && "nada por aqui ainda."}
-                        {col.id === "brotando" &&
-                          "mova uma tarefa pra cá quando começar."}
-                        {col.id === "floresceu" &&
-                          "suas conquistas aparecem aqui."}
+                        {col.id === "brotando" && "mova uma tarefa pra cá quando começar."}
+                        {col.id === "floresceu" && "suas conquistas aparecem aqui."}
                       </p>
                     </div>
                   ) : (
@@ -371,8 +353,6 @@ function TarefasPage() {
         </Tabs>
       </section>
 
-
-
       {/* MODAL */}
       {modalAberto && (
         <div
@@ -384,9 +364,7 @@ function TarefasPage() {
             className="mx-auto w-full max-w-[480px] rounded-2xl bg-[#FDF8F5] p-8 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="mb-6 font-serif text-[28px] text-[#1A1A2E]">
-              Nova tarefa
-            </h2>
+            <h2 className="mb-6 font-serif text-[28px] text-[#1A1A2E]">Nova tarefa</h2>
 
             <label className="mb-2 block font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-50">
               TÍTULO
@@ -467,9 +445,7 @@ function CardTarefa({
         )}
       </div>
 
-      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">
-        {tarefa.titulo}
-      </p>
+      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">{tarefa.titulo}</p>
 
       {tarefa.descricao && (
         <p className="mb-3 line-clamp-2 font-sans text-[12px] leading-relaxed text-[#1A1A2E] opacity-40">
@@ -488,9 +464,7 @@ function CardTarefa({
               {colId === "a_fazer" ? "Brotar" : "Florescer"}
             </button>
           ) : (
-            <span className="caveat-decorativo text-[#2D6A4F]">
-              feita
-            </span>
+            <span className="caveat-decorativo text-[#2D6A4F]">feita</span>
           )}
         </div>
         {tarefa.fonte === "manual" && (
@@ -503,7 +477,6 @@ function CardTarefa({
           </button>
         )}
       </div>
-
     </div>
   );
 }
@@ -519,8 +492,7 @@ function TarefaCardMobile({
   onMover: (s: Status) => void;
   onDeletar: () => void;
 }) {
-  const btn =
-    "min-h-[44px] rounded-full border px-3 py-2 font-sans text-[12px] transition-colors";
+  const btn = "min-h-[44px] rounded-full border px-3 py-2 font-sans text-[12px] transition-colors";
   return (
     <div className="rounded-xl border border-[rgba(26,26,46,0.06)] bg-white p-4 shadow-sm">
       <div className="mb-2 flex items-center gap-2">
@@ -534,9 +506,7 @@ function TarefaCardMobile({
           </span>
         )}
       </div>
-      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">
-        {tarefa.titulo}
-      </p>
+      <p className="mb-3 font-sans text-[14px] leading-snug text-[#1A1A2E]">{tarefa.titulo}</p>
       {tarefa.descricao && (
         <p className="mb-3 font-sans text-[12px] leading-relaxed text-[#1A1A2E] opacity-50">
           {tarefa.descricao}
@@ -588,4 +558,3 @@ function TarefaCardMobile({
     </div>
   );
 }
-

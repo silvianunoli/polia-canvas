@@ -44,17 +44,9 @@ export function SeloCarimbo({ numero, palavraMarco }: SeloCarimboProps) {
       <svg width="220" height="220" viewBox="0 0 220 220" aria-hidden="true">
         <defs>
           {/* Caminho do texto no topo: arco superior do círculo */}
-          <path
-            id={idTopo}
-            d="M 30,110 A 80,80 0 0 1 190,110"
-            fill="none"
-          />
+          <path id={idTopo} d="M 30,110 A 80,80 0 0 1 190,110" fill="none" />
           {/* Caminho do texto na base: arco inferior do círculo */}
-          <path
-            id={idBase}
-            d="M 30,110 A 80,80 0 0 0 190,110"
-            fill="none"
-          />
+          <path id={idBase} d="M 30,110 A 80,80 0 0 0 190,110" fill="none" />
         </defs>
 
         {/* Contorno externo sólido */}

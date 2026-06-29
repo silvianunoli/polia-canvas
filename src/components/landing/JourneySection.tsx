@@ -11,8 +11,16 @@ const fases: Fase[] = [
     cor: "#C9407A",
     etapas: [
       { n: 1, nome: "Descoberta", sub: "Quem você é. Quem você quer alcançar." },
-      { n: 2, nome: "Identidade do seu negócio", sub: "Que cara, que vibe, que palavras te representam." },
-      { n: 3, nome: "Modelo de Negócio", sub: "Por que você existe, pra quem e por que escolheriam você." },
+      {
+        n: 2,
+        nome: "Identidade do seu negócio",
+        sub: "Que cara, que vibe, que palavras te representam.",
+      },
+      {
+        n: 3,
+        nome: "Modelo de Negócio",
+        sub: "Por que você existe, pra quem e por que escolheriam você.",
+      },
     ],
   },
   {
@@ -30,7 +38,11 @@ const fases: Fase[] = [
     etapas: [
       { n: 7, nome: "Suas vendas", sub: "Como ela sabe, se decide e fecha." },
       { n: 8, nome: "Seus clientes", sub: "Como acolhe, resolve e fideliza." },
-      { n: 9, nome: "Sua audiência", sub: "O que ela consome, o que para o scroll, como você chega." },
+      {
+        n: 9,
+        nome: "Sua audiência",
+        sub: "O que ela consome, o que para o scroll, como você chega.",
+      },
     ],
   },
   {
@@ -71,10 +83,9 @@ function EtapaNode({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(
-      ([e]) => e.isIntersecting && setInView(true),
-      { rootMargin: "-80px" }
-    );
+    const obs = new IntersectionObserver(([e]) => e.isIntersecting && setInView(true), {
+      rootMargin: "-80px",
+    });
     obs.observe(el);
     return () => obs.disconnect();
   }, []);
@@ -402,14 +413,7 @@ export function JourneySection() {
           }}
           preserveAspectRatio="none"
         >
-          <line
-            x1="1"
-            y1="0"
-            x2="1"
-            y2="100%"
-            stroke="rgba(255,255,255,0.10)"
-            strokeWidth="1.5"
-          />
+          <line x1="1" y1="0" x2="1" y2="100%" stroke="rgba(255,255,255,0.10)" strokeWidth="1.5" />
           <path
             ref={pathRef}
             d="M 1 0 L 1 10000"
@@ -426,12 +430,7 @@ export function JourneySection() {
 
         {fases.map((fase) => {
           const group = (
-            <FaseGroup
-              key={fase.nome}
-              fase={fase}
-              startIdx={startIdx}
-              isMobile={isMobile}
-            />
+            <FaseGroup key={fase.nome} fase={fase} startIdx={startIdx} isMobile={isMobile} />
           );
           startIdx += fase.etapas.length;
           return group;

@@ -20,7 +20,11 @@ function AdminTicket() {
     const { data: t } = await supabase.from("tickets").select("*").eq("id", id).maybeSingle();
     setTicket(t);
     if (t?.user_id) {
-      const { data: p } = await supabase.from("profiles").select("full_name").eq("id", t.user_id).maybeSingle();
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", t.user_id)
+        .maybeSingle();
       setUserNome(p?.full_name ?? "—");
     }
     const { data: msgs } = await supabase
@@ -45,13 +49,20 @@ function AdminTicket() {
       author_role: "admin",
       body: resposta,
     });
-    await supabase.from("tickets").update({ status: "em_andamento" }).eq("id", id).eq("status", "aberto");
+    await supabase
+      .from("tickets")
+      .update({ status: "em_andamento" })
+      .eq("id", id)
+      .eq("status", "aberto");
     setResposta("");
     carregar();
   };
 
   const resolverTicket = async () => {
-    await supabase.from("tickets").update({ status: "resolvido", resolved_at: new Date().toISOString() }).eq("id", id);
+    await supabase
+      .from("tickets")
+      .update({ status: "resolvido", resolved_at: new Date().toISOString() })
+      .eq("id", id);
     carregar();
   };
 
@@ -59,14 +70,18 @@ function AdminTicket() {
 
   return (
     <div className="max-w-[760px]">
-      <Link to="/admin/chamados" className="font-sans text-[#C96B3E] text-[13px] hover:underline mb-3 inline-block">
+      <Link
+        to="/admin/chamados"
+        className="font-sans text-[#C96B3E] text-[13px] hover:underline mb-3 inline-block"
+      >
         ← Chamados
       </Link>
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="font-serif text-[#1A1A2E] text-[32px]">{ticket.title}</h1>
           <p className="font-sans text-[#1A1A2E] text-[13px] opacity-40">
-            {userNome} · {ticket.module_ref ?? "sem contexto"} · {new Date(ticket.created_at).toLocaleString("pt-BR")}
+            {userNome} · {ticket.module_ref ?? "sem contexto"} ·{" "}
+            {new Date(ticket.created_at).toLocaleString("pt-BR")}
           </p>
         </div>
         {ticket.status !== "resolvido" && (
@@ -85,7 +100,10 @@ function AdminTicket() {
 
       <div className="space-y-4 mb-6">
         {mensagens.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.author_role === "admin" ? "justify-end" : "justify-start"}`}>
+          <div
+            key={msg.id}
+            className={`flex ${msg.author_role === "admin" ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[80%] rounded-2xl p-5 ${
                 msg.author_role === "admin"
@@ -93,9 +111,14 @@ function AdminTicket() {
                   : "bg-white border border-[rgba(26,26,46,0.06)] text-[#1A1A2E]"
               }`}
             >
-              <p className="font-sans text-[14px] leading-relaxed mb-2 whitespace-pre-wrap">{msg.body}</p>
-              <p className={`font-sans text-[11px] ${msg.author_role === "admin" ? "opacity-40" : "opacity-30"}`}>
-                {msg.author_role === "admin" ? "Você" : userNome} · {new Date(msg.created_at).toLocaleString("pt-BR")}
+              <p className="font-sans text-[14px] leading-relaxed mb-2 whitespace-pre-wrap">
+                {msg.body}
+              </p>
+              <p
+                className={`font-sans text-[11px] ${msg.author_role === "admin" ? "opacity-40" : "opacity-30"}`}
+              >
+                {msg.author_role === "admin" ? "Você" : userNome} ·{" "}
+                {new Date(msg.created_at).toLocaleString("pt-BR")}
               </p>
             </div>
           </div>

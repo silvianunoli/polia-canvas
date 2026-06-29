@@ -22,13 +22,7 @@ const FASE_COR: Record<EtapaTopBarProps["fase"], string> = {
  * Barra contextual da etapa: breadcrumb + "voltar ao painel".
  * Mora abaixo do PainelNav em todas as páginas /etapa/N.
  */
-export function EtapaTopBar({
-  etapa,
-  fase,
-  nome,
-  cor,
-  variant = "light",
-}: EtapaTopBarProps) {
+export function EtapaTopBar({ etapa, fase, nome, cor, variant = "light" }: EtapaTopBarProps) {
   const corFase = cor ?? FASE_COR[fase];
   const textBase = variant === "dark" ? "#FDF8F5" : "#1A1A2E";
   const dim = variant === "dark" ? "opacity-60" : "opacity-50";
@@ -58,10 +52,7 @@ export function EtapaTopBar({
             >
               {fase} · Etapa {etapa}
             </span>
-            <span
-              className={`font-sans text-[13px] ${dim}`}
-              style={{ color: textBase }}
-            >
+            <span className={`font-sans text-[13px] ${dim}`} style={{ color: textBase }}>
               {nome}
             </span>
           </div>

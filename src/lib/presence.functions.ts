@@ -55,7 +55,12 @@ Gere o guia de primeira impressão. O canal_principal deve ter 1 frase identific
                     caminho_resumido: { type: "string" },
                     bio_sugerida: { type: "string" },
                   },
-                  required: ["canal_principal", "aparencia_guia", "caminho_resumido", "bio_sugerida"],
+                  required: [
+                    "canal_principal",
+                    "aparencia_guia",
+                    "caminho_resumido",
+                    "bio_sugerida",
+                  ],
                   additionalProperties: false,
                 },
               },
@@ -68,7 +73,8 @@ Gere o guia de primeira impressão. O canal_principal deve ter 1 frase identific
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { guia: null, error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { guia: null, error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { guia: null, error: "Créditos esgotados." };
         return { guia: null, error: "Não consegui montar seu guia agora." };
       }

@@ -17,9 +17,30 @@ export function PublicFooter() {
               Produto
             </p>
             <ul className="space-y-2">
-              <li><Link to="/como-funciona" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Como funciona</Link></li>
-              <li><Link to="/precos" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Preços</Link></li>
-              <li><Link to="/lista-de-espera" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Lista de espera</Link></li>
+              <li>
+                <Link
+                  to="/como-funciona"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Como funciona
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/precos"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Preços
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/lista-de-espera"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Lista de espera
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -28,9 +49,30 @@ export function PublicFooter() {
               Conteúdo
             </p>
             <ul className="space-y-2">
-              <li><Link to="/manifesto" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Manifesto</Link></li>
-              <li><Link to="/sobre" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Sobre</Link></li>
-              <li><Link to="/blog" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Blog</Link></li>
+              <li>
+                <Link
+                  to="/manifesto"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Manifesto
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/sobre"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Sobre
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/blog"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -39,10 +81,38 @@ export function PublicFooter() {
               Legal
             </p>
             <ul className="space-y-2">
-              <li><Link to="/termos" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Termos de uso</Link></li>
-              <li><Link to="/privacidade" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Privacidade</Link></li>
-              <li><Link to="/contato" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Contato</Link></li>
-              <li><Link to="/ajuda" className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors">Central de ajuda</Link></li>
+              <li>
+                <Link
+                  to="/termos"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Termos de uso
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacidade"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Privacidade
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/contato"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Contato
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/ajuda"
+                  className="font-sans text-[#FDF8F5]/60 text-[14px] hover:text-[#FDF8F5] transition-colors"
+                >
+                  Central de ajuda
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
@@ -51,9 +121,7 @@ export function PublicFooter() {
           <p className="font-sans text-[#FDF8F5]/40 text-[12px]">
             2026 Pólia. Feito com carinho para mulheres que constroem.
           </p>
-          <p className="caveat-decorativo text-[#C96B3E]">
-            voar é um ato de coragem.
-          </p>
+          <p className="caveat-decorativo text-[#C96B3E]">voar é um ato de coragem.</p>
         </div>
       </div>
     </footer>

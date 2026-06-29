@@ -47,7 +47,8 @@ O mini-pitch deve:
       if (!res.ok) {
         const text = await res.text();
         console.error("AI gateway error:", res.status, text);
-        if (res.status === 429) return { minipitch: "", error: "Muitas tentativas. Tente novamente em instantes." };
+        if (res.status === 429)
+          return { minipitch: "", error: "Muitas tentativas. Tente novamente em instantes." };
         if (res.status === 402) return { minipitch: "", error: "Créditos esgotados." };
         return { minipitch: "", error: "Não consegui montar o mini-pitch agora." };
       }

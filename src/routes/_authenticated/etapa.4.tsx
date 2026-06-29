@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/etapa/4")({
     if (!anteriorOk && !essaOk) {
       throw redirect({ to: "/painel" });
     }
-},
+  },
   component: Etapa4Page,
 });
 
@@ -88,7 +88,8 @@ function Etapa4Page() {
         setDeliveryMethod(p.delivery_method ?? "");
         setPriceRange(p.price_range ?? "");
 
-        const saved = typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
+        const saved =
+          typeof window !== "undefined" ? Number(localStorage.getItem(STORAGE_KEY) || 0) : 0;
         if (saved >= 1 && saved <= 6) {
           setStep(saved);
         } else if ((p as ProfileE4).product_finalized_at) {
@@ -135,7 +136,10 @@ function Etapa4Page() {
       for (const [k, v] of Object.entries(campos)) {
         if (typeof v === "string") payload[k] = v;
       }
-      await supabase.from("profiles").update(payload as never).eq("id", userId);
+      await supabase
+        .from("profiles")
+        .update(payload as never)
+        .eq("id", userId);
     },
     [userId],
   );
@@ -182,7 +186,10 @@ function Etapa4Page() {
   const concludedRef = useRef(false);
   useEffect(() => {
     if (step !== 6 || !userId || concludedRef.current) return;
-    if (profile?.star_4_completed_at) { concludedRef.current = true; return; }
+    if (profile?.star_4_completed_at) {
+      concludedRef.current = true;
+      return;
+    }
     concludedRef.current = true;
     (async () => {
       await supabase
@@ -280,7 +287,12 @@ function Etapa4Page() {
           {step === 3 && (
             <PerguntaBlock
               caveat="a forma de entregar faz parte da experiência."
-              titulo={<>Como a cliente recebe<br />o que comprou?</>}
+              titulo={
+                <>
+                  Como a cliente recebe
+                  <br />o que comprou?
+                </>
+              }
               label="SEU MODO DE ENTREGA"
               placeholder="Ex: Entrego pessoalmente em SP capital ou envio pelos Correios com rastreio. Prazo de 10 dias úteis após confirmação do pagamento. Sempre mando foto antes de embalar."
               maxLength={300}
@@ -358,7 +370,9 @@ function Capa({ onStart }: { onStart: () => void }) {
         </p>
 
         <div className="mt-10 flex h-[140px] w-[140px] sm:h-[180px] sm:w-[180px] flex-col items-center justify-center rounded-2xl border-[1.5px] border-dashed border-[rgba(232,151,112,0.55)] bg-[rgba(26,26,46,0.4)] px-4">
-          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">PLACEHOLDER · LOGO</p>
+          <p className="font-accent text-[10px] font-bold tracking-[1.5px] text-polia-terracota">
+            PLACEHOLDER · LOGO
+          </p>
           <p className="caveat-decorativo text-polia-terracota mt-1">Lockup L4 Vertical</p>
           <p className="font-sans text-[10px] text-polia-marrom/60 mt-1">180×180</p>
         </div>
@@ -391,7 +405,7 @@ function Capa({ onStart }: { onStart: () => void }) {
           className="mt-10 md:mt-14 relative h-[58px] rounded-[12px] bg-[#C96B3E] px-10 font-sans text-[18px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
           style={{ boxShadow: "0 0 24px rgba(201,107,62,0.35)" }}
         >
-          Vamos preencher os 3 espaços  →
+          Vamos preencher os 3 espaços →
         </button>
 
         <p className="caveat-decorativo text-polia-terracota/75 mt-4">
@@ -467,8 +481,7 @@ function PerguntaLayout({
           <hr className="border-[#EAE2D8] my-6" />
           <p className="caveat-decorativo text-[#6A6A7E] leading-[22px]">
             depois vem
-            <br />
-            a sua ficha de produto
+            <br />a sua ficha de produto
           </p>
         </aside>
 
@@ -537,7 +550,9 @@ function PerguntaBlock({
 
       <div className="flex max-w-[720px] flex-col gap-4 rounded-[14px] border border-dashed border-[#C96B3E]/40 bg-[#FAF4EF] p-5 md:flex-row md:items-start">
         <div className="flex h-[80px] w-[80px] shrink-0 flex-col items-center justify-center rounded-[10px] border border-dashed border-[#C96B3E]/50 bg-white p-2 text-center">
-          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">RAPOSA</p>
+          <p className="font-accent text-[8px] font-bold tracking-[1px] text-polia-terracota">
+            RAPOSA
+          </p>
           <p className="caveat-decorativo text-[#6A6A7E] leading-tight mt-1">{raposaEstado}</p>
         </div>
         <p className="font-sans text-[14px] leading-[22px] text-[#6A6A7E]">{raposaTexto}</p>
@@ -656,7 +671,9 @@ function FichaTela({
                   <p className="font-accent text-[9px] font-bold tracking-[1.5px] text-[#6A6A7E] uppercase">
                     A PARTIR DE
                   </p>
-                  <p className="font-serif text-polia-terracota text-[22px] mt-2">{ficha.preco_destaque}</p>
+                  <p className="font-serif text-polia-terracota text-[22px] mt-2">
+                    {ficha.preco_destaque}
+                  </p>
                 </div>
               </div>
 
@@ -684,7 +701,7 @@ function FichaTela({
                 className="h-[54px] rounded-[12px] bg-[#C96B3E] px-8 font-sans text-[15px] font-semibold text-polia-creme hover:bg-[#B85A2D]"
                 style={{ boxShadow: "0 0 28px rgba(201,107,62,0.35)" }}
               >
-                Conquistar esse marco  →
+                Conquistar esse marco →
               </button>
             </div>
           </>
@@ -704,7 +721,8 @@ function Conclusao({ onVerPainel, onEtapa5 }: { onVerPainel: () => void; onEtapa
       palavraMarco="PRESENÇA"
       ferramentaDesbloqueada={{
         titulo: "Sua Vitrine",
-        descricao: "Sua ficha de produto foi adicionada. Agora sua vitrine online começa a tomar forma.",
+        descricao:
+          "Sua ficha de produto foi adicionada. Agora sua vitrine online começa a tomar forma.",
       }}
       proximaEtapaLabel="Começar Etapa 5 →"
       onVerPainel={onVerPainel}

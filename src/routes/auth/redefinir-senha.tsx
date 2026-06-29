@@ -3,11 +3,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  AuthShell,
-  CaveatEyebrow,
-  SerifHeadline,
-} from "@/components/cosmic/AuthShell";
+import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { PoliaButton } from "@/components/ui/PoliaButton";
 
@@ -32,8 +28,7 @@ function computeStrength(pw: string): Strength {
   if (!hasLen) return { score: 1, label: "Senha fraca", color: "#C96B3E" };
   if (hasLen && hasLetter && hasNumber && hasSpecial)
     return { score: 3, label: "Senha forte", color: "#2D6A4F" };
-  if (hasLen && hasLetter && hasNumber)
-    return { score: 2, label: "Senha boa", color: "#C8A96E" };
+  if (hasLen && hasLetter && hasNumber) return { score: 2, label: "Senha boa", color: "#C8A96E" };
   return { score: 1, label: "Senha fraca", color: "#C96B3E" };
 }
 
@@ -101,13 +96,8 @@ function RedefinirSenhaPage() {
         <div className="flex flex-col items-center text-center">
           <Star size={40} color="#C8A96E" />
           <h2 className="mt-5 font-serif text-[28px] text-[#FDF8F5]">Senha atualizada.</h2>
-          <p className="mt-2 caveat-decorativo text-[#E89770]">
-            você está pronta.
-          </p>
-          <p
-            className="mt-3 font-sans text-[14px]"
-            style={{ color: "rgba(255,255,255,0.50)" }}
-          >
+          <p className="mt-2 caveat-decorativo text-[#E89770]">você está pronta.</p>
+          <p className="mt-3 font-sans text-[14px]" style={{ color: "rgba(255,255,255,0.50)" }}>
             Redirecionando para o login...
           </p>
         </div>
@@ -152,10 +142,7 @@ function RedefinirSenhaPage() {
                   />
                 ))}
               </div>
-              <p
-                className="mt-1.5 font-sans text-[12px]"
-                style={{ color: strength.color }}
-              >
+              <p className="mt-1.5 font-sans text-[12px]" style={{ color: strength.color }}>
                 {strength.label}
               </p>
             </div>

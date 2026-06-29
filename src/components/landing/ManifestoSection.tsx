@@ -59,8 +59,7 @@ export function ManifestoSection() {
           transform: "translate(-50%, -50%)",
           width: 800,
           height: 800,
-          background:
-            "radial-gradient(circle, rgba(200,169,110,0.05) 0%, transparent 60%)",
+          background: "radial-gradient(circle, rgba(200,169,110,0.05) 0%, transparent 60%)",
           pointerEvents: "none",
         }}
       />
