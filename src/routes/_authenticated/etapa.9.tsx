@@ -166,15 +166,18 @@ function Etapa9Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !plano) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Plano de Conteúdo",
-      tipo: "plano_conteudo",
-      fase: "Venda",
-      etapa: 9,
-      conteudo: plano as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Plano de Conteúdo",
+        tipo: "plano_conteudo",
+        fase: "Venda",
+        etapa: 9,
+        conteudo: plano as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ content_finalized_at: new Date().toISOString() } as never)

@@ -166,15 +166,18 @@ function Etapa8Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !protocolo) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Protocolo de Cuidado",
-      tipo: "protocolo_cuidado",
-      fase: "Venda",
-      etapa: 8,
-      conteudo: protocolo as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Protocolo de Cuidado",
+        tipo: "protocolo_cuidado",
+        fase: "Venda",
+        etapa: 8,
+        conteudo: protocolo as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ care_finalized_at: new Date().toISOString() } as never)

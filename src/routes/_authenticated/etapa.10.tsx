@@ -166,15 +166,18 @@ function Etapa10Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !painel) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Painel de 3 Números",
-      tipo: "painel_numeros",
-      fase: "Evolução",
-      etapa: 10,
-      conteudo: painel as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Painel de 3 Números",
+        tipo: "painel_numeros",
+        fase: "Evolução",
+        etapa: 10,
+        conteudo: painel as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ growth_finalized_at: new Date().toISOString() } as never)

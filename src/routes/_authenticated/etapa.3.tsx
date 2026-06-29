@@ -166,15 +166,18 @@ function Etapa3Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !mapa) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Mapa de Posicionamento",
-      tipo: "mapa_posicionamento",
-      fase: "Sonho",
-      etapa: 3,
-      conteudo: mapa as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Mapa de Posicionamento",
+        tipo: "mapa_posicionamento",
+        fase: "Sonho",
+        etapa: 3,
+        conteudo: mapa as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ positioning_finalized_at: new Date().toISOString() } as never)

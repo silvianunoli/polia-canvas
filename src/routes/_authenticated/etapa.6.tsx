@@ -166,15 +166,18 @@ function Etapa6Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !sistema) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Sistema de Controle",
-      tipo: "sistema_controle",
-      fase: "Construção",
-      etapa: 6,
-      conteudo: sistema as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Sistema de Controle",
+        tipo: "sistema_controle",
+        fase: "Construção",
+        etapa: 6,
+        conteudo: sistema as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ routine_finalized_at: new Date().toISOString() } as never)

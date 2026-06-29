@@ -166,15 +166,18 @@ function Etapa7Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !roteiro) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Roteiro de Fechamento",
-      tipo: "roteiro_fechamento",
-      fase: "Venda",
-      etapa: 7,
-      conteudo: roteiro as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Roteiro de Fechamento",
+        tipo: "roteiro_fechamento",
+        fase: "Venda",
+        etapa: 7,
+        conteudo: roteiro as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ sales_finalized_at: new Date().toISOString() } as never)

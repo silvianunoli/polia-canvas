@@ -173,15 +173,18 @@ function Etapa2Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId || !vozMarca) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Voz de Marca",
-      tipo: "voz_de_marca",
-      fase: "Sonho",
-      etapa: 2,
-      conteudo: vozMarca as never,
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Voz de Marca",
+        tipo: "voz_de_marca",
+        fase: "Sonho",
+        etapa: 2,
+        conteudo: vozMarca as never,
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     await supabase
       .from("profiles")
       .update({ brand_voice_finalized_at: new Date().toISOString() } as never)

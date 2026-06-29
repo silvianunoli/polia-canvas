@@ -190,15 +190,18 @@ function Etapa1Page() {
 
   const salvarEntregavelEAvancar = useCallback(async () => {
     if (!userId) return;
-    await supabase.from("entregaveis").insert({
-      user_id: userId,
-      titulo: "Mini-pitch",
-      tipo: "mini_pitch",
-      fase: "Sonho",
-      etapa: 1,
-      conteudo: { texto: miniPitch },
-      status: "concluido",
-    });
+    await supabase.from("entregaveis").upsert(
+      {
+        user_id: userId,
+        titulo: "Mini-pitch",
+        tipo: "mini_pitch",
+        fase: "Sonho",
+        etapa: 1,
+        conteudo: { texto: miniPitch },
+        status: "concluido",
+      },
+      { onConflict: "user_id,tipo" },
+    );
     setStep(6);
   }, [userId, miniPitch]);
 
