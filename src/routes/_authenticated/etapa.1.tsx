@@ -6,7 +6,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 import { EtapaTopBar } from "@/components/etapa/EtapaTopBar";
 import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
 import { ConclusaoEtapa } from "@/components/painel/ConclusaoEtapa";
-import { gerarMiniPitch } from "@/lib/minipitch.functions";
+import { gerarMiniPitch, type MiniPitch } from "@/lib/minipitch.functions";
 
 export const Route = createFileRoute("/_authenticated/etapa/1")({
   head: () => ({
@@ -66,7 +66,7 @@ function Etapa1Page() {
   const [targetCustomer, setTargetCustomer] = useState("");
 
   // Mini-pitch state
-  const [miniPitch, setMiniPitch] = useState("");
+  const [pitch, setPitch] = useState<MiniPitch | null>(null);
   const [loadingPitch, setLoadingPitch] = useState(false);
   const [pitchError, setPitchError] = useState<string | null>(null);
 
@@ -106,8 +106,7 @@ function Etapa1Page() {
             .limit(1)
             .maybeSingle();
           if (mounted && ent?.conteudo) {
-            const c = ent.conteudo as { texto?: string };
-            setMiniPitch(c.texto ?? "");
+            setPitch(ent.conteudo as MiniPitch);
           }
         }
 
@@ -185,11 +184,11 @@ function Etapa1Page() {
     });
     setLoadingPitch(false);
     if (result.error) setPitchError(result.error);
-    setMiniPitch(result.minipitch || "");
+    setPitch(result.pitch);
   }, [autoSave, gerar, profileStory, problemSolved, targetCustomer]);
 
   const salvarEntregavelEAvancar = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !pitch) return;
     await supabase.from("entregaveis").upsert(
       {
         user_id: userId,
@@ -197,13 +196,13 @@ function Etapa1Page() {
         tipo: "mini_pitch",
         fase: "Sonho",
         etapa: 1,
-        conteudo: { texto: miniPitch },
+        conteudo: pitch as never,
         status: "concluido",
       },
       { onConflict: "user_id,tipo" },
     );
     setStep(6);
-  }, [userId, miniPitch]);
+  }, [userId, pitch]);
 
   // Conclude etapa 1 on entering step 6
   const concludedRef = useRef(false);
@@ -316,7 +315,7 @@ function Etapa1Page() {
       {step === 5 && (
         <MiniPitchTela
           loading={loadingPitch}
-          miniPitch={miniPitch}
+          miniPitch={pitch?.texto ?? ""}
           error={pitchError}
           displayName={profile?.display_name ?? ""}
           businessName={profile?.business_name ?? ""}
