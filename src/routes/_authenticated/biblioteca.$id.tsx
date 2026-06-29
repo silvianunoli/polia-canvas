@@ -51,9 +51,9 @@ const camposPorTipo: Record<string, Campo[]> = {
     { chave: "publico", label: "QUEM VOCÊ AJUDA", tipo: "texto" },
     { chave: "solucao", label: "O QUE VOCÊ FAZ", tipo: "texto" },
     { chave: "transformacao", label: "O QUE TRANSFORMA", tipo: "texto" },
-    { chave: "pitch_completo", label: "SEU PITCH COMPLETO", tipo: "destaque" },
+    { chave: "texto", label: "SEU PITCH COMPLETO", tipo: "destaque" },
   ],
-  voz_marca: [
+  voz_de_marca: [
     { chave: "palavras", label: "SUAS 3 PALAVRAS", tipo: "lista" },
     { chave: "frase", label: "SUA VOZ EM UMA FRASE", tipo: "destaque" },
   ],
