@@ -187,7 +187,7 @@ function RedefinirPage() {
       </form>
 
       <p className="mt-6 text-center font-sans text-[14px] text-[#D8D2CC]/70">
-        Lembrei a senha!{" "}
+        Lembrei a senha.{" "}
         <Link to="/auth/login" className="text-[#C96B3E] underline underline-offset-2">
           Voltar para o login
         </Link>
