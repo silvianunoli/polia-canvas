@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { PoliaFooter } from "@/components/layout/PoliaFooter";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
@@ -29,14 +30,17 @@ function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const withFooter = showFooterFor(pathname);
   return (
-    <>
+    <div className="flex min-h-screen flex-col md:flex-row">
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo
       </a>
-      <main id="main-content">
-        <Outlet />
-      </main>
-      {withFooter && <PoliaFooter />}
-    </>
+      <Sidebar />
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main id="main-content" className="flex-1">
+          <Outlet />
+        </main>
+        {withFooter && <PoliaFooter />}
+      </div>
+    </div>
   );
 }

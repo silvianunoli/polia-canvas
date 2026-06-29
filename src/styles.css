@@ -83,6 +83,34 @@
   --font-handwritten: "Caveat", cursive;
 }
 
+/* ── Paleta Pólia v3 (pêssego/turquesa/amarelo) ──────────────────────────────
+   Escopada à classe .polia-v3 (sidebar + painel redesenhados). NÃO afeta o
+   resto da v1, que segue Territorial Diurno (terracota). Migração incremental.
+   Regra de contraste: pêssego e turquesa-claro SÓ em fundo/borda/gráfico,
+   nunca em texto. Texto sempre --ink / --ink-soft / --muted (ou --secondary-text). */
+.polia-v3 {
+  --bg: #F2F0ED;
+  --surface: #F9EFEE;
+  --surface-pink: #F6DAD4;
+  --line: #E6E6E6;
+  --ink: #0A0A0A;
+  --ink-soft: #2C2C2C;
+  --muted: #9E9E9E;
+  --accent: #F3B9A9;          /* pêssego — fundo/borda/gráfico, NUNCA texto */
+  --accent-ink: #2C2C2C;
+  --secondary: #7CCBCD;       /* turquesa — banner, bordas de ação (fundo) */
+  --secondary-light: #BFE9EB;
+  --secondary-ink: #0A0A0A;
+  --secondary-text: #2C7E80;  /* turquesa escuro p/ TEXTO de link/CTA (AA ok) */
+  --highlight: #FFC629;       /* amarelo — indicador pontual, um por tela */
+  --highlight-ink: #0A0A0A;
+}
+
+.font-fraunces {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  letter-spacing: -0.015em;
+}
+
 :root {
   --radius: 0.75rem;
 
