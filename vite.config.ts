@@ -12,4 +12,8 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  // Force-enable Nitro for builds rodando fora do sandbox Lovable.
+  // Sem isso, o Lovable plugin pula o Nitro e a build deixa deps como `h3-v2`
+  // como bare imports — o Worker quebra com "No such module" no runtime.
+  nitro: true,
 });
