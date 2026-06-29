@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/cms")({
   head: () => ({
@@ -11,8 +12,8 @@ export const Route = createFileRoute("/_authenticated/admin/cms")({
 
 function AdminCms() {
   const [tab, setTab] = useState<"blog" | "espera">("blog");
-  const [posts, setPosts] = useState<any[]>([]);
-  const [espera, setEspera] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Tables<"blog_posts">[]>([]);
+  const [espera, setEspera] = useState<Tables<"lista_espera">[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -29,7 +30,7 @@ function AdminCms() {
     })();
   }, []);
 
-  const togglePublicar = async (post: any) => {
+  const togglePublicar = async (post: Tables<"blog_posts">) => {
     const novo = !post.publicado;
     await supabase
       .from("blog_posts")
@@ -63,7 +64,7 @@ function AdminCms() {
         ].map((t) => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key as any)}
+            onClick={() => setTab(t.key as "blog" | "espera")}
             className={`font-mono text-[10px] tracking-[1.5px] uppercase px-5 py-2 rounded-full transition-all ${
               tab === t.key
                 ? "bg-[#1A1A2E] text-[#FDF8F5]"
@@ -91,7 +92,7 @@ function AdminCms() {
                 <p className="font-sans text-[#1A1A2E] text-[14px] font-medium">{post.titulo}</p>
                 <p className="font-sans text-[#1A1A2E] text-[12px] opacity-40">
                   {post.categoria ?? "sem categoria"} ·{" "}
-                  {post.publicado
+                  {post.publicado_em
                     ? `publicado em ${new Date(post.publicado_em).toLocaleDateString("pt-BR")}`
                     : "rascunho"}
                 </p>

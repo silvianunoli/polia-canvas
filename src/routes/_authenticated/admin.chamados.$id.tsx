@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
   head: () => ({
@@ -11,8 +12,8 @@ export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
 
 function AdminTicket() {
   const { id } = Route.useParams();
-  const [ticket, setTicket] = useState<any>(null);
-  const [mensagens, setMensagens] = useState<any[]>([]);
+  const [ticket, setTicket] = useState<Tables<"tickets"> | null>(null);
+  const [mensagens, setMensagens] = useState<Tables<"ticket_messages">[]>([]);
   const [resposta, setResposta] = useState("");
   const [userNome, setUserNome] = useState("");
 

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/flags")({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/flags")({
 });
 
 function AdminFlags() {
-  const [flags, setFlags] = useState<any[]>([]);
+  const [flags, setFlags] = useState<Tables<"feature_flags">[]>([]);
 
   const carregar = async () => {
     const { data } = await supabase.from("feature_flags").select("*").order("key");

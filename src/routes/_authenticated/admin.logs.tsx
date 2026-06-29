@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/logs")({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/logs")({
 });
 
 function AdminLogs() {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<Tables<"edge_function_logs">[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -29,7 +30,7 @@ function AdminLogs() {
       string,
       { chamadas: number; erros: number; soma_lat: number; com_lat: number }
     >();
-    logs.forEach((l: any) => {
+    logs.forEach((l) => {
       const cur = map.get(l.function_name) ?? { chamadas: 0, erros: 0, soma_lat: 0, com_lat: 0 };
       cur.chamadas++;
       if (l.status !== "ok") cur.erros++;

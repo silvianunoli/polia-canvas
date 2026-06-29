@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/comunicacao")({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/comunicacao")({
 });
 
 function AdminComunicacao() {
-  const [contatos, setContatos] = useState<any[]>([]);
+  const [contatos, setContatos] = useState<Tables<"contatos">[]>([]);
 
   useEffect(() => {
     (async () => {

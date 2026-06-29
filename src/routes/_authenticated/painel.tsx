@@ -399,7 +399,7 @@ function PainelPage() {
               if (state === "current") {
                 navigate({ to: `/etapa/${etapa}` as "/etapa/1" });
               } else if (state === "done") {
-                navigate({ to: "/biblioteca", search: { etapa } as any });
+                navigate({ to: "/biblioteca" });
               }
             }}
           />

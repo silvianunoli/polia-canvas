@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/feedback")({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin/feedback")({
 });
 
 function AdminFeedback() {
-  const [respostas, setRespostas] = useState<any[]>([]);
+  const [respostas, setRespostas] = useState<Tables<"feedback_responses">[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -24,7 +25,7 @@ function AdminFeedback() {
   }, []);
 
   const porEtapa = useMemo(() => {
-    const map = new Map<string, any[]>();
+    const map = new Map<string, Tables<"feedback_responses">[]>();
     respostas
       .filter((r) => r.trigger_type === "entregavel_concluido")
       .forEach((r) => {

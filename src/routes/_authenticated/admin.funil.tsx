@@ -23,8 +23,10 @@ const NOMES_ETAPAS = [
   "Visão",
 ];
 
+type EtapaFunil = { n: number; nome: string; concluidas: number; dropoff: number };
+
 function AdminFunil() {
-  const [etapas, setEtapas] = useState<any[]>([]);
+  const [etapas, setEtapas] = useState<EtapaFunil[]>([]);
   const [total, setTotal] = useState(0);
   const [seg, setSeg] = useState({ progressoras: 0, estagnadas: 0, silenciosas: 0 });
 
@@ -37,7 +39,7 @@ function AdminFunil() {
       setTotal(totalC);
       const arr = data ?? [];
       const contagem: number[] = Array(12).fill(0);
-      arr.forEach((p: any) => {
+      arr.forEach((p) => {
         for (let i = 1; i <= (p.etapa_atual ?? 0); i++) contagem[i]++;
       });
       const out = NOMES_ETAPAS.map((nome, i) => {
@@ -53,7 +55,7 @@ function AdminFunil() {
       let prog = 0,
         estag = 0,
         sil = 0;
-      arr.forEach((p: any) => {
+      arr.forEach((p) => {
         const ts = new Date(p.updated_at).getTime();
         if (ts < dias14) sil++;
         else if ((p.etapa_atual ?? 0) >= 2) prog++;

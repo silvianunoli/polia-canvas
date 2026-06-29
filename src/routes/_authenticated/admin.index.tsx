@@ -11,6 +11,14 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminHome,
 });
 
+type AlertaParada = {
+  id: string;
+  nome: string;
+  etapa_atual: number | null;
+  dias_parada: number;
+  ultima_atividade: string;
+};
+
 function AdminHome() {
   const [stats, setStats] = useState({
     ecua_m: 0,
@@ -21,7 +29,7 @@ function AdminHome() {
     total_cadastros: 0,
     lista_espera_total: 0,
   });
-  const [alertasVermelhos, setAlertasVermelhos] = useState<any[]>([]);
+  const [alertasVermelhos, setAlertasVermelhos] = useState<AlertaParada[]>([]);
   const [saude, setSaude] = useState({ eventos24h: 0, erros24h: 0, latencia: 0 });
   const [censo, setCenso] = useState<{ label: string; valor: number }[]>([]);
 
@@ -51,12 +59,10 @@ function AdminHome() {
       ]);
 
       const wau2 = profilesAtivos?.length ?? 0;
-      const etapas = (profilesAll ?? [])
-        .map((p: any) => p.etapa_atual)
-        .sort((a: number, b: number) => a - b);
+      const etapas = (profilesAll ?? []).map((p) => p.etapa_atual ?? 0).sort((a, b) => a - b);
       const medianaEtapa = etapas.length ? etapas[Math.floor(etapas.length / 2)] : 1;
 
-      const ativacaoNum = (ativadasD7 ?? []).filter((p: any) => {
+      const ativacaoNum = (ativadasD7 ?? []).filter((p) => {
         if (!p.star_1_completed_at) return false;
         return (
           new Date(p.star_1_completed_at).getTime() - new Date(p.created_at).getTime() <=
@@ -69,9 +75,7 @@ function AdminHome() {
 
       // ECUA-M: total etapas completadas no mes / ativas
       const ecuaM =
-        wau2 > 0
-          ? profilesAtivos!.reduce((s: number, p: any) => s + (p.etapa_atual ?? 0), 0) / wau2
-          : 0;
+        wau2 > 0 ? profilesAtivos!.reduce((s, p) => s + (p.etapa_atual ?? 0), 0) / wau2 : 0;
 
       const { data: paradas } = await supabase
         .from("profiles")
@@ -83,7 +87,7 @@ function AdminHome() {
         .limit(5);
 
       setAlertasVermelhos(
-        (paradas ?? []).map((p: any) => ({
+        (paradas ?? []).map((p) => ({
           id: p.id,
           nome: p.full_name ?? "Sem nome",
           etapa_atual: p.etapa_atual,

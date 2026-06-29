@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/")({
   head: () => ({
@@ -9,9 +10,14 @@ export const Route = createFileRoute("/_authenticated/admin/chamados/")({
   component: AdminChamados,
 });
 
+type TicketRow = Pick<
+  Tables<"tickets">,
+  "id" | "title" | "status" | "priority" | "module_ref" | "created_at" | "user_id"
+> & { user_nome: string };
+
 function AdminChamados() {
   const navigate = useNavigate();
-  const [tickets, setTickets] = useState<any[]>([]);
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<"aberto" | "em_andamento" | "resolvido">(
     "aberto",
   );
@@ -25,12 +31,12 @@ function AdminChamados() {
         .eq("status", filtroStatus)
         .order("created_at", { ascending: false });
 
-      const userIds = Array.from(new Set((data ?? []).map((t: any) => t.user_id)));
+      const userIds = Array.from(new Set((data ?? []).map((t) => t.user_id)));
       const { data: profs } = userIds.length
         ? await supabase.from("profiles").select("id,full_name").in("id", userIds)
-        : { data: [] as any[] };
-      const map = new Map((profs ?? []).map((p: any) => [p.id, p.full_name]));
-      setTickets((data ?? []).map((t: any) => ({ ...t, user_nome: map.get(t.user_id) ?? "—" })));
+        : { data: [] as Pick<Tables<"profiles">, "id" | "full_name">[] };
+      const map = new Map((profs ?? []).map((p) => [p.id, p.full_name] as [string, string | null]));
+      setTickets((data ?? []).map((t) => ({ ...t, user_nome: map.get(t.user_id) ?? "—" })));
 
       const [{ count: a }, { count: e }, { count: r }] = await Promise.all([
         supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "aberto"),
