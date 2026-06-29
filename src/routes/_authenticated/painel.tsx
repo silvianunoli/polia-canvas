@@ -1,10 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star } from "lucide-react";
+import {
+  Star,
+  Sun,
+  Flame,
+  Target,
+  Timer,
+  NotebookPen,
+  MessageCircleHeart,
+  LayoutGrid,
+  TrendingUp,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { GuiaInsight } from "@/components/painel/GuiaInsight";
+import { PainelTrabalho } from "@/components/painel/PainelTrabalho";
 import { TrilhaMarcos } from "@/components/painel/TrilhaMarcos";
 import { CadernoCard } from "@/components/caderno/CadernoCard";
 import { pluralizeKanban } from "@/lib/kanban";
@@ -16,8 +29,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
       { title: "Painel · Pólia" },
       {
         name: "description",
-        content:
-          "Seu painel da Pólia: jornada, tarefas, clientes e o ar do seu negócio agora.",
+        content: "Seu painel da Pólia: jornada, tarefas, clientes e o ar do seu negócio agora.",
       },
     ],
   }),
@@ -41,7 +53,11 @@ export const Route = createFileRoute("/_authenticated/painel")({
 // ============= Conteúdo dinâmico =============
 
 const NOMES_ETAPAS: Record<number, { nome: string; subtitulo: string; tempoEstimado: string }> = {
-  1: { nome: "Descoberta", subtitulo: "quem você é nesse negócio", tempoEstimado: "uns 12 minutos" },
+  1: {
+    nome: "Descoberta",
+    subtitulo: "quem você é nesse negócio",
+    tempoEstimado: "uns 12 minutos",
+  },
   2: { nome: "Identidade", subtitulo: "sua voz, sua marca viva", tempoEstimado: "uns 20 minutos" },
   3: { nome: "Modelo", subtitulo: "como seu negócio se sustenta", tempoEstimado: "uns 25 minutos" },
   4: { nome: "Presença", subtitulo: "onde te encontram", tempoEstimado: "uns 30 minutos" },
@@ -107,11 +123,7 @@ function PainelPage() {
             .select("full_name, business_name, created_at, onboarding_completed, etapa_atual")
             .eq("id", userId!)
             .maybeSingle(),
-          supabase
-            .from("user_progress")
-            .select("etapa_atual")
-            .eq("user_id", userId!)
-            .maybeSingle(),
+          supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
           supabase
             .from("user_profile")
             .select("segmento, nome_negocio")
@@ -190,8 +202,7 @@ function PainelPage() {
 
   // Próxima tarefa
   const proximaTarefa = tarefasAFazer[0] ?? tarefasBrotando[0];
-  const tituloProxima =
-    proximaTarefa?.titulo ?? `Começar ${etapaInfo.nome.toLowerCase()}`;
+  const tituloProxima = proximaTarefa?.titulo ?? `Começar ${etapaInfo.nome.toLowerCase()}`;
 
   // Semana — só calcula no client (depende de new Date()), evita SSR mismatch
   const dias = useMemo(() => {
@@ -235,7 +246,7 @@ function PainelPage() {
     conquistaUltima && new Date(conquistaUltima.created_at).getTime() >= seteDiasAtras
       ? conquistaUltima
       : null;
-  const conquistaAnterior = conquistaAtual ? null : conquistaUltima ?? null;
+  const conquistaAnterior = conquistaAtual ? null : (conquistaUltima ?? null);
 
   const subtituloNegocio =
     businessType === "produto"
@@ -243,6 +254,12 @@ function PainelPage() {
       : businessType === "servico"
         ? "você vende serviço, então aqui mostra agenda e clientes."
         : "você vende produto e serviço, então aqui mostra os dois.";
+
+  const resumoPainel = dados
+    ? `Etapa ${etapaAtual} de 11 na jornada (${etapaInfo.nome}). ` +
+      `${tarefasAFazer.length} tarefas a fazer, ${tarefasBrotando.length} em progresso, ` +
+      `${tarefasFloresceram.length} prontas. ${diasDesdeCadastro} dias usando a Pólia.`
+    : "";
 
   return (
     <div className="min-h-screen bg-polia-creme">
@@ -322,13 +339,21 @@ function PainelPage() {
         </div>
       </section>
 
+      {/* Insight da guia (Coach transversal) */}
+      <div className="bg-polia-creme px-6 md:px-12">
+        <div className="mx-auto max-w-[1280px]">
+          <GuiaInsight contexto="painel" resumo={resumoPainel} />
+        </div>
+      </div>
+
+      {/* Bloco de trabalho (dashboard): check-in, KPIs por status, alertas, delegadas, calendário */}
+      <PainelTrabalho />
+
       {/* SEÇÃO 2 — CTA */}
       <section className="w-full bg-polia-terracota">
         <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 px-6 py-8 md:flex-row md:items-center md:px-12">
           <div>
-            <p className="mb-1 caveat-decorativo text-polia-creme/70">
-              Seu próximo marco...
-            </p>
+            <p className="mb-1 caveat-decorativo text-polia-creme/70">Seu próximo marco...</p>
             <h2 className="mb-2 font-serif text-[28px] leading-tight text-polia-creme md:text-[32px]">
               {tituloProxima}
             </h2>
@@ -381,6 +406,78 @@ function PainelPage() {
         </div>
       </section>
 
+      {/* SEÇÃO 4 — SEU DIA (operação diária) */}
+      <section className="bg-polia-creme px-6 py-12 md:px-12">
+        <div className="mx-auto max-w-[1280px]">
+          <p className="mb-2 font-accent text-[11px] uppercase tracking-[2px] text-polia-noite opacity-50">
+            SEU DIA
+          </p>
+          <h2 className="mb-1 font-serif text-[28px] text-polia-noite md:text-[36px]">
+            O dia a dia da sua marca
+          </h2>
+          <p className="mb-8 caveat-decorativo text-polia-terracota">
+            pequenas ferramentas pra manter o ritmo, um dia de cada vez.
+          </p>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <SeuDiaCard
+              to="/diario"
+              icon={<Sun size={20} />}
+              titulo="Diário"
+              sub="seu check-in do dia"
+            />
+            <SeuDiaCard
+              to="/habitos"
+              icon={<Flame size={20} />}
+              titulo="Hábitos"
+              sub="o que você repete e constrói"
+            />
+            <SeuDiaCard
+              to="/metas"
+              icon={<Target size={20} />}
+              titulo="Metas"
+              sub="onde você quer chegar"
+            />
+            <SeuDiaCard
+              to="/foco"
+              icon={<Timer size={20} />}
+              titulo="Foco"
+              sub="um tempo só pra avançar"
+            />
+            <SeuDiaCard
+              to="/caderno"
+              icon={<NotebookPen size={20} />}
+              titulo="Caderno"
+              sub="ideias e anotações"
+            />
+            <SeuDiaCard
+              to="/guia"
+              icon={<MessageCircleHeart size={20} />}
+              titulo="Sua guia"
+              sub="pensar o negócio junto"
+            />
+            <SeuDiaCard
+              to="/planner"
+              icon={<LayoutGrid size={20} />}
+              titulo="Quadros"
+              sub="projetos fora da jornada"
+            />
+            <SeuDiaCard
+              to="/equipe"
+              icon={<Users size={20} />}
+              titulo="Equipe"
+              sub="quem caminha com você"
+            />
+            <SeuDiaCard
+              to="/progresso"
+              icon={<TrendingUp size={20} />}
+              titulo="Seu Progresso"
+              sub="o quanto você já andou"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* SEÇÃO 5 — HOJE NO SEU NEGÓCIO */}
       <section className="bg-polia-creme px-6 py-16 md:px-12">
         <div className="mx-auto max-w-[1280px]">
@@ -390,9 +487,7 @@ function PainelPage() {
           <h2 className="mb-1 font-serif text-[28px] text-polia-noite md:text-[36px]">
             O ar do seu negócio agora
           </h2>
-          <p className="mb-8 caveat-decorativo text-polia-terracota">
-            {subtituloNegocio}
-          </p>
+          <p className="mb-8 caveat-decorativo text-polia-terracota">{subtituloNegocio}</p>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <CardReceita />
@@ -517,9 +612,7 @@ function PainelPage() {
                     {c.col}
                   </p>
                   {c.items.length === 0 ? (
-                    <p className="caveat-decorativo text-polia-noite opacity-30">
-                      vazio
-                    </p>
+                    <p className="caveat-decorativo text-polia-noite opacity-30">vazio</p>
                   ) : (
                     c.items.slice(0, 3).map((t) => (
                       <div
@@ -571,9 +664,7 @@ function PainelPage() {
               </>
             ) : conquistaAnterior ? (
               <>
-                <p className="mb-2 caveat-decorativo text-polia-dourado">
-                  última conquista
-                </p>
+                <p className="mb-2 caveat-decorativo text-polia-dourado">última conquista</p>
                 <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite opacity-80">
                   {conquistaAnterior.titulo}
                 </p>
@@ -649,10 +740,7 @@ function PainelPage() {
                 className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4"
                 style={{ border: "1px solid rgba(26,26,46,0.06)" }}
               >
-                <div
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: "#D8D2CC" }}
-                />
+                <div className="h-2 w-2 rounded-full" style={{ background: "#D8D2CC" }} />
                 <span className="font-sans text-[15px] text-polia-noite">{m}</span>
               </div>
             ))}
@@ -689,6 +777,33 @@ function PainelPage() {
 
 // ============= Subcomponentes =============
 
+function SeuDiaCard({
+  to,
+  icon,
+  titulo,
+  sub,
+}: {
+  to: string;
+  icon: ReactNode;
+  titulo: string;
+  sub: string;
+}) {
+  return (
+    <a
+      href={to}
+      className="group flex items-center gap-4 rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-polia-terracota/30 hover:shadow-[0_6px_16px_rgba(58,42,31,0.06)]"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(201,107,62,0.1)] text-polia-terracota">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block font-serif text-[18px] text-polia-noite">{titulo}</span>
+        <span className="block font-sans text-[13px] text-polia-noite opacity-50">{sub}</span>
+      </span>
+    </a>
+  );
+}
+
 function StatBlock({
   label,
   value,
@@ -708,9 +823,7 @@ function StatBlock({
         {label}
       </span>
       <span className={valueClass}>{value}</span>
-      <span
-        className={`caveat-decorativo text-[14px] ${subColor ?? "text-polia-noite"}`}
-      >
+      <span className={`caveat-decorativo text-[14px] ${subColor ?? "text-polia-noite"}`}>
         {sub}
       </span>
     </div>
@@ -718,12 +831,7 @@ function StatBlock({
 }
 
 function Divider() {
-  return (
-    <div
-      className="hidden h-12 w-px md:block"
-      style={{ background: "rgba(26,26,46,0.1)" }}
-    />
-  );
+  return <div className="hidden h-12 w-px md:block" style={{ background: "rgba(26,26,46,0.1)" }} />;
 }
 
 function OrbitCard({
@@ -769,12 +877,8 @@ function OrbitCard({
           </span>
         )}
       </div>
-      <p className="mb-1 font-sans text-[16px] font-semibold text-polia-marrom">
-        {title}
-      </p>
-      <p className="mb-3 font-sans text-[12px] text-polia-marrom opacity-60">
-        {tags}
-      </p>
+      <p className="mb-1 font-sans text-[16px] font-semibold text-polia-marrom">{title}</p>
+      <p className="mb-3 font-sans text-[12px] text-polia-marrom opacity-60">{tags}</p>
       <p
         className={`caveat-decorativo text-[14px] ${
           unlocked ? "text-polia-terracota" : "text-polia-marrom opacity-50"
@@ -795,15 +899,11 @@ function CardReceita() {
       <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
         RECEITA · MÊS
       </p>
-      <p className="mb-1 font-serif text-[40px] leading-none text-polia-noite">
-        R$ 0
-      </p>
+      <p className="mb-1 font-serif text-[40px] leading-none text-polia-noite">R$ 0</p>
       <p className="mb-4 font-sans text-[13px] text-polia-noite opacity-50">
         ainda não tem dados aqui
       </p>
-      <p className="caveat-decorativo text-polia-noite">
-        à medida que você avança, vai aparecendo
-      </p>
+      <p className="caveat-decorativo text-polia-noite">à medida que você avança, vai aparecendo</p>
     </div>
   );
 }
@@ -835,9 +935,7 @@ function CardAgenda() {
         <p className="font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
           SUA AGENDA · GOOGLE CALENDAR
         </p>
-        <span className="font-sans text-[11px] text-polia-noite opacity-50">
-          não conectado
-        </span>
+        <span className="font-sans text-[11px] text-polia-noite opacity-50">não conectado</span>
       </div>
       <p className="py-8 text-center caveat-decorativo text-polia-noite">
         conecta seu Google Calendar aqui pra ver tudo em um lugar
@@ -852,13 +950,9 @@ function CardClientes() {
       className="rounded-2xl bg-white p-6 shadow-sm"
       style={{ border: "1px solid rgba(26,26,46,0.06)" }}
     >
-      <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
-        CLIENTES
-      </p>
+      <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">CLIENTES</p>
       <p className="mb-1 font-serif text-[40px] leading-none text-polia-noite">0</p>
-      <p className="mb-6 font-sans text-[13px] text-polia-noite opacity-50">
-        ativas esse mês
-      </p>
+      <p className="mb-6 font-sans text-[13px] text-polia-noite opacity-50">ativas esse mês</p>
       <p className="caveat-decorativo text-polia-noite">
         à medida que você cadastrar, a casa começa a se preencher.
       </p>

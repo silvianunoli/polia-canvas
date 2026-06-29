@@ -29,9 +29,16 @@ function AdminLayout() {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data: p } = await supabase.from("profiles").select("full_name").eq("id", u.user.id).maybeSingle();
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", u.user.id)
+        .maybeSingle();
       setNome(p?.full_name ?? "");
-      const { count } = await supabase.from("tickets").select("*", { count: "exact", head: true }).eq("status", "aberto");
+      const { count } = await supabase
+        .from("tickets")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "aberto");
       setTicketsAbertos(count ?? 0);
     })();
   }, []);
@@ -40,7 +47,11 @@ function AdminLayout() {
     { href: "/admin", label: "Visão geral" },
     { href: "/admin/funil", label: "Funil de jornada" },
     { href: "/admin/usuarios", label: "Usuárias" },
-    { href: "/admin/chamados", label: `Chamados${ticketsAbertos > 0 ? ` (${ticketsAbertos})` : ""}` },
+    { href: "/admin/crm", label: "CRM" },
+    {
+      href: "/admin/chamados",
+      label: `Chamados${ticketsAbertos > 0 ? ` (${ticketsAbertos})` : ""}`,
+    },
     { href: "/admin/feedback", label: "Feedback" },
     { href: "/admin/cms", label: "CMS" },
     { href: "/admin/comunicacao", label: "Comunicação" },
@@ -55,7 +66,9 @@ function AdminLayout() {
         <p className="font-sans text-[#C96B3E] text-[11px] mb-8">{nome}</p>
         <nav className="flex flex-col gap-1">
           {items.map((item) => {
-            const active = location.pathname === item.href || (item.href !== "/admin" && location.pathname.startsWith(item.href));
+            const active =
+              location.pathname === item.href ||
+              (item.href !== "/admin" && location.pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
@@ -72,7 +85,10 @@ function AdminLayout() {
           })}
         </nav>
         <div className="mt-auto">
-          <Link to="/painel" className="font-sans text-[#1A1A2E] text-[12px] opacity-40 hover:opacity-70">
+          <Link
+            to="/painel"
+            className="font-sans text-[#1A1A2E] text-[12px] opacity-40 hover:opacity-70"
+          >
             ← Voltar ao app
           </Link>
         </div>

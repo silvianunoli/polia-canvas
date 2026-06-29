@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { PlaceholderImage } from "@/components/PlaceholderImage";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
@@ -41,7 +42,9 @@ function ConfiguracoesPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("full_name, business_name, business_type, streak")
+        .select(
+          "full_name, business_name, business_type, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
+        )
         .eq("id", userId!)
         .maybeSingle();
       return data;
@@ -53,6 +56,11 @@ function ConfiguracoesPage() {
   const [tipoNegocio, setTipoNegocio] = useState<string>("");
   const [salvo, setSalvo] = useState(false);
   const [salvando, setSalvando] = useState(false);
+
+  const [notifResumo, setNotifResumo] = useState(true);
+  const [notifNovidades, setNotifNovidades] = useState(true);
+  const [notifDicas, setNotifDicas] = useState(true);
+  const plano = profileQuery.data?.plano ?? "beta";
 
   const [alterandoSenha, setAlterandoSenha] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
@@ -66,8 +74,28 @@ function ConfiguracoesPage() {
       setNome(p.full_name ?? "");
       setNomeNegocio(p.business_name ?? "");
       setTipoNegocio(p.business_type ?? "");
+      setNotifResumo(p.notif_resumo_semanal ?? true);
+      setNotifNovidades(p.notif_novidades ?? true);
+      setNotifDicas(p.notif_dicas ?? true);
     }
   }, [profileQuery.data]);
+
+  const toggleNotif = async (
+    campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas",
+    valor: boolean,
+  ) => {
+    if (!userId) return;
+    if (campo === "notif_resumo_semanal") setNotifResumo(valor);
+    if (campo === "notif_novidades") setNotifNovidades(valor);
+    if (campo === "notif_dicas") setNotifDicas(valor);
+    const payload =
+      campo === "notif_resumo_semanal"
+        ? { notif_resumo_semanal: valor }
+        : campo === "notif_novidades"
+          ? { notif_novidades: valor }
+          : { notif_dicas: valor };
+    await supabase.from("profiles").update(payload).eq("id", userId);
+  };
 
   const salvarPerfil = async () => {
     if (!userId) return;
@@ -108,6 +136,26 @@ function ConfiguracoesPage() {
     setNovaSenha("");
     setConfirmarSenha("");
     setTimeout(() => setSenhaOk(false), 2000);
+  };
+
+  const pedirExclusao = async () => {
+    if (!userId) return;
+    if (
+      !window.confirm(
+        "Tem certeza que quer excluir sua conta? Seus dados serão removidos e isso não dá pra desfazer.",
+      )
+    )
+      return;
+    if (!window.confirm("Última confirmação: pedir a exclusão da conta de verdade?")) return;
+    await supabase.from("tickets").insert({
+      user_id: userId,
+      title: "Exclusão de conta",
+      body: "A usuária solicitou a exclusão da conta e dos seus dados pelo app (Configurações → Zona de perigo).",
+      priority: "alta",
+      module_ref: "conta",
+    });
+    await supabase.auth.signOut();
+    window.location.href = "/auth/login";
   };
 
   const initial = (nome.trim()[0] || nomeNegocio.trim()[0] || "P").toUpperCase();
@@ -199,9 +247,7 @@ function ConfiguracoesPage() {
                     <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-1">
                       {tipo.label}
                     </p>
-                    <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">
-                      {tipo.sub}
-                    </p>
+                    <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">{tipo.sub}</p>
                   </button>
                 ))}
               </div>
@@ -210,7 +256,10 @@ function ConfiguracoesPage() {
         </Secao>
 
         {/* SEÇÃO 3 — INTEGRAÇÕES */}
-        <Secao titulo="Integrações" subtitulo="conecte ferramentas que você já usa pra ver tudo em um lugar.">
+        <Secao
+          titulo="Integrações"
+          subtitulo="conecte ferramentas que você já usa pra ver tudo em um lugar."
+        >
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 border border-[rgba(26,26,46,0.08)] rounded-xl">
               <div>
@@ -241,9 +290,7 @@ function ConfiguracoesPage() {
         <Secao titulo="Segurança">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-0.5">
-                Senha
-              </p>
+              <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-0.5">Senha</p>
               <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">
                 altere sua senha de acesso
               </p>
@@ -283,9 +330,7 @@ function ConfiguracoesPage() {
                   </p>
                 )}
               </Campo>
-              {senhaErro && (
-                <p className="font-sans text-[#C9407A] text-[12px]">{senhaErro}</p>
-              )}
+              {senhaErro && <p className="font-sans text-[#C9407A] text-[12px]">{senhaErro}</p>}
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
@@ -302,9 +347,7 @@ function ConfiguracoesPage() {
                 <button
                   type="button"
                   onClick={alterarSenha}
-                  disabled={
-                    novaSenha.length < 8 || novaSenha !== confirmarSenha
-                  }
+                  disabled={novaSenha.length < 8 || novaSenha !== confirmarSenha}
                   className="font-sans text-[13px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-40"
                 >
                   Salvar nova senha
@@ -312,11 +355,105 @@ function ConfiguracoesPage() {
               </div>
             </div>
           )}
-          {senhaOk && (
-            <p className="caveat-decorativo text-[#C96B3E] mt-3">
-              senha atualizada.
+          {senhaOk && <p className="caveat-decorativo text-[#C96B3E] mt-3">senha atualizada.</p>}
+        </Secao>
+
+        {/* SEÇÃO 5 — NOTIFICAÇÕES */}
+        <Secao titulo="Notificações" subtitulo="escolha o que você quer receber por e-mail.">
+          <div className="divide-y divide-[rgba(26,26,46,0.06)]">
+            <ToggleLinha
+              titulo="Resumo semanal"
+              descricao="um panorama do seu negócio toda semana"
+              checked={notifResumo}
+              onCheckedChange={(v) => toggleNotif("notif_resumo_semanal", v)}
+            />
+            <ToggleLinha
+              titulo="Novidades da Pólia"
+              descricao="quando algo novo chega no app"
+              checked={notifNovidades}
+              onCheckedChange={(v) => toggleNotif("notif_novidades", v)}
+            />
+            <ToggleLinha
+              titulo="Dicas e conteúdos"
+              descricao="ideias pra crescer seu negócio"
+              checked={notifDicas}
+              onCheckedChange={(v) => toggleNotif("notif_dicas", v)}
+            />
+          </div>
+        </Secao>
+
+        {/* SEÇÃO 6 — ASSINATURA */}
+        <Secao titulo="Assinatura">
+          <div className="rounded-xl border border-[rgba(201,107,62,0.25)] bg-[rgba(201,107,62,0.04)] p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <span className="inline-block rounded-full bg-polia-terracota px-2.5 py-1 font-accent text-[10px] font-bold uppercase tracking-[1px] text-polia-creme">
+                  {plano === "beta" ? "Plano de lançamento" : plano}
+                </span>
+                <p className="mt-2 font-sans text-[14px] text-[#1A1A2E]">
+                  Você está no beta — com tudo da Pólia liberado.
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="font-serif text-[28px] leading-none text-[#1A1A2E]">Grátis</p>
+                <p className="mt-1 font-sans text-[12px] text-[#1A1A2E] opacity-50">
+                  durante o lançamento
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="mt-3 caveat-decorativo text-[#1A1A2E] opacity-60">
+            quando a Pólia sair do beta, vai custar R$ 29/mês — e você é avisada antes, sem
+            surpresa.
+          </p>
+          <button
+            type="button"
+            disabled
+            className="mt-4 cursor-not-allowed rounded-xl border border-[rgba(26,26,46,0.12)] px-4 py-2 font-sans text-[13px] text-[#1A1A2E] opacity-40"
+          >
+            Gerenciar pagamento — em breve
+          </button>
+        </Secao>
+
+        {/* SEÇÃO 7 — PAGAMENTOS */}
+        <Secao titulo="Pagamentos" subtitulo="por enquanto, a Pólia é gratuita.">
+          <div className="rounded-xl border border-[rgba(26,26,46,0.08)] bg-[rgba(26,26,46,0.02)] p-5">
+            <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">
+              Nenhuma cobrança no beta.
             </p>
-          )}
+            <p className="mt-1 font-sans text-[13px] leading-relaxed text-[#1A1A2E] opacity-55">
+              Quando a Pólia passar a ser paga (R$ 29/mês), suas formas de pagamento e seus recibos
+              vão aparecer aqui.
+            </p>
+          </div>
+          <button
+            type="button"
+            disabled
+            className="mt-4 cursor-not-allowed rounded-xl border border-[rgba(26,26,46,0.12)] px-4 py-2 font-sans text-[13px] text-[#1A1A2E] opacity-40"
+          >
+            Adicionar forma de pagamento — em breve
+          </button>
+        </Secao>
+
+        {/* SEÇÃO 8 — ZONA DE PERIGO */}
+        <Secao titulo="Zona de perigo">
+          <div className="flex flex-col gap-4 rounded-xl border border-[rgba(201,64,122,0.25)] bg-[rgba(201,64,122,0.04)] p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">
+                Excluir minha conta
+              </p>
+              <p className="mt-0.5 font-sans text-[13px] leading-relaxed text-[#1A1A2E] opacity-55">
+                Apaga sua conta e seus dados da Pólia. Não dá pra desfazer.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={pedirExclusao}
+              className="shrink-0 rounded-xl border border-[rgba(201,64,122,0.4)] px-4 py-2 font-sans text-[13px] font-medium text-[#C9407A] transition-colors hover:bg-[rgba(201,64,122,0.08)]"
+            >
+              Pedir exclusão
+            </button>
+          </div>
         </Secao>
 
         {/* SALVAR PERFIL */}
@@ -353,26 +490,38 @@ function Secao({
 }) {
   return (
     <section className="mb-8 bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]">
-      <h2 className="font-serif text-[#1A1A2E] text-[22px] leading-tight mb-1">
-        {titulo}
-      </h2>
+      <h2 className="font-serif text-[#1A1A2E] text-[22px] leading-tight mb-1">{titulo}</h2>
       {subtitulo && (
-        <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50 mb-5">
-          {subtitulo}
-        </p>
+        <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50 mb-5">{subtitulo}</p>
       )}
       <div className={subtitulo ? "" : "mt-5"}>{children}</div>
     </section>
   );
 }
 
-function Campo({
-  label,
-  children,
+function ToggleLinha({
+  titulo,
+  descricao,
+  checked,
+  onCheckedChange,
 }: {
-  label: string;
-  children: React.ReactNode;
+  titulo: string;
+  descricao: string;
+  checked: boolean;
+  onCheckedChange: (v: boolean) => void;
 }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-3.5">
+      <div>
+        <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">{titulo}</p>
+        <p className="font-sans text-[12px] text-[#1A1A2E] opacity-50">{descricao}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+function Campo({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
       <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-50 mb-2 font-bold">

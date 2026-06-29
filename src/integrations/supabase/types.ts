@@ -53,6 +53,60 @@ export type Database = {
         }
         Relationships: []
       }
+      checkins: {
+        Row: {
+          agua_litros: number | null
+          alimentacao: number | null
+          created_at: string
+          data: string
+          energia: number | null
+          estresse: number | null
+          exercicio: boolean | null
+          humor: number | null
+          id: string
+          intencao: string | null
+          nota: string | null
+          sono_horas: number | null
+          updated_at: string
+          user_id: string
+          vitoria: string | null
+        }
+        Insert: {
+          agua_litros?: number | null
+          alimentacao?: number | null
+          created_at?: string
+          data?: string
+          energia?: number | null
+          estresse?: number | null
+          exercicio?: boolean | null
+          humor?: number | null
+          id?: string
+          intencao?: string | null
+          nota?: string | null
+          sono_horas?: number | null
+          updated_at?: string
+          user_id: string
+          vitoria?: string | null
+        }
+        Update: {
+          agua_litros?: number | null
+          alimentacao?: number | null
+          created_at?: string
+          data?: string
+          energia?: number | null
+          estresse?: number | null
+          exercicio?: boolean | null
+          humor?: number | null
+          id?: string
+          intencao?: string | null
+          nota?: string | null
+          sono_horas?: number | null
+          updated_at?: string
+          user_id?: string
+          vitoria?: string | null
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           contato: string | null
@@ -82,6 +136,57 @@ export type Database = {
           notas?: string | null
           status_pedido?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_insights: {
+        Row: {
+          conteudo: string
+          contexto: string
+          created_at: string
+          expires_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          contexto: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          contexto?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_mensagens: {
+        Row: {
+          conteudo: string
+          created_at: string
+          id: string
+          papel: string
+          user_id: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          id?: string
+          papel: string
+          user_id: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          id?: string
+          papel?: string
           user_id?: string
         }
         Relationships: []
@@ -170,6 +275,39 @@ export type Database = {
           latency_ms?: number | null
           status?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      equipe_membros: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome: string
+          papel: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome: string
+          papel?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome?: string
+          papel?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -362,6 +500,124 @@ export type Database = {
         }
         Relationships: []
       }
+      foco_sessoes: {
+        Row: {
+          concluida: boolean
+          created_at: string
+          duracao_min: number
+          id: string
+          meta_id: string | null
+          modo: string | null
+          nota: string | null
+          rotulo: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          concluida?: boolean
+          created_at?: string
+          duracao_min: number
+          id?: string
+          meta_id?: string | null
+          modo?: string | null
+          nota?: string | null
+          rotulo?: string | null
+          tipo?: string
+          user_id: string
+        }
+        Update: {
+          concluida?: boolean
+          created_at?: string
+          duracao_min?: number
+          id?: string
+          meta_id?: string | null
+          modo?: string | null
+          nota?: string | null
+          rotulo?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foco_sessoes_meta_id_fkey"
+            columns: ["meta_id"]
+            isOneToOne: false
+            referencedRelation: "metas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habito_logs: {
+        Row: {
+          created_at: string
+          data: string
+          habito_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          habito_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          habito_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habito_logs_habito_id_fkey"
+            columns: ["habito_id"]
+            isOneToOne: false
+            referencedRelation: "habitos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habitos: {
+        Row: {
+          ativo: boolean
+          categoria: string | null
+          cor: string | null
+          created_at: string
+          emoji: string | null
+          id: string
+          nome: string
+          ordem: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          nome: string
+          ordem?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          categoria?: string | null
+          cor?: string | null
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lista_espera: {
         Row: {
           criado_em: string
@@ -383,6 +639,81 @@ export type Database = {
           id?: string
           nome?: string
           tipo_negocio?: string | null
+        }
+        Relationships: []
+      }
+      metas: {
+        Row: {
+          concluida_em: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          prazo: string | null
+          progresso: number
+          status: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluida_em?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          progresso?: number
+          status?: string
+          titulo: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluida_em?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          prazo?: string | null
+          progresso?: number
+          status?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notas: {
+        Row: {
+          arquivada: boolean
+          conteudo: string
+          created_at: string
+          deleted_at: string | null
+          fixada: boolean
+          id: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          arquivada?: boolean
+          conteudo?: string
+          created_at?: string
+          deleted_at?: string | null
+          fixada?: boolean
+          id?: string
+          titulo?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          arquivada?: boolean
+          conteudo?: string
+          created_at?: string
+          deleted_at?: string | null
+          fixada?: boolean
+          id?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -423,6 +754,9 @@ export type Database = {
           main_channel: string | null
           mini_pitch: string | null
           network_finalized_at: string | null
+          notif_dicas: boolean
+          notif_novidades: boolean
+          notif_resumo_semanal: boolean
           onboarding_completed: boolean
           onboarding_completed_at: string | null
           orbit_brand_alive_unlocked: boolean
@@ -433,6 +767,7 @@ export type Database = {
           orbit_sales_unlocked: boolean
           orbit_vitrine_active: boolean
           orbit_vitrine_unlocked: boolean
+          plano: string
           positioning_finalized_at: string | null
           positioning_statement: string | null
           presence_finalized_at: string | null
@@ -505,6 +840,9 @@ export type Database = {
           main_channel?: string | null
           mini_pitch?: string | null
           network_finalized_at?: string | null
+          notif_dicas?: boolean
+          notif_novidades?: boolean
+          notif_resumo_semanal?: boolean
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
@@ -515,6 +853,7 @@ export type Database = {
           orbit_sales_unlocked?: boolean
           orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
+          plano?: string
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
           presence_finalized_at?: string | null
@@ -587,6 +926,9 @@ export type Database = {
           main_channel?: string | null
           mini_pitch?: string | null
           network_finalized_at?: string | null
+          notif_dicas?: boolean
+          notif_novidades?: boolean
+          notif_resumo_semanal?: boolean
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
           orbit_brand_alive_unlocked?: boolean
@@ -597,6 +939,7 @@ export type Database = {
           orbit_sales_unlocked?: boolean
           orbit_vitrine_active?: boolean
           orbit_vitrine_unlocked?: boolean
+          plano?: string
           positioning_finalized_at?: string | null
           positioning_statement?: string | null
           presence_finalized_at?: string | null
@@ -635,13 +978,47 @@ export type Database = {
         }
         Relationships: []
       }
+      quadros: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          slug?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tarefas: {
         Row: {
           created_at: string
           descricao: string | null
           etapa: number | null
+          assigned_to: string | null
           fonte: string
           id: string
+          prazo: string | null
+          prioridade: string | null
+          quadro_id: string | null
           status: string
           titulo: string
           updated_at: string
@@ -651,8 +1028,12 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           etapa?: number | null
+          assigned_to?: string | null
           fonte?: string
           id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          quadro_id?: string | null
           status?: string
           titulo: string
           updated_at?: string
@@ -662,14 +1043,26 @@ export type Database = {
           created_at?: string
           descricao?: string | null
           etapa?: number | null
+          assigned_to?: string | null
           fonte?: string
           id?: string
+          prazo?: string | null
+          prioridade?: string | null
+          quadro_id?: string | null
           status?: string
           titulo?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tarefas_quadro_id_fkey"
+            columns: ["quadro_id"]
+            isOneToOne: false
+            referencedRelation: "quadros"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ticket_messages: {
         Row: {

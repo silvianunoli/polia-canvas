@@ -5,6 +5,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 export interface UserMeta {
   initial: string;
   displayName: string;
+  businessName: string | null;
   isAdmin: boolean;
   streak: number;
   avatarUrl: string | null;
@@ -23,10 +24,14 @@ export function useUserMeta() {
     enabled: !!userId,
     staleTime: 60_000,
     queryFn: async () => {
-      const [{ data: profile }, { data: tarefas }] = await Promise.all([
+      const desde90 = new Date();
+      desde90.setDate(desde90.getDate() - 90);
+      const desde90Key = desde90.toISOString().slice(0, 10);
+
+      const [{ data: profile }, { data: tarefas }, { data: checkins }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, is_admin")
+          .select("full_name, is_admin, business_name")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
@@ -35,6 +40,7 @@ export function useUserMeta() {
           .eq("user_id", userId!)
           .order("updated_at", { ascending: false })
           .limit(200),
+        supabase.from("checkins").select("data").eq("user_id", userId!).gte("data", desde90Key),
       ]);
 
       const full =
@@ -51,6 +57,10 @@ export function useUserMeta() {
         if (t.status === "floresceu") {
           ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
         }
+      });
+      // Check-in do dia (Diário) também conta como "apareceu hoje".
+      (checkins ?? []).forEach((c: { data: string }) => {
+        if (c.data) ativos.add(c.data);
       });
       let streak = 0;
       const cursor = new Date();
@@ -71,9 +81,13 @@ export function useUserMeta() {
         cursor.setDate(cursor.getDate() - 1);
       }
 
+      const rawBusiness = (profile?.business_name as string | undefined) ?? "";
+      const businessName = rawBusiness.trim() || null;
+
       return {
         initial,
         displayName,
+        businessName,
         isAdmin: !!profile?.is_admin,
         streak,
         avatarUrl: null,
@@ -85,6 +99,7 @@ export function useUserMeta() {
     query.data ?? {
       initial: "P",
       displayName: "você",
+      businessName: null,
       isAdmin: false,
       streak: 0,
       avatarUrl: null,

@@ -9,9 +9,9 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "@tanstack/react-router";
-import { PlaceholderImage } from "@/components/PlaceholderImage";
+import { BusinessBrandLockup } from "@/components/painel/BusinessBrandLockup";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { Menu, Flame } from "lucide-react";
+import { Menu, Flame, ChevronDown } from "lucide-react";
 
 interface NavLinkItem {
   to: string;
@@ -28,6 +28,19 @@ const links: NavLinkItem[] = [
   { to: "/biblioteca", label: "Entregáveis" },
 ];
 
+// "Seu dia" — camada de operação diária da marca (agrupada pra não inflar o nav principal).
+const seuDiaLinks: NavLinkItem[] = [
+  { to: "/diario", label: "Diário" },
+  { to: "/habitos", label: "Hábitos" },
+  { to: "/metas", label: "Metas" },
+  { to: "/foco", label: "Foco" },
+  { to: "/caderno", label: "Caderno" },
+  { to: "/planner", label: "Quadros" },
+  { to: "/equipe", label: "Equipe" },
+  { to: "/guia", label: "Sua guia" },
+  { to: "/progresso", label: "Seu Progresso" },
+];
+
 export function PainelNav({
   navActive = "/painel",
 }: {
@@ -38,6 +51,9 @@ export function PainelNav({
   const meta = useUserMeta();
   const streak = meta.streak;
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const seuDiaActive = seuDiaLinks.some(
+    (l) => navActive === l.to || navActive.startsWith(l.to + "/"),
+  );
 
   return (
     <header
@@ -59,7 +75,7 @@ export function PainelNav({
           <SheetContent side="left" className="w-72 bg-[#FDF8F5] p-0">
             <nav aria-label="Navegação principal" className="flex h-full flex-col">
               <div className="border-b border-[rgba(26,26,46,0.08)] px-6 py-5">
-                <PlaceholderImage slot="logo-header" width={100} height={28} description="logo Pólia" rounded={6} />
+                <BusinessBrandLockup variant="drawer" />
               </div>
               <ul className="flex flex-col gap-1 px-3 py-4">
                 {links.map((l) => {
@@ -82,6 +98,35 @@ export function PainelNav({
                   );
                 })}
               </ul>
+
+              {/* Grupo "Seu dia" — operação diária */}
+              <div className="border-t border-[rgba(26,26,46,0.08)] px-3 pt-4">
+                <p className="px-3 pb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#0E1731] opacity-40">
+                  Seu dia
+                </p>
+                <ul className="flex flex-col gap-1">
+                  {seuDiaLinks.map((l) => {
+                    const isActive = navActive === l.to || navActive.startsWith(l.to + "/");
+                    return (
+                      <li key={l.to}>
+                        <a
+                          href={l.to}
+                          onClick={() => setDrawerOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
+                          className={
+                            isActive
+                              ? "flex min-h-11 items-center rounded-lg bg-polia-terracota/10 px-3 font-sans text-[15px] font-bold text-polia-terracota"
+                              : "flex min-h-11 items-center rounded-lg px-3 font-sans text-[15px] text-[#0E1731] hover:bg-[#0E1731]/5"
+                          }
+                        >
+                          {l.label}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
               <div className="mt-auto border-t border-[rgba(26,26,46,0.08)] px-3 py-3">
                 <a
                   href="/configuracoes"
@@ -105,14 +150,9 @@ export function PainelNav({
           </SheetContent>
         </Sheet>
 
-        {/* Logo */}
-        <PlaceholderImage
-          slot="logo-header"
-          width={120}
-          height={32}
-          description="logo Pólia"
-          rounded={6}
-        />
+        {/* Brand lockup — nome do negócio da Aimer dominante, "feito com Pólia" como assinatura.
+            Marcador Exclusivo nº3 (Inversão de Hierarquia). cf. polia-marcadores-exclusivos. */}
+        <BusinessBrandLockup variant="header" />
 
         {/* Desktop nav */}
         <nav aria-label="Navegação principal" className="hidden items-center gap-6 lg:flex">
@@ -133,6 +173,44 @@ export function PainelNav({
               </a>
             );
           })}
+
+          {/* Grupo "Seu dia" — dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                aria-label="Seu dia"
+                className={
+                  seuDiaActive
+                    ? "flex items-center gap-1 border-b-2 border-polia-terracota pb-[2px] font-sans text-[16px] font-bold text-polia-terracota"
+                    : "flex items-center gap-1 font-sans text-[14px] font-medium text-[#0E1731] transition hover:text-polia-terracota"
+                }
+              >
+                Seu dia <ChevronDown size={14} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-44 rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-1 shadow-md"
+            >
+              {seuDiaLinks.map((l) => {
+                const isActive = navActive === l.to || navActive.startsWith(l.to + "/");
+                return (
+                  <DropdownMenuItem key={l.to} asChild>
+                    <a
+                      href={l.to}
+                      className={
+                        isActive
+                          ? "cursor-pointer rounded-lg px-3 py-2 font-sans text-[14px] font-semibold text-polia-terracota focus:bg-[rgba(201,107,62,0.08)]"
+                          : "cursor-pointer rounded-lg px-3 py-2 font-sans text-[14px] text-[#0E1731] focus:bg-[rgba(26,26,46,0.04)]"
+                      }
+                    >
+                      {l.label}
+                    </a>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
 
         {/* Right side */}

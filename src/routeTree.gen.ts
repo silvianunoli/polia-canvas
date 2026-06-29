@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as DesignSystemRouteImport } from './routes/design-system'
+import { Route as CaseDeUxRouteImport } from './routes/case-de-ux'
 import { Route as PublicRouteImport } from './routes/_public'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -31,19 +33,29 @@ import { Route as PublicAjudaRouteImport } from './routes/_public.ajuda'
 import { Route as AuthenticatedVitrineRouteImport } from './routes/_authenticated/vitrine'
 import { Route as AuthenticatedVendasEClientesRouteImport } from './routes/_authenticated/vendas-e-clientes'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
+import { Route as AuthenticatedProgressoRouteImport } from './routes/_authenticated/progresso'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
 import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authenticated/marca-viva'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
+import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
+import { Route as AuthenticatedGuiaRouteImport } from './routes/_authenticated/guia'
+import { Route as AuthenticatedFocoRouteImport } from './routes/_authenticated/foco'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEntregaveisRouteImport } from './routes/_authenticated/entregaveis'
+import { Route as AuthenticatedDiarioRouteImport } from './routes/_authenticated/diario'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as PublicBlogIndexRouteImport } from './routes/_public.blog.index'
+import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedBibliotecaIndexRouteImport } from './routes/_authenticated/biblioteca.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as PublicBlogSlugRouteImport } from './routes/_public.blog.$slug'
+import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
 import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
 import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
@@ -60,6 +72,7 @@ import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authenticated/admin.funil'
 import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
 import { Route as AuthenticatedAdminFeedbackRouteImport } from './routes/_authenticated/admin.feedback'
+import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated/admin.crm'
 import { Route as AuthenticatedAdminComunicacaoRouteImport } from './routes/_authenticated/admin.comunicacao'
 import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
 import { Route as AuthenticatedAdminUsuariosIndexRouteImport } from './routes/_authenticated/admin.usuarios.index'
@@ -70,6 +83,16 @@ import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_auth
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesignSystemRoute = DesignSystemRouteImport.update({
+  id: '/design-system',
+  path: '/design-system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaseDeUxRoute = CaseDeUxRouteImport.update({
+  id: '/case-de-ux',
+  path: '/case-de-ux',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PublicRoute = PublicRouteImport.update({
@@ -176,6 +199,11 @@ const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   path: '/tarefas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProgressoRoute = AuthenticatedProgressoRouteImport.update({
+  id: '/progresso',
+  path: '/progresso',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -184,6 +212,11 @@ const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
 const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedMetasRoute = AuthenticatedMetasRouteImport.update({
+  id: '/metas',
+  path: '/metas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedMarcaVivaRoute = AuthenticatedMarcaVivaRouteImport.update({
@@ -196,9 +229,29 @@ const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
   path: '/jornada',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedHabitosRoute = AuthenticatedHabitosRouteImport.update({
+  id: '/habitos',
+  path: '/habitos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedGuiaRoute = AuthenticatedGuiaRouteImport.update({
+  id: '/guia',
+  path: '/guia',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedFocoRoute = AuthenticatedFocoRouteImport.update({
+  id: '/foco',
+  path: '/foco',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
+  id: '/equipe',
+  path: '/equipe',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedEntregaveisRoute =
@@ -207,6 +260,11 @@ const AuthenticatedEntregaveisRoute =
     path: '/entregaveis',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDiarioRoute = AuthenticatedDiarioRouteImport.update({
+  id: '/diario',
+  path: '/diario',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -216,6 +274,11 @@ const AuthenticatedConfiguracoesRoute =
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCadernoRoute = AuthenticatedCadernoRouteImport.update({
+  id: '/caderno',
+  path: '/caderno',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
@@ -228,6 +291,12 @@ const PublicBlogIndexRoute = PublicBlogIndexRouteImport.update({
   path: '/blog/',
   getParentRoute: () => PublicRoute,
 } as any)
+const AuthenticatedPlannerIndexRoute =
+  AuthenticatedPlannerIndexRouteImport.update({
+    id: '/planner/',
+    path: '/planner/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBibliotecaIndexRoute =
   AuthenticatedBibliotecaIndexRouteImport.update({
     id: '/biblioteca/',
@@ -244,6 +313,12 @@ const PublicBlogSlugRoute = PublicBlogSlugRouteImport.update({
   path: '/blog/$slug',
   getParentRoute: () => PublicRoute,
 } as any)
+const AuthenticatedPlannerSlugRoute =
+  AuthenticatedPlannerSlugRouteImport.update({
+    id: '/planner/$slug',
+    path: '/planner/$slug',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedEtapa9Route = AuthenticatedEtapa9RouteImport.update({
   id: '/etapa/9',
   path: '/etapa/9',
@@ -326,6 +401,11 @@ const AuthenticatedAdminFeedbackRoute =
     path: '/feedback',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminComunicacaoRoute =
   AuthenticatedAdminComunicacaoRouteImport.update({
     id: '/comunicacao',
@@ -364,16 +444,26 @@ const AuthenticatedAdminChamadosIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/case-de-ux': typeof CaseDeUxRoute
+  '/design-system': typeof DesignSystemRoute
   '/sobre': typeof SobreRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/caderno': typeof AuthenticatedCadernoRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/diario': typeof AuthenticatedDiarioRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/foco': typeof AuthenticatedFocoRoute
+  '/guia': typeof AuthenticatedGuiaRoute
+  '/habitos': typeof AuthenticatedHabitosRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/progresso': typeof AuthenticatedProgressoRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
@@ -394,6 +484,7 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
@@ -410,9 +501,11 @@ export interface FileRoutesByFullPath {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/blog/$slug': typeof PublicBlogSlugRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/blog/': typeof PublicBlogIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
@@ -421,15 +514,25 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/case-de-ux': typeof CaseDeUxRoute
+  '/design-system': typeof DesignSystemRoute
   '/sobre': typeof SobreRoute
+  '/caderno': typeof AuthenticatedCadernoRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/diario': typeof AuthenticatedDiarioRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
+  '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/foco': typeof AuthenticatedFocoRoute
+  '/guia': typeof AuthenticatedGuiaRoute
+  '/habitos': typeof AuthenticatedHabitosRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/progresso': typeof AuthenticatedProgressoRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/vitrine': typeof AuthenticatedVitrineRoute
@@ -450,6 +553,7 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
@@ -466,9 +570,11 @@ export interface FileRoutesByTo {
   '/etapa/7': typeof AuthenticatedEtapa7Route
   '/etapa/8': typeof AuthenticatedEtapa8Route
   '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/blog/$slug': typeof PublicBlogSlugRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/biblioteca': typeof AuthenticatedBibliotecaIndexRoute
+  '/planner': typeof AuthenticatedPlannerIndexRoute
   '/blog': typeof PublicBlogIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
@@ -480,16 +586,26 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_public': typeof PublicRouteWithChildren
+  '/case-de-ux': typeof CaseDeUxRoute
+  '/design-system': typeof DesignSystemRoute
   '/sobre': typeof SobreRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/diario': typeof AuthenticatedDiarioRoute
   '/_authenticated/entregaveis': typeof AuthenticatedEntregaveisRoute
+  '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/foco': typeof AuthenticatedFocoRoute
+  '/_authenticated/guia': typeof AuthenticatedGuiaRoute
+  '/_authenticated/habitos': typeof AuthenticatedHabitosRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/progresso': typeof AuthenticatedProgressoRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/_authenticated/vitrine': typeof AuthenticatedVitrineRoute
@@ -510,6 +626,7 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/_authenticated/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/_authenticated/admin/funil': typeof AuthenticatedAdminFunilRoute
@@ -526,9 +643,11 @@ export interface FileRoutesById {
   '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
   '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
   '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
+  '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/_public/blog/$slug': typeof PublicBlogSlugRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_public/blog/': typeof PublicBlogIndexRoute
   '/_authenticated/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
@@ -539,16 +658,26 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/case-de-ux'
+    | '/design-system'
     | '/sobre'
     | '/admin'
+    | '/caderno'
     | '/clientes'
     | '/configuracoes'
+    | '/diario'
     | '/entregaveis'
+    | '/equipe'
     | '/financeiro'
+    | '/foco'
+    | '/guia'
+    | '/habitos'
     | '/jornada'
     | '/marca-viva'
+    | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/progresso'
     | '/tarefas'
     | '/vendas-e-clientes'
     | '/vitrine'
@@ -569,6 +698,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/admin/cms'
     | '/admin/comunicacao'
+    | '/admin/crm'
     | '/admin/feedback'
     | '/admin/flags'
     | '/admin/funil'
@@ -585,9 +715,11 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/planner/$slug'
     | '/blog/$slug'
     | '/admin/'
     | '/biblioteca/'
+    | '/planner/'
     | '/blog/'
     | '/admin/chamados/$id'
     | '/admin/usuarios/$id'
@@ -596,15 +728,25 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/case-de-ux'
+    | '/design-system'
     | '/sobre'
+    | '/caderno'
     | '/clientes'
     | '/configuracoes'
+    | '/diario'
     | '/entregaveis'
+    | '/equipe'
     | '/financeiro'
+    | '/foco'
+    | '/guia'
+    | '/habitos'
     | '/jornada'
     | '/marca-viva'
+    | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/progresso'
     | '/tarefas'
     | '/vendas-e-clientes'
     | '/vitrine'
@@ -625,6 +767,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/admin/cms'
     | '/admin/comunicacao'
+    | '/admin/crm'
     | '/admin/feedback'
     | '/admin/flags'
     | '/admin/funil'
@@ -641,9 +784,11 @@ export interface FileRouteTypes {
     | '/etapa/7'
     | '/etapa/8'
     | '/etapa/9'
+    | '/planner/$slug'
     | '/blog/$slug'
     | '/admin'
     | '/biblioteca'
+    | '/planner'
     | '/blog'
     | '/admin/chamados/$id'
     | '/admin/usuarios/$id'
@@ -654,16 +799,26 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/_public'
+    | '/case-de-ux'
+    | '/design-system'
     | '/sobre'
     | '/_authenticated/admin'
+    | '/_authenticated/caderno'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
+    | '/_authenticated/diario'
     | '/_authenticated/entregaveis'
+    | '/_authenticated/equipe'
     | '/_authenticated/financeiro'
+    | '/_authenticated/foco'
+    | '/_authenticated/guia'
+    | '/_authenticated/habitos'
     | '/_authenticated/jornada'
     | '/_authenticated/marca-viva'
+    | '/_authenticated/metas'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
+    | '/_authenticated/progresso'
     | '/_authenticated/tarefas'
     | '/_authenticated/vendas-e-clientes'
     | '/_authenticated/vitrine'
@@ -684,6 +839,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/_authenticated/admin/cms'
     | '/_authenticated/admin/comunicacao'
+    | '/_authenticated/admin/crm'
     | '/_authenticated/admin/feedback'
     | '/_authenticated/admin/flags'
     | '/_authenticated/admin/funil'
@@ -700,9 +856,11 @@ export interface FileRouteTypes {
     | '/_authenticated/etapa/7'
     | '/_authenticated/etapa/8'
     | '/_authenticated/etapa/9'
+    | '/_authenticated/planner/$slug'
     | '/_public/blog/$slug'
     | '/_authenticated/admin/'
     | '/_authenticated/biblioteca/'
+    | '/_authenticated/planner/'
     | '/_public/blog/'
     | '/_authenticated/admin/chamados/$id'
     | '/_authenticated/admin/usuarios/$id'
@@ -714,6 +872,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   PublicRoute: typeof PublicRouteWithChildren
+  CaseDeUxRoute: typeof CaseDeUxRoute
+  DesignSystemRoute: typeof DesignSystemRoute
   SobreRoute: typeof SobreRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthEsqueciRoute: typeof AuthEsqueciRoute
@@ -731,6 +891,20 @@ declare module '@tanstack/react-router' {
       path: '/sobre'
       fullPath: '/sobre'
       preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/design-system': {
+      id: '/design-system'
+      path: '/design-system'
+      fullPath: '/design-system'
+      preLoaderRoute: typeof DesignSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/case-de-ux': {
+      id: '/case-de-ux'
+      path: '/case-de-ux'
+      fullPath: '/case-de-ux'
+      preLoaderRoute: typeof CaseDeUxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_public': {
@@ -880,6 +1054,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTarefasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/progresso': {
+      id: '/_authenticated/progresso'
+      path: '/progresso'
+      fullPath: '/progresso'
+      preLoaderRoute: typeof AuthenticatedProgressoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/painel': {
       id: '/_authenticated/painel'
       path: '/painel'
@@ -892,6 +1073,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/metas': {
+      id: '/_authenticated/metas'
+      path: '/metas'
+      fullPath: '/metas'
+      preLoaderRoute: typeof AuthenticatedMetasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/marca-viva': {
@@ -908,6 +1096,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJornadaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/habitos': {
+      id: '/_authenticated/habitos'
+      path: '/habitos'
+      fullPath: '/habitos'
+      preLoaderRoute: typeof AuthenticatedHabitosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/guia': {
+      id: '/_authenticated/guia'
+      path: '/guia'
+      fullPath: '/guia'
+      preLoaderRoute: typeof AuthenticatedGuiaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/foco': {
+      id: '/_authenticated/foco'
+      path: '/foco'
+      fullPath: '/foco'
+      preLoaderRoute: typeof AuthenticatedFocoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
@@ -915,11 +1124,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/equipe': {
+      id: '/_authenticated/equipe'
+      path: '/equipe'
+      fullPath: '/equipe'
+      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/entregaveis': {
       id: '/_authenticated/entregaveis'
       path: '/entregaveis'
       fullPath: '/entregaveis'
       preLoaderRoute: typeof AuthenticatedEntregaveisRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/diario': {
+      id: '/_authenticated/diario'
+      path: '/diario'
+      fullPath: '/diario'
+      preLoaderRoute: typeof AuthenticatedDiarioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/configuracoes': {
@@ -936,6 +1159,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/caderno': {
+      id: '/_authenticated/caderno'
+      path: '/caderno'
+      fullPath: '/caderno'
+      preLoaderRoute: typeof AuthenticatedCadernoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -949,6 +1179,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/'
       preLoaderRoute: typeof PublicBlogIndexRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_authenticated/planner/': {
+      id: '/_authenticated/planner/'
+      path: '/planner'
+      fullPath: '/planner/'
+      preLoaderRoute: typeof AuthenticatedPlannerIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/biblioteca/': {
       id: '/_authenticated/biblioteca/'
@@ -970,6 +1207,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog/$slug'
       preLoaderRoute: typeof PublicBlogSlugRouteImport
       parentRoute: typeof PublicRoute
+    }
+    '/_authenticated/planner/$slug': {
+      id: '/_authenticated/planner/$slug'
+      path: '/planner/$slug'
+      fullPath: '/planner/$slug'
+      preLoaderRoute: typeof AuthenticatedPlannerSlugRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/etapa/9': {
       id: '/_authenticated/etapa/9'
@@ -1083,6 +1327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFeedbackRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/crm': {
+      id: '/_authenticated/admin/crm'
+      path: '/crm'
+      fullPath: '/admin/crm'
+      preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/comunicacao': {
       id: '/_authenticated/admin/comunicacao'
       path: '/comunicacao'
@@ -1131,6 +1382,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCmsRoute: typeof AuthenticatedAdminCmsRoute
   AuthenticatedAdminComunicacaoRoute: typeof AuthenticatedAdminComunicacaoRoute
+  AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
   AuthenticatedAdminFeedbackRoute: typeof AuthenticatedAdminFeedbackRoute
   AuthenticatedAdminFlagsRoute: typeof AuthenticatedAdminFlagsRoute
   AuthenticatedAdminFunilRoute: typeof AuthenticatedAdminFunilRoute
@@ -1145,6 +1397,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCmsRoute: AuthenticatedAdminCmsRoute,
   AuthenticatedAdminComunicacaoRoute: AuthenticatedAdminComunicacaoRoute,
+  AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
   AuthenticatedAdminFeedbackRoute: AuthenticatedAdminFeedbackRoute,
   AuthenticatedAdminFlagsRoute: AuthenticatedAdminFlagsRoute,
   AuthenticatedAdminFunilRoute: AuthenticatedAdminFunilRoute,
@@ -1161,14 +1414,22 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedDiarioRoute: typeof AuthenticatedDiarioRoute
   AuthenticatedEntregaveisRoute: typeof AuthenticatedEntregaveisRoute
+  AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedFocoRoute: typeof AuthenticatedFocoRoute
+  AuthenticatedGuiaRoute: typeof AuthenticatedGuiaRoute
+  AuthenticatedHabitosRoute: typeof AuthenticatedHabitosRoute
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedMarcaVivaRoute: typeof AuthenticatedMarcaVivaRoute
+  AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedProgressoRoute: typeof AuthenticatedProgressoRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedVendasEClientesRoute: typeof AuthenticatedVendasEClientesRoute
   AuthenticatedVitrineRoute: typeof AuthenticatedVitrineRoute
@@ -1184,19 +1445,29 @@ interface AuthenticatedRouteChildren {
   AuthenticatedEtapa7Route: typeof AuthenticatedEtapa7Route
   AuthenticatedEtapa8Route: typeof AuthenticatedEtapa8Route
   AuthenticatedEtapa9Route: typeof AuthenticatedEtapa9Route
+  AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
   AuthenticatedBibliotecaIndexRoute: typeof AuthenticatedBibliotecaIndexRoute
+  AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedDiarioRoute: AuthenticatedDiarioRoute,
   AuthenticatedEntregaveisRoute: AuthenticatedEntregaveisRoute,
+  AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedFocoRoute: AuthenticatedFocoRoute,
+  AuthenticatedGuiaRoute: AuthenticatedGuiaRoute,
+  AuthenticatedHabitosRoute: AuthenticatedHabitosRoute,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedMarcaVivaRoute: AuthenticatedMarcaVivaRoute,
+  AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedProgressoRoute: AuthenticatedProgressoRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedVendasEClientesRoute: AuthenticatedVendasEClientesRoute,
   AuthenticatedVitrineRoute: AuthenticatedVitrineRoute,
@@ -1212,7 +1483,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedEtapa7Route: AuthenticatedEtapa7Route,
   AuthenticatedEtapa8Route: AuthenticatedEtapa8Route,
   AuthenticatedEtapa9Route: AuthenticatedEtapa9Route,
+  AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
   AuthenticatedBibliotecaIndexRoute: AuthenticatedBibliotecaIndexRoute,
+  AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -1252,6 +1525,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   PublicRoute: PublicRouteWithChildren,
+  CaseDeUxRoute: CaseDeUxRoute,
+  DesignSystemRoute: DesignSystemRoute,
   SobreRoute: SobreRoute,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthEsqueciRoute: AuthEsqueciRoute,
@@ -1264,3 +1539,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

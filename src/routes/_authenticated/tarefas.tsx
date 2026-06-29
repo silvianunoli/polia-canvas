@@ -76,6 +76,7 @@ function TarefasPage() {
         .from("tarefas")
         .select("id, titulo, descricao, status, fonte, etapa, created_at")
         .eq("user_id", userId!)
+        .is("quadro_id", null)
         .order("created_at", { ascending: false });
       return (data ?? []) as Tarefa[];
     },
