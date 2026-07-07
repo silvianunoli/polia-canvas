@@ -166,7 +166,7 @@ function ManifestoPage() {
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                to="/lista-de-espera"
+                to="/auth/cadastro"
                 className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
               >
                 Começar

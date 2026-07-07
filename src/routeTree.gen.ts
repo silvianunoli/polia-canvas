@@ -46,6 +46,7 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
+import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
@@ -256,6 +257,11 @@ const AuthenticatedCadernoRoute = AuthenticatedCadernoRouteImport.update({
   path: '/caderno',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAssinarRoute = AuthenticatedAssinarRouteImport.update({
+  id: '/assinar',
+  path: '/assinar',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -394,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -453,6 +460,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
@@ -515,6 +523,7 @@ export interface FileRoutesById {
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
+  '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
@@ -577,6 +586,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/admin'
+    | '/assinar'
     | '/caderno'
     | '/calendario'
     | '/clientes'
@@ -636,6 +646,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/assinar'
     | '/caderno'
     | '/calendario'
     | '/clientes'
@@ -697,6 +708,7 @@ export interface FileRouteTypes {
     | '/sobre'
     | '/termos'
     | '/_authenticated/admin'
+    | '/_authenticated/assinar'
     | '/_authenticated/caderno'
     | '/_authenticated/calendario'
     | '/_authenticated/clientes'
@@ -1029,6 +1041,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadernoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/assinar': {
+      id: '/_authenticated/assinar'
+      path: '/assinar'
+      fullPath: '/assinar'
+      preLoaderRoute: typeof AuthenticatedAssinarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
       path: '/admin'
@@ -1221,6 +1240,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
+  AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
@@ -1251,6 +1271,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
+  AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,

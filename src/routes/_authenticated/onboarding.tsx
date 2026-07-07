@@ -14,7 +14,15 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
       .select("onboarding_completed")
       .eq("id", sess.session.user.id)
       .maybeSingle();
-    if (data?.onboarding_completed) throw redirect({ to: "/painel" });
+    if (!data?.onboarding_completed) return;
+    const { data: assinatura } = await supabase
+      .from("assinaturas" as never)
+      .select("status")
+      .eq("user_id", sess.session.user.id)
+      .maybeSingle();
+    const status = (assinatura as { status: string } | null)?.status;
+    const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
+    throw redirect({ to: ativa ? "/painel" : "/assinar" });
   },
   component: OnboardingPage,
 });
@@ -70,7 +78,7 @@ function OnboardingPage() {
           )}
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
           {step === 5 && (
-            <Step5 tipo={state.business_type} onFinish={() => navigate({ to: "/painel" })} />
+            <Step5 tipo={state.business_type} onFinish={() => navigate({ to: "/assinar" })} />
           )}
         </div>
       </div>

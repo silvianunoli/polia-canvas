@@ -9,12 +9,51 @@ import { Sidebar } from "@/components/layout/Sidebar";
 // vista; se sumir depois, foi expiração, não primeiro acesso.
 const TEVE_SESSAO_KEY = "polia-teve-sessao";
 
+const STATUS_ATIVOS = ["active", "past_due", "trialing"];
+
+// Rotas fora da trava de assinatura: o próprio funil de pagamento (pra não
+// virar loop de redirect) e as áreas de admin/blog-admin, que já têm seu
+// próprio guard por papel (is_admin) e não devem depender da assinatura de
+// quem está logada pra gerenciar o app.
+function isentoDeAssinatura(pathname: string): boolean {
+  return (
+    pathname === "/onboarding" ||
+    pathname === "/assinar" ||
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/blog-admin")
+  );
+}
+
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
     if (data.session) {
       localStorage.setItem(TEVE_SESSAO_KEY, "1");
+
+      if (!isentoDeAssinatura(location.pathname)) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed, plano")
+          .eq("id", data.session.user.id)
+          .maybeSingle();
+
+        if (!profile?.onboarding_completed) {
+          throw redirect({ to: "/onboarding" });
+        }
+
+        // Contas beta (de antes do Stripe) ficam liberadas sem assinatura.
+        if (profile.plano !== "beta") {
+          const { data: assinatura } = await supabase
+            .from("assinaturas" as never)
+            .select("status")
+            .eq("user_id", data.session.user.id)
+            .maybeSingle();
+          const status = (assinatura as { status: string } | null)?.status;
+          const ativa = status ? STATUS_ATIVOS.includes(status) : false;
+          if (!ativa) throw redirect({ to: "/assinar" });
+        }
+      }
       return;
     }
     const expirou = localStorage.getItem(TEVE_SESSAO_KEY) === "1";
