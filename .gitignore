@@ -38,3 +38,4 @@ dist-ssr
 
 # Supabase CLI (temporários locais)
 supabase/.temp/
+coverage

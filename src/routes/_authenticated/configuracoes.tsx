@@ -1,15 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { toastErro } from "@/lib/toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { Switch } from "@/components/ui/switch";
 import { dadosEmissorRecibo } from "@/lib/recibo.functions";
 import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
+import { iniciarAssinatura, statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
+import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 
 const VALOR_PLANO_PAGO = 29;
+const VALOR_PLANO_ANUAL = 290;
+
+const NOME_PLANO: Record<string, string> = {
+  beta: "Plano de lançamento",
+  mensal: "Mensal",
+  anual: "Anual",
+  cancelada: "Assinatura cancelada",
+};
+
+function formatarData(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+}
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
@@ -58,6 +73,58 @@ function ConfiguracoesPage() {
   const [notifDicas, setNotifDicas] = useState(true);
   const plano = profileQuery.data?.plano ?? "beta";
   const [baixandoRecibo, setBaixandoRecibo] = useState(false);
+  const queryClient = useQueryClient();
+
+  const assinaturaQuery = useQuery({
+    queryKey: ["assinatura-status", userId],
+    enabled: !!userId,
+    queryFn: () => statusAssinatura(),
+  });
+  const assinatura = assinaturaQuery.data;
+
+  const [planoIniciando, setPlanoIniciando] = useState<"mensal" | "anual" | null>(null);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
+
+  const invalidarAssinatura = () => {
+    queryClient.invalidateQueries({ queryKey: ["assinatura-status", userId] });
+    queryClient.invalidateQueries({ queryKey: ["configuracoes-profile", userId] });
+  };
+
+  const assinar = async (planoEscolhido: "mensal" | "anual") => {
+    setPlanoIniciando(planoEscolhido);
+    try {
+      const resultado = await iniciarAssinatura({ data: { plano: planoEscolhido } });
+      if (resultado.error || !resultado.clientSecret) {
+        toastErro(resultado.error ?? "Não consegui iniciar sua assinatura agora. Tenta de novo.");
+        return;
+      }
+      setClientSecret(resultado.clientSecret);
+    } catch {
+      toastErro("Não consegui iniciar sua assinatura agora. Tenta de novo.");
+    } finally {
+      setPlanoIniciando(null);
+    }
+  };
+
+  const cancelar = async () => {
+    setCancelando(true);
+    try {
+      const resultado = await cancelarAssinatura();
+      if (!resultado.ok) {
+        toastErro(resultado.error ?? "Não consegui cancelar sua assinatura agora. Tenta de novo.");
+        return;
+      }
+      toastSucesso("Assinatura cancelada. Fica ativa até o fim do período já pago.");
+      setConfirmandoCancelamento(false);
+      invalidarAssinatura();
+    } catch {
+      toastErro("Não consegui cancelar sua assinatura agora. Tenta de novo.");
+    } finally {
+      setCancelando(false);
+    }
+  };
 
   const baixarRecibo = async () => {
     setBaixandoRecibo(true);
@@ -382,35 +449,96 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 6 — ASSINATURA */}
         <Secao titulo="Assinatura">
-          <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 font-semibold text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
-                  {plano === "beta" ? "Plano de lançamento" : plano}
-                </span>
-                <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
-                  Você está no beta, com tudo da Pólia liberado.
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">Grátis</p>
-                <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
-                  durante o lançamento
-                </p>
+          {assinaturaQuery.isLoading && (
+            <p className="font-sans text-[13px] text-[var(--muted)]">Carregando...</p>
+          )}
+
+          {!assinaturaQuery.isLoading && assinatura?.ativa && (
+            <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 font-semibold text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
+                    {NOME_PLANO[plano] ?? plano}
+                  </span>
+                  <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
+                    {assinatura.cancelAtPeriodEnd
+                      ? `Cancelada — fica ativa até ${formatarData(assinatura.currentPeriodEnd)}.`
+                      : `Próxima cobrança em ${formatarData(assinatura.currentPeriodEnd)}.`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">
+                    R$ {plano === "anual" ? VALOR_PLANO_ANUAL : VALOR_PLANO_PAGO}
+                  </p>
+                  <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
+                    {plano === "anual" ? "por ano" : "por mês"}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-          <p className="mt-3 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-            quando a Pólia sair do beta, vai custar R$ 29/mês, e você é avisada antes, sem surpresa.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled
-              className="cursor-not-allowed rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--muted)]"
-            >
-              Gerenciar pagamento (em breve)
-            </button>
+          )}
+
+          {!assinaturaQuery.isLoading && !assinatura?.ativa && (
+            <>
+              <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
+                {plano === "cancelada"
+                  ? "sua assinatura foi cancelada. assine de novo quando quiser."
+                  : "escolha um plano pra sair do beta e manter a Pólia funcionando."}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <PlanoCard
+                  titulo="Mensal"
+                  preco={`R$ ${VALOR_PLANO_PAGO}`}
+                  periodo="por mês"
+                  carregando={planoIniciando === "mensal"}
+                  desabilitado={planoIniciando !== null}
+                  onAssinar={() => assinar("mensal")}
+                />
+                <PlanoCard
+                  titulo="Anual"
+                  preco={`R$ ${VALOR_PLANO_ANUAL}`}
+                  periodo="por ano · 2 meses grátis"
+                  carregando={planoIniciando === "anual"}
+                  desabilitado={planoIniciando !== null}
+                  onAssinar={() => assinar("anual")}
+                />
+              </div>
+            </>
+          )}
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && !confirmandoCancelamento && (
+              <button
+                type="button"
+                onClick={() => setConfirmandoCancelamento(true)}
+                className="rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+              >
+                Cancelar assinatura
+              </button>
+            )}
+            {confirmandoCancelamento && (
+              <div className="flex items-center gap-2">
+                <span className="font-sans text-[13px] text-[var(--ink-soft)]">
+                  cancelar mesmo? fica ativa até o fim do período já pago.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setConfirmandoCancelamento(false)}
+                  disabled={cancelando}
+                  className="rounded-xl border border-[var(--line)] px-3 py-1.5 font-sans text-[13px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:opacity-50"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelar}
+                  disabled={cancelando}
+                  className="rounded-xl border border-[var(--danger)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white disabled:opacity-50"
+                >
+                  {cancelando ? "Cancelando..." : "Confirmar cancelamento"}
+                </button>
+              </div>
+            )}
             {plano !== "beta" && (
               <button
                 type="button"
@@ -424,25 +552,17 @@ function ConfiguracoesPage() {
           </div>
         </Secao>
 
-        {/* SEÇÃO 7 — PAGAMENTOS */}
-        <Secao titulo="Pagamentos" subtitulo="por enquanto, a Pólia é gratuita.">
-          <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
-            <p className="font-sans text-[14px] font-medium text-[var(--ink)]">
-              Nenhuma cobrança no beta.
-            </p>
-            <p className="mt-1 font-sans text-[13px] leading-relaxed text-[var(--ink-soft)]">
-              Quando a Pólia passar a ser paga (R$ 29/mês), suas formas de pagamento e seus recibos
-              vão aparecer aqui.
-            </p>
-          </div>
-          <button
-            type="button"
-            disabled
-            className="mt-4 cursor-not-allowed rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--muted)]"
-          >
-            Adicionar forma de pagamento (em breve)
-          </button>
-        </Secao>
+        {clientSecret && (
+          <AssinaturaCheckout
+            clientSecret={clientSecret}
+            onClose={() => setClientSecret(null)}
+            onSucesso={() => {
+              setClientSecret(null);
+              toastSucesso("Pagamento confirmado! Atualizando sua assinatura...");
+              invalidarAssinatura();
+            }}
+          />
+        )}
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
@@ -541,6 +661,40 @@ function ToggleLinha({
         <p className="font-sans text-[12px] text-[var(--ink-soft)]">{descricao}</p>
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
+
+function PlanoCard({
+  titulo,
+  preco,
+  periodo,
+  carregando,
+  desabilitado,
+  onAssinar,
+}: {
+  titulo: string;
+  preco: string;
+  periodo: string;
+  carregando: boolean;
+  desabilitado: boolean;
+  onAssinar: () => void;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--line)] p-5">
+      <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
+        {titulo}
+      </p>
+      <p className="mt-1 font-fraunces text-[28px] leading-none text-[var(--ink)]">{preco}</p>
+      <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{periodo}</p>
+      <button
+        type="button"
+        onClick={onAssinar}
+        disabled={desabilitado}
+        className="mt-4 w-full rounded-xl bg-[var(--secondary)] px-4 py-2 font-sans text-[13px] font-semibold text-[var(--secondary-ink)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {carregando ? "Preparando..." : "Assinar"}
+      </button>
     </div>
   );
 }
