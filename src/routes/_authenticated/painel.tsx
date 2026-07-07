@@ -1,27 +1,12 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import {
-  Star,
-  Sun,
-  Flame,
-  Target,
-  Timer,
-  NotebookPen,
-  MessageCircleHeart,
-  LayoutGrid,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pencil, BarChart3, Check } from "lucide-react";
+import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
-import { GuiaInsight } from "@/components/painel/GuiaInsight";
-import { PainelTrabalho } from "@/components/painel/PainelTrabalho";
-import { TrilhaMarcos } from "@/components/painel/TrilhaMarcos";
-import { CadernoCard } from "@/components/caderno/CadernoCard";
-import { pluralizeKanban } from "@/lib/kanban";
-import { getMarginalia } from "@/lib/marginaliaText";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -29,7 +14,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
       { title: "Painel · Pólia" },
       {
         name: "description",
-        content: "Seu painel da Pólia: jornada, tarefas, clientes e o ar do seu negócio agora.",
+        content: "Seu painel da Pólia: o próximo módulo, seu dia e o ar do seu negócio.",
       },
     ],
   }),
@@ -50,50 +35,12 @@ export const Route = createFileRoute("/_authenticated/painel")({
   component: PainelPage,
 });
 
-// ============= Conteúdo dinâmico =============
-
-const NOMES_ETAPAS: Record<number, { nome: string; subtitulo: string; tempoEstimado: string }> = {
-  1: {
-    nome: "Descoberta",
-    subtitulo: "quem você é nesse negócio",
-    tempoEstimado: "uns 12 minutos",
-  },
-  2: { nome: "Identidade", subtitulo: "sua voz, sua marca viva", tempoEstimado: "uns 20 minutos" },
-  3: { nome: "Modelo", subtitulo: "como seu negócio se sustenta", tempoEstimado: "uns 25 minutos" },
-  4: { nome: "Presença", subtitulo: "onde te encontram", tempoEstimado: "uns 30 minutos" },
-  5: { nome: "Conteúdo", subtitulo: "o que você diz pro mundo", tempoEstimado: "uns 25 minutos" },
-  6: { nome: "Gestão", subtitulo: "o ritmo da rotina", tempoEstimado: "uns 20 minutos" },
-  7: { nome: "Suas vendas", subtitulo: "fechar com leveza", tempoEstimado: "uns 25 minutos" },
-  8: { nome: "Seus clientes", subtitulo: "quem volta sempre", tempoEstimado: "uns 20 minutos" },
-  9: { nome: "Sua audiência", subtitulo: "gente que escuta", tempoEstimado: "uns 25 minutos" },
-  10: { nome: "Seu futuro", subtitulo: "pra onde isso cresce", tempoEstimado: "uns 30 minutos" },
-  11: { nome: "Conexões", subtitulo: "rede que sustenta", tempoEstimado: "uns 20 minutos" },
-};
-
-const HEADLINES = [
-  "Mais um dia construindo\no que é seu.",
-  "Cada vez que você volta,\navança um pouco mais.",
-  "Você está no lugar certo.\nVamos continuar?",
-  "Seu negócio tá crescendo.\nDá pra ver.",
-];
-
-const RECADOS_POR_ETAPA: Record<number, string> = {
-  1: "Antes de definir voz, lista 3 marcas que você admira e escreve o que sente lendo cada uma.\n\nNão precisa ser perfeito. Precisa ser seu.",
-  2: "Sua identidade não nasce de um logo. Nasce do que você sente quando fala do seu negócio.\n\nEscreve 3 palavras agora, sem pensar muito.",
-  3: "Modelo de negócio não é planilha. É clareza de como o dinheiro entra e sai.\n\nComeça pelo que você já cobra hoje.",
-  4: "Presença não é estar em todo lugar. É estar bem onde sua cliente já te procura.\n\nUm canal de cada vez.",
-  5: "Conteúdo bom vem de história real. A sua basta.\n\nNão tenta soar como outra pessoa.",
-};
-
-function getHeadlineSaudacao() {
-  const h = new Date().getHours();
-  if (h >= 5 && h < 12) return "Bom dia";
-  if (h >= 12 && h < 18) return "Boa tarde";
+function getSaudacao() {
+  const agora = new Date();
+  const minutos = agora.getHours() * 60 + agora.getMinutes();
+  if (minutos < 12 * 60) return "Bom dia";
+  if (minutos < 18 * 60 + 30) return "Boa tarde";
   return "Boa noite";
-}
-
-function getHeadlineFrase(seed: number) {
-  return HEADLINES[seed % HEADLINES.length];
 }
 
 function startOfWeek(d: Date) {
@@ -105,119 +52,388 @@ function startOfWeek(d: Date) {
   return s;
 }
 
-// ============= Página =============
+function fmtBRL(v: number) {
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+}
+
+function ordinal(n: number) {
+  return `${n}º`;
+}
+
+// Extrai o primeiro número de um texto livre em pt-BR ("R$ 6.000" → 6000).
+function numeroDe(texto: string): number {
+  const m = texto.match(/[\d.,]+/);
+  if (!m) return 0;
+  let s = m[0];
+  const temVirgula = s.includes(",");
+  const temPonto = s.includes(".");
+  if (temVirgula && temPonto) {
+    s =
+      s.lastIndexOf(",") > s.lastIndexOf(".")
+        ? s.replace(/\./g, "").replace(",", ".")
+        : s.replace(/,/g, "");
+  } else if (temVirgula) {
+    s = s.replace(",", ".");
+  } else if (temPonto) {
+    const partes = s.split(".");
+    if (partes.length === 2 && partes[1].length === 3) s = partes.join("");
+  }
+  const n = parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+const SPAN_CLASS: Record<number, string> = {
+  3: "col-span-12 sm:col-span-3",
+  4: "col-span-12 sm:col-span-4",
+  5: "col-span-12 sm:col-span-5",
+  6: "col-span-12 sm:col-span-6",
+  12: "col-span-12",
+};
+
+interface SecaoRow {
+  secao: string;
+  concluido: boolean;
+}
+interface CampoRow {
+  campo: string;
+  valor: string | null;
+}
+interface LancRow {
+  tipo: string;
+  valor: number;
+  data: string;
+}
+interface ClienteRow {
+  status_pedido: string | null;
+}
+interface QuadroRow {
+  id: string;
+  nome: string;
+  slug: string;
+}
+interface TarefaRow {
+  id: string;
+  titulo: string;
+  status: string;
+  quadro_id: string | null;
+  prazo: string | null;
+  horario: string | null;
+  created_at: string;
+}
+
+function hojeISO(): string {
+  const d = new Date();
+  const tz = d.getTimezoneOffset();
+  return new Date(d.getTime() - tz * 60000).toISOString().slice(0, 10);
+}
+function addDias(iso: string, n: number): string {
+  const d = new Date(iso + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function fmtDDMM(iso: string): string {
+  const [, m, d] = iso.split("-");
+  return `${d}/${m}`;
+}
+
+// ── Motion (respeita prefers-reduced-motion) ──
+function usePrefersReducedMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduce(mq.matches);
+    const on = () => setReduce(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduce;
+}
+
+function useEntrada() {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const r = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(r);
+  }, []);
+  return shown;
+}
+
+function Reveal({ children, className }: { children: ReactNode; className?: string }) {
+  const reduce = usePrefersReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (reduce) {
+      setShown(true);
+      return;
+    }
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setShown(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [reduce]);
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={
+        reduce
+          ? undefined
+          : {
+              opacity: shown ? 1 : 0,
+              transform: shown ? "none" : "translateY(12px)",
+              transition:
+                "opacity 240ms cubic-bezier(0.22,1,0.36,1), transform 240ms cubic-bezier(0.22,1,0.36,1)",
+            }
+      }
+    >
+      {children}
+    </div>
+  );
+}
 
 function PainelPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
-  const navigate = useNavigate();
+  const meta = useUserMeta();
+  const qc = useQueryClient();
 
-  const userQuery = useQuery({
+  const reduce = usePrefersReducedMotion();
+  const entrou = useEntrada();
+  const barOn = reduce || entrou;
+
+  const dadosQuery = useQuery({
     queryKey: ["painel-dados", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, progressRes, userProfileRes, tarefasRes, entregaveisRes, conquistasRes] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("full_name, business_name, created_at, onboarding_completed, etapa_atual")
-            .eq("id", userId!)
-            .maybeSingle(),
-          supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
-          supabase
-            .from("user_profile")
-            .select("segmento, nome_negocio")
-            .eq("user_id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("tarefas")
-            .select("id, titulo, status, created_at, etapa")
-            .eq("user_id", userId!)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("entregaveis")
-            .select("id, titulo, fase, etapa, tipo, conteudo, created_at")
-            .eq("user_id", userId!)
-            .eq("status", "concluido")
-            .order("created_at", { ascending: false })
-            .limit(3),
-          supabase
-            .from("conquistas")
-            .select("id, titulo, descricao, xp, created_at")
-            .eq("user_id", userId!)
-            .order("created_at", { ascending: false })
-            .limit(1),
-        ]);
+      const hoje = hojeISO();
+      const [
+        profileRes,
+        secoesRes,
+        camposRes,
+        lancRes,
+        clientesRes,
+        quadrosRes,
+        tarefasRes,
+        intencaoRes,
+      ] = await Promise.all([
+        supabase.from("profiles").select("created_at").eq("id", userId!).maybeSingle(),
+        supabase
+          .from("planejamento_secoes" as never)
+          .select("secao, concluido")
+          .eq("user_id", userId!),
+        supabase
+          .from("planejamento_campos" as never)
+          .select("campo, valor")
+          .eq("user_id", userId!)
+          .in("campo", ["financeiro.meta_boa", "financeiro.meta_celebracao"]),
+        supabase.from("lancamentos").select("tipo, valor, data").eq("user_id", userId!),
+        supabase
+          .from("clientes" as never)
+          .select("status_pedido")
+          .eq("user_id", userId!),
+        supabase.from("quadros").select("id, nome, slug").eq("user_id", userId!),
+        supabase
+          .from("tarefas")
+          .select("id, titulo, status, quadro_id, prazo, horario, created_at")
+          .eq("user_id", userId!)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("intencoes_dia" as never)
+          .select("texto")
+          .eq("user_id", userId!)
+          .eq("data", hoje)
+          .maybeSingle(),
+      ]);
       return {
-        profile: profileRes.data,
-        progress: progressRes.data,
-        userProfile: userProfileRes.data,
-        tarefas: tarefasRes.data ?? [],
-        entregaveis: entregaveisRes.data ?? [],
-        conquistas: conquistasRes.data ?? [],
+        createdAt: (profileRes.data as { created_at: string } | null)?.created_at ?? null,
+        secoes: ((secoesRes as unknown as { data: SecaoRow[] | null }).data ?? []) as SecaoRow[],
+        campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
+        lancamentos: (lancRes.data ?? []) as unknown as LancRow[],
+        clientes: ((clientesRes as unknown as { data: ClienteRow[] | null }).data ??
+          []) as ClienteRow[],
+        quadros: (quadrosRes.data ?? []) as unknown as QuadroRow[],
+        tarefas: (tarefasRes.data ?? []) as unknown as TarefaRow[],
+        intencao:
+          (intencaoRes as unknown as { data: { texto: string } | null }).data?.texto ?? null,
       };
     },
   });
 
-  const dados = userQuery.data;
+  const dados = dadosQuery.data;
 
-  const displayName = useMemo(() => {
-    const full = dados?.profile?.full_name ?? user?.user_metadata?.full_name ?? "";
-    const first = full.trim().split(" ")[0];
-    return first || "boas-vindas";
-  }, [dados?.profile?.full_name, user?.user_metadata?.full_name]);
+  // ── Progresso do planejamento (mesma fonte da tela /planejamento) ──
+  const concluidas = useMemo(
+    () => new Set((dados?.secoes ?? []).filter((s) => s.concluido).map((s) => s.secao)),
+    [dados?.secoes],
+  );
+  const moduloAtual = useMemo(() => {
+    for (let n = 1; n <= TOTAL_MODULOS; n++) {
+      if (!secoesDoModulo(n).every((s) => concluidas.has(s.id))) return n;
+    }
+    return TOTAL_MODULOS + 1;
+  }, [concluidas]);
+  const jornadaFinalizada = moduloAtual > TOTAL_MODULOS;
+  const etapaInfo = moduloInfo(jornadaFinalizada ? TOTAL_MODULOS : moduloAtual);
 
-  const initial = displayName.charAt(0).toUpperCase() || "P";
-  // Prioriza profile.etapa_atual (atualizado pelos useEffect das etapas) sobre user_progress (legado)
-  const etapaAtual =
-    (dados?.profile as { etapa_atual?: number } | null | undefined)?.etapa_atual ??
-    dados?.progress?.etapa_atual ??
-    1;
-  const etapaInfo = NOMES_ETAPAS[etapaAtual] ?? NOMES_ETAPAS[1];
-  const businessType = dados?.userProfile?.segmento ?? "hibrido";
-  const streak = 0; // placeholder até existir cálculo
   const diasDesdeCadastro = useMemo(() => {
-    const c = dados?.profile?.created_at;
+    const c = dados?.createdAt;
     if (!c) return 1;
-    const diff = Date.now() - new Date(c).getTime();
-    return Math.max(1, Math.floor(diff / 86400000));
-  }, [dados?.profile?.created_at]);
+    return Math.max(1, Math.floor((Date.now() - new Date(c).getTime()) / 86400000));
+  }, [dados?.createdAt]);
 
-  // Hidratação: valores baseados em Date só após mount (evita SSR mismatch)
+  const campoValor = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of dados?.campos ?? []) if (c.valor && c.valor.trim()) m.set(c.campo, c.valor);
+    return m;
+  }, [dados?.campos]);
+  const metaBoa = useMemo(() => {
+    const v = campoValor.get("financeiro.meta_boa");
+    return v ? numeroDe(v) : 0;
+  }, [campoValor]);
+  const metaCelebracao = useMemo(() => {
+    const v = campoValor.get("financeiro.meta_celebracao");
+    return v ? numeroDe(v) : 0;
+  }, [campoValor]);
+
+  // ── Métricas reais do mês corrente (calculado no cliente pra não divergir na hidratação SSR) ──
   const [clientReady, setClientReady] = useState(false);
-  const [headline, setHeadline] = useState<string>(HEADLINES[0]);
-  const [saudacao, setSaudacao] = useState<string>("Olá");
+  useEffect(() => setClientReady(true), []);
+  const { receitaMes, pedidosMes } = useMemo(() => {
+    if (!clientReady) return { receitaMes: 0, pedidosMes: 0 };
+    const agora = new Date();
+    // lancamentos.data é coluna DATE ("YYYY-MM-DD"). Comparar por prefixo de string, não
+    // via new Date(): "2026-07-01" viraria UTC meia-noite e em GMT-3 cairia no mês anterior,
+    // fazendo a venda do dia 1º sumir da receita do mês. Ver financeiro.tsx (mesAnoDe).
+    const prefixoMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
+    let receita = 0;
+    let pedidos = 0;
+    for (const l of dados?.lancamentos ?? []) {
+      if (l.tipo !== "entrada") continue;
+      if (!l.data?.startsWith(prefixoMes)) continue;
+      receita += Number(l.valor);
+      pedidos += 1;
+    }
+    return { receitaMes: receita, pedidosMes: pedidos };
+  }, [dados?.lancamentos, clientReady]);
 
+  const clientes = dados?.clientes ?? [];
+  const clientesCount = clientes.length;
+  const clientesEntregues = clientes.filter((c) => c.status_pedido === "Entregue").length;
+  const clientesEmEspera = clientes.filter((c) => c.status_pedido === "Em espera").length;
+
+  // ── Suas tarefas (quadros do Planner, agrupadas por prazo) ──
+  const quadros = dados?.quadros ?? [];
+  const quadrosPorId = useMemo(() => new Map(quadros.map((q) => [q.id, q])), [quadros]);
+  const tarefasQuadro = useMemo(
+    () => (dados?.tarefas ?? []).filter((t) => t.quadro_id),
+    [dados?.tarefas],
+  );
+  const linkTarefa = (t: TarefaRow) => {
+    const q = t.quadro_id ? quadrosPorId.get(t.quadro_id) : null;
+    return q ? `/planner/${q.slug}` : "/planner";
+  };
+  const gruposTarefas = useMemo(() => {
+    if (!clientReady) return { atrasadas: [], hoje: [], proximas: [] as typeof tarefasQuadro };
+    const hoje = hojeISO();
+    const em7dias = addDias(hoje, 7);
+    const pendentes = tarefasQuadro.filter((t) => t.status !== "concluido");
+    const atrasadas = pendentes.filter((t) => t.prazo && t.prazo < hoje);
+    const hojeGrupo = pendentes.filter((t) => t.prazo === hoje);
+    const proximas = pendentes.filter((t) => t.prazo && t.prazo > hoje && t.prazo <= em7dias);
+    return { atrasadas, hoje: hojeGrupo, proximas };
+  }, [tarefasQuadro, clientReady]);
+  const totalTarefasPainel =
+    gruposTarefas.atrasadas.length + gruposTarefas.hoje.length + gruposTarefas.proximas.length;
+  const quadroPendentesLink = useMemo(() => {
+    const contagem = new Map<string, number>();
+    for (const t of tarefasQuadro) {
+      if (t.status === "concluido" || !t.quadro_id) continue;
+      contagem.set(t.quadro_id, (contagem.get(t.quadro_id) ?? 0) + 1);
+    }
+    let melhor: { slug: string; n: number } | null = null;
+    for (const [qid, n] of contagem) {
+      const q = quadrosPorId.get(qid);
+      if (!q) continue;
+      if (!melhor || n > melhor.n) melhor = { slug: q.slug, n };
+    }
+    return melhor ? `/planner/${melhor.slug}` : "/planner";
+  }, [tarefasQuadro, quadrosPorId]);
+
+  // ── Headline ancorada em dado real ──
+  const headline: ReactNode = useMemo(() => {
+    if (receitaMes <= 0) {
+      return "Vamos registrar sua primeira venda?";
+    }
+    if (metaBoa > 0 && receitaMes >= metaBoa) {
+      return "Mês bom batido. Agora é caminho pro mês de comemorar.";
+    }
+    if (metaBoa > 0) {
+      return (
+        <>
+          Faltam <span className="whitespace-nowrap">{fmtBRL(metaBoa - receitaMes)}</span> pra
+          fechar a Meta do mês.
+        </>
+      );
+    }
+    return (
+      <>
+        Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
+      </>
+    );
+  }, [receitaMes, metaBoa]);
+
+  // ── Semana de trabalho (tarefas concluídas por dia) ──
+  const [saudacao, setSaudacao] = useState("Olá");
+  useEffect(() => setSaudacao(getSaudacao()), []);
+
+  // ── Intenção do dia (persiste por dia; se ficar vazia, fica em silêncio) ──
+  const [editandoIntencao, setEditandoIntencao] = useState(false);
+  const [rascunhoIntencao, setRascunhoIntencao] = useState("");
+  const intencaoSalva = dados?.intencao ?? null;
   useEffect(() => {
-    setClientReady(true);
-    const seed = Math.floor(Date.now() / (1000 * 60 * 30));
-    setHeadline(getHeadlineFrase(seed));
-    setSaudacao(getHeadlineSaudacao());
-  }, []);
+    if (!editandoIntencao) setRascunhoIntencao(intencaoSalva ?? "");
+  }, [intencaoSalva, editandoIntencao]);
 
-  const tarefas = dados?.tarefas ?? [];
-  const tarefasAFazer = tarefas.filter((t) => t.status === "a_fazer");
-  const tarefasBrotando = tarefas.filter((t) => t.status === "brotando");
-  const tarefasFloresceram = tarefas.filter((t) => t.status === "floresceu");
+  const salvarIntencao = async () => {
+    const texto = rascunhoIntencao.trim();
+    if (!texto || !userId) return;
+    setEditandoIntencao(false);
+    const { error } = await supabase
+      .from("intencoes_dia" as never)
+      .upsert(
+        { user_id: userId, data: hojeISO(), texto, updated_at: new Date().toISOString() } as never,
+        { onConflict: "user_id,data" },
+      );
+    if (error) {
+      toastErro("Não consegui guardar sua intenção. Tenta de novo.");
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
+  };
 
-  // Próxima tarefa
-  const proximaTarefa = tarefasAFazer[0] ?? tarefasBrotando[0];
-  const tituloProxima = proximaTarefa?.titulo ?? `Começar ${etapaInfo.nome.toLowerCase()}`;
-
-  // Semana — só calcula no client (depende de new Date()), evita SSR mismatch
   const dias = useMemo(() => {
     const abrevs = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
-    if (!clientReady) {
-      return abrevs.map((abrev) => ({ abrev, numero: 0, tarefas: 0, isHoje: false }));
-    }
+    if (!clientReady)
+      return abrevs.map((abrev) => ({ abrev, tarefas: 0, isHoje: false, isFuturo: false }));
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const ini = startOfWeek(hoje);
+    const tarefas = dados?.tarefas ?? [];
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(ini);
       d.setDate(ini.getDate() + i);
       const count = tarefas.filter((t) => {
-        if (t.status !== "floresceu") return false;
+        if (t.status !== "concluido") return false;
         const td = new Date(t.created_at);
         return (
           td.getFullYear() === d.getFullYear() &&
@@ -227,838 +443,397 @@ function PainelPage() {
       }).length;
       return {
         abrev: abrevs[i],
-        numero: d.getDate(),
         tarefas: count,
         isHoje: d.getTime() === hoje.getTime(),
+        isFuturo: d.getTime() > hoje.getTime(),
       };
     });
-  }, [tarefas, clientReady]);
-
-  const totalSemana = dias.reduce((acc, d) => acc + d.tarefas, 0);
-
-  const recadoEtapa =
-    RECADOS_POR_ETAPA[etapaAtual] ??
-    "Continue de onde parou. Cada passo que você dá marca o seu mapa.\n\nA Pólia tá aqui.";
-
-  const conquistaUltima = dados?.conquistas?.[0];
-  const seteDiasAtras = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const conquistaAtual =
-    conquistaUltima && new Date(conquistaUltima.created_at).getTime() >= seteDiasAtras
-      ? conquistaUltima
-      : null;
-  const conquistaAnterior = conquistaAtual ? null : (conquistaUltima ?? null);
-
-  const subtituloNegocio =
-    businessType === "produto"
-      ? "você vende produto, então aqui mostra o que importa pra produção."
-      : businessType === "servico"
-        ? "você vende serviço, então aqui mostra agenda e clientes."
-        : "você vende produto e serviço, então aqui mostra os dois.";
-
-  const resumoPainel = dados
-    ? `Etapa ${etapaAtual} de 11 na jornada (${etapaInfo.nome}). ` +
-      `${tarefasAFazer.length} tarefas a fazer, ${tarefasBrotando.length} em progresso, ` +
-      `${tarefasFloresceram.length} prontas. ${diasDesdeCadastro} dias usando a Pólia.`
-    : "";
+  }, [dados?.tarefas, clientReady]);
+  const maxSemana = Math.max(1, ...dias.map((d) => d.tarefas));
 
   return (
-    <div className="min-h-screen bg-polia-creme">
-      <PainelNav initial={initial} streak={streak} />
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      <div className="mx-auto w-full max-w-[1120px] px-6 pb-24 pt-16 md:px-10">
+        {/* Header: primeira dobra, sem reveal */}
+        <div>
+          <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
+            {saudacao}, {meta.displayName}.
+          </p>
+          <h1 className="font-fraunces mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)]">
+            {headline}
+          </h1>
 
-      {/* SEÇÃO 1 — SAUDAÇÃO */}
-      <section className="bg-polia-creme px-6 pb-10 pt-12 md:px-12">
-        <div className="mx-auto flex max-w-[1280px] flex-col gap-8 md:flex-row md:items-start md:justify-between">
-          <div className="flex-1">
-            <p className="mb-2 caveat-informacional text-polia-terracota" suppressHydrationWarning>
-              {saudacao}, {displayName}.
+          {/* Intenção do dia */}
+          <div className="mt-6 max-w-[560px]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              {intencaoSalva && !editandoIntencao
+                ? "Intenção de hoje"
+                : "Qual é a sua intenção pra hoje?"}
             </p>
-
-            <h1 className="max-w-[640px] whitespace-pre-line font-serif text-[40px] leading-[1.1] text-polia-noite md:text-[60px]">
-              {headline}
-            </h1>
-
-            {/* Stats */}
-            <div className="mt-8 flex flex-col gap-6 md:flex-row md:items-start md:gap-10">
-              <StatBlock
-                label="DIA NA JORNADA"
-                valueClass="font-serif text-[28px] text-polia-terracota"
-                value={String(diasDesdeCadastro)}
-                sub="de uma vida nova"
-              />
-              <Divider />
-              <StatBlock
-                label="PRÓXIMO MARCO"
-                valueClass="font-sans text-[16px] font-semibold text-polia-noite"
-                value={`${etapaInfo.nome} · ${etapaInfo.subtitulo}`}
-                sub={`${etapaInfo.tempoEstimado} pra abrir`}
-                subColor="text-polia-musgo"
-              />
-              <Divider />
-              <StatBlock
-                label="HOJE"
-                valueClass="font-sans text-[16px] font-semibold text-polia-noite"
-                value={
-                  tarefasAFazer.length + tarefasBrotando.length + tarefasFloresceram.length === 0
-                    ? "nada brotando ainda"
-                    : pluralizeKanban({
-                        a_fazer: tarefasAFazer.length,
-                        brotando: tarefasBrotando.length,
-                        floresceu: tarefasFloresceram.length,
-                      })
-                }
-                sub="seu fluxo da semana"
-              />
-            </div>
-          </div>
-
-          {/* Raposa + balão */}
-          <div className="hidden flex-col items-end gap-3 md:flex">
-            <div
-              className="rounded-xl border bg-white px-4 py-3 shadow-sm"
-              style={{
-                borderColor: "rgba(26,26,46,0.06)",
-                maxWidth: 180,
-              }}
-            >
-              <p className="caveat-decorativo leading-snug text-polia-noite">
-                aí continua de onde parou ontem?
-              </p>
-            </div>
-            <div
-              className="flex h-[200px] w-[180px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-polia-terracota"
-              style={{ background: "rgba(201,107,62,0.04)" }}
-            >
-              <span className="font-accent text-[10px] font-bold tracking-[1px] text-polia-terracota">
-                RAPOSA
-              </span>
-              <span className="font-sans text-[9px] text-polia-terracota opacity-70">
-                ESTADO FELIZ
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Insight da guia (Coach transversal) */}
-      <div className="bg-polia-creme px-6 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <GuiaInsight contexto="painel" resumo={resumoPainel} />
-        </div>
-      </div>
-
-      {/* Bloco de trabalho (dashboard): check-in, KPIs por status, alertas, delegadas, calendário */}
-      <PainelTrabalho />
-
-      {/* SEÇÃO 2 — CTA */}
-      <section className="w-full bg-polia-terracota">
-        <div className="mx-auto flex max-w-[1280px] flex-col items-start justify-between gap-6 px-6 py-8 md:flex-row md:items-center md:px-12">
-          <div>
-            <p className="mb-1 caveat-decorativo text-polia-creme/70">Seu próximo marco...</p>
-            <h2 className="mb-2 font-serif text-[28px] leading-tight text-polia-creme md:text-[32px]">
-              {tituloProxima}
-            </h2>
-            <p className="font-sans text-[14px] text-polia-creme/75">
-              {etapaInfo.nome} · {etapaInfo.subtitulo} · você vai gastar {etapaInfo.tempoEstimado}
-            </p>
-          </div>
-          <div className="flex w-full flex-col items-stretch gap-2 md:w-auto md:items-end">
-            <a
-              href={`/etapa/${etapaAtual}`}
-              className="whitespace-nowrap rounded-xl bg-polia-creme px-8 py-3 text-center font-sans text-[16px] font-semibold text-polia-terracota transition-colors hover:bg-white"
-            >
-              Continuar de onde parei →
-            </a>
-            <a
-              href="/jornada"
-              className="text-center caveat-decorativo text-polia-creme/70 hover:text-polia-creme md:text-right"
-            >
-              ou ver o mapa completo
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 3 — MAPA compacto (linka pra /jornada pra ver completo) */}
-      <section className="relative bg-polia-papel-creme px-6 py-12 md:px-12">
-        <div className="relative mx-auto max-w-[1280px]">
-          <div className="mb-6 flex flex-col items-start justify-between gap-3 md:flex-row md:items-end">
-            <p className="font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
-              SEU MAPA TOMANDO FORMA
-            </p>
-            <a
-              href="/jornada"
-              className="font-sans text-[14px] text-polia-terracota hover:underline"
-            >
-              Ver mapa completo →
-            </a>
-          </div>
-
-          <TrilhaMarcos
-            etapaAtual={etapaAtual}
-            onMarcoClick={(etapa, state) => {
-              if (state === "current") {
-                navigate({ to: `/etapa/${etapa}` as "/etapa/1" });
-              } else if (state === "done") {
-                navigate({ to: "/biblioteca" });
-              }
-            }}
-          />
-        </div>
-      </section>
-
-      {/* SEÇÃO 4 — SEU DIA (operação diária) */}
-      <section className="bg-polia-creme px-6 py-12 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <p className="mb-2 font-accent text-[11px] uppercase tracking-[2px] text-polia-noite opacity-50">
-            SEU DIA
-          </p>
-          <h2 className="mb-1 font-serif text-[28px] text-polia-noite md:text-[36px]">
-            O dia a dia da sua marca
-          </h2>
-          <p className="mb-8 caveat-decorativo text-polia-terracota">
-            pequenas ferramentas pra manter o ritmo, um dia de cada vez.
-          </p>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <SeuDiaCard
-              to="/diario"
-              icon={<Sun size={20} />}
-              titulo="Diário"
-              sub="seu check-in do dia"
-            />
-            <SeuDiaCard
-              to="/habitos"
-              icon={<Flame size={20} />}
-              titulo="Hábitos"
-              sub="o que você repete e constrói"
-            />
-            <SeuDiaCard
-              to="/metas"
-              icon={<Target size={20} />}
-              titulo="Metas"
-              sub="onde você quer chegar"
-            />
-            <SeuDiaCard
-              to="/foco"
-              icon={<Timer size={20} />}
-              titulo="Foco"
-              sub="um tempo só pra avançar"
-            />
-            <SeuDiaCard
-              to="/caderno"
-              icon={<NotebookPen size={20} />}
-              titulo="Caderno"
-              sub="ideias e anotações"
-            />
-            <SeuDiaCard
-              to="/guia"
-              icon={<MessageCircleHeart size={20} />}
-              titulo="Sua guia"
-              sub="pensar o negócio junto"
-            />
-            <SeuDiaCard
-              to="/planner"
-              icon={<LayoutGrid size={20} />}
-              titulo="Quadros"
-              sub="projetos fora da jornada"
-            />
-            <SeuDiaCard
-              to="/equipe"
-              icon={<Users size={20} />}
-              titulo="Equipe"
-              sub="quem caminha com você"
-            />
-            <SeuDiaCard
-              to="/progresso"
-              icon={<TrendingUp size={20} />}
-              titulo="Seu Progresso"
-              sub="o quanto você já andou"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 5 — HOJE NO SEU NEGÓCIO */}
-      <section className="bg-polia-creme px-6 py-16 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <p className="mb-2 font-accent text-[11px] uppercase tracking-[2px] text-polia-noite opacity-50">
-            HOJE NO SEU NEGÓCIO
-          </p>
-          <h2 className="mb-1 font-serif text-[28px] text-polia-noite md:text-[36px]">
-            O ar do seu negócio agora
-          </h2>
-          <p className="mb-8 caveat-decorativo text-polia-terracota">{subtituloNegocio}</p>
-
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <CardReceita />
-            <CardPedidos />
-            <CardAgenda />
-            <CardClientes />
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 6 — SEMANA DE COLHEITA */}
-      <section className="bg-polia-creme px-6 py-12 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <p className="mb-2 font-accent text-[11px] uppercase tracking-[2px] opacity-50">
-            ESSA SEMANA
-          </p>
-          <h2 className="mb-8 font-serif text-[28px] text-polia-noite md:text-[32px]">
-            Sua semana de trabalho
-          </h2>
-          <div className="flex flex-col items-start gap-6 md:flex-row md:items-end md:justify-between">
-            <div className="grid w-full grid-cols-7 gap-1.5 sm:gap-3 md:flex-1">
-              {dias.map((d, i) => (
-                <div
-                  key={i}
-                  className={`flex min-w-0 flex-col items-center gap-1 rounded-xl px-1.5 py-3 sm:p-4 ${
-                    d.isHoje ? "bg-polia-terracota" : "border border-[rgba(26,26,46,0.06)] bg-white"
-                  }`}
+            {editandoIntencao || !intencaoSalva ? (
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="text"
+                  value={rascunhoIntencao}
+                  onChange={(e) => setRascunhoIntencao(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") salvarIntencao();
+                    if (e.key === "Escape" && intencaoSalva) setEditandoIntencao(false);
+                  }}
+                  placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
+                  className="h-[38px] flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                />
+                <button
+                  type="button"
+                  onClick={salvarIntencao}
+                  aria-label="Guardar intenção"
+                  title="Guardar intenção"
+                  className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-[var(--accent)] text-[var(--accent-ink)] transition-transform duration-150 hover:-translate-y-px"
                 >
-                  <span
-                    className={`font-sans text-[12px] font-medium ${
-                      d.isHoje ? "text-polia-creme/80" : "text-polia-noite opacity-50"
-                    }`}
-                  >
-                    {d.abrev}
-                  </span>
-                  <span
-                    className={`font-serif text-[22px] sm:text-[28px] ${
-                      d.isHoje ? "text-polia-creme" : "text-polia-noite"
-                    }`}
-                  >
-                    {d.numero}
-                  </span>
-                  <span
-                    className={`font-sans text-[16px] font-semibold sm:text-[18px] ${
-                      d.isHoje ? "text-polia-creme" : "text-polia-noite"
-                    }`}
-                  >
-                    {d.tarefas}
-                  </span>
-                  <span
-                    className={`hidden sm:block text-center caveat-decorativo text-[14px] leading-none ${
-                      d.isHoje ? "text-polia-creme/70" : "text-polia-noite opacity-40"
-                    }`}
-                  >
-                    {d.isHoje ? "hoje" : "tarefas"}
-                  </span>
-                  {d.isHoje && (
-                    <span className="sm:hidden text-center caveat-decorativo text-[14px] leading-none text-polia-creme/70">
-                      hoje
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="text-right md:ml-6">
-              <p className="mb-1 font-accent text-[10px] uppercase tracking-[1px] opacity-50">
-                ESSA SEMANA
-              </p>
-              <p className="font-serif text-[48px] leading-none text-polia-terracota">
-                {totalSemana}
-              </p>
-              <p className="mb-1 font-sans text-[14px] text-polia-noite opacity-60">
-                tarefas prontas
-              </p>
-              <p className="caveat-decorativo text-polia-noite opacity-40">
-                recorde anterior: {Math.max(totalSemana, 0)}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SEÇÃO 7 — TRÊS CARDS DO DIA */}
-      <section className="bg-polia-creme px-6 py-12 md:px-12">
-        <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Card 1 — Recado */}
-          <div
-            className="rounded-2xl p-6"
-            style={{
-              background: "rgba(201,107,62,0.06)",
-              border: "1px solid rgba(201,107,62,0.15)",
-            }}
-          >
-            <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] text-polia-terracota">
-              UM RECADO PRA VOCÊ
-            </p>
-            <p className="whitespace-pre-line caveat-decorativo leading-relaxed text-polia-noite">
-              {recadoEtapa}
-            </p>
-            <p className="mt-4 caveat-decorativo text-polia-terracota">- Pólia</p>
-          </div>
-
-          {/* Card 2 — Fluxo de hoje */}
-          <div
-            className="rounded-2xl bg-white p-6"
-            style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-          >
-            <p className="mb-2 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
-              SUAS TAREFAS
-            </p>
-            <h3 className="mb-4 font-sans text-[18px] font-semibold text-polia-noite">
-              Seu fluxo de hoje
-            </h3>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { col: "A fazer", items: tarefasAFazer },
-                { col: "Fazendo", items: tarefasBrotando },
-                { col: "Prontas", items: tarefasFloresceram },
-              ].map((c) => (
-                <div key={c.col}>
-                  <p className="mb-2 font-sans text-[11px] font-semibold text-polia-noite opacity-50">
-                    {c.col}
-                  </p>
-                  {c.items.length === 0 ? (
-                    <p className="caveat-decorativo text-polia-noite opacity-30">vazio</p>
-                  ) : (
-                    c.items.slice(0, 3).map((t) => (
-                      <div
-                        key={t.id}
-                        className="mb-1.5 rounded-lg bg-polia-cinza-claro px-2 py-1.5"
-                      >
-                        <p className="truncate font-sans text-[12px] leading-tight text-polia-noite">
-                          {t.titulo}
-                        </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ))}
-            </div>
-            <a
-              href="/tarefas"
-              className="mt-4 inline-block font-sans text-[13px] text-polia-terracota hover:underline"
-            >
-              Tarefas →
-            </a>
-          </div>
-
-          {/* Card 3 — Conquista */}
-          <div
-            className="rounded-2xl bg-white p-6"
-            style={{ border: "1px solid rgba(200,169,110,0.2)" }}
-          >
-            <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] text-polia-dourado">
-              CONQUISTA DA SEMANA
-            </p>
-            {conquistaAtual ? (
-              <>
-                <div
-                  className="mb-4 flex h-12 w-12 items-center justify-center rounded-full"
-                  style={{ background: "rgba(200,169,110,0.15)" }}
-                >
-                  <Star className="text-polia-dourado" size={24} fill="currentColor" />
-                </div>
-                <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite">
-                  {conquistaAtual.titulo}
-                </p>
-                <p className="mb-3 font-sans text-[14px] font-semibold text-polia-musgo">
-                  +{conquistaAtual.xp} XP
-                </p>
-                <p className="caveat-decorativo leading-snug text-polia-noite">
-                  {conquistaAtual.descricao ?? "Você plantou algo que vai dar fruto."}
-                </p>
-              </>
-            ) : conquistaAnterior ? (
-              <>
-                <p className="mb-2 caveat-decorativo text-polia-dourado">última conquista</p>
-                <p className="mb-1 font-sans text-[18px] font-semibold text-polia-noite opacity-80">
-                  {conquistaAnterior.titulo}
-                </p>
-                <p className="caveat-decorativo leading-snug text-polia-noite">
-                  {conquistaAnterior.descricao ?? "Acesa na sua constelação."}
-                </p>
-              </>
+                  <Check size={16} aria-hidden="true" />
+                </button>
+              </div>
             ) : (
-              <p className="caveat-decorativo text-polia-dourado">
-                sua primeira conquista mora aqui · abra um marco pra começar.
-              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
+                  {intencaoSalva}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRascunhoIntencao(intencaoSalva ?? "");
+                    setEditandoIntencao(true);
+                  }}
+                  aria-label="Editar intenção"
+                  title="Editar intenção"
+                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:bg-[var(--secondary-light)] hover:text-[var(--ink)]"
+                >
+                  <Pencil size={14} aria-hidden="true" />
+                </button>
+              </div>
             )}
           </div>
         </div>
-      </section>
 
-      {/* SEÇÃO 8 — BIBLIOTECA */}
-      <section className="bg-polia-creme px-6 py-12 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <h2 className="mb-2 font-serif text-[28px] text-polia-noite md:text-[32px]">
-            Sua biblioteca de marcos
-          </h2>
-          <p className="mb-8 caveat-decorativo text-polia-terracota">
-            Toda vez que você completa uma etapa, fica aqui. Não se perde.
-          </p>
+        {/* Linha de contexto */}
+        <Reveal className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--line)] py-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              Dia no planejamento
+            </span>
+            <span className="font-fraunces rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
+              {ordinal(diasDesdeCadastro)}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              Status
+            </span>
+            <span className="text-[15px] text-[var(--ink-soft)]">
+              {jornadaFinalizada
+                ? "Planejamento concluído"
+                : `Módulo ${moduloAtual} · ${etapaInfo.nome}`}{" "}
+              <a href="/planejamento" className="text-[var(--ink-soft)] hover:underline">
+                ver
+              </a>
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              Presença
+            </span>
+            <span className="text-[15px] text-[var(--ink-soft)]">
+              {meta.streak} {meta.streak === 1 ? "dia" : "dias"}
+            </span>
+          </div>
+        </Reveal>
 
-          {dados?.entregaveis && dados.entregaveis.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {dados.entregaveis.map((e) => (
-                <EntregavelCard
-                  key={e.id}
-                  fase={e.fase}
-                  titulo={e.titulo}
-                  preview={extractPreview(e.conteudo)}
-                  etapa={`Etapa ${e.etapa}`}
-                  tempo={tempoRelativo(e.created_at)}
-                  createdAt={e.created_at}
-                  id={e.id}
-                />
-              ))}
-            </div>
-          ) : (
-            <div
-              className="rounded-2xl bg-white py-16 text-center"
-              style={{ border: "1px solid rgba(26,26,46,0.06)" }}
+        {/* Bento de dados */}
+        <div className="mt-8 grid grid-cols-12 gap-4">
+          <Reveal className={SPAN_CLASS[5]}>
+            <a
+              href="/financeiro"
+              className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
             >
-              <p className="caveat-decorativo text-polia-noite opacity-40">
-                sua primeira conquista aparece aqui quando você completar a Etapa 1.
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Receita · mês
+              </p>
+              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+                {fmtBRL(receitaMes)}
+              </p>
+              {metaCelebracao > 0 && (
+                <div className="relative mx-0.5 mt-4 h-2 rounded-md border border-[var(--line)] bg-[var(--bg)]">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-md bg-[var(--secondary)]"
+                    style={{
+                      width: barOn
+                        ? `${Math.min(100, (receitaMes / metaCelebracao) * 100)}%`
+                        : "0%",
+                      transition: reduce ? "none" : "width 800ms cubic-bezier(0.22,1,0.36,1)",
+                    }}
+                  />
+                  {metaBoa > 0 && (
+                    <div
+                      className="absolute -top-1 -bottom-1 w-0.5 bg-[var(--ink)]"
+                      style={{ left: `${Math.min(100, (metaBoa / metaCelebracao) * 100)}%` }}
+                    />
+                  )}
+                </div>
+              )}
+              <p className="mt-2 text-[13px] text-[var(--muted)]">
+                {metaBoa > 0
+                  ? `${Math.min(100, Math.round((receitaMes / metaBoa) * 100))}% da Meta do mês (${fmtBRL(metaBoa)})`
+                  : receitaMes > 0
+                    ? "entradas esse mês"
+                    : "ainda sem entradas"}{" "}
+                · <span className="text-[var(--ink-soft)]">Financeiro</span>
+              </p>
+            </a>
+          </Reveal>
+
+          <Reveal className={SPAN_CLASS[3]}>
+            <a
+              href="/financeiro"
+              className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Pedidos · mês
+              </p>
+              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+                {pedidosMes}
+              </p>
+              <p className="mt-2 text-[13px] text-[var(--muted)]">
+                {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"} ·{" "}
+                <span className="text-[var(--ink-soft)]">ver entradas</span>
+              </p>
+            </a>
+          </Reveal>
+
+          <Reveal className={SPAN_CLASS[4]}>
+            <a
+              href="/clientes"
+              className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+            >
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Clientes
+              </p>
+              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+                {clientesCount}
+              </p>
+              <p className="mt-2 text-[13px] text-[var(--muted)]">
+                {clientesCount > 0
+                  ? `${clientesEntregues} entregues · ${clientesEmEspera} em espera`
+                  : "nenhuma cadastrada ainda"}{" "}
+                · <span className="text-[var(--ink-soft)]">Clientes</span>
+              </p>
+            </a>
+          </Reveal>
+
+          {/* Tarefas de hoje */}
+          <Reveal className={SPAN_CLASS[6]}>
+            <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white transition-[background,transform] duration-200 group-hover:-rotate-[4deg] group-hover:bg-[var(--secondary-light)]">
+                  <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="font-fraunces text-[18px] text-[var(--ink)]">Suas tarefas</p>
+                  <p className="text-[13px] text-[var(--muted)]">
+                    do Planner · {gruposTarefas.atrasadas.length}{" "}
+                    {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
+                    {gruposTarefas.hoje.length} pra hoje · {gruposTarefas.proximas.length}{" "}
+                    {gruposTarefas.proximas.length === 1 ? "próxima" : "próximas"}
+                  </p>
+                </div>
+              </div>
+
+              {totalTarefasPainel === 0 ? (
+                <p className="mt-4 text-[14px] text-[var(--muted)]">
+                  Nada nos seus quadros por perto.
+                </p>
+              ) : (
+                <div className="mt-3">
+                  {gruposTarefas.atrasadas.length > 0 && (
+                    <GrupoTarefasPainel
+                      titulo="Ficou pra trás"
+                      corTitulo="text-[var(--danger)]"
+                      itens={gruposTarefas.atrasadas}
+                      rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}
+                      corRotulo="text-[var(--danger)]"
+                      linkTarefa={linkTarefa}
+                      link={`${quadroPendentesLink}?filtro=all`}
+                      linkTitulo="Abrir o Planner"
+                    />
+                  )}
+                  {gruposTarefas.hoje.length > 0 && (
+                    <GrupoTarefasPainel
+                      titulo="Hoje"
+                      itens={gruposTarefas.hoje}
+                      rotulo={(t) => (t.horario ? `hoje · ${t.horario}` : "prazo hoje")}
+                      linkTarefa={linkTarefa}
+                      link={`${quadroPendentesLink}?filtro=today`}
+                      linkTitulo="Abrir o Planner filtrado em Hoje"
+                    />
+                  )}
+                  {gruposTarefas.proximas.length > 0 && (
+                    <GrupoTarefasPainel
+                      titulo="Próximos 7 dias"
+                      itens={gruposTarefas.proximas}
+                      rotulo={(t) => `até ${fmtDDMM(t.prazo!)}`}
+                      linkTarefa={linkTarefa}
+                      link={`${quadroPendentesLink}?filtro=7`}
+                      linkTitulo="Abrir o Planner filtrado em 7 dias"
+                    />
+                  )}
+                </div>
+              )}
+
+              <p className="mt-3 text-[13px]">
+                <a
+                  href={quadroPendentesLink}
+                  className="text-[var(--secondary-text)] hover:underline"
+                >
+                  Abrir no Planner →
+                </a>
               </p>
             </div>
-          )}
-        </div>
-      </section>
+          </Reveal>
 
-      {/* SEÇÃO 9 — ESTRELAS QUE TE ESPERAM */}
-      <section className="bg-polia-cinza-claro px-6 py-12 md:px-12">
-        <div className="mx-auto max-w-[1280px]">
-          <h2 className="mb-1 font-serif text-[24px] text-polia-noite md:text-[28px]">
-            Marcos no seu horizonte
-          </h2>
-          <p className="mb-8 font-sans text-[14px] text-polia-noite opacity-50">
-            Os marcos do seu negócio que você vai chegar.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            {[
-              "primeira contratação",
-              "100 clientes ativas",
-              "1 ano de negócio",
-              "primeira filial",
-            ].map((m) => (
-              <div
-                key={m}
-                className="flex items-center gap-3 rounded-2xl bg-white px-6 py-4"
-                style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-              >
-                <div className="h-2 w-2 rounded-full" style={{ background: "#D8D2CC" }} />
-                <span className="font-sans text-[15px] text-polia-noite">{m}</span>
+          {/* Semana de trabalho */}
+          <Reveal className={SPAN_CLASS[6]}>
+            <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white transition-[background,transform] duration-200 group-hover:-rotate-[4deg] group-hover:bg-[var(--secondary-light)]">
+                  <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="font-fraunces text-[18px] text-[var(--ink)]">
+                    Sua semana de trabalho
+                  </p>
+                  <p className="text-[13px] text-[var(--muted)]">tarefas concluídas por dia</p>
+                </div>
               </div>
-            ))}
-          </div>
-          <p className="mt-6 text-right caveat-decorativo text-polia-noite opacity-40">
-            A Pólia torce. Você adiciona a dela no seu.
-          </p>
-        </div>
-      </section>
+              <div className="mt-5 flex h-[150px] items-end gap-2">
+                {dias.map((d, i) => {
+                  const alturaPx = d.tarefas > 0 ? 10 + (d.tarefas / maxSemana) * 70 : 2;
+                  return (
+                    <div
+                      key={i}
+                      className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                    >
+                      <span
+                        className="text-[13px] font-semibold text-[var(--ink)]"
+                        style={{
+                          opacity: barOn ? 1 : 0,
+                          transition: reduce ? "none" : "opacity 300ms ease",
+                        }}
+                      >
+                        {d.tarefas > 0 ? d.tarefas : d.isFuturo ? "" : "0"}
+                      </span>
+                      <span
+                        className="w-full max-w-[72px] rounded-t-md"
+                        style={{
+                          height: barOn ? `${alturaPx}px` : "0px",
+                          background: d.tarefas === 0 ? "var(--line)" : "var(--accent)",
+                          border: d.isHoje ? "2px solid var(--ink)" : undefined,
+                          borderBottom: d.isHoje ? "0" : undefined,
+                          transition: reduce ? "none" : "height 600ms cubic-bezier(0.22,1,0.36,1)",
+                        }}
+                      />
+                      <span
+                        className={`text-[12px] ${d.isHoje ? "font-semibold text-[var(--ink)]" : "text-[var(--muted)]"}`}
+                      >
+                        {d.abrev}
+                        {d.isHoje ? " · hoje" : ""}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </Reveal>
 
-      {/* SEÇÃO 10 — FOOTER MANTRA */}
-      <section className="relative overflow-hidden bg-polia-papel-creme py-16 text-center">
-        <div className="relative">
-          <div className="mb-8 flex justify-center gap-6 opacity-50">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="h-2 w-2 bg-polia-mostarda"
-                style={{ transform: "rotate(45deg)" }}
-              />
-            ))}
-          </div>
-          <p className="mb-4 font-serif text-[28px] text-polia-marrom md:text-[36px]">
-            A Pólia não acaba. Ela só fica mais sua.
-          </p>
-          <p className="caveat-decorativo text-[18px] text-polia-terracota opacity-80">
-            cada vez que você volta, encontra mais de você aqui
-          </p>
+          {/* Agenda: link pro calendário mensal (Planner + Google, quando conectado) */}
+          <Reveal className={SPAN_CLASS[12]}>
+            <a
+              href="/calendario"
+              className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-white px-5 py-4 text-[14px] text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)]"
+            >
+              <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                Calendário
+              </span>
+              <span>
+                Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google.
+              </span>
+              <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>
+            </a>
+          </Reveal>
         </div>
-      </section>
+      </div>
     </div>
   );
 }
 
-// ============= Subcomponentes =============
-
-function SeuDiaCard({
-  to,
-  icon,
+function GrupoTarefasPainel({
   titulo,
-  sub,
+  corTitulo,
+  itens,
+  rotulo,
+  corRotulo,
+  linkTarefa,
+  link,
+  linkTitulo,
 }: {
-  to: string;
-  icon: ReactNode;
   titulo: string;
-  sub: string;
+  corTitulo?: string;
+  itens: TarefaRow[];
+  rotulo: (t: TarefaRow) => string;
+  corRotulo?: string;
+  linkTarefa: (t: TarefaRow) => string;
+  link?: string;
+  linkTitulo?: string;
 }) {
   return (
-    <a
-      href={to}
-      className="group flex items-center gap-4 rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-polia-terracota/30 hover:shadow-[0_6px_16px_rgba(58,42,31,0.06)]"
-    >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[rgba(201,107,62,0.1)] text-polia-terracota">
-        {icon}
-      </span>
-      <span className="min-w-0">
-        <span className="block font-serif text-[18px] text-polia-noite">{titulo}</span>
-        <span className="block font-sans text-[13px] text-polia-noite opacity-50">{sub}</span>
-      </span>
-    </a>
-  );
-}
-
-function StatBlock({
-  label,
-  value,
-  valueClass,
-  sub,
-  subColor,
-}: {
-  label: string;
-  value: string;
-  valueClass: string;
-  sub: string;
-  subColor?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="font-accent text-[10px] uppercase tracking-[1px] text-polia-noite opacity-50">
-        {label}
-      </span>
-      <span className={valueClass}>{value}</span>
-      <span className={`caveat-decorativo text-[14px] ${subColor ?? "text-polia-noite"}`}>
-        {sub}
-      </span>
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="hidden h-12 w-px md:block" style={{ background: "rgba(26,26,46,0.1)" }} />;
-}
-
-function OrbitCard({
-  title,
-  tags,
-  unlocked,
-  sub,
-}: {
-  title: string;
-  tags: string;
-  unlocked: boolean;
-  sub: string;
-}) {
-  return (
-    <div
-      className={`rounded-2xl bg-white p-6 ${unlocked ? "" : "opacity-50"}`}
-      style={{
-        border: "1px solid rgba(26,26,46,0.08)",
-      }}
-    >
-      <div className="mb-4 flex items-center gap-2">
-        <div
-          className={`relative h-8 w-8 rounded-full border-2 ${
-            unlocked ? "border-polia-terracota" : "border-polia-cinza-areia"
+    <div className="mb-1">
+      {link ? (
+        <a
+          href={link}
+          title={linkTitulo}
+          className={`mb-1 inline-block text-[10px] font-semibold uppercase tracking-[0.14em] no-underline hover:underline ${
+            corTitulo ?? "text-[var(--muted)] hover:text-[var(--ink-soft)]"
           }`}
         >
-          {unlocked && (
-            <div
-              className="absolute h-2 w-2 rounded-full bg-polia-terracota"
-              style={{ top: -2, left: "50%", transform: "translateX(-50%)" }}
-            />
-          )}
-        </div>
-        {unlocked && (
-          <span
-            className="rounded-full px-2 py-0.5 font-sans text-[11px]"
-            style={{
-              background: "rgba(44,106,79,0.15)",
-              color: "#2D6A4F",
-            }}
-          >
-            anda com você
-          </span>
-        )}
-      </div>
-      <p className="mb-1 font-sans text-[16px] font-semibold text-polia-marrom">{title}</p>
-      <p className="mb-3 font-sans text-[12px] text-polia-marrom opacity-60">{tags}</p>
-      <p
-        className={`caveat-decorativo text-[14px] ${
-          unlocked ? "text-polia-terracota" : "text-polia-marrom opacity-50"
-        }`}
-      >
-        {sub}
-      </p>
-    </div>
-  );
-}
-
-function CardReceita() {
-  return (
-    <div
-      className="rounded-2xl bg-white p-6 shadow-sm"
-      style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-    >
-      <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
-        RECEITA · MÊS
-      </p>
-      <p className="mb-1 font-serif text-[40px] leading-none text-polia-noite">R$ 0</p>
-      <p className="mb-4 font-sans text-[13px] text-polia-noite opacity-50">
-        ainda não tem dados aqui
-      </p>
-      <p className="caveat-decorativo text-polia-noite">à medida que você avança, vai aparecendo</p>
-    </div>
-  );
-}
-
-function CardPedidos() {
-  return (
-    <div
-      className="rounded-2xl bg-white p-6 shadow-sm"
-      style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-    >
-      <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
-        PEDIDOS · PRODUTOS
-      </p>
-      <p className="mb-4 font-serif text-[28px] text-polia-noite">nenhum pedido ainda</p>
-      <p className="caveat-decorativo text-polia-noite">
-        quando seus pedidos começarem, eles aparecem aqui.
-      </p>
-    </div>
-  );
-}
-
-function CardAgenda() {
-  return (
-    <div
-      className="rounded-2xl bg-white p-6 shadow-sm"
-      style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <p className="font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">
-          SUA AGENDA · GOOGLE CALENDAR
-        </p>
-        <span className="font-sans text-[11px] text-polia-noite opacity-50">não conectado</span>
-      </div>
-      <p className="py-8 text-center caveat-decorativo text-polia-noite">
-        conecta seu Google Calendar aqui pra ver tudo em um lugar
-      </p>
-    </div>
-  );
-}
-
-function CardClientes() {
-  return (
-    <div
-      className="rounded-2xl bg-white p-6 shadow-sm"
-      style={{ border: "1px solid rgba(26,26,46,0.06)" }}
-    >
-      <p className="mb-4 font-accent text-[10px] uppercase tracking-[1.5px] opacity-50">CLIENTES</p>
-      <p className="mb-1 font-serif text-[40px] leading-none text-polia-noite">0</p>
-      <p className="mb-6 font-sans text-[13px] text-polia-noite opacity-50">ativas esse mês</p>
-      <p className="caveat-decorativo text-polia-noite">
-        à medida que você cadastrar, a casa começa a se preencher.
-      </p>
-    </div>
-  );
-}
-
-const BADGE_FASE: Record<string, string> = {
-  Sonho: "bg-[rgba(201,64,122,0.1)] text-[#C9407A]",
-  Construção: "bg-[rgba(26,127,173,0.1)] text-[#1A7FAD]",
-  Venda: "bg-[rgba(26,143,92,0.1)] text-[#1A8F5C]",
-  Evolução: "bg-[rgba(107,80,204,0.1)] text-[#6B50CC]",
-};
-
-function EntregavelCard({
-  fase,
-  titulo,
-  preview,
-  etapa,
-  tempo,
-  createdAt,
-  id,
-}: {
-  fase: string;
-  titulo: string;
-  preview: string;
-  etapa: string;
-  tempo: string;
-  createdAt: string;
-  id: string;
-}) {
-  // Entregável é sempre "página visitada" (Aimer criou). Dobrinha permanente.
-  // Marginalia surge depois de 2+ dias da criação.
-  const marginalia = getMarginalia({
-    primeiraVez: createdAt,
-    ultimaVisita: createdAt,
-    visitas: 2,
-  });
-  const seed = id.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-
-  return (
-    <CadernoCard dobrada marginalia={marginalia} seed={seed}>
-      <span
-        className={`mb-4 inline-block rounded-full px-3 py-1 font-accent text-[10px] font-bold uppercase tracking-[1.5px] ${
-          BADGE_FASE[fase] ?? BADGE_FASE.Sonho
-        }`}
-      >
-        {fase}
-      </span>
-      <p className="mb-4 line-clamp-3 font-sans text-[14px] leading-relaxed text-polia-noite opacity-70">
-        {preview}
-      </p>
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="font-sans text-[14px] font-semibold text-polia-noite">{titulo}</p>
-          <p className="font-sans text-[12px] text-polia-noite opacity-40">
-            {etapa} · há {tempo}
-          </p>
-        </div>
-        <a
-          href={`/biblioteca/${id}`}
-          className="font-sans text-[13px] text-polia-terracota hover:underline"
-        >
-          abrir →
+          {titulo} →
         </a>
-      </div>
-    </CadernoCard>
+      ) : (
+        <p
+          className={`mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+            corTitulo ?? "text-[var(--muted)]"
+          }`}
+        >
+          {titulo}
+        </p>
+      )}
+      <ul>
+        {itens.map((t) => (
+          <li key={t.id} className="border-b border-[var(--line)] last:border-b-0">
+            <a
+              href={linkTarefa(t)}
+              title="Abrir esta tarefa no Planner"
+              className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-inherit no-underline transition-colors duration-150 hover:bg-[var(--secondary-light)]"
+            >
+              <span
+                className="h-[18px] w-[18px] shrink-0 rounded-[5px] border-[1.5px] border-[var(--muted)]"
+                aria-hidden="true"
+              />
+              <span className="flex-1 text-[15px] text-[var(--ink-soft)]">{t.titulo}</span>
+              <span className={`shrink-0 text-[12px] ${corRotulo ?? "text-[var(--muted)]"}`}>
+                {rotulo(t)}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
-}
-
-function tempoRelativo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const dias = Math.floor(diff / 86400000);
-  if (dias === 0) return "hoje";
-  if (dias === 1) return "1 dia";
-  if (dias < 30) return `${dias} dias`;
-  const meses = Math.floor(dias / 30);
-  return meses === 1 ? "1 mês" : `${meses} meses`;
-}
-
-/**
- * Extrai um preview legível de qualquer payload de entregavel
- * (string, objeto com declaracao/texto/conteudo/resumo, ou JSON arbitrário).
- */
-function extractPreview(payload: unknown): string {
-  if (payload == null) return "";
-  if (typeof payload === "string") return payload;
-  if (typeof payload !== "object") return String(payload);
-  const obj = payload as Record<string, unknown>;
-  const preferKeys = [
-    "declaracao",
-    "resumo",
-    "texto",
-    "descricao",
-    "conteudo",
-    "title",
-    "titulo",
-    "summary",
-  ];
-  for (const k of preferKeys) {
-    const v = obj[k];
-    if (typeof v === "string" && v.trim()) return v;
-  }
-  // pega primeiro valor string que encontrar
-  for (const v of Object.values(obj)) {
-    if (typeof v === "string" && v.trim()) return v;
-  }
-  return "";
 }

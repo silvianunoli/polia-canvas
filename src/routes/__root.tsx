@@ -13,25 +13,44 @@ import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { CookieConsent } from "@/components/ui/CookieConsent";
-import { ErrorPage } from "@/components/layout/ErrorPage";
+import { ErrorPage, type ErrorPageProps } from "@/components/layout/ErrorPage";
+import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 import appCss from "../styles.css?url";
 
+const MODO_MANUTENCAO = import.meta.env.VITE_MODO_MANUTENCAO === "true";
+
+// Rotas compartilhadas (404/500/manutenção/offline) têm duas peles: quem está
+// deslogada vê o chrome do site (cabeçalho/rodapé); quem está logada vê a
+// versão mínima sem navegação (já era assim). Enquanto a sessão ainda carrega,
+// mostra a mínima pra não trocar de chrome no meio do carregamento.
+function AutoChromeErrorPage(props: ErrorPageProps) {
+  const { user, loading } = useSupabaseSession();
+  if (!loading && !user) return <SiteErrorPage {...props} />;
+  return <ErrorPage {...props} />;
+}
+
 function NotFoundComponent() {
-  return <ErrorPage code="404" />;
+  return <AutoChromeErrorPage code="404" />;
 }
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
+  const errorId = crypto.randomUUID().slice(0, 8);
+  console.error(`[${errorId}]`, error);
   const router = useRouter();
   return (
-    <ErrorPage
+    <AutoChromeErrorPage
       code="500"
-      ctaLabel="Tentar de novo"
-      onCta={() => {
-        router.invalidate();
-        reset();
+      errorId={errorId}
+      primaryAction={{
+        label: "Tentar de novo",
+        onClick: () => {
+          router.invalidate();
+          reset();
+        },
       }}
     />
   );
@@ -107,6 +126,7 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const router = useRouter();
   const { queryClient } = Route.useRouteContext();
+  const online = useOnlineStatus();
 
   useEffect(() => {
     const {
@@ -118,12 +138,48 @@ function RootComponent() {
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
 
+  // Link de confirmação de e-mail vencido/já usado: o Supabase volta com o
+  // erro no hash da URL (não dá pro servidor ver, só o client). O link de
+  // confirmação aponta pro /onboarding — redefinir-senha.tsx já trata o caso
+  // dela mesma, então aqui só cobre o resto (a confirmação de cadastro).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash;
+    const linkVencido = hash.includes("otp_expired") || hash.includes("access_denied");
+    if (linkVencido && window.location.pathname !== "/auth/redefinir-senha") {
+      router.navigate({ to: "/auth/link-expirado", search: { tipo: "confirmacao" } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster richColors position="top-center" theme="light" />
+      {MODO_MANUTENCAO ? (
+        <AutoChromeErrorPage code="manutencao" />
+      ) : !online ? (
+        <AutoChromeErrorPage
+          code="offline"
+          primaryAction={{ label: "Tentar de novo", onClick: () => window.location.reload() }}
+        />
+      ) : (
+        <Outlet />
+      )}
+      <Toaster
+        position="bottom-right"
+        theme="light"
+        toastOptions={{
+          classNames: {
+            toast: "polia-v3 rounded-lg border font-sans",
+            title: "text-[var(--ink)]",
+            description: "text-[var(--ink-soft)]",
+            success: "!border-[var(--secondary)]",
+            error: "!border-[var(--danger)]",
+            info: "!border-[var(--line)]",
+          },
+        }}
+      />
       <CookieConsent />
-      <DiagnosticPanel />
+      {import.meta.env.DEV && <DiagnosticPanel />}
     </QueryClientProvider>
   );
 }

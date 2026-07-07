@@ -1,12 +1,23 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Mail, User } from "lucide-react";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthShell, CaveatEyebrow, Divider, SerifHeadline } from "@/components/cosmic/AuthShell";
-import { CosmicInput, PasswordStrength, passwordScore } from "@/components/cosmic/CosmicInput";
-import { CosmicButton } from "@/components/cosmic/CosmicButton";
+import {
+  AuthShell,
+  AuthButton,
+  Divider,
+  SerifHeadline,
+  SubText,
+} from "@/components/cosmic/AuthShell";
+import {
+  CosmicInput,
+  PasswordRequirements,
+  senhaCumpreRequisitos,
+  useCapsLockWarning,
+  CapsLockHint,
+} from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 
 export const Route = createFileRoute("/auth/cadastro")({
@@ -29,67 +40,81 @@ export const Route = createFileRoute("/auth/cadastro")({
   component: CadastroPage,
 });
 
-const schema = z.object({
-  nome: z.string().trim().min(2, "Coloca pelo menos 2 letras no seu nome.").max(120),
-  email: z.string().trim().email("Esse e-mail não parece certo. Confere o formato.").max(255),
-  senha: z
-    .string()
-    .min(8, "Sua senha precisa ter pelo menos 8 caracteres, uma letra maiúscula e um número.")
-    .refine(
-      (v) => /[A-Z]/.test(v) && /\d/.test(v),
-      "Sua senha precisa ter pelo menos 8 caracteres, uma letra maiúscula e um número.",
-    ),
-});
-
 function CadastroPage() {
   const navigate = useNavigate();
   const [values, setValues] = useState({ nome: "", email: "", senha: "" });
-  const [errors, setErrors] = useState<Partial<Record<keyof typeof values, string>>>({});
+  const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
+  const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const senhaRef = useRef<HTMLInputElement>(null);
+  const caps = useCapsLockWarning();
 
   function set<K extends keyof typeof values>(key: K, v: string) {
     setValues((s) => ({ ...s, [key]: v }));
-    if (errors[key]) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (errors[key as "nome" | "email"]) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (key === "senha") setSenhaInvalida(false);
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    const parsed = schema.safeParse(values);
-    if (!parsed.success) {
-      const fieldErrors: typeof errors = {};
-      for (const issue of parsed.error.issues) {
-        const k = issue.path[0] as keyof typeof values;
-        if (!fieldErrors[k]) fieldErrors[k] = issue.message;
-      }
+    const nome = values.nome.trim();
+    const email = values.email.trim();
+
+    const fieldErrors: typeof errors = {};
+    if (nome.length < 2) fieldErrors.nome = "Falta o seu nome.";
+    if (!email) fieldErrors.email = "Falta o seu e-mail.";
+    else if (!z.string().email().safeParse(email).success) {
+      fieldErrors.email = "E-mail inválido. Confere o @.";
+    }
+    const senhaOk = senhaCumpreRequisitos(values.senha);
+    if (!senhaOk) setSenhaInvalida(true);
+    if (Object.keys(fieldErrors).length || !senhaOk) {
       setErrors(fieldErrors);
+      if (!senhaOk) senhaRef.current?.focus();
       return;
     }
+
+    setErrors({});
+    setSenhaInvalida(false);
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
-        email: parsed.data.email,
-        password: parsed.data.senha,
+        email,
+        password: values.senha,
         options: {
           emailRedirectTo: `${window.location.origin}/onboarding`,
-          data: { full_name: parsed.data.nome },
+          data: { full_name: nome },
         },
       });
       if (error) {
         if (/already/i.test(error.message) || /registered/i.test(error.message)) {
-          setErrors({ email: "Esse e-mail já tem uma conta aqui. Quer entrar?" });
+          setErrors({
+            email: (
+              <>
+                Esse e-mail já tem conta.{" "}
+                <Link
+                  to="/auth/login"
+                  search={{ email }}
+                  className="text-[var(--danger)] underline underline-offset-2"
+                >
+                  Entrar
+                </Link>
+              </>
+            ),
+          });
         } else {
-          toast.error("Tivemos um problema. Tenta de novo em alguns segundos.");
+          toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
         }
         return;
       }
       if (!data.session) {
-        navigate({ to: "/auth/verificacao", search: { email: parsed.data.email } });
+        navigate({ to: "/auth/verificacao", search: { email } });
       } else {
         navigate({ to: "/onboarding" });
       }
     } catch {
-      toast.error("Tivemos um problema. Tenta de novo em alguns segundos.");
+      toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
     } finally {
       setLoading(false);
     }
@@ -103,21 +128,21 @@ function CadastroPage() {
     });
     if (error) {
       setGoogleLoading(false);
-      toast.error("Não consegui conectar com o Google agora. Tenta de novo.");
+      toastErro("Não deu pra entrar por aí. Tenta de novo ou usa o e-mail.");
     }
   }
 
   return (
     <AuthShell>
-      <CaveatEyebrow>Oi. Vamos montar o seu começo.</CaveatEyebrow>
-      <SerifHeadline>Cria a sua conta.</SerifHeadline>
+      <SerifHeadline size={28}>Comece pelo comecinho.</SerifHeadline>
+      <SubText>Sua conta em menos de um minuto.</SubText>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4" noValidate>
+      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
         <CosmicInput
-          label="Como você se chama?"
+          label="Seu nome"
           name="nome"
           autoComplete="name"
-          placeholder="Ana"
+          placeholder="como você quer ser chamada"
           icon={<User size={18} />}
           value={values.nome}
           onChange={(e) => set("nome", e.target.value)}
@@ -125,11 +150,11 @@ function CadastroPage() {
           disabled={loading}
         />
         <CosmicInput
-          label="Qual é o seu e-mail?"
+          label="Seu e-mail"
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="ana@seunegocio.com.br"
+          placeholder="voce@seunegocio.com.br"
           icon={<Mail size={18} />}
           value={values.email}
           onChange={(e) => set("email", e.target.value)}
@@ -138,48 +163,49 @@ function CadastroPage() {
         />
         <div>
           <CosmicInput
-            label="Cria uma senha"
+            ref={senhaRef}
+            label="Crie uma senha"
             name="senha"
             type="password"
             autoComplete="new-password"
-            placeholder="Mínimo 8 caracteres"
+            placeholder="crie uma senha segura"
             value={values.senha}
             onChange={(e) => set("senha", e.target.value)}
-            error={errors.senha}
+            onKeyUp={caps.onKeyUp}
+            invalid={senhaInvalida}
             disabled={loading}
           />
-          {values.senha.length > 0 && <PasswordStrength password={values.senha} />}
+          <CapsLockHint ligado={caps.ligado} />
+          <PasswordRequirements password={values.senha} />
         </div>
 
-        <div className="mt-2">
-          <CosmicButton type="submit" loading={loading}>
-            {loading ? "Criando..." : "Criar minha conta →"}
-          </CosmicButton>
+        <div className="mt-1">
+          <AuthButton type="submit" fullWidth loading={loading}>
+            {loading ? "Criando..." : "Criar conta →"}
+          </AuthButton>
         </div>
       </form>
 
       <Divider />
       <GoogleButton onClick={handleGoogle} loading={googleLoading} />
 
-      <p className="mt-5 text-center font-sans text-[14px] text-[#D8D2CC]/70">
+      <p className="mt-4 text-center text-[14px] text-[var(--muted)]">
         Já tem conta?{" "}
-        <Link to="/auth/login" className="text-[#C96B3E] underline underline-offset-2">
+        <Link to="/auth/login" className="text-[var(--ink-soft)] underline underline-offset-2">
           Entrar
         </Link>
       </p>
-      <p className="mt-3 text-center font-sans text-[12px] text-[#D8D2CC]/50">
+      <p className="mt-2 text-center text-[12px] text-[var(--muted)]">
         Ao criar sua conta, você concorda com os nossos{" "}
-        <a href="#" className="text-[#C96B3E]">
+        <a href="#" className="text-[var(--ink-soft)] underline">
           Termos de Uso
         </a>{" "}
         e{" "}
-        <a href="#" className="text-[#C96B3E]">
+        <a href="#" className="text-[var(--ink-soft)] underline">
           Política de Privacidade
         </a>
         .
       </p>
-
-      <span className="sr-only">{passwordScore(values.senha)}</span>
     </AuthShell>
   );
 }

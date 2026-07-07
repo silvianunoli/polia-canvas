@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { toastErro } from "@/lib/toast";
 import { Users, Plus, Trash2, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/equipe")({
@@ -67,15 +68,20 @@ function EquipePage() {
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["equipe", userId] });
 
+  // Sem checar { error } o mutationFn nunca "falha" — a mutation reporta sucesso, o form
+  // limpa e a lista invalida como se tivesse gravado. Lança no erro pra cair no onErro.
+  const onErro = (msg: string) => () => toastErro(msg);
+
   const adicionar = useMutation({
     mutationFn: async () => {
       if (!nome.trim()) return;
-      await supabase.from("equipe_membros").insert({
+      const { error } = await supabase.from("equipe_membros").insert({
         user_id: userId!,
         nome: nome.trim(),
         email: email.trim() || null,
         papel,
       });
+      if (error) throw error;
     },
     onSuccess: () => {
       setNome("");
@@ -84,40 +90,51 @@ function EquipePage() {
       setAberto(false);
       invalidar();
     },
+    onError: onErro("Não consegui adicionar a pessoa. Tenta de novo."),
   });
 
   const criarDemo = useMutation({
     mutationFn: async () => {
-      await supabase.from("equipe_membros").insert(DEMO.map((d) => ({ ...d, user_id: userId! })));
+      const { error } = await supabase
+        .from("equipe_membros")
+        .insert(DEMO.map((d) => ({ ...d, user_id: userId! })));
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: onErro("Não consegui criar os exemplos. Tenta de novo."),
   });
 
   const alternarStatus = useMutation({
     mutationFn: async (m: Membro) => {
-      await supabase
+      const { error } = await supabase
         .from("equipe_membros")
         .update({ status: m.status === "ativo" ? "inativo" : "ativo" })
         .eq("id", m.id);
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: onErro("Não consegui mudar o status. Tenta de novo."),
   });
 
   const alternarPapel = useMutation({
     mutationFn: async (m: Membro) => {
-      await supabase
+      const { error } = await supabase
         .from("equipe_membros")
         .update({ papel: m.papel === "lider" ? "membro" : "lider" })
         .eq("id", m.id);
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: onErro("Não consegui mudar o papel. Tenta de novo."),
   });
 
   const remover = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("equipe_membros").delete().eq("id", id);
+      const { error } = await supabase.from("equipe_membros").delete().eq("id", id);
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: onErro("Não consegui remover a pessoa. Tenta de novo."),
   });
 
   const filtrados = useMemo(() => {
@@ -232,7 +249,7 @@ function EquipePage() {
               Você ainda está sozinha aqui
             </p>
             <p className="mx-auto mb-4 max-w-[400px] font-sans text-[14px] leading-relaxed text-[#1A1A2E] opacity-55">
-              Adicione quem te ajuda no negócio — sócia, freelancer, assistente. Depois dá pra
+              Adicione quem te ajuda no negócio: sócia, freelancer, assistente. Depois dá pra
               delegar cards do Planner pra cada pessoa.
             </p>
             <button

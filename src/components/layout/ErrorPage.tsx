@@ -1,275 +1,182 @@
+import { useEffect, useRef } from "react";
 import { Link } from "@tanstack/react-router";
-import { StarField } from "@/components/ui/StarField";
-import { PlaceholderImage } from "@/components/PlaceholderImage";
+import {
+  Compass,
+  AlertTriangle,
+  Lock,
+  Wrench,
+  WifiOff,
+  Clock,
+  Link2Off,
+  CreditCard,
+  type LucideIcon,
+} from "lucide-react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 
-export type ErrorCode = "400" | "401" | "403" | "404" | "408" | "500" | "502" | "503";
+export type ErrorCode =
+  | "404"
+  | "500"
+  | "403"
+  | "manutencao"
+  | "offline"
+  | "sessao-expirada"
+  | "link-expirado"
+  | "paywall";
 
-type RaposaState =
-  | "feliz"
-  | "animada"
-  | "curiosa"
-  | "amparando"
-  | "dormindo"
-  | "confusa"
-  | "esperando";
+export type ErrorAction = { label: string; href: string } | { label: string; onClick: () => void };
 
 interface CopyMap {
   title: string;
   subtitle: string;
-  raposa: RaposaState;
   pageTitle: string;
+  icon: LucideIcon;
+  primaryAction: ErrorAction;
+  secondaryAction?: ErrorAction;
 }
 
-const COPY: Record<ErrorCode, CopyMap> = {
-  "400": {
-    title: "Algo veio torto.",
-    subtitle: "Volta um passinho e tenta de novo.",
-    raposa: "curiosa",
-    pageTitle: "Requisição inválida",
-  },
-  "401": {
-    title: "Te perdi por um segundo.",
-    subtitle: "Faz login de novo, eu te espero aqui.",
-    raposa: "dormindo",
-    pageTitle: "Sessão expirou",
-  },
-  "403": {
-    title: "Esse cantinho ainda não é seu.",
-    subtitle: "Volta quando estiver na fase certa.",
-    raposa: "amparando",
-    pageTitle: "Acesso restrito",
-  },
+// Textos exatos da seção 3.1 do PRD de sistema de erros. Não reescrever solto
+// em outro lugar — quem precisar da mesma copy (ex: banner de sessão expirada
+// no login) importa ERROR_COPY em vez de duplicar a frase.
+export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   "404": {
-    title: "Esse marco ainda não existe no mapa.",
-    subtitle: "Mas a sua jornada continua por aqui.",
-    raposa: "curiosa",
+    title: "Essa página não existe.",
+    subtitle: "O endereço está errado ou a página saiu do ar.",
     pageTitle: "Página não encontrada",
-  },
-  "408": {
-    title: "A conexão respirou fundo demais.",
-    subtitle: "Tenta de novo daqui a pouco.",
-    raposa: "esperando",
-    pageTitle: "Tempo esgotado",
+    icon: Compass,
+    primaryAction: { label: "Ir pro início", href: "/painel" },
+    secondaryAction: { label: "Falar com a gente", href: "/contato" },
   },
   "500": {
-    title: "O mapa perdeu o norte um segundo.",
-    subtitle: "Não é você, sou eu. Já volto a te guiar.",
-    raposa: "confusa",
+    title: "Algo travou do nosso lado.",
+    subtitle: "Não foi você. A gente já foi avisado. Tenta de novo em instantes.",
     pageTitle: "Erro interno",
+    icon: AlertTriangle,
+    primaryAction: { label: "Tentar de novo", href: "/painel" },
+    secondaryAction: { label: "Ir pro início", href: "/painel" },
   },
-  "502": {
-    title: "O mapa perdeu o norte um segundo.",
-    subtitle: "Não é você, sou eu. Já volto a te guiar.",
-    raposa: "confusa",
-    pageTitle: "Servidor instável",
+  "403": {
+    title: "Você não tem acesso a essa parte.",
+    subtitle: "Se acha que deveria ter, fala com a gente.",
+    pageTitle: "Acesso restrito",
+    icon: Lock,
+    primaryAction: { label: "Voltar", href: "/painel" },
+    secondaryAction: { label: "Falar com a gente", href: "/contato" },
   },
-  "503": {
-    title: "O mapa perdeu o norte um segundo.",
-    subtitle: "Não é você, sou eu. Já volto a te guiar.",
-    raposa: "confusa",
-    pageTitle: "Servidor indisponível",
+  manutencao: {
+    title: "A Pólia está em manutenção rápida.",
+    subtitle: "A gente volta já. As suas etapas estão a salvo.",
+    pageTitle: "Manutenção",
+    icon: Wrench,
+    primaryAction: { label: "Tentar de novo", href: "/painel" },
+  },
+  offline: {
+    title: "Você está sem internet.",
+    subtitle: "Assim que voltar, você continua de onde parou.",
+    pageTitle: "Sem conexão",
+    icon: WifiOff,
+    primaryAction: { label: "Tentar de novo", href: "/painel" },
+  },
+  "sessao-expirada": {
+    title: "Sua sessão expirou.",
+    subtitle:
+      "Por segurança, a gente encerrou o acesso. Entra de novo pra continuar de onde parou.",
+    pageTitle: "Sessão expirada",
+    icon: Clock,
+    primaryAction: { label: "Entrar", href: "/auth/login" },
+  },
+  "link-expirado": {
+    title: "Esse link expirou.",
+    subtitle: "Peça um novo link que a gente manda na hora.",
+    pageTitle: "Link expirado",
+    icon: Link2Off,
+    primaryAction: { label: "Enviar novo link", href: "/auth/esqueci-senha" },
+  },
+  paywall: {
+    title: "Seu período de teste terminou.",
+    subtitle: "Pra continuar com as suas etapas, escolha um plano. Nada some enquanto isso.",
+    pageTitle: "Fim do período de teste",
+    icon: CreditCard,
+    primaryAction: { label: "Ver planos", href: "/precos" },
+    secondaryAction: { label: "Falar com a gente", href: "/contato" },
   },
 };
 
-interface ErrorPageProps {
+export interface ErrorPageProps {
   code: ErrorCode;
   title?: string;
   subtitle?: string;
-  ctaLabel?: string;
-  ctaHref?: string;
-  onCta?: () => void;
+  /** ID curto pra usuária citar no suporte — só aparece quando fornecido (tipicamente em 500). */
+  errorId?: string;
+  primaryAction?: ErrorAction;
+  secondaryAction?: ErrorAction;
+}
+
+function ActionButton({
+  action,
+  variant,
+}: {
+  action: ErrorAction;
+  variant: "primary" | "secondary";
+}) {
+  const className =
+    variant === "primary"
+      ? "rounded-lg bg-[var(--secondary)] px-8 py-4 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
+      : "rounded-lg border border-[var(--ink)] px-8 py-4 text-[16px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white";
+
+  if ("href" in action) {
+    return (
+      <Link to={action.href} className={className}>
+        {action.label}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={action.onClick} className={className}>
+      {action.label}
+    </button>
+  );
 }
 
 export function ErrorPage({
   code,
   title,
   subtitle,
-  ctaLabel = "Voltar pro início",
-  ctaHref = "/painel",
-  onCta,
+  errorId,
+  primaryAction,
+  secondaryAction,
 }: ErrorPageProps) {
-  const copy = COPY[code];
+  const copy = ERROR_COPY[code];
+  const Icon = copy.icon;
+  const headingRef = useRef<HTMLHeadingElement>(null);
   useDocumentTitle(copy.pageTitle);
 
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
+
+  const primary = primaryAction ?? copy.primaryAction;
+  const secondary = secondaryAction ?? copy.secondaryAction;
+
   return (
-    <div
-      style={{
-        background: "var(--azul-noite, #1A1A2E)",
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        textAlign: "center",
-        position: "relative",
-        overflow: "hidden",
-        padding: 24,
-      }}
-    >
-      <StarField density={40} speed={0.4} />
-      {/* hill base */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: 0,
-          right: 0,
-          bottom: 0,
-          height: 140,
-          background:
-            "radial-gradient(ellipse at 50% 100%, rgba(10,10,30,0.95) 30%, transparent 75%)",
-          pointerEvents: "none",
-        }}
-      />
-      <div
-        style={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 520,
-          width: "100%",
-        }}
-      >
-        <div
-          style={{
-            fontFamily: "Caveat, cursive",
-            fontSize: 20,
-            color: "#C8A96E",
-            marginBottom: 16,
-          }}
+    <div className="polia-v3 flex min-h-screen items-center justify-center bg-white px-6 py-16 text-center">
+      <div className="max-w-[440px]">
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--secondary-light)]">
+          <Icon size={28} className="text-[var(--secondary-ink)]" aria-hidden="true" />
+        </div>
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-fraunces text-[32px] leading-[1.15] text-[var(--ink)] outline-none md:text-[40px]"
         >
-          ops.
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-          <PlaceholderImage
-            slot={`mascote-raposa-${copy.raposa}`}
-            width={120}
-            height={140}
-            description={`Raposa · estado ${copy.raposa}`}
-          />
-        </div>
-
-        <div style={{ position: "relative", paddingTop: 24 }}>
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              top: 0,
-              left: "50%",
-              transform: "translateX(-50%)",
-              fontFamily: "DM Serif Display, serif",
-              fontSize: 96,
-              lineHeight: 1,
-              color: "rgba(255,255,255,0.07)",
-              pointerEvents: "none",
-              userSelect: "none",
-              letterSpacing: "-0.04em",
-            }}
-          >
-            {code}
-          </div>
-          <h1
-            style={{
-              position: "relative",
-              fontFamily: "DM Serif Display, serif",
-              fontSize: 36,
-              lineHeight: 1.15,
-              color: "#FDF8F5",
-              margin: 0,
-              marginTop: 24,
-            }}
-          >
-            {title ?? copy.title}
-          </h1>
-        </div>
-        <p
-          style={{
-            fontFamily: "Inter, sans-serif",
-            fontSize: 18,
-            color: "rgba(253,248,245,0.65)",
-            marginTop: 16,
-            lineHeight: 1.5,
-          }}
-        >
+          {title ?? copy.title}
+        </h1>
+        <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
           {subtitle ?? copy.subtitle}
         </p>
-        <p
-          style={{
-            fontFamily: "Caveat, cursive",
-            fontSize: 16,
-            color: "#C8A96E",
-            opacity: 0.85,
-            marginTop: 8,
-          }}
-        >
-          Deixa a Pólia te guiar de volta.
-        </p>
-
-        <div
-          style={{
-            marginTop: 32,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 16,
-          }}
-        >
-          {onCta ? (
-            <button
-              onClick={onCta}
-              style={{
-                background: "#C96B3E",
-                color: "#FDF8F5",
-                fontFamily: "Inter, sans-serif",
-                fontSize: 16,
-                fontWeight: 600,
-                padding: "16px 40px",
-                borderRadius: 12,
-                border: "none",
-                cursor: "pointer",
-                boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
-                minHeight: 44,
-              }}
-            >
-              {ctaLabel}
-            </button>
-          ) : (
-            <Link
-              to={ctaHref}
-              style={{
-                background: "#C96B3E",
-                color: "#FDF8F5",
-                fontFamily: "Inter, sans-serif",
-                fontSize: 16,
-                fontWeight: 600,
-                padding: "16px 40px",
-                borderRadius: 12,
-                display: "inline-block",
-                textDecoration: "none",
-                boxShadow: "0 8px 24px rgba(201,107,62,0.25)",
-                minHeight: 44,
-              }}
-            >
-              {ctaLabel}
-            </Link>
-          )}
-          {ctaHref !== "/jornada" && (
-            <Link
-              to="/jornada"
-              style={{
-                fontFamily: "Inter, sans-serif",
-                fontSize: 14,
-                color: "rgba(253,248,245,0.65)",
-                textDecoration: "underline",
-                textUnderlineOffset: 4,
-                minHeight: 44,
-                display: "inline-flex",
-                alignItems: "center",
-              }}
-            >
-              voltar pra jornada
-            </Link>
-          )}
+        {errorId && <p className="mt-3 text-[12px] text-[var(--muted)]">Código: {errorId}</p>}
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <ActionButton action={primary} variant="primary" />
+          {secondary && <ActionButton action={secondary} variant="secondary" />}
         </div>
       </div>
     </div>

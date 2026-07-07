@@ -1,20 +1,16 @@
-import { useMemo, useState } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { SidebarAside } from "@/components/layout/SidebarAside";
+import { toastErro, toastSucesso } from "@/lib/toast";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
-      { title: "Suas vendas e clientes · Pólia" },
-      {
-        name: "description",
-        content:
-          "Hub vivo de vendas e clientes: roteiro de fechamento, protocolo de cuidado e plano de conteúdo.",
-      },
+      { title: "Seus clientes · Pólia" },
+      { name: "description", content: "Suas clientes, do primeiro contato ao pós-venda." },
     ],
   }),
   beforeLoad: async () => {
@@ -43,57 +39,54 @@ interface Cliente {
   contato: string | null;
   status_pedido: StatusPedido | null;
   notas: string | null;
+  valor: number | null;
+  produto_id: string | null;
   created_at: string;
+  updated_at: string | null;
+  venda_registrada: boolean;
 }
 
-interface Entregavel {
+interface Produto {
   id: string;
-  etapa: number;
-  tipo: string;
-  conteudo: Record<string, unknown> | null;
+  nome: string;
 }
 
-type TabId = "clientes" | "vendas" | "cuidado" | "conteudo";
+function formatarValorBRL(valor: number | null) {
+  if (valor === null || valor === undefined) return null;
+  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function formatarDataCurta(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
 
 function statusPedidoCor(status: StatusPedido) {
   switch (status) {
     case "Em produção":
-      return "bg-[rgba(201,107,62,0.1)] text-polia-terracota";
+      return "bg-[var(--secondary-light)] text-[var(--secondary-text)]";
     case "Entregue":
-      return "bg-[rgba(44,106,79,0.1)] text-[#2D6A4F]";
-    case "Em espera":
-      return "bg-[rgba(200,169,110,0.15)] text-[#C8A96E]";
+      return "bg-[var(--surface-pink)] text-[var(--ink-soft)]";
     case "Atrasado":
-      return "bg-[rgba(201,64,122,0.1)] text-[#C9407A]";
+      return "bg-[var(--highlight)] text-[var(--highlight-ink)]";
+    case "Em espera":
+    default:
+      return "bg-[var(--line)] text-[var(--ink-soft)]";
   }
 }
 
 function ClientesPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
-  const navigate = useNavigate();
   const qc = useQueryClient();
-
-  const [tabAtiva, setTabAtiva] = useState<TabId>("clientes");
-  const [modalClienteAberto, setModalClienteAberto] = useState(false);
+  const [modalAberto, setModalAberto] = useState(false);
 
   const dadosQuery = useQuery({
     queryKey: ["clientes-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, progressRes, entregaveisRes, clientesRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("full_name, etapa_atual, streak, orbit_sales_unlocked, orbit_sales_active")
-          .eq("id", userId!)
-          .maybeSingle(),
-        supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
-        supabase
-          .from("entregaveis")
-          .select("id, etapa, tipo, conteudo")
-          .eq("user_id", userId!)
-          .in("etapa", [7, 8, 9])
-          .eq("status", "concluido"),
+      const [profileRes, clientesRes, produtosRes] = await Promise.all([
+        supabase.from("profiles").select("full_name, streak").eq("id", userId!).maybeSingle(),
         (
           supabase.from("clientes" as never) as unknown as {
             select: (s: string) => {
@@ -112,170 +105,84 @@ function ClientesPage() {
           .select("*")
           .eq("user_id", userId!)
           .order("created_at", { ascending: false }),
+        supabase.from("produtos").select("id, nome").eq("user_id", userId!),
       ]);
-
-      const clientes = ((clientesRes as { data: Cliente[] | null }).data ?? []) as Cliente[];
-
       return {
-        profile: profileRes.data,
-        etapaAtual: progressRes.data?.etapa_atual ?? profileRes.data?.etapa_atual ?? 1,
-        entregaveis: (entregaveisRes.data ?? []) as Entregavel[],
-        clientes,
+        profile: profileRes.data as { full_name: string | null; streak: number | null } | null,
+        clientes: ((clientesRes as { data: Cliente[] | null }).data ?? []) as Cliente[],
+        produtos: (produtosRes.data ?? []) as Produto[],
       };
     },
   });
 
   const profile = dadosQuery.data?.profile;
-  const entregaveis = dadosQuery.data?.entregaveis ?? [];
   const clientes = dadosQuery.data?.clientes ?? [];
-  const etapaAtual = dadosQuery.data?.etapaAtual ?? 1;
-
-  const orbitUnlocked = profile?.orbit_sales_unlocked ?? false;
-  const orbitActive = profile?.orbit_sales_active ?? false;
-
-  const roteiro = useMemo(() => entregaveis.find((e) => e.etapa === 7), [entregaveis]);
-  const protocolo = useMemo(() => entregaveis.find((e) => e.etapa === 8), [entregaveis]);
-  const plano = useMemo(() => entregaveis.find((e) => e.etapa === 9), [entregaveis]);
-
+  const produtos = dadosQuery.data?.produtos ?? [];
   const initial = (profile?.full_name?.charAt(0) || "P").toUpperCase();
-  const streak = (profile as { streak?: number } | null)?.streak ?? 0;
+  const streak = profile?.streak ?? 0;
 
-  if (dadosQuery.isLoading) {
-    return (
-      <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
-        <p className="caveat-decorativo text-[#1A1A2E] opacity-40">carregando...</p>
-      </div>
-    );
-  }
-
-  // ESTADO BLOQUEADO
-  if (!orbitUnlocked) {
-    return (
-      <div className="min-h-screen bg-polia-papel-creme flex flex-col items-center justify-center text-center px-8">
-        <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-4">
-          SUAS VENDAS E CLIENTES
-        </p>
-        <h1 className="font-serif text-polia-marrom text-[48px] leading-tight mb-4 max-w-[520px]">
-          Essa ferramenta anda com você quando você chegar na Etapa 7.
-        </h1>
-        <p className="font-sans text-polia-marrom/70 text-[16px] max-w-[440px] mb-8">
-          Complete as etapas de Venda pra montar seu fluxo de vendas, protocolo de cuidado e plano
-          de conteúdo.
-        </p>
-        <button
-          onClick={() => navigate({ to: `/etapa/${etapaAtual}` as string })}
-          className="bg-polia-terracota text-polia-creme font-sans font-semibold text-[16px] px-8 py-3.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
-        >
-          Continuar minha jornada →
-        </button>
-        <p className="caveat-decorativo text-polia-marrom/70 mt-4">falta pouco.</p>
-      </div>
-    );
-  }
+  const nomeProduto = (produtoId: string | null) => {
+    if (!produtoId) return "sem produto";
+    return produtos.find((p) => p.id === produtoId)?.nome || "sem produto";
+  };
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <PainelNav initial={initial} streak={streak} navActive="/clientes" />
 
-      {/* Cabeçalho */}
-      <div className="px-6 pt-8 md:px-12 md:pt-10">
-        <div className="flex flex-col gap-6 mb-8 max-w-[1280px] mx-auto md:flex-row md:items-end md:justify-between">
+      <div className="mx-auto max-w-[880px] px-6 py-12 md:px-10">
+        <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="font-accent text-polia-terracota text-[11px] tracking-[2px] uppercase mb-2">
-              SUAS VENDAS E CLIENTES
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+              SEUS CLIENTES
             </p>
-            <h1 className="font-serif text-[#1A1A2E] text-[28px] leading-tight md:text-[44px]">
+            <h1 className="font-fraunces text-[clamp(28px,5vw,44px)] leading-tight text-[var(--ink)]">
               Do primeiro contato ao sim.
             </h1>
-            <p className="caveat-decorativo text-polia-terracota mt-2">
-              {orbitActive
-                ? "fluxo completo: vendas, cuidado e conteúdo."
-                : "vendas e cuidado montados. conteúdo vem na Etapa 9."}
+            <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
+              suas clientes e seus pedidos, num lugar só.
             </p>
           </div>
-        </div>
-      </div>
+          <button
+            onClick={() => setModalAberto(true)}
+            className="shrink-0 rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
+          >
+            + Adicionar cliente
+          </button>
+        </header>
 
-      {/* Tabs */}
-      <div className="px-6 md:px-12">
-        <div className="grid grid-cols-2 gap-2 md:flex md:gap-1 md:border-b md:border-[rgba(26,26,46,0.08)] max-w-[1280px] mx-auto">
-          {(
-            [
-              { id: "clientes", label: "Clientes", bloqueado: false },
-              { id: "vendas", label: "Fluxo de vendas", bloqueado: false },
-              { id: "cuidado", label: "Protocolo de cuidado", bloqueado: false },
-              {
-                id: "conteudo",
-                label: "Plano de conteúdo",
-                bloqueado: !orbitActive,
-              },
-            ] as { id: TabId; label: string; bloqueado: boolean }[]
-          ).map((tab) => {
-            const ativo = tabAtiva === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setTabAtiva(tab.id)}
-                className={`font-sans text-[13px] md:text-[14px] px-3 md:px-5 py-2.5 md:py-3 rounded-lg md:rounded-none border md:border-0 md:border-b-2 transition-colors text-center ${
-                  ativo
-                    ? "border-[#C96B3E] text-polia-terracota font-semibold bg-[rgba(201,107,62,0.06)] md:bg-transparent"
-                    : "border-[rgba(26,26,46,0.1)] md:border-transparent text-[#1A1A2E] opacity-60 md:opacity-50 hover:opacity-80"
-                }`}
-              >
-                {tab.label}
-                {tab.bloqueado && (
-                  <span className="font-sans text-[10px] ml-2 opacity-50">· Etapa 9</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Conteúdo das tabs */}
-      <div className="px-6 py-8 md:px-12 md:py-10">
-        {tabAtiva === "clientes" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8 max-w-[1280px] mx-auto">
-            <TabClientes clientes={clientes} onAdicionar={() => setModalClienteAberto(true)} />
-            <SidebarAside caveat="cada nome aqui é uma história que começou com você.">
-              <p className="font-sans text-[13px] text-polia-noite/70">
-                {clientes.length}{" "}
-                {clientes.length === 1 ? "cliente cadastrada" : "clientes cadastradas"}.
-              </p>
-            </SidebarAside>
+        {dadosQuery.isLoading ? (
+          <p className="py-16 text-center font-fraunces italic text-[15px] text-[var(--muted)]">
+            carregando…
+          </p>
+        ) : clientes.length === 0 ? (
+          <div className="rounded-2xl border-2 border-dashed border-[var(--line)] py-16 text-center">
+            <p className="font-fraunces italic text-[15px] text-[var(--muted)]">
+              adicione sua primeira cliente aqui.
+            </p>
           </div>
         ) : (
-          <div className="max-w-[880px] mx-auto">
-            {tabAtiva === "vendas" && (
-              <TabEntregavelE7
-                entregavel={roteiro}
-                onIrEtapa={() => navigate({ to: "/etapa/7" })}
+          <div>
+            {clientes.map((cliente) => (
+              <LinhaCliente
+                key={cliente.id}
+                cliente={cliente}
+                nomeProduto={nomeProduto(cliente.produto_id)}
+                userId={userId!}
+                onRegistrado={() => qc.invalidateQueries({ queryKey: ["clientes-hub", userId] })}
               />
-            )}
-            {tabAtiva === "cuidado" && (
-              <TabEntregavelE8
-                entregavel={protocolo}
-                onIrEtapa={() => navigate({ to: "/etapa/8" })}
-              />
-            )}
-            {tabAtiva === "conteudo" && (
-              <TabEntregavelE9
-                entregavel={plano}
-                bloqueado={!orbitActive}
-                onIrEtapa={() => navigate({ to: "/etapa/9" })}
-              />
-            )}
+            ))}
           </div>
         )}
       </div>
 
-      {modalClienteAberto && userId && (
+      {modalAberto && userId && (
         <ModalCliente
           userId={userId}
-          onClose={() => setModalClienteAberto(false)}
+          onClose={() => setModalAberto(false)}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["clientes-hub", userId] });
-            setModalClienteAberto(false);
+            setModalAberto(false);
           }}
         />
       )}
@@ -283,269 +190,163 @@ function ClientesPage() {
   );
 }
 
-/* ============== TAB 1 — CLIENTES ============== */
-function TabClientes({ clientes, onAdicionar }: { clientes: Cliente[]; onAdicionar: () => void }) {
+/* ============== Linha da lista + popover de registro ============== */
+function LinhaCliente({
+  cliente,
+  nomeProduto,
+  userId,
+  onRegistrado,
+}: {
+  cliente: Cliente;
+  nomeProduto: string;
+  userId: string;
+  onRegistrado: () => void;
+}) {
+  const [popAberto, setPopAberto] = useState(false);
+  const [duplicataData, setDuplicataData] = useState<string | null>(null);
+  const [registrando, setRegistrando] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!popAberto) return;
+    const aoClicarFora = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setPopAberto(false);
+      }
+    };
+    document.addEventListener("mousedown", aoClicarFora);
+    return () => document.removeEventListener("mousedown", aoClicarFora);
+  }, [popAberto]);
+
+  const abrirPopover = async () => {
+    setPopAberto(true);
+    setDuplicataData(null);
+    const seteDiasAtras = new Date();
+    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
+    const { data } = await supabase
+      .from("lancamentos")
+      .select("data, descricao")
+      .eq("user_id", userId)
+      .ilike("descricao", cliente.nome)
+      .gte("data", seteDiasAtras.toISOString().slice(0, 10));
+    if (data && data.length > 0) {
+      setDuplicataData(data[0].data);
+    }
+  };
+
+  const registrar = async () => {
+    setRegistrando(true);
+    // RPC transacional: insere o lançamento e marca a cliente numa só transação. Se o update
+    // falhar, o insert faz rollback — sem lançamento órfão que levasse a registro DUPLICADO.
+    const { error } = await (
+      supabase.rpc as unknown as (
+        fn: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ error: { message?: string } | null }>
+    )("registrar_venda_cliente", { p_cliente_id: cliente.id });
+    setRegistrando(false);
+    if (error) {
+      const jaRegistrada = error.message?.includes("já registrada");
+      toastErro(
+        jaRegistrada
+          ? "Essa venda já foi registrada. Atualize a página."
+          : "Não consegui registrar a venda no Financeiro. Tenta de novo.",
+      );
+      // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
+      if (jaRegistrada) onRegistrado();
+      return;
+    }
+    setPopAberto(false);
+    onRegistrado();
+    toastSucesso("Venda registrada no Financeiro.");
+  };
+
+  const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
+
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div
+      ref={containerRef}
+      className="relative mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
+          <span className="font-sans text-[16px] font-semibold text-[var(--accent-ink)]">
+            {cliente.nome.charAt(0).toUpperCase()}
+          </span>
+        </div>
         <div>
-          <h2 className="font-serif text-[#1A1A2E] text-[28px]">Suas clientes</h2>
-          <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50 mt-1">
-            {clientes.length} cadastradas
+          <p className="font-sans text-[15px] font-semibold text-[var(--ink)]">{cliente.nome}</p>
+          <p className="font-sans text-[12px] text-[var(--muted)]">
+            {cliente.contato || "sem contato"}
+          </p>
+          <p className="mt-0.5 font-sans text-[13px] text-[var(--ink-soft)]">
+            {nomeProduto}
+            {formatarValorBRL(cliente.valor) ? ` · ${formatarValorBRL(cliente.valor)}` : ""}
+            {` · ${formatarDataCurta(cliente.created_at)}`}
           </p>
         </div>
-        <button
-          onClick={onAdicionar}
-          className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota px-5 py-2.5 rounded-xl hover:bg-[#B85A2D] transition-colors"
-        >
-          + Adicionar cliente
-        </button>
       </div>
-
-      {clientes.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed border-[rgba(26,26,46,0.08)] rounded-2xl">
-          <p className="caveat-decorativo text-[#1A1A2E] opacity-35">
-            adicione sua primeira cliente aqui.
-          </p>
-        </div>
-      ) : (
-        clientes.map((cliente) => (
-          <div
-            key={cliente.id}
-            className="bg-white rounded-xl p-5 border border-[rgba(26,26,46,0.06)] mb-3 flex items-center justify-between hover:border-[rgba(201,107,62,0.15)] transition-colors"
+      <div className="flex items-center gap-3">
+        {cliente.status_pedido && (
+          <span
+            className={`font-sans text-[11px] px-3 py-1 rounded ${statusPedidoCor(cliente.status_pedido)}`}
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-[rgba(201,107,62,0.12)] flex items-center justify-center">
-                <span className="font-sans font-semibold text-polia-terracota text-[16px]">
-                  {cliente.nome.charAt(0).toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <p className="font-sans text-[#1A1A2E] text-[15px] font-semibold">{cliente.nome}</p>
-                <p className="font-sans text-[#1A1A2E] text-[12px] opacity-40">
-                  {cliente.contato || "sem contato"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              {cliente.status_pedido && (
-                <span
-                  className={`font-sans text-[11px] px-3 py-1 rounded-full ${statusPedidoCor(cliente.status_pedido)}`}
-                >
-                  {cliente.status_pedido}
-                </span>
-              )}
-            </div>
-          </div>
-        ))
-      )}
-    </div>
-  );
-}
-
-/* ============== Card de entregável genérico ============== */
-function CardEntregavel({
-  selo,
-  titulo,
-  blocos,
-  destaque,
-}: {
-  selo: string;
-  titulo: string;
-  blocos: { label: string; conteudo: string }[];
-  destaque?: { label: string; texto: string };
-}) {
-  return (
-    <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] max-w-[760px]">
-      <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
-        {selo}
-      </p>
-      <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">{titulo}</p>
-      {blocos.map((item, i) => (
-        <div
-          key={item.label}
-          className={`mb-5 pb-5 ${
-            i === blocos.length - 1
-              ? "border-none mb-0 pb-0"
-              : "border-b border-[rgba(26,26,46,0.06)]"
-          }`}
-        >
-          <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
-            {item.label}
-          </p>
-          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">{item.conteudo}</p>
-        </div>
-      ))}
-      {destaque && (
-        <div className="mt-6 bg-[rgba(201,107,62,0.04)] border border-[rgba(201,107,62,0.15)] rounded-xl p-5">
-          <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-polia-terracota mb-2">
-            {destaque.label}
-          </p>
-          <p className="caveat-decorativo text-[#1A1A2E] leading-relaxed">"{destaque.texto}"</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function EstadoVazioEntregavel({
-  texto,
-  ctaTexto,
-  onClick,
-}: {
-  texto: string;
-  ctaTexto: string;
-  onClick: () => void;
-}) {
-  return (
-    <div className="text-center py-16">
-      <p className="font-sans text-[#1A1A2E] text-[15px] opacity-40 mb-4">{texto}</p>
-      <button
-        onClick={onClick}
-        className="font-sans text-polia-terracota text-[14px] hover:underline"
-      >
-        {ctaTexto}
-      </button>
-    </div>
-  );
-}
-
-/* ============== TAB 2 — E7 ============== */
-function TabEntregavelE7({
-  entregavel,
-  onIrEtapa,
-}: {
-  entregavel?: Entregavel;
-  onIrEtapa: () => void;
-}) {
-  if (!entregavel || !entregavel.conteudo) {
-    return (
-      <EstadoVazioEntregavel
-        texto="Complete a Etapa 7 pra gerar seu roteiro de fechamento."
-        ctaTexto="Ir pra Etapa 7 →"
-        onClick={onIrEtapa}
-      />
-    );
-  }
-  const c = entregavel.conteudo as {
-    passo_descoberta?: string;
-    passo_decisao?: string;
-    passo_fechamento?: string;
-    mensagem_fechamento?: string;
-  };
-  return (
-    <CardEntregavel
-      selo="ENTREGÁVEL · ETAPA 7"
-      titulo="Do primeiro contato ao sim"
-      blocos={[
-        { label: "COMO ELA TE DESCOBRE", conteudo: c.passo_descoberta || "" },
-        { label: "O QUE A CONVENCE", conteudo: c.passo_decisao || "" },
-        { label: "COMO VOCÊ FECHA", conteudo: c.passo_fechamento || "" },
-      ]}
-      destaque={{
-        label: "SUA MENSAGEM DE FECHAMENTO",
-        texto: c.mensagem_fechamento || "",
-      }}
-    />
-  );
-}
-
-/* ============== TAB 3 — E8 ============== */
-function TabEntregavelE8({
-  entregavel,
-  onIrEtapa,
-}: {
-  entregavel?: Entregavel;
-  onIrEtapa: () => void;
-}) {
-  if (!entregavel || !entregavel.conteudo) {
-    return (
-      <EstadoVazioEntregavel
-        texto="Complete a Etapa 8 pra gerar seu protocolo de cuidado."
-        ctaTexto="Ir pra Etapa 8 →"
-        onClick={onIrEtapa}
-      />
-    );
-  }
-  const c = entregavel.conteudo as {
-    boas_vindas?: string;
-    resolucao?: string;
-    fidelizacao?: string;
-    mensagem_pos_entrega?: string;
-  };
-  return (
-    <CardEntregavel
-      selo="ENTREGÁVEL · ETAPA 8"
-      titulo="Seu protocolo de cuidado"
-      blocos={[
-        { label: "BOAS-VINDAS", conteudo: c.boas_vindas || "" },
-        { label: "QUANDO ALGO DÁ ERRADO", conteudo: c.resolucao || "" },
-        { label: "COMO FIDELIZA", conteudo: c.fidelizacao || "" },
-      ]}
-      destaque={{
-        label: "MENSAGEM PÓS-ENTREGA",
-        texto: c.mensagem_pos_entrega || "",
-      }}
-    />
-  );
-}
-
-/* ============== TAB 4 — E9 ============== */
-function TabEntregavelE9({
-  entregavel,
-  bloqueado,
-  onIrEtapa,
-}: {
-  entregavel?: Entregavel;
-  bloqueado: boolean;
-  onIrEtapa: () => void;
-}) {
-  if (bloqueado || !entregavel || !entregavel.conteudo) {
-    return (
-      <EstadoVazioEntregavel
-        texto="Complete a Etapa 9 pra gerar seu plano de conteúdo."
-        ctaTexto="Ir pra Etapa 9 →"
-        onClick={onIrEtapa}
-      />
-    );
-  }
-  const c = entregavel.conteudo as {
-    tipos_conteudo?: string;
-    gatilhos_parada?: string;
-    ritmo_sugerido?: string;
-    ideias?: string[];
-  };
-  return (
-    <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] max-w-[760px]">
-      <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
-        ENTREGÁVEL · ETAPA 9
-      </p>
-      <p className="font-serif text-[#1A1A2E] text-[20px] mb-6">Seu plano de conteúdo</p>
-      {[
-        { label: "O QUE ELA QUER VER", conteudo: c.tipos_conteudo || "" },
-        { label: "O QUE PARA O SCROLL", conteudo: c.gatilhos_parada || "" },
-        { label: "SEU RITMO IDEAL", conteudo: c.ritmo_sugerido || "" },
-      ].map((item) => (
-        <div key={item.label} className="mb-5 pb-5 border-b border-[rgba(26,26,46,0.06)]">
-          <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
-            {item.label}
-          </p>
-          <p className="font-sans text-[#1A1A2E] text-[15px] leading-relaxed">{item.conteudo}</p>
-        </div>
-      ))}
-      <div className="mt-6 pt-2">
-        <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-4">
-          3 IDEIAS DE CONTEÚDO PARA COMEÇAR
-        </p>
-        {(c.ideias ?? []).map((ideia, i) => (
-          <div key={i} className="flex gap-3 mb-3">
-            <span className="font-serif text-polia-terracota text-[18px] leading-none mt-0.5">
-              {i + 1}
-            </span>
-            <p className="caveat-decorativo text-[#1A1A2E] leading-snug">{ideia}</p>
-          </div>
-        ))}
+            {cliente.status_pedido}
+          </span>
+        )}
+        {cliente.venda_registrada ? (
+          <span className="shrink-0 font-sans text-[13px] text-[var(--ink-soft)]">
+            Registrada ·{" "}
+            <Link to="/financeiro" className="text-[var(--secondary-text)] hover:underline">
+              ver no Financeiro
+            </Link>
+          </span>
+        ) : mostrarAcaoRegistrar ? (
+          <button
+            onClick={abrirPopover}
+            className="shrink-0 font-sans text-[14px] text-[var(--ink-soft)] underline decoration-transparent underline-offset-4 transition-colors hover:decoration-[var(--secondary-ink)]"
+          >
+            Registrar venda →
+          </button>
+        ) : null}
       </div>
+
+      {popAberto && (
+        <div
+          className="absolute right-0 top-[calc(100%+8px)] z-10 w-[300px] rounded-xl border border-[var(--line)] bg-white p-4 text-left shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="font-sans text-[14px] font-semibold text-[var(--ink)]">
+            Registrar no Financeiro
+          </p>
+          <p className="mt-1 font-sans text-[13px] text-[var(--ink-soft)]">
+            {nomeProduto}
+            {formatarValorBRL(cliente.valor) ? ` · ${formatarValorBRL(cliente.valor)}` : ""}
+            {` · categoria: Venda de produto`}
+          </p>
+          {duplicataData && (
+            <p className="mt-3 rounded-lg bg-[var(--bg)] px-3 py-2 font-sans text-[12.5px] text-[var(--ink-soft)]">
+              Já existe um lançamento parecido em {formatarDataCurta(duplicataData)}. Registrar
+              mesmo assim?
+            </p>
+          )}
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              onClick={() => setPopAberto(false)}
+              className="rounded-md border border-[var(--line)] bg-white px-3 py-1.5 font-sans text-[13px] text-[var(--ink)]"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={registrar}
+              disabled={registrando}
+              className="rounded-md border border-[var(--secondary)] bg-[var(--secondary)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--secondary-ink)] disabled:opacity-50"
+            >
+              {registrando ? "Registrando..." : duplicataData ? "Registrar mesmo assim" : "Registrar"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -564,8 +365,31 @@ function ModalCliente({
   const [contato, setContato] = useState("");
   const [statusPedido, setStatusPedido] = useState<StatusPedido | "">("");
   const [notas, setNotas] = useState("");
+  const [valor, setValor] = useState("");
+  const [produtoId, setProdutoId] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+
+  const produtosQuery = useQuery({
+    queryKey: ["produtos-select", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("produtos")
+        .select("id, nome, preco_venda")
+        .eq("user_id", userId)
+        .eq("arquivado", false)
+        .order("nome");
+      return data ?? [];
+    },
+  });
+  const produtos = produtosQuery.data ?? [];
+
+  const selecionarProduto = (id: string) => {
+    setProdutoId(id);
+    const p = produtos.find((x) => x.id === id);
+    if (p) setValor(String(p.preco_venda));
+  };
 
   const salvar = async () => {
     if (!nome.trim()) {
@@ -580,6 +404,8 @@ function ModalCliente({
       contato: contato.trim() || null,
       status_pedido: statusPedido || null,
       notas: notas.trim() || null,
+      valor: valor ? Number(valor) : null,
+      produto_id: produtoId || null,
     };
     const { error } = await (
       supabase.from("clientes" as never) as unknown as {
@@ -598,51 +424,49 @@ function ModalCliente({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(26,26,46,0.5)] px-4"
+      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl p-8 w-full max-w-[480px]"
+        className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-white p-8"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="font-accent text-polia-terracota text-[10px] tracking-[2px] uppercase mb-2">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
           NOVA CLIENTE
         </p>
-        <h2 className="font-serif text-[#1A1A2E] text-[26px] mb-6">Adicionar cliente</h2>
+        <h2 className="mb-6 font-fraunces text-[26px] text-[var(--ink)]">Adicionar cliente</h2>
 
         <div className="mb-4">
-          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">Nome</label>
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Nome</label>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full border border-[rgba(26,26,46,0.12)] rounded-lg px-3 py-2 font-sans text-[14px] text-[#1A1A2E] focus:outline-none focus:border-[#C96B3E]"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="Ana"
           />
         </div>
 
         <div className="mb-4">
-          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">
-            Contato
-          </label>
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Contato</label>
           <input
             value={contato}
             onChange={(e) => setContato(e.target.value)}
-            className="w-full border border-[rgba(26,26,46,0.12)] rounded-lg px-3 py-2 font-sans text-[14px] text-[#1A1A2E] focus:outline-none focus:border-[#C96B3E]"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="@instagram ou telefone"
           />
         </div>
 
         <div className="mb-4">
-          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
             Status do pedido
           </label>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setStatusPedido("")}
-              className={`font-sans text-[12px] px-3 py-1.5 rounded-full border ${
+              className={`rounded border px-3 py-1.5 font-sans text-[12px] ${
                 statusPedido === ""
-                  ? "border-[#C96B3E] text-polia-terracota"
-                  : "border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60"
+                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                  : "border-[var(--line)] text-[var(--muted)]"
               }`}
             >
               Sem pedido
@@ -651,10 +475,10 @@ function ModalCliente({
               <button
                 key={s}
                 onClick={() => setStatusPedido(s)}
-                className={`font-sans text-[12px] px-3 py-1.5 rounded-full border ${
+                className={`rounded border px-3 py-1.5 font-sans text-[12px] ${
                   statusPedido === s
-                    ? "border-[#C96B3E] text-polia-terracota"
-                    : "border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60"
+                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                    : "border-[var(--line)] text-[var(--muted)]"
                 }`}
               >
                 {s}
@@ -663,31 +487,60 @@ function ModalCliente({
           </div>
         </div>
 
-        <div className="mb-6">
-          <label className="font-sans text-[12px] text-[#1A1A2E] opacity-60 block mb-1">
-            Notas
+        <div className="mb-4">
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
+            Produto (opcional)
           </label>
+          <select
+            value={produtoId}
+            onChange={(e) => selecionarProduto(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+          >
+            <option value="">Sem produto</option>
+            {produtos.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nome} · R$ {Number(p.preco_venda).toLocaleString("pt-BR")}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="mb-4">
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
+            Valor da venda (R$)
+          </label>
+          <input
+            type="number"
+            value={valor}
+            onChange={(e) => setValor(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            placeholder="0"
+          />
+        </div>
+
+        <div className="mb-6">
+          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Notas</label>
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={3}
-            className="w-full border border-[rgba(26,26,46,0.12)] rounded-lg px-3 py-2 font-sans text-[14px] text-[#1A1A2E] focus:outline-none focus:border-[#C96B3E] resize-none"
+            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
         </div>
 
-        {erro && <p className="font-sans text-[13px] text-[#C9407A] mb-3">{erro}</p>}
+        {erro && <p className="mb-3 font-sans text-[13px] text-[var(--danger)]">{erro}</p>}
 
         <div className="flex justify-end gap-3">
           <button
             onClick={onClose}
-            className="font-sans text-[14px] text-[#1A1A2E] opacity-60 hover:opacity-100 px-4 py-2"
+            className="px-4 py-2 font-sans text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
           >
             Cancelar
           </button>
           <button
             onClick={salvar}
             disabled={salvando}
-            className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota px-5 py-2 rounded-xl hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {salvando ? "Salvando..." : "Salvar"}
           </button>

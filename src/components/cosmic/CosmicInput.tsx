@@ -1,25 +1,46 @@
-import { forwardRef, useState, type InputHTMLAttributes, type ReactNode } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import {
+  forwardRef,
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+import { Eye, EyeOff, Circle, CheckCircle2 } from "lucide-react";
+import { FieldError } from "@/components/ui/FieldError";
 
 interface CosmicInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   icon?: ReactNode;
-  error?: string;
+  error?: ReactNode;
   hint?: ReactNode;
   rightSlot?: ReactNode;
+  /** Reserva altura fixa pra mensagem de erro, mesmo vazia, pra layout não pular. */
+  reserveErrorSpace?: boolean;
+  /** Borda --danger sem mensagem embaixo (ex: checklist externo já explica o que falta). */
+  invalid?: boolean;
 }
 
 export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
-  ({ label, icon, error, hint, rightSlot, id, type = "text", ...rest }, ref) => {
-    const inputId = id ?? rest.name;
+  (
+    { label, icon, error, hint, rightSlot, reserveErrorSpace, invalid, id, type = "text", ...rest },
+    ref,
+  ) => {
+    const generatedId = useId();
+    const inputId = id ?? rest.name ?? generatedId;
+    const errorId = `${inputId}-error`;
     const isPassword = type === "password";
     const [show, setShow] = useState(false);
     const effectiveType = isPassword ? (show ? "text" : "password") : type;
+    const marcarErro = !!error || !!invalid;
 
     return (
       <div className="w-full">
-        <div className="mb-1.5 flex items-end justify-between">
-          <label htmlFor={inputId} className="font-sans text-[13px] text-polia-marrom/80">
+        <div className="mb-1.5 flex items-end justify-between gap-2">
+          <label
+            htmlFor={inputId}
+            className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]"
+          >
             {label}
           </label>
           {hint}
@@ -29,24 +50,27 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
             ref={ref}
             id={inputId}
             type={effectiveType}
+            aria-invalid={marcarErro || undefined}
+            aria-describedby={error ? errorId : undefined}
             {...rest}
-            className={`h-[52px] w-full rounded-xl bg-white px-4 ${
+            className={`h-[48px] w-full rounded-lg bg-white px-4 ${
               icon || isPassword ? "pr-11" : ""
-            } font-sans text-[16px] text-polia-marrom placeholder:text-polia-marrom/40 outline-none transition-all border ${
-              error
-                ? "border-[#E53E3E] focus:border-[#E53E3E] focus:shadow-[0_0_12px_rgba(229,62,62,0.25)]"
-                : "border-[rgba(201,107,62,0.4)] focus:border-polia-terracota focus:shadow-[0_0_12px_rgba(201,107,62,0.25)]"
+            } text-[15px] text-[var(--ink)] placeholder:text-[var(--muted)] outline-none transition-colors border ${
+              marcarErro
+                ? "border-[var(--danger)] focus:border-[var(--danger)]"
+                : "border-[var(--line)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]"
             } disabled:opacity-60`}
           />
           {(icon || isPassword || rightSlot) && (
-            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-polia-marrom/50">
+            <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-2 text-[var(--muted)]">
               {rightSlot}
               {isPassword ? (
                 <button
                   type="button"
                   onClick={() => setShow((v) => !v)}
-                  className="rounded-md p-1 transition-colors hover:text-polia-marrom focus:outline-none focus:ring-2 focus:ring-polia-terracota/40"
+                  className="flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--secondary)]"
                   aria-label={show ? "Esconder senha" : "Mostrar senha"}
+                  title={show ? "Esconder senha" : "Mostrar senha"}
                   tabIndex={-1}
                 >
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -57,40 +81,85 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
             </div>
           )}
         </div>
-        {error && <p className="mt-1.5 font-sans text-[13px] text-[#E53E3E]">{error}</p>}
+        <FieldError id={errorId} reserveSpace={reserveErrorSpace}>
+          {error}
+        </FieldError>
       </div>
     );
   },
 );
 CosmicInput.displayName = "CosmicInput";
 
-interface PasswordStrengthProps {
-  password: string;
+// Aviso de Caps Lock: hint, não erro (--muted). Some sozinho quando desliga.
+export function useCapsLockWarning() {
+  const [ligado, setLigado] = useState(false);
+  const onKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.getModifierState) setLigado(e.getModifierState("CapsLock"));
+  };
+  return { ligado, onKeyUp };
 }
 
-export function passwordScore(password: string): number {
-  let score = 0;
-  if (password.length >= 8) score++;
-  if (/[A-Z]/.test(password)) score++;
-  if (/\d/.test(password)) score++;
-  if (password.length >= 12 || /[^A-Za-z0-9]/.test(password)) score++;
-  return score;
-}
-
-export function PasswordStrength({ password }: PasswordStrengthProps) {
-  const score = passwordScore(password);
-  const colors = ["#E53E3E", "#E89770", "#C8A96E", "#2D6A4F"];
+export function CapsLockHint({ ligado }: { ligado: boolean }) {
   return (
-    <div className="mt-2 grid grid-cols-4 gap-1.5">
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="h-1 rounded-full transition-colors"
-          style={{
-            backgroundColor: i < score ? colors[Math.min(score - 1, 3)] : "rgba(26,26,46,0.08)",
-          }}
-        />
-      ))}
+    <p className="mt-1.5 min-h-[16px] text-[12px] text-[var(--muted)]">
+      {ligado ? "Caps Lock está ligado." : ""}
+    </p>
+  );
+}
+
+// Guia de senha da criação de conta: requisitos visíveis desde o início (não
+// é erro até o submit), barra de 3 segmentos sem vermelho (pendente = --muted).
+const REQUISITOS = [
+  { id: "len", label: "Pelo menos 8 caracteres", teste: (v: string) => v.length >= 8 },
+  { id: "num", label: "Pelo menos 1 número", teste: (v: string) => /\d/.test(v) },
+  { id: "up", label: "Pelo menos 1 letra maiúscula", teste: (v: string) => /[A-Z]/.test(v) },
+];
+
+export function senhaCumpreRequisitos(password: string): boolean {
+  return REQUISITOS.every((r) => r.teste(password));
+}
+
+export function PasswordRequirements({ password }: { password: string }) {
+  const oks = REQUISITOS.map((r) => r.teste(password));
+  const score = oks.filter(Boolean).length;
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="h-1 flex-1 rounded-full transition-colors duration-[250ms]"
+            style={{
+              background:
+                i < score ? (score >= 3 ? "var(--secondary)" : "var(--accent)") : "var(--line)",
+            }}
+          />
+        ))}
+      </div>
+      <div className="mt-2 flex flex-col gap-[3px]">
+        {REQUISITOS.map((r, i) => {
+          const ok = oks[i];
+          return (
+            <span
+              key={r.id}
+              className={`flex items-center gap-2 text-[12.5px] transition-colors duration-200 ${
+                ok ? "text-[var(--ink-soft)]" : "text-[var(--muted)]"
+              }`}
+            >
+              {ok ? (
+                <CheckCircle2
+                  size={14}
+                  className="shrink-0 text-[var(--secondary)]"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Circle size={14} className="shrink-0" aria-hidden="true" />
+              )}
+              {r.label}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

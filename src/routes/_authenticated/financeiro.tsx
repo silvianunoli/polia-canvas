@@ -1,20 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 
+function usePrefersReducedMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduce(mq.matches);
+    const on = () => setReduce(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduce;
+}
+
+type RegistrarTipo = "entrada" | "saida";
+
+interface FinanceiroSearch {
+  registrar?: RegistrarTipo;
+  valor?: number;
+  desc?: string;
+}
+
 export const Route = createFileRoute("/_authenticated/financeiro")({
   head: () => ({
     meta: [
-      { title: "Seu Painel Financeiro · Pólia" },
+      { title: "Financeiro · Pólia" },
       {
         name: "description",
-        content: "Acompanhe receita, meta e plano de crescimento do seu negócio.",
+        content: "Seu fluxo de caixa: entradas, saídas, lucro e meta do mês.",
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): FinanceiroSearch => {
+    const registrar =
+      search.registrar === "entrada" || search.registrar === "saida"
+        ? (search.registrar as RegistrarTipo)
+        : undefined;
+    const valorNum = Number(search.valor);
+    const valor = Number.isFinite(valorNum) && valorNum > 0 ? valorNum : undefined;
+    const desc = typeof search.desc === "string" && search.desc ? search.desc : undefined;
+    return { registrar, valor, desc };
+  },
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data: userData } = await supabase.auth.getUser();
@@ -32,453 +62,759 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
   component: FinanceiroPage,
 });
 
-interface Entregavel {
+interface Lancamento {
   id: string;
-  etapa: number;
   tipo: string;
-  conteudo: Record<string, unknown> | null;
+  valor: number;
+  data: string;
+  descricao: string | null;
+  categoria: string | null;
+  created_at: string;
 }
 
-interface PainelNumeros {
-  numero_1?: string;
-  numero_2?: string;
-  numero_3?: string;
-  ritmo_recomendado?: string;
-  gatilho_principal?: string;
+interface CampoRow {
+  campo: string;
+  valor: string | null;
 }
 
-interface PlanoCrescimento {
-  visao_refinada?: string;
-  rede_descrita?: string;
-  proximo_passo?: string;
-  afirmacao?: string;
+interface MetaMesRow {
+  id: string;
+  valor_alvo: number | null;
+  valor_atual: number;
 }
+
+// Semente padrão pra usuárias novas; some assim que o histórico real tiver categorias.
+const CATEGORIAS_ENTRADA = ["Venda de produto", "Prestação de serviço", "Outros"];
+const CATEGORIAS_SAIDA = ["Insumos / estoque", "Marketing", "Ferramentas e assinaturas", "Outros"];
+const NOVA_CATEGORIA = "+ nova categoria";
+
+function fmt(v: number) {
+  return `R$ ${v.toLocaleString("pt-BR")}`;
+}
+
+function fmtData(iso: string) {
+  // iso = "YYYY-MM-DD"
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
+}
+
+function mesAnoDe(iso: string) {
+  const [y, m] = iso.split("-").map(Number);
+  return { ano: y, mes: m };
+}
+
+// Extrai o primeiro número de um texto livre em pt-BR ("R$ 2.500" → 2500).
+function numeroDe(texto: string): number {
+  const m = texto.match(/[\d.,]+/);
+  if (!m) return 0;
+  let s = m[0];
+  const temVirgula = s.includes(",");
+  const temPonto = s.includes(".");
+  if (temVirgula && temPonto) {
+    s = s.replace(/\./g, "").replace(",", ".");
+  } else if (temVirgula) {
+    s = s.replace(",", ".");
+  } else if (temPonto && /\.\d{3}(\D|$)/.test(s)) {
+    s = s.replace(/\./g, "");
+  }
+  const v = parseFloat(s);
+  return Number.isFinite(v) ? v : 0;
+}
+
+type PeriodoId = "mes" | "passado" | "custom";
+type FiltroTipo = "todos" | "entrada" | "saida";
 
 function FinanceiroPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
-  const navigate = useNavigate();
   const qc = useQueryClient();
+  const search = Route.useSearch();
+  const navigate = useNavigate();
 
-  const mesAtual = new Date().getMonth() + 1;
-  const anoAtual = new Date().getFullYear();
+  const hoje = useMemo(() => new Date(), []);
+  const mesAtual = hoje.getMonth() + 1;
+  const anoAtual = hoje.getFullYear();
+  const hojeISO = hoje.toISOString().slice(0, 10);
+
+  // ── Modal ──
+  const [modalAberto, setModalAberto] = useState(false);
+  const [modalTipo, setModalTipo] = useState<RegistrarTipo>("entrada");
+  const [prefill, setPrefill] = useState<{
+    valor?: number;
+    desc?: string;
+    categoria?: string;
+  } | null>(null);
+
+  // ── Filtros do histórico ──
+  const [periodo, setPeriodo] = useState<PeriodoId>("mes");
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [customDe, setCustomDe] = useState("");
+  const [customAte, setCustomAte] = useState("");
 
   const dadosQuery = useQuery({
     queryKey: ["financeiro", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, progressRes, finRes, entregaveisRes] = await Promise.all([
+      const [lancRes, camposRes, metaRes] = await Promise.all([
         supabase
-          .from("profiles")
-          .select("full_name, orbit_financial_unlocked, orbit_financial_active")
-          .eq("id", userId!)
-          .maybeSingle(),
-        supabase.from("user_progress").select("etapa_atual").eq("user_id", userId!).maybeSingle(),
-        supabase
-          .from("financeiro_mensal")
-          .select("id, receita, meta")
+          .from("lancamentos")
+          .select("id, tipo, valor, data, descricao, categoria, created_at")
           .eq("user_id", userId!)
-          .eq("mes", mesAtual)
-          .eq("ano", anoAtual)
-          .maybeSingle(),
+          .order("data", { ascending: false }),
         supabase
-          .from("entregaveis")
-          .select("id, etapa, tipo, conteudo")
+          .from("planejamento_campos" as never)
+          .select("campo, valor")
           .eq("user_id", userId!)
-          .in("etapa", [10, 11])
-          .eq("status", "concluido")
-          .order("created_at", { ascending: false }),
+          .in("campo", ["financeiro.meta_minima", "financeiro.meta_boa", "financeiro.meta_celebracao"]),
+        supabase
+          .from("metas")
+          .select("id, valor_alvo, valor_atual")
+          .eq("user_id", userId!)
+          .eq("titulo", "Meta do mês")
+          .maybeSingle(),
       ]);
       return {
-        profile: profileRes.data,
-        progress: progressRes.data,
-        financeiro: finRes.data,
-        entregaveis: (entregaveisRes.data ?? []) as Entregavel[],
+        lancamentos: (lancRes.data ?? []) as Lancamento[],
+        campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
+        metaMes: (metaRes.data ?? null) as MetaMesRow | null,
       };
     },
   });
 
-  const profile = dadosQuery.data?.profile;
-  const etapaAtual = dadosQuery.data?.progress?.etapa_atual ?? 1;
-  const financeiro = dadosQuery.data?.financeiro;
-  const entregaveis = dadosQuery.data?.entregaveis ?? [];
+  const lancamentos = useMemo(
+    () => dadosQuery.data?.lancamentos ?? [],
+    [dadosQuery.data?.lancamentos],
+  );
 
-  const initial =
-    (profile?.full_name ?? user?.user_metadata?.full_name ?? "P").charAt(0).toUpperCase() || "P";
+  const campoValor = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of dadosQuery.data?.campos ?? []) if (c.valor && c.valor.trim()) m.set(c.campo, c.valor);
+    return m;
+  }, [dadosQuery.data?.campos]);
 
-  const unlocked = !!profile?.orbit_financial_unlocked;
-  const active = !!profile?.orbit_financial_active;
+  const metaMes = dadosQuery.data?.metaMes ?? null;
+  const metaAlvo = metaMes?.valor_alvo ?? 0;
 
-  // ============ ESTADO BLOQUEADO ============
+  const initial = (user?.user_metadata?.full_name ?? user?.email ?? "P").charAt(0).toUpperCase();
+
+  // ── Computado: mês corrente ──
+  const { entradas, saidas } = useMemo(() => {
+    let e = 0;
+    let s = 0;
+    for (const l of lancamentos) {
+      const { ano, mes } = mesAnoDe(l.data);
+      if (ano !== anoAtual || mes !== mesAtual) continue;
+      if (l.tipo === "entrada") e += Number(l.valor);
+      else if (l.tipo === "saida") s += Number(l.valor);
+    }
+    return { entradas: e, saidas: s };
+  }, [lancamentos, anoAtual, mesAtual]);
+
+  const lucro = entradas - saidas;
+
+  const lancamentosMes = useMemo(() => {
+    return lancamentos.filter((l) => {
+      const { ano, mes } = mesAnoDe(l.data);
+      return ano === anoAtual && mes === mesAtual;
+    });
+  }, [lancamentos, anoAtual, mesAtual]);
+
+  const numEntradasMes = lancamentosMes.filter((l) => l.tipo === "entrada").length;
+
+  const maiorSaidaCategoria = useMemo(() => {
+    let maior: Lancamento | null = null;
+    for (const l of lancamentosMes) {
+      if (l.tipo !== "saida") continue;
+      if (!maior || Number(l.valor) > Number(maior.valor)) maior = l;
+    }
+    return maior?.categoria || (maior ? "Outros" : null);
+  }, [lancamentosMes]);
+
+  const margemPct = entradas > 0 ? Math.round((lucro / entradas) * 100) : 0;
+
+  // ── Marcas da régua (leitura, vêm do Módulo 4 do Planejamento) ──
+  const marcas = useMemo(() => {
+    const lista: { chave: string; texto: string; num: number }[] = [];
+    for (const [campo, label] of [
+      ["financeiro.meta_minima", "mínimo"],
+      ["financeiro.meta_boa", "mês bom"],
+      ["financeiro.meta_celebracao", "comemorar"],
+    ] as const) {
+      const texto = campoValor.get(campo);
+      if (texto) lista.push({ chave: campo, texto: `${label} · ${texto}`, num: numeroDe(texto) });
+    }
+    return lista;
+  }, [campoValor]);
+
+  // ── Search-param trigger (abrir modal vindo de /clientes) ──
+  useEffect(() => {
+    if (!search.registrar) return;
+    setModalTipo(search.registrar);
+    setPrefill({
+      valor: search.valor,
+      desc: search.desc,
+      categoria: search.registrar === "entrada" ? "Venda de produto" : undefined,
+    });
+    setModalAberto(true);
+    navigate({ to: "/financeiro", search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── Histórico filtrado ──
+  const lancamentosFiltrados = useMemo(() => {
+    return lancamentos.filter((l) => {
+      if (filtroTipo !== "todos" && l.tipo !== filtroTipo) return false;
+      const { ano, mes } = mesAnoDe(l.data);
+      if (periodo === "mes") {
+        if (ano !== anoAtual || mes !== mesAtual) return false;
+      } else if (periodo === "passado") {
+        const mp = mesAtual === 1 ? 12 : mesAtual - 1;
+        const ap = mesAtual === 1 ? anoAtual - 1 : anoAtual;
+        if (ano !== ap || mes !== mp) return false;
+      } else if (periodo === "custom") {
+        if (customDe && l.data < customDe) return false;
+        if (customAte && l.data > customAte) return false;
+      }
+      return true;
+    });
+  }, [lancamentos, filtroTipo, periodo, customDe, customAte, anoAtual, mesAtual]);
+
+  const abrirModal = (tipo: RegistrarTipo) => {
+    setModalTipo(tipo);
+    setPrefill(null);
+    setModalAberto(true);
+  };
+
+  // Denominador único: valor_alvo da meta "Meta do mês" (mesma fonte que /metas gerencia).
+  const metaPct = metaAlvo > 0 ? Math.min((entradas / metaAlvo) * 100, 100) : 0;
+
+  const reduce = usePrefersReducedMotion();
+  const [barOn, setBarOn] = useState(reduce);
+  useEffect(() => {
+    if (reduce) return;
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setBarOn(true)));
+    return () => cancelAnimationFrame(id);
+  }, [reduce]);
+
+  // ── Loading ──
   if (dadosQuery.isLoading) {
     return (
-      <div className="min-h-screen bg-[#FDF8F5]">
+      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <PainelNav initial={initial} streak={0} navActive="/financeiro" />
       </div>
     );
   }
-
-  if (!unlocked) {
-    return (
-      <div className="min-h-screen bg-polia-papel-creme">
-        <PainelNav initial={initial} streak={0} navActive="/financeiro" />
-        <div className="flex flex-col items-center justify-center px-8 py-32 text-center">
-          <p className="mb-4 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
-            SEU PAINEL FINANCEIRO
-          </p>
-          <h1 className="mb-4 max-w-[520px] font-serif text-[48px] leading-tight text-polia-marrom">
-            Essa ferramenta anda com você quando você chegar na Etapa 10.
-          </h1>
-          <p className="mb-8 max-w-[440px] font-sans text-[16px] text-polia-marrom/70">
-            Complete as etapas de Evolução pra montar seu painel de acompanhamento e plano de
-            crescimento.
-          </p>
-          <button
-            onClick={() => navigate({ to: `/etapa/${etapaAtual}` as "/etapa/1" })}
-            className="rounded-xl bg-[#C96B3E] px-8 py-3.5 font-sans text-[16px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D]"
-          >
-            Continuar minha jornada →
-          </button>
-          <p className="mt-4 caveat-decorativo text-polia-marrom/70">quase lá.</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ============ ESTADO ATIVO / PARCIAL ============
-  const painelEntregavel = entregaveis.find((e) => e.etapa === 10);
-  const planoEntregavel = entregaveis.find((e) => e.etapa === 11);
-  const painelData = (painelEntregavel?.conteudo ?? {}) as PainelNumeros;
-  const planoData = (planoEntregavel?.conteudo ?? {}) as PlanoCrescimento;
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <PainelNav initial={initial} streak={0} navActive="/financeiro" />
 
-      <div className="mx-auto max-w-[1280px] px-6 py-10 md:px-12">
-        {/* CABEÇALHO */}
-        <div className="mb-8">
-          <p className="mb-2 font-accent text-[11px] font-bold uppercase tracking-[2px] text-polia-terracota">
-            SEU PAINEL FINANCEIRO
-          </p>
-          <h1 className="font-serif text-[28px] leading-tight text-[#1A1A2E] md:text-[44px]">
-            O que você mede, cresce.
-          </h1>
-          <p className="mt-2 caveat-decorativo text-polia-terracota">
-            {active
-              ? "painel completo: números, crescimento e rede."
-              : "painel de números montado. plano de crescimento vem na Etapa 11."}
-          </p>
-        </div>
+      <div className="mx-auto max-w-[1120px] px-6 py-12 md:px-10">
+        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+          Este mês ·{" "}
+          {hoje.toLocaleDateString("pt-BR", { month: "long" })}
+        </p>
 
-        {/* RECEITA + META */}
-        <ReceitaMetaSection
-          userId={userId}
-          mes={mesAtual}
-          ano={anoAtual}
-          rowId={financeiro?.id}
-          receita={Number(financeiro?.receita ?? 0)}
-          meta={Number(financeiro?.meta ?? 0)}
-          onUpdate={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
-        />
-
-        {/* PAINEL DE 3 NÚMEROS */}
-        {painelEntregavel ? (
-          <>
-            <div className="mb-4 flex items-end justify-between">
-              <div>
-                <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-[#1A1A2E] opacity-40">
-                  ENTREGÁVEL · ETAPA 10
-                </p>
-                <h2 className="font-serif text-[32px] text-[#1A1A2E]">Painel de 3 números</h2>
-              </div>
-              <a
-                href={`/biblioteca/${painelEntregavel.id}`}
-                className="font-sans text-[13px] text-polia-terracota hover:underline"
-              >
-                Editar →
-              </a>
-            </div>
-
-            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-              {[
-                { ordem: 1, conteudo: painelData.numero_1 },
-                { ordem: 2, conteudo: painelData.numero_2 },
-                { ordem: 3, conteudo: painelData.numero_3 },
-              ].map((item) => (
-                <div
-                  key={item.ordem}
-                  className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-6 shadow-sm"
-                >
-                  <p className="mb-3 font-serif text-[32px] leading-none text-polia-terracota">
-                    {item.ordem}
-                  </p>
-                  <p className="font-sans text-[14px] leading-relaxed text-[#1A1A2E]">
-                    {item.conteudo ?? "—"}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-6">
-                <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40">
-                  SEU RITMO DE REVISÃO
-                </p>
-                <p className="font-sans text-[15px] leading-relaxed text-[#1A1A2E]">
-                  {painelData.ritmo_recomendado ?? "—"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[rgba(201,107,62,0.15)] bg-[rgba(201,107,62,0.04)] p-6">
-                <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
-                  QUANDO AGIR
-                </p>
-                <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
-                  {painelData.gatilho_principal ?? "—"}
-                </p>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="mb-8 rounded-2xl border-2 border-dashed border-[rgba(26,26,46,0.08)] py-12 text-center">
-            <p className="mb-3 font-sans text-[15px] text-[#1A1A2E] opacity-40">
-              Complete a Etapa 10 pra montar seu painel de 3 números.
+        {/* ───────── 1. Cards de resumo ───────── */}
+        <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Entradas
             </p>
-            <button
-              onClick={() => navigate({ to: "/etapa/10" })}
-              className="font-sans text-[14px] text-polia-terracota hover:underline"
-            >
-              Ir pra Etapa 10 →
-            </button>
+            <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+              {fmt(entradas)}
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">{numEntradasMes} registros</p>
           </div>
-        )}
 
-        {/* PLANO DE CRESCIMENTO */}
-        {!active || !planoEntregavel ? (
-          <div className="rounded-2xl border-2 border-dashed border-[rgba(26,26,46,0.08)] bg-[rgba(26,26,46,0.04)] p-10 text-center">
-            <p className="mb-2 font-serif text-[24px] text-[#1A1A2E] opacity-50">
-              Plano de Crescimento
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Saídas
             </p>
-            <p className="mb-4 font-sans text-[14px] text-[#1A1A2E] opacity-35">
-              Complete a Etapa 11 pra gerar seu plano de crescimento.
+            <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+              {fmt(saidas)}
             </p>
-            <button
-              onClick={() => navigate({ to: "/etapa/11" })}
-              className="font-sans text-[14px] text-polia-terracota hover:underline"
-            >
-              Ir pra Etapa 11 →
-            </button>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">
+              {maiorSaidaCategoria ? `maior saída: ${maiorSaidaCategoria}` : "nenhuma saída ainda"}
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="mb-4 flex items-end justify-between">
-              <div>
-                <p className="mb-1 font-accent text-[10px] font-bold uppercase tracking-[2px] text-[#1A1A2E] opacity-40">
-                  ENTREGÁVEL · ETAPA 11
-                </p>
-                <h2 className="font-serif text-[32px] text-[#1A1A2E]">Plano de Crescimento</h2>
-              </div>
-              <a
-                href={`/biblioteca/${planoEntregavel.id}`}
-                className="font-sans text-[13px] text-polia-terracota hover:underline"
-              >
-                Editar →
+
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Lucro líquido
+            </p>
+            <p
+              className={`font-fraunces mt-1 text-[32px] leading-none ${
+                lucro < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+              }`}
+            >
+              {fmt(lucro)}
+            </p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% de margem no mês</p>
+          </div>
+        </section>
+
+        {/* ───────── 2. Meta do mês (régua) ───────── */}
+        <section className="mt-5 rounded-xl bg-[var(--surface)] p-6 md:p-8">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+            Onde você está no mês
+          </p>
+
+          {metaAlvo <= 0 ? (
+            <p className="mt-6 text-[14px] text-[var(--ink-soft)]">
+              Ainda sem Meta do mês ativa.{" "}
+              <a href="/metas" className="text-[var(--secondary-text)] hover:underline">
+                Criar em Metas →
               </a>
+            </p>
+          ) : (
+            <div className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white">
+              <div
+                className="absolute inset-y-0 left-0 rounded-lg rounded-r-none bg-[var(--secondary)] transition-[width] duration-[800ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+                style={{ width: `${barOn ? metaPct : 0}%` }}
+              />
+              {marcas.map((m) => {
+                const left = Math.min(99, (m.num / metaAlvo) * 100);
+                return (
+                  <div
+                    key={m.chave}
+                    className="group/mark absolute -top-1.5 -bottom-1.5 w-[2px] bg-[var(--ink)]"
+                    style={{ left: `${left}%` }}
+                  >
+                    <span
+                      className="absolute -top-[34px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)] transition-colors duration-150 group-hover/mark:bg-[var(--secondary-light)]"
+                      style={left > 90 ? { transform: "translateX(-90%)" } : undefined}
+                    >
+                      {m.texto}
+                    </span>
+                  </div>
+                );
+              })}
+              <span
+                className="absolute top-[22px] -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)]"
+                style={{ left: `${Math.min(96, metaPct)}%` }}
+              >
+                {fmt(Math.round(entradas))} agora
+              </span>
             </div>
+          )}
 
-            <div className="max-w-[760px] rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-8">
-              {[
-                { label: "SUA VISÃO", conteudo: planoData.visao_refinada },
-                { label: "SUA REDE", conteudo: planoData.rede_descrita },
-                { label: "PRÓXIMO PASSO", conteudo: planoData.proximo_passo },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="mb-5 border-b border-[rgba(26,26,46,0.06)] pb-5 last:mb-0 last:border-none last:pb-0"
-                >
-                  <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40">
-                    {item.label}
-                  </p>
-                  <p className="font-sans text-[15px] leading-relaxed text-[#1A1A2E]">
-                    {item.conteudo ?? "—"}
-                  </p>
-                </div>
-              ))}
+          <p className="mt-0 text-[13px] text-[var(--muted)]">
+            A meta é uma só no sistema: criada em Metas, lida aqui. Os 3 marcos vêm do Módulo 4 do
+            Planejamento.
+          </p>
+        </section>
 
-              {planoData.afirmacao && (
-                <div className="mt-6 rounded-xl border border-[rgba(201,107,62,0.15)] bg-[rgba(201,107,62,0.04)] p-5">
-                  <p className="mb-2 font-accent text-[9px] font-bold uppercase tracking-[1.5px] text-polia-terracota">
-                    SUA AFIRMAÇÃO
-                  </p>
-                  <p className="caveat-decorativo leading-snug text-[#1A1A2E]">
-                    "{planoData.afirmacao}"
-                  </p>
-                </div>
-              )}
+        {/* ───────── 3. Ações rápidas ───────── */}
+        <section className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={() => abrirModal("entrada")}
+            className="rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90"
+          >
+            + Registrar entrada
+          </button>
+          <button
+            onClick={() => abrirModal("saida")}
+            className="rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-[var(--ink)] hover:border-[var(--secondary)]"
+          >
+            + Registrar saída
+          </button>
+        </section>
+
+        {/* ───────── 4. Histórico ───────── */}
+        <section className="mt-10">
+          <p className="font-fraunces text-[18px] text-[var(--ink)]">Histórico</p>
+
+          {/* Filtros */}
+          <div className="mt-4 flex flex-col gap-3">
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { id: "mes", label: "Este mês" },
+                  { id: "passado", label: "Mês passado" },
+                  { id: "custom", label: "Personalizado" },
+                ] as { id: PeriodoId; label: string }[]
+              ).map((p) => {
+                const ativo = periodo === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPeriodo(p.id)}
+                    className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
+                      ativo
+                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                        : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
             </div>
-          </>
-        )}
+            <div className="flex flex-wrap gap-2">
+              {(
+                [
+                  { id: "todos", label: "Todos" },
+                  { id: "entrada", label: "Entradas" },
+                  { id: "saida", label: "Saídas" },
+                ] as { id: FiltroTipo; label: string }[]
+              ).map((t) => {
+                const ativo = filtroTipo === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setFiltroTipo(t.id)}
+                    className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
+                      ativo
+                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                        : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            {periodo === "custom" && (
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
+                  De
+                  <input
+                    type="date"
+                    value={customDe}
+                    onChange={(e) => setCustomDe(e.target.value)}
+                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                  />
+                </label>
+                <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
+                  Até
+                  <input
+                    type="date"
+                    value={customAte}
+                    onChange={(e) => setCustomAte(e.target.value)}
+                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                  />
+                </label>
+              </div>
+            )}
+          </div>
+
+          {/* Lista */}
+          <div className="mt-6">
+            {lancamentos.length === 0 ? (
+              <p className="py-12 text-center text-[14px] text-[var(--muted)]">
+                Nenhum lançamento ainda. Registre sua primeira entrada ou saída acima.
+              </p>
+            ) : lancamentosFiltrados.length === 0 ? (
+              <p className="py-12 text-center text-[14px] text-[var(--muted)]">
+                Nenhum lançamento nesse período.
+              </p>
+            ) : (
+              lancamentosFiltrados.map((l) => {
+                const entrada = l.tipo === "entrada";
+                return (
+                  <div
+                    key={l.id}
+                    className="flex items-center justify-between gap-4 rounded-lg border-b border-[var(--line)] px-3 py-4 transition-colors duration-150 hover:bg-white"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-[15px] text-[var(--ink-soft)]">
+                        {l.descricao || (entrada ? "Entrada" : "Saída")}
+                      </p>
+                      <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12.5px] text-[var(--muted)]">
+                        <span>{fmtData(l.data)}</span>
+                        {l.categoria && (
+                          <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11.5px] text-[var(--ink-soft)]">
+                            {l.categoria}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <p
+                      className={`font-fraunces shrink-0 text-[19px] tabular-nums ${
+                        entrada ? "text-[var(--ink)]" : "text-[var(--ink-soft)]"
+                      }`}
+                    >
+                      {entrada ? "+ " : "− "}
+                      {fmt(Number(l.valor))}
+                    </p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </section>
       </div>
+
+      {/* ───────── 5. Modal ───────── */}
+      {modalAberto && userId && (
+        <ModalLancamento
+          userId={userId}
+          tipoInicial={modalTipo}
+          dataPadrao={hojeISO}
+          prefill={prefill}
+          historico={lancamentos}
+          onClose={() => setModalAberto(false)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["financeiro", userId] });
+            setModalAberto(false);
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function ReceitaMetaSection({
+/* ============== Modal: novo lançamento ============== */
+function ModalLancamento({
   userId,
-  mes,
-  ano,
-  rowId,
-  receita,
-  meta,
-  onUpdate,
+  tipoInicial,
+  dataPadrao,
+  prefill,
+  historico,
+  onClose,
+  onSaved,
 }: {
-  userId: string | undefined;
-  mes: number;
-  ano: number;
-  rowId: string | undefined;
-  receita: number;
-  meta: number;
-  onUpdate: () => void;
+  userId: string;
+  tipoInicial: RegistrarTipo;
+  dataPadrao: string;
+  prefill: { valor?: number; desc?: string; categoria?: string } | null;
+  historico: Lancamento[];
+  onClose: () => void;
+  onSaved: () => void;
 }) {
-  const [editandoReceita, setEditandoReceita] = useState(false);
-  const [editandoMeta, setEditandoMeta] = useState(false);
-  const [receitaInput, setReceitaInput] = useState(String(receita || ""));
-  const [metaInput, setMetaInput] = useState(String(meta || ""));
+  const [tipo, setTipo] = useState<RegistrarTipo>(tipoInicial);
+  // Campo de valor: dígitos acumulam da direita pra esquerda, em centavos.
+  const [cents, setCents] = useState(() =>
+    prefill?.valor ? Math.round(prefill.valor * 100) : 0,
+  );
+  const [data, setData] = useState(dataPadrao);
+  const [descricao, setDescricao] = useState(prefill?.desc ?? "");
+  const [categoria, setCategoria] = useState(prefill?.categoria ?? "");
+  const [novaCategoriaAberta, setNovaCategoriaAberta] = useState(false);
+  const [novaCategoriaTexto, setNovaCategoriaTexto] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const valorNum = cents / 100;
+
+  // Categorias derivadas do histórico real da usuária, unidas com semente padrão pra quem é nova.
+  const categorias = useMemo(() => {
+    const semente = tipo === "entrada" ? CATEGORIAS_ENTRADA : CATEGORIAS_SAIDA;
+    const doHistorico = [
+      ...new Set(
+        historico
+          .filter((l) => l.tipo === tipo && l.categoria && l.categoria.trim())
+          .map((l) => l.categoria!.trim()),
+      ),
+    ];
+    const unidas = [...doHistorico];
+    for (const s of semente) if (!unidas.includes(s)) unidas.push(s);
+    return unidas;
+  }, [historico, tipo]);
+
+  const trocarTipo = (t: RegistrarTipo) => {
+    setTipo(t);
+    setCategoria(""); // categorias dependem do tipo; limpa ao trocar
+    setNovaCategoriaAberta(false);
+    setNovaCategoriaTexto("");
+  };
+
+  const escolherCategoria = (c: string) => {
+    if (c === NOVA_CATEGORIA) {
+      setNovaCategoriaAberta(true);
+      return;
+    }
+    setCategoria(categoria === c ? "" : c);
+  };
+
+  const moedaFmt = (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  const onValorKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key >= "0" && e.key <= "9") {
+      e.preventDefault();
+      setCents((c) => c * 10 + Number(e.key));
+    } else if (e.key === "Backspace") {
+      e.preventDefault();
+      setCents((c) => Math.floor(c / 10));
+    } else if (!["Tab", "Escape"].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const categoriaFinal = novaCategoriaAberta ? novaCategoriaTexto.trim() : categoria;
+
+  const faltaMsg = !cents
+    ? "Falta o valor"
+    : !descricao.trim()
+      ? "Falta a descrição"
+      : !categoriaFinal
+        ? "Escolha uma categoria"
+        : "";
+
+  const salvar = async () => {
+    if (faltaMsg) return;
+    setSalvando(true);
+    setErro(null);
+    const { error } = await supabase.from("lancamentos").insert({
+      user_id: userId,
+      tipo,
+      valor: valorNum,
+      data,
+      descricao: descricao.trim() || null,
+      categoria: categoriaFinal || null,
+    });
+    setSalvando(false);
+    if (error) {
+      setErro(error.message || "Erro ao salvar.");
+      return;
+    }
+    onSaved();
+  };
 
   useEffect(() => {
-    setReceitaInput(String(receita || ""));
-    setMetaInput(String(meta || ""));
-  }, [receita, meta]);
-
-  const upsertCampo = async (campo: "receita" | "meta", valor: number) => {
-    if (!userId) return;
-    if (rowId) {
-      const patch =
-        campo === "receita"
-          ? { receita: valor, updated_at: new Date().toISOString() }
-          : { meta: valor, updated_at: new Date().toISOString() };
-      await supabase.from("financeiro_mensal").update(patch).eq("id", rowId);
-    } else {
-      await supabase.from("financeiro_mensal").insert({
-        user_id: userId,
-        mes,
-        ano,
-        receita: campo === "receita" ? valor : 0,
-        meta: campo === "meta" ? valor : 0,
-      });
-    }
-    onUpdate();
-  };
-
-  const salvarReceita = async () => {
-    const v = parseFloat(receitaInput) || 0;
-    await upsertCampo("receita", v);
-    setEditandoReceita(false);
-  };
-
-  const salvarMeta = async () => {
-    const v = parseFloat(metaInput) || 0;
-    await upsertCampo("meta", v);
-    setEditandoMeta(false);
-  };
-
-  const pct = useMemo(
-    () => (meta > 0 ? Math.min((receita / meta) * 100, 100) : 0),
-    [receita, meta],
-  );
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-2">
-      {/* Receita */}
-      <div className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-6 shadow-sm">
-        <p className="mb-4 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40">
-          RECEITA · MÊS ATUAL
-        </p>
-        {editandoReceita ? (
-          <div className="mb-3 flex items-center gap-2">
-            <span className="font-serif text-[24px] text-[#1A1A2E]">R$</span>
-            <input
-              type="number"
-              value={receitaInput}
-              onChange={(e) => setReceitaInput(e.target.value)}
-              className="w-[160px] border-b-2 border-[#C96B3E] bg-transparent font-serif text-[36px] text-[#1A1A2E] outline-none"
-              autoFocus
-            />
-            <button
-              onClick={salvarReceita}
-              className="ml-2 font-sans text-[14px] font-semibold text-polia-terracota"
-            >
-              salvar
-            </button>
-          </div>
-        ) : (
-          <button onClick={() => setEditandoReceita(true)} className="group text-left">
-            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
-              {receita > 0 ? `R$ ${receita.toLocaleString("pt-BR")}` : "R$ 0"}
-            </p>
-            <p className="mt-1 font-sans text-[11px] text-polia-terracota opacity-0 transition-opacity group-hover:opacity-100">
-              clique pra atualizar
-            </p>
-          </button>
-        )}
-        {meta > 0 && (
-          <>
-            <p className="mb-2 mt-3 font-sans text-[13px] text-[#1A1A2E] opacity-40">
-              de R$ {meta.toLocaleString("pt-BR")} da sua meta
-            </p>
-            <div className="mb-1 h-2 w-full rounded-full bg-[#F5F5FA]">
-              <div
-                className="h-2 rounded-full bg-[#C96B3E] transition-all"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <p className="font-sans text-[12px] font-semibold text-polia-terracota">
-              {Math.round(pct)}%
-            </p>
-          </>
-        )}
-      </div>
+    <div
+      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[440px] rounded-2xl bg-white p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">Novo lançamento</h2>
 
-      {/* Meta */}
-      <div className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-6 shadow-sm">
-        <p className="mb-4 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40">
-          SUA META DO MÊS
-        </p>
-        {editandoMeta ? (
-          <div className="mb-3 flex items-center gap-2">
-            <span className="font-serif text-[24px] text-[#1A1A2E]">R$</span>
-            <input
-              type="number"
-              value={metaInput}
-              onChange={(e) => setMetaInput(e.target.value)}
-              className="w-[160px] border-b-2 border-[#C96B3E] bg-transparent font-serif text-[36px] text-[#1A1A2E] outline-none"
-              autoFocus
-            />
+        {/* Tipo */}
+        <div className="mb-4">
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
+          <div className="flex gap-2">
+            {(
+              [
+                { id: "entrada", label: "Entrada" },
+                { id: "saida", label: "Saída" },
+              ] as { id: RegistrarTipo; label: string }[]
+            ).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => trocarTipo(t.id)}
+                className={`flex-1 rounded-lg border px-3 py-2 text-[14px] ${
+                  tipo === t.id
+                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                    : "border-[var(--line)] text-[var(--ink-soft)]"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Valor */}
+        <div className="mb-4">
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor (R$)</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={cents ? moedaFmt : ""}
+            onKeyDown={onValorKeyDown}
+            onChange={() => {}}
+            placeholder="R$ 0,00"
+            autoFocus
+            className="font-fraunces w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          />
+        </div>
+
+        {/* Data */}
+        <div className="mb-4">
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Data</label>
+          <input
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+          />
+        </div>
+
+        {/* Descrição */}
+        <div className="mb-4">
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Descrição</label>
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            placeholder="ex: pagamento da Ana"
+          />
+        </div>
+
+        {/* Categoria */}
+        <div className="mb-6">
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Categoria</label>
+          <div className="flex flex-wrap gap-2">
+            {categorias.map((c) => (
+              <button
+                key={c}
+                onClick={() => escolherCategoria(c)}
+                className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
+                  categoria === c
+                    ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                    : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+                }`}
+              >
+                {c}
+              </button>
+            ))}
             <button
-              onClick={salvarMeta}
-              className="ml-2 font-sans text-[14px] font-semibold text-polia-terracota"
+              onClick={() => escolherCategoria(NOVA_CATEGORIA)}
+              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
+                novaCategoriaAberta
+                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+              }`}
             >
-              salvar
+              {NOVA_CATEGORIA}
             </button>
           </div>
-        ) : (
-          <button onClick={() => setEditandoMeta(true)} className="group text-left">
-            <p className="font-serif text-[28px] leading-none text-[#1A1A2E] transition-colors group-hover:text-polia-terracota md:text-[40px]">
-              {meta > 0 ? `R$ ${meta.toLocaleString("pt-BR")}` : "definir meta"}
-            </p>
-            <p className="mt-1 font-sans text-[11px] text-polia-terracota opacity-0 transition-opacity group-hover:opacity-100">
-              clique pra editar
-            </p>
-          </button>
-        )}
-        {receita > 0 && meta > 0 && receita < meta && (
-          <p className="mt-4 caveat-decorativo text-[#1A1A2E]">
-            falta R$ {(meta - receita).toLocaleString("pt-BR")} pra fechar a meta
-          </p>
-        )}
-        {receita >= meta && meta > 0 && (
-          <p className="mt-4 caveat-decorativo text-[#2D6A4F]">meta batida esse mês.</p>
-        )}
+          {novaCategoriaAberta && (
+            <input
+              autoFocus
+              value={novaCategoriaTexto}
+              onChange={(e) => setNovaCategoriaTexto(e.target.value)}
+              placeholder="Nome da categoria"
+              maxLength={40}
+              className="mt-2 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            />
+          )}
+        </div>
+
+        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[12.5px] text-[var(--muted)]">{faltaMsg}</span>
+          <span className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={salvar}
+              disabled={salvando || !!faltaMsg}
+              className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
+            >
+              {salvando ? "Salvando..." : "Salvar lançamento"}
+            </button>
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -2,9 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Mail } from "lucide-react";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
+import { AuthShell, SerifHeadline } from "@/components/cosmic/AuthShell";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -58,49 +58,46 @@ function VerificacaoPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
     if (error) {
-      toast.error("Não consegui reenviar agora. Tenta de novo em alguns segundos.");
+      toastErro("Não consegui reenviar agora. Tenta de novo em alguns segundos.");
     } else {
-      toast.success("Enviei um novo link de confirmação.");
+      toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
       setCooldown(60);
     }
   }
 
   return (
     <AuthShell>
-      <CaveatEyebrow>Só mais um passo.</CaveatEyebrow>
-      <SerifHeadline>Confirma seu e-mail.</SerifHeadline>
-
-      <div className="mt-8 flex flex-col items-center">
-        <div className="flex h-[120px] w-[120px] items-center justify-center rounded-2xl border border-dashed border-[rgba(201,107,62,0.4)] bg-[rgba(201,107,62,0.12)]">
-          <Mail size={48} color="#C96B3E" strokeWidth={1.5} />
+      <div className="flex flex-col items-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
+          <Mail size={22} aria-hidden="true" />
         </div>
-
-        <p className="mt-7 text-center font-sans text-[17px] leading-relaxed text-[#D8D2CC]/90">
-          Mandei um link de confirmação para{" "}
-          <span className="font-semibold text-[#FDF8F5]">{email ?? "seu e-mail"}</span>. Clica nele
-          para continuar.
-        </p>
-        <p className="mt-2 text-center font-sans text-[14px] text-[#D8D2CC]/60">
-          Pode demorar alguns minutinhos. Não esquece de checar o spam.
+        <SerifHeadline size={26}>Quase lá.</SerifHeadline>
+        <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
+          A gente mandou um link pra{" "}
+          <span className="font-semibold text-[var(--ink)]">{email ?? "seu e-mail"}</span>.
+          <br />
+          Confirma pra entrar.
         </p>
 
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={!email || cooldown > 0 || resending}
-          className="mt-6 font-sans text-[14px] text-[#C96B3E] underline underline-offset-2 disabled:opacity-50"
-        >
-          {cooldown > 0
-            ? `Reenviar em ${cooldown}s`
-            : resending
-              ? "Enviando..."
-              : "Não recebi o e-mail - reenviar"}
-        </button>
+        <p className="mt-5 text-center text-[13.5px] text-[var(--muted)]">
+          Não chegou?{" "}
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={!email || cooldown > 0 || resending}
+            className="text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+          >
+            {cooldown > 0
+              ? `Pode pedir outro em ${cooldown}s`
+              : resending
+                ? "Enviando..."
+                : "Reenviar o link"}
+          </button>
+        </p>
 
-        <p className="mt-10 text-center font-sans text-[14px] text-[#D8D2CC]/60">
-          E-mail errado?{" "}
-          <Link to="/auth/cadastro" className="text-[#C96B3E] underline underline-offset-2">
-            Voltar e corrigir
+        <p className="mt-6 text-center text-[14px] text-[var(--muted)]">
+          <Link to="/auth/login" className="text-[var(--ink-soft)] underline underline-offset-2">
+            Voltar pra entrada
           </Link>
         </p>
       </div>

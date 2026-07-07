@@ -4,16 +4,20 @@ import {
   LayoutDashboard,
   Map,
   Users,
-  Store,
+  Package,
   Wallet,
-  Sun,
+  LayoutList,
+  Target,
+  Notebook,
   Flame,
   Menu,
-  PanelLeftClose,
-  PanelLeftOpen,
+  ChevronsLeft,
+  ChevronsRight,
   Settings,
   Shield,
   LogOut,
+  CalendarDays,
+  Newspaper,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,31 +26,22 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
+// Marca e Mapa de Mercado NÃO ficam aqui: são documentos do planejamento,
+// acessados pelo badge de cada módulo dentro de /planejamento. O sidebar guarda
+// o planejamento + as ferramentas de trabalho do dia a dia.
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
-  { to: "/jornada", label: "Jornada", icon: Map },
-  { to: "/clientes", label: "Vendas e clientes", icon: Users },
-  { to: "/vitrine", label: "Vitrine", icon: Store },
+  { to: "/planejamento", label: "Planejamento", icon: Map },
+  { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
-  { to: "/painel#ferramentas", label: "Seu dia", icon: Sun },
-];
-
-// Quando a usuária está numa feature do "Seu dia", o item fica destacado.
-const SEU_DIA = [
-  "/diario",
-  "/habitos",
-  "/metas",
-  "/foco",
-  "/caderno",
-  "/planner",
-  "/equipe",
-  "/guia",
-  "/progresso",
+  { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/metas", label: "Metas", icon: Target },
+  { to: "/caderno", label: "Caderno", icon: Notebook },
+  { to: "/planner", label: "Planner", icon: LayoutList },
+  { to: "/calendario", label: "Calendário", icon: CalendarDays },
 ];
 
 function isActive(itemTo: string, pathname: string) {
-  if (itemTo === "/painel#ferramentas")
-    return SEU_DIA.some((r) => pathname === r || pathname.startsWith(r + "/"));
   if (itemTo === "/painel") return pathname === "/painel";
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
@@ -74,8 +69,8 @@ export function Sidebar() {
 
   const streakLabel =
     meta.streak > 0
-      ? `Você apareceu ${meta.streak} ${meta.streak === 1 ? "dia" : "dias"}. Continua crescendo.`
-      : "Os dias que você apareceu. Só cresce.";
+      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} em que você apareceu e registrou algo na Pólia. Só cresce, nunca zera.`
+      : "Conta os dias em que você aparece e registra algo na Pólia. Só cresce.";
 
   function Body({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
     return (
@@ -86,9 +81,9 @@ export function Sidebar() {
             <Link
               to="/painel"
               onClick={onNavigate}
-              aria-label="Pólia — ir para o painel"
+              aria-label="Pólia, ir para o painel"
               className="font-fraunces text-[var(--ink)] no-underline"
-              style={{ fontSize: compact ? 18 : 24, fontWeight: 600, lineHeight: 1 }}
+              style={{ fontSize: compact ? 18 : 24, fontWeight: 400, lineHeight: 1 }}
             >
               {compact ? "P" : "Pólia"}
             </Link>
@@ -138,7 +133,7 @@ export function Sidebar() {
                   aria-current={active ? "page" : undefined}
                   className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
                     active
-                      ? "border-l-[3px] border-[var(--secondary)] pl-[9px] font-medium text-[var(--ink)] bg-[var(--surface)]"
+                      ? "border-l-[3px] border-[var(--secondary)] pl-[9px] font-medium text-[var(--ink)]"
                       : "border-l-[3px] border-transparent text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                   } ${compact ? "justify-center" : ""}`}
                 >
@@ -177,6 +172,16 @@ export function Sidebar() {
                 {!compact && <span>Administração</span>}
               </Link>
             )}
+            {meta.isAdmin && (
+              <a
+                href="/blog-admin"
+                onClick={onNavigate}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+              >
+                <Newspaper size={20} aria-hidden="true" />
+                {!compact && <span>Blog</span>}
+              </a>
+            )}
             <button
               type="button"
               onClick={signOut}
@@ -190,9 +195,9 @@ export function Sidebar() {
                 type="button"
                 onClick={() => setCollapsed(true)}
                 aria-label="Recolher menu"
-                className="mt-1 hidden md:flex min-h-9 items-center gap-2 rounded-lg px-3 text-[12px] text-[var(--muted)] hover:bg-[var(--surface)]"
+                className="mt-2 hidden self-end rounded-md px-2 py-1 text-[12px] text-[var(--muted)] transition-colors md:flex md:items-center md:gap-1.5 hover:text-[var(--ink-soft)]"
               >
-                <PanelLeftClose size={16} aria-hidden="true" /> Recolher
+                Recolher <ChevronsLeft size={15} aria-hidden="true" />
               </button>
             )}
             {compact && (
@@ -202,7 +207,7 @@ export function Sidebar() {
                 aria-label="Expandir menu"
                 className="mt-1 hidden md:flex min-h-9 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
               >
-                <PanelLeftOpen size={18} aria-hidden="true" />
+                <ChevronsRight size={18} aria-hidden="true" />
               </button>
             )}
           </div>
@@ -237,7 +242,7 @@ export function Sidebar() {
             <Body compact={false} onNavigate={() => setMobileOpen(false)} />
           </SheetContent>
         </Sheet>
-        <span className="font-fraunces text-[18px] font-semibold text-[var(--ink)]">Pólia</span>
+        <span className="font-fraunces text-[18px] text-[var(--ink)]">Pólia</span>
       </div>
     </>
   );

@@ -1,12 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { CheckCircle, Mail } from "lucide-react";
+import { Mail, Check } from "lucide-react";
 import { z } from "zod";
-import { toast } from "sonner";
+import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthShell, CaveatEyebrow, SerifHeadline } from "@/components/cosmic/AuthShell";
+import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
-import { PoliaButton } from "@/components/ui/PoliaButton";
 
 export const Route = createFileRoute("/auth/esqueci-senha")({
   head: () => ({
@@ -23,7 +22,7 @@ export const Route = createFileRoute("/auth/esqueci-senha")({
 });
 
 const schema = z.object({
-  email: z.string().trim().email("Esse e-mail não parece certo. Confere o formato.").max(255),
+  email: z.string().trim().email("E-mail inválido. Confere o @.").max(255),
 });
 
 function EsqueciSenhaPage() {
@@ -44,7 +43,7 @@ function EsqueciSenhaPage() {
       redirectTo: `${window.location.origin}/auth/redefinir-senha`,
     });
     if (error) {
-      toast.error("Não consegui enviar agora. Tenta de novo em alguns segundos.");
+      toastErro("Não consegui enviar agora. Tenta de novo em alguns segundos.");
       return false;
     }
     return true;
@@ -76,25 +75,21 @@ function EsqueciSenhaPage() {
   }
 
   return (
-    <AuthShell maxWidth={480}>
+    <AuthShell maxWidth={420}>
       {!sent ? (
         <>
-          <CaveatEyebrow size={20}>sem estresse.</CaveatEyebrow>
-          <SerifHeadline size={44}>Vamos recuperar o seu acesso.</SerifHeadline>
-          <p
-            className="mt-3 text-center font-sans text-[16px] leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.55)" }}
-          >
-            Digite o seu e-mail e a gente te manda um link pra criar uma nova senha.
+          <SerifHeadline size={26}>Vamos recuperar.</SerifHeadline>
+          <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
+            Digite o e-mail da sua conta e a gente manda o link.
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-9 flex flex-col gap-4" noValidate>
+          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
             <CosmicInput
-              label="Qual é o seu e-mail?"
+              label="Seu e-mail"
               name="email"
               type="email"
               autoComplete="email"
-              placeholder="ana@seunegocio.com.br"
+              placeholder="voce@seunegocio.com.br"
               icon={<Mail size={18} />}
               value={email}
               onChange={(e) => {
@@ -102,53 +97,44 @@ function EsqueciSenhaPage() {
                 if (error) setError(undefined);
               }}
               error={error}
+              reserveErrorSpace
               disabled={loading}
             />
             <div className="mt-1">
-              <PoliaButton type="submit" fullWidth disabled={loading}>
-                {loading ? "Enviando..." : "Enviar link de recuperação"}
-              </PoliaButton>
+              <AuthButton type="submit" fullWidth loading={loading}>
+                {loading ? "Enviando..." : "Enviar link →"}
+              </AuthButton>
             </div>
           </form>
 
-          <p
-            className="mt-8 text-center font-sans text-[14px]"
-            style={{ color: "rgba(255,255,255,0.40)" }}
-          >
-            Lembrei a senha.{" "}
-            <Link
-              to="/auth/login"
-              className="transition-colors hover:text-[rgba(255,255,255,0.70)]"
-            >
-              Voltar ao login
+          <p className="mt-5 text-center text-[14px] text-[var(--muted)]">
+            <Link to="/auth/login" className="text-[var(--ink-soft)] underline underline-offset-2">
+              Lembrei a senha
             </Link>
           </p>
         </>
       ) : (
         <div className="flex flex-col items-center text-center">
-          <CheckCircle size={40} color="#2D6A4F" />
-          <h2 className="mt-5 font-serif text-[28px] text-[#FDF8F5]">Link enviado.</h2>
-          <p className="mt-2 caveat-decorativo text-[#E89770]">olha sua caixa de entrada.</p>
-          <p
-            className="mt-3 font-sans text-[15px] leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.55)" }}
-          >
-            Enviamos um link pro seu e-mail. Ele expira em 1 hora.
+          <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
+            <Check size={22} aria-hidden="true" />
+          </div>
+          <h2 className="font-fraunces mt-3 text-[22px] leading-snug text-[var(--ink)]">
+            Se esse e-mail tiver conta,
+            <br />a gente manda o link.
+          </h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+            Confira a caixa de entrada (e o spam). O link vale por 1 hora.
           </p>
           <button
             type="button"
             onClick={handleResend}
             disabled={cooldown > 0 || loading}
-            className="mt-6 font-sans text-[14px] text-[#C96B3E] underline underline-offset-2 disabled:opacity-50"
+            className="mt-5 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
           >
-            {cooldown > 0 ? `Tentar novamente em ${cooldown}s` : "Não chegou? Tentar novamente"}
+            {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
           </button>
-          <Link
-            to="/auth/login"
-            className="mt-8 font-sans text-[14px]"
-            style={{ color: "rgba(255,255,255,0.40)" }}
-          >
-            Lembrei a senha. Voltar ao login
+          <Link to="/auth/login" className="mt-6 text-[14px] text-[var(--muted)]">
+            Voltar pra entrada
           </Link>
         </div>
       )}

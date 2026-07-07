@@ -1,8 +1,6 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import { CosmicBackground } from "@/components/cosmic/CosmicBackground";
-import { CosmicButton } from "@/components/cosmic/CosmicButton";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -27,8 +25,13 @@ type BusinessStage = "ideia" | "comecei" | "ja_vendo";
 interface OnboardingState {
   business_type: BusinessType | null;
   business_stage: BusinessStage | null;
-  display_name: string;
   business_name: string;
+  // Passo 4 — o que vende e entrega (varia por tipo)
+  c1: string;
+  c2: string;
+  toggle: string;
+  hp: string; // híbrido: o que recebe na frente produto
+  hs: string; // híbrido: o que recebe na frente serviço
 }
 
 function OnboardingPage() {
@@ -36,15 +39,18 @@ function OnboardingPage() {
   const [state, setState] = useState<OnboardingState>({
     business_type: null,
     business_stage: null,
-    display_name: "",
     business_name: "",
+    c1: "",
+    c2: "",
+    toggle: "",
+    hp: "",
+    hs: "",
   });
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
-      <CosmicBackground />
-      <div className="relative z-10 min-h-screen w-full px-5 pb-20 pt-10">
+    <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
+      <div className="w-full px-5 pb-20 pt-10">
         {step > 1 && <StepIndicator step={step} />}
         <div className="mx-auto w-full max-w-[900px]">
           {step === 1 && <Step1 onNext={() => setStep(2)} />}
@@ -63,7 +69,9 @@ function OnboardingPage() {
             />
           )}
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
-          {step === 5 && <Step5 onFinish={() => navigate({ to: "/painel" })} />}
+          {step === 5 && (
+            <Step5 tipo={state.business_type} onFinish={() => navigate({ to: "/painel" })} />
+          )}
         </div>
       </div>
     </div>
@@ -72,57 +80,24 @@ function OnboardingPage() {
 
 function StepIndicator({ step }: { step: number }) {
   return (
-    <p
-      className="text-center font-sans font-semibold uppercase text-polia-mostarda-intenso/90"
-      style={{ fontSize: 11, letterSpacing: 2.5 }}
-    >
+    <p className="text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
       Passo {step} de 5
     </p>
   );
 }
 
-function LogoPlaceholder({ size = 180 }: { size?: number }) {
-  return (
-    <div
-      className="mx-auto flex flex-col items-center justify-center gap-1 rounded-xl border border-dashed bg-white p-4 text-center"
-      style={{
-        width: size === 180 ? 220 : size,
-        height: size,
-        borderColor: "rgba(200,169,110,0.5)",
-        borderWidth: 1.5,
-      }}
-    >
-      <span
-        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
-        style={{ fontSize: 10, letterSpacing: 1.5 }}
-      >
-        Placeholder · Logo
-      </span>
-      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 10 }}>
-        Lockup L2 Vertical · 180×180
-      </span>
-      <span className="font-sans text-polia-marrom/50" style={{ fontSize: 9 }}>
-        SVG · upload no Lovable
-      </span>
-    </div>
-  );
+function LogoPlaceholder() {
+  return <p className="text-center font-fraunces text-[27px] text-[var(--ink)]">Pólia</p>;
 }
 
-function Caveat({ children, size = 28 }: { children: React.ReactNode; size?: number }) {
-  return (
-    <p
-      className="text-center caveat-decorativo text-polia-terracota"
-      style={{ fontSize: size, lineHeight: 1.15 }}
-    >
-      {children}
-    </p>
-  );
+function Caveat({ children }: { children: React.ReactNode }) {
+  return <p className="text-center italic text-[var(--ink-soft)]">{children}</p>;
 }
 
 function Headline({ children, size = 64 }: { children: React.ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-serif text-polia-marrom"
+      className="text-center font-fraunces text-[var(--ink)]"
       style={{
         fontSize: `clamp(${Math.round(size * 0.55)}px, 6vw, ${size}px)`,
         lineHeight: 1.15,
@@ -136,7 +111,7 @@ function Headline({ children, size = 64 }: { children: React.ReactNode; size?: n
 function Body({ children, max = 600 }: { children: React.ReactNode; max?: number }) {
   return (
     <p
-      className="mx-auto text-center font-sans text-polia-marrom/70"
+      className="mx-auto text-center text-[var(--ink-soft)]"
       style={{ fontSize: 17, lineHeight: "28px", maxWidth: max }}
     >
       {children}
@@ -148,7 +123,6 @@ function PrimaryCTA({
   children,
   onClick,
   disabled,
-  loading,
 }: {
   children: React.ReactNode;
   onClick?: () => void;
@@ -156,58 +130,32 @@ function PrimaryCTA({
   loading?: boolean;
 }) {
   return (
-    <div className="relative mx-auto" style={{ width: 270 }}>
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/2 -z-10 -translate-x-1/2 -translate-y-1/2 rounded-[16px] bg-[rgba(201,107,62,0.3)] blur-[2px]"
-        style={{ width: 300, height: 68 }}
-      />
-      <CosmicButton onClick={onClick} disabled={disabled} loading={loading} variant="primary">
-        {children}
-      </CosmicButton>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="mx-auto h-[52px] w-[270px] rounded-xl bg-[var(--secondary)] px-6 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
+    >
+      {children}
+    </button>
   );
 }
 
 /* ---------------- STEP 1 ---------------- */
 function Step1({ onNext }: { onNext: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-8 pt-4">
+    <div className="flex flex-col items-center gap-10 pt-10">
       <LogoPlaceholder />
-      <div className="mt-2 flex flex-col items-center gap-5">
-        <Caveat size={32}>Ei. Finalmente você chegou.</Caveat>
+      <div className="flex flex-col items-center gap-5">
+        <Caveat>Ei. Finalmente você chegou.</Caveat>
         <Headline size={76}>Oi. Eu sou a Pólia.</Headline>
       </div>
       <div className="flex flex-col gap-1">
-        <Body>Vou te guiar do primeiro passo até seu primeiro entregável.</Body>
+        <Body>Vou te guiar do primeiro passo até sua primeira ferramenta pronta.</Body>
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
       <PrimaryCTA onClick={onNext}>Começar →</PrimaryCTA>
-      <p className="text-center font-sans text-[14px] text-polia-marrom/55">Leva 3 minutinhos.</p>
-      <FoxPlaceholder />
-    </div>
-  );
-}
-
-function FoxPlaceholder() {
-  return (
-    <div
-      className="mx-auto flex flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed bg-white p-4 text-center"
-      style={{ width: 260, height: 220, borderColor: "rgba(232,151,112,0.6)", borderWidth: 1.5 }}
-    >
-      <div className="rounded-full bg-polia-cinza-areia/40" style={{ width: 54, height: 54 }} />
-      <span
-        className="font-sans font-semibold uppercase text-polia-terracota"
-        style={{ fontSize: 10, letterSpacing: 1.5 }}
-      >
-        Placeholder · Raposa
-      </span>
-      <span className="caveat-decorativo text-polia-terracota" style={{ fontSize: 22 }}>
-        Estado: Orientando
-      </span>
-      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 10 }}>
-        PNG transparente · 220×260
-      </span>
+      <p className="text-center text-[14px] text-[var(--muted)]">Leva 3 minutinhos.</p>
     </div>
   );
 }
@@ -271,12 +219,7 @@ function Step2({
         Continuar →
       </PrimaryCTA>
       {!value && (
-        <p
-          className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
-          style={{ fontSize: 18 }}
-        >
-          escolhe uma pra continuar
-        </p>
+        <p className="text-center italic text-[var(--ink-soft)]">escolhe uma pra continuar</p>
       )}
     </div>
   );
@@ -299,24 +242,22 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-[10px] rounded-[14px] p-[22px] text-left transition-all"
-      style={{
-        background: selected ? "rgba(201,107,62,0.15)" : "rgba(36,36,66,0.55)",
-        border: `1.5px solid ${selected ? "#C96B3E" : "rgba(232,151,112,0.4)"}`,
-        boxShadow: selected ? "0 0 20px rgba(201,107,62,0.2)" : "none",
-        minHeight: 170,
-      }}
+      className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-all ${
+        selected
+          ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
+          : "border-[var(--line)] bg-white"
+      }`}
     >
-      <span
-        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
-        style={{ fontSize: 10, letterSpacing: 1.8 }}
-      >
+      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
         {tag}
       </span>
-      <span className="font-serif text-polia-marrom" style={{ fontSize: 22, lineHeight: "28px" }}>
+      <span
+        className="font-fraunces text-[var(--ink)]"
+        style={{ fontSize: 22, lineHeight: "28px" }}
+      >
         {title}
       </span>
-      <span className="font-sans text-polia-marrom/70" style={{ fontSize: 12, lineHeight: "17px" }}>
+      <span className="text-[var(--ink-soft)]" style={{ fontSize: 12, lineHeight: "17px" }}>
         {desc}
       </span>
     </button>
@@ -376,18 +317,86 @@ function Step3({
         Continuar →
       </PrimaryCTA>
       {!value && (
-        <p
-          className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
-          style={{ fontSize: 18 }}
-        >
-          escolhe um pra continuar
-        </p>
+        <p className="text-center italic text-[var(--ink-soft)]">escolhe um pra continuar</p>
       )}
     </div>
   );
 }
 
 /* ---------------- STEP 4 ---------------- */
+const STEP4: Record<
+  BusinessType,
+  {
+    c1: { label: string; ph: string };
+    c2?: { label: string; ph: string };
+    toggle: { label: string; opcoes: { v: string; label: string }[] };
+    hibrido?: boolean;
+  }
+> = {
+  produto_fisico: {
+    c1: {
+      label: "Como se chama o que você vende?",
+      ph: "ex: sabonetes artesanais, roupas infantis",
+    },
+    c2: {
+      label: "O que vai junto com o produto? O que a pessoa recebe?",
+      ph: "ex: embalagem, nota, bilhetinho",
+    },
+    toggle: {
+      label: "Você produz, revende ou os dois?",
+      opcoes: [
+        { v: "produzo", label: "Produzo" },
+        { v: "revendo", label: "Revendo" },
+        { v: "ambos", label: "Os dois" },
+      ],
+    },
+  },
+  produto_digital: {
+    c1: {
+      label: "Qual é o seu produto digital?",
+      ph: "ex: curso de aquarela, template de contrato",
+    },
+    c2: {
+      label: "O que a pessoa recebe quando compra?",
+      ph: "ex: acesso a vídeos por 1 ano, PDF para download",
+    },
+    toggle: {
+      label: "Tem recorrência?",
+      opcoes: [
+        { v: "unico", label: "Pagamento único" },
+        { v: "assinatura", label: "Assinatura / Mensalidade" },
+      ],
+    },
+  },
+  servico: {
+    c1: { label: "Qual é o seu serviço?", ph: "ex: design de logos, consultoria financeira" },
+    c2: {
+      label: "O que você entrega ao final de cada trabalho?",
+      ph: "ex: arquivos editáveis, relatório, sessão gravada",
+    },
+    toggle: {
+      label: "Como você cobra?",
+      opcoes: [
+        { v: "hora", label: "Por hora" },
+        { v: "projeto", label: "Por projeto" },
+        { v: "mensal", label: "Pacote mensal" },
+      ],
+    },
+  },
+  hibrido: {
+    c1: { label: "O que você vende?", ph: "ex: curso + mentoria, produto físico + consulta" },
+    toggle: {
+      label: "Das duas frentes, qual é a principal agora?",
+      opcoes: [
+        { v: "produto", label: "O produto" },
+        { v: "servico", label: "O serviço" },
+        { v: "ambas", label: "As duas igualmente" },
+      ],
+    },
+    hibrido: true,
+  },
+};
+
 function Step4({
   state,
   setState,
@@ -399,29 +408,49 @@ function Step4({
 }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const tipo = state.business_type;
+  const cfg = tipo ? STEP4[tipo] : null;
 
-  const displayTrim = state.display_name.trim();
-  const valid = displayTrim.length >= 2 && displayTrim.length <= 40;
+  function buildDescricao() {
+    if (!tipo) return null;
+    if (tipo === "hibrido") {
+      return {
+        tipo,
+        o_que_vende: state.c1.trim() || null,
+        principal: state.toggle || null,
+        frente_produto: state.hp.trim() || null,
+        frente_servico: state.hs.trim() || null,
+      };
+    }
+    return {
+      tipo,
+      o_que_vende: state.c1.trim() || null,
+      detalhe: state.c2.trim() || null,
+      modo: state.toggle || null,
+    };
+  }
 
   async function handleSubmit() {
-    if (!valid) return;
     setSaving(true);
     setError(null);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const userId = sess.session?.user.id;
       if (!userId) throw new Error("Sessão expirou");
+      const fullName =
+        (sess.session?.user.user_metadata?.full_name as string | undefined)?.trim() || null;
 
       const { error: upErr } = await supabase.from("profiles").upsert(
         {
           id: userId,
           business_type: state.business_type,
           business_stage: state.business_stage,
-          display_name: displayTrim,
           business_name: state.business_name.trim() || null,
+          display_name: fullName,
+          descricao_produto: buildDescricao(),
           onboarding_completed: true,
           onboarding_completed_at: new Date().toISOString(),
-        },
+        } as never,
         { onConflict: "id" },
       );
       if (upErr) throw upErr;
@@ -436,47 +465,74 @@ function Step4({
   return (
     <div className="flex flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
-      <Caveat>A gente tá quase lá.</Caveat>
-      <Headline size={60}>Como você quer ser chamada?</Headline>
-      <Body max={800}>
-        Vou te chamar pelo nome em todo lugar. Coloca o que eu escutar e te reconhecer.
-      </Body>
-
-      <div className="flex w-full max-w-[440px] flex-col gap-5">
-        <Field
-          label="Seu nome ou apelido"
-          value={state.display_name}
-          onChange={(v) => setState((s) => ({ ...s, display_name: v.slice(0, 40) }))}
-          placeholder="Como te chamo aqui? (ex: Aimer, Ai, Lú...)"
-          required
-        />
-        <Field
-          label="Nome do seu negócio (mesmo provisório)"
-          value={state.business_name}
-          onChange={(v) => setState((s) => ({ ...s, business_name: v.slice(0, 60) }))}
-          placeholder="Ainda tá pensando? Tudo bem. Coloca o que vier."
-        />
-      </div>
-
-      <p
-        className="text-center caveat-decorativo text-[rgba(232,151,112,0.7)]"
-        style={{ fontSize: 16 }}
-      >
-        depois você pode trocar nos ajustes do perfil
+      <Caveat>Agora a parte mais sua.</Caveat>
+      <Headline size={56}>O que você vende e o que entrega?</Headline>
+      <p className="text-center text-[14px] text-[var(--muted)]">
+        Pode ser breve. Você ajusta depois.
       </p>
 
-      {error && (
-        <p className="text-center font-sans" style={{ fontSize: 14, color: "#E53E3E" }}>
-          {error}
-        </p>
-      )}
+      <div className="flex w-full max-w-[480px] flex-col gap-5">
+        <Field
+          label="Nome do seu negócio"
+          value={state.business_name}
+          onChange={(v) => setState((s) => ({ ...s, business_name: v.slice(0, 60) }))}
+          placeholder="Mesmo que provisório, coloca o que vier."
+        />
 
-      <PrimaryCTA onClick={handleSubmit} disabled={!valid || saving} loading={saving}>
-        {saving ? "Salvando..." : "Continuar  →"}
+        {cfg && (
+          <>
+            <Field
+              label={cfg.c1.label}
+              value={state.c1}
+              onChange={(v) => setState((s) => ({ ...s, c1: v.slice(0, 120) }))}
+              placeholder={cfg.c1.ph}
+            />
+            {cfg.c2 && (
+              <Field
+                label={cfg.c2.label}
+                value={state.c2}
+                onChange={(v) => setState((s) => ({ ...s, c2: v.slice(0, 200) }))}
+                placeholder={cfg.c2.ph}
+                multiline
+              />
+            )}
+            <Toggle
+              label={cfg.toggle.label}
+              value={state.toggle}
+              opcoes={cfg.toggle.opcoes}
+              onChange={(v) => setState((s) => ({ ...s, toggle: v }))}
+            />
+            {cfg.hibrido && (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field
+                  label="O que recebe · Produto"
+                  value={state.hp}
+                  onChange={(v) => setState((s) => ({ ...s, hp: v.slice(0, 120) }))}
+                  placeholder="ex: o produto em si, garantia"
+                />
+                <Field
+                  label="O que recebe · Serviço"
+                  value={state.hs}
+                  onChange={(v) => setState((s) => ({ ...s, hs: v.slice(0, 120) }))}
+                  placeholder="ex: as sessões, o acompanhamento"
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {error && <p className="text-center text-[14px] text-[var(--danger)]">{error}</p>}
+
+      <PrimaryCTA onClick={handleSubmit} disabled={saving}>
+        {saving ? "Salvando..." : "Continuar →"}
       </PrimaryCTA>
     </div>
   );
 }
+
+const CAMPO_CLS =
+  "rounded-lg border border-[var(--line)] bg-white px-4 text-[16px] text-[var(--ink)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]";
 
 function Field({
   label,
@@ -484,157 +540,120 @@ function Field({
   onChange,
   placeholder,
   required,
+  multiline,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder: string;
   required?: boolean;
+  multiline?: boolean;
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span
-        className="font-sans font-semibold uppercase text-polia-mostarda-intenso"
-        style={{ fontSize: 10, letterSpacing: 1.8 }}
-      >
+      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
         {label}
-        {required && <span className="ml-1 text-polia-terracota">*</span>}
+        {required && <span className="ml-1 text-[var(--danger)]">*</span>}
       </span>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="rounded-xl px-[18px] font-sans text-polia-marrom outline-none transition-all placeholder:text-polia-marrom/60 focus:border-[#C96B3E]"
-        style={{
-          height: 56,
-          background: "rgba(36,36,66,0.55)",
-          border: "1.2px solid rgba(232,151,112,0.45)",
-          fontSize: 16,
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = "#C96B3E";
-          e.currentTarget.style.boxShadow = "0 0 12px rgba(201,107,62,0.25)";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = "rgba(232,151,112,0.45)";
-          e.currentTarget.style.boxShadow = "none";
-        }}
-      />
+      {multiline ? (
+        <textarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          rows={2}
+          className={`${CAMPO_CLS} resize-none py-3`}
+        />
+      ) : (
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`${CAMPO_CLS} h-14`}
+        />
+      )}
     </label>
   );
 }
 
-/* ---------------- STEP 5 ---------------- */
-const STARS = [
-  "Descoberta",
-  "Branding",
-  "Posicionamento",
-  "Produto",
-  "Vitrine",
-  "Estoque",
-  "Vendas",
-  "Atendimento",
-  "Marketing",
-  "Métricas",
-  "Evolução",
-];
-
-function Star({ active }: { active: boolean }) {
-  const size = active ? 20 : 14;
-  const fill = active ? "#C96B3E" : "rgba(216,210,204,0.5)";
+function Toggle({
+  label,
+  value,
+  opcoes,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  opcoes: { v: string; label: string }[];
+  onChange: (v: string) => void;
+}) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill}>
-      <path d="M12 0 L14 10 L24 12 L14 14 L12 24 L10 14 L0 12 L10 10 Z" />
-    </svg>
+    <div className="flex flex-col gap-2">
+      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+        {label}
+      </span>
+      <div className="flex flex-wrap gap-2">
+        {opcoes.map((o) => {
+          const on = value === o.v;
+          return (
+            <button
+              key={o.v}
+              type="button"
+              onClick={() => onChange(on ? "" : o.v)}
+              className={`rounded-full border px-4 py-2 text-[14px] transition-colors ${
+                on
+                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+              }`}
+            >
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-function Step5({ onFinish }: { onFinish: () => void }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(t);
-  }, []);
+/* ---------------- STEP 5 ---------------- */
+const ETAPA1_DESC: Record<BusinessType, string> = {
+  produto_fisico: "Quem você é, o que você produz e de onde vem o que você vende.",
+  produto_digital: "Quem você é, o que você ensina e qual problema você resolve.",
+  servico: "Quem você é, qual problema você resolve e como você trabalha.",
+  hibrido: "Quem você é e como as duas frentes do seu negócio se complementam.",
+};
 
+function Step5({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
+  const desc = tipo ? ETAPA1_DESC[tipo] : ETAPA1_DESC.produto_fisico;
   return (
-    <div className="flex flex-col items-center gap-8 pt-12">
+    <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
-      <Caveat size={30}>Pronto. Tá tudo no lugar.</Caveat>
-      <Headline size={72}>
-        Seu primeiro marco vai
-        <br />
-        abrir agora.
-      </Headline>
+      <Caveat>Pronto. Tá tudo no lugar.</Caveat>
+      <Headline size={56}>Seu planejamento começa agora.</Headline>
 
-      <div className="w-full overflow-x-auto py-6">
-        <div className="mx-auto flex min-w-max items-start justify-center gap-6 px-4">
-          {STARS.map((label, i) => {
-            const active = i === 0;
-            return (
-              <div key={label} className="flex w-[80px] flex-col items-center gap-2">
-                <div
-                  className="relative flex items-center justify-center"
-                  style={{
-                    width: active ? 44 : 24,
-                    height: active ? 44 : 24,
-                    opacity: active ? (mounted ? 1 : 0) : 1,
-                    transform: active ? `scale(${mounted ? 1 : 0.5})` : "none",
-                    transition: "opacity 800ms ease-out, transform 600ms ease-out",
-                  }}
-                >
-                  {active && (
-                    <div
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        background: "rgba(201,107,62,0.3)",
-                        animation: "polia-pulse 2s ease-in-out infinite",
-                      }}
-                    />
-                  )}
-                  <div className="relative">
-                    <Star active={active} />
-                  </div>
-                </div>
-                <span
-                  className="text-center font-sans"
-                  style={{
-                    fontSize: 9,
-                    fontWeight: active ? 600 : 400,
-                    color: active ? "#FDF8F5" : "rgba(216,210,204,0.55)",
-                  }}
-                >
-                  {label}
-                </span>
-                {active && (
-                  <span className="caveat-decorativo text-polia-terracota" style={{ fontSize: 14 }}>
-                    abrindo agora
-                  </span>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6">
+        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          Módulo 1 de 6
+        </p>
+        <p className="mt-3 font-fraunces text-[24px] text-[var(--ink)]">Razão de existir</p>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">{desc}</p>
+        <p className="mt-4 text-[13px] text-[var(--secondary-text)]">→ Abre agora</p>
       </div>
 
-      <p className="text-center font-serif text-polia-terracota" style={{ fontSize: 22 }}>
+      <p className="text-center italic text-[var(--ink-soft)]">
         A Pólia não acaba. Ela só fica mais sua.
       </p>
-      <p
-        className="text-center caveat-decorativo text-[rgba(232,151,112,0.8)]"
-        style={{ fontSize: 18 }}
-      >
+      <p className="text-center text-[14px] text-[var(--muted)]">
         cada vez que você volta, encontra mais de você aqui
       </p>
 
-      <PrimaryCTA onClick={onFinish}>Começar minha jornada →</PrimaryCTA>
-
-      <style>{`
-        @keyframes polia-pulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 0.6; }
-        }
-      `}</style>
+      <button
+        type="button"
+        onClick={onFinish}
+        className="h-[52px] w-full rounded-xl bg-[var(--secondary)] font-medium text-[var(--secondary-ink)] hover:opacity-90"
+      >
+        Começar meu planejamento →
+      </button>
     </div>
   );
 }

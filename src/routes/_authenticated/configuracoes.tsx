@@ -1,11 +1,15 @@
-import { useEffect, useState } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { PlaceholderImage } from "@/components/PlaceholderImage";
 import { Switch } from "@/components/ui/switch";
+import { dadosEmissorRecibo } from "@/lib/recibo.functions";
+import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
+
+const VALOR_PLANO_PAGO = 29;
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
@@ -24,17 +28,9 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
   component: ConfiguracoesPage,
 });
 
-const TIPOS = [
-  { valor: "produto_fisico", label: "Produto físico", sub: "convites, cosméticos, roupas" },
-  { valor: "produto_digital", label: "Produto digital", sub: "e-books, cursos, templates" },
-  { valor: "servico", label: "Serviço", sub: "consultoria, assessoria, aulas" },
-  { valor: "hibrido", label: "Produto e serviço", sub: "vende os dois" },
-];
-
 function ConfiguracoesPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
-  const navigate = useNavigate();
 
   const profileQuery = useQuery({
     queryKey: ["configuracoes-profile", userId],
@@ -53,14 +49,40 @@ function ConfiguracoesPage() {
 
   const [nome, setNome] = useState("");
   const [nomeNegocio, setNomeNegocio] = useState("");
-  const [tipoNegocio, setTipoNegocio] = useState<string>("");
-  const [salvo, setSalvo] = useState(false);
-  const [salvando, setSalvando] = useState(false);
+  const [nomeSalvo, setNomeSalvo] = useState(false);
+  const [nomeNegocioSalvo, setNomeNegocioSalvo] = useState(false);
+  const businessNameAtual = profileQuery.data?.business_name ?? "";
 
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
   const [notifDicas, setNotifDicas] = useState(true);
   const plano = profileQuery.data?.plano ?? "beta";
+  const [baixandoRecibo, setBaixandoRecibo] = useState(false);
+
+  const baixarRecibo = async () => {
+    setBaixandoRecibo(true);
+    try {
+      const emissor = await dadosEmissorRecibo();
+      if (!emissor.nome || !emissor.cpf) {
+        toastErro("O recibo ainda não está configurado. Fala com o suporte.");
+        return;
+      }
+      gerarReciboPdf({
+        emissorNome: emissor.nome,
+        emissorCpf: emissor.cpf,
+        emissorEndereco: emissor.endereco,
+        pagadorNome: profileQuery.data?.full_name || "Assinante Pólia",
+        pagadorEmail: user?.email ?? "",
+        descricao: "Assinatura Pólia, plano mensal",
+        valor: VALOR_PLANO_PAGO,
+        dataEmissao: new Date(),
+      });
+    } catch {
+      toastErro("Não consegui gerar o recibo agora. Tenta de novo.");
+    } finally {
+      setBaixandoRecibo(false);
+    }
+  };
 
   const [alterandoSenha, setAlterandoSenha] = useState(false);
   const [novaSenha, setNovaSenha] = useState("");
@@ -68,17 +90,51 @@ function ConfiguracoesPage() {
   const [senhaErro, setSenhaErro] = useState<string | null>(null);
   const [senhaOk, setSenhaOk] = useState(false);
 
+  const [excluindoConta, setExcluindoConta] = useState(false);
+  const [confirmacaoExclusao, setConfirmacaoExclusao] = useState("");
+  const [excluindo, setExcluindo] = useState(false);
+
+  const carregouInicial = useRef(false);
+  const nomeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nomeNegocioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     const p = profileQuery.data;
     if (p) {
       setNome(p.full_name ?? "");
       setNomeNegocio(p.business_name ?? "");
-      setTipoNegocio(p.business_type ?? "");
       setNotifResumo(p.notif_resumo_semanal ?? true);
       setNotifNovidades(p.notif_novidades ?? true);
       setNotifDicas(p.notif_dicas ?? true);
+      carregouInicial.current = true;
     }
   }, [profileQuery.data]);
+
+  useEffect(() => {
+    if (!userId || !carregouInicial.current) return;
+    if (nomeTimer.current) clearTimeout(nomeTimer.current);
+    nomeTimer.current = setTimeout(async () => {
+      await supabase.from("profiles").update({ full_name: nome }).eq("id", userId);
+      setNomeSalvo(true);
+      setTimeout(() => setNomeSalvo(false), 1600);
+    }, 600);
+    return () => {
+      if (nomeTimer.current) clearTimeout(nomeTimer.current);
+    };
+  }, [nome, userId]);
+
+  useEffect(() => {
+    if (!userId || !carregouInicial.current) return;
+    if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
+    nomeNegocioTimer.current = setTimeout(async () => {
+      await supabase.from("profiles").update({ business_name: nomeNegocio }).eq("id", userId);
+      setNomeNegocioSalvo(true);
+      setTimeout(() => setNomeNegocioSalvo(false), 1600);
+    }, 600);
+    return () => {
+      if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
+    };
+  }, [nomeNegocio, userId]);
 
   const toggleNotif = async (
     campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas",
@@ -95,24 +151,6 @@ function ConfiguracoesPage() {
           ? { notif_novidades: valor }
           : { notif_dicas: valor };
     await supabase.from("profiles").update(payload).eq("id", userId);
-  };
-
-  const salvarPerfil = async () => {
-    if (!userId) return;
-    setSalvando(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: nome,
-        business_name: nomeNegocio,
-        business_type: tipoNegocio || null,
-      })
-      .eq("id", userId);
-    setSalvando(false);
-    if (!error) {
-      setSalvo(true);
-      setTimeout(() => setSalvo(false), 2000);
-    }
   };
 
   const alterarSenha = async () => {
@@ -138,15 +176,11 @@ function ConfiguracoesPage() {
     setTimeout(() => setSenhaOk(false), 2000);
   };
 
+  const confirmacaoBate = businessNameAtual.length > 0 && confirmacaoExclusao === businessNameAtual;
+
   const pedirExclusao = async () => {
-    if (!userId) return;
-    if (
-      !window.confirm(
-        "Tem certeza que quer excluir sua conta? Seus dados serão removidos e isso não dá pra desfazer.",
-      )
-    )
-      return;
-    if (!window.confirm("Última confirmação: pedir a exclusão da conta de verdade?")) return;
+    if (!userId || !confirmacaoBate) return;
+    setExcluindo(true);
     await supabase.from("tickets").insert({
       user_id: userId,
       title: "Exclusão de conta",
@@ -163,15 +197,15 @@ function ConfiguracoesPage() {
   const email = user?.email ?? "";
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)]">
       <PainelNav initial={initial} streak={streak} />
 
       <main className="mx-auto max-w-[880px] px-12 py-12">
         <div className="mb-10">
-          <h1 className="font-serif text-[#1A1A2E] text-[40px] leading-tight mb-2">
+          <h1 className="font-fraunces text-[var(--ink)] text-[40px] leading-tight mb-2">
             Configurações
           </h1>
-          <p className="caveat-decorativo text-[#C96B3E]">
+          <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
             seu perfil e seu negócio, do jeito que você quer.
           </p>
         </div>
@@ -179,36 +213,21 @@ function ConfiguracoesPage() {
         {/* SEÇÃO 1 — PERFIL */}
         <Secao titulo="Seu perfil">
           <div className="space-y-5">
-            <Campo label="FOTO DO PERFIL">
-              <div className="flex items-center gap-4">
-                <PlaceholderImage
-                  slot="avatar"
-                  width={72}
-                  height={72}
-                  rounded={9999}
-                  fit="cover"
-                  description="JPG, PNG ou WebP — quadrada de preferência"
-                  accept="image/png,image/jpeg,image/webp"
-                />
-                <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50 max-w-[280px]">
-                  arraste uma imagem ou clique pra escolher do seu computador.
-                </p>
-              </div>
-            </Campo>
-            <Campo label="SEU NOME">
+            <Campo label="SEU NOME" saved={nomeSalvo}>
               <input
                 type="text"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 maxLength={80}
-                className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
+                placeholder="Seu nome"
+                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
               />
             </Campo>
             <Campo label="E-MAIL">
-              <div className="w-full h-[48px] flex items-center bg-[rgba(26,26,46,0.04)] border border-[rgba(26,26,46,0.08)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] opacity-60">
+              <div className="w-full h-[48px] flex items-center bg-[var(--surface)] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink-soft)] text-[15px]">
                 {email}
               </div>
-              <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40 mt-1.5">
+              <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
                 o e-mail não pode ser alterado
               </p>
             </Campo>
@@ -217,42 +236,19 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 2 — NEGÓCIO */}
         <Secao titulo="Seu negócio">
-          <div className="space-y-6">
-            <Campo label="NOME DO NEGÓCIO">
-              <input
-                type="text"
-                value={nomeNegocio}
-                onChange={(e) => setNomeNegocio(e.target.value)}
-                maxLength={80}
-                placeholder="Ex: Ateliê da Aimer · Estúdio Florescer · Doces da Lua"
-                className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] placeholder:text-[#1A1A2E] placeholder:opacity-30 focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
-              />
-              <p className="mt-1.5 caveat-decorativo text-polia-noite/50">
-                pode trocar depois — só vale como você chama hoje.
-              </p>
-            </Campo>
-            <Campo label="TIPO DE NEGÓCIO">
-              <div className="grid grid-cols-2 gap-3">
-                {TIPOS.map((tipo) => (
-                  <button
-                    key={tipo.valor}
-                    type="button"
-                    onClick={() => setTipoNegocio(tipo.valor)}
-                    className={`text-left p-4 rounded-xl border transition-colors ${
-                      tipoNegocio === tipo.valor
-                        ? "border-[#C96B3E] bg-[rgba(201,107,62,0.06)]"
-                        : "border-[rgba(26,26,46,0.08)] hover:border-[rgba(26,26,46,0.15)]"
-                    }`}
-                  >
-                    <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-1">
-                      {tipo.label}
-                    </p>
-                    <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">{tipo.sub}</p>
-                  </button>
-                ))}
-              </div>
-            </Campo>
-          </div>
+          <Campo label="NOME DO NEGÓCIO" saved={nomeNegocioSalvo}>
+            <input
+              type="text"
+              value={nomeNegocio}
+              onChange={(e) => setNomeNegocio(e.target.value)}
+              maxLength={80}
+              placeholder="Ex: Ateliê da Aimer · Estúdio Florescer · Doces da Lua"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+            />
+            <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
+              aparece no topo do seu planejamento
+            </p>
+          </Campo>
         </Secao>
 
         {/* SEÇÃO 3 — INTEGRAÇÕES */}
@@ -261,25 +257,21 @@ function ConfiguracoesPage() {
           subtitulo="conecte ferramentas que você já usa pra ver tudo em um lugar."
         >
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-[rgba(26,26,46,0.08)] rounded-xl">
+            <div className="flex items-center justify-between p-4 border border-[var(--line)] rounded-xl">
               <div>
-                <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-0.5">
+                <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
                   Google Calendar
                 </p>
-                <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">
+                <p className="font-sans text-[var(--ink-soft)] text-[12px]">
                   mostre seus compromissos no painel
                 </p>
               </div>
-              <button
-                type="button"
-                disabled
-                className="font-sans text-[13px] text-[#1A1A2E] opacity-40 border border-[rgba(26,26,46,0.12)] rounded-xl px-4 py-2"
-              >
-                Em breve
-              </button>
+              <span className="border border-[var(--line)] text-[var(--muted)] rounded px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide">
+                EM BREVE
+              </span>
             </div>
-            <div className="p-4 border border-dashed border-[rgba(26,26,46,0.1)] rounded-xl text-center">
-              <p className="font-sans text-[#1A1A2E] text-[13px] opacity-40">
+            <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
+              <p className="font-sans text-[var(--muted)] text-[13px]">
                 Mais integrações em breve.
               </p>
             </div>
@@ -290,8 +282,8 @@ function ConfiguracoesPage() {
         <Secao titulo="Segurança">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-0.5">Senha</p>
-              <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">
+              <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">Senha</p>
+              <p className="font-sans text-[var(--ink-soft)] text-[12px]">
                 altere sua senha de acesso
               </p>
             </div>
@@ -299,7 +291,7 @@ function ConfiguracoesPage() {
               <button
                 type="button"
                 onClick={() => setAlterandoSenha(true)}
-                className="font-sans text-[13px] text-[#C96B3E] border border-[rgba(201,107,62,0.3)] rounded-xl px-4 py-2 hover:bg-[rgba(201,107,62,0.06)] transition-colors"
+                className="font-sans text-[13px] text-[var(--secondary-text)] border border-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary-light)] transition-colors"
               >
                 Alterar senha
               </button>
@@ -307,14 +299,14 @@ function ConfiguracoesPage() {
           </div>
 
           {alterandoSenha && (
-            <div className="space-y-4 mt-6 pt-6 border-t border-[rgba(26,26,46,0.06)]">
+            <div className="space-y-4 mt-6 pt-6 border-t border-[var(--line)]">
               <Campo label="NOVA SENHA">
                 <input
                   type="password"
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   minLength={8}
-                  className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                 />
               </Campo>
               <Campo label="CONFIRMAR NOVA SENHA">
@@ -322,15 +314,17 @@ function ConfiguracoesPage() {
                   type="password"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
-                  className="w-full h-[48px] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 font-sans text-[#1A1A2E] text-[15px] focus:outline-none focus:border-[#C96B3E] focus:shadow-[0_0_0_3px_rgba(201,107,62,0.08)] transition-all"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                 />
                 {novaSenha && confirmarSenha && novaSenha !== confirmarSenha && (
-                  <p className="font-sans text-[#C9407A] text-[12px] mt-1.5">
+                  <p className="font-sans text-[var(--ink-soft)] text-[12px] mt-1.5">
                     as senhas não coincidem
                   </p>
                 )}
               </Campo>
-              {senhaErro && <p className="font-sans text-[#C9407A] text-[12px]">{senhaErro}</p>}
+              {senhaErro && (
+                <p className="font-sans text-[var(--danger)] text-[12px]">{senhaErro}</p>
+              )}
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
@@ -340,7 +334,7 @@ function ConfiguracoesPage() {
                     setConfirmarSenha("");
                     setSenhaErro(null);
                   }}
-                  className="font-sans text-[13px] text-[#1A1A2E] border border-[rgba(26,26,46,0.12)] rounded-xl px-4 py-2 hover:bg-[rgba(26,26,46,0.04)] transition-colors"
+                  className="font-sans text-[13px] text-[var(--ink)] border border-[var(--line)] rounded-xl px-4 py-2 hover:bg-[var(--surface)] transition-colors"
                 >
                   Cancelar
                 </button>
@@ -348,19 +342,23 @@ function ConfiguracoesPage() {
                   type="button"
                   onClick={alterarSenha}
                   disabled={novaSenha.length < 8 || novaSenha !== confirmarSenha}
-                  className="font-sans text-[13px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-4 py-2 hover:bg-[#B85A2D] transition-colors disabled:opacity-40"
+                  className="font-sans text-[13px] font-semibold text-[var(--secondary-ink)] bg-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary)] transition-colors disabled:opacity-40"
                 >
                   Salvar nova senha
                 </button>
               </div>
             </div>
           )}
-          {senhaOk && <p className="caveat-decorativo text-[#C96B3E] mt-3">senha atualizada.</p>}
+          {senhaOk && (
+            <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mt-3">
+              senha atualizada.
+            </p>
+          )}
         </Secao>
 
         {/* SEÇÃO 5 — NOTIFICAÇÕES */}
         <Secao titulo="Notificações" subtitulo="escolha o que você quer receber por e-mail.">
-          <div className="divide-y divide-[rgba(26,26,46,0.06)]">
+          <div className="divide-y divide-[var(--line)]">
             <ToggleLinha
               titulo="Resumo semanal"
               descricao="um panorama do seu negócio toda semana"
@@ -384,44 +382,55 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 6 — ASSINATURA */}
         <Secao titulo="Assinatura">
-          <div className="rounded-xl border border-[rgba(201,107,62,0.25)] bg-[rgba(201,107,62,0.04)] p-5">
+          <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="inline-block rounded-full bg-polia-terracota px-2.5 py-1 font-accent text-[10px] font-bold uppercase tracking-[1px] text-polia-creme">
+                <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 font-semibold text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
                   {plano === "beta" ? "Plano de lançamento" : plano}
                 </span>
-                <p className="mt-2 font-sans text-[14px] text-[#1A1A2E]">
-                  Você está no beta — com tudo da Pólia liberado.
+                <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
+                  Você está no beta, com tudo da Pólia liberado.
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-serif text-[28px] leading-none text-[#1A1A2E]">Grátis</p>
-                <p className="mt-1 font-sans text-[12px] text-[#1A1A2E] opacity-50">
+                <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">Grátis</p>
+                <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
                   durante o lançamento
                 </p>
               </div>
             </div>
           </div>
-          <p className="mt-3 caveat-decorativo text-[#1A1A2E] opacity-60">
-            quando a Pólia sair do beta, vai custar R$ 29/mês — e você é avisada antes, sem
-            surpresa.
+          <p className="mt-3 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
+            quando a Pólia sair do beta, vai custar R$ 29/mês, e você é avisada antes, sem surpresa.
           </p>
-          <button
-            type="button"
-            disabled
-            className="mt-4 cursor-not-allowed rounded-xl border border-[rgba(26,26,46,0.12)] px-4 py-2 font-sans text-[13px] text-[#1A1A2E] opacity-40"
-          >
-            Gerenciar pagamento — em breve
-          </button>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled
+              className="cursor-not-allowed rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--muted)]"
+            >
+              Gerenciar pagamento (em breve)
+            </button>
+            {plano !== "beta" && (
+              <button
+                type="button"
+                onClick={baixarRecibo}
+                disabled={baixandoRecibo}
+                className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {baixandoRecibo ? "Gerando recibo..." : "Baixar recibo"}
+              </button>
+            )}
+          </div>
         </Secao>
 
         {/* SEÇÃO 7 — PAGAMENTOS */}
         <Secao titulo="Pagamentos" subtitulo="por enquanto, a Pólia é gratuita.">
-          <div className="rounded-xl border border-[rgba(26,26,46,0.08)] bg-[rgba(26,26,46,0.02)] p-5">
-            <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">
+          <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
+            <p className="font-sans text-[14px] font-medium text-[var(--ink)]">
               Nenhuma cobrança no beta.
             </p>
-            <p className="mt-1 font-sans text-[13px] leading-relaxed text-[#1A1A2E] opacity-55">
+            <p className="mt-1 font-sans text-[13px] leading-relaxed text-[var(--ink-soft)]">
               Quando a Pólia passar a ser paga (R$ 29/mês), suas formas de pagamento e seus recibos
               vão aparecer aqui.
             </p>
@@ -429,51 +438,66 @@ function ConfiguracoesPage() {
           <button
             type="button"
             disabled
-            className="mt-4 cursor-not-allowed rounded-xl border border-[rgba(26,26,46,0.12)] px-4 py-2 font-sans text-[13px] text-[#1A1A2E] opacity-40"
+            className="mt-4 cursor-not-allowed rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--muted)]"
           >
-            Adicionar forma de pagamento — em breve
+            Adicionar forma de pagamento (em breve)
           </button>
         </Secao>
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
-        <Secao titulo="Zona de perigo">
-          <div className="flex flex-col gap-4 rounded-xl border border-[rgba(201,64,122,0.25)] bg-[rgba(201,64,122,0.04)] p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">
-                Excluir minha conta
-              </p>
-              <p className="mt-0.5 font-sans text-[13px] leading-relaxed text-[#1A1A2E] opacity-55">
-                Apaga sua conta e seus dados da Pólia. Não dá pra desfazer.
-              </p>
-            </div>
+        <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
+          <h2 className="font-fraunces text-[20px] leading-tight text-[var(--danger)]">
+            Excluir conta
+          </h2>
+          <p className="mt-2 font-sans text-[14px] text-[var(--ink-soft)]">
+            Excluir a conta apaga planejamento, financeiro, clientes e notas. Não tem volta.
+          </p>
+
+          {!excluindoConta && (
             <button
               type="button"
-              onClick={pedirExclusao}
-              className="shrink-0 rounded-xl border border-[rgba(201,64,122,0.4)] px-4 py-2 font-sans text-[13px] font-medium text-[#C9407A] transition-colors hover:bg-[rgba(201,64,122,0.08)]"
+              onClick={() => setExcluindoConta(true)}
+              className="mt-4 rounded-xl border border-[var(--danger)] bg-white px-4 py-2 font-sans text-[13px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger)] hover:text-white"
             >
-              Pedir exclusão
+              Excluir conta
             </button>
-          </div>
-        </Secao>
+          )}
 
-        {/* SALVAR PERFIL */}
-        <div className="flex items-center justify-end gap-4 mt-10">
-          <span
-            className={`caveat-decorativo text-[#C96B3E] text-[14px] transition-opacity duration-300 ${
-              salvo ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            salvo.
-          </span>
-          <button
-            type="button"
-            onClick={salvarPerfil}
-            disabled={salvando}
-            className="font-sans text-[14px] font-semibold text-polia-creme bg-polia-terracota rounded-xl px-6 py-3 hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
-          >
-            {salvando ? "Salvando..." : "Salvar alterações"}
-          </button>
-        </div>
+          {excluindoConta && (
+            <div className="mt-4">
+              <p className="font-sans text-[13px] text-[var(--ink-soft)] mb-2">
+                Digite o nome do negócio ({businessNameAtual}) pra confirmar:
+              </p>
+              <input
+                type="text"
+                value={confirmacaoExclusao}
+                onChange={(e) => setConfirmacaoExclusao(e.target.value)}
+                placeholder="Nome do negócio"
+                className="w-full h-[48px] border border-[var(--danger)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] outline-none focus:shadow-[0_0_0_3px_var(--danger-soft)] transition-all"
+              />
+              <div className="flex gap-2 justify-end mt-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExcluindoConta(false);
+                    setConfirmacaoExclusao("");
+                  }}
+                  className="font-sans text-[13px] text-[var(--ink)] border border-[var(--line)] rounded-xl px-4 py-2 hover:bg-white transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={pedirExclusao}
+                  disabled={!confirmacaoBate || excluindo}
+                  className="rounded-xl border border-[var(--danger)] bg-white px-4 py-2 font-sans text-[13px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[var(--danger)]"
+                >
+                  {excluindo ? "Excluindo..." : "Excluir de vez"}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
@@ -489,10 +513,10 @@ function Secao({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-8 bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]">
-      <h2 className="font-serif text-[#1A1A2E] text-[22px] leading-tight mb-1">{titulo}</h2>
+    <section className="mb-8 bg-white rounded-2xl p-6 border border-[var(--line)]">
+      <h2 className="font-fraunces text-[var(--ink)] text-[22px] leading-tight mb-1">{titulo}</h2>
       {subtitulo && (
-        <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50 mb-5">{subtitulo}</p>
+        <p className="font-sans text-[var(--ink-soft)] text-[13px] mb-5">{subtitulo}</p>
       )}
       <div className={subtitulo ? "" : "mt-5"}>{children}</div>
     </section>
@@ -513,19 +537,38 @@ function ToggleLinha({
   return (
     <div className="flex items-center justify-between gap-4 py-3.5">
       <div>
-        <p className="font-sans text-[14px] font-medium text-[#1A1A2E]">{titulo}</p>
-        <p className="font-sans text-[12px] text-[#1A1A2E] opacity-50">{descricao}</p>
+        <p className="font-sans text-[14px] font-medium text-[var(--ink)]">{titulo}</p>
+        <p className="font-sans text-[12px] text-[var(--ink-soft)]">{descricao}</p>
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
   );
 }
 
-function Campo({ label, children }: { label: string; children: React.ReactNode }) {
+function Campo({
+  label,
+  saved,
+  children,
+}: {
+  label: string;
+  saved?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <p className="font-accent text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-50 mb-2 font-bold">
-        {label}
+      <p className="flex items-center justify-between mb-2">
+        <span className="font-semibold text-[9px] tracking-[1.5px] uppercase text-[var(--muted)] font-bold">
+          {label}
+        </span>
+        {saved !== undefined && (
+          <span
+            className={`font-sans text-[12px] text-[var(--muted)] normal-case tracking-normal font-normal transition-opacity duration-200 ${
+              saved ? "opacity-100" : "opacity-0"
+            }`}
+          >
+            salvo
+          </span>
+        )}
       </p>
       {children}
     </div>

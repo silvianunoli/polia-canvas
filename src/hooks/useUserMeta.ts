@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
@@ -18,30 +19,52 @@ export interface UserMeta {
 export function useUserMeta() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
+  const qc = useQueryClient();
+
+  // Registra a presença de hoje uma vez por sessão/montagem — fora do queryFn de leitura,
+  // pra um refetch (foco de janela, reconnect, retry) não disparar writes repetidos nem
+  // serializar a leitura do header atrás do round-trip de escrita. Idempotente por dia.
+  useEffect(() => {
+    if (!userId) return;
+    const hojeKey = new Date().toISOString().slice(0, 10);
+    supabase
+      .from("presencas")
+      .upsert(
+        { user_id: userId, data: hojeKey },
+        { onConflict: "user_id,data", ignoreDuplicates: true },
+      )
+      .then(({ error }) => {
+        // Sem presença registrada não quebra nada; o streak só não conta hoje.
+        if (!error) qc.invalidateQueries({ queryKey: ["user-meta", userId] });
+      });
+  }, [userId, qc]);
 
   const query = useQuery<UserMeta>({
     queryKey: ["user-meta", userId],
     enabled: !!userId,
     staleTime: 60_000,
     queryFn: async () => {
-      const desde90 = new Date();
-      desde90.setDate(desde90.getDate() - 90);
-      const desde90Key = desde90.toISOString().slice(0, 10);
+      const desde = new Date();
+      desde.setDate(desde.getDate() - 365);
+      const desdeKey = desde.toISOString().slice(0, 10);
 
-      const [{ data: profile }, { data: tarefas }, { data: checkins }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("full_name, is_admin, business_name")
-          .eq("id", userId!)
-          .maybeSingle(),
-        supabase
-          .from("tarefas")
-          .select("status, updated_at, created_at")
-          .eq("user_id", userId!)
-          .order("updated_at", { ascending: false })
-          .limit(200),
-        supabase.from("checkins").select("data").eq("user_id", userId!).gte("data", desde90Key),
-      ]);
+      const [{ data: profile }, { data: tarefas }, { data: checkins }, { data: presencas }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("full_name, is_admin, business_name")
+            .eq("id", userId!)
+            .maybeSingle(),
+          supabase
+            .from("tarefas")
+            .select("status, updated_at")
+            .eq("user_id", userId!)
+            .eq("status", "floresceu")
+            .gte("updated_at", desdeKey)
+            .limit(400),
+          supabase.from("checkins").select("data").eq("user_id", userId!).gte("data", desdeKey),
+          supabase.from("presencas").select("data").eq("user_id", userId!).gte("data", desdeKey),
+        ]);
 
       const full =
         (profile?.full_name as string | undefined) ??
@@ -50,36 +73,20 @@ export function useUserMeta() {
       const displayName = full.trim().split(" ")[0] || "você";
       const initial = (displayName.charAt(0) || "P").toUpperCase();
 
-      // Streak: dias consecutivos (do mais recente) com pelo menos uma tarefa
-      // concluída (status === "floresceu") ou atualizada.
+      // Presença = dias distintos em que a usuária apareceu: abriu o app (presencas),
+      // fez check-in no Diário (checkins) ou concluiu uma tarefa (floresceu).
+      // É um total que só cresce — não um streak consecutivo que zera com uma falha.
       const ativos = new Set<string>();
-      (tarefas ?? []).forEach((t: { status: string; updated_at: string; created_at: string }) => {
-        if (t.status === "floresceu") {
-          ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
-        }
+      (presencas ?? []).forEach((p: { data: string }) => {
+        if (p.data) ativos.add(p.data);
       });
-      // Check-in do dia (Diário) também conta como "apareceu hoje".
       (checkins ?? []).forEach((c: { data: string }) => {
         if (c.data) ativos.add(c.data);
       });
-      let streak = 0;
-      const cursor = new Date();
-      cursor.setHours(0, 0, 0, 0);
-      // se hoje não tem mas ontem tinha, ainda conta a partir de ontem
-      let skipped = 0;
-      while (skipped <= 1) {
-        const key = cursor.toISOString().slice(0, 10);
-        if (ativos.has(key)) {
-          streak += 1;
-          skipped = 0;
-        } else if (streak === 0 && skipped === 0) {
-          // permite começar de ontem se hoje vazio
-          skipped += 1;
-        } else {
-          break;
-        }
-        cursor.setDate(cursor.getDate() - 1);
-      }
+      (tarefas ?? []).forEach((t: { status: string; updated_at: string }) => {
+        if (t.status === "floresceu") ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
+      });
+      const streak = ativos.size;
 
       const rawBusiness = (profile?.business_name as string | undefined) ?? "";
       const businessName = rawBusiness.trim() || null;

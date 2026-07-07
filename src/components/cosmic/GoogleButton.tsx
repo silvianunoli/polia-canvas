@@ -18,7 +18,7 @@ export function GoogleButton({
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[rgba(26,26,46,0.12)] bg-white font-sans text-[16px] text-polia-marrom/70 transition-colors hover:bg-polia-papel-creme disabled:opacity-60"
+      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-white text-[15px] text-[var(--ink)] transition-colors hover:bg-[var(--surface)] disabled:opacity-60"
     >
       {loading ? (
         <Loader2 size={18} className="animate-spin" />

@@ -6,7 +6,7 @@ export const Route = createFileRoute("/design-system")({
       { title: "Design System · Pólia" },
       {
         name: "description",
-        content: "O sistema visual da Pólia — cores, tipografia, componentes e voz.",
+        content: "O sistema visual da Pólia: cores, tipografia, componentes e voz.",
       },
     ],
   }),
@@ -36,7 +36,7 @@ const TIPOS = [
   {
     fam: "Inter",
     classe: "font-sans",
-    amostra: "O dia a dia da sua marca, num lugar só — sem jargão, sem ruído.",
+    amostra: "O dia a dia da sua marca, num lugar só: sem jargão, sem ruído.",
     uso: "texto corrido",
   },
   {
@@ -73,7 +73,7 @@ function DesignSystemPage() {
             O mundo visual da Pólia
           </h1>
           <p className="font-sans text-[17px] leading-relaxed text-[#1A1A2E] opacity-65">
-            Territorial diurno: creme, terracota e mostarda. Quente, humano e claro — feito pra
+            Territorial diurno: creme, terracota e mostarda. Quente, humano e claro, feito pra
             mulher que toca o próprio negócio.
           </p>
         </div>
@@ -168,7 +168,7 @@ function DesignSystemPage() {
             {/* Card */}
             <Bloco titulo="Card">
               <div className="rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white p-4 shadow-[0_1px_2px_rgba(26,26,46,0.04)]">
-                <p className="font-serif text-[17px] text-[#1A1A2E]">Um marco no seu mapa</p>
+                <p className="font-serif text-[17px] text-[#1A1A2E]">Uma etapa no seu mapa</p>
                 <p className="mt-1 font-sans text-[13px] text-[#1A1A2E] opacity-55">
                   superfície branca, cantos suaves, sombra discreta.
                 </p>
@@ -178,7 +178,7 @@ function DesignSystemPage() {
         </Secao>
 
         {/* VOZ */}
-        <Secao titulo="Voz — Linguagem Aimer">
+        <Secao titulo="Voz · Linguagem Aimer">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[rgba(45,106,79,0.2)] bg-[rgba(45,106,79,0.04)] p-5">
               <p className="mb-3 font-accent text-[10px] font-bold uppercase tracking-[1.5px] text-[#2D6A4F]">
@@ -205,7 +205,7 @@ function DesignSystemPage() {
       </main>
 
       <footer className="border-t border-[rgba(26,26,46,0.08)] px-6 py-8 text-center md:px-12">
-        <p className="caveat-decorativo text-[#C96B3E]">um sistema vivo — cresce com a Pólia.</p>
+        <p className="caveat-decorativo text-[#C96B3E]">um sistema vivo, cresce com a Pólia.</p>
       </footer>
     </div>
   );

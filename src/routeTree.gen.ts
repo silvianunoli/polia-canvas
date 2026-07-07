@@ -9,65 +9,53 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as PrecosRouteImport } from './routes/precos'
+import { Route as ManifestoRouteImport } from './routes/manifesto'
+import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
-import { Route as CaseDeUxRouteImport } from './routes/case-de-ux'
-import { Route as PublicRouteImport } from './routes/_public'
+import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
+import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirSenhaRouteImport } from './routes/auth/redefinir-senha'
-import { Route as AuthRedefinirRouteImport } from './routes/auth/redefinir'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
+import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirado'
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
-import { Route as AuthEsqueciRouteImport } from './routes/auth/esqueci'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
-import { Route as PublicTermosRouteImport } from './routes/_public.termos'
-import { Route as PublicPrivacidadeRouteImport } from './routes/_public.privacidade'
-import { Route as PublicPrecosRouteImport } from './routes/_public.precos'
-import { Route as PublicManifestoRouteImport } from './routes/_public.manifesto'
-import { Route as PublicListaDeEsperaRouteImport } from './routes/_public.lista-de-espera'
-import { Route as PublicContatoRouteImport } from './routes/_public.contato'
-import { Route as PublicComoFuncionaRouteImport } from './routes/_public.como-funciona'
-import { Route as PublicAjudaRouteImport } from './routes/_public.ajuda'
-import { Route as AuthenticatedVitrineRouteImport } from './routes/_authenticated/vitrine'
 import { Route as AuthenticatedVendasEClientesRouteImport } from './routes/_authenticated/vendas-e-clientes'
 import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
-import { Route as AuthenticatedProgressoRouteImport } from './routes/_authenticated/progresso'
+import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
+import { Route as AuthenticatedMercadoRouteImport } from './routes/_authenticated/mercado'
 import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authenticated/marca-viva'
+import { Route as AuthenticatedMarcaRouteImport } from './routes/_authenticated/marca'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
-import { Route as AuthenticatedHabitosRouteImport } from './routes/_authenticated/habitos'
-import { Route as AuthenticatedGuiaRouteImport } from './routes/_authenticated/guia'
-import { Route as AuthenticatedFocoRouteImport } from './routes/_authenticated/foco'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEntregaveisRouteImport } from './routes/_authenticated/entregaveis'
-import { Route as AuthenticatedDiarioRouteImport } from './routes/_authenticated/diario'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
+import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
-import { Route as PublicBlogIndexRouteImport } from './routes/_public.blog.index'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
-import { Route as AuthenticatedBibliotecaIndexRouteImport } from './routes/_authenticated/biblioteca.index'
+import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
+import { Route as AuthenticatedBlogAdminIndexRouteImport } from './routes/_authenticated/blog-admin.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
-import { Route as PublicBlogSlugRouteImport } from './routes/_public.blog.$slug'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
-import { Route as AuthenticatedEtapa9RouteImport } from './routes/_authenticated/etapa.9'
-import { Route as AuthenticatedEtapa8RouteImport } from './routes/_authenticated/etapa.8'
-import { Route as AuthenticatedEtapa7RouteImport } from './routes/_authenticated/etapa.7'
-import { Route as AuthenticatedEtapa6RouteImport } from './routes/_authenticated/etapa.6'
-import { Route as AuthenticatedEtapa5RouteImport } from './routes/_authenticated/etapa.5'
-import { Route as AuthenticatedEtapa4RouteImport } from './routes/_authenticated/etapa.4'
-import { Route as AuthenticatedEtapa3RouteImport } from './routes/_authenticated/etapa.3'
-import { Route as AuthenticatedEtapa2RouteImport } from './routes/_authenticated/etapa.2'
-import { Route as AuthenticatedEtapa11RouteImport } from './routes/_authenticated/etapa.11'
-import { Route as AuthenticatedEtapa10RouteImport } from './routes/_authenticated/etapa.10'
-import { Route as AuthenticatedEtapa1RouteImport } from './routes/_authenticated/etapa.1'
-import { Route as AuthenticatedBibliotecaIdRouteImport } from './routes/_authenticated/biblioteca.$id'
+import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
+import { Route as AuthenticatedEtapaNRouteImport } from './routes/_authenticated/etapa.$n'
+import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
+import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authenticated/admin.funil'
 import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
@@ -77,12 +65,38 @@ import { Route as AuthenticatedAdminComunicacaoRouteImport } from './routes/_aut
 import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
 import { Route as AuthenticatedAdminUsuariosIndexRouteImport } from './routes/_authenticated/admin.usuarios.index'
 import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_authenticated/admin.chamados.index'
+import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
 import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_authenticated/admin.chamados.$id'
 
+const TermosRoute = TermosRouteImport.update({
+  id: '/termos',
+  path: '/termos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadeRoute = PrivacidadeRouteImport.update({
+  id: '/privacidade',
+  path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrecosRoute = PrecosRouteImport.update({
+  id: '/precos',
+  path: '/precos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManifestoRoute = ManifestoRouteImport.update({
+  id: '/manifesto',
+  path: '/manifesto',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
+  id: '/lista-de-espera',
+  path: '/lista-de-espera',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DesignSystemRoute = DesignSystemRouteImport.update({
@@ -90,13 +104,19 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
   path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CaseDeUxRoute = CaseDeUxRouteImport.update({
-  id: '/case-de-ux',
-  path: '/case-de-ux',
+const ContatoRoute = ContatoRouteImport.update({
+  id: '/contato',
+  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PublicRoute = PublicRouteImport.update({
-  id: '/_public',
+const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
+  id: '/como-funciona',
+  path: '/como-funciona',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AjudaRoute = AjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -106,6 +126,16 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogIndexRoute = BlogIndexRouteImport.update({
+  id: '/blog/',
+  path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/blog/$slug',
+  path: '/blog/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthVerificacaoRoute = AuthVerificacaoRouteImport.update({
@@ -118,14 +148,14 @@ const AuthRedefinirSenhaRoute = AuthRedefinirSenhaRouteImport.update({
   path: '/auth/redefinir-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRedefinirRoute = AuthRedefinirRouteImport.update({
-  id: '/auth/redefinir',
-  path: '/auth/redefinir',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthLoginRoute = AuthLoginRouteImport.update({
   id: '/auth/login',
   path: '/auth/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLinkExpiradoRoute = AuthLinkExpiradoRouteImport.update({
+  id: '/auth/link-expirado',
+  path: '/auth/link-expirado',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthEsqueciSenhaRoute = AuthEsqueciSenhaRouteImport.update({
@@ -133,60 +163,10 @@ const AuthEsqueciSenhaRoute = AuthEsqueciSenhaRouteImport.update({
   path: '/auth/esqueci-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthEsqueciRoute = AuthEsqueciRouteImport.update({
-  id: '/auth/esqueci',
-  path: '/auth/esqueci',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthCadastroRoute = AuthCadastroRouteImport.update({
   id: '/auth/cadastro',
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
-} as any)
-const PublicTermosRoute = PublicTermosRouteImport.update({
-  id: '/termos',
-  path: '/termos',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicPrivacidadeRoute = PublicPrivacidadeRouteImport.update({
-  id: '/privacidade',
-  path: '/privacidade',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicPrecosRoute = PublicPrecosRouteImport.update({
-  id: '/precos',
-  path: '/precos',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicManifestoRoute = PublicManifestoRouteImport.update({
-  id: '/manifesto',
-  path: '/manifesto',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicListaDeEsperaRoute = PublicListaDeEsperaRouteImport.update({
-  id: '/lista-de-espera',
-  path: '/lista-de-espera',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicContatoRoute = PublicContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicComoFuncionaRoute = PublicComoFuncionaRouteImport.update({
-  id: '/como-funciona',
-  path: '/como-funciona',
-  getParentRoute: () => PublicRoute,
-} as any)
-const PublicAjudaRoute = PublicAjudaRouteImport.update({
-  id: '/ajuda',
-  path: '/ajuda',
-  getParentRoute: () => PublicRoute,
-} as any)
-const AuthenticatedVitrineRoute = AuthenticatedVitrineRouteImport.update({
-  id: '/vitrine',
-  path: '/vitrine',
-  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedVendasEClientesRoute =
   AuthenticatedVendasEClientesRouteImport.update({
@@ -199,9 +179,9 @@ const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
   path: '/tarefas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedProgressoRoute = AuthenticatedProgressoRouteImport.update({
-  id: '/progresso',
-  path: '/progresso',
+const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
@@ -219,29 +199,24 @@ const AuthenticatedMetasRoute = AuthenticatedMetasRouteImport.update({
   path: '/metas',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMercadoRoute = AuthenticatedMercadoRouteImport.update({
+  id: '/mercado',
+  path: '/mercado',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMarcaVivaRoute = AuthenticatedMarcaVivaRouteImport.update({
   id: '/marca-viva',
   path: '/marca-viva',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMarcaRoute = AuthenticatedMarcaRouteImport.update({
+  id: '/marca',
+  path: '/marca',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedJornadaRoute = AuthenticatedJornadaRouteImport.update({
   id: '/jornada',
   path: '/jornada',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedHabitosRoute = AuthenticatedHabitosRouteImport.update({
-  id: '/habitos',
-  path: '/habitos',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedGuiaRoute = AuthenticatedGuiaRouteImport.update({
-  id: '/guia',
-  path: '/guia',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedFocoRoute = AuthenticatedFocoRouteImport.update({
-  id: '/foco',
-  path: '/foco',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
@@ -260,11 +235,6 @@ const AuthenticatedEntregaveisRoute =
     path: '/entregaveis',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedDiarioRoute = AuthenticatedDiarioRouteImport.update({
-  id: '/diario',
-  path: '/diario',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
@@ -274,6 +244,11 @@ const AuthenticatedConfiguracoesRoute =
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
+  id: '/calendario',
+  path: '/calendario',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedCadernoRoute = AuthenticatedCadernoRouteImport.update({
@@ -286,21 +261,22 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const PublicBlogIndexRoute = PublicBlogIndexRouteImport.update({
-  id: '/blog/',
-  path: '/blog/',
-  getParentRoute: () => PublicRoute,
-} as any)
 const AuthenticatedPlannerIndexRoute =
   AuthenticatedPlannerIndexRouteImport.update({
     id: '/planner/',
     path: '/planner/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedBibliotecaIndexRoute =
-  AuthenticatedBibliotecaIndexRouteImport.update({
-    id: '/biblioteca/',
-    path: '/biblioteca/',
+const AuthenticatedPlanejamentoIndexRoute =
+  AuthenticatedPlanejamentoIndexRouteImport.update({
+    id: '/planejamento/',
+    path: '/planejamento/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBlogAdminIndexRoute =
+  AuthenticatedBlogAdminIndexRouteImport.update({
+    id: '/blog-admin/',
+    path: '/blog-admin/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
@@ -308,76 +284,33 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const PublicBlogSlugRoute = PublicBlogSlugRouteImport.update({
-  id: '/blog/$slug',
-  path: '/blog/$slug',
-  getParentRoute: () => PublicRoute,
-} as any)
 const AuthenticatedPlannerSlugRoute =
   AuthenticatedPlannerSlugRouteImport.update({
     id: '/planner/$slug',
     path: '/planner/$slug',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedEtapa9Route = AuthenticatedEtapa9RouteImport.update({
-  id: '/etapa/9',
-  path: '/etapa/9',
+const AuthenticatedPlanejamentoCompletoRoute =
+  AuthenticatedPlanejamentoCompletoRouteImport.update({
+    id: '/planejamento/completo',
+    path: '/planejamento/completo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedEtapaNRoute = AuthenticatedEtapaNRouteImport.update({
+  id: '/etapa/$n',
+  path: '/etapa/$n',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedEtapa8Route = AuthenticatedEtapa8RouteImport.update({
-  id: '/etapa/8',
-  path: '/etapa/8',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa7Route = AuthenticatedEtapa7RouteImport.update({
-  id: '/etapa/7',
-  path: '/etapa/7',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa6Route = AuthenticatedEtapa6RouteImport.update({
-  id: '/etapa/6',
-  path: '/etapa/6',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa5Route = AuthenticatedEtapa5RouteImport.update({
-  id: '/etapa/5',
-  path: '/etapa/5',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa4Route = AuthenticatedEtapa4RouteImport.update({
-  id: '/etapa/4',
-  path: '/etapa/4',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa3Route = AuthenticatedEtapa3RouteImport.update({
-  id: '/etapa/3',
-  path: '/etapa/3',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa2Route = AuthenticatedEtapa2RouteImport.update({
-  id: '/etapa/2',
-  path: '/etapa/2',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa11Route = AuthenticatedEtapa11RouteImport.update({
-  id: '/etapa/11',
-  path: '/etapa/11',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa10Route = AuthenticatedEtapa10RouteImport.update({
-  id: '/etapa/10',
-  path: '/etapa/10',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedEtapa1Route = AuthenticatedEtapa1RouteImport.update({
-  id: '/etapa/1',
-  path: '/etapa/1',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
-const AuthenticatedBibliotecaIdRoute =
-  AuthenticatedBibliotecaIdRouteImport.update({
-    id: '/biblioteca/$id',
-    path: '/biblioteca/$id',
+const AuthenticatedBlogAdminNovoRoute =
+  AuthenticatedBlogAdminNovoRouteImport.update({
+    id: '/blog-admin/novo',
+    path: '/blog-admin/novo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedBlogAdminIdRoute =
+  AuthenticatedBlogAdminIdRouteImport.update({
+    id: '/blog-admin/$id',
+    path: '/blog-admin/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
@@ -429,6 +362,12 @@ const AuthenticatedAdminChamadosIndexRoute =
     path: '/chamados/',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedPlanejamentoModuloNRoute =
+  AuthenticatedPlanejamentoModuloNRouteImport.update({
+    id: '/planejamento/modulo/$n',
+    path: '/planejamento/modulo/$n',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedAdminUsuariosIdRoute =
   AuthenticatedAdminUsuariosIdRouteImport.update({
     id: '/usuarios/$id',
@@ -444,44 +383,42 @@ const AuthenticatedAdminChamadosIdRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/case-de-ux': typeof CaseDeUxRoute
+  '/ajuda': typeof AjudaRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
+  '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/manifesto': typeof ManifestoRoute
+  '/precos': typeof PrecosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/caderno': typeof AuthenticatedCadernoRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/diario': typeof AuthenticatedDiarioRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/foco': typeof AuthenticatedFocoRoute
-  '/guia': typeof AuthenticatedGuiaRoute
-  '/habitos': typeof AuthenticatedHabitosRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/marca': typeof AuthenticatedMarcaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/mercado': typeof AuthenticatedMercadoRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
-  '/progresso': typeof AuthenticatedProgressoRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
-  '/vitrine': typeof AuthenticatedVitrineRoute
-  '/ajuda': typeof PublicAjudaRoute
-  '/como-funciona': typeof PublicComoFuncionaRoute
-  '/contato': typeof PublicContatoRoute
-  '/lista-de-espera': typeof PublicListaDeEsperaRoute
-  '/manifesto': typeof PublicManifestoRoute
-  '/precos': typeof PublicPrecosRoute
-  '/privacidade': typeof PublicPrivacidadeRoute
-  '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
-  '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -489,68 +426,58 @@ export interface FileRoutesByFullPath {
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
-  '/etapa/1': typeof AuthenticatedEtapa1Route
-  '/etapa/10': typeof AuthenticatedEtapa10Route
-  '/etapa/11': typeof AuthenticatedEtapa11Route
-  '/etapa/2': typeof AuthenticatedEtapa2Route
-  '/etapa/3': typeof AuthenticatedEtapa3Route
-  '/etapa/4': typeof AuthenticatedEtapa4Route
-  '/etapa/5': typeof AuthenticatedEtapa5Route
-  '/etapa/6': typeof AuthenticatedEtapa6Route
-  '/etapa/7': typeof AuthenticatedEtapa7Route
-  '/etapa/8': typeof AuthenticatedEtapa8Route
-  '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
+  '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
+  '/etapa/$n': typeof AuthenticatedEtapaNRoute
+  '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/blog/$slug': typeof PublicBlogSlugRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
-  '/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
+  '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
-  '/blog/': typeof PublicBlogIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
   '/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/case-de-ux': typeof CaseDeUxRoute
+  '/ajuda': typeof AjudaRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
+  '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/manifesto': typeof ManifestoRoute
+  '/precos': typeof PrecosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
   '/caderno': typeof AuthenticatedCadernoRoute
+  '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/diario': typeof AuthenticatedDiarioRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/foco': typeof AuthenticatedFocoRoute
-  '/guia': typeof AuthenticatedGuiaRoute
-  '/habitos': typeof AuthenticatedHabitosRoute
   '/jornada': typeof AuthenticatedJornadaRoute
+  '/marca': typeof AuthenticatedMarcaRoute
   '/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/mercado': typeof AuthenticatedMercadoRoute
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
-  '/progresso': typeof AuthenticatedProgressoRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
   '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
-  '/vitrine': typeof AuthenticatedVitrineRoute
-  '/ajuda': typeof PublicAjudaRoute
-  '/como-funciona': typeof PublicComoFuncionaRoute
-  '/contato': typeof PublicContatoRoute
-  '/lista-de-espera': typeof PublicListaDeEsperaRoute
-  '/manifesto': typeof PublicManifestoRoute
-  '/precos': typeof PublicPrecosRoute
-  '/privacidade': typeof PublicPrivacidadeRoute
-  '/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
-  '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog': typeof BlogIndexRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -558,26 +485,18 @@ export interface FileRoutesByTo {
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
-  '/etapa/1': typeof AuthenticatedEtapa1Route
-  '/etapa/10': typeof AuthenticatedEtapa10Route
-  '/etapa/11': typeof AuthenticatedEtapa11Route
-  '/etapa/2': typeof AuthenticatedEtapa2Route
-  '/etapa/3': typeof AuthenticatedEtapa3Route
-  '/etapa/4': typeof AuthenticatedEtapa4Route
-  '/etapa/5': typeof AuthenticatedEtapa5Route
-  '/etapa/6': typeof AuthenticatedEtapa6Route
-  '/etapa/7': typeof AuthenticatedEtapa7Route
-  '/etapa/8': typeof AuthenticatedEtapa8Route
-  '/etapa/9': typeof AuthenticatedEtapa9Route
+  '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
+  '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
+  '/etapa/$n': typeof AuthenticatedEtapaNRoute
+  '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/blog/$slug': typeof PublicBlogSlugRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
-  '/biblioteca': typeof AuthenticatedBibliotecaIndexRoute
+  '/blog-admin': typeof AuthenticatedBlogAdminIndexRoute
+  '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
-  '/blog': typeof PublicBlogIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados': typeof AuthenticatedAdminChamadosIndexRoute
   '/admin/usuarios': typeof AuthenticatedAdminUsuariosIndexRoute
 }
@@ -585,45 +504,42 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/_public': typeof PublicRouteWithChildren
-  '/case-de-ux': typeof CaseDeUxRoute
+  '/ajuda': typeof AjudaRoute
+  '/como-funciona': typeof ComoFuncionaRoute
+  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
+  '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/manifesto': typeof ManifestoRoute
+  '/precos': typeof PrecosRoute
+  '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
+  '/termos': typeof TermosRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
+  '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
-  '/_authenticated/diario': typeof AuthenticatedDiarioRoute
   '/_authenticated/entregaveis': typeof AuthenticatedEntregaveisRoute
   '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
-  '/_authenticated/foco': typeof AuthenticatedFocoRoute
-  '/_authenticated/guia': typeof AuthenticatedGuiaRoute
-  '/_authenticated/habitos': typeof AuthenticatedHabitosRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
+  '/_authenticated/marca': typeof AuthenticatedMarcaRoute
   '/_authenticated/marca-viva': typeof AuthenticatedMarcaVivaRoute
+  '/_authenticated/mercado': typeof AuthenticatedMercadoRoute
   '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
-  '/_authenticated/progresso': typeof AuthenticatedProgressoRoute
+  '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
-  '/_authenticated/vitrine': typeof AuthenticatedVitrineRoute
-  '/_public/ajuda': typeof PublicAjudaRoute
-  '/_public/como-funciona': typeof PublicComoFuncionaRoute
-  '/_public/contato': typeof PublicContatoRoute
-  '/_public/lista-de-espera': typeof PublicListaDeEsperaRoute
-  '/_public/manifesto': typeof PublicManifestoRoute
-  '/_public/precos': typeof PublicPrecosRoute
-  '/_public/privacidade': typeof PublicPrivacidadeRoute
-  '/_public/termos': typeof PublicTermosRoute
   '/auth/cadastro': typeof AuthCadastroRoute
-  '/auth/esqueci': typeof AuthEsqueciRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
-  '/auth/redefinir': typeof AuthRedefinirRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
+  '/blog/$slug': typeof BlogSlugRoute
+  '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
@@ -631,26 +547,18 @@ export interface FileRoutesById {
   '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/_authenticated/admin/funil': typeof AuthenticatedAdminFunilRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/_authenticated/biblioteca/$id': typeof AuthenticatedBibliotecaIdRoute
-  '/_authenticated/etapa/1': typeof AuthenticatedEtapa1Route
-  '/_authenticated/etapa/10': typeof AuthenticatedEtapa10Route
-  '/_authenticated/etapa/11': typeof AuthenticatedEtapa11Route
-  '/_authenticated/etapa/2': typeof AuthenticatedEtapa2Route
-  '/_authenticated/etapa/3': typeof AuthenticatedEtapa3Route
-  '/_authenticated/etapa/4': typeof AuthenticatedEtapa4Route
-  '/_authenticated/etapa/5': typeof AuthenticatedEtapa5Route
-  '/_authenticated/etapa/6': typeof AuthenticatedEtapa6Route
-  '/_authenticated/etapa/7': typeof AuthenticatedEtapa7Route
-  '/_authenticated/etapa/8': typeof AuthenticatedEtapa8Route
-  '/_authenticated/etapa/9': typeof AuthenticatedEtapa9Route
+  '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
+  '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
+  '/_authenticated/etapa/$n': typeof AuthenticatedEtapaNRoute
+  '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/_public/blog/$slug': typeof PublicBlogSlugRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
-  '/_authenticated/biblioteca/': typeof AuthenticatedBibliotecaIndexRoute
+  '/_authenticated/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
+  '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
-  '/_public/blog/': typeof PublicBlogIndexRoute
   '/_authenticated/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
   '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
+  '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/_authenticated/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
   '/_authenticated/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
@@ -658,44 +566,42 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/case-de-ux'
-    | '/design-system'
-    | '/sobre'
-    | '/admin'
-    | '/caderno'
-    | '/clientes'
-    | '/configuracoes'
-    | '/diario'
-    | '/entregaveis'
-    | '/equipe'
-    | '/financeiro'
-    | '/foco'
-    | '/guia'
-    | '/habitos'
-    | '/jornada'
-    | '/marca-viva'
-    | '/metas'
-    | '/onboarding'
-    | '/painel'
-    | '/progresso'
-    | '/tarefas'
-    | '/vendas-e-clientes'
-    | '/vitrine'
     | '/ajuda'
     | '/como-funciona'
     | '/contato'
+    | '/design-system'
     | '/lista-de-espera'
     | '/manifesto'
     | '/precos'
     | '/privacidade'
+    | '/sobre'
     | '/termos'
+    | '/admin'
+    | '/caderno'
+    | '/calendario'
+    | '/clientes'
+    | '/configuracoes'
+    | '/entregaveis'
+    | '/equipe'
+    | '/financeiro'
+    | '/jornada'
+    | '/marca'
+    | '/marca-viva'
+    | '/mercado'
+    | '/metas'
+    | '/onboarding'
+    | '/painel'
+    | '/produtos'
+    | '/tarefas'
+    | '/vendas-e-clientes'
     | '/auth/cadastro'
-    | '/auth/esqueci'
     | '/auth/esqueci-senha'
+    | '/auth/link-expirado'
     | '/auth/login'
-    | '/auth/redefinir'
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
+    | '/blog/$slug'
+    | '/blog/'
     | '/admin/cms'
     | '/admin/comunicacao'
     | '/admin/crm'
@@ -703,68 +609,58 @@ export interface FileRouteTypes {
     | '/admin/flags'
     | '/admin/funil'
     | '/admin/logs'
-    | '/biblioteca/$id'
-    | '/etapa/1'
-    | '/etapa/10'
-    | '/etapa/11'
-    | '/etapa/2'
-    | '/etapa/3'
-    | '/etapa/4'
-    | '/etapa/5'
-    | '/etapa/6'
-    | '/etapa/7'
-    | '/etapa/8'
-    | '/etapa/9'
+    | '/blog-admin/$id'
+    | '/blog-admin/novo'
+    | '/etapa/$n'
+    | '/planejamento/completo'
     | '/planner/$slug'
-    | '/blog/$slug'
     | '/admin/'
-    | '/biblioteca/'
+    | '/blog-admin/'
+    | '/planejamento/'
     | '/planner/'
-    | '/blog/'
     | '/admin/chamados/$id'
     | '/admin/usuarios/$id'
+    | '/planejamento/modulo/$n'
     | '/admin/chamados/'
     | '/admin/usuarios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/case-de-ux'
-    | '/design-system'
-    | '/sobre'
-    | '/caderno'
-    | '/clientes'
-    | '/configuracoes'
-    | '/diario'
-    | '/entregaveis'
-    | '/equipe'
-    | '/financeiro'
-    | '/foco'
-    | '/guia'
-    | '/habitos'
-    | '/jornada'
-    | '/marca-viva'
-    | '/metas'
-    | '/onboarding'
-    | '/painel'
-    | '/progresso'
-    | '/tarefas'
-    | '/vendas-e-clientes'
-    | '/vitrine'
     | '/ajuda'
     | '/como-funciona'
     | '/contato'
+    | '/design-system'
     | '/lista-de-espera'
     | '/manifesto'
     | '/precos'
     | '/privacidade'
+    | '/sobre'
     | '/termos'
+    | '/caderno'
+    | '/calendario'
+    | '/clientes'
+    | '/configuracoes'
+    | '/entregaveis'
+    | '/equipe'
+    | '/financeiro'
+    | '/jornada'
+    | '/marca'
+    | '/marca-viva'
+    | '/mercado'
+    | '/metas'
+    | '/onboarding'
+    | '/painel'
+    | '/produtos'
+    | '/tarefas'
+    | '/vendas-e-clientes'
     | '/auth/cadastro'
-    | '/auth/esqueci'
     | '/auth/esqueci-senha'
+    | '/auth/link-expirado'
     | '/auth/login'
-    | '/auth/redefinir'
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
+    | '/blog/$slug'
+    | '/blog'
     | '/admin/cms'
     | '/admin/comunicacao'
     | '/admin/crm'
@@ -772,71 +668,60 @@ export interface FileRouteTypes {
     | '/admin/flags'
     | '/admin/funil'
     | '/admin/logs'
-    | '/biblioteca/$id'
-    | '/etapa/1'
-    | '/etapa/10'
-    | '/etapa/11'
-    | '/etapa/2'
-    | '/etapa/3'
-    | '/etapa/4'
-    | '/etapa/5'
-    | '/etapa/6'
-    | '/etapa/7'
-    | '/etapa/8'
-    | '/etapa/9'
+    | '/blog-admin/$id'
+    | '/blog-admin/novo'
+    | '/etapa/$n'
+    | '/planejamento/completo'
     | '/planner/$slug'
-    | '/blog/$slug'
     | '/admin'
-    | '/biblioteca'
+    | '/blog-admin'
+    | '/planejamento'
     | '/planner'
-    | '/blog'
     | '/admin/chamados/$id'
     | '/admin/usuarios/$id'
+    | '/planejamento/modulo/$n'
     | '/admin/chamados'
     | '/admin/usuarios'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/_public'
-    | '/case-de-ux'
+    | '/ajuda'
+    | '/como-funciona'
+    | '/contato'
     | '/design-system'
+    | '/lista-de-espera'
+    | '/manifesto'
+    | '/precos'
+    | '/privacidade'
     | '/sobre'
+    | '/termos'
     | '/_authenticated/admin'
     | '/_authenticated/caderno'
+    | '/_authenticated/calendario'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
-    | '/_authenticated/diario'
     | '/_authenticated/entregaveis'
     | '/_authenticated/equipe'
     | '/_authenticated/financeiro'
-    | '/_authenticated/foco'
-    | '/_authenticated/guia'
-    | '/_authenticated/habitos'
     | '/_authenticated/jornada'
+    | '/_authenticated/marca'
     | '/_authenticated/marca-viva'
+    | '/_authenticated/mercado'
     | '/_authenticated/metas'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
-    | '/_authenticated/progresso'
+    | '/_authenticated/produtos'
     | '/_authenticated/tarefas'
     | '/_authenticated/vendas-e-clientes'
-    | '/_authenticated/vitrine'
-    | '/_public/ajuda'
-    | '/_public/como-funciona'
-    | '/_public/contato'
-    | '/_public/lista-de-espera'
-    | '/_public/manifesto'
-    | '/_public/precos'
-    | '/_public/privacidade'
-    | '/_public/termos'
     | '/auth/cadastro'
-    | '/auth/esqueci'
     | '/auth/esqueci-senha'
+    | '/auth/link-expirado'
     | '/auth/login'
-    | '/auth/redefinir'
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
+    | '/blog/$slug'
+    | '/blog/'
     | '/_authenticated/admin/cms'
     | '/_authenticated/admin/comunicacao'
     | '/_authenticated/admin/crm'
@@ -844,26 +729,18 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/flags'
     | '/_authenticated/admin/funil'
     | '/_authenticated/admin/logs'
-    | '/_authenticated/biblioteca/$id'
-    | '/_authenticated/etapa/1'
-    | '/_authenticated/etapa/10'
-    | '/_authenticated/etapa/11'
-    | '/_authenticated/etapa/2'
-    | '/_authenticated/etapa/3'
-    | '/_authenticated/etapa/4'
-    | '/_authenticated/etapa/5'
-    | '/_authenticated/etapa/6'
-    | '/_authenticated/etapa/7'
-    | '/_authenticated/etapa/8'
-    | '/_authenticated/etapa/9'
+    | '/_authenticated/blog-admin/$id'
+    | '/_authenticated/blog-admin/novo'
+    | '/_authenticated/etapa/$n'
+    | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
-    | '/_public/blog/$slug'
     | '/_authenticated/admin/'
-    | '/_authenticated/biblioteca/'
+    | '/_authenticated/blog-admin/'
+    | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
-    | '/_public/blog/'
     | '/_authenticated/admin/chamados/$id'
     | '/_authenticated/admin/usuarios/$id'
+    | '/_authenticated/planejamento/modulo/$n'
     | '/_authenticated/admin/chamados/'
     | '/_authenticated/admin/usuarios/'
   fileRoutesById: FileRoutesById
@@ -871,26 +748,68 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  PublicRoute: typeof PublicRouteWithChildren
-  CaseDeUxRoute: typeof CaseDeUxRoute
+  AjudaRoute: typeof AjudaRoute
+  ComoFuncionaRoute: typeof ComoFuncionaRoute
+  ContatoRoute: typeof ContatoRoute
   DesignSystemRoute: typeof DesignSystemRoute
+  ListaDeEsperaRoute: typeof ListaDeEsperaRoute
+  ManifestoRoute: typeof ManifestoRoute
+  PrecosRoute: typeof PrecosRoute
+  PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
+  TermosRoute: typeof TermosRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
-  AuthEsqueciRoute: typeof AuthEsqueciRoute
   AuthEsqueciSenhaRoute: typeof AuthEsqueciSenhaRoute
+  AuthLinkExpiradoRoute: typeof AuthLinkExpiradoRoute
   AuthLoginRoute: typeof AuthLoginRoute
-  AuthRedefinirRoute: typeof AuthRedefinirRoute
   AuthRedefinirSenhaRoute: typeof AuthRedefinirSenhaRoute
   AuthVerificacaoRoute: typeof AuthVerificacaoRoute
+  BlogSlugRoute: typeof BlogSlugRoute
+  BlogIndexRoute: typeof BlogIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termos': {
+      id: '/termos'
+      path: '/termos'
+      fullPath: '/termos'
+      preLoaderRoute: typeof TermosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sobre': {
       id: '/sobre'
       path: '/sobre'
       fullPath: '/sobre'
       preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidade': {
+      id: '/privacidade'
+      path: '/privacidade'
+      fullPath: '/privacidade'
+      preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/precos': {
+      id: '/precos'
+      path: '/precos'
+      fullPath: '/precos'
+      preLoaderRoute: typeof PrecosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manifesto': {
+      id: '/manifesto'
+      path: '/manifesto'
+      fullPath: '/manifesto'
+      preLoaderRoute: typeof ManifestoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lista-de-espera': {
+      id: '/lista-de-espera'
+      path: '/lista-de-espera'
+      fullPath: '/lista-de-espera'
+      preLoaderRoute: typeof ListaDeEsperaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/design-system': {
@@ -900,18 +819,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/case-de-ux': {
-      id: '/case-de-ux'
-      path: '/case-de-ux'
-      fullPath: '/case-de-ux'
-      preLoaderRoute: typeof CaseDeUxRouteImport
+    '/contato': {
+      id: '/contato'
+      path: '/contato'
+      fullPath: '/contato'
+      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_public': {
-      id: '/_public'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof PublicRouteImport
+    '/como-funciona': {
+      id: '/como-funciona'
+      path: '/como-funciona'
+      fullPath: '/como-funciona'
+      preLoaderRoute: typeof ComoFuncionaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ajuda': {
+      id: '/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AjudaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -928,6 +854,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/': {
+      id: '/blog/'
+      path: '/blog'
+      fullPath: '/blog/'
+      preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/blog/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth/verificacao': {
       id: '/auth/verificacao'
       path: '/auth/verificacao'
@@ -942,18 +882,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRedefinirSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/redefinir': {
-      id: '/auth/redefinir'
-      path: '/auth/redefinir'
-      fullPath: '/auth/redefinir'
-      preLoaderRoute: typeof AuthRedefinirRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/login': {
       id: '/auth/login'
       path: '/auth/login'
       fullPath: '/auth/login'
       preLoaderRoute: typeof AuthLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/link-expirado': {
+      id: '/auth/link-expirado'
+      path: '/auth/link-expirado'
+      fullPath: '/auth/link-expirado'
+      preLoaderRoute: typeof AuthLinkExpiradoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/esqueci-senha': {
@@ -963,82 +903,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthEsqueciSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/esqueci': {
-      id: '/auth/esqueci'
-      path: '/auth/esqueci'
-      fullPath: '/auth/esqueci'
-      preLoaderRoute: typeof AuthEsqueciRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/auth/cadastro': {
       id: '/auth/cadastro'
       path: '/auth/cadastro'
       fullPath: '/auth/cadastro'
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_public/termos': {
-      id: '/_public/termos'
-      path: '/termos'
-      fullPath: '/termos'
-      preLoaderRoute: typeof PublicTermosRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/privacidade': {
-      id: '/_public/privacidade'
-      path: '/privacidade'
-      fullPath: '/privacidade'
-      preLoaderRoute: typeof PublicPrivacidadeRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/precos': {
-      id: '/_public/precos'
-      path: '/precos'
-      fullPath: '/precos'
-      preLoaderRoute: typeof PublicPrecosRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/manifesto': {
-      id: '/_public/manifesto'
-      path: '/manifesto'
-      fullPath: '/manifesto'
-      preLoaderRoute: typeof PublicManifestoRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/lista-de-espera': {
-      id: '/_public/lista-de-espera'
-      path: '/lista-de-espera'
-      fullPath: '/lista-de-espera'
-      preLoaderRoute: typeof PublicListaDeEsperaRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/contato': {
-      id: '/_public/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof PublicContatoRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/como-funciona': {
-      id: '/_public/como-funciona'
-      path: '/como-funciona'
-      fullPath: '/como-funciona'
-      preLoaderRoute: typeof PublicComoFuncionaRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_public/ajuda': {
-      id: '/_public/ajuda'
-      path: '/ajuda'
-      fullPath: '/ajuda'
-      preLoaderRoute: typeof PublicAjudaRouteImport
-      parentRoute: typeof PublicRoute
-    }
-    '/_authenticated/vitrine': {
-      id: '/_authenticated/vitrine'
-      path: '/vitrine'
-      fullPath: '/vitrine'
-      preLoaderRoute: typeof AuthenticatedVitrineRouteImport
-      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/vendas-e-clientes': {
       id: '/_authenticated/vendas-e-clientes'
@@ -1054,11 +924,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTarefasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/progresso': {
-      id: '/_authenticated/progresso'
-      path: '/progresso'
-      fullPath: '/progresso'
-      preLoaderRoute: typeof AuthenticatedProgressoRouteImport
+    '/_authenticated/produtos': {
+      id: '/_authenticated/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/painel': {
@@ -1082,6 +952,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMetasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mercado': {
+      id: '/_authenticated/mercado'
+      path: '/mercado'
+      fullPath: '/mercado'
+      preLoaderRoute: typeof AuthenticatedMercadoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/marca-viva': {
       id: '/_authenticated/marca-viva'
       path: '/marca-viva'
@@ -1089,32 +966,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarcaVivaRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/marca': {
+      id: '/_authenticated/marca'
+      path: '/marca'
+      fullPath: '/marca'
+      preLoaderRoute: typeof AuthenticatedMarcaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/jornada': {
       id: '/_authenticated/jornada'
       path: '/jornada'
       fullPath: '/jornada'
       preLoaderRoute: typeof AuthenticatedJornadaRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/habitos': {
-      id: '/_authenticated/habitos'
-      path: '/habitos'
-      fullPath: '/habitos'
-      preLoaderRoute: typeof AuthenticatedHabitosRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/guia': {
-      id: '/_authenticated/guia'
-      path: '/guia'
-      fullPath: '/guia'
-      preLoaderRoute: typeof AuthenticatedGuiaRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/foco': {
-      id: '/_authenticated/foco'
-      path: '/foco'
-      fullPath: '/foco'
-      preLoaderRoute: typeof AuthenticatedFocoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/financeiro': {
@@ -1138,13 +1001,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEntregaveisRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/diario': {
-      id: '/_authenticated/diario'
-      path: '/diario'
-      fullPath: '/diario'
-      preLoaderRoute: typeof AuthenticatedDiarioRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/configuracoes': {
       id: '/_authenticated/configuracoes'
       path: '/configuracoes'
@@ -1157,6 +1013,13 @@ declare module '@tanstack/react-router' {
       path: '/clientes'
       fullPath: '/clientes'
       preLoaderRoute: typeof AuthenticatedClientesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/calendario': {
+      id: '/_authenticated/calendario'
+      path: '/calendario'
+      fullPath: '/calendario'
+      preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/caderno': {
@@ -1173,13 +1036,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_public/blog/': {
-      id: '/_public/blog/'
-      path: '/blog'
-      fullPath: '/blog/'
-      preLoaderRoute: typeof PublicBlogIndexRouteImport
-      parentRoute: typeof PublicRoute
-    }
     '/_authenticated/planner/': {
       id: '/_authenticated/planner/'
       path: '/planner'
@@ -1187,11 +1043,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlannerIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/biblioteca/': {
-      id: '/_authenticated/biblioteca/'
-      path: '/biblioteca'
-      fullPath: '/biblioteca/'
-      preLoaderRoute: typeof AuthenticatedBibliotecaIndexRouteImport
+    '/_authenticated/planejamento/': {
+      id: '/_authenticated/planejamento/'
+      path: '/planejamento'
+      fullPath: '/planejamento/'
+      preLoaderRoute: typeof AuthenticatedPlanejamentoIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/blog-admin/': {
+      id: '/_authenticated/blog-admin/'
+      path: '/blog-admin'
+      fullPath: '/blog-admin/'
+      preLoaderRoute: typeof AuthenticatedBlogAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/': {
@@ -1201,13 +1064,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_public/blog/$slug': {
-      id: '/_public/blog/$slug'
-      path: '/blog/$slug'
-      fullPath: '/blog/$slug'
-      preLoaderRoute: typeof PublicBlogSlugRouteImport
-      parentRoute: typeof PublicRoute
-    }
     '/_authenticated/planner/$slug': {
       id: '/_authenticated/planner/$slug'
       path: '/planner/$slug'
@@ -1215,88 +1071,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlannerSlugRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/etapa/9': {
-      id: '/_authenticated/etapa/9'
-      path: '/etapa/9'
-      fullPath: '/etapa/9'
-      preLoaderRoute: typeof AuthenticatedEtapa9RouteImport
+    '/_authenticated/planejamento/completo': {
+      id: '/_authenticated/planejamento/completo'
+      path: '/planejamento/completo'
+      fullPath: '/planejamento/completo'
+      preLoaderRoute: typeof AuthenticatedPlanejamentoCompletoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/etapa/8': {
-      id: '/_authenticated/etapa/8'
-      path: '/etapa/8'
-      fullPath: '/etapa/8'
-      preLoaderRoute: typeof AuthenticatedEtapa8RouteImport
+    '/_authenticated/etapa/$n': {
+      id: '/_authenticated/etapa/$n'
+      path: '/etapa/$n'
+      fullPath: '/etapa/$n'
+      preLoaderRoute: typeof AuthenticatedEtapaNRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/etapa/7': {
-      id: '/_authenticated/etapa/7'
-      path: '/etapa/7'
-      fullPath: '/etapa/7'
-      preLoaderRoute: typeof AuthenticatedEtapa7RouteImport
+    '/_authenticated/blog-admin/novo': {
+      id: '/_authenticated/blog-admin/novo'
+      path: '/blog-admin/novo'
+      fullPath: '/blog-admin/novo'
+      preLoaderRoute: typeof AuthenticatedBlogAdminNovoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/etapa/6': {
-      id: '/_authenticated/etapa/6'
-      path: '/etapa/6'
-      fullPath: '/etapa/6'
-      preLoaderRoute: typeof AuthenticatedEtapa6RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/5': {
-      id: '/_authenticated/etapa/5'
-      path: '/etapa/5'
-      fullPath: '/etapa/5'
-      preLoaderRoute: typeof AuthenticatedEtapa5RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/4': {
-      id: '/_authenticated/etapa/4'
-      path: '/etapa/4'
-      fullPath: '/etapa/4'
-      preLoaderRoute: typeof AuthenticatedEtapa4RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/3': {
-      id: '/_authenticated/etapa/3'
-      path: '/etapa/3'
-      fullPath: '/etapa/3'
-      preLoaderRoute: typeof AuthenticatedEtapa3RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/2': {
-      id: '/_authenticated/etapa/2'
-      path: '/etapa/2'
-      fullPath: '/etapa/2'
-      preLoaderRoute: typeof AuthenticatedEtapa2RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/11': {
-      id: '/_authenticated/etapa/11'
-      path: '/etapa/11'
-      fullPath: '/etapa/11'
-      preLoaderRoute: typeof AuthenticatedEtapa11RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/10': {
-      id: '/_authenticated/etapa/10'
-      path: '/etapa/10'
-      fullPath: '/etapa/10'
-      preLoaderRoute: typeof AuthenticatedEtapa10RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/etapa/1': {
-      id: '/_authenticated/etapa/1'
-      path: '/etapa/1'
-      fullPath: '/etapa/1'
-      preLoaderRoute: typeof AuthenticatedEtapa1RouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/biblioteca/$id': {
-      id: '/_authenticated/biblioteca/$id'
-      path: '/biblioteca/$id'
-      fullPath: '/biblioteca/$id'
-      preLoaderRoute: typeof AuthenticatedBibliotecaIdRouteImport
+    '/_authenticated/blog-admin/$id': {
+      id: '/_authenticated/blog-admin/$id'
+      path: '/blog-admin/$id'
+      fullPath: '/blog-admin/$id'
+      preLoaderRoute: typeof AuthenticatedBlogAdminIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/admin/logs': {
@@ -1362,6 +1162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminChamadosIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/planejamento/modulo/$n': {
+      id: '/_authenticated/planejamento/modulo/$n'
+      path: '/planejamento/modulo/$n'
+      fullPath: '/planejamento/modulo/$n'
+      preLoaderRoute: typeof AuthenticatedPlanejamentoModuloNRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/admin/usuarios/$id': {
       id: '/_authenticated/admin/usuarios/$id'
       path: '/usuarios/$id'
@@ -1415,126 +1222,89 @@ const AuthenticatedAdminRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
+  AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
-  AuthenticatedDiarioRoute: typeof AuthenticatedDiarioRoute
   AuthenticatedEntregaveisRoute: typeof AuthenticatedEntregaveisRoute
   AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
-  AuthenticatedFocoRoute: typeof AuthenticatedFocoRoute
-  AuthenticatedGuiaRoute: typeof AuthenticatedGuiaRoute
-  AuthenticatedHabitosRoute: typeof AuthenticatedHabitosRoute
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
+  AuthenticatedMarcaRoute: typeof AuthenticatedMarcaRoute
   AuthenticatedMarcaVivaRoute: typeof AuthenticatedMarcaVivaRoute
+  AuthenticatedMercadoRoute: typeof AuthenticatedMercadoRoute
   AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
-  AuthenticatedProgressoRoute: typeof AuthenticatedProgressoRoute
+  AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedVendasEClientesRoute: typeof AuthenticatedVendasEClientesRoute
-  AuthenticatedVitrineRoute: typeof AuthenticatedVitrineRoute
-  AuthenticatedBibliotecaIdRoute: typeof AuthenticatedBibliotecaIdRoute
-  AuthenticatedEtapa1Route: typeof AuthenticatedEtapa1Route
-  AuthenticatedEtapa10Route: typeof AuthenticatedEtapa10Route
-  AuthenticatedEtapa11Route: typeof AuthenticatedEtapa11Route
-  AuthenticatedEtapa2Route: typeof AuthenticatedEtapa2Route
-  AuthenticatedEtapa3Route: typeof AuthenticatedEtapa3Route
-  AuthenticatedEtapa4Route: typeof AuthenticatedEtapa4Route
-  AuthenticatedEtapa5Route: typeof AuthenticatedEtapa5Route
-  AuthenticatedEtapa6Route: typeof AuthenticatedEtapa6Route
-  AuthenticatedEtapa7Route: typeof AuthenticatedEtapa7Route
-  AuthenticatedEtapa8Route: typeof AuthenticatedEtapa8Route
-  AuthenticatedEtapa9Route: typeof AuthenticatedEtapa9Route
+  AuthenticatedBlogAdminIdRoute: typeof AuthenticatedBlogAdminIdRoute
+  AuthenticatedBlogAdminNovoRoute: typeof AuthenticatedBlogAdminNovoRoute
+  AuthenticatedEtapaNRoute: typeof AuthenticatedEtapaNRoute
+  AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
-  AuthenticatedBibliotecaIndexRoute: typeof AuthenticatedBibliotecaIndexRoute
+  AuthenticatedBlogAdminIndexRoute: typeof AuthenticatedBlogAdminIndexRoute
+  AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
+  AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
+  AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
-  AuthenticatedDiarioRoute: AuthenticatedDiarioRoute,
   AuthenticatedEntregaveisRoute: AuthenticatedEntregaveisRoute,
   AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
-  AuthenticatedFocoRoute: AuthenticatedFocoRoute,
-  AuthenticatedGuiaRoute: AuthenticatedGuiaRoute,
-  AuthenticatedHabitosRoute: AuthenticatedHabitosRoute,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
+  AuthenticatedMarcaRoute: AuthenticatedMarcaRoute,
   AuthenticatedMarcaVivaRoute: AuthenticatedMarcaVivaRoute,
+  AuthenticatedMercadoRoute: AuthenticatedMercadoRoute,
   AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
-  AuthenticatedProgressoRoute: AuthenticatedProgressoRoute,
+  AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedVendasEClientesRoute: AuthenticatedVendasEClientesRoute,
-  AuthenticatedVitrineRoute: AuthenticatedVitrineRoute,
-  AuthenticatedBibliotecaIdRoute: AuthenticatedBibliotecaIdRoute,
-  AuthenticatedEtapa1Route: AuthenticatedEtapa1Route,
-  AuthenticatedEtapa10Route: AuthenticatedEtapa10Route,
-  AuthenticatedEtapa11Route: AuthenticatedEtapa11Route,
-  AuthenticatedEtapa2Route: AuthenticatedEtapa2Route,
-  AuthenticatedEtapa3Route: AuthenticatedEtapa3Route,
-  AuthenticatedEtapa4Route: AuthenticatedEtapa4Route,
-  AuthenticatedEtapa5Route: AuthenticatedEtapa5Route,
-  AuthenticatedEtapa6Route: AuthenticatedEtapa6Route,
-  AuthenticatedEtapa7Route: AuthenticatedEtapa7Route,
-  AuthenticatedEtapa8Route: AuthenticatedEtapa8Route,
-  AuthenticatedEtapa9Route: AuthenticatedEtapa9Route,
+  AuthenticatedBlogAdminIdRoute: AuthenticatedBlogAdminIdRoute,
+  AuthenticatedBlogAdminNovoRoute: AuthenticatedBlogAdminNovoRoute,
+  AuthenticatedEtapaNRoute: AuthenticatedEtapaNRoute,
+  AuthenticatedPlanejamentoCompletoRoute:
+    AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
-  AuthenticatedBibliotecaIndexRoute: AuthenticatedBibliotecaIndexRoute,
+  AuthenticatedBlogAdminIndexRoute: AuthenticatedBlogAdminIndexRoute,
+  AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
+  AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface PublicRouteChildren {
-  PublicAjudaRoute: typeof PublicAjudaRoute
-  PublicComoFuncionaRoute: typeof PublicComoFuncionaRoute
-  PublicContatoRoute: typeof PublicContatoRoute
-  PublicListaDeEsperaRoute: typeof PublicListaDeEsperaRoute
-  PublicManifestoRoute: typeof PublicManifestoRoute
-  PublicPrecosRoute: typeof PublicPrecosRoute
-  PublicPrivacidadeRoute: typeof PublicPrivacidadeRoute
-  PublicTermosRoute: typeof PublicTermosRoute
-  PublicBlogSlugRoute: typeof PublicBlogSlugRoute
-  PublicBlogIndexRoute: typeof PublicBlogIndexRoute
-}
-
-const PublicRouteChildren: PublicRouteChildren = {
-  PublicAjudaRoute: PublicAjudaRoute,
-  PublicComoFuncionaRoute: PublicComoFuncionaRoute,
-  PublicContatoRoute: PublicContatoRoute,
-  PublicListaDeEsperaRoute: PublicListaDeEsperaRoute,
-  PublicManifestoRoute: PublicManifestoRoute,
-  PublicPrecosRoute: PublicPrecosRoute,
-  PublicPrivacidadeRoute: PublicPrivacidadeRoute,
-  PublicTermosRoute: PublicTermosRoute,
-  PublicBlogSlugRoute: PublicBlogSlugRoute,
-  PublicBlogIndexRoute: PublicBlogIndexRoute,
-}
-
-const PublicRouteWithChildren =
-  PublicRoute._addFileChildren(PublicRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  PublicRoute: PublicRouteWithChildren,
-  CaseDeUxRoute: CaseDeUxRoute,
+  AjudaRoute: AjudaRoute,
+  ComoFuncionaRoute: ComoFuncionaRoute,
+  ContatoRoute: ContatoRoute,
   DesignSystemRoute: DesignSystemRoute,
+  ListaDeEsperaRoute: ListaDeEsperaRoute,
+  ManifestoRoute: ManifestoRoute,
+  PrecosRoute: PrecosRoute,
+  PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
+  TermosRoute: TermosRoute,
   AuthCadastroRoute: AuthCadastroRoute,
-  AuthEsqueciRoute: AuthEsqueciRoute,
   AuthEsqueciSenhaRoute: AuthEsqueciSenhaRoute,
+  AuthLinkExpiradoRoute: AuthLinkExpiradoRoute,
   AuthLoginRoute: AuthLoginRoute,
-  AuthRedefinirRoute: AuthRedefinirRoute,
   AuthRedefinirSenhaRoute: AuthRedefinirSenhaRoute,
   AuthVerificacaoRoute: AuthVerificacaoRoute,
+  BlogSlugRoute: BlogSlugRoute,
+  BlogIndexRoute: BlogIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

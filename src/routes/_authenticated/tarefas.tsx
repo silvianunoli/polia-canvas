@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { pluralizeKanban } from "@/lib/kanban";
+import { toastErro } from "@/lib/toast";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const Route = createFileRoute("/_authenticated/tarefas")({
@@ -107,16 +108,28 @@ function TarefasPage() {
   };
 
   const moverTarefa = async (id: string, novoStatus: Status) => {
+    const anterior = qc.getQueryData<Tarefa[]>(["tarefas", userId]);
     updateLocal((list) => list.map((t) => (t.id === id ? { ...t, status: novoStatus } : t)));
-    await supabase
+    const { error } = await supabase
       .from("tarefas")
       .update({ status: novoStatus, updated_at: new Date().toISOString() })
       .eq("id", id);
+    // Sem reverter, o card fica movido na tela mas o banco não mudou — no próximo refetch
+    // "pula" de volta sem explicação. Restaura o cache e avisa.
+    if (error) {
+      qc.setQueryData(["tarefas", userId], anterior);
+      toastErro("Não consegui mover a tarefa. Tenta de novo.");
+    }
   };
 
   const deletarTarefa = async (id: string) => {
+    const anterior = qc.getQueryData<Tarefa[]>(["tarefas", userId]);
     updateLocal((list) => list.filter((t) => t.id !== id));
-    await supabase.from("tarefas").delete().eq("id", id);
+    const { error } = await supabase.from("tarefas").delete().eq("id", id);
+    if (error) {
+      qc.setQueryData(["tarefas", userId], anterior);
+      toastErro("Não consegui excluir a tarefa. Tenta de novo.");
+    }
   };
 
   const criarTarefa = async () => {

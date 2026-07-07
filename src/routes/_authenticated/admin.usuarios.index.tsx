@@ -86,7 +86,7 @@ function AdminUsuarios() {
         >
           <option value="">Todos os status</option>
           <option value="ativa">Ativas (até 7 dias)</option>
-          <option value="morna">Mornas (8–30 dias)</option>
+          <option value="morna">Mornas (8 a 30 dias)</option>
           <option value="sumida">Sumidas (30+ dias)</option>
           <option value="onboarding">Onboarding pendente</option>
         </select>

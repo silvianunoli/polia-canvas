@@ -5,7 +5,7 @@
 const MANTRAS = [
   "cada vez que você volta, encontra mais de você aqui.",
   "negócio que floresce não nasce pronto. floresce.",
-  "o caminho é seu — a Pólia só caminha junto.",
+  "o caminho é seu, a Pólia só caminha junto.",
   "sua história é o ativo. tudo o mais é ferramenta.",
   "constância vence virada. um passo, todo dia.",
   "respira. seu ritmo importa mais que a velocidade.",

@@ -1,27 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { CadernoCard } from "@/components/caderno/CadernoCard";
-import { getMarginalia } from "@/lib/marginaliaText";
-import {
-  Plus,
-  Pin,
-  Archive,
-  Trash2,
-  ArrowLeft,
-  NotebookPen,
-  Search,
-  RotateCcw,
-} from "lucide-react";
+import { toastErro } from "@/lib/toast";
+import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search } from "lucide-react";
+
+function usePrefersReducedMotion() {
+  const [reduce, setReduce] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduce(mq.matches);
+    const on = () => setReduce(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduce;
+}
 
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({
     meta: [
       { title: "Caderno · Pólia" },
-      { name: "description", content: "Suas ideias, anotações e rascunhos — tudo num lugar só." },
+      { name: "description", content: "Suas ideias, anotações e rascunhos · tudo num lugar só." },
     ],
   }),
   component: CadernoPage,
@@ -38,19 +40,20 @@ interface Nota {
   deleted_at: string | null;
 }
 
-function seedFromId(id: string): number {
-  let s = 0;
-  for (let i = 0; i < id.length; i++) s = (s + id.charCodeAt(i)) % 997;
-  return s;
-}
-
-function editada(n: Nota): boolean {
-  return new Date(n.updated_at).getTime() - new Date(n.created_at).getTime() > 60_000;
-}
-
-function resumo(conteudo: string): string {
-  const t = conteudo.trim().replace(/\s+/g, " ");
-  return t.length > 90 ? t.slice(0, 90) + "…" : t;
+/** Envolve a primeira ocorrência (case-insensitive) do termo em <mark>. */
+function destacar(texto: string, termo: string): ReactNode {
+  if (!termo) return texto;
+  const i = texto.toLowerCase().indexOf(termo.toLowerCase());
+  if (i < 0) return texto;
+  return (
+    <>
+      {texto.slice(0, i)}
+      <mark className="rounded-[3px] bg-[var(--secondary-light)] text-[var(--ink)]">
+        {texto.slice(i, i + termo.length)}
+      </mark>
+      {texto.slice(i + termo.length)}
+    </>
+  );
 }
 
 function CadernoPage() {
@@ -77,24 +80,9 @@ function CadernoPage() {
   const notas = useMemo(() => notasQuery.data ?? [], [notasQuery.data]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selecionada = notas.find((n) => n.id === selectedId) ?? null;
+  const reduceMotion = usePrefersReducedMotion();
 
   const [busca, setBusca] = useState("");
-  const [verLixeira, setVerLixeira] = useState(false);
-
-  const lixeiraQuery = useQuery({
-    queryKey: ["notas-lixeira", userId],
-    enabled: !!userId && verLixeira,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("notas")
-        .select("id, titulo, conteudo, fixada, arquivada, created_at, updated_at, deleted_at")
-        .eq("user_id", userId!)
-        .not("deleted_at", "is", null)
-        .order("deleted_at", { ascending: false });
-      return (data ?? []) as Nota[];
-    },
-  });
-  const lixeira = lixeiraQuery.data ?? [];
 
   const notasVisiveis = busca.trim()
     ? notas.filter((n) =>
@@ -105,122 +93,206 @@ function CadernoPage() {
   const [titulo, setTitulo] = useState("");
   const [conteudo, setConteudo] = useState("");
   const [salvoEm, setSalvoEm] = useState(false);
+  // Painel do editor em fade ao trocar de nota (evita flash do conteúdo anterior).
+  const [editorVisivel, setEditorVisivel] = useState(true);
+  const [excluirArmado, setExcluirArmado] = useState(false);
+  // ref com o id "carregado no momento" pra autosave/troca nunca gravar na nota errada.
+  const idCarregadoRef = useRef<string | null>(null);
+  const trocaTimerRef = useRef<number | null>(null);
+
+  const [toast, setToast] = useState<{ msg: string; notaId: string } | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ["notas", userId] });
-    qc.invalidateQueries({ queryKey: ["notas-lixeira", userId] });
   };
 
-  // Carrega a nota selecionada no editor (só quando muda a seleção).
+  // Troca de nota selecionada: fade out -> troca conteúdo -> fade in.
+  function selecionar(id: string | null) {
+    if (id === selectedId) return;
+    setExcluirArmado(false);
+    if (trocaTimerRef.current) window.clearTimeout(trocaTimerRef.current);
+    if (reduceMotion) {
+      const n = notas.find((x) => x.id === id);
+      idCarregadoRef.current = id;
+      setSelectedId(id);
+      setTitulo(n?.titulo ?? "");
+      setConteudo(n?.conteudo ?? "");
+      setEditorVisivel(true);
+      return;
+    }
+    setEditorVisivel(false);
+    trocaTimerRef.current = window.setTimeout(() => {
+      const n = notas.find((x) => x.id === id);
+      idCarregadoRef.current = id;
+      setSelectedId(id);
+      setTitulo(n?.titulo ?? "");
+      setConteudo(n?.conteudo ?? "");
+      setEditorVisivel(true);
+    }, 200);
+  }
+
   useEffect(() => {
-    const n = notas.find((x) => x.id === selectedId);
-    setTitulo(n?.titulo ?? "");
-    setConteudo(n?.conteudo ?? "");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
+    return () => {
+      if (trocaTimerRef.current) window.clearTimeout(trocaTimerRef.current);
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const salvar = useMutation({
     mutationFn: async ({ id, t, c }: { id: string; t: string; c: string }) => {
-      await supabase.from("notas").update({ titulo: t, conteudo: c }).eq("id", id);
+      const { error } = await supabase.from("notas").update({ titulo: t, conteudo: c }).eq("id", id);
+      if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
-      setSalvoEm(true);
+    onError: () => toastErro("Não consegui salvar a nota. O texto ainda está na tela."),
+    onSuccess: (id) => {
+      // Só reflete "salvo" se ainda estivermos na mesma nota (evita closure obsoleta).
+      if (idCarregadoRef.current === id) {
+        setSalvoEm(true);
+        window.setTimeout(() => {
+          if (idCarregadoRef.current === id) setSalvoEm(false);
+        }, 1500);
+      }
       invalidar();
-      window.setTimeout(() => setSalvoEm(false), 1500);
     },
   });
 
-  // Autosave com debounce — só salva se houve mudança real.
+  // Autosave com debounce — só salva se houve mudança real, e sempre na nota que
+  // estava carregada no momento em que o timer disparar (evita gravar na nota errada
+  // ao alternar rapidamente entre notas).
   useEffect(() => {
     if (!selectedId) return;
-    const n = notas.find((x) => x.id === selectedId);
+    const idNoMomento = selectedId;
+    const n = notas.find((x) => x.id === idNoMomento);
     if (!n) return;
     if (n.titulo === titulo && n.conteudo === conteudo) return;
     const t = window.setTimeout(() => {
-      salvar.mutate({ id: selectedId, t: titulo, c: conteudo });
+      if (idCarregadoRef.current !== idNoMomento) return;
+      salvar.mutate({ id: idNoMomento, t: titulo, c: conteudo });
     }, 800);
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titulo, conteudo, selectedId]);
 
   const criar = useMutation({
-    mutationFn: async () => {
-      const { data } = await supabase
+    mutationFn: async (tituloInicial?: string) => {
+      const t = tituloInicial ?? "";
+      const { data, error } = await supabase
         .from("notas")
-        .insert({ user_id: userId!, titulo: "", conteudo: "" })
+        .insert({ user_id: userId!, titulo: t, conteudo: "" })
         .select("id")
         .single();
-      return data?.id as string | undefined;
+      if (error) throw error;
+      return { id: data?.id as string | undefined, titulo: t };
     },
-    onSuccess: (id) => {
+    onError: () => toastErro("Não consegui criar a nota. Tenta de novo."),
+    onSuccess: ({ id, titulo: tituloCriado }) => {
       invalidar();
-      if (id) setSelectedId(id);
+      if (!id) return;
+      // Abre a nota recém-criada direto, sem esperar o refetch da lista
+      // (o conteúdo já é conhecido aqui, então não há closure obsoleta).
+      if (trocaTimerRef.current) window.clearTimeout(trocaTimerRef.current);
+      idCarregadoRef.current = id;
+      setSelectedId(id);
+      setTitulo(tituloCriado);
+      setConteudo("");
+      setEditorVisivel(true);
+      setExcluirArmado(false);
     },
   });
 
   const fixar = useMutation({
     mutationFn: async (n: Nota) => {
-      await supabase.from("notas").update({ fixada: !n.fixada }).eq("id", n.id);
+      const { error } = await supabase.from("notas").update({ fixada: !n.fixada }).eq("id", n.id);
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: () => toastErro("Não consegui fixar a nota. Tenta de novo."),
   });
 
-  const arquivar = useMutation({
-    mutationFn: async (id: string) => {
-      await supabase.from("notas").update({ arquivada: true }).eq("id", id);
-    },
-    onSuccess: () => {
-      invalidar();
-      setSelectedId(null);
-    },
-  });
-
-  // "remover" = mover pra lixeira (soft delete).
+  // Exclusão com soft delete (mantém deleted_at) + toast de 6s com desfazer.
   const remover = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("notas").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase
+        .from("notas")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      return id;
     },
-    onSuccess: () => {
+    onError: () => toastErro("Não consegui excluir a nota. Tenta de novo."),
+    onSuccess: (id) => {
       invalidar();
+      const nota = notas.find((n) => n.id === id);
       setSelectedId(null);
+      idCarregadoRef.current = null;
+      setExcluirArmado(false);
+      mostrarToast(`Nota excluída: ${nota?.titulo.trim() || "sem título"}`, id);
     },
   });
 
-  const restaurar = useMutation({
+  const desfazer = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("notas").update({ deleted_at: null }).eq("id", id);
+      const { error } = await supabase.from("notas").update({ deleted_at: null }).eq("id", id);
+      if (error) throw error;
     },
     onSuccess: invalidar,
+    onError: () => toastErro("Não consegui restaurar a nota. Tenta de novo."),
   });
 
-  const apagarDeVez = useMutation({
-    mutationFn: async (id: string) => {
-      await supabase.from("notas").delete().eq("id", id);
-    },
-    onSuccess: invalidar,
-  });
+  function mostrarToast(msg: string, notaId: string) {
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    setToast({ msg, notaId });
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 6000);
+  }
+
+  function handleExcluirClick() {
+    if (!selecionada) return;
+    if (!excluirArmado) {
+      setExcluirArmado(true);
+      return;
+    }
+    remover.mutate(selecionada.id);
+  }
+
+  function handleDesfazer() {
+    if (!toast) return;
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    desfazer.mutate(toast.notaId);
+    setToast(null);
+  }
+
+  function criarDeBusca() {
+    const termo = busca.trim();
+    criar.mutate(termo);
+    setBusca("");
+  }
 
   return (
-    <div className="min-h-screen bg-[#FDF8F5]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <PainelNav navActive="/caderno" />
 
-      <main className="mx-auto max-w-[1100px] px-4 py-8 sm:px-6 sm:py-10">
-        <div className="mb-6 flex items-end justify-between gap-4">
+      <main className="mx-auto max-w-[1100px] px-4 py-12 sm:px-6">
+        <div className="mb-8 flex items-end justify-between gap-4">
           <div>
-            <h1 className="mb-1.5 font-serif text-[34px] leading-tight text-[#1A1A2E] sm:text-[40px]">
+            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
               Caderno
+            </p>
+            <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
+              Suas anotações.
             </h1>
-            <p className="caveat-decorativo text-[#C96B3E]">
-              suas ideias, anotações e rascunhos — num lugar só.
+            <p className="mt-2 italic text-[var(--ink-soft)]">
+              Suas ideias, anotações e rascunhos · num lugar só.
             </p>
           </div>
           <button
             type="button"
-            onClick={() => criar.mutate()}
+            onClick={() => criar.mutate(undefined)}
             disabled={criar.isPending}
-            className="flex h-11 shrink-0 items-center gap-1.5 rounded-xl bg-polia-terracota px-4 font-sans text-[14px] font-semibold text-polia-creme transition-colors hover:bg-[#B85A2D] disabled:opacity-50"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            <Plus size={16} />
+            <Plus size={16} aria-hidden="true" />
             <span className="hidden sm:inline">Nova nota</span>
           </button>
         </div>
@@ -228,140 +300,87 @@ function CadernoPage() {
         <div className="grid gap-5 lg:grid-cols-[330px_1fr]">
           {/* Lista (esquerda) */}
           <aside className={selectedId ? "hidden lg:block" : "block"}>
-            {/* Busca + lixeira */}
+            {/* Busca */}
             <div className="mb-3 flex items-center gap-2">
               <div className="relative flex-1">
                 <Search
                   size={15}
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#1A1A2E] opacity-35"
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]"
                 />
                 <input
                   type="text"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar anotações…"
-                  className="h-10 w-full rounded-xl border border-[rgba(26,26,46,0.12)] bg-white pl-9 pr-3 font-sans text-[14px] text-[#1A1A2E] placeholder:text-[#1A1A2E] placeholder:opacity-35 focus:border-[#C96B3E] focus:outline-none"
+                  className="h-10 w-full rounded-xl border border-[var(--line)] bg-white pl-9 pr-3 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
                 />
               </div>
-              <button
-                type="button"
-                onClick={() => setVerLixeira((v) => !v)}
-                aria-pressed={verLixeira}
-                aria-label="Lixeira"
-                title="Lixeira"
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors ${
-                  verLixeira
-                    ? "border-[#C96B3E] bg-[rgba(201,107,62,0.08)] text-[#C96B3E]"
-                    : "border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60 hover:opacity-100"
-                }`}
-              >
-                <Trash2 size={16} />
-              </button>
             </div>
 
-            {verLixeira ? (
-              lixeiraQuery.isLoading ? (
-                <p className="px-1 py-6 text-center font-sans text-[13px] text-[#1A1A2E] opacity-40">
-                  carregando…
-                </p>
-              ) : lixeira.length === 0 ? (
-                <p className="rounded-2xl border border-dashed border-[rgba(26,26,46,0.12)] bg-white/50 px-4 py-8 text-center font-sans text-[13px] text-[#1A1A2E] opacity-50">
-                  A lixeira está vazia.
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {lixeira.map((n) => (
-                    <li
-                      key={n.id}
-                      className="flex items-center gap-2 rounded-xl border border-[rgba(26,26,46,0.08)] bg-white p-3"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-serif text-[15px] text-[#1A1A2E] opacity-70">
-                          {n.titulo.trim() || "sem título"}
-                        </p>
-                        <p className="truncate font-sans text-[12px] text-[#3A2A1F] opacity-40">
-                          {resumo(n.conteudo) || "nota vazia"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => restaurar.mutate(n.id)}
-                        aria-label="Restaurar"
-                        title="Restaurar"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#2D6A4F] hover:bg-[rgba(45,106,79,0.1)]"
-                      >
-                        <RotateCcw size={15} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm("Apagar de vez? Não dá pra desfazer.")) {
-                            apagarDeVez.mutate(n.id);
-                          }
-                        }}
-                        aria-label="Apagar de vez"
-                        title="Apagar de vez"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-[#C9407A] hover:bg-[rgba(201,64,122,0.1)]"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )
-            ) : notasQuery.isLoading ? (
+            {notasQuery.isLoading ? (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-[88px] animate-pulse rounded-2xl bg-white/60" />
+                  <div key={i} className="h-[88px] animate-pulse rounded-xl bg-[var(--surface)]" />
                 ))}
               </div>
             ) : notas.length === 0 ? (
-              <ListaVazia onCriar={() => criar.mutate()} />
+              <ListaVazia onCriar={() => criar.mutate(undefined)} />
             ) : notasVisiveis.length === 0 ? (
-              <p className="rounded-2xl border border-dashed border-[rgba(26,26,46,0.12)] bg-white/50 px-4 py-8 text-center font-sans text-[13px] text-[#1A1A2E] opacity-50">
-                Nada encontrado pra “{busca}”.
+              <p className="rounded-xl border border-dashed border-[var(--line)] bg-white px-4 py-8 text-center text-[13px] text-[var(--muted)]">
+                Nada com esse termo.{" "}
+                <button
+                  type="button"
+                  onClick={criarDeBusca}
+                  className="font-medium text-[var(--secondary-text)] hover:underline"
+                >
+                  Criar nota &quot;{busca.trim()}&quot;
+                </button>
               </p>
             ) : (
               <ul className="space-y-3">
                 {notasVisiveis.map((n) => {
-                  const marginalia = getMarginalia({
-                    primeiraVez: n.created_at,
-                    ultimaVisita: n.updated_at,
-                    visitas: editada(n) ? 2 : 1,
-                  });
+                  const ativa = selectedId === n.id;
+                  const termo = busca.trim();
+                  const preview = [n.conteudo.split("\n")[0] ?? "", n.conteudo.split("\n")[1] ?? ""]
+                    .join(" ")
+                    .trim();
                   return (
                     <li key={n.id}>
-                      <CadernoCard
-                        as="article"
-                        seed={seedFromId(n.id)}
-                        dobrada={editada(n)}
-                        marginalia={selectedId === n.id ? null : marginalia}
-                        padding={16}
-                        onClick={() => setSelectedId(n.id)}
-                        className={
-                          selectedId === n.id
-                            ? "ring-2 ring-[#C96B3E]/40"
-                            : "hover:-translate-y-0.5"
-                        }
+                      <button
+                        type="button"
+                        onClick={() => selecionar(n.id)}
+                        className={`block w-full rounded-xl border bg-white p-4 text-left transition-colors ${
+                          ativa
+                            ? "border-[var(--secondary)]"
+                            : "border-[var(--line)] hover:border-[var(--secondary)]"
+                        }`}
                       >
                         <div className="flex items-start gap-2">
-                          {n.fixada && (
-                            <Pin
-                              size={13}
-                              className="mt-1 shrink-0 text-[#C96B3E]"
-                              fill="#C96B3E"
-                            />
-                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              fixar.mutate(n);
+                            }}
+                            aria-label={n.fixada ? "Desafixar" : "Fixar no topo"}
+                            title={n.fixada ? "Desafixar" : "Fixar no topo"}
+                            className={`mt-0.5 shrink-0 ${
+                              n.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
+                            }`}
+                          >
+                            <Pin size={13} aria-hidden="true" fill={n.fixada ? "currentColor" : "none"} />
+                          </button>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate font-serif text-[16px] text-[#1A1A2E]">
-                              {n.titulo.trim() || "sem título"}
+                            <p className="font-fraunces truncate text-[16px] text-[var(--ink)]">
+                              {destacar(n.titulo.trim() || "sem título", termo)}
                             </p>
-                            <p className="mt-0.5 line-clamp-2 font-sans text-[12.5px] leading-snug text-[#3A2A1F] opacity-55">
-                              {resumo(n.conteudo) || "nota vazia"}
+                            <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">
+                              {preview ? destacar(preview, termo) : "nota vazia"}
                             </p>
                           </div>
                         </div>
-                      </CadernoCard>
+                      </button>
                     </li>
                   );
                 })}
@@ -372,22 +391,25 @@ function CadernoPage() {
           {/* Editor (direita) */}
           <section className={selectedId ? "block" : "hidden lg:block"}>
             {selecionada ? (
-              <div className="rounded-2xl border border-[rgba(58,42,31,0.08)] bg-[#FDFCFA] p-5 sm:p-7">
+              <div
+                className="rounded-xl border border-[var(--line)] bg-white p-5 transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] sm:p-7"
+                style={{ opacity: editorVisivel ? 1 : 0 }}
+              >
                 {/* Barra do editor */}
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <button
                     type="button"
-                    onClick={() => setSelectedId(null)}
-                    className="flex items-center gap-1.5 font-sans text-[13px] text-[#1A1A2E] opacity-60 hover:opacity-100 lg:hidden"
+                    onClick={() => selecionar(null)}
+                    className="flex items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)] lg:hidden"
                   >
-                    <ArrowLeft size={15} /> voltar
+                    <ArrowLeft size={15} aria-hidden="true" /> voltar
                   </button>
                   <span
-                    className={`caveat-decorativo ml-auto text-[13px] text-[#2D6A4F] transition-opacity ${
-                      salvoEm ? "opacity-100" : "opacity-0"
+                    className={`ml-auto text-[13px] text-[var(--secondary-text)] transition-opacity ${
+                      salvar.isPending ? "opacity-100" : salvoEm ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    salvo.
+                    {salvar.isPending ? "salvando..." : "salvo"}
                   </span>
                   <div className="flex items-center gap-1">
                     <button
@@ -395,29 +417,15 @@ function CadernoPage() {
                       onClick={() => fixar.mutate(selecionada)}
                       aria-label={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
                       title={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[rgba(58,42,31,0.05)] ${
-                        selecionada.fixada ? "text-[#C96B3E]" : "text-[#3A2A1F] opacity-45"
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface)] ${
+                        selecionada.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                       }`}
                     >
-                      <Pin size={16} fill={selecionada.fixada ? "#C96B3E" : "none"} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => arquivar.mutate(selecionada.id)}
-                      aria-label="Arquivar nota"
-                      title="Arquivar"
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-[#3A2A1F] opacity-45 transition-colors hover:bg-[rgba(58,42,31,0.05)] hover:opacity-80"
-                    >
-                      <Archive size={16} />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => remover.mutate(selecionada.id)}
-                      aria-label="Mover para a lixeira"
-                      title="Mover para a lixeira"
-                      className="flex h-9 w-9 items-center justify-center rounded-lg text-[#3A2A1F] opacity-45 transition-colors hover:bg-[rgba(201,64,122,0.1)] hover:text-[#C9407A] hover:opacity-100"
-                    >
-                      <Trash2 size={16} />
+                      <Pin
+                        size={16}
+                        aria-hidden="true"
+                        fill={selecionada.fixada ? "currentColor" : "none"}
+                      />
                     </button>
                   </div>
                 </div>
@@ -428,21 +436,35 @@ function CadernoPage() {
                   onChange={(e) => setTitulo(e.target.value)}
                   maxLength={160}
                   placeholder="Título da nota"
-                  className="mb-3 w-full bg-transparent font-serif text-[26px] leading-tight text-[#1A1A2E] placeholder:text-[#3A2A1F] placeholder:opacity-25 focus:outline-none"
+                  className="font-fraunces mb-3 w-full bg-transparent text-[26px] leading-tight text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
                 <textarea
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
                   placeholder="Comece a escrever…"
-                  className="min-h-[48vh] w-full resize-none bg-transparent font-sans text-[15.5px] leading-[1.85] text-[#3A2A1F] placeholder:text-[#3A2A1F] placeholder:opacity-25 focus:outline-none"
+                  className="min-h-[48vh] w-full resize-none bg-transparent text-[15.5px] leading-[1.85] text-[var(--ink-soft)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
+
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleExcluirClick}
+                    className="rounded-lg px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
+                  >
+                    {excluirArmado ? "Excluir mesmo? Clique de novo" : "Excluir nota"}
+                  </button>
+                </div>
               </div>
             ) : (
-              <div className="hidden h-full min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-[rgba(26,26,46,0.12)] bg-white/40 px-6 text-center lg:flex">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(201,107,62,0.1)]">
-                  <NotebookPen size={22} className="text-polia-terracota" />
+              <div className="hidden h-full min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-[var(--line)] bg-white px-6 text-center lg:flex">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)]">
+                  <NotebookPen
+                    size={22}
+                    aria-hidden="true"
+                    className="text-[var(--secondary-text)]"
+                  />
                 </div>
-                <p className="font-sans text-[14px] text-[#1A1A2E] opacity-55">
+                <p className="text-[14px] text-[var(--muted)]">
                   Escolha uma nota à esquerda ou crie uma nova.
                 </p>
               </div>
@@ -450,26 +472,50 @@ function CadernoPage() {
           </section>
         </div>
       </main>
+
+      {/* Toast de exclusão com desfazer (rede de segurança de 6s) */}
+      <div
+        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] shadow-[0_4px_12px_rgba(10,10,10,0.08)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          toast ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        <span>{toast?.msg}</span>
+        <button
+          type="button"
+          onClick={handleDesfazer}
+          className="font-semibold text-[var(--secondary-text)] underline underline-offset-2"
+        >
+          Desfazer
+        </button>
+      </div>
     </div>
   );
 }
 
 function ListaVazia({ onCriar }: { onCriar: () => void }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[rgba(26,26,46,0.12)] bg-white/50 px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(201,107,62,0.1)]">
-        <NotebookPen size={22} className="text-polia-terracota" />
+    <div className="rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
+      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)]">
+        <NotebookPen size={22} aria-hidden="true" className="text-[var(--secondary-text)]" />
       </div>
-      <p className="mb-3 font-sans text-[14px] leading-relaxed text-[#1A1A2E] opacity-55">
+      <p className="mb-3 text-[14px] leading-relaxed text-[var(--muted)]">
         Seu caderno está em branco. A primeira página é sua.
       </p>
       <button
         type="button"
         onClick={onCriar}
-        className="font-sans text-[13px] font-semibold text-[#C96B3E] hover:underline"
+        className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
       >
         + criar a primeira nota
       </button>
+      <p className="mt-3 text-[12px] text-[var(--muted)]">
+        ou monte seu guia de presença pelo{" "}
+        <a href="/planejamento/modulo/5" className="font-medium text-[var(--secondary-text)] hover:underline">
+          Planejamento →
+        </a>
+      </p>
     </div>
   );
 }

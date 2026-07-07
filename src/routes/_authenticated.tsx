@@ -3,24 +3,38 @@ import { supabase } from "@/integrations/supabase/client";
 import { PoliaFooter } from "@/components/layout/PoliaFooter";
 import { Sidebar } from "@/components/layout/Sidebar";
 
+// Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
+// assim que detecta um token inválido/vencido — checar essa chave depois
+// perderia a corrida quase sempre). Marcada sempre que uma sessão válida é
+// vista; se sumir depois, foi expiração, não primeiro acesso.
+const TEVE_SESSAO_KEY = "polia-teve-sessao";
+
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      throw redirect({
-        to: "/auth/login",
-        search: { redirect: location.href },
-      });
+    if (data.session) {
+      localStorage.setItem(TEVE_SESSAO_KEY, "1");
+      return;
     }
+    const expirou = localStorage.getItem(TEVE_SESSAO_KEY) === "1";
+    throw redirect({
+      to: "/auth/login",
+      search: {
+        // location.href do TanStack Router já é só pathname+search+hash
+        // (sem origin) — seguro pra usar como destino de redirect.
+        next: location.href,
+        ...(expirou ? { motivo: "sessao-expirada" as const } : {}),
+      },
+    });
   },
   component: AuthenticatedLayout,
 });
 
-// Rotas que mostram o footer (admin/config/auth-like).
-// Rotas operacionais (Painel, Jornada, Tarefas, Clientes, Vitrine, Financeiro,
-// Biblioteca, Etapa) ficam sem footer pra evitar ruído no flow de trabalho.
-const FOOTER_PATHS = ["/configuracoes", "/admin"];
+// Só o painel admin mostra o footer. As páginas do produto (Painel, Jornada,
+// Tarefas, Clientes, Financeiro, Biblioteca, Etapa, Configurações) ficam sem
+// footer pra manter a mesma proposta limpa no flow de trabalho.
+const FOOTER_PATHS = ["/admin"];
 
 function showFooterFor(pathname: string) {
   return FOOTER_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));

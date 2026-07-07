@@ -104,6 +104,10 @@
   --secondary-text: #2C7E80;  /* turquesa escuro p/ TEXTO de link/CTA (AA ok) */
   --highlight: #FFC629;       /* amarelo — indicador pontual, um por tela */
   --highlight-ink: #0A0A0A;
+  --danger: #C0392B;          /* vermelho-tijolo — texto/borda de ação destrutiva e erro (AA em fundo claro) */
+  --danger-soft: #FBEAE7;     /* fundo sutil da zona de perigo */
+  --cat-vendas: #E0A8C0;      /* categoria "Vendas" do Planner — só fundo/borda/dot, nunca texto corrido */
+  --cat-admin: #B9B2A6;       /* categoria "Admin" do Planner — idem */
 }
 
 .font-fraunces {
@@ -220,10 +224,36 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Controles de formulário não herdam font-family do body por padrão do browser. */
+  input,
+  button,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+
   h1, h2, h3, h4 {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }
+}
+
+/* Barra de rolagem fina — DESIGN-3.md §6. Global (nunca esconder scroll).
+   Fallback pros tokens legado fora do escopo .polia-v3, que não define --line/--muted. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line, var(--border)) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--line, var(--border));
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--muted, var(--muted-foreground));
 }
 
 /* Landing page hex vars + utilities */
