@@ -10,5 +10,9 @@
   // (com aviso) e paths relativos podem duplicar.
   "observability": {
     "enabled": true
-  }
+  },
+  "routes": [{ "pattern": "usepolia.com.br", "custom_domain": true }],
+  // Mantém o subdomínio *.workers.dev ativo como fallback além do domínio
+  // próprio (Wrangler desativa ele por padrão assim que "routes" aparece).
+  "workers_dev": true
 }
