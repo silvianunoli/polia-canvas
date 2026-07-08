@@ -61,6 +61,7 @@ import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
 import { Route as AuthenticatedAdminFeedbackRouteImport } from './routes/_authenticated/admin.feedback'
 import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated/admin.crm'
+import { Route as AuthenticatedAdminConvitesRouteImport } from './routes/_authenticated/admin.convites'
 import { Route as AuthenticatedAdminComunicacaoRouteImport } from './routes/_authenticated/admin.comunicacao'
 import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
 import { Route as AuthenticatedAdminUsuariosIndexRouteImport } from './routes/_authenticated/admin.usuarios.index'
@@ -339,6 +340,12 @@ const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
   path: '/crm',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminConvitesRoute =
+  AuthenticatedAdminConvitesRouteImport.update({
+    id: '/convites',
+    path: '/convites',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminComunicacaoRoute =
   AuthenticatedAdminComunicacaoRouteImport.update({
     id: '/comunicacao',
@@ -421,6 +428,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/convites': typeof AuthenticatedAdminConvitesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
@@ -480,6 +488,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/admin/convites': typeof AuthenticatedAdminConvitesRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
@@ -542,6 +551,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
   '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
+  '/_authenticated/admin/convites': typeof AuthenticatedAdminConvitesRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
   '/_authenticated/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
@@ -604,6 +614,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/admin/cms'
     | '/admin/comunicacao'
+    | '/admin/convites'
     | '/admin/crm'
     | '/admin/feedback'
     | '/admin/flags'
@@ -663,6 +674,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/admin/cms'
     | '/admin/comunicacao'
+    | '/admin/convites'
     | '/admin/crm'
     | '/admin/feedback'
     | '/admin/flags'
@@ -724,6 +736,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/_authenticated/admin/cms'
     | '/_authenticated/admin/comunicacao'
+    | '/_authenticated/admin/convites'
     | '/_authenticated/admin/crm'
     | '/_authenticated/admin/feedback'
     | '/_authenticated/admin/flags'
@@ -1134,6 +1147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/convites': {
+      id: '/_authenticated/admin/convites'
+      path: '/convites'
+      fullPath: '/admin/convites'
+      preLoaderRoute: typeof AuthenticatedAdminConvitesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/comunicacao': {
       id: '/_authenticated/admin/comunicacao'
       path: '/comunicacao'
@@ -1189,6 +1209,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminCmsRoute: typeof AuthenticatedAdminCmsRoute
   AuthenticatedAdminComunicacaoRoute: typeof AuthenticatedAdminComunicacaoRoute
+  AuthenticatedAdminConvitesRoute: typeof AuthenticatedAdminConvitesRoute
   AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
   AuthenticatedAdminFeedbackRoute: typeof AuthenticatedAdminFeedbackRoute
   AuthenticatedAdminFlagsRoute: typeof AuthenticatedAdminFlagsRoute
@@ -1204,6 +1225,7 @@ interface AuthenticatedAdminRouteChildren {
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminCmsRoute: AuthenticatedAdminCmsRoute,
   AuthenticatedAdminComunicacaoRoute: AuthenticatedAdminComunicacaoRoute,
+  AuthenticatedAdminConvitesRoute: AuthenticatedAdminConvitesRoute,
   AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
   AuthenticatedAdminFeedbackRoute: AuthenticatedAdminFeedbackRoute,
   AuthenticatedAdminFlagsRoute: AuthenticatedAdminFlagsRoute,

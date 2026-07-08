@@ -47,6 +47,7 @@ function AdminLayout() {
     { href: "/admin", label: "Visão geral" },
     { href: "/admin/funil", label: "Funil de jornada" },
     { href: "/admin/usuarios", label: "Usuárias" },
+    { href: "/admin/convites", label: "Convites" },
     { href: "/admin/crm", label: "CRM" },
     {
       href: "/admin/chamados",
@@ -57,6 +58,7 @@ function AdminLayout() {
     { href: "/admin/comunicacao", label: "Comunicação" },
     { href: "/admin/logs", label: "Logs do sistema" },
     { href: "/admin/flags", label: "Feature Flags" },
+    { href: "/design-system", label: "Design System" },
   ];
 
   return (
