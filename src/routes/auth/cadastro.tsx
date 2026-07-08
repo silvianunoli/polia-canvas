@@ -4,6 +4,7 @@ import { Mail, User } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
+import { verificarConvite, marcarConviteUsado } from "@/lib/convites.functions";
 import {
   AuthShell,
   AuthButton,
@@ -79,6 +80,24 @@ function CadastroPage() {
     setSenhaInvalida(false);
     setLoading(true);
     try {
+      const { permitido } = await verificarConvite({ data: { email } });
+      if (!permitido) {
+        setErrors({
+          email: (
+            <>
+              Esse e-mail ainda não tem convite pra Pólia.{" "}
+              <Link
+                to="/lista-de-espera"
+                className="text-[var(--danger)] underline underline-offset-2"
+              >
+                Entra na lista de espera
+              </Link>
+            </>
+          ),
+        });
+        return;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password: values.senha,
@@ -108,6 +127,9 @@ function CadastroPage() {
         }
         return;
       }
+      // Best-effort: se falhar em marcar o convite como usado, a conta já foi criada
+      // com sucesso mesmo assim — não bloqueamos o fluxo por causa disso.
+      marcarConviteUsado({ data: { email } }).catch(() => {});
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {

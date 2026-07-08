@@ -203,11 +203,7 @@ function PlannerIndex() {
             <p className="font-fraunces text-[20px] text-[var(--ink)]">Nenhum quadro ainda</p>
             <p className="mx-auto mt-1.5 max-w-[400px] text-[14px] leading-relaxed text-[var(--muted)]">
               Quadros são pra projetos que têm vida própria · um lançamento, um evento, uma
-              campanha. Suas tarefas do planejamento continuam em{" "}
-              <a href="/tarefas" className="text-[var(--secondary-text)] hover:underline">
-                Tarefas
-              </a>
-              .
+              campanha.
             </p>
           </div>
         ) : (

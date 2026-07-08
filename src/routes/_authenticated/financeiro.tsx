@@ -401,8 +401,8 @@ function FinanceiroPage() {
           )}
 
           <p className="mt-0 text-[13px] text-[var(--muted)]">
-            A meta é uma só no sistema: criada em Metas, lida aqui. Os 3 marcos vêm do Módulo 4 do
-            Planejamento.
+            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas. Os 3 marcos vêm de
+            Quanto vale, no seu Planejamento.
           </p>
         </section>
 

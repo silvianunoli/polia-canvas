@@ -4,6 +4,7 @@ import { Mail, Clock, HelpCircle } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { enviarContato } from "@/lib/contato.functions";
+import { useTurnstile, verificarTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
@@ -61,6 +62,7 @@ function Contato() {
   // Honeypot: campo invisível fora do fluxo de teclado. Humano nunca preenche; bot que
   // preenche tudo, sim. Se vier preenchido, finge sucesso e não insere nada.
   const [hp, setHp] = useState("");
+  const turnstile = useTurnstile();
   const refs = {
     nome: useRef<HTMLInputElement>(null),
     email: useRef<HTMLInputElement>(null),
@@ -101,6 +103,12 @@ function Contato() {
     setErrors({});
     setLoading(true);
     try {
+      if (!turnstile.token || !(await verificarTurnstile(turnstile.token))) {
+        toastErro("Confirma que não é um robô antes de enviar.");
+        turnstile.reset();
+        setLoading(false);
+        return;
+      }
       const resultado = await enviarContato({
         data: {
           nome: parsed.data.nome,
@@ -322,6 +330,7 @@ function Contato() {
                       />
                       <FieldError id="mensagem-error">{errors.mensagem}</FieldError>
                     </div>
+                    <TurnstileWidget containerRef={turnstile.containerRef} />
                     <button
                       type="submit"
                       disabled={loading}

@@ -30,7 +30,6 @@ import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirad
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedVendasEClientesRouteImport } from './routes/_authenticated/vendas-e-clientes'
-import { Route as AuthenticatedTarefasRouteImport } from './routes/_authenticated/tarefas'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
@@ -175,11 +174,6 @@ const AuthenticatedVendasEClientesRoute =
     path: '/vendas-e-clientes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedTarefasRoute = AuthenticatedTarefasRouteImport.update({
-  id: '/tarefas',
-  path: '/tarefas',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
@@ -416,7 +410,6 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/produtos': typeof AuthenticatedProdutosRoute
-  '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -476,7 +469,6 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
   '/produtos': typeof AuthenticatedProdutosRoute
-  '/tarefas': typeof AuthenticatedTarefasRoute
   '/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -539,7 +531,6 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
-  '/_authenticated/tarefas': typeof AuthenticatedTarefasRoute
   '/_authenticated/vendas-e-clientes': typeof AuthenticatedVendasEClientesRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -602,7 +593,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/painel'
     | '/produtos'
-    | '/tarefas'
     | '/vendas-e-clientes'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
@@ -662,7 +652,6 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/painel'
     | '/produtos'
-    | '/tarefas'
     | '/vendas-e-clientes'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
@@ -724,7 +713,6 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
     | '/_authenticated/produtos'
-    | '/_authenticated/tarefas'
     | '/_authenticated/vendas-e-clientes'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
@@ -927,13 +915,6 @@ declare module '@tanstack/react-router' {
       path: '/vendas-e-clientes'
       fullPath: '/vendas-e-clientes'
       preLoaderRoute: typeof AuthenticatedVendasEClientesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/tarefas': {
-      id: '/_authenticated/tarefas'
-      path: '/tarefas'
-      fullPath: '/tarefas'
-      preLoaderRoute: typeof AuthenticatedTarefasRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/produtos': {
@@ -1256,7 +1237,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
-  AuthenticatedTarefasRoute: typeof AuthenticatedTarefasRoute
   AuthenticatedVendasEClientesRoute: typeof AuthenticatedVendasEClientesRoute
   AuthenticatedBlogAdminIdRoute: typeof AuthenticatedBlogAdminIdRoute
   AuthenticatedBlogAdminNovoRoute: typeof AuthenticatedBlogAdminNovoRoute
@@ -1287,7 +1267,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
-  AuthenticatedTarefasRoute: AuthenticatedTarefasRoute,
   AuthenticatedVendasEClientesRoute: AuthenticatedVendasEClientesRoute,
   AuthenticatedBlogAdminIdRoute: AuthenticatedBlogAdminIdRoute,
   AuthenticatedBlogAdminNovoRoute: AuthenticatedBlogAdminNovoRoute,

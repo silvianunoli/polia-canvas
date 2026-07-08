@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTurnstile, verificarTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
@@ -75,6 +76,7 @@ function ListaEsperaPage() {
   // Honeypot: campo invisível fora do fluxo de teclado. Humano nunca preenche; bot que
   // preenche tudo, sim. Se vier preenchido, finge sucesso e não insere nada.
   const [hp, setHp] = useState("");
+  const turnstile = useTurnstile();
   const nomeRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
 
@@ -99,6 +101,13 @@ function ListaEsperaPage() {
     }
     setAceiteErro(false);
     setLoading(true);
+
+    if (!turnstile.token || !(await verificarTurnstile(turnstile.token))) {
+      toastErro("Confirma que não é um robô antes de entrar na lista.");
+      turnstile.reset();
+      setLoading(false);
+      return;
+    }
 
     const { error } = await supabase.from("lista_espera").insert({
       nome: nome.trim(),
@@ -292,6 +301,7 @@ function ListaEsperaPage() {
                       </p>
                     )}
 
+                    <TurnstileWidget containerRef={turnstile.containerRef} />
                     <button
                       type="submit"
                       disabled={loading}
