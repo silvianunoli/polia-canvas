@@ -146,7 +146,7 @@ function CadastroPage() {
     setGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/` },
+      options: { redirectTo: `${window.location.origin}/painel` },
     });
     if (error) {
       setGoogleLoading(false);
