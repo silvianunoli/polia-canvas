@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/design-system")({
   head: () => ({
@@ -10,6 +11,20 @@ export const Route = createFileRoute("/design-system")({
       },
     ],
   }),
+  // Ferramenta interna (guia de voz + tokens) — mesma checagem de admin.tsx.
+  // Fica fora do layout /admin/* de propósito: essa página tem chrome próprio
+  // (header cheio, sem sidebar de 220px) pra funcionar como vitrine standalone.
+  beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw redirect({ to: "/auth/login" });
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", userData.user.id)
+      .maybeSingle();
+    if (!profile?.is_admin) throw redirect({ to: "/painel" });
+  },
   component: DesignSystemPage,
 });
 
