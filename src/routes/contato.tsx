@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Mail, Clock, HelpCircle } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
-import { supabase } from "@/integrations/supabase/client";
+import { enviarContato } from "@/lib/contato.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
@@ -100,16 +100,23 @@ function Contato() {
     }
     setErrors({});
     setLoading(true);
-    const { error } = await supabase.from("contatos").insert({
-      nome: parsed.data.nome,
-      email: email.trim(),
-      assunto: parsed.data.assunto,
-      mensagem: parsed.data.mensagem,
-    });
-    if (error) {
+    try {
+      const resultado = await enviarContato({
+        data: {
+          nome: parsed.data.nome,
+          email: email.trim(),
+          assunto: parsed.data.assunto,
+          mensagem: parsed.data.mensagem,
+          hp,
+        },
+      });
+      if (resultado.ok) {
+        setEnviado(true);
+      } else {
+        toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
+      }
+    } catch {
       toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
-    } else {
-      setEnviado(true);
     }
     setLoading(false);
   }
