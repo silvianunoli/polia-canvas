@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
     meta: [
       { title: "Configurações · Pólia" },
-      { name: "description", content: "Seu perfil e seu negócio, do jeito que você quer." },
+      { name: "description", content: "Perfil e negócio, do jeito que fizer sentido." },
     ],
   }),
   beforeLoad: async () => {
@@ -273,7 +273,7 @@ function ConfiguracoesPage() {
             Configurações
           </h1>
           <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-            seu perfil e seu negócio, do jeito que você quer.
+            seu perfil e seu negócio, do jeito que fizer sentido pra você.
           </p>
         </div>
 
@@ -321,7 +321,7 @@ function ConfiguracoesPage() {
         {/* SEÇÃO 3 — INTEGRAÇÕES */}
         <Secao
           titulo="Integrações"
-          subtitulo="conecte ferramentas que você já usa pra ver tudo em um lugar."
+          subtitulo="conecta ferramentas de uso diário pra reunir tudo num lugar só."
         >
           <div className="space-y-3">
             <div className="flex items-center justify-between p-4 border border-[var(--line)] rounded-xl">
@@ -424,7 +424,7 @@ function ConfiguracoesPage() {
         </Secao>
 
         {/* SEÇÃO 5 — NOTIFICAÇÕES */}
-        <Secao titulo="Notificações" subtitulo="escolha o que você quer receber por e-mail.">
+        <Secao titulo="Notificações" subtitulo="escolha o que chega por e-mail.">
           <div className="divide-y divide-[var(--line)]">
             <ToggleLinha
               titulo="Resumo semanal"

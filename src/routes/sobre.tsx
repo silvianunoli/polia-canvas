@@ -31,12 +31,12 @@ const pontos = [
   {
     icon: Target,
     titulo: "A Aimer aponta o próximo passo",
-    desc: "A assistente lê o seu momento e mostra a próxima etapa pequena, pra você nunca travar sem saber o que fazer.",
+    desc: "A assistente lê o seu momento e mostra a próxima etapa pequena, pra nunca travar sem saber o que fazer.",
   },
   {
     icon: Clock,
-    titulo: "Você continua no seu ritmo",
-    desc: "Você segue de onde parou, no seu tempo. Aqui você é dona da sua marca, não devedora dela.",
+    titulo: "A marca segue no ritmo dela",
+    desc: "Continua de onde parou, no seu tempo. Dona da marca, nunca devedora dela.",
   },
 ];
 
@@ -53,9 +53,9 @@ const marcos = [
 
 const naoE = [
   "Coach que promete faturamento e some depois.",
-  "Curso que você compra, assiste pela metade e esquece.",
+  "Curso que fica pela metade e cai no esquecimento.",
   "App neutro de produtividade, sem cara e sem direção.",
-  "Ferramenta de empresa grande adaptada pra você fingir que serve.",
+  "Ferramenta de empresa grande adaptada pra fingir que serve.",
 ];
 
 const formacao = [
@@ -233,8 +233,8 @@ function SobrePage() {
               percebo primeiro.
             </p>
             <p className="mt-6 text-[18px] leading-[1.65] text-[var(--ink-soft)]">
-              Se você toca a sua marca sozinha, eu sei como é. Passei dez anos aprendendo, na
-              marra, o método que devia ter existido desde o começo. A Pólia é pra você não
+              Quem toca a marca sozinha, eu sei como é. Passei dez anos aprendendo, na
+              marra, o método que devia ter existido desde o começo. A Pólia é pra ninguém
               precisar dos dez anos. Só da próxima etapa, no seu tempo.
             </p>
             <div className="mt-3 flex flex-wrap gap-2">

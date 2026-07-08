@@ -9,7 +9,7 @@ export const Route = createFileRoute("/ajuda")({
       { title: "Ajuda · Pólia" },
       {
         name: "description",
-        content: "Central de ajuda da Pólia. Respostas curtas e diretas pra você voltar pra sua etapa rápido.",
+        content: "Central de ajuda da Pólia. Respostas curtas e diretas pra voltar rápido pra etapa.",
       },
       { property: "og:title", content: "Ajuda · Pólia" },
       { property: "og:description", content: "Como a gente pode ajudar?" },
@@ -75,7 +75,7 @@ function AjudaPage() {
               Como a gente pode ajudar?
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              Respostas curtas e diretas, pra você voltar pra sua etapa rápido. Sem tutorial de dez
+              Respostas curtas e diretas, pra voltar rápido pra etapa. Sem tutorial de dez
               minutos pra uma coisa de um clique.
             </p>
             <form

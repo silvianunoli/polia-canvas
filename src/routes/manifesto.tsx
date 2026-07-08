@@ -10,7 +10,7 @@ export const Route = createFileRoute("/manifesto")({
       {
         name: "description",
         content:
-          "O que a Pólia acredita: presença, não perfeição. Oportunidade, não culpa. Você é dona, nunca devedora.",
+          "O que a Pólia acredita: presença, não perfeição. Oportunidade, não culpa. Dona da marca, nunca devedora dela.",
       },
       { property: "og:title", content: "Manifesto · Pólia" },
       { property: "og:description", content: "A gente acredita no seu ritmo, não na cobrança." },
@@ -31,7 +31,7 @@ const recusa = [
 const escolhe = [
   "Presença medida por avanço real",
   "Um convite: a etapa aberta te espera",
-  "Você dona, nunca devedora",
+  "Dona da marca, nunca devedora dela",
   "O concreto: o preço que saiu da sua cabeça",
   "Respeitar a sua inteligência, do seu lado",
   "Do tamanho de uma pessoa só",
@@ -41,22 +41,22 @@ const credo = [
   {
     linha: "Presença vale mais que perfeição.",
     texto:
-      "Não é sobre fazer tudo, todo dia, sem falhar. É sobre aparecer e andar um passo real. Aqui você é medida por avanço, não por dia impecável. Uma etapa fechada vale mais que uma lista inteira intimidando você.",
+      "Não é sobre fazer tudo, todo dia, sem falhar. É sobre aparecer e andar um passo real. Aqui o que mede é o avanço, não o dia impecável. Uma etapa fechada vale mais que uma lista inteira de coisas por fazer.",
   },
   {
     linha: "A gente puxa pela oportunidade, nunca pela culpa.",
     texto:
-      "“Tem uma etapa aberta, 4 minutos.” Isso é um convite. “Você sumiu, não desista” é uma cobrança disfarçada de incentivo, e a gente não usa. A etapa parada te espera sem cara feia, quanto tempo você precisar.",
+      "“Tem uma etapa aberta, 4 minutos.” Isso é um convite. “Você sumiu, não desista” é uma cobrança disfarçada de incentivo, e a gente não usa. A etapa parada te espera sem cara feia, quanto tempo for preciso.",
   },
   {
-    linha: "Você é dona, nunca devedora.",
+    linha: "Dona da marca, nunca devedora dela.",
     texto:
-      "A sua marca não é uma dívida que se acumula quando você não mexe. É sua, e a Pólia trata assim. Sai de cada uso com uma coisa feita e a sensação de dona. Nunca com a régua na mão e a conta pra pagar.",
+      "A marca não é uma dívida que se acumula parada. É de quem toca ela, e a Pólia trata assim. Cada uso fecha com uma coisa feita e a sensação de dona. Nunca com a régua na mão e a conta pra pagar.",
   },
   {
     linha: "A gente respeita a sua inteligência.",
     texto:
-      "Sem tutorial bobo, sem explicar o óbvio, sem mascote fazendo graça. Você sabe o que faz. A Pólia foi feita por quem já viveu isso e senta do lado, não a professora que fala de cima nem o app que te acha ingênua.",
+      "Sem tutorial bobo, sem explicar o óbvio, sem mascote fazendo graça. Quem toca a marca sabe o que faz. A Pólia foi feita por quem já viveu isso e senta do lado, não a professora que fala de cima nem o app que te acha ingênua.",
   },
   {
     linha: "Motiva o avanço real, não o hype.",
@@ -66,7 +66,7 @@ const credo = [
   {
     linha: "Do tamanho de uma pessoa só.",
     texto:
-      "Você é o time inteiro. Então nada de feature de equipe, jargão corporativo ou complexidade de ERP. A Pólia cabe na sua rotina de uma pessoa que faz tudo, porque foi feita pra ela, não adaptada de uma ferramenta de empresa grande.",
+      "O time é uma pessoa só. Então nada de feature de equipe, jargão corporativo ou complexidade de ERP. A Pólia cabe na rotina de quem faz tudo sozinha, porque foi feita pra ela, não adaptada de uma ferramenta de empresa grande.",
   },
 ];
 

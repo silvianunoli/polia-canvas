@@ -155,7 +155,7 @@ function Step1({ onNext }: { onNext: () => void }) {
     <div className="flex flex-col items-center gap-10 pt-10">
       <LogoPlaceholder />
       <div className="flex flex-col items-center gap-5">
-        <Caveat>Ei. Finalmente você chegou.</Caveat>
+        <Caveat>Ei. Que bom ter alguém aqui.</Caveat>
         <Headline size={76}>Oi. Eu sou a Pólia.</Headline>
       </div>
       <div className="flex flex-col gap-1">
@@ -185,7 +185,7 @@ const BIZ_TYPES: { value: BusinessType; tag: string; title: string; desc: string
   {
     value: "servico",
     tag: "Serviço",
-    title: "Você é quem entrega",
+    title: "Quem entrega é a própria pessoa",
     desc: "Consultoria, terapia, design, aula, atendimento. Hora sua vira agenda.",
   },
   {
@@ -208,8 +208,8 @@ function Step2({
   return (
     <div className="flex flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
-      <Caveat>Me conta um pouquinho do que você faz.</Caveat>
-      <Headline size={64}>Como é o que você vende?</Headline>
+      <Caveat>Um pouquinho sobre o que essa marca faz.</Caveat>
+      <Headline size={64}>Como é o que essa marca vende?</Headline>
       <Body>Isso me ajuda a montar seu painel já do seu jeito.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
         {BIZ_TYPES.map((o) => (
@@ -278,7 +278,7 @@ const STAGES: { value: BusinessStage; tag: string; title: string; desc: string }
     value: "ideia",
     tag: "Só uma ideia",
     title: "Tô no ponto zero",
-    desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia constrói tudo com você do começo.",
+    desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia constrói tudo desde o começo.",
   },
   {
     value: "comecei",
@@ -306,9 +306,9 @@ function Step3({
   return (
     <div className="flex flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
-      <Caveat>Em que momento você tá?</Caveat>
+      <Caveat>Em que momento essa marca está?</Caveat>
       <Headline size={64}>Conta a real pra mim.</Headline>
-      <Body>Sem julgamento. A gente começa de onde você está.</Body>
+      <Body>Sem julgamento. A gente começa de onde estiver.</Body>
       <div className="grid w-full max-w-[820px] grid-cols-1 gap-4 md:grid-cols-3">
         {STAGES.map((o) => (
           <ChoiceCard
@@ -343,7 +343,7 @@ const STEP4: Record<
 > = {
   produto_fisico: {
     c1: {
-      label: "Como se chama o que você vende?",
+      label: "Como se chama o que é vendido?",
       ph: "ex: sabonetes artesanais, roupas infantis",
     },
     c2: {
@@ -351,7 +351,7 @@ const STEP4: Record<
       ph: "ex: embalagem, nota, bilhetinho",
     },
     toggle: {
-      label: "Você produz, revende ou os dois?",
+      label: "Produção própria, revenda ou os dois?",
       opcoes: [
         { v: "produzo", label: "Produzo" },
         { v: "revendo", label: "Revendo" },
@@ -379,11 +379,11 @@ const STEP4: Record<
   servico: {
     c1: { label: "Qual é o seu serviço?", ph: "ex: design de logos, consultoria financeira" },
     c2: {
-      label: "O que você entrega ao final de cada trabalho?",
+      label: "O que é entregue ao final de cada trabalho?",
       ph: "ex: arquivos editáveis, relatório, sessão gravada",
     },
     toggle: {
-      label: "Como você cobra?",
+      label: "Como funciona a cobrança?",
       opcoes: [
         { v: "hora", label: "Por hora" },
         { v: "projeto", label: "Por projeto" },
@@ -392,7 +392,7 @@ const STEP4: Record<
     },
   },
   hibrido: {
-    c1: { label: "O que você vende?", ph: "ex: curso + mentoria, produto físico + consulta" },
+    c1: { label: "O que é vendido?", ph: "ex: curso + mentoria, produto físico + consulta" },
     toggle: {
       label: "Das duas frentes, qual é a principal agora?",
       opcoes: [
@@ -474,9 +474,9 @@ function Step4({
     <div className="flex flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
       <Caveat>Agora a parte mais sua.</Caveat>
-      <Headline size={56}>O que você vende e o que entrega?</Headline>
+      <Headline size={56}>O que essa marca vende e o que entrega?</Headline>
       <p className="text-center text-[14px] text-[var(--muted)]">
-        Pode ser breve. Você ajusta depois.
+        Pode ser breve. Dá pra ajustar depois.
       </p>
 
       <div className="flex w-full max-w-[480px] flex-col gap-5">
@@ -625,10 +625,10 @@ function Toggle({
 
 /* ---------------- STEP 5 ---------------- */
 const ETAPA1_DESC: Record<BusinessType, string> = {
-  produto_fisico: "Quem você é, o que você produz e de onde vem o que você vende.",
-  produto_digital: "Quem você é, o que você ensina e qual problema você resolve.",
-  servico: "Quem você é, qual problema você resolve e como você trabalha.",
-  hibrido: "Quem você é e como as duas frentes do seu negócio se complementam.",
+  produto_fisico: "Quem está por trás da marca, o que ela produz e de onde vem o que vende.",
+  produto_digital: "Quem está por trás da marca, o que ela ensina e qual problema resolve.",
+  servico: "Quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
+  hibrido: "Quem está por trás da marca e como as duas frentes do negócio se complementam.",
 };
 
 function Step5({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
@@ -652,7 +652,7 @@ function Step5({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => 
         A Pólia não acaba. Ela só fica mais sua.
       </p>
       <p className="text-center text-[14px] text-[var(--muted)]">
-        cada vez que você volta, encontra mais de você aqui
+        cada volta encontra mais história por aqui
       </p>
 
       <button

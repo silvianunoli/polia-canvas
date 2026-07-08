@@ -3,12 +3,12 @@
  * Mostra um mantra que roda por dia da semana e links institucionais discretos.
  */
 const MANTRAS = [
-  "cada vez que você volta, encontra mais de você aqui.",
+  "cada volta encontra mais história por aqui.",
   "negócio que floresce não nasce pronto. floresce.",
   "o caminho é seu, a Pólia só caminha junto.",
   "sua história é o ativo. tudo o mais é ferramenta.",
   "constância vence virada. um passo, todo dia.",
-  "respira. seu ritmo importa mais que a velocidade.",
+  "o ritmo de cada uma importa mais que a velocidade.",
   "essa semana também conta. não precisa ser épica.",
 ];
 

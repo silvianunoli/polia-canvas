@@ -85,7 +85,7 @@ function BlogList() {
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
               Sem hack de faturamento, sem "10 passos pra escalar". Textos diretos sobre o que trava
-              de verdade quando você é o time inteiro, e como voltar pra sua etapa.
+              de verdade quando o time é uma pessoa só, e como voltar pra etapa.
             </p>
           </div>
         </section>

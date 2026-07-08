@@ -183,7 +183,7 @@ function ModuloPage() {
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
             Módulo {n} concluído
           </p>
-          <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">Você acabou de construir a</p>
+          <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">Acabou de nascer a</p>
           <h1 className="font-fraunces mt-1 text-[2.5rem] leading-[1.05] text-[var(--ink)]">
             {ferramenta.nome}
           </h1>

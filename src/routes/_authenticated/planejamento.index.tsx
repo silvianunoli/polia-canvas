@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_authenticated/planejamento/")({
       { title: "Planejamento · Pólia" },
       {
         name: "description",
-        content: "A base do seu negócio, construída por você, no seu ritmo.",
+        content: "A base do negócio, construída no ritmo de quem toca ele.",
       },
     ],
   }),
@@ -470,7 +470,7 @@ function PlanejamentoPage() {
               {businessName || "A base do seu negócio."}
             </h1>
             <p className="mt-2 text-[17px] text-[var(--ink-soft)]">
-              {businessName ? "Seu planejamento de negócio." : "Construída por você, no seu ritmo."}
+              {businessName ? "Seu planejamento de negócio." : "Construída no seu ritmo."}
             </p>
           </div>
 
@@ -656,7 +656,7 @@ function PlanejamentoPage() {
                       ) : (
                         <div className="mt-3">
                           <p className="text-[0.9rem] text-[var(--muted)]">
-                            Você ainda não preencheu este módulo.
+                            Este módulo ainda está em branco.
                           </p>
                           {proximo ? (
                             <a
@@ -898,7 +898,7 @@ function MetaTrack({
   return (
     <div className="mb-8 rounded-[var(--radius-md)] bg-[var(--surface)] p-6">
       <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-        Onde você está agora
+        Onde o negócio está agora
       </p>
       <div className="relative mx-1 my-9 h-3.5 rounded-lg border border-[var(--line)] bg-white">
         <div

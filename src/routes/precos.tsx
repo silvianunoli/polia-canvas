@@ -10,7 +10,7 @@ export const Route = createFileRoute("/precos")({
       {
         name: "description",
         content:
-          "Um plano só, do tamanho de uma pessoa só. Sem feature de equipe que você não usa, sem pegadinha. Cancela quando quiser.",
+          "Um plano só, do tamanho de uma pessoa só. Sem feature de equipe sem uso, sem pegadinha. Cancela quando quiser.",
       },
       { property: "og:title", content: "Preços · Pólia" },
       { property: "og:description", content: "Preço de uma pessoa só." },
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/precos")({
 });
 
 const beneficios = [
-  "Volte quando der e continue de onde parou, sem recomeçar do zero",
-  "Saia de cada dia com uma coisa da marca realmente feita",
+  "Continua de onde parou, sem recomeçar do zero",
+  "Cada dia fecha com uma coisa da marca realmente feita",
   "A Aimer lê o seu momento e aponta a próxima etapa certa",
   "Feita pra uma pessoa só: um plano, sem assento extra nem time",
   "Seus números claros, o que entrou e o que saiu, sem planilha",
@@ -43,7 +43,7 @@ const faqs = [
   {
     pergunta: "Posso cancelar quando quiser?",
     resposta:
-      "Sim, num clique, dentro do app. Sem ligar pra ninguém, sem “tem certeza?” três vezes. Você continua com acesso até o fim do ciclo que já pagou.",
+      "Sim, num clique, dentro do app. Sem ligar pra ninguém, sem “tem certeza?” três vezes. O acesso continua até o fim do ciclo já pago.",
   },
   {
     pergunta: "O preço pode mudar depois?",
@@ -81,8 +81,8 @@ function PrecosPage() {
               Preço de uma pessoa só.
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              Um plano, sem escada de “básico, pro, empresa”. Você é o time inteiro, então cobrar
-              por isso não faz sentido. Sem feature de equipe que você não usa, sem pegadinha no
+              Um plano, sem escada de “básico, pro, empresa”. O time é uma pessoa só, cobrar como
+              se fosse mais não faz sentido. Sem feature de equipe parada, sem pegadinha no
               rodapé.
             </p>
           </div>
@@ -169,7 +169,7 @@ function PrecosPage() {
                     Por que um plano só
                   </p>
                   <h3 className="font-fraunces mt-3 text-[20px] text-[var(--ink)]">
-                    Porque hoje você é o time inteiro.
+                    Porque o time é uma pessoa só.
                   </h3>
                   <p className="mt-3 text-[var(--ink-soft)]">
                     Planos em escada existem pra vender função de equipe: permissão, assento
@@ -180,11 +180,11 @@ function PrecosPage() {
 
                 <div className="rounded-xl bg-[var(--surface-pink)] p-6">
                   <h3 className="font-fraunces text-[20px] text-[var(--ink)]">
-                    Parou um tempo? Você continua no seu ritmo.
+                    Parou um tempo? A trilha continua no ritmo.
                   </h3>
                   <p className="mt-3 text-[var(--ink-soft)]">
-                    A Pólia não apaga a sua trilha por inatividade. Você entra e a etapa está lá,
-                    do jeito que deixou. Cancelar é num clique, sem ligação e sem sermão.
+                    A Pólia não apaga as etapas por inatividade. A etapa fica lá,
+                    do jeito que foi deixada. Cancelar é num clique, sem ligação e sem sermão.
                   </p>
                 </div>
 
@@ -196,7 +196,7 @@ function PrecosPage() {
                     Hoje a Pólia é pra uma pessoa só.
                   </h3>
                   <p className="mt-3 text-[var(--ink-soft)]">
-                    Se você cresceu e quer gerir um time por aqui, registra o seu interesse. A
+                    Quem cresceu e quer gerir um time por aqui pode registrar o interesse. A
                     gente te dá um retorno quando isso existir.
                   </p>
                   <a

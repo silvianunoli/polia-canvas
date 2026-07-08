@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 const trilha = [
   { titulo: "Definir quem é a sua marca", status: "done" as const },
   { titulo: "Preço do carro-chefe", status: "done" as const, tempo: "6 min" },
-  { titulo: "Bio que explica o que você faz", status: "open" as const, tempo: "5 min" },
+  { titulo: "Bio que explica o que a marca faz", status: "open" as const, tempo: "5 min" },
   { titulo: "Primeira publicação da semana", status: "next" as const, tempo: "4 min" },
   { titulo: "Organizar os primeiros clientes", status: "next" as const, tempo: "7 min" },
 ];
@@ -33,8 +33,8 @@ const trilha = [
 const passos = [
   {
     n: "01",
-    titulo: "Você diz quem é a sua marca",
-    desc: "Uma coisa de cada vez: o que você vende, pra quem, o que te trava. A Pólia monta as suas etapas do seu jeito.",
+    titulo: "A marca conta quem ela é",
+    desc: "Uma coisa de cada vez: o que a marca vende, pra quem, o que trava. A Pólia monta as etapas do jeito dela.",
   },
   {
     n: "02",
@@ -44,7 +44,7 @@ const passos = [
   {
     n: "03",
     titulo: "Cada etapa fechada é um passo real",
-    desc: "Quando você fecha uma etapa, a marca andou de verdade. A Pólia marca a sua Presença, sem confete.",
+    desc: "Quando a etapa fecha, a marca andou de verdade. A Pólia marca a Presença, sem confete.",
   },
 ];
 
@@ -72,12 +72,12 @@ const modulos = [
   {
     icon: CalendarCheck,
     titulo: "Etapa do dia",
-    desc: "Ao abrir, você já vê a etapa de hoje. Sem decidir do zero toda vez.",
+    desc: "Ao abrir, a etapa de hoje já está ali. Sem decidir do zero toda vez.",
   },
   {
     icon: Activity,
     titulo: "Presença",
-    desc: "O registro de que você apareceu e avançou. Medido por avanço.",
+    desc: "O registro de presença e avanço. Medido por avanço.",
   },
 ];
 
@@ -96,8 +96,8 @@ function HomePage() {
                   A sua marca inteira, uma etapa por vez.
                 </h1>
                 <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-                  Em vez de uma lista de 40 coisas que trava, a Pólia te dá o próximo passo pequeno,
-                  na ordem certa. Você anda de verdade, sem se perder no meio.
+                  Em vez de uma lista de 40 coisas que trava, a Pólia dá o próximo passo pequeno,
+                  na ordem certa. A marca anda de verdade, sem se perder no meio.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link
@@ -121,7 +121,7 @@ function HomePage() {
                 className="max-w-[460px] rounded-xl border border-[var(--line)] bg-white p-6"
               >
                 <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Suas etapas
+                  A trilha
                 </p>
                 {trilha.map((item) => (
                   <div
@@ -208,7 +208,7 @@ function HomePage() {
                 A sua marca continua no seu ritmo.
               </h2>
               <p className="mt-4 max-w-[54ch] text-[var(--accent-ink)]">
-                Faz tempo que não abre? Você entra e continua de onde parou. A Pólia mostra a etapa
+                Faz tempo que não abre? A trilha continua de onde parou. A Pólia mostra a etapa
                 aberta e o quanto falta. Sem recomeçar do zero, no seu tempo.
               </p>
             </div>
@@ -260,7 +260,7 @@ function HomePage() {
                     Feita por quem já tocou a própria marca sozinha.
                   </h2>
                   <p className="mt-3 max-w-[54ch] text-[var(--ink-soft)]">
-                    A Sil já teve o próprio negócio e sentiu na pele o que trava quando você é o
+                    A Sil já teve o próprio negócio e sentiu na pele o que trava pra quem é o
                     time inteiro. A Pólia nasceu do método que faltava, do lado de quem faz tudo.{" "}
                     <Link
                       to="/sobre"
@@ -281,7 +281,7 @@ function HomePage() {
           <div className="mx-auto max-w-[1120px] px-6">
             <div className="rounded-xl bg-[var(--secondary)] p-8 text-center md:p-12">
               <p className="font-fraunces mx-auto max-w-[26ch] text-[26px] italic leading-[1.3] text-[var(--secondary-ink)]">
-                Presença, não perfeição. Oportunidade, não culpa. Você é dona, nunca devedora.
+                Presença, não perfeição. Oportunidade, não culpa. Dona da marca, nunca devedora dela.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link

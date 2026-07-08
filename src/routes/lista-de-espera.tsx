@@ -28,27 +28,27 @@ export const Route = createFileRoute("/lista-de-espera")({
 });
 
 const PASSOS = [
-  "Você entra na lista",
+  "Entra na lista",
   "A gente te avisa quando abrir",
-  "Você fecha a primeira etapa",
+  "Fecha a primeira etapa",
 ];
 
 const RAZOES = [
   {
-    forte: "Você fica sabendo primeiro.",
-    resto: " Assim que a Pólia abrir, você é uma das primeiras avisadas.",
+    forte: "Fica sabendo primeiro.",
+    resto: " Assim que a Pólia abrir, quem está na lista é avisada entre as primeiras.",
   },
   {
     forte: "Entre as primeiras.",
-    resto: " Você usa a Pólia antes de abrir pra todo mundo.",
+    resto: " Acesso à Pólia antes da abertura pra todo mundo.",
   },
   {
-    forte: "Você ajuda a construir.",
-    resto: " A gente pergunta o que fazer primeiro, e o que te trava vira prioridade.",
+    forte: "Ajuda a construir.",
+    resto: " A gente pergunta o que fazer primeiro, e o que trava vira prioridade.",
   },
   {
     forte: "Sem compromisso.",
-    resto: " Entrar não custa nada, e você sai da lista quando quiser.",
+    resto: " Entrar não custa nada, e dá pra sair da lista quando quiser.",
   },
 ];
 
@@ -117,7 +117,7 @@ function ListaEsperaPage() {
 
     if (error) {
       if (error.code === "23505") {
-        toastErro("Esse email já está na lista. Você está dentro.");
+        toastErro("Esse email já está na lista. Já está dentro.");
         setEnviado(true);
       } else {
         toastErro("Não deu pra entrar agora. Tenta de novo em alguns minutos.");
@@ -297,7 +297,7 @@ function ListaEsperaPage() {
 
                     {aceiteErro && (
                       <p className="text-[13px] text-[var(--danger)]">
-                        Pra entrar na lista, você precisa aceitar os termos.
+                        Pra entrar na lista, falta aceitar os termos.
                       </p>
                     )}
 
@@ -310,7 +310,7 @@ function ListaEsperaPage() {
                       {loading ? "Entrando…" : "Entrar na lista"}
                     </button>
                     <p className="text-[13px] text-[var(--muted)]">
-                      Sem spam. A gente escreve só pra avisar quando abrir. Você sai quando quiser.
+                      Sem spam. A gente escreve só pra avisar quando abrir. Dá pra sair quando quiser.
                     </p>
                   </form>
                 ) : (
@@ -320,7 +320,7 @@ function ListaEsperaPage() {
                     aria-live="polite"
                   >
                     <h2 className="font-fraunces max-w-[20ch] text-[24px] text-[var(--ink)]">
-                      Pronto. Você tá na lista.
+                      Pronto. Nome na lista.
                     </h2>
                     <p className="mt-3 max-w-[48ch] text-[var(--ink-soft)]">
                       A gente te avisa assim que a Pólia abrir. Sem enfeite. Enquanto isso, dá pra

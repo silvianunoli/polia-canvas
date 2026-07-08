@@ -48,14 +48,14 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   },
   "500": {
     title: "Algo travou do nosso lado.",
-    subtitle: "Não foi você. A gente já foi avisado. Tenta de novo em instantes.",
+    subtitle: "Não foi nada que fez. A gente já foi avisado. Tenta de novo em instantes.",
     pageTitle: "Erro interno",
     icon: AlertTriangle,
     primaryAction: { label: "Tentar de novo", href: "/painel" },
     secondaryAction: { label: "Ir pro início", href: "/painel" },
   },
   "403": {
-    title: "Você não tem acesso a essa parte.",
+    title: "Essa parte é de acesso restrito.",
     subtitle: "Se acha que deveria ter, fala com a gente.",
     pageTitle: "Acesso restrito",
     icon: Lock,
@@ -70,8 +70,8 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     primaryAction: { label: "Tentar de novo", href: "/painel" },
   },
   offline: {
-    title: "Você está sem internet.",
-    subtitle: "Assim que voltar, você continua de onde parou.",
+    title: "Sem conexão com a internet agora.",
+    subtitle: "Assim que a conexão voltar, tudo continua de onde parou.",
     pageTitle: "Sem conexão",
     icon: WifiOff,
     primaryAction: { label: "Tentar de novo", href: "/painel" },

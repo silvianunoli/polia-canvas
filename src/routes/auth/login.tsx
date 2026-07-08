@@ -32,11 +32,11 @@ export const Route = createFileRoute("/auth/login")({
   head: () => ({
     meta: [
       { title: "Entrar · Pólia" },
-      { name: "description", content: "Entre na sua conta Pólia para continuar de onde parou." },
+      { name: "description", content: "A conta Pólia continua de onde parou." },
       { property: "og:title", content: "Entrar · Pólia" },
       {
         property: "og:description",
-        content: "Entre na sua conta Pólia para continuar de onde parou.",
+        content: "A conta Pólia continua de onde parou.",
       },
     ],
   }),
@@ -122,9 +122,9 @@ function LoginPage() {
           setTentativas(proximaTentativa);
           if (proximaTentativa >= MAX_TENTATIVAS) {
             setLockoutCooldown(LOCKOUT_SEGUNDOS);
-            setLoginErro("Muitas tentativas. Espera um minuto e tenta de novo.");
+            setLoginErro("Muitas tentativas. Vale esperar um minuto e tentar de novo.");
           } else {
-            setLoginErro("E-mail ou senha não conferem. Tenta de novo.");
+            setLoginErro("E-mail ou senha não conferem. Vale conferir de novo.");
           }
           // O campo ainda está `disabled` (loading só vira false no finally
           // logo abaixo) — um input desabilitado não aceita foco, por isso
@@ -186,7 +186,7 @@ function LoginPage() {
       ) : (
         search.next && (
           <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-center">
-            <p className="text-[14px] font-semibold text-[var(--ink)]">Entra pra ver isso.</p>
+            <p className="text-[14px] font-semibold text-[var(--ink)]">Isso fica logo depois de entrar.</p>
           </div>
         )
       )}

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacidade")({
       {
         name: "description",
         content:
-          "Política de Privacidade da Pólia, no padrão LGPD. Seus dados são seus. A gente explica o que coleta, por quê e como você controla.",
+          "Política de Privacidade da Pólia, no padrão LGPD. Os dados são da titular. A gente explica o que coleta, por quê e como ela controla.",
       },
     ],
   }),
@@ -25,12 +25,12 @@ function Ph({ children }: { children: React.ReactNode }) {
 }
 
 const TOC = [
-  ["controlador", "1. Quem trata seus dados"],
+  ["controlador", "1. Quem trata os dados"],
   ["coleta", "2. Dados que coletamos"],
   ["uso", "3. Para que usamos"],
   ["cookies", "4. Cookies"],
   ["compartilha", "5. Compartilhamento"],
-  ["direitos", "6. Seus direitos"],
+  ["direitos", "6. Direitos da titular"],
   ["seguranca", "7. Segurança"],
   ["retencao", "8. Por quanto tempo guardamos"],
   ["internacional", "9. Transferência internacional"],
@@ -40,16 +40,16 @@ const TOC = [
 ] as const;
 
 const DADOS = [
-  { categoria: "Cadastro", exemplos: "Nome, e-mail, senha", origem: "Você informa" },
+  { categoria: "Cadastro", exemplos: "Nome, e-mail, senha", origem: "Informado pela titular" },
   {
     categoria: "Marca e operação",
-    exemplos: "Dados da sua marca, clientes e números que você registra",
-    origem: "Você informa",
+    exemplos: "Dados da marca, clientes e números registrados",
+    origem: "Informado pela titular",
   },
   {
     categoria: "Pagamento",
     exemplos: "Dados de cobrança, processados pelo provedor de pagamento",
-    origem: "Você informa / provedor",
+    origem: "Titular / provedor",
   },
   {
     categoria: "Uso",
@@ -87,8 +87,8 @@ function PrivacidadePage() {
             </div>
 
             <p className="mt-6 text-[16px] leading-relaxed text-[var(--ink-soft)]">
-              Os seus dados são seus. Esta política explica, sem enrolação, o que a Pólia coleta,
-              para quê, com quem compartilha e como você controla tudo isso.
+              Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
+              para quê, com quem compartilha e como ela controla tudo isso.
             </p>
 
             <hr className="my-8 border-t border-[var(--line)]" />
@@ -109,11 +109,11 @@ function PrivacidadePage() {
             </ul>
 
             <div className="[&>h2]:font-fraunces [&>h2]:mt-12 [&>h2]:scroll-mt-24 [&>h2]:text-[22px] [&>h2]:text-[var(--ink)] [&>p]:mt-3 [&>p]:leading-relaxed [&>p]:text-[var(--ink-soft)] [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:text-[var(--ink-soft)] [&>ul>li]:mt-2">
-              <h2 id="controlador">1. Quem trata seus dados</h2>
+              <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
-                O controlador dos seus dados é <Ph>[Razão social]</Ph>, CNPJ{" "}
+                O controlador dos dados é <Ph>[Razão social]</Ph>, CNPJ{" "}
                 <Ph>[00.000.000/0001-00]</Ph>, com sede em <Ph>[endereço]</Ph>. É a gente quem
-                decide como e por que seus dados são tratados.
+                decide como e por que os dados são tratados.
               </p>
 
               <h2 id="coleta">2. Dados que coletamos</h2>
@@ -157,7 +157,7 @@ function PrivacidadePage() {
               <h2 id="uso">3. Para que usamos (e com qual base legal)</h2>
               <ul>
                 <li>
-                  <strong className="text-[var(--ink)]">Operar a sua conta e o serviço</strong> ·
+                  <strong className="text-[var(--ink)]">Operar a conta e o serviço</strong> ·
                   base: execução de contrato.
                 </li>
                 <li>
@@ -170,7 +170,7 @@ function PrivacidadePage() {
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">
-                    Enviar avisos importantes e, se você aceitar, novidades
+                    Enviar avisos importantes e, mediante aceite, novidades
                   </strong>{" "}
                   · base: consentimento / legítimo interesse.
                 </li>
@@ -179,12 +179,12 @@ function PrivacidadePage() {
                   obrigação legal.
                 </li>
               </ul>
-              <p>A gente não vende os seus dados. Ponto.</p>
+              <p>A gente não vende os dados. Ponto.</p>
 
               <h2 id="cookies">4. Cookies</h2>
               <p>
-                Usamos cookies essenciais (para você continuar logada) e, se você permitir,
-                cookies de medição para entender o uso e melhorar o produto. Você controla isso no
+                Usamos cookies essenciais (pra manter a sessão logada) e, mediante permissão,
+                cookies de medição para entender o uso e melhorar o produto. O controle fica no
                 banner de cookies e nas configurações do navegador.{" "}
                 <Ph>[Listar as ferramentas de analytics usadas.]</Ph>
               </p>
@@ -208,27 +208,28 @@ function PrivacidadePage() {
               </ul>
               <p>Esses parceiros tratam os dados como operadores, seguindo as nossas instruções.</p>
 
-              <h2 id="direitos">6. Seus direitos (LGPD art. 18)</h2>
+              <h2 id="direitos">6. Direitos da titular (LGPD art. 18)</h2>
               <p>
-                A qualquer momento você pode pedir para: confirmar se tratamos seus dados; acessar
-                seus dados; corrigir dados incompletos ou errados; anonimizar, bloquear ou
-                eliminar dados desnecessários; portar seus dados; eliminar dados tratados com base
-                no consentimento; saber com quem compartilhamos; e revogar o consentimento. Para
-                exercer, escreve pra gente (seção 12). A gente responde no prazo da lei.
+                A qualquer momento, a titular pode pedir para: confirmar se a gente trata os dados
+                dela; acessar os dados; corrigir dados incompletos ou errados; anonimizar,
+                bloquear ou eliminar dados desnecessários; portar os dados; eliminar dados
+                tratados com base no consentimento; saber com quem a gente compartilha; e revogar
+                o consentimento. Para exercer, o contato é pela seção 12. A gente responde no
+                prazo da lei.
               </p>
 
               <h2 id="seguranca">7. Segurança</h2>
               <p>
-                Usamos medidas técnicas e organizacionais para proteger seus dados, como controle
+                Usamos medidas técnicas e organizacionais para proteger os dados, como controle
                 de acesso e criptografia em trânsito. Nenhum sistema é 100% infalível, mas a gente
-                trata segurança como prioridade e avisa você e a ANPD se acontecer um incidente
+                trata segurança como prioridade e avisa a titular e a ANPD se acontecer um incidente
                 relevante.
               </p>
 
               <h2 id="retencao">8. Por quanto tempo guardamos</h2>
               <p>
-                Guardamos seus dados enquanto a sua conta existir e pelo tempo necessário para
-                cumprir obrigações legais. Ao cancelar, você pode pedir a exclusão; alguns dados
+                Guardamos os dados enquanto a conta existir e pelo tempo necessário para
+                cumprir obrigações legais. Ao cancelar, a titular pode pedir a exclusão; alguns dados
                 podem ser mantidos por prazos legais <Ph>[definir prazos, ex.: fiscais por 5 anos]</Ph>.
               </p>
 
@@ -242,7 +243,7 @@ function PrivacidadePage() {
               <h2 id="encarregado">10. Encarregado (DPO)</h2>
               <p>
                 Nosso encarregado pela proteção de dados é{" "}
-                <Ph>[nome / e-mail do encarregado]</Ph>. É com quem você fala sobre qualquer
+                <Ph>[nome / e-mail do encarregado]</Ph>. É com quem a titular fala sobre qualquer
                 assunto de privacidade.
               </p>
 

@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/metas")({
   head: () => ({
     meta: [
       { title: "Metas · Pólia" },
-      { name: "description", content: "Onde você quer chegar, e o quanto já andou." },
+      { name: "description", content: "Onde a marca quer chegar, e o quanto já andou." },
     ],
   }),
   component: MetasPage,
@@ -200,7 +200,7 @@ function MetasPage() {
             Suas metas
           </p>
           <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
-            Onde você quer chegar.
+            Onde a marca quer chegar.
           </h1>
         </header>
 
@@ -218,7 +218,7 @@ function MetasPage() {
           </button>
           {limiteAtingido && (
             <p className="mt-2 text-[12px] text-[var(--muted)]">
-              Você já tem {LIMITE_ATIVAS} metas ativas. Conclua ou arquive uma antes de adicionar
+              Já tem {LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar
               outra.
             </p>
           )}
@@ -302,7 +302,7 @@ function MetasPage() {
                       disabled={limiteAtingido}
                       title={
                         limiteAtingido
-                          ? "Você já tem 3 metas ativas. Conclua ou arquive uma antes de reabrir."
+                          ? "Já tem 3 metas ativas. Conclua ou arquive uma antes de reabrir."
                           : undefined
                       }
                       className="shrink-0 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
@@ -495,7 +495,7 @@ function MetaCard({
         <div className="min-w-0">
           {pronta ? (
             <span className="text-[12px] font-medium text-[var(--secondary-text)]">
-              Você bateu a meta.
+              Meta batida.
             </span>
           ) : meta.prazo ? (
             <span
@@ -615,7 +615,7 @@ function InlineValor({
     <button
       type="button"
       onClick={start}
-      aria-label="Atualizar quanto você já tem"
+      aria-label="Atualizar valor atual da meta"
       className="font-medium text-[var(--ink)] underline decoration-dotted decoration-[var(--muted)] underline-offset-2 hover:decoration-[var(--secondary)]"
     >
       {valorFmt(formato, value)}
@@ -714,7 +714,7 @@ function ModalMeta({
 
         {/* Formato */}
         <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Como você mede?</label>
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Formato da medida</label>
           <div className="flex gap-2">
             {(
               [
@@ -769,7 +769,7 @@ function ModalMeta({
         {/* Atual */}
         <div className="mb-4">
           <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            Quanto você já tem hoje
+            Valor atual, hoje
           </label>
           <input
             type="number"

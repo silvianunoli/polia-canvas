@@ -14,7 +14,7 @@ export const Route = createFileRoute("/auth/esqueci-senha")({
       {
         name: "description",
         content:
-          "Recupere o acesso à sua conta Pólia. Te enviamos um link para criar uma nova senha.",
+          "Recuperação de acesso à conta Pólia. Um link pra criar uma nova senha, direto no e-mail.",
       },
     ],
   }),
@@ -80,7 +80,7 @@ function EsqueciSenhaPage() {
         <>
           <SerifHeadline size={26}>Vamos recuperar.</SerifHeadline>
           <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
-            Digite o e-mail da sua conta e a gente manda o link.
+            É só informar o e-mail da conta que a gente manda o link.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>

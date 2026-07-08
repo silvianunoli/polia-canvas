@@ -26,10 +26,10 @@ function Ph({ children }: { children: React.ReactNode }) {
 const TOC = [
   ["aceitacao", "1. Aceitação"],
   ["servico", "2. O que é a Pólia"],
-  ["conta", "3. Sua conta"],
+  ["conta", "3. A conta"],
   ["planos", "4. Planos e pagamento"],
   ["uso", "5. Uso aceitável"],
-  ["conteudo", "6. Seu conteúdo"],
+  ["conteudo", "6. O conteúdo"],
   ["propriedade", "7. Propriedade da Pólia"],
   ["cancelamento", "8. Cancelamento"],
   ["garantias", "9. Garantias e responsabilidade"],
@@ -60,7 +60,7 @@ function TermosPage() {
               <span aria-hidden="true" className="text-[var(--danger)]">•</span>
               <p className="text-[15px] leading-relaxed text-[var(--ink-soft)]">
                 <strong className="text-[var(--ink)]">Rascunho, não revisado por advogado.</strong>{" "}
-                Este texto é uma base em linguagem clara pra você não publicar do zero. Antes de ir
+                Este texto é uma base em linguagem clara, feita pra não começar do zero. Antes de ir
                 ao ar, precisa passar por um advogado e ter os campos marcados em <Ph>amarelo</Ph>{" "}
                 preenchidos com os dados reais da empresa.
               </p>
@@ -68,7 +68,7 @@ function TermosPage() {
 
             <p className="mt-6 text-[16px] leading-relaxed text-[var(--ink-soft)]">
               Bem-vinda à Pólia. Estes termos explicam as regras de uso do site e do aplicativo. A
-              gente escreveu do jeito mais direto possível. Ao criar uma conta ou usar o site, você
+              gente escreveu do jeito mais direto possível. Ao criar uma conta ou usar o site, a usuária
               concorda com o que está aqui.
             </p>
             <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-soft)]">
@@ -100,24 +100,24 @@ function TermosPage() {
             <div className="[&>h2]:font-fraunces [&>h2]:mt-12 [&>h2]:scroll-mt-24 [&>h2]:text-[22px] [&>h2]:text-[var(--ink)] [&>p]:mt-3 [&>p]:leading-relaxed [&>p]:text-[var(--ink-soft)] [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:text-[var(--ink-soft)] [&>ul>li]:mt-2">
               <h2 id="aceitacao">1. Aceitação</h2>
               <p>
-                Ao usar a Pólia, você declara ter pelo menos 18 anos e capacidade para aceitar
-                estes termos. Se você usa a Pólia em nome de uma empresa, declara ter poderes para
+                Ao usar a Pólia, a usuária declara ter pelo menos 18 anos e capacidade para aceitar
+                estes termos. Se usa a Pólia em nome de uma empresa, declara ter poderes para
                 isso.
               </p>
 
               <h2 id="servico">2. O que é a Pólia</h2>
               <p>
-                A Pólia é um ambiente digital que organiza a operação da sua marca em etapas e
+                A Pólia é um ambiente digital que organiza a operação da marca em etapas e
                 tarefas, com registro de clientes, números e progresso. A Pólia é uma ferramenta de
-                apoio: as decisões sobre o seu negócio são sempre suas. A gente não presta
+                apoio: as decisões sobre o negócio são sempre da usuária. A gente não presta
                 consultoria contábil, jurídica ou financeira.
               </p>
 
-              <h2 id="conta">3. Sua conta</h2>
+              <h2 id="conta">3. A conta</h2>
               <p>
-                Você é responsável por manter seus dados de acesso em segurança e por tudo que
-                acontece na sua conta. Avise a gente se notar uso indevido. Os dados que você
-                informa devem ser verdadeiros e atualizados.
+                A usuária é responsável por manter os dados de acesso em segurança e por tudo que
+                acontece na conta. Deve avisar a gente se notar uso indevido. Os dados informados
+                devem ser verdadeiros e atualizados.
               </p>
 
               <h2 id="planos">4. Planos e pagamento</h2>
@@ -129,7 +129,7 @@ function TermosPage() {
                   </Link>
                   .
                 </li>
-                <li>A cobrança é recorrente e renova automaticamente até você cancelar.</li>
+                <li>A cobrança é recorrente e renova automaticamente até ser cancelada.</li>
                 <li>
                   <Ph>[Definir política de reembolso e período de teste.]</Ph>
                 </li>
@@ -138,17 +138,17 @@ function TermosPage() {
 
               <h2 id="uso">5. Uso aceitável</h2>
               <p>
-                Você concorda em não usar a Pólia para: violar leis, infringir direitos de
+                A usuária concorda em não usar a Pólia para: violar leis, infringir direitos de
                 terceiros, tentar burlar segurança, revender o acesso sem autorização, ou
                 sobrecarregar a plataforma de forma indevida. A gente pode suspender contas que
                 quebrem estas regras.
               </p>
 
-              <h2 id="conteudo">6. Seu conteúdo</h2>
+              <h2 id="conteudo">6. O conteúdo</h2>
               <p>
-                Tudo que você cadastra na Pólia (dados da marca, clientes, números) continua sendo
-                seu. Você nos dá apenas a permissão necessária para operar o serviço: armazenar,
-                processar e mostrar esse conteúdo de volta pra você. A gente não vende o seu
+                Tudo que é cadastrado na Pólia (dados da marca, clientes, números) continua sendo
+                da usuária. Ela dá pra gente apenas a permissão necessária para operar o serviço:
+                armazenar, processar e mostrar esse conteúdo de volta. A gente não vende esse
                 conteúdo. O tratamento de dados pessoais segue a{" "}
                 <Link to="/privacidade" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                   Política de Privacidade
@@ -159,13 +159,13 @@ function TermosPage() {
               <h2 id="propriedade">7. Propriedade da Pólia</h2>
               <p>
                 A marca Pólia, o software, o design e os textos são nossos ou licenciados para a
-                gente. Estes termos não transferem esses direitos para você, além do uso normal do
+                gente. Estes termos não transferem esses direitos para a usuária, além do uso normal do
                 serviço.
               </p>
 
               <h2 id="cancelamento">8. Cancelamento</h2>
               <p>
-                Você pode cancelar quando quiser, direto no aplicativo, sem precisar ligar ou
+                O cancelamento pode ser feito quando quiser, direto no aplicativo, sem precisar ligar ou
                 justificar. O acesso continua até o fim do ciclo já pago. A gente pode encerrar
                 contas que violem estes termos, avisando quando for possível.
               </p>
@@ -174,7 +174,7 @@ function TermosPage() {
               <p>
                 A gente se esforça para manter a Pólia no ar e funcionando, mas o serviço é
                 fornecido “como está”, sem garantia de disponibilidade ininterrupta. Na medida
-                permitida pela lei, a responsabilidade da Pólia se limita ao valor que você pagou
+                permitida pela lei, a responsabilidade da Pólia se limita ao valor pago
                 nos últimos <Ph>[12]</Ph> meses.{" "}
                 <Ph>[Revisar limitação com advogado, à luz do Código de Defesa do Consumidor.]</Ph>
               </p>
@@ -183,19 +183,19 @@ function TermosPage() {
               <p>
                 A gente pode atualizar estes termos. Quando a mudança for relevante, avisamos por
                 e-mail ou dentro do aplicativo, com antecedência razoável. Continuar usando a Pólia
-                depois disso significa que você aceitou a nova versão.
+                depois disso significa aceitar a nova versão.
               </p>
 
               <h2 id="lei">11. Lei e foro</h2>
               <p>
                 Estes termos seguem as leis do Brasil. Fica eleito o foro da comarca de{" "}
                 <Ph>[cidade/UF]</Ph> para resolver questões, sem prejuízo dos direitos que a
-                legislação de consumo garante a você.
+                legislação de consumo garante à usuária.
               </p>
 
               <h2 id="contato">12. Contato</h2>
               <p>
-                Dúvidas sobre estes termos? Escreve pra{" "}
+                Dúvidas sobre estes termos? O contato é{" "}
                 <a href="mailto:oi@usepolia.com.br" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                   oi@usepolia.com.br
                 </a>{" "}

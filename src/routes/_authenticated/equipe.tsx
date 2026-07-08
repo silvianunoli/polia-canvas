@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/equipe")({
   head: () => ({
     meta: [
       { title: "Minha equipe · Pólia" },
-      { name: "description", content: "Quem caminha com você no negócio." },
+      { name: "description", content: "Quem caminha junto no negócio." },
     ],
   }),
   component: EquipePage,
@@ -155,7 +155,7 @@ function EquipePage() {
             <h1 className="mb-2 font-serif text-[36px] leading-tight text-[#1A1A2E] sm:text-[40px]">
               Minha equipe
             </h1>
-            <p className="caveat-decorativo text-[#C96B3E]">quem caminha com você no negócio.</p>
+            <p className="caveat-decorativo text-[#C96B3E]">quem caminha junto no negócio.</p>
           </div>
           <button
             type="button"
@@ -246,10 +246,10 @@ function EquipePage() {
               <Users size={26} className="text-polia-terracota" />
             </div>
             <p className="mb-1.5 font-serif text-[20px] text-[#1A1A2E]">
-              Você ainda está sozinha aqui
+              Ainda sem ninguém por aqui
             </p>
             <p className="mx-auto mb-4 max-w-[400px] font-sans text-[14px] leading-relaxed text-[#1A1A2E] opacity-55">
-              Adicione quem te ajuda no negócio: sócia, freelancer, assistente. Depois dá pra
+              Adicione quem ajuda no negócio: sócia, freelancer, assistente. Depois dá pra
               delegar cards do Planner pra cada pessoa.
             </p>
             <button

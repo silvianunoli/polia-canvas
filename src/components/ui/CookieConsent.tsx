@@ -48,7 +48,7 @@ export function CookieConsent() {
               </p>
               <p className="mt-1 max-w-[560px] text-[13px] leading-[1.55] text-[var(--muted)]">
                 A Pólia usa cookies essenciais pra funcionar e cookies de análise pra entender como
-                melhorar a sua experiência. Você controla o que aceita. Leia nossa{" "}
+                melhorar a experiência. O controle do que é aceito fica com quem usa. Leia nossa{" "}
                 <Link
                   to="/privacidade"
                   className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"

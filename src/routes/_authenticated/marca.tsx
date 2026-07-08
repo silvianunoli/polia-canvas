@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/marca")({
   head: () => ({
     meta: [
       { title: "Marca · Pólia" },
-      { name: "description", content: "A identidade do seu negócio, escrita por você." },
+      { name: "description", content: "A identidade do negócio, escrita por quem o toca." },
     ],
   }),
   beforeLoad: async () => {
@@ -68,7 +68,7 @@ function MarcaPage() {
             {profile?.business_name || "Sua marca"}
           </h1>
           <p className="mt-2 text-[1rem] text-[var(--ink-soft)]">
-            A identidade do seu negócio, escrita por você.
+            A identidade do negócio, escrita por quem o toca.
           </p>
         </header>
 

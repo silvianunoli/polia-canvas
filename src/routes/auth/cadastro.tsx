@@ -28,13 +28,13 @@ export const Route = createFileRoute("/auth/cadastro")({
       {
         name: "description",
         content:
-          "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+          "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
       { property: "og:title", content: "Criar conta · Pólia" },
       {
         property: "og:description",
         content:
-          "Crie sua conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+          "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
     ],
   }),
@@ -156,7 +156,7 @@ function CadastroPage() {
 
   return (
     <AuthShell>
-      <SerifHeadline size={28}>Comece pelo comecinho.</SerifHeadline>
+      <SerifHeadline size={28}>Tudo começa pelo comecinho.</SerifHeadline>
       <SubText>Sua conta em menos de um minuto.</SubText>
 
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
@@ -164,7 +164,7 @@ function CadastroPage() {
           label="Seu nome"
           name="nome"
           autoComplete="name"
-          placeholder="como você quer ser chamada"
+          placeholder="como prefere ser chamada"
           icon={<User size={18} />}
           value={values.nome}
           onChange={(e) => set("nome", e.target.value)}
@@ -218,7 +218,7 @@ function CadastroPage() {
         </Link>
       </p>
       <p className="mt-2 text-center text-[12px] text-[var(--muted)]">
-        Ao criar sua conta, você concorda com os nossos{" "}
+        Ao criar a conta, a usuária concorda com os nossos{" "}
         <a href="#" className="text-[var(--ink-soft)] underline">
           Termos de Uso
         </a>{" "}

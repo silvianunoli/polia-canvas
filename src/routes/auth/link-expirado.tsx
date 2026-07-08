@@ -18,13 +18,13 @@ const COPY = {
   confirmacao: {
     title: "Esse link de confirmação expirou.",
     subtitle:
-      "Links de confirmação valem por 24 horas. Crie a conta de novo com o mesmo e-mail que a gente manda um link novo na hora.",
+      "Links de confirmação valem por 24 horas. Basta criar a conta de novo com o mesmo e-mail que a gente manda um link novo na hora.",
     primaryLabel: "Criar conta de novo",
     primaryHref: "/auth/cadastro",
   },
   redefinicao: {
     title: "Esse link de redefinir senha expirou.",
-    subtitle: "Links de redefinição valem por 1 hora. Peça um novo que a gente manda na hora.",
+    subtitle: "Links de redefinição valem por 1 hora. É só pedir um novo que a gente manda na hora.",
     primaryLabel: "Pedir um novo link",
     primaryHref: "/auth/esqueci-senha",
   },

@@ -65,7 +65,7 @@ function MercadoPage() {
             Mapa de Mercado
           </p>
           <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,40px)] leading-[1.1] text-[var(--ink)]">
-            Quem você serve.
+            Quem a marca serve.
           </h1>
           <p className="mt-2 text-[1rem] text-[var(--ink-soft)]">
             Sua cliente, o mercado e o seu lugar nele, pra consultar quando criar conteúdo, produto

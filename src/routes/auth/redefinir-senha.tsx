@@ -10,7 +10,7 @@ export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({
     meta: [
       { title: "Nova senha · Pólia" },
-      { name: "description", content: "Defina uma nova senha para sua conta Pólia." },
+      { name: "description", content: "Nova senha para a conta Pólia." },
     ],
   }),
   component: RedefinirSenhaPage,
@@ -87,7 +87,7 @@ function RedefinirSenhaPage() {
 
   return (
     <AuthShell maxWidth={420}>
-      <SerifHeadline size={26}>Escolha a nova senha.</SerifHeadline>
+      <SerifHeadline size={26}>Hora de escolher a nova senha.</SerifHeadline>
 
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
         <div>

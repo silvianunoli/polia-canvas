@@ -14,15 +14,15 @@ export const Route = createFileRoute("/auth/verificacao")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
-      { title: "Confirma seu e-mail · Pólia" },
+      { title: "Confirmação de e-mail · Pólia" },
       {
         name: "description",
-        content: "Confirme seu e-mail para começar a usar a Pólia.",
+        content: "Confirmação de e-mail para começar a usar a Pólia.",
       },
-      { property: "og:title", content: "Confirma seu e-mail · Pólia" },
+      { property: "og:title", content: "Confirmação de e-mail · Pólia" },
       {
         property: "og:description",
-        content: "Confirme seu e-mail para começar a usar a Pólia.",
+        content: "Confirmação de e-mail para começar a usar a Pólia.",
       },
     ],
   }),

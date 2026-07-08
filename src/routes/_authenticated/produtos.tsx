@@ -246,7 +246,7 @@ function ProdutosPage() {
               <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
                 <p className="mx-auto max-w-[420px] text-[14px] leading-relaxed text-[var(--muted)]">
                   Nenhum produto ainda. Adicione um aqui, ou deixe o Módulo 3 do planejamento criar
-                  os primeiros com o que você listar.
+                  os primeiros com o que for listado lá.
                 </p>
                 <a
                   href="/planejamento/modulo/3"
@@ -609,7 +609,7 @@ function Calculadora({
               value={despesasFixas}
               onChange={setDespesasFixas}
             />
-            <CampoNum label="Quantas você vende por mês" value={qtd} onChange={setQtd} />
+            <CampoNum label="Quantas vende por mês" value={qtd} onChange={setQtd} />
           </GrupoCalc>
           <GrupoCalc titulo="Sobre o preço de venda (%)">
             <CampoNum
@@ -618,7 +618,7 @@ function Calculadora({
               onChange={setTaxaVenda}
             />
             <CampoNum label="Impostos sobre a venda (%)" value={impostos} onChange={setImpostos} />
-            <CampoNum label="Quanto você quer de lucro (%)" value={margem} onChange={setMargem} />
+            <CampoNum label="Lucro desejado (%)" value={margem} onChange={setMargem} />
           </GrupoCalc>
         </>
       ) : (

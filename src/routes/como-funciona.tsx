@@ -34,7 +34,7 @@ export const Route = createFileRoute("/como-funciona")({
 const trilha = [
   { titulo: "Definir quem é a sua marca", status: "done" as const },
   { titulo: "Preço do carro-chefe", status: "done" as const, tempo: "6 min" },
-  { titulo: "Bio que explica o que você faz", status: "open" as const, tempo: "5 min" },
+  { titulo: "Bio que explica o que a marca faz", status: "open" as const, tempo: "5 min" },
   { titulo: "Primeira publicação da semana", status: "next" as const, tempo: "4 min" },
   { titulo: "Organizar os primeiros clientes", status: "next" as const, tempo: "7 min" },
 ];
@@ -44,22 +44,22 @@ const passos = [
     n: "01",
     icon: User,
     pill: "Identidade",
-    titulo: "Você diz quem é a sua marca.",
-    desc: "Sem formulário gigante. A Pólia pergunta uma coisa de cada vez: o que você vende, pra quem, e o que te trava hoje. A partir daí ela monta a sua Trilha, do seu jeito, não um template genérico.",
+    titulo: "A marca conta quem ela é.",
+    desc: "Sem formulário gigante. A Pólia pergunta uma coisa de cada vez: o que a marca vende, pra quem, e o que trava hoje. A partir daí ela monta a sua Trilha, do jeito dela, não um template genérico.",
   },
   {
     n: "02",
     icon: RouteIcon,
     pill: "Trilha e Tarefas",
     titulo: "A trilha vira etapas de poucos minutos.",
-    desc: "Cada etapa é uma Tarefa concreta de 4 a 6 minutos: “definir o preço do carro-chefe”, “escrever a bio que explica o que você faz”. Nada de “organize seu negócio”. É pequeno o bastante pra caber num dia cheio.",
+    desc: "Cada etapa é uma Tarefa concreta de 4 a 6 minutos: “definir o preço do carro-chefe”, “escrever a bio que explica o que a marca faz”. Nada de “organize seu negócio”. É pequeno o bastante pra caber num dia cheio.",
   },
   {
     n: "03",
     icon: Flag,
     pill: "Etapa e Presença",
     titulo: "Cada etapa fechada é um passo real.",
-    desc: "Quando você fecha uma etapa, a marca andou de verdade. A Pólia registra a sua Presença sem confete e sem troféu. O que importa é que você avançou.",
+    desc: "Quando a etapa fecha, a marca andou de verdade. A Pólia registra a Presença sem confete e sem troféu. O que importa é o avanço.",
   },
 ];
 
@@ -87,12 +87,12 @@ const modulos = [
   {
     icon: CalendarCheck,
     titulo: "Trilha do dia",
-    desc: "Ao abrir, você já vê a etapa de hoje. Sem decidir por onde começar do zero toda vez.",
+    desc: "Ao abrir, a etapa de hoje já está ali. Sem decidir por onde começar do zero toda vez.",
   },
   {
     icon: Activity,
     titulo: "Presença",
-    desc: "O registro de que você apareceu e avançou. Medido por avanço, nunca por dia perfeito.",
+    desc: "O registro de presença e avanço. Medido por avanço, nunca por dia perfeito.",
   },
 ];
 
@@ -112,8 +112,8 @@ function ComoFuncionaPage() {
               Uma coisa de cada vez. Do seu jeito.
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              A Pólia pega a sua marca inteira e quebra numa trilha de etapas curtas. Você fecha
-              uma por dia, ou uma por semana. O ritmo é seu, e sempre tem alguém do lado mostrando
+              A Pólia pega a sua marca inteira e quebra numa trilha de etapas curtas. Uma etapa por
+              dia, ou uma por semana. O ritmo é seu, e sempre tem alguém do lado mostrando
               o próximo passo.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -139,8 +139,8 @@ function ComoFuncionaPage() {
                   Em vez de uma lista de 40 coisas, uma etapa por vez.
                 </h2>
                 <p className="mt-3 text-[var(--ink-soft)]">
-                  Cada etapa é pequena e concreta, com um tempo do lado. A Aimer deixa uma aberta
-                  pra você, na ordem que faz sentido. Você fecha, a próxima abre.
+                  Cada etapa é pequena e concreta, com um tempo do lado. A Aimer deixa uma aberta,
+                  na ordem que faz sentido. Uma fecha, a próxima abre.
                 </p>
               </div>
 
@@ -195,7 +195,7 @@ function ComoFuncionaPage() {
         <section className="pb-12 md:pb-16">
           <div className="mx-auto max-w-[1120px] px-6">
             <p className="mb-8 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              Como você usa, em 3 passos
+              Como funciona, em 3 passos
             </p>
             {passos.map((p, i) => {
               const Icon = p.icon;
@@ -234,7 +234,7 @@ function ComoFuncionaPage() {
                 A sua trilha continua no seu ritmo.
               </h2>
               <p className="mt-4 max-w-[54ch] text-[var(--accent-ink)]">
-                Faz tempo que não abre? Sem problema. Você entra e continua de onde parou: a Pólia
+                Faz tempo que não abre? Sem problema. A trilha continua de onde parou: a Pólia
                 mostra a etapa aberta e o quanto falta. Sem recomeçar do zero, no seu tempo.
               </p>
             </div>
@@ -269,7 +269,7 @@ function ComoFuncionaPage() {
         <section className="pb-16 md:pb-24">
           <div className="mx-auto max-w-[1120px] px-6 text-center">
             <h2 className="font-fraunces mx-auto max-w-[18ch] text-[32px] text-[var(--ink)] md:text-[40px]">
-              Pronta pra fechar a primeira etapa?
+              Bora fechar a primeira etapa?
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link

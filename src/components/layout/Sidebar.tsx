@@ -69,8 +69,8 @@ export function Sidebar() {
 
   const streakLabel =
     meta.streak > 0
-      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} em que você apareceu e registrou algo na Pólia. Só cresce, nunca zera.`
-      : "Conta os dias em que você aparece e registra algo na Pólia. Só cresce.";
+      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} de presença, com algo registrado na Pólia. Só cresce, nunca zera.`
+      : "Conta os dias com presença e algo registrado na Pólia. Só cresce.";
 
   function Body({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
     return (

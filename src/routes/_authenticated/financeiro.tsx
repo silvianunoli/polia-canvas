@@ -358,7 +358,7 @@ function FinanceiroPage() {
         {/* ───────── 2. Meta do mês (régua) ───────── */}
         <section className="mt-5 rounded-xl bg-[var(--surface)] p-6 md:p-8">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-            Onde você está no mês
+            Onde o mês está agora
           </p>
 
           {metaAlvo <= 0 ? (
