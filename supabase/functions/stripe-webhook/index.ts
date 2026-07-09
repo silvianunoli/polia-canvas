@@ -10,10 +10,17 @@ const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") ?? "", {
 });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
-const supabaseAdmin = createClient(
-  Deno.env.get("SUPABASE_URL") ?? "",
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-);
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const SITE_URL = "https://usepolia.com.br";
+
+const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+// Client separado, apontando pro schema auth: é a forma direta de checar se um
+// e-mail já tem conta sem paginar admin.listUsers(). Service role já ignora RLS.
+const supabaseAuthSchema = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  db: { schema: "auth" },
+});
 
 const PRICE_TO_PLANO: Record<string, string> = {};
 const PRICE_MENSAL = Deno.env.get("STRIPE_PRICE_ID_MENSAL");
@@ -67,6 +74,75 @@ async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription)
   }
 }
 
+async function buscarUserIdPorEmail(email: string): Promise<string | null> {
+  const { data, error } = await supabaseAuthSchema
+    .from("users")
+    .select("id")
+    .ilike("email", email)
+    .maybeSingle();
+  if (error) {
+    console.error("[stripe-webhook] Erro ao buscar usuária por e-mail:", error);
+    return null;
+  }
+  return (data as { id: string } | null)?.id ?? null;
+}
+
+async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
+  const apiKey = Deno.env.get("RESEND_API_KEY");
+  if (!apiKey) {
+    console.error("[stripe-webhook] Missing RESEND_API_KEY — e-mail de ativação não enviado.");
+    return;
+  }
+  try {
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "Pólia <naoresponda@usepolia.com.br>",
+        to: [email],
+        subject: "Sua compra foi confirmada — crie sua senha",
+        text: `Sua compra na Pólia foi confirmada.\n\nCria sua senha e entra pela primeira vez:\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
+      }),
+    });
+    if (!resp.ok) {
+      console.error("[stripe-webhook] Falha ao enviar e-mail de ativação:", await resp.text());
+    }
+  } catch (err) {
+    console.error("[stripe-webhook] Erro ao enviar e-mail de ativação:", err);
+  }
+}
+
+// Resolve o e-mail de quem comprou pra um user_id: reaproveita conta existente
+// (ex.: já tinha convite) ou cria uma nova + manda o link de ativação. Em
+// qualquer um dos casos, grava o user_id nos metadados do Customer no Stripe —
+// upsertAssinaturaDaSubscription já sabe ler esse metadado como fallback.
+async function resolverContaDaCompra(email: string, customerId: string): Promise<string | null> {
+  const existente = await buscarUserIdPorEmail(email);
+  let userId = existente;
+
+  if (!userId) {
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "invite",
+      email,
+      options: { redirectTo: `${SITE_URL}/onboarding` },
+    });
+    if (error || !data.user) {
+      console.error("[stripe-webhook] Falha ao criar conta pra compra:", error);
+      return null;
+    }
+    userId = data.user.id;
+    await enviarEmailAtivacao(email, data.properties.action_link);
+  }
+
+  try {
+    await stripe.customers.update(customerId, { metadata: { user_id: userId } });
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao gravar user_id no Customer:", err);
+  }
+
+  return userId;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
@@ -88,6 +164,30 @@ Deno.serve(async (req) => {
 
   try {
     switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const email = session.customer_details?.email;
+        const customerId =
+          typeof session.customer === "string" ? session.customer : session.customer?.id;
+        const subscriptionId =
+          typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+
+        if (!email || !customerId || !subscriptionId) {
+          console.error("[stripe-webhook] checkout.session.completed sem e-mail/customer/subscription.");
+          break;
+        }
+
+        const userId = await resolverContaDaCompra(email, customerId);
+        if (!userId) break;
+
+        // A assinatura em si (status, ciclo, plano) é gravada pelo mesmo
+        // caminho de customer.subscription.created/updated — busca a
+        // subscription e reaproveita o upsert já existente, agora que o
+        // Customer já tem o user_id certo nos metadados.
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        await upsertAssinaturaDaSubscription(subscription);
+        break;
+      }
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         await upsertAssinaturaDaSubscription(event.data.object as Stripe.Subscription);

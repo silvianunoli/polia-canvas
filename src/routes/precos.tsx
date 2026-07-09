@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { z } from "zod";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { FieldError } from "@/components/ui/FieldError";
+import { iniciarCompraPublica } from "@/lib/compra-publica.functions";
+
+const VALOR_PLANO_MENSAL = 29;
+const VALOR_PLANO_ANUAL = 290;
 
 export const Route = createFileRoute("/precos")({
   head: () => ({
@@ -65,6 +71,32 @@ const faqs = [
 
 function PrecosPage() {
   const [ciclo, setCiclo] = useState<"mensal" | "anual">("mensal");
+  const [email, setEmail] = useState("");
+  const [erro, setErro] = useState<string | undefined>();
+  const [comprando, setComprando] = useState(false);
+
+  async function handleComprar(e: FormEvent) {
+    e.preventDefault();
+    const emailLimpo = email.trim();
+    if (!emailLimpo || !z.string().email().safeParse(emailLimpo).success) {
+      setErro("E-mail inválido. Confere o @.");
+      return;
+    }
+    setErro(undefined);
+    setComprando(true);
+    try {
+      const resultado = await iniciarCompraPublica({ data: { email: emailLimpo, plano: ciclo } });
+      if (resultado.error || !resultado.url) {
+        setErro(resultado.error ?? "Não consegui abrir o checkout agora. Tenta de novo.");
+        setComprando(false);
+        return;
+      }
+      window.location.href = resultado.url;
+    } catch {
+      setErro("Não consegui abrir o checkout agora. Tenta de novo.");
+      setComprando(false);
+    }
+  }
 
   return (
     <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
@@ -129,20 +161,44 @@ function PrecosPage() {
                 </div>
 
                 <div className="mt-6 flex items-baseline gap-2">
-                  <span className="font-fraunces text-[56px] leading-none tracking-[-0.02em]">
-                    <span className="rounded-[3px] bg-[var(--highlight)] px-1.5 text-[var(--highlight-ink)]">
-                      {ciclo === "mensal" ? "R$ XX" : "R$ YY"}
-                    </span>
+                  <span className="font-fraunces text-[56px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+                    {ciclo === "mensal" ? `R$ ${VALOR_PLANO_MENSAL}` : `R$ ${VALOR_PLANO_ANUAL}`}
                   </span>
                   <span className="text-[var(--ink-soft)]">{ciclo === "mensal" ? "/mês" : "/ano"}</span>
                 </div>
 
-                <Link
-                  to="/auth/cadastro"
-                  className="mt-6 block w-full rounded-lg bg-[var(--secondary)] px-8 py-4 text-center text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
-                >
-                  Começar
-                </Link>
+                <form onSubmit={handleComprar} className="mt-6" noValidate>
+                  <label htmlFor="precos-email" className="mb-2 block text-[13px] font-semibold text-[var(--ink)]">
+                    Seu e-mail
+                  </label>
+                  <input
+                    id="precos-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (erro) setErro(undefined);
+                    }}
+                    maxLength={255}
+                    placeholder="voce@seunegocio.com.br"
+                    disabled={comprando}
+                    aria-invalid={!!erro || undefined}
+                    aria-describedby={erro ? "precos-email-error" : undefined}
+                    className={`w-full rounded-lg border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors disabled:opacity-60 ${
+                      erro
+                        ? "border-[var(--danger)] focus:border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                  <FieldError id="precos-email-error">{erro}</FieldError>
+                  <button
+                    type="submit"
+                    disabled={comprando}
+                    className="mt-2 block w-full rounded-lg bg-[var(--secondary)] px-8 py-4 text-center text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {comprando ? "Abrindo checkout..." : "Comprar"}
+                  </button>
+                </form>
                 <p className="mt-3 text-center text-[14px] text-[var(--muted)]">
                   Sem fidelidade. Cancela quando quiser.
                 </p>

@@ -6,7 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 let _stripe: Stripe | undefined;
 
-function stripeClient(): Stripe {
+export function stripeClient(): Stripe {
   if (_stripe) return _stripe;
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) {
@@ -17,7 +17,7 @@ function stripeClient(): Stripe {
   return _stripe;
 }
 
-function precoParaPlano(plano: "mensal" | "anual"): string {
+export function precoParaPlano(plano: "mensal" | "anual"): string {
   const priceId =
     plano === "mensal" ? process.env.STRIPE_PRICE_ID_MENSAL : process.env.STRIPE_PRICE_ID_ANUAL;
   if (!priceId) {
