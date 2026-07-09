@@ -15,16 +15,16 @@ describe("useOnlineStatus", () => {
     cleanup();
   });
 
-  it("começa true quando navigator.onLine é true", () => {
+  it("começa true mesmo quando navigator.onLine é true", () => {
     setNavigatorOnLine(true);
     const { result } = renderHook(() => useOnlineStatus());
     expect(result.current).toBe(true);
   });
 
-  it("começa false quando navigator.onLine é false", () => {
+  it("começa true mesmo quando navigator.onLine é false (evita flash de 'sem conexão' no mount/reload)", () => {
     setNavigatorOnLine(false);
     const { result } = renderHook(() => useOnlineStatus());
-    expect(result.current).toBe(false);
+    expect(result.current).toBe(true);
   });
 
   it("vira false ao disparar o evento 'offline'", () => {
