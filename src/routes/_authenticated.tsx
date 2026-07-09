@@ -26,6 +26,12 @@ function isentoDeAssinatura(pathname: string): boolean {
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
+    // NOTA DE SEGURANÇA: este guard é client-only (retorna no SSR logo abaixo) e
+    // serve pra NAVEGAÇÃO, não como fronteira de segurança. A entitlement real é
+    // imposta no banco por RLS — a usuária não forja `plano` (congelado na policy
+    // de update, migração 20260709170000) nem `assinaturas.status` (sem policy de
+    // escrita pra ela; só o webhook grava). Furar este redirect no máximo deixa
+    // ver os PRÓPRIOS dados sem pagar; nunca dado de terceiros.
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
     if (data.session) {
