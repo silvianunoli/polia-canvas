@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAcaoAdminServer } from "@/lib/audit-log.server";
+import { emailPolia } from "@/lib/email-template";
 
 const emailInput = z.object({ email: z.string().trim().toLowerCase().email().max(255) });
 
@@ -119,6 +120,13 @@ export const enviarConvite = createServerFn({ method: "POST" })
         to: [data.email],
         subject: "Você foi convidada pra Pólia",
         text: `Você tem acesso liberado à Pólia, sem custo.\n\nAceita o convite e cria sua conta:\n${link}`,
+        html: emailPolia({
+          preheader: "Seu acesso à Pólia está liberado.",
+          headline: "Você foi convidada pra Pólia",
+          paragrafos: ["Alguém liberou seu acesso à Pólia, sem custo. É só aceitar o convite e criar sua conta."],
+          ctaLabel: "Aceitar convite",
+          ctaUrl: link,
+        }),
       }),
     });
     if (!resp.ok) {

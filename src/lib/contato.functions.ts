@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { emailPolia, escapeHtml } from "@/lib/email-template";
 
 const inputSchema = z.object({
   nome: z.string().trim().min(2).max(120),
@@ -52,6 +53,14 @@ export const enviarContato = createServerFn({ method: "POST" })
           reply_to: data.email,
           subject: `[Contato] ${data.assunto} — ${data.nome}`,
           text: `${data.mensagem}\n\n—\n${data.nome} <${data.email}>`,
+          html: emailPolia({
+            preheader: escapeHtml(`${data.assunto} — ${data.nome}`),
+            headline: escapeHtml(data.assunto),
+            paragrafos: [
+              escapeHtml(data.mensagem).replace(/\n/g, "<br />"),
+              `— ${escapeHtml(data.nome)} &lt;${escapeHtml(data.email)}&gt;`,
+            ],
+          }),
         }),
       });
       if (!resp.ok) {
