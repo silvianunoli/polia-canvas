@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { TOTAL_MODULOS } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -14,16 +15,16 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 type AlertaParada = {
   id: string;
   nome: string;
-  etapa_atual: number | null;
+  modulo_atual: number;
   dias_parada: number;
   ultima_atividade: string;
 };
 
 function AdminHome() {
   const [stats, setStats] = useState({
-    ecua_m: 0,
+    mod_m: 0,
     ativacao_d7: 0,
-    mediana_etapa: 1,
+    mediana_modulo: 0,
     wau2: 0,
     retencao_d30: 0,
     total_cadastros: 0,
@@ -35,73 +36,105 @@ function AdminHome() {
 
   useEffect(() => {
     (async () => {
-      const inicioMes = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
       const dias14 = new Date(Date.now() - 14 * 86400000).toISOString();
       const dias10 = new Date(Date.now() - 10 * 86400000).toISOString();
       const dias7 = new Date(Date.now() - 7 * 86400000).toISOString();
       const dias30 = new Date(Date.now() - 30 * 86400000).toISOString();
+      const dias37 = new Date(Date.now() - 37 * 86400000).toISOString();
 
       const [
         { count: totalCadastros },
         { count: listaEspera },
         { data: profilesAtivos },
-        { data: ativadasD7 },
-        { data: profilesAll },
+        { data: cadastrosD30 },
+        { data: cohortD30 },
+        { data: secoesFeitas },
       ] = await Promise.all([
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("lista_espera").select("*", { count: "exact", head: true }),
-        supabase.from("profiles").select("etapa_atual,updated_at").gte("updated_at", dias14),
+        supabase.from("profiles").select("id,full_name,updated_at").gte("updated_at", dias14),
+        supabase.from("profiles").select("id,created_at").gte("created_at", dias30),
         supabase
           .from("profiles")
-          .select("id,created_at,star_1_completed_at")
-          .gte("created_at", dias30),
-        supabase.from("profiles").select("etapa_atual").gt("etapa_atual", 0),
+          .select("id,updated_at")
+          .gte("created_at", dias37)
+          .lt("created_at", dias30),
+        supabase.from("planejamento_secoes").select("user_id,modulo,concluido_em").eq("concluido", true),
       ]);
 
-      const wau2 = profilesAtivos?.length ?? 0;
-      const etapas = (profilesAll ?? []).map((p) => p.etapa_atual ?? 0).sort((a, b) => a - b);
-      const medianaEtapa = etapas.length ? etapas[Math.floor(etapas.length / 2)] : 1;
+      // Módulo mais avançado que cada usuária já concluiu ao menos 1 seção,
+      // e a data em que ela concluiu a 1ª seção do módulo 1 (marco de ativação).
+      const maxModuloPorUsuaria = new Map<string, number>();
+      const primeiraConclusaoM1 = new Map<string, string>();
+      (secoesFeitas ?? []).forEach((s) => {
+        const atual = maxModuloPorUsuaria.get(s.user_id) ?? 0;
+        if (s.modulo > atual) maxModuloPorUsuaria.set(s.user_id, s.modulo);
+        if (s.modulo === 1) {
+          const existente = primeiraConclusaoM1.get(s.user_id);
+          if (!existente || s.concluido_em < existente) {
+            primeiraConclusaoM1.set(s.user_id, s.concluido_em);
+          }
+        }
+      });
 
-      const ativacaoNum = (ativadasD7 ?? []).filter((p) => {
-        if (!p.star_1_completed_at) return false;
-        return (
-          new Date(p.star_1_completed_at).getTime() - new Date(p.created_at).getTime() <=
-          7 * 86400000
-        );
-      }).length;
-      const ativacaoD7 = ativadasD7?.length
-        ? Math.round((ativacaoNum / ativadasD7.length) * 100)
+      const wau2 = profilesAtivos?.length ?? 0;
+      const modulosAtivas = (profilesAtivos ?? [])
+        .map((p) => maxModuloPorUsuaria.get(p.id) ?? 0)
+        .sort((a, b) => a - b);
+      const medianaModulo = modulosAtivas.length
+        ? modulosAtivas[Math.floor(modulosAtivas.length / 2)]
         : 0;
 
-      // ECUA-M: total etapas completadas no mes / ativas
-      const ecuaM =
-        wau2 > 0 ? profilesAtivos!.reduce((s, p) => s + (p.etapa_atual ?? 0), 0) / wau2 : 0;
+      // Ativação D7: completou a 1ª seção do módulo 1 em até 7 dias do cadastro.
+      const ativacaoNum = (cadastrosD30 ?? []).filter((p) => {
+        const dataM1 = primeiraConclusaoM1.get(p.id);
+        if (!dataM1) return false;
+        return new Date(dataM1).getTime() - new Date(p.created_at).getTime() <= 7 * 86400000;
+      }).length;
+      const ativacaoD7 = cadastrosD30?.length
+        ? Math.round((ativacaoNum / cadastrosD30.length) * 100)
+        : 0;
+
+      // Retenção D30: de quem se cadastrou entre 30 e 37 dias atrás, quantas
+      // ainda tiveram atividade nos últimos 7 dias.
+      const retidas = (cohortD30 ?? []).filter((p) => p.updated_at >= dias7).length;
+      const retencaoD30 = cohortD30?.length ? Math.round((retidas / cohortD30.length) * 100) : 0;
+
+      // MOD-M: módulos concluídos por usuária ativa (14 dias)
+      const modM =
+        wau2 > 0
+          ? (profilesAtivos ?? []).reduce((s, p) => s + (maxModuloPorUsuaria.get(p.id) ?? 0), 0) /
+            wau2
+          : 0;
 
       const { data: paradas } = await supabase
         .from("profiles")
-        .select("id,full_name,etapa_atual,updated_at")
+        .select("id,full_name,updated_at")
         .lt("updated_at", dias10)
-        .gt("etapa_atual", 0)
-        .is("jornada_completed_at", null)
         .order("updated_at", { ascending: true })
-        .limit(5);
+        .limit(30);
+
+      const paradasComProgresso = (paradas ?? [])
+        .map((p) => ({ ...p, modulo: maxModuloPorUsuaria.get(p.id) ?? 0 }))
+        .filter((p) => p.modulo >= 1 && p.modulo < TOTAL_MODULOS)
+        .slice(0, 5);
 
       setAlertasVermelhos(
-        (paradas ?? []).map((p) => ({
+        paradasComProgresso.map((p) => ({
           id: p.id,
           nome: p.full_name ?? "Sem nome",
-          etapa_atual: p.etapa_atual,
+          modulo_atual: p.modulo,
           dias_parada: Math.floor((Date.now() - new Date(p.updated_at).getTime()) / 86400000),
           ultima_atividade: new Date(p.updated_at).toLocaleDateString("pt-BR"),
         })),
       );
 
       setStats({
-        ecua_m: ecuaM,
+        mod_m: modM,
         ativacao_d7: ativacaoD7,
-        mediana_etapa: medianaEtapa,
+        mediana_modulo: medianaModulo,
         wau2,
-        retencao_d30: 0,
+        retencao_d30: retencaoD30,
         total_cadastros: totalCadastros ?? 0,
         lista_espera_total: listaEspera ?? 0,
       });
@@ -163,12 +196,12 @@ function AdminHome() {
       tooltip: "em 7 dias depois do cadastro",
       valor: `${stats.ativacao_d7}%`,
       ok: stats.ativacao_d7 >= 40,
-      desc: "completaram E1 em 7 dias",
+      desc: "concluiu M1 em 7 dias",
     },
     {
-      label: "Mediana de Etapa",
-      tooltip: "etapa onde metade das ativas está",
-      valor: `E${stats.mediana_etapa}`,
+      label: "Mediana de Módulo",
+      tooltip: "módulo onde metade das ativas está",
+      valor: `M${stats.mediana_modulo}`,
       ok: true,
       desc: "onde metade das ativas está",
     },
@@ -183,53 +216,50 @@ function AdminHome() {
     {
       label: "Retenção",
       sigla: "D30",
-      tooltip: "trinta dias depois do cadastro",
+      tooltip: "de quem se cadastrou há ~30 dias, quantas seguem ativas",
       valor: `${stats.retencao_d30}%`,
       ok: stats.retencao_d30 >= 35,
-      desc: "coorte do mês anterior",
+      desc: "coorte de 30-37 dias atrás",
     },
     { label: "Total cadastros", valor: stats.total_cadastros, ok: true, desc: "desde o início" },
   ];
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="bg-[#1A1A2E] rounded-2xl p-8 mb-6">
-        <p className="font-mono text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-2 flex items-center gap-1.5">
-          <span>NORTH STAR · ECUA-M</span>
+      <div className="mb-6 rounded-2xl bg-[var(--ink)] p-8">
+        <p className="mb-2 flex items-center gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--secondary)]">
+          <span>NORTH STAR · MÓD-M</span>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 type="button"
-                aria-label="O que é ECUA-M"
-                className="inline-flex items-center justify-center min-h-[24px] min-w-[24px] text-[#C96B3E]/70 hover:text-[#C96B3E]"
+                aria-label="O que é MÓD-M"
+                className="inline-flex min-h-[24px] min-w-[24px] items-center justify-center text-[var(--secondary)]/70 hover:text-[var(--secondary)]"
               >
                 <HelpCircle size={14} />
               </button>
             </TooltipTrigger>
-            <TooltipContent>etapas completadas por usuária ativa este mês</TooltipContent>
+            <TooltipContent>módulos do Planejamento concluídos por usuária ativa</TooltipContent>
           </Tooltip>
         </p>
-        <p className="font-serif text-[#FDF8F5] text-[56px] leading-none mb-1">
-          {stats.ecua_m.toFixed(1)}
+        <p className="font-fraunces mb-1 text-[56px] leading-none text-white">
+          {stats.mod_m.toFixed(1)}
         </p>
-        <p className="font-sans text-[#D8D2CC] text-[14px] opacity-60">
-          etapas completadas por usuária ativa este mês · meta: acima de 1.5
+        <p className="font-sans text-[14px] text-white/60">
+          módulos concluídos por usuária ativa (14 dias) · meta: acima de 1
         </p>
-        <div className="mt-4 w-full h-2 bg-white/10 rounded-full">
+        <div className="mt-4 h-2 w-full rounded-full bg-white/10">
           <div
-            className="h-2 bg-[#C96B3E] rounded-full transition-all"
-            style={{ width: `${Math.min((stats.ecua_m / 3) * 100, 100)}%` }}
+            className="h-2 rounded-full bg-[var(--secondary)] transition-all"
+            style={{ width: `${Math.min((stats.mod_m / TOTAL_MODULOS) * 100, 100)}%` }}
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
         {metricas.map((item) => (
-          <div
-            key={item.label}
-            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]"
-          >
-            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2 flex items-center gap-1">
+          <div key={item.label} className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               <span>
                 {item.label}
                 {item.sigla ? ` ${item.sigla}` : ""}
@@ -240,7 +270,7 @@ function AdminHome() {
                     <button
                       type="button"
                       aria-label={`O que é ${item.sigla ?? item.label}`}
-                      className="inline-flex items-center justify-center min-h-[20px] min-w-[20px] text-[#1A1A2E]/40 hover:text-[#1A1A2E]/70"
+                      className="inline-flex min-h-[20px] min-w-[20px] items-center justify-center text-[var(--muted)] hover:text-[var(--ink-soft)]"
                     >
                       <HelpCircle size={11} />
                     </button>
@@ -250,22 +280,23 @@ function AdminHome() {
               )}
             </p>
             <p
-              className={`font-serif text-[32px] leading-none mb-1 ${item.ok ? "text-[#2D6A4F]" : "text-[#C0392B]"}`}
+              className="font-fraunces mb-1 text-[32px] leading-none"
+              style={{ color: item.ok ? "var(--secondary-text)" : "var(--danger)" }}
             >
               {item.valor}
             </p>
-            <p className="font-sans text-[#1A1A2E] text-[11px] opacity-40">{item.desc}</p>
+            <p className="font-sans text-[11px] text-[var(--muted)]">{item.desc}</p>
           </div>
         ))}
       </div>
 
-      <div className="space-y-3 mb-6">
-        <p className="font-mono text-[10px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40">
-          ATENÇÃO IMEDIATA
+      <div className="mb-6 space-y-3">
+        <p className="font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+          Atenção imediata
         </p>
         {alertasVermelhos.length === 0 ? (
-          <div className="bg-[rgba(44,106,79,0.04)] border border-[rgba(44,106,79,0.1)] rounded-xl p-4">
-            <p className="font-sans text-[#2D6A4F] text-[13px] opacity-70">
+          <div className="rounded-xl border border-[var(--secondary)]/30 bg-[var(--secondary-light)]/30 p-4">
+            <p className="font-sans text-[13px] text-[var(--secondary-text)]">
               Nenhum alerta crítico no momento.
             </p>
           </div>
@@ -273,20 +304,20 @@ function AdminHome() {
           alertasVermelhos.map((u) => (
             <div
               key={u.id}
-              className="bg-[rgba(192,57,43,0.06)] border border-[rgba(192,57,43,0.20)] rounded-xl p-4 flex items-center justify-between"
+              className="flex items-center justify-between rounded-xl border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-4"
             >
               <div>
-                <p className="font-sans text-[#C0392B] text-[13px] font-medium">
-                  {u.nome} · parada há {u.dias_parada} dias na Etapa {u.etapa_atual}
+                <p className="font-sans text-[13px] font-medium text-[var(--danger)]">
+                  {u.nome} · parada há {u.dias_parada} dias no Módulo {u.modulo_atual}
                 </p>
-                <p className="font-sans text-[#1A1A2E] text-[12px] opacity-50">
+                <p className="font-sans text-[12px] text-[var(--ink-soft)]">
                   última atividade: {u.ultima_atividade}
                 </p>
               </div>
               <Link
                 to="/admin/usuarios/$id"
                 params={{ id: u.id }}
-                className="font-sans text-[#C0392B] text-[12px] hover:underline"
+                className="font-sans text-[12px] text-[var(--danger)] hover:underline"
               >
                 Ver perfil →
               </Link>
@@ -296,27 +327,24 @@ function AdminHome() {
       </div>
 
       {/* SAÚDE DO SISTEMA (24h) — dados reais de edge_function_logs */}
-      <p className="font-mono text-[10px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-3">
-        SAÚDE DO SISTEMA · 24H
+      <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+        Saúde do sistema · 24h
       </p>
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
-          { label: "Eventos", valor: String(saude.eventos24h), cor: "#1A7FAD" },
+          { label: "Eventos", valor: String(saude.eventos24h), cor: "var(--ink)" },
           {
             label: "Erros",
             valor: String(saude.erros24h),
-            cor: saude.erros24h > 0 ? "#C0392B" : "#2D6A4F",
+            cor: saude.erros24h > 0 ? "var(--danger)" : "var(--secondary-text)",
           },
-          { label: "Latência média", valor: `${saude.latencia} ms`, cor: "#1A1A2E" },
+          { label: "Latência média", valor: `${saude.latencia} ms`, cor: "var(--ink)" },
         ].map((m) => (
-          <div
-            key={m.label}
-            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]"
-          >
-            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-2">
+          <div key={m.label} className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {m.label}
             </p>
-            <p className="font-serif text-[32px] leading-none" style={{ color: m.cor }}>
+            <p className="font-fraunces text-[32px] leading-none" style={{ color: m.cor }}>
               {m.valor}
             </p>
           </div>
@@ -324,29 +352,34 @@ function AdminHome() {
       </div>
 
       {/* CENSO DE DADOS — contagens reais das tabelas que o admin enxerga */}
-      <div className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)] mb-6">
-        <p className="font-mono text-[10px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-4">
-          CENSO DE DADOS
+      <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-6">
+        <p className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+          Censo de dados
         </p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {censo.map((c) => (
             <div key={c.label}>
-              <p className="font-serif text-[28px] leading-none text-[#1A1A2E]">{c.valor}</p>
-              <p className="font-sans text-[12px] text-[#1A1A2E] opacity-50 mt-1">{c.label}</p>
+              <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">{c.valor}</p>
+              <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{c.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]">
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-1">
-              LISTA DE ESPERA
+            <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
+              Lista de espera
             </p>
-            <p className="font-serif text-[#1A1A2E] text-[32px]">{stats.lista_espera_total}</p>
+            <p className="font-fraunces text-[32px] text-[var(--ink)]">
+              {stats.lista_espera_total}
+            </p>
           </div>
-          <Link to="/admin/cms" className="font-sans text-[#C96B3E] text-[13px] hover:underline">
+          <Link
+            to="/admin/crm"
+            className="font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
+          >
             Gerenciar →
           </Link>
         </div>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { MODULOS, TOTAL_MODULOS } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/admin/funil")({
   head: () => ({
@@ -8,20 +9,6 @@ export const Route = createFileRoute("/_authenticated/admin/funil")({
   }),
   component: AdminFunil,
 });
-
-const NOMES_ETAPAS = [
-  "Posicionamento",
-  "Voz da marca",
-  "Produto",
-  "Presença",
-  "Rotina",
-  "Vendas",
-  "Cuidado",
-  "Conteúdo",
-  "Crescimento",
-  "Rede",
-  "Visão",
-];
 
 type EtapaFunil = { n: number; nome: string; concluidas: number; dropoff: number };
 
@@ -32,22 +19,30 @@ function AdminFunil() {
 
   useEffect(() => {
     (async () => {
-      const { data, count } = await supabase
-        .from("profiles")
-        .select("etapa_atual,updated_at", { count: "exact" });
+      const [{ data: profiles, count }, { data: secoes }] = await Promise.all([
+        supabase.from("profiles").select("id,updated_at", { count: "exact" }),
+        supabase.from("planejamento_secoes").select("user_id,modulo").eq("concluido", true),
+      ]);
       const totalC = count ?? 0;
       setTotal(totalC);
-      const arr = data ?? [];
-      const contagem: number[] = Array(12).fill(0);
-      arr.forEach((p) => {
-        for (let i = 1; i <= (p.etapa_atual ?? 0); i++) contagem[i]++;
+
+      // Módulo mais avançado que cada usuária já concluiu ao menos 1 seção.
+      const maxModuloPorUsuaria = new Map<string, number>();
+      (secoes ?? []).forEach((s) => {
+        const atual = maxModuloPorUsuaria.get(s.user_id) ?? 0;
+        if (s.modulo > atual) maxModuloPorUsuaria.set(s.user_id, s.modulo);
       });
-      const out = NOMES_ETAPAS.map((nome, i) => {
-        const n = i + 1;
-        const concluidas = contagem[n];
-        const anterior = i === 0 ? totalC : contagem[i];
+      const maxModulos = Array.from(maxModuloPorUsuaria.values());
+
+      const contagem: number[] = Array(TOTAL_MODULOS + 1).fill(0);
+      maxModulos.forEach((max) => {
+        for (let i = 1; i <= max; i++) contagem[i]++;
+      });
+      const out = MODULOS.map((m) => {
+        const concluidas = contagem[m.n];
+        const anterior = m.n === 1 ? totalC : contagem[m.n - 1];
         const dropoff = anterior > 0 ? Math.round(((anterior - concluidas) / anterior) * 100) : 0;
-        return { n, nome, concluidas, dropoff };
+        return { n: m.n, nome: m.nome, concluidas, dropoff };
       });
       setEtapas(out);
 
@@ -55,10 +50,11 @@ function AdminFunil() {
       let prog = 0,
         estag = 0,
         sil = 0;
-      arr.forEach((p) => {
+      (profiles ?? []).forEach((p) => {
         const ts = new Date(p.updated_at).getTime();
+        const maxModulo = maxModuloPorUsuaria.get(p.id) ?? 0;
         if (ts < dias14) sil++;
-        else if ((p.etapa_atual ?? 0) >= 2) prog++;
+        else if (maxModulo >= 1) prog++;
         else estag++;
       });
       setSeg({ progressoras: prog, estagnadas: estag, silenciosas: sil });
@@ -67,35 +63,38 @@ function AdminFunil() {
 
   return (
     <>
-      <h1 className="font-serif text-[#1A1A2E] text-[40px] mb-8">Funil de jornada</h1>
+      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Funil de jornada</h1>
+      <p className="mb-8 font-sans text-[14px] text-[var(--muted)]">
+        Quantas usuárias chegaram em cada módulo do Planejamento.
+      </p>
 
-      <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] mb-6">
-        <p className="font-mono text-[9px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-6">
-          PROGRESSO POR ETAPA
+      <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-8">
+        <p className="mb-6 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+          Progresso por módulo
         </p>
         {etapas.map((etapa, i) => (
           <div key={etapa.n} className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <p className="font-sans text-[#1A1A2E] text-[13px]">
-                <span className="opacity-40 mr-2">E{etapa.n}</span> {etapa.nome}
+            <div className="mb-1 flex items-center justify-between">
+              <p className="font-sans text-[13px] text-[var(--ink)]">
+                <span className="mr-2 text-[var(--muted)]">M{etapa.n}</span> {etapa.nome}
               </p>
               <div className="flex items-center gap-4">
-                <p className="font-sans text-[#1A1A2E] text-[13px] opacity-60">
+                <p className="font-sans text-[13px] text-[var(--ink-soft)]">
                   {etapa.concluidas} usuárias
                 </p>
                 {i > 0 && etapa.dropoff > 40 && (
-                  <span className="font-mono text-[9px] tracking-[1px] uppercase text-[#C96B3E] bg-[rgba(201,107,62,0.08)] px-2 py-0.5 rounded-full">
+                  <span className="rounded-full bg-[var(--danger-soft)] px-2 py-0.5 font-sans text-[10px] font-medium uppercase tracking-[1px] text-[var(--danger)]">
                     -{etapa.dropoff}% drop
                   </span>
                 )}
               </div>
             </div>
-            <div className="w-full h-3 bg-[#F5F5FA] rounded-full">
+            <div className="h-3 w-full rounded-full bg-[var(--line)]">
               <div
                 className="h-3 rounded-full transition-all"
                 style={{
                   width: `${total ? (etapa.concluidas / total) * 100 : 0}%`,
-                  backgroundColor: etapa.dropoff > 40 ? "#C9407A" : "#C96B3E",
+                  backgroundColor: etapa.dropoff > 40 ? "var(--danger)" : "var(--secondary)",
                 }}
               />
             </div>
@@ -103,36 +102,36 @@ function AdminFunil() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           {
             label: "Progressoras Ativas",
-            desc: "etapa ≥ 2 e ativas em 14 dias",
+            desc: "concluiu ao menos 1 módulo e ativa em 14 dias",
             count: seg.progressoras,
-            cor: "#2D6A4F",
+            cor: "var(--secondary-text)",
           },
           {
             label: "Estagnadas",
-            desc: "ativas mas sem progredir",
+            desc: "ativa mas sem nenhum módulo concluído",
             count: seg.estagnadas,
-            cor: "#C96B3E",
+            cor: "var(--ink-soft)",
           },
           {
             label: "Silenciosas",
             desc: "sem acesso há mais de 14 dias",
             count: seg.silenciosas,
-            cor: "#C9407A",
+            cor: "var(--danger)",
           },
         ].map((s) => (
-          <div
-            key={s.label}
-            className="bg-white rounded-2xl p-6 border border-[rgba(26,26,46,0.06)]"
-          >
-            <p className="font-serif text-[48px] leading-none mb-2" style={{ color: s.cor }}>
+          <div key={s.label} className="rounded-2xl border border-[var(--line)] bg-white p-6">
+            <p
+              className="font-fraunces mb-2 text-[48px] leading-none"
+              style={{ color: s.cor }}
+            >
               {s.count}
             </p>
-            <p className="font-sans text-[#1A1A2E] text-[14px] font-medium mb-1">{s.label}</p>
-            <p className="font-sans text-[#1A1A2E] text-[12px] opacity-40">{s.desc}</p>
+            <p className="mb-1 font-sans text-[14px] font-medium text-[var(--ink)]">{s.label}</p>
+            <p className="font-sans text-[12px] text-[var(--muted)]">{s.desc}</p>
           </div>
         ))}
       </div>

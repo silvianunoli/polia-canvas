@@ -17,6 +17,7 @@ import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ContatoRouteImport } from './routes/contato'
+import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
 import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -56,15 +57,16 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedEtapaNRouteImport } from './routes/_authenticated/etapa.$n'
 import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
 import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
+import { Route as AuthenticatedAdminQualidadeRouteImport } from './routes/_authenticated/admin.qualidade'
+import { Route as AuthenticatedAdminNegocioRouteImport } from './routes/_authenticated/admin.negocio'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
+import { Route as AuthenticatedAdminGovernancaRouteImport } from './routes/_authenticated/admin.governanca'
 import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authenticated/admin.funil'
 import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
-import { Route as AuthenticatedAdminFeedbackRouteImport } from './routes/_authenticated/admin.feedback'
 import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated/admin.crm'
-import { Route as AuthenticatedAdminConvitesRouteImport } from './routes/_authenticated/admin.convites'
-import { Route as AuthenticatedAdminComunicacaoRouteImport } from './routes/_authenticated/admin.comunicacao'
-import { Route as AuthenticatedAdminCmsRouteImport } from './routes/_authenticated/admin.cms'
-import { Route as AuthenticatedAdminUsuariosIndexRouteImport } from './routes/_authenticated/admin.usuarios.index'
+import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
+import { Route as AuthenticatedAdminAlertasRouteImport } from './routes/_authenticated/admin.alertas'
 import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_authenticated/admin.chamados.index'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
@@ -108,6 +110,11 @@ const DesignSystemRoute = DesignSystemRouteImport.update({
 const ContatoRoute = ContatoRouteImport.update({
   id: '/contato',
   path: '/contato',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
+  id: '/compra-confirmada',
+  path: '/compra-confirmada',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
@@ -314,11 +321,29 @@ const AuthenticatedBlogAdminIdRoute =
     path: '/blog-admin/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminQualidadeRoute =
+  AuthenticatedAdminQualidadeRouteImport.update({
+    id: '/qualidade',
+    path: '/qualidade',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminNegocioRoute =
+  AuthenticatedAdminNegocioRouteImport.update({
+    id: '/negocio',
+    path: '/negocio',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminGovernancaRoute =
+  AuthenticatedAdminGovernancaRouteImport.update({
+    id: '/governanca',
+    path: '/governanca',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminFunilRoute = AuthenticatedAdminFunilRouteImport.update({
   id: '/funil',
   path: '/funil',
@@ -329,38 +354,27 @@ const AuthenticatedAdminFlagsRoute = AuthenticatedAdminFlagsRouteImport.update({
   path: '/flags',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedAdminFeedbackRoute =
-  AuthenticatedAdminFeedbackRouteImport.update({
-    id: '/feedback',
-    path: '/feedback',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
   id: '/crm',
   path: '/crm',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
-const AuthenticatedAdminConvitesRoute =
-  AuthenticatedAdminConvitesRouteImport.update({
-    id: '/convites',
-    path: '/convites',
+const AuthenticatedAdminAuditoriaRoute =
+  AuthenticatedAdminAuditoriaRouteImport.update({
+    id: '/auditoria',
+    path: '/auditoria',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminComunicacaoRoute =
-  AuthenticatedAdminComunicacaoRouteImport.update({
-    id: '/comunicacao',
-    path: '/comunicacao',
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminCmsRoute = AuthenticatedAdminCmsRouteImport.update({
-  id: '/cms',
-  path: '/cms',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminUsuariosIndexRoute =
-  AuthenticatedAdminUsuariosIndexRouteImport.update({
-    id: '/usuarios/',
-    path: '/usuarios/',
+const AuthenticatedAdminAlertasRoute =
+  AuthenticatedAdminAlertasRouteImport.update({
+    id: '/alertas',
+    path: '/alertas',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminChamadosIndexRoute =
@@ -392,6 +406,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
@@ -426,14 +441,16 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/admin/cms': typeof AuthenticatedAdminCmsRoute
-  '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
-  '/admin/convites': typeof AuthenticatedAdminConvitesRoute
+  '/admin/alertas': typeof AuthenticatedAdminAlertasRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -447,12 +464,12 @@ export interface FileRoutesByFullPath {
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
-  '/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
@@ -486,14 +503,16 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
-  '/admin/cms': typeof AuthenticatedAdminCmsRoute
-  '/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
-  '/admin/convites': typeof AuthenticatedAdminConvitesRoute
+  '/admin/alertas': typeof AuthenticatedAdminAlertasRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -507,7 +526,6 @@ export interface FileRoutesByTo {
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados': typeof AuthenticatedAdminChamadosIndexRoute
-  '/admin/usuarios': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -515,6 +533,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/ajuda': typeof AjudaRoute
   '/como-funciona': typeof ComoFuncionaRoute
+  '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
@@ -549,14 +568,16 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/_authenticated/admin/cms': typeof AuthenticatedAdminCmsRoute
-  '/_authenticated/admin/comunicacao': typeof AuthenticatedAdminComunicacaoRoute
-  '/_authenticated/admin/convites': typeof AuthenticatedAdminConvitesRoute
+  '/_authenticated/admin/alertas': typeof AuthenticatedAdminAlertasRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
   '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/_authenticated/admin/feedback': typeof AuthenticatedAdminFeedbackRoute
   '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
   '/_authenticated/admin/funil': typeof AuthenticatedAdminFunilRoute
+  '/_authenticated/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
+  '/_authenticated/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/_authenticated/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/_authenticated/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -570,7 +591,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/_authenticated/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
-  '/_authenticated/admin/usuarios/': typeof AuthenticatedAdminUsuariosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -578,6 +598,7 @@ export interface FileRouteTypes {
     | '/'
     | '/ajuda'
     | '/como-funciona'
+    | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
@@ -612,14 +633,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/admin/cms'
-    | '/admin/comunicacao'
-    | '/admin/convites'
+    | '/admin/alertas'
+    | '/admin/analytics'
+    | '/admin/auditoria'
     | '/admin/crm'
-    | '/admin/feedback'
     | '/admin/flags'
     | '/admin/funil'
+    | '/admin/governanca'
     | '/admin/logs'
+    | '/admin/negocio'
+    | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/etapa/$n'
@@ -633,12 +656,12 @@ export interface FileRouteTypes {
     | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
     | '/admin/chamados/'
-    | '/admin/usuarios/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/ajuda'
     | '/como-funciona'
+    | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
@@ -672,14 +695,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog'
-    | '/admin/cms'
-    | '/admin/comunicacao'
-    | '/admin/convites'
+    | '/admin/alertas'
+    | '/admin/analytics'
+    | '/admin/auditoria'
     | '/admin/crm'
-    | '/admin/feedback'
     | '/admin/flags'
     | '/admin/funil'
+    | '/admin/governanca'
     | '/admin/logs'
+    | '/admin/negocio'
+    | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/etapa/$n'
@@ -693,13 +718,13 @@ export interface FileRouteTypes {
     | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
     | '/admin/chamados'
-    | '/admin/usuarios'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/ajuda'
     | '/como-funciona'
+    | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
@@ -734,14 +759,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/_authenticated/admin/cms'
-    | '/_authenticated/admin/comunicacao'
-    | '/_authenticated/admin/convites'
+    | '/_authenticated/admin/alertas'
+    | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/auditoria'
     | '/_authenticated/admin/crm'
-    | '/_authenticated/admin/feedback'
     | '/_authenticated/admin/flags'
     | '/_authenticated/admin/funil'
+    | '/_authenticated/admin/governanca'
     | '/_authenticated/admin/logs'
+    | '/_authenticated/admin/negocio'
+    | '/_authenticated/admin/qualidade'
     | '/_authenticated/blog-admin/$id'
     | '/_authenticated/blog-admin/novo'
     | '/_authenticated/etapa/$n'
@@ -755,7 +782,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/usuarios/$id'
     | '/_authenticated/planejamento/modulo/$n'
     | '/_authenticated/admin/chamados/'
-    | '/_authenticated/admin/usuarios/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -763,6 +789,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AjudaRoute: typeof AjudaRoute
   ComoFuncionaRoute: typeof ComoFuncionaRoute
+  CompraConfirmadaRoute: typeof CompraConfirmadaRoute
   ContatoRoute: typeof ContatoRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
@@ -837,6 +864,13 @@ declare module '@tanstack/react-router' {
       path: '/contato'
       fullPath: '/contato'
       preLoaderRoute: typeof ContatoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compra-confirmada': {
+      id: '/compra-confirmada'
+      path: '/compra-confirmada'
+      fullPath: '/compra-confirmada'
+      preLoaderRoute: typeof CompraConfirmadaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/como-funciona': {
@@ -1112,11 +1146,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlogAdminIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/qualidade': {
+      id: '/_authenticated/admin/qualidade'
+      path: '/qualidade'
+      fullPath: '/admin/qualidade'
+      preLoaderRoute: typeof AuthenticatedAdminQualidadeRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/negocio': {
+      id: '/_authenticated/admin/negocio'
+      path: '/negocio'
+      fullPath: '/admin/negocio'
+      preLoaderRoute: typeof AuthenticatedAdminNegocioRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/logs': {
       id: '/_authenticated/admin/logs'
       path: '/logs'
       fullPath: '/admin/logs'
       preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/governanca': {
+      id: '/_authenticated/admin/governanca'
+      path: '/governanca'
+      fullPath: '/admin/governanca'
+      preLoaderRoute: typeof AuthenticatedAdminGovernancaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/funil': {
@@ -1133,13 +1188,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFlagsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/feedback': {
-      id: '/_authenticated/admin/feedback'
-      path: '/feedback'
-      fullPath: '/admin/feedback'
-      preLoaderRoute: typeof AuthenticatedAdminFeedbackRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/crm': {
       id: '/_authenticated/admin/crm'
       path: '/crm'
@@ -1147,32 +1195,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/convites': {
-      id: '/_authenticated/admin/convites'
-      path: '/convites'
-      fullPath: '/admin/convites'
-      preLoaderRoute: typeof AuthenticatedAdminConvitesRouteImport
+    '/_authenticated/admin/auditoria': {
+      id: '/_authenticated/admin/auditoria'
+      path: '/auditoria'
+      fullPath: '/admin/auditoria'
+      preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/comunicacao': {
-      id: '/_authenticated/admin/comunicacao'
-      path: '/comunicacao'
-      fullPath: '/admin/comunicacao'
-      preLoaderRoute: typeof AuthenticatedAdminComunicacaoRouteImport
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/cms': {
-      id: '/_authenticated/admin/cms'
-      path: '/cms'
-      fullPath: '/admin/cms'
-      preLoaderRoute: typeof AuthenticatedAdminCmsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/usuarios/': {
-      id: '/_authenticated/admin/usuarios/'
-      path: '/usuarios'
-      fullPath: '/admin/usuarios/'
-      preLoaderRoute: typeof AuthenticatedAdminUsuariosIndexRouteImport
+    '/_authenticated/admin/alertas': {
+      id: '/_authenticated/admin/alertas'
+      path: '/alertas'
+      fullPath: '/admin/alertas'
+      preLoaderRoute: typeof AuthenticatedAdminAlertasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/chamados/': {
@@ -1207,35 +1248,37 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminCmsRoute: typeof AuthenticatedAdminCmsRoute
-  AuthenticatedAdminComunicacaoRoute: typeof AuthenticatedAdminComunicacaoRoute
-  AuthenticatedAdminConvitesRoute: typeof AuthenticatedAdminConvitesRoute
+  AuthenticatedAdminAlertasRoute: typeof AuthenticatedAdminAlertasRoute
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
   AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
-  AuthenticatedAdminFeedbackRoute: typeof AuthenticatedAdminFeedbackRoute
   AuthenticatedAdminFlagsRoute: typeof AuthenticatedAdminFlagsRoute
   AuthenticatedAdminFunilRoute: typeof AuthenticatedAdminFunilRoute
+  AuthenticatedAdminGovernancaRoute: typeof AuthenticatedAdminGovernancaRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
+  AuthenticatedAdminNegocioRoute: typeof AuthenticatedAdminNegocioRoute
+  AuthenticatedAdminQualidadeRoute: typeof AuthenticatedAdminQualidadeRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
   AuthenticatedAdminUsuariosIdRoute: typeof AuthenticatedAdminUsuariosIdRoute
   AuthenticatedAdminChamadosIndexRoute: typeof AuthenticatedAdminChamadosIndexRoute
-  AuthenticatedAdminUsuariosIndexRoute: typeof AuthenticatedAdminUsuariosIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminCmsRoute: AuthenticatedAdminCmsRoute,
-  AuthenticatedAdminComunicacaoRoute: AuthenticatedAdminComunicacaoRoute,
-  AuthenticatedAdminConvitesRoute: AuthenticatedAdminConvitesRoute,
+  AuthenticatedAdminAlertasRoute: AuthenticatedAdminAlertasRoute,
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
   AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
-  AuthenticatedAdminFeedbackRoute: AuthenticatedAdminFeedbackRoute,
   AuthenticatedAdminFlagsRoute: AuthenticatedAdminFlagsRoute,
   AuthenticatedAdminFunilRoute: AuthenticatedAdminFunilRoute,
+  AuthenticatedAdminGovernancaRoute: AuthenticatedAdminGovernancaRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
+  AuthenticatedAdminNegocioRoute: AuthenticatedAdminNegocioRoute,
+  AuthenticatedAdminQualidadeRoute: AuthenticatedAdminQualidadeRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
   AuthenticatedAdminUsuariosIdRoute: AuthenticatedAdminUsuariosIdRoute,
   AuthenticatedAdminChamadosIndexRoute: AuthenticatedAdminChamadosIndexRoute,
-  AuthenticatedAdminUsuariosIndexRoute: AuthenticatedAdminUsuariosIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
@@ -1311,6 +1354,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AjudaRoute: AjudaRoute,
   ComoFuncionaRoute: ComoFuncionaRoute,
+  CompraConfirmadaRoute: CompraConfirmadaRoute,
   ContatoRoute: ContatoRoute,
   DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,

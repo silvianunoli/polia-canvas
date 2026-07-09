@@ -46,26 +46,25 @@ function AdminLayout() {
   const items = [
     { href: "/admin", label: "Visão geral" },
     { href: "/admin/funil", label: "Funil de jornada" },
-    { href: "/admin/usuarios", label: "Usuárias" },
-    { href: "/admin/convites", label: "Convites" },
-    { href: "/admin/crm", label: "CRM" },
+    { href: "/admin/negocio", label: "Negócio" },
+    { href: "/admin/analytics", label: "Analytics" },
     {
       href: "/admin/chamados",
       label: `Chamados${ticketsAbertos > 0 ? ` (${ticketsAbertos})` : ""}`,
     },
-    { href: "/admin/feedback", label: "Feedback" },
-    { href: "/admin/cms", label: "CMS" },
-    { href: "/admin/comunicacao", label: "Comunicação" },
+    { href: "/admin/qualidade", label: "Qualidade" },
     { href: "/admin/logs", label: "Logs do sistema" },
+    { href: "/admin/alertas", label: "Alertas" },
+    { href: "/admin/governanca", label: "Governança" },
+    { href: "/admin/auditoria", label: "Auditoria" },
     { href: "/admin/flags", label: "Feature Flags" },
-    { href: "/design-system", label: "Design System" },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5FA] flex">
-      <aside className="w-[220px] bg-white border-r border-[rgba(26,26,46,0.06)] flex flex-col py-6 px-4 fixed h-full">
-        <p className="font-serif text-[#1A1A2E] text-[18px] mb-1">Pólia Admin</p>
-        <p className="font-sans text-[#C96B3E] text-[11px] mb-8">{nome}</p>
+    <div className="polia-v3 flex min-h-screen bg-[var(--bg)]">
+      <aside className="fixed flex h-full w-[220px] flex-col border-r border-[var(--line)] bg-white px-4 py-6">
+        <p className="font-fraunces mb-1 text-[18px] text-[var(--ink)]">Pólia Admin</p>
+        <p className="mb-8 font-sans text-[11px] text-[var(--secondary-text)]">{nome}</p>
         <nav className="flex flex-col gap-1">
           {items.map((item) => {
             const active =
@@ -75,10 +74,10 @@ function AdminLayout() {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`font-sans text-[14px] px-3 py-2 rounded-lg transition-colors ${
+                className={`rounded-lg border-l-[3px] px-3 py-2 font-sans text-[14px] no-underline transition-colors ${
                   active
-                    ? "bg-[rgba(201,107,62,0.08)] text-[#C96B3E] font-medium"
-                    : "text-[#1A1A2E] opacity-60 hover:opacity-100 hover:bg-[rgba(26,26,46,0.04)]"
+                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] font-medium text-[var(--secondary-text)]"
+                    : "border-transparent text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                 }`}
               >
                 {item.label}
@@ -89,7 +88,7 @@ function AdminLayout() {
         <div className="mt-auto">
           <Link
             to="/painel"
-            className="font-sans text-[#1A1A2E] text-[12px] opacity-40 hover:opacity-70"
+            className="font-sans text-[12px] text-[var(--muted)] no-underline hover:text-[var(--ink-soft)]"
           >
             ← Voltar ao app
           </Link>

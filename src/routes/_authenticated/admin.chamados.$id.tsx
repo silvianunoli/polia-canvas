@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { logAcaoAdmin } from "@/lib/audit-log";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
   head: () => ({
@@ -64,23 +65,24 @@ function AdminTicket() {
       .from("tickets")
       .update({ status: "resolvido", resolved_at: new Date().toISOString() })
       .eq("id", id);
+    await logAcaoAdmin("resolver_chamado", id, { titulo: ticket?.title });
     carregar();
   };
 
-  if (!ticket) return <p className="font-sans text-[#1A1A2E] opacity-50">Carregando…</p>;
+  if (!ticket) return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
 
   return (
     <div className="max-w-[760px]">
       <Link
         to="/admin/chamados"
-        className="font-sans text-[#C96B3E] text-[13px] hover:underline mb-3 inline-block"
+        className="mb-3 inline-block font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
       >
         ← Chamados
       </Link>
-      <div className="flex items-start justify-between mb-6">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="font-serif text-[#1A1A2E] text-[32px]">{ticket.title}</h1>
-          <p className="font-sans text-[#1A1A2E] text-[13px] opacity-40">
+          <h1 className="font-fraunces text-[32px] text-[var(--ink)]">{ticket.title}</h1>
+          <p className="font-sans text-[13px] text-[var(--muted)]">
             {userNome} · {ticket.module_ref ?? "sem contexto"} ·{" "}
             {new Date(ticket.created_at).toLocaleString("pt-BR")}
           </p>
@@ -88,18 +90,20 @@ function AdminTicket() {
         {ticket.status !== "resolvido" && (
           <button
             onClick={resolverTicket}
-            className="bg-[#2D6A4F] text-[#FDF8F5] font-sans text-[14px] rounded-xl px-5 py-2 hover:bg-[#1E5038] transition-colors"
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
           >
             Resolver
           </button>
         )}
       </div>
 
-      <div className="bg-white border border-[rgba(26,26,46,0.06)] rounded-2xl p-5 mb-6">
-        <p className="font-sans text-[14px] text-[#1A1A2E] whitespace-pre-wrap">{ticket.body}</p>
+      <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-5">
+        <p className="whitespace-pre-wrap font-sans text-[14px] text-[var(--ink)]">
+          {ticket.body}
+        </p>
       </div>
 
-      <div className="space-y-4 mb-6">
+      <div className="mb-6 space-y-4">
         {mensagens.map((msg) => (
           <div
             key={msg.id}
@@ -108,15 +112,21 @@ function AdminTicket() {
             <div
               className={`max-w-[80%] rounded-2xl p-5 ${
                 msg.author_role === "admin"
-                  ? "bg-[#1A1A2E] text-[#FDF8F5]"
-                  : "bg-white border border-[rgba(26,26,46,0.06)] text-[#1A1A2E]"
+                  ? "bg-[var(--ink)] text-white"
+                  : "border border-[var(--line)] bg-white text-[var(--ink)]"
               }`}
             >
-              <p className="font-sans text-[14px] leading-relaxed mb-2 whitespace-pre-wrap">
+              <p className="mb-2 whitespace-pre-wrap font-sans text-[14px] leading-relaxed">
                 {msg.body}
               </p>
               <p
-                className={`font-sans text-[11px] ${msg.author_role === "admin" ? "opacity-40" : "opacity-30"}`}
+                className="font-sans text-[11px]"
+                style={{
+                  color:
+                    msg.author_role === "admin"
+                      ? "rgba(255,255,255,0.55)"
+                      : "var(--muted)",
+                }}
               >
                 {msg.author_role === "admin" ? "Você" : userNome} ·{" "}
                 {new Date(msg.created_at).toLocaleString("pt-BR")}
@@ -127,19 +137,19 @@ function AdminTicket() {
       </div>
 
       {ticket.status !== "resolvido" && (
-        <div className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]">
+        <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
           <textarea
             value={resposta}
             onChange={(e) => setResposta(e.target.value)}
             placeholder="Escreva sua resposta…"
             rows={4}
-            className="w-full font-sans text-[#1A1A2E] text-[14px] outline-none resize-none mb-4"
+            className="mb-4 w-full resize-none font-sans text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
           />
           <div className="flex justify-end">
             <button
               onClick={enviarResposta}
               disabled={!resposta.trim()}
-              className="bg-[#C96B3E] text-[#FDF8F5] font-sans font-semibold text-[14px] px-6 py-2.5 rounded-xl hover:bg-[#B85A2D] transition-colors disabled:opacity-50"
+              className="rounded-xl bg-[var(--secondary)] px-6 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               Enviar resposta
             </button>

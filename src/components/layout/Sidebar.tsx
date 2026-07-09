@@ -13,11 +13,11 @@ import {
   Menu,
   ChevronsLeft,
   ChevronsRight,
+  ChevronDown,
   Settings,
   Shield,
   LogOut,
   CalendarDays,
-  Newspaper,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -46,6 +46,12 @@ function isActive(itemTo: string, pathname: string) {
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
 
+const ADMIN_SUBLINKS = [
+  { to: "/blog-admin", label: "Blog", external: true },
+  { to: "/admin/crm", label: "CRM", external: false },
+  { to: "/design-system", label: "Design System", external: false },
+] as const;
+
 async function signOut() {
   await supabase.auth.signOut();
   window.location.href = "/auth/login";
@@ -56,6 +62,7 @@ export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
 
   // ≤1366px: colapsa para ícones automaticamente.
   useEffect(() => {
@@ -66,6 +73,17 @@ export function Sidebar() {
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
+
+  // Abre o submenu de Administração automaticamente se já está numa página dele.
+  useEffect(() => {
+    if (
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/blog-admin") ||
+      pathname.startsWith("/design-system")
+    ) {
+      setAdminOpen(true);
+    }
+  }, [pathname]);
 
   const streakLabel =
     meta.streak > 0
@@ -162,25 +180,71 @@ export function Sidebar() {
               <Settings size={20} aria-hidden="true" />
               {!compact && <span>Configurações</span>}
             </Link>
-            {meta.isAdmin && (
-              <Link
-                to="/admin"
-                onClick={onNavigate}
-                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-              >
-                <Shield size={20} aria-hidden="true" />
-                {!compact && <span>Administração</span>}
-              </Link>
+            {meta.isAdmin && compact && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Link
+                    to="/admin/crm"
+                    onClick={onNavigate}
+                    aria-label="Administração"
+                    className="flex min-h-11 items-center justify-center rounded-lg px-3 text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
+                  >
+                    <Shield size={20} aria-hidden="true" />
+                  </Link>
+                </TooltipTrigger>
+                <TooltipContent side="right">Administração</TooltipContent>
+              </Tooltip>
             )}
-            {meta.isAdmin && (
-              <a
-                href="/blog-admin"
-                onClick={onNavigate}
-                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-              >
-                <Newspaper size={20} aria-hidden="true" />
-                {!compact && <span>Blog</span>}
-              </a>
+            {meta.isAdmin && !compact && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setAdminOpen((o) => !o)}
+                  aria-expanded={adminOpen}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                >
+                  <Shield size={20} aria-hidden="true" />
+                  <span className="flex-1 text-left">Administração</span>
+                  <ChevronDown
+                    size={16}
+                    aria-hidden="true"
+                    className={`transition-transform ${adminOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {adminOpen && (
+                  <div className="ml-8 flex flex-col gap-1 py-1">
+                    {ADMIN_SUBLINKS.map((s) =>
+                      s.external ? (
+                        <a
+                          key={s.to}
+                          href={s.to}
+                          onClick={onNavigate}
+                          className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
+                            pathname.startsWith(s.to)
+                              ? "font-medium text-[var(--ink)]"
+                              : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                          }`}
+                        >
+                          {s.label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={s.to}
+                          to={s.to}
+                          onClick={onNavigate}
+                          className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
+                            isActive(s.to, pathname)
+                              ? "font-medium text-[var(--ink)]"
+                              : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                          }`}
+                        >
+                          {s.label}
+                        </Link>
+                      ),
+                    )}
+                  </div>
+                )}
+              </div>
             )}
             <button
               type="button"

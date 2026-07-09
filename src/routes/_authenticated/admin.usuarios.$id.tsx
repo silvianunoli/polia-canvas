@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { moduloInfo } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/admin/usuarios/$id")({
   head: () => ({
@@ -15,6 +16,7 @@ function AdminUsuarioPerfil() {
   const [usuario, setUsuario] = useState<Tables<"profiles"> | null>(null);
   const [totalTickets, setTotalTickets] = useState(0);
   const [totalEntregaveis, setTotalEntregaveis] = useState(0);
+  const [moduloAtual, setModuloAtual] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -30,73 +32,84 @@ function AdminUsuarioPerfil() {
         .select("*", { count: "exact", head: true })
         .eq("user_id", id);
       setTotalEntregaveis(ce ?? 0);
+      const { data: secoes } = await supabase
+        .from("planejamento_secoes")
+        .select("modulo")
+        .eq("user_id", id)
+        .eq("concluido", true);
+      const max = (secoes ?? []).reduce((m, s) => Math.max(m, s.modulo), 0);
+      setModuloAtual(max);
     })();
   }, [id]);
 
-  if (!usuario) return <p className="font-sans text-[#1A1A2E] opacity-50">Carregando…</p>;
+  if (!usuario) return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
 
   return (
     <>
       <Link
-        to="/admin/usuarios"
-        className="font-sans text-[#C96B3E] text-[13px] hover:underline mb-3 inline-block"
+        to="/admin/crm"
+        className="mb-3 inline-block font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
       >
-        ← Usuárias
+        ← CRM
       </Link>
-      <div className="flex items-start justify-between mb-8">
+      <div className="mb-8 flex items-start justify-between">
         <div>
-          <p className="font-mono text-[#C96B3E] text-[10px] tracking-[2px] uppercase mb-1">
-            USUÁRIA
+          <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--secondary-text)]">
+            Usuária
           </p>
-          <h1 className="font-serif text-[#1A1A2E] text-[40px]">{usuario.full_name ?? "—"}</h1>
-          <p className="font-sans text-[#1A1A2E] text-[14px] opacity-50">
+          <h1 className="font-fraunces text-[40px] text-[var(--ink)]">
+            {usuario.full_name ?? "—"}
+          </h1>
+          <p className="font-sans text-[14px] text-[var(--muted)]">
             {usuario.business_name ?? ""}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: "Etapa atual", valor: `E${usuario.etapa_atual}` },
+          {
+            label: "Módulo atual",
+            valor: moduloAtual > 0 ? `M${moduloAtual} · ${moduloInfo(moduloAtual).nome}` : "não iniciou",
+          },
           { label: "Streak", valor: `${usuario.streak ?? 0} dias` },
           { label: "Entregáveis", valor: totalEntregaveis },
           { label: "Chamados", valor: totalTickets },
         ].map((item) => (
-          <div
-            key={item.label}
-            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)]"
-          >
-            <p className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#1A1A2E] opacity-40 mb-1">
+          <div key={item.label} className="rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {item.label}
             </p>
-            <p className="font-serif text-[#1A1A2E] text-[32px]">{item.valor}</p>
+            <p className="font-fraunces text-[22px] leading-tight text-[var(--ink)]">
+              {item.valor}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl p-7 border border-[rgba(26,26,46,0.06)]">
-        <p className="font-mono text-[9px] tracking-[2px] uppercase text-[#1A1A2E] opacity-40 mb-5">
-          PERFIL
+      <div className="rounded-2xl border border-[var(--line)] bg-white p-7">
+        <p className="mb-5 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+          Perfil
         </p>
-        <dl className="space-y-2 font-sans text-[13px] text-[#1A1A2E]">
+        <dl className="space-y-2 font-sans text-[13px] text-[var(--ink)]">
           <div className="flex gap-2">
-            <dt className="opacity-50 w-40">Negócio:</dt>
+            <dt className="w-40 text-[var(--muted)]">Negócio:</dt>
             <dd>{usuario.business_name ?? "—"}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="opacity-50 w-40">Tipo:</dt>
+            <dt className="w-40 text-[var(--muted)]">Tipo:</dt>
             <dd>{usuario.business_type ?? "—"}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="opacity-50 w-40">Estágio:</dt>
+            <dt className="w-40 text-[var(--muted)]">Estágio:</dt>
             <dd>{usuario.business_stage ?? "—"}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="opacity-50 w-40">Cliente:</dt>
+            <dt className="w-40 text-[var(--muted)]">Cliente:</dt>
             <dd>{usuario.target_customer ?? "—"}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="opacity-50 w-40">Onboarding:</dt>
+            <dt className="w-40 text-[var(--muted)]">Onboarding:</dt>
             <dd>{usuario.onboarding_completed ? "completo" : "pendente"}</dd>
           </div>
         </dl>

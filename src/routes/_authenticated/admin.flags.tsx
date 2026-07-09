@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { logAcaoAdmin } from "@/lib/audit-log";
 
 export const Route = createFileRoute("/_authenticated/admin/flags")({
   head: () => ({
@@ -9,6 +10,11 @@ export const Route = createFileRoute("/_authenticated/admin/flags")({
   }),
   component: AdminFlags,
 });
+
+// Flags que nenhum trecho do app lê hoje — o toggle liga/desliga no banco,
+// mas não muda comportamento nenhum. Mantido explícito aqui pra não fingir
+// que existe uma feature por trás até alguém conectar de verdade.
+const FLAGS_SEM_CODIGO_CONECTADO = new Set(["csat_modal_ativo", "broadcast_ativo"]);
 
 function AdminFlags() {
   const [flags, setFlags] = useState<Tables<"feature_flags">[]>([]);
@@ -27,33 +33,51 @@ function AdminFlags() {
       .from("feature_flags")
       .update({ enabled, updated_at: new Date().toISOString() })
       .eq("key", key);
+    await logAcaoAdmin("toggle_feature_flag", key, { enabled });
     carregar();
   };
 
   return (
     <>
-      <h2 className="font-serif text-[#1A1A2E] text-[40px] mb-6">Feature Flags</h2>
+      <h2 className="font-fraunces mb-2 text-[40px] text-[var(--ink)]">Feature Flags</h2>
+      <p className="mb-6 max-w-[560px] font-sans text-[13px] text-[var(--muted)]">
+        Ligar/desligar aqui só muda o valor no banco. Só vale pra flags que o código
+        efetivamente lê — as marcadas abaixo ainda não estão conectadas a nada.
+      </p>
       <div className="space-y-3">
-        {flags.map((flag) => (
-          <div
-            key={flag.key}
-            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)] flex items-center justify-between"
-          >
-            <div>
-              <p className="font-mono text-[#1A1A2E] text-[14px] font-medium">{flag.key}</p>
-              <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">{flag.description}</p>
-            </div>
-            <button
-              onClick={() => toggle(flag.key, !flag.enabled)}
-              className={`w-12 h-6 rounded-full transition-colors relative ${flag.enabled ? "bg-[#2D6A4F]" : "bg-[rgba(26,26,46,0.15)]"}`}
-              aria-label={`Toggle ${flag.key}`}
+        {flags.map((flag) => {
+          const inerte = FLAGS_SEM_CODIGO_CONECTADO.has(flag.key);
+          return (
+            <div
+              key={flag.key}
+              className="flex items-center justify-between rounded-2xl border border-[var(--line)] bg-white p-5"
             >
-              <span
-                className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${flag.enabled ? "translate-x-7" : "translate-x-1"}`}
-              />
-            </button>
-          </div>
-        ))}
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-mono text-[14px] font-medium text-[var(--ink)]">
+                    {flag.key}
+                  </p>
+                  {inerte && (
+                    <span className="rounded-full bg-[var(--highlight)] px-2 py-0.5 font-sans text-[10px] font-medium uppercase tracking-[0.5px] text-[var(--highlight-ink)]">
+                      sem efeito ainda
+                    </span>
+                  )}
+                </div>
+                <p className="font-sans text-[13px] text-[var(--muted)]">{flag.description}</p>
+              </div>
+              <button
+                onClick={() => toggle(flag.key, !flag.enabled)}
+                className="relative h-6 w-12 rounded-full transition-colors"
+                style={{ backgroundColor: flag.enabled ? "var(--secondary)" : "var(--line)" }}
+                aria-label={`Toggle ${flag.key}`}
+              >
+                <span
+                  className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${flag.enabled ? "translate-x-7" : "translate-x-1"}`}
+                />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </>
   );

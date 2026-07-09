@@ -1,7 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { buscarUsuariaPorEmail } from "@/lib/admin-usuarias.functions";
+import { toastErro } from "@/lib/toast";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/")({
   head: () => ({
@@ -15,6 +18,9 @@ type TicketRow = Pick<
   "id" | "title" | "status" | "priority" | "module_ref" | "created_at" | "user_id"
 > & { user_nome: string };
 
+const tabTriggerClass =
+  "rounded-lg px-4 py-1.5 text-[var(--muted)] data-[state=active]:bg-[var(--secondary-light)] data-[state=active]:text-[var(--secondary-text)] data-[state=active]:shadow-none";
+
 function AdminChamados() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -22,6 +28,27 @@ function AdminChamados() {
     "aberto",
   );
   const [counts, setCounts] = useState({ aberto: 0, em_andamento: 0, resolvido: 0 });
+
+  const [buscaEmail, setBuscaEmail] = useState("");
+  const [buscando, setBuscando] = useState(false);
+  const [resultado, setResultado] = useState<
+    { encontrada: true; id: string; email: string; nome: string } | { encontrada: false } | null
+  >(null);
+
+  const buscarPorEmail = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!buscaEmail.trim()) return;
+    setBuscando(true);
+    setResultado(null);
+    try {
+      const r = await buscarUsuariaPorEmail({ data: { email: buscaEmail } });
+      setResultado(r);
+    } catch {
+      toastErro("Não consegui buscar essa usuária.");
+    } finally {
+      setBuscando(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -53,62 +80,295 @@ function AdminChamados() {
     })();
   }, [filtroStatus]);
 
+  const [respostas, setRespostas] = useState<Tables<"feedback_responses">[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("feedback_responses")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500);
+      setRespostas(data ?? []);
+    })();
+  }, []);
+  const porEtapa = useMemo(() => {
+    const map = new Map<string, Tables<"feedback_responses">[]>();
+    respostas
+      .filter((r) => r.trigger_type === "entregavel_concluido")
+      .forEach((r) => {
+        if (!map.has(r.context_ref)) map.set(r.context_ref, []);
+        map.get(r.context_ref)!.push(r);
+      });
+    return Array.from(map.entries())
+      .map(([ref, items]) => {
+        const total = items.length;
+        const s1 = items.filter((i) => i.score === 1).length;
+        const s2 = items.filter((i) => i.score === 2).length;
+        const s3 = items.filter((i) => i.score === 3).length;
+        return {
+          ref,
+          total,
+          score_1: s1,
+          score_2: s2,
+          score_3: s3,
+          pct_dificil: total ? Math.round((s1 / total) * 100) : 0,
+          pct_ok: total ? Math.round((s2 / total) * 100) : 0,
+          pct_boa: total ? Math.round((s3 / total) * 100) : 0,
+          comentarios: items
+            .filter((i) => i.comment)
+            .map((i) => i.comment)
+            .slice(0, 3),
+        };
+      })
+      .sort((a, b) => a.ref.localeCompare(b.ref));
+  }, [respostas]);
+
+  const [contatos, setContatos] = useState<Tables<"contatos">[]>([]);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("contatos")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+      setContatos(data ?? []);
+    })();
+  }, []);
+
   return (
     <>
-      <h1 className="font-serif text-[#1A1A2E] text-[40px] mb-6">Chamados</h1>
-      <div className="flex gap-2 mb-6">
-        {(["aberto", "em_andamento", "resolvido"] as const).map((s) => (
-          <button
-            key={s}
-            onClick={() => setFiltroStatus(s)}
-            className={`font-mono text-[10px] tracking-[1px] uppercase px-4 py-2 rounded-full transition-all ${
-              filtroStatus === s
-                ? "bg-[#1A1A2E] text-[#FDF8F5]"
-                : "border border-[rgba(26,26,46,0.12)] text-[#1A1A2E] opacity-60 hover:opacity-100"
-            }`}
-          >
-            {s.replace("_", " ")} ({counts[s]})
-          </button>
-        ))}
-      </div>
+      <h1 className="font-fraunces mb-6 text-[40px] text-[var(--ink)]">Chamados</h1>
 
-      <div className="space-y-3">
-        {tickets.map((ticket) => (
-          <div
-            key={ticket.id}
-            className="bg-white rounded-2xl p-5 border border-[rgba(26,26,46,0.06)] cursor-pointer hover:shadow-sm transition-shadow"
-            onClick={() => navigate({ to: "/admin/chamados/$id", params: { id: ticket.id } })}
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  {ticket.priority === "urgente" && (
-                    <span className="font-mono text-[9px] tracking-[1px] uppercase bg-[rgba(201,64,122,0.1)] text-[#C9407A] px-2 py-0.5 rounded-full">
-                      urgente
-                    </span>
-                  )}
-                  {ticket.module_ref && (
-                    <span className="font-mono text-[9px] tracking-[1px] uppercase bg-[rgba(26,26,46,0.06)] text-[#1A1A2E] opacity-50 px-2 py-0.5 rounded-full">
-                      {ticket.module_ref}
-                    </span>
-                  )}
+      <Tabs defaultValue="chamados">
+        <TabsList className="mb-6 h-auto gap-1 rounded-xl border border-[var(--line)] bg-white p-1">
+          <TabsTrigger value="chamados" className={tabTriggerClass}>
+            Chamados
+          </TabsTrigger>
+          <TabsTrigger value="feedback" className={tabTriggerClass}>
+            Feedback · {porEtapa.reduce((s, e) => s + e.total, 0)}
+          </TabsTrigger>
+          <TabsTrigger value="comunicacao" className={tabTriggerClass}>
+            Comunicação · {contatos.length}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* CHAMADOS */}
+        <TabsContent value="chamados">
+          <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-5">
+            <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+              Buscar usuária por e-mail
+            </p>
+            <form onSubmit={buscarPorEmail} className="flex flex-wrap gap-3">
+              <input
+                type="email"
+                placeholder="nome@dominio.com"
+                value={buscaEmail}
+                onChange={(e) => setBuscaEmail(e.target.value)}
+                className="min-w-[220px] flex-1 rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:outline-none"
+              />
+              <button
+                type="submit"
+                disabled={buscando}
+                className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
+              >
+                {buscando ? "Buscando…" : "Buscar"}
+              </button>
+            </form>
+            {resultado && !resultado.encontrada && (
+              <p className="mt-3 font-sans text-[13px] text-[var(--muted)]">
+                Nenhuma usuária com esse e-mail.
+              </p>
+            )}
+            {resultado && resultado.encontrada && (
+              <Link
+                to="/admin/usuarios/$id"
+                params={{ id: resultado.id }}
+                className="mt-3 flex items-center justify-between rounded-xl border border-[var(--line)] p-3 no-underline hover:border-[var(--secondary)]"
+              >
+                <div>
+                  <p className="font-sans text-[14px] text-[var(--ink)]">{resultado.nome}</p>
+                  <p className="font-sans text-[12px] text-[var(--muted)]">{resultado.email}</p>
                 </div>
-                <p className="font-sans text-[#1A1A2E] text-[15px] font-medium">{ticket.title}</p>
-                <p className="font-sans text-[#1A1A2E] text-[13px] opacity-40">
-                  {ticket.user_nome} · {new Date(ticket.created_at).toLocaleString("pt-BR")}
+                <span className="font-sans text-[13px] text-[var(--secondary-text)]">
+                  Ver perfil →
+                </span>
+              </Link>
+            )}
+          </div>
+
+          <div className="mb-6 flex gap-2">
+            {(["aberto", "em_andamento", "resolvido"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setFiltroStatus(s)}
+                className={`rounded-full px-4 py-2 font-sans text-[13px] font-medium capitalize transition-colors ${
+                  filtroStatus === s
+                    ? "bg-[var(--ink)] text-white"
+                    : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+                }`}
+              >
+                {s.replace("_", " ")} ({counts[s]})
+              </button>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            {tickets.map((ticket) => (
+              <div
+                key={ticket.id}
+                className="cursor-pointer rounded-2xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)]"
+                onClick={() => navigate({ to: "/admin/chamados/$id", params: { id: ticket.id } })}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="mb-1 flex items-center gap-2">
+                      {ticket.priority === "urgente" && (
+                        <span className="rounded-full bg-[var(--danger-soft)] px-2 py-0.5 font-sans text-[10px] font-medium uppercase tracking-[1px] text-[var(--danger)]">
+                          urgente
+                        </span>
+                      )}
+                      {ticket.module_ref && (
+                        <span className="rounded-full bg-[var(--line)] px-2 py-0.5 font-sans text-[10px] font-medium uppercase tracking-[1px] text-[var(--ink-soft)]">
+                          {ticket.module_ref}
+                        </span>
+                      )}
+                    </div>
+                    <p className="font-sans text-[15px] font-medium text-[var(--ink)]">
+                      {ticket.title}
+                    </p>
+                    <p className="font-sans text-[13px] text-[var(--muted)]">
+                      {ticket.user_nome} · {new Date(ticket.created_at).toLocaleString("pt-BR")}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {tickets.length === 0 && (
+              <div className="rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
+                <p className="font-sans text-[13px] text-[var(--muted)]">
+                  Nenhum chamado nesse status.
                 </p>
               </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* FEEDBACK */}
+        <TabsContent value="feedback">
+          <p className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+            Por contexto · score 1=difícil 2=ok 3=boa
+          </p>
+          <div className="space-y-3">
+            {porEtapa.length === 0 && (
+              <p className="font-sans text-[13px] text-[var(--muted)]">
+                Nenhum CSAT registrado ainda.
+              </p>
+            )}
+            {porEtapa.map((item) => (
+              <div key={item.ref} className="rounded-2xl border border-[var(--line)] bg-white p-5">
+                <div className="mb-3 flex items-center justify-between">
+                  <p className="font-sans text-[14px] font-medium text-[var(--ink)]">{item.ref}</p>
+                  <p
+                    className="font-sans text-[11px] font-medium uppercase tracking-[1px]"
+                    style={{
+                      color: item.pct_dificil > 30 ? "var(--danger)" : "var(--secondary-text)",
+                    }}
+                  >
+                    {item.pct_dificil}% difícil
+                  </p>
+                </div>
+                <div className="mb-3 flex gap-2">
+                  {[
+                    {
+                      label: "Difícil",
+                      count: item.score_1,
+                      pct: item.pct_dificil,
+                      cor: "var(--danger)",
+                      bg: "var(--danger-soft)",
+                    },
+                    {
+                      label: "Ok",
+                      count: item.score_2,
+                      pct: item.pct_ok,
+                      cor: "var(--ink-soft)",
+                      bg: "var(--line)",
+                    },
+                    {
+                      label: "Boa",
+                      count: item.score_3,
+                      pct: item.pct_boa,
+                      cor: "var(--secondary-text)",
+                      bg: "var(--secondary-light)",
+                    },
+                  ].map((s) => (
+                    <div key={s.label} className="flex-1">
+                      <div className="h-2 rounded-full" style={{ backgroundColor: s.bg }}>
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{ width: `${s.pct}%`, backgroundColor: s.cor }}
+                        />
+                      </div>
+                      <p className="mt-1 font-sans text-[11px] text-[var(--muted)]">
+                        {s.label} · {s.count}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                {item.comentarios.map((c, i) => (
+                  <p key={i} className="mb-1 font-sans text-[12px] italic text-[var(--muted)]">
+                    "{c}"
+                  </p>
+                ))}
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* COMUNICAÇÃO */}
+        <TabsContent value="comunicacao">
+          <div className="mb-10">
+            <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">
+              Mensagens recebidas
+            </h2>
+            <div className="space-y-3">
+              {contatos.length === 0 && (
+                <p className="font-sans text-[13px] text-[var(--muted)]">Nenhuma mensagem ainda.</p>
+              )}
+              {contatos.map((c) => (
+                <div key={c.id} className="rounded-2xl border border-[var(--line)] bg-white p-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-sans text-[14px] font-medium text-[var(--ink)]">
+                        {c.nome} · {c.assunto}
+                      </p>
+                      <p className="mt-1 whitespace-pre-wrap font-sans text-[13px] text-[var(--ink-soft)]">
+                        {c.mensagem}
+                      </p>
+                    </div>
+                    <a
+                      href={`mailto:${c.email}?subject=Re: ${encodeURIComponent(c.assunto)}`}
+                      className="ml-4 shrink-0 font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
+                    >
+                      Responder →
+                    </a>
+                  </div>
+                  <p className="mt-3 font-sans text-[11px] text-[var(--muted)]">
+                    {new Date(c.created_at).toLocaleString("pt-BR")}
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-        {tickets.length === 0 && (
-          <div className="bg-white rounded-2xl p-8 border border-[rgba(26,26,46,0.06)] text-center">
-            <p className="font-sans text-[#1A1A2E] text-[13px] opacity-50">
-              Nenhum chamado nesse status.
+
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-7">
+            <h2 className="font-fraunces mb-2 text-[24px] text-[var(--ink)]">Broadcast por email</h2>
+            <p className="font-sans text-[13px] text-[var(--muted)]">
+              Em breve. A flag <code className="font-mono text-[12px]">broadcast_ativo</code>{" "}
+              precisa estar ligada e o Resend configurado.
             </p>
           </div>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
     </>
   );
 }
