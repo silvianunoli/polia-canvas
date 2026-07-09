@@ -41,7 +41,7 @@ export function SiteHeader() {
         </nav>
         <div className="flex items-center gap-3">
           <Link
-            to="/auth/cadastro"
+            to="/precos"
             className="hidden rounded-lg border border-[var(--secondary)] bg-[var(--secondary)] px-6 py-3 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 md:inline-flex"
           >
             Começar
@@ -75,7 +75,7 @@ export function SiteHeader() {
             ))}
             <li>
               <Link
-                to="/auth/cadastro"
+                to="/precos"
                 onClick={() => setOpen(false)}
                 className="block py-4 font-semibold text-[var(--ink)] no-underline"
               >

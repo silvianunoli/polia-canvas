@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -289,12 +289,16 @@ function PrecosPage() {
               Comece pela primeira etapa.
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/auth/cadastro"
-                className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
+              <button
+                type="button"
+                onClick={() => {
+                  document.getElementById("precos-email")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  document.getElementById("precos-email")?.focus();
+                }}
+                className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95"
               >
                 Começar
-              </Link>
+              </button>
             </div>
           </div>
         </section>

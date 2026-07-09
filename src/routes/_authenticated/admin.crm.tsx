@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Trash2, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { toastErro, toastSucesso } from "@/lib/toast";
+import {
+  listarConvites,
+  criarConvite,
+  enviarConvite,
+  removerConvite,
+  type ConviteListItem,
+} from "@/lib/convites.functions";
 
 export const Route = createFileRoute("/_authenticated/admin/crm")({
   head: () => ({
@@ -20,7 +29,7 @@ interface Cliente {
   created_at: string;
 }
 
-interface Convite {
+interface EsperaItem {
   id: string;
   nome: string;
   email: string;
@@ -38,23 +47,46 @@ function statusKey(c: Cliente): StatusKey {
   return "morna";
 }
 
-const STATUS_META: Record<StatusKey, { label: string; bg: string; cor: string }> = {
-  lead: { label: "Lead", bg: "rgba(184,134,46,0.12)", cor: "#B8862E" },
-  ativa: { label: "Ativa", bg: "rgba(45,106,79,0.1)", cor: "#2D6A4F" },
-  morna: { label: "Morna", bg: "rgba(26,26,46,0.06)", cor: "#1A1A2E" },
-  sumida: { label: "Sumida", bg: "rgba(201,64,122,0.1)", cor: "#C9407A" },
+// Mesma escala de 4 estados usada nos pedidos de Clientes (statusPedidoCor):
+// neutro → ok (turquesa) → atenção (amarelo) → parado (vermelho).
+const STATUS_META: Record<StatusKey, { label: string; className: string }> = {
+  lead: { label: "Lead", className: "bg-[var(--line)] text-[var(--ink-soft)]" },
+  ativa: {
+    label: "Ativa",
+    className: "bg-[var(--secondary-light)] text-[var(--secondary-text)]",
+  },
+  morna: { label: "Morna", className: "bg-[var(--highlight)] text-[var(--highlight-ink)]" },
+  sumida: { label: "Sumida", className: "bg-[var(--danger-soft)] text-[var(--danger)]" },
 };
+
+const inputClass =
+  "rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:outline-none";
+const btnPrimary =
+  "rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50";
+const btnOutline =
+  "rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)] hover:text-[var(--ink)] disabled:opacity-40";
+const cardClass = "overflow-hidden rounded-2xl border border-[var(--line)] bg-white";
+const thClass =
+  "px-5 py-3 text-left font-sans text-[11px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]";
+const tdMuted = "px-5 py-3 font-sans text-[13px] text-[var(--muted)]";
 
 function AdminCRM() {
   const navigate = useNavigate();
   const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [convites, setConvites] = useState<Convite[]>([]);
+  const [espera, setEspera] = useState<EsperaItem[]>([]);
   const [filtroStatus, setFiltroStatus] = useState("");
   const [busca, setBusca] = useState("");
 
+  const [convites, setConvites] = useState<ConviteListItem[]>([]);
+  const [carregandoConvites, setCarregandoConvites] = useState(true);
+  const [novoEmail, setNovoEmail] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [removendo, setRemovendo] = useState<string | null>(null);
+  const [enviandoConvite, setEnviandoConvite] = useState<string | null>(null);
+
   useEffect(() => {
     (async () => {
-      const [{ data: profs }, { data: espera }] = await Promise.all([
+      const [{ data: profs }, { data: esperaData }] = await Promise.all([
         supabase
           .from("profiles")
           .select("id,full_name,etapa_atual,plano,onboarding_completed,updated_at,created_at")
@@ -67,9 +99,85 @@ function AdminCRM() {
           .limit(300),
       ]);
       setClientes((profs ?? []) as Cliente[]);
-      setConvites((espera ?? []) as Convite[]);
+      setEspera((esperaData ?? []) as EsperaItem[]);
     })();
   }, []);
+
+  const carregarConvites = async () => {
+    setCarregandoConvites(true);
+    try {
+      const { convites: lista } = await listarConvites();
+      setConvites(lista);
+    } catch {
+      toastErro("Não consegui carregar os convites.");
+    } finally {
+      setCarregandoConvites(false);
+    }
+  };
+
+  useEffect(() => {
+    carregarConvites();
+  }, []);
+
+  async function handleAdicionarConvite(e: FormEvent) {
+    e.preventDefault();
+    const email = novoEmail.trim();
+    if (!email) return;
+    setEnviando(true);
+    try {
+      await criarConvite({ data: { email } });
+      setNovoEmail("");
+      toastSucesso("Convite criado.");
+      carregarConvites();
+    } catch (err) {
+      toastErro(err instanceof Error ? err.message : "Não consegui criar o convite.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  async function handleEnviarConvite(email: string) {
+    setEnviandoConvite(email);
+    try {
+      await enviarConvite({ data: { email } });
+      toastSucesso("Convite enviado.");
+      carregarConvites();
+    } catch (err) {
+      toastErro(err instanceof Error ? err.message : "Não consegui enviar o convite.");
+    } finally {
+      setEnviandoConvite(null);
+    }
+  }
+
+  async function handleRemoverConvite(email: string) {
+    setRemovendo(email);
+    try {
+      await removerConvite({ data: { email } });
+      toastSucesso("Convite removido.");
+      setConvites((c) => c.filter((item) => item.email !== email));
+    } catch {
+      toastErro("Não consegui remover o convite.");
+    } finally {
+      setRemovendo(null);
+    }
+  }
+
+  const pendentesConvites = convites.filter((c) => !c.usado_em).length;
+
+  const exportarCsvEspera = () => {
+    const linhas = [["nome", "email", "tipo_negocio", "data"]];
+    espera.forEach((e) => linhas.push([e.nome, e.email, e.tipo_negocio ?? "", e.criado_em]));
+    const csv = linhas
+      .map((l) => l.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "lista-espera.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const contagem = useMemo(() => {
     const c: Record<StatusKey, number> = { lead: 0, ativa: 0, morna: 0, sumida: 0 };
@@ -87,15 +195,31 @@ function AdminCRM() {
 
   return (
     <>
-      <h1 className="mb-1 font-serif text-[40px] text-[#1A1A2E]">CRM</h1>
-      <p className="mb-6 font-sans text-[14px] text-[#1A1A2E] opacity-50">
-        Suas clientes da Pólia e quem está na fila do beta.
+      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">CRM</h1>
+      <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
+        Suas clientes da Pólia, quem está na fila do beta e quem pode se cadastrar.
       </p>
 
       <Tabs defaultValue="clientes">
-        <TabsList className="mb-6 bg-[rgba(26,26,46,0.04)]">
-          <TabsTrigger value="clientes">Clientes · {clientes.length}</TabsTrigger>
-          <TabsTrigger value="convites">Convites · {convites.length}</TabsTrigger>
+        <TabsList className="mb-6 h-auto gap-1 rounded-xl border border-[var(--line)] bg-white p-1">
+          <TabsTrigger
+            value="clientes"
+            className="rounded-lg px-4 py-1.5 text-[var(--muted)] data-[state=active]:bg-[var(--secondary-light)] data-[state=active]:text-[var(--secondary-text)] data-[state=active]:shadow-none"
+          >
+            Clientes · {clientes.length}
+          </TabsTrigger>
+          <TabsTrigger
+            value="espera"
+            className="rounded-lg px-4 py-1.5 text-[var(--muted)] data-[state=active]:bg-[var(--secondary-light)] data-[state=active]:text-[var(--secondary-text)] data-[state=active]:shadow-none"
+          >
+            Lista de espera · {espera.length}
+          </TabsTrigger>
+          <TabsTrigger
+            value="convites"
+            className="rounded-lg px-4 py-1.5 text-[var(--muted)] data-[state=active]:bg-[var(--secondary-light)] data-[state=active]:text-[var(--secondary-text)] data-[state=active]:shadow-none"
+          >
+            Convites · {convites.length}
+          </TabsTrigger>
         </TabsList>
 
         {/* CLIENTES */}
@@ -113,7 +237,6 @@ function AdminCRM() {
                 key={k}
                 label={STATUS_META[k].label}
                 valor={contagem[k]}
-                cor={STATUS_META[k].cor}
                 ativo={filtroStatus === k}
                 onClick={() => setFiltroStatus(filtroStatus === k ? "" : k)}
               />
@@ -125,18 +248,15 @@ function AdminCRM() {
             placeholder="Buscar por nome"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            className="mb-5 w-full rounded-xl border border-[rgba(26,26,46,0.12)] bg-white px-4 py-2 font-sans text-[14px] text-[#1A1A2E] focus:border-[#C96B3E] focus:outline-none sm:max-w-[320px]"
+            className={`mb-5 w-full sm:max-w-[320px] ${inputClass}`}
           />
 
-          <div className="overflow-x-auto rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white">
+          <div className={`overflow-x-auto ${cardClass}`}>
             <table className="w-full min-w-[640px]">
               <thead>
-                <tr className="border-b border-[rgba(26,26,46,0.06)]">
+                <tr className="border-b border-[var(--line)]">
                   {["Cliente", "Status", "Plano", "Etapa", "Cadastro", "Ações"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40"
-                    >
+                    <th key={h} className={thClass}>
                       {h}
                     </th>
                   ))}
@@ -148,37 +268,34 @@ function AdminCRM() {
                   return (
                     <tr
                       key={c.id}
-                      className="border-b border-[rgba(26,26,46,0.04)] hover:bg-[rgba(26,26,46,0.02)]"
+                      className="border-b border-[var(--line)] hover:bg-[var(--surface)]"
                     >
-                      <td className="px-5 py-3 font-sans text-[14px] text-[#1A1A2E]">
+                      <td className="px-5 py-3 font-sans text-[14px] text-[var(--ink)]">
                         {c.full_name ?? "—"}
                       </td>
                       <td className="px-5 py-3">
                         <span
-                          className="rounded-full px-2.5 py-1 font-sans text-[11px] font-medium"
-                          style={{ background: st.bg, color: st.cor }}
+                          className={`rounded-full px-2.5 py-1 font-sans text-[11px] font-medium ${st.className}`}
                         >
                           {st.label}
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <span className="rounded-full bg-[rgba(26,26,46,0.05)] px-2 py-1 font-mono text-[10px] uppercase tracking-[1px] text-[#1A1A2E] opacity-70">
+                        <span className="rounded-full bg-[var(--line)] px-2 py-1 font-mono text-[10px] uppercase tracking-[1px] text-[var(--ink-soft)]">
                           {c.plano ?? "beta"}
                         </span>
                       </td>
-                      <td className="px-5 py-3 font-sans text-[13px] text-[#1A1A2E] opacity-60">
+                      <td className="px-5 py-3 font-sans text-[13px] text-[var(--ink-soft)]">
                         E{c.etapa_atual ?? 1}
                       </td>
-                      <td className="px-5 py-3 font-sans text-[13px] text-[#1A1A2E] opacity-50">
-                        {new Date(c.created_at).toLocaleDateString("pt-BR")}
-                      </td>
+                      <td className={tdMuted}>{new Date(c.created_at).toLocaleDateString("pt-BR")}</td>
                       <td className="px-5 py-3">
                         <button
                           type="button"
                           onClick={() =>
                             navigate({ to: "/admin/usuarios/$id", params: { id: c.id } })
                           }
-                          className="font-sans text-[13px] text-[#C96B3E] hover:underline"
+                          className="font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
                         >
                           Ver
                         </button>
@@ -190,7 +307,7 @@ function AdminCRM() {
                   <tr>
                     <td
                       colSpan={6}
-                      className="px-5 py-8 text-center font-sans text-[13px] text-[#1A1A2E] opacity-40"
+                      className="px-5 py-8 text-center font-sans text-[13px] text-[var(--muted)]"
                     >
                       Nenhuma cliente encontrada.
                     </td>
@@ -201,47 +318,161 @@ function AdminCRM() {
           </div>
         </TabsContent>
 
-        {/* CONVITES (lista de espera do beta) */}
-        <TabsContent value="convites">
-          <p className="mb-4 font-sans text-[13px] text-[#1A1A2E] opacity-55">
-            Quem entrou na lista de espera e ainda não está usando a Pólia.
-          </p>
-          <div className="overflow-x-auto rounded-2xl border border-[rgba(26,26,46,0.06)] bg-white">
+        {/* LISTA DE ESPERA (fila pública do beta) */}
+        <TabsContent value="espera">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="font-sans text-[13px] text-[var(--muted)]">
+              Quem entrou na lista de espera pública e ainda não está usando a Pólia.
+            </p>
+            <button
+              onClick={exportarCsvEspera}
+              disabled={espera.length === 0}
+              className={`shrink-0 ${btnOutline}`}
+            >
+              Exportar CSV
+            </button>
+          </div>
+          <div className={`overflow-x-auto ${cardClass}`}>
             <table className="w-full min-w-[560px]">
               <thead>
-                <tr className="border-b border-[rgba(26,26,46,0.06)]">
+                <tr className="border-b border-[var(--line)]">
                   {["Nome", "E-mail", "Tipo de negócio", "Entrou na fila"].map((h) => (
-                    <th
-                      key={h}
-                      className="px-5 py-3 text-left font-mono text-[9px] uppercase tracking-[1.5px] text-[#1A1A2E] opacity-40"
-                    >
+                    <th key={h} className={thClass}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {convites.map((v) => (
-                  <tr key={v.id} className="border-b border-[rgba(26,26,46,0.04)]">
-                    <td className="px-5 py-3 font-sans text-[14px] text-[#1A1A2E]">{v.nome}</td>
-                    <td className="px-5 py-3 font-sans text-[13px] text-[#1A1A2E] opacity-70">
+                {espera.map((v) => (
+                  <tr key={v.id} className="border-b border-[var(--line)]">
+                    <td className="px-5 py-3 font-sans text-[14px] text-[var(--ink)]">{v.nome}</td>
+                    <td className="px-5 py-3 font-sans text-[13px] text-[var(--ink-soft)]">
                       {v.email}
                     </td>
-                    <td className="px-5 py-3 font-sans text-[13px] text-[#1A1A2E] opacity-60">
+                    <td className="px-5 py-3 font-sans text-[13px] text-[var(--ink-soft)]">
                       {v.tipo_negocio ?? "—"}
                     </td>
-                    <td className="px-5 py-3 font-sans text-[13px] text-[#1A1A2E] opacity-50">
-                      {new Date(v.criado_em).toLocaleDateString("pt-BR")}
-                    </td>
+                    <td className={tdMuted}>{new Date(v.criado_em).toLocaleDateString("pt-BR")}</td>
                   </tr>
                 ))}
-                {convites.length === 0 && (
+                {espera.length === 0 && (
                   <tr>
                     <td
                       colSpan={4}
-                      className="px-5 py-8 text-center font-sans text-[13px] text-[#1A1A2E] opacity-40"
+                      className="px-5 py-8 text-center font-sans text-[13px] text-[var(--muted)]"
                     >
                       Ninguém na fila ainda.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
+        {/* CONVITES (allowlist de e-mails liberados pro cadastro) */}
+        <TabsContent value="convites">
+          <p className="mb-4 font-sans text-[13px] text-[var(--muted)]">
+            {convites.length} e-mails liberados · {pendentesConvites} ainda não usaram o convite.
+            O cadastro é fechado: só quem está aqui consegue criar conta.
+          </p>
+
+          <form onSubmit={handleAdicionarConvite} className="mb-6 flex gap-3">
+            <input
+              type="email"
+              placeholder="email@dominio.com"
+              value={novoEmail}
+              onChange={(e) => setNovoEmail(e.target.value)}
+              disabled={enviando}
+              className={`min-w-[220px] flex-1 ${inputClass}`}
+            />
+            <button type="submit" disabled={enviando || !novoEmail.trim()} className={btnPrimary}>
+              {enviando ? "Adicionando..." : "Liberar e-mail"}
+            </button>
+          </form>
+
+          <div className={`overflow-x-auto ${cardClass}`}>
+            <table className="w-full min-w-[560px]">
+              <thead>
+                <tr className="border-b border-[var(--line)]">
+                  {["E-mail", "Status", "Criado em", "Usado em", ""].map((h) => (
+                    <th key={h} className={thClass}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {convites.map((c) => (
+                  <tr
+                    key={c.email}
+                    className="border-b border-[var(--line)] hover:bg-[var(--surface)]"
+                  >
+                    <td className="px-5 py-3 font-sans text-[14px] text-[var(--ink)]">
+                      {c.email}
+                    </td>
+                    <td className="px-5 py-3">
+                      <span
+                        className={`rounded-full px-2.5 py-1 font-sans text-[11px] font-medium ${
+                          c.usado_em
+                            ? "bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                            : c.enviado_em
+                              ? "bg-[var(--line)] text-[var(--ink-soft)]"
+                              : "bg-[var(--highlight)] text-[var(--highlight-ink)]"
+                        }`}
+                      >
+                        {c.usado_em ? "Usado" : c.enviado_em ? "Convite enviado" : "Pendente"}
+                      </span>
+                    </td>
+                    <td className={tdMuted}>{new Date(c.criado_em).toLocaleDateString("pt-BR")}</td>
+                    <td className={tdMuted}>
+                      {c.usado_em ? new Date(c.usado_em).toLocaleDateString("pt-BR") : "—"}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        {!c.usado_em && (
+                          <button
+                            type="button"
+                            onClick={() => handleEnviarConvite(c.email)}
+                            disabled={enviandoConvite === c.email}
+                            aria-label={`Enviar convite por e-mail pra ${c.email}`}
+                            title={c.enviado_em ? "Reenviar convite" : "Enviar convite"}
+                            className="text-[var(--muted)] hover:text-[var(--secondary-text)] disabled:opacity-30"
+                          >
+                            <Send size={16} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoverConvite(c.email)}
+                          disabled={removendo === c.email}
+                          aria-label={`Remover convite de ${c.email}`}
+                          className="text-[var(--muted)] hover:text-[var(--danger)] disabled:opacity-30"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {!carregandoConvites && convites.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-5 py-8 text-center font-sans text-[13px] text-[var(--muted)]"
+                    >
+                      Nenhum convite ainda.
+                    </td>
+                  </tr>
+                )}
+                {carregandoConvites && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="px-5 py-8 text-center font-sans text-[13px] text-[var(--muted)]"
+                    >
+                      Carregando...
                     </td>
                   </tr>
                 )}
@@ -257,13 +488,11 @@ function AdminCRM() {
 function KpiPill({
   label,
   valor,
-  cor,
   ativo,
   onClick,
 }: {
   label: string;
   valor: number;
-  cor?: string;
   ativo: boolean;
   onClick: () => void;
 }) {
@@ -273,14 +502,16 @@ function KpiPill({
       onClick={onClick}
       className={`flex items-center gap-2 rounded-xl border px-3.5 py-2 transition-colors ${
         ativo
-          ? "border-[#C96B3E] bg-[rgba(201,107,62,0.06)]"
-          : "border-[rgba(26,26,46,0.1)] bg-white"
+          ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
+          : "border-[var(--line)] bg-white hover:border-[var(--secondary)]"
       }`}
     >
-      <span className="font-serif text-[18px] leading-none" style={{ color: cor ?? "#1A1A2E" }}>
+      <span
+        className={`font-fraunces text-[18px] leading-none ${ativo ? "text-[var(--secondary-text)]" : "text-[var(--ink)]"}`}
+      >
         {valor}
       </span>
-      <span className="font-sans text-[13px] text-[#1A1A2E] opacity-65">{label}</span>
+      <span className="font-sans text-[13px] text-[var(--ink-soft)]">{label}</span>
     </button>
   );
 }

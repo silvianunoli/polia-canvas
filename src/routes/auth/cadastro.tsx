@@ -21,7 +21,12 @@ import {
 } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 
+const searchSchema = z.object({
+  email: z.string().email().optional(),
+});
+
 export const Route = createFileRoute("/auth/cadastro")({
+  validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Criar conta · Pólia" },
@@ -43,7 +48,8 @@ export const Route = createFileRoute("/auth/cadastro")({
 
 function CadastroPage() {
   const navigate = useNavigate();
-  const [values, setValues] = useState({ nome: "", email: "", senha: "" });
+  const { email: emailConvite } = Route.useSearch();
+  const [values, setValues] = useState({ nome: "", email: emailConvite ?? "", senha: "" });
   const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
   const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -11,7 +11,7 @@ export function SiteFooter() {
               A Pólia te ajuda a construir a sua marca, uma etapa de cada vez, no seu tempo.
             </p>
             <Link
-              to="/auth/cadastro"
+              to="/precos"
               className="mt-6 inline-flex rounded-lg border border-[var(--secondary)] bg-[var(--secondary)] px-6 py-3 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
             >
               Começar

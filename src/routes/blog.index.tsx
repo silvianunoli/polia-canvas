@@ -176,7 +176,7 @@ function BlogList() {
                 </p>
               </div>
               <Link
-                to="/auth/cadastro"
+                to="/precos"
                 className="inline-flex rounded-lg border border-[var(--ink)] px-8 py-4 text-[18px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
               >
                 Começar

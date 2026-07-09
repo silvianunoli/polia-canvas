@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { logAcaoAdminServer } from "@/lib/audit-log.server";
 
 const emailInput = z.object({ email: z.string().trim().toLowerCase().email().max(255) });
 
@@ -13,6 +14,7 @@ export interface ConviteListItem {
   email: string;
   criado_em: string;
   usado_em: string | null;
+  enviado_em: string | null;
 }
 
 export const verificarConvite = createServerFn({ method: "POST" })
@@ -56,7 +58,7 @@ export const listarConvites = createServerFn({ method: "GET" })
     await assertAdmin(context.userId);
     const { data, error } = await supabaseAdmin
       .from("convites_cadastro" as never)
-      .select("email, criado_em, usado_em")
+      .select("email, criado_em, usado_em, enviado_em")
       .order("criado_em", { ascending: false });
     if (error) throw new Error("Falha ao listar convites.");
     return { convites: (data ?? []) as unknown as ConviteListItem[] };
@@ -74,6 +76,63 @@ export const criarConvite = createServerFn({ method: "POST" })
       if (error.code === "23505") throw new Error("Esse e-mail já tem convite.");
       throw new Error("Falha ao criar convite.");
     }
+    await logAcaoAdminServer(context.userId, "criar_convite", data.email);
+    return { ok: true };
+  });
+
+const SITE_URL = "https://usepolia.com.br";
+
+function resendApiKey(): string {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) {
+    console.error("[Convites] Missing RESEND_API_KEY environment variable.");
+    throw new Error("Missing RESEND_API_KEY environment variable.");
+  }
+  return key;
+}
+
+export const enviarConvite = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => emailInput.parse(input))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: convite } = await supabaseAdmin
+      .from("convites_cadastro" as never)
+      .select("usado_em")
+      .eq("email", data.email)
+      .maybeSingle();
+    if (!convite) throw new Error("Esse e-mail não está na lista de convites.");
+    if ((convite as unknown as ConviteRow).usado_em) {
+      throw new Error("Essa pessoa já criou a conta — não precisa reenviar.");
+    }
+
+    const link = `${SITE_URL}/auth/cadastro?email=${encodeURIComponent(data.email)}`;
+    const resp = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${resendApiKey()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: "Pólia <naoresponda@usepolia.com.br>",
+        to: [data.email],
+        subject: "Você foi convidada pra Pólia",
+        text: `Você tem acesso liberado à Pólia, sem custo.\n\nAceita o convite e cria sua conta:\n${link}`,
+      }),
+    });
+    if (!resp.ok) {
+      console.error("[Convites] Falha ao enviar e-mail de convite:", await resp.text());
+      throw new Error("Não consegui enviar o convite agora. Tenta de novo.");
+    }
+
+    const { error } = await supabaseAdmin
+      .from("convites_cadastro" as never)
+      .update({ enviado_em: new Date().toISOString() } as never)
+      .eq("email", data.email);
+    if (error) console.error("[Convites] Falha ao marcar convite enviado:", error);
+
+    await logAcaoAdminServer(context.userId, "enviar_convite", data.email);
     return { ok: true };
   });
 
@@ -87,5 +146,6 @@ export const removerConvite = createServerFn({ method: "POST" })
       .delete()
       .eq("email", data.email);
     if (error) throw new Error("Falha ao remover convite.");
+    await logAcaoAdminServer(context.userId, "remover_convite", data.email);
     return { ok: true };
   });
