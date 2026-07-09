@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { dadosEmissorRecibo } from "@/lib/recibo.functions";
 import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
 import { iniciarAssinatura, statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
+import { excluirMinhaConta } from "@/lib/conta.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 
 const VALOR_PLANO_PAGO = 29;
@@ -248,13 +249,14 @@ function ConfiguracoesPage() {
   const pedirExclusao = async () => {
     if (!userId || !confirmacaoBate) return;
     setExcluindo(true);
-    await supabase.from("tickets").insert({
-      user_id: userId,
-      title: "Exclusão de conta",
-      body: "A usuária solicitou a exclusão da conta e dos seus dados pelo app (Configurações → Zona de perigo).",
-      priority: "alta",
-      module_ref: "conta",
-    });
+    // Apaga de verdade: cancela o Stripe, apaga todos os dados no banco e remove
+    // o login. Só desloga se deu certo — senão a usuária pensaria que apagou sem ter.
+    const resultado = await excluirMinhaConta();
+    if (!resultado.ok) {
+      toastErro(resultado.error ?? "Não consegui excluir a conta agora. Tenta de novo.");
+      setExcluindo(false);
+      return;
+    }
     await supabase.auth.signOut();
     window.location.href = "/auth/login";
   };
