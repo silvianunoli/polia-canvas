@@ -6,6 +6,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -18,6 +19,8 @@ import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { track } from "@/lib/analytics";
+import { logErroCliente } from "@/lib/error-log";
 
 import appCss from "../styles.css?url";
 
@@ -40,6 +43,10 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   const errorId = crypto.randomUUID().slice(0, 8);
   console.error(`[${errorId}]`, error);
+  useEffect(() => {
+    logErroCliente(error.message, error.stack);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const router = useRouter();
   return (
     <AutoChromeErrorPage
@@ -127,6 +134,35 @@ function RootComponent() {
   const router = useRouter();
   const { queryClient } = Route.useRouteContext();
   const online = useOnlineStatus();
+
+  // Pageview automático em toda página, pública ou logada — um hook aqui
+  // no root cobre todas as rotas, sem precisar instrumentar cada uma.
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    track("pageview");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // Captura erro de JS não tratado e promise rejeitada fora da árvore React
+  // (o ErrorComponent do router já cobre erro de rota/loader).
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      logErroCliente(event.message, event.error?.stack);
+    };
+    const onRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      logErroCliente(
+        reason instanceof Error ? reason.message : String(reason),
+        reason instanceof Error ? reason.stack : undefined,
+      );
+    };
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onRejection);
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onRejection);
+    };
+  }, []);
 
   useEffect(() => {
     const {
