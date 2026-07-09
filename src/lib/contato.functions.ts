@@ -2,12 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { emailPolia, enviarEmailResend, escapeHtml } from "@/lib/email-template";
+import { verificarTurnstileServer } from "@/lib/turnstile.server";
 
 const inputSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(255),
   assunto: z.string().trim().min(1).max(120),
   mensagem: z.string().trim().min(10).max(2000),
+  turnstileToken: z.string().optional(),
   // Honeypot: campo invisível que só um bot preenche. Vindo preenchido,
   // fingimos sucesso sem gravar nem notificar.
   hp: z.string().optional(),
@@ -17,6 +19,12 @@ export const enviarContato = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
     if (data.hp) return { ok: true };
+
+    // Turnstile validado no SERVIDOR: sem isso, um POST direto na serverFn pulava
+    // o anti-bot (que só rodava no cliente) e permitia spam/bombardeio de e-mail.
+    if (!(await verificarTurnstileServer(data.turnstileToken))) {
+      return { ok: false };
+    }
 
     const { error } = await supabaseAdmin.from("contatos").insert({
       nome: data.nome,

@@ -4,7 +4,7 @@ import { Mail, Clock, HelpCircle } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { enviarContato } from "@/lib/contato.functions";
-import { useTurnstile, verificarTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
+import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
@@ -103,9 +103,10 @@ function Contato() {
     setErrors({});
     setLoading(true);
     try {
-      if (!turnstile.token || !(await verificarTurnstile(turnstile.token))) {
+      // O Turnstile é validado no servidor (dentro de enviarContato). O token é
+      // uso único, então aqui só checamos que existe — quem valida é o servidor.
+      if (!turnstile.token) {
         toastErro("Confirma que não é um robô antes de enviar.");
-        turnstile.reset();
         setLoading(false);
         return;
       }
@@ -115,15 +116,18 @@ function Contato() {
           email: email.trim(),
           assunto: parsed.data.assunto,
           mensagem: parsed.data.mensagem,
+          turnstileToken: turnstile.token,
           hp,
         },
       });
       if (resultado.ok) {
         setEnviado(true);
       } else {
+        turnstile.reset();
         toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
       }
     } catch {
+      turnstile.reset();
       toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
     }
     setLoading(false);

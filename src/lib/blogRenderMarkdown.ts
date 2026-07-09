@@ -1,5 +1,5 @@
 import { marked, Renderer } from "marked";
-import { parseYoutubeOrVimeoEmbedUrl, isSafeHref } from "./blogMarkdown";
+import { parseYoutubeOrVimeoEmbedUrl, isSafeHref, escapeHtmlAttr } from "./blogMarkdown";
 
 const VIDEO_SHORTCODE = /::video\[([^\]]+)\]/g;
 
@@ -13,7 +13,7 @@ function buildSafeRenderer(): Renderer {
   renderer.link = ({ href, tokens }) => {
     const label = renderer.parser.parseInline(tokens);
     if (!isSafeHref(href)) return label;
-    return `<a href="${href}">${label}</a>`;
+    return `<a href="${escapeHtmlAttr(href)}">${label}</a>`;
   };
   return renderer;
 }

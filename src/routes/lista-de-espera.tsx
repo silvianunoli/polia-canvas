@@ -2,8 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useTurnstile, verificarTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
+import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
+import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
@@ -102,28 +102,33 @@ function ListaEsperaPage() {
     setAceiteErro(false);
     setLoading(true);
 
-    if (!turnstile.token || !(await verificarTurnstile(turnstile.token))) {
+    // O Turnstile é validado no servidor (dentro de entrarListaEspera). O token
+    // é uso único, então aqui só checamos que existe.
+    if (!turnstile.token) {
       toastErro("Confirma que não é um robô antes de entrar na lista.");
-      turnstile.reset();
       setLoading(false);
       return;
     }
 
-    const { error } = await supabase.from("lista_espera").insert({
-      nome: nome.trim(),
-      email: email.trim(),
-      tipo_negocio: trava || null,
-    });
-
-    if (error) {
-      if (error.code === "23505") {
-        toastErro("Esse email já está na lista. Já está dentro.");
+    try {
+      const resultado = await entrarListaEspera({
+        data: {
+          nome: nome.trim(),
+          email: email.trim(),
+          tipo_negocio: trava || null,
+          turnstileToken: turnstile.token,
+        },
+      });
+      if (resultado.ok) {
+        if (resultado.jaEstava) toastErro("Esse email já está na lista. Já está dentro.");
         setEnviado(true);
       } else {
+        turnstile.reset();
         toastErro("Não deu pra entrar agora. Tenta de novo em alguns minutos.");
       }
-    } else {
-      setEnviado(true);
+    } catch {
+      turnstile.reset();
+      toastErro("Não deu pra entrar agora. Tenta de novo em alguns minutos.");
     }
     setLoading(false);
   }

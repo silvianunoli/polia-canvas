@@ -4,7 +4,7 @@ import { Mail, User } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { verificarConvite, marcarConviteUsado } from "@/lib/convites.functions";
+import { verificarConvite } from "@/lib/convites.functions";
 import {
   AuthShell,
   AuthButton,
@@ -133,9 +133,8 @@ function CadastroPage() {
         }
         return;
       }
-      // Best-effort: se falhar em marcar o convite como usado, a conta já foi criada
-      // com sucesso mesmo assim — não bloqueamos o fluxo por causa disso.
-      marcarConviteUsado({ data: { email } }).catch(() => {});
+      // O convite é marcado como usado no servidor (trigger AFTER INSERT em
+      // auth.users), não daqui — ver migração 20260709170100.
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {

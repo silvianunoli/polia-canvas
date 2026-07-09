@@ -28,6 +28,17 @@ export function isSafeHref(href: string): boolean {
   }
 }
 
+// Escapa um valor pra uso seguro como VALOR DE ATRIBUTO HTML entre aspas duplas.
+// isSafeHref valida só o protocolo do link; um href https válido ainda pode ter
+// aspas/< no path e fechar o atributo, injetando markup (XSS). Escapar fecha isso.
+export function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 export function parseYoutubeOrVimeoEmbedUrl(rawUrl: string): string | null {
   let url: URL;
   try {

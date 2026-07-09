@@ -289,6 +289,21 @@ Deno.serve(async (req) => {
     return new Response("Assinatura inválida.", { status: 400 });
   }
 
+  // Idempotência: se já processamos este event.id, devolve 200 sem reprocessar.
+  // O Stripe reentrega eventos (retry em não-2xx e, às vezes, duplicatas); sem
+  // isso, os e-mails do webhook reenviavam a cada entrega.
+  const { data: jaProcessado } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .select("id")
+    .eq("id", event.id)
+    .maybeSingle();
+  if (jaProcessado) {
+    return new Response(JSON.stringify({ received: true, duplicate: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -390,6 +405,15 @@ Deno.serve(async (req) => {
   } catch (err) {
     console.error(`[stripe-webhook] Erro ao processar ${event.type}:`, err);
     return new Response("Erro ao processar evento.", { status: 500 });
+  }
+
+  // Só registra o event.id no fim do caminho de sucesso: se o processamento
+  // acima falhar (500), o id NÃO é gravado e a reentrega do Stripe reprocessa.
+  const { error: registroErro } = await supabaseAdmin
+    .from("stripe_webhook_events")
+    .insert({ id: event.id, type: event.type });
+  if (registroErro && registroErro.code !== "23505") {
+    console.error("[stripe-webhook] Falha ao registrar event.id:", registroErro);
   }
 
   return new Response(JSON.stringify({ received: true }), {

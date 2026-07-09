@@ -30,16 +30,11 @@ export const verificarConvite = createServerFn({ method: "POST" })
     return { permitido: (convite as unknown as ConviteRow).usado_em === null };
   });
 
-export const marcarConviteUsado = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => emailInput.parse(input))
-  .handler(async ({ data }) => {
-    const { error } = await supabaseAdmin
-      .from("convites_cadastro" as never)
-      .update({ usado_em: new Date().toISOString() } as never)
-      .eq("email", data.email);
-    if (error) console.error("[Convites] Falha ao marcar convite usado:", error);
-    return { ok: !error };
-  });
+// marcarConviteUsado foi REMOVIDA: era uma serverFn PÚBLICA que aceitava e-mail
+// arbitrário e permitia invalidar o convite de qualquer pessoa (DoS do cadastro
+// fechado). A marcação agora acontece no servidor, via trigger AFTER INSERT em
+// auth.users, no momento em que a conta é de fato criada — ver a migração
+// 20260709170100_marcar_convite_usado_no_signup.sql.
 
 // As 3 funções abaixo usam supabaseAdmin (bypassa RLS deny-all da tabela) —
 // só são seguras porque assertAdmin barra qualquer chamador que não seja
