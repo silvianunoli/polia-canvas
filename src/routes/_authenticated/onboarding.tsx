@@ -1,7 +1,8 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding · Pólia" }] }),
@@ -55,6 +56,12 @@ function OnboardingPage() {
     hs: "",
   });
   const navigate = useNavigate();
+
+  // Best-effort, silencioso: se falhar, não atrapalha o onboarding — a
+  // própria função é idempotente e não reenvia em loads seguintes.
+  useEffect(() => {
+    garantirBoasVindas().catch(() => {});
+  }, []);
 
   return (
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">

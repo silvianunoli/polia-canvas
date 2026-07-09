@@ -428,16 +428,19 @@ export type Database = {
         Row: {
           criado_em: string
           email: string
+          enviado_em: string | null
           usado_em: string | null
         }
         Insert: {
           criado_em?: string
           email: string
+          enviado_em?: string | null
           usado_em?: string | null
         }
         Update: {
           criado_em?: string
           email?: string
+          enviado_em?: string | null
           usado_em?: string | null
         }
         Relationships: []
@@ -1253,6 +1256,7 @@ export type Database = {
           action_triggers: string | null
           audience_content_types: string | null
           awareness_source: string | null
+          boas_vindas_enviado_em: string | null
           brand_feeling: string | null
           brand_visual_style: string | null
           brand_voice: string | null
@@ -1343,6 +1347,7 @@ export type Database = {
           action_triggers?: string | null
           audience_content_types?: string | null
           awareness_source?: string | null
+          boas_vindas_enviado_em?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null
@@ -1433,6 +1438,7 @@ export type Database = {
           action_triggers?: string | null
           audience_content_types?: string | null
           awareness_source?: string | null
+          boas_vindas_enviado_em?: string | null
           brand_feeling?: string | null
           brand_visual_style?: string | null
           brand_voice?: string | null

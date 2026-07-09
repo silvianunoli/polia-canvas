@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAcaoAdminServer } from "@/lib/audit-log.server";
-import { emailPolia } from "@/lib/email-template";
+import { emailPolia, enviarEmailResend } from "@/lib/email-template";
 
 const emailInput = z.object({ email: z.string().trim().toLowerCase().email().max(255) });
 
@@ -83,15 +83,6 @@ export const criarConvite = createServerFn({ method: "POST" })
 
 const SITE_URL = "https://usepolia.com.br";
 
-function resendApiKey(): string {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) {
-    console.error("[Convites] Missing RESEND_API_KEY environment variable.");
-    throw new Error("Missing RESEND_API_KEY environment variable.");
-  }
-  return key;
-}
-
 export const enviarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => emailInput.parse(input))
@@ -109,28 +100,20 @@ export const enviarConvite = createServerFn({ method: "POST" })
     }
 
     const link = `${SITE_URL}/auth/cadastro?email=${encodeURIComponent(data.email)}`;
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${resendApiKey()}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "Pólia <naoresponda@usepolia.com.br>",
-        to: [data.email],
-        subject: "Você foi convidada pra Pólia",
-        text: `Você tem acesso liberado à Pólia, sem custo.\n\nAceita o convite e cria sua conta:\n${link}`,
-        html: emailPolia({
-          preheader: "Seu acesso à Pólia está liberado.",
-          headline: "Você foi convidada pra Pólia",
-          paragrafos: ["Alguém liberou seu acesso à Pólia, sem custo. É só aceitar o convite e criar sua conta."],
-          ctaLabel: "Aceitar convite",
-          ctaUrl: link,
-        }),
+    const enviado = await enviarEmailResend({
+      to: [data.email],
+      subject: "Você foi convidada pra Pólia",
+      text: `Você tem acesso liberado à Pólia, sem custo.\n\nAceita o convite e cria sua conta:\n${link}`,
+      html: emailPolia({
+        preheader: "Seu acesso à Pólia está liberado.",
+        headline: "Você foi convidada pra Pólia",
+        paragrafos: ["Alguém liberou seu acesso à Pólia, sem custo. É só aceitar o convite e criar sua conta."],
+        ctaLabel: "Aceitar convite",
+        ctaUrl: link,
       }),
+      contexto: "[Convites]",
     });
-    if (!resp.ok) {
-      console.error("[Convites] Falha ao enviar e-mail de convite:", await resp.text());
+    if (!enviado) {
       throw new Error("Não consegui enviar o convite agora. Tenta de novo.");
     }
 

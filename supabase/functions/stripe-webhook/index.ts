@@ -126,10 +126,10 @@ function emailPolia(opts: { preheader: string; headline: string; paragrafos: str
 </html>`;
 }
 
-async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
+async function enviarViaResend(subject: string, text: string, html: string, to: string, contexto: string) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
-    console.error("[stripe-webhook] Missing RESEND_API_KEY — e-mail de ativação não enviado.");
+    console.error(`[stripe-webhook] Missing RESEND_API_KEY — ${contexto} não enviado.`);
     return;
   }
   try {
@@ -138,27 +138,105 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Pólia <naoresponda@usepolia.com.br>",
-        to: [email],
-        subject: "Sua compra foi confirmada — crie sua senha",
-        text: `Sua compra na Pólia foi confirmada.\n\nCria sua senha e entra pela primeira vez:\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
-        html: emailPolia({
-          preheader: "Sua compra foi confirmada — crie sua senha.",
-          headline: "Sua compra foi confirmada",
-          paragrafos: [
-            "Cria sua senha e entra pela primeira vez na Pólia.",
-            "Esse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.",
-          ],
-          ctaLabel: "Criar minha senha",
-          ctaUrl: linkAtivacao,
-        }),
+        to: [to],
+        subject,
+        text,
+        html,
       }),
     });
     if (!resp.ok) {
-      console.error("[stripe-webhook] Falha ao enviar e-mail de ativação:", await resp.text());
+      console.error(`[stripe-webhook] Falha ao enviar ${contexto}:`, await resp.text());
     }
   } catch (err) {
-    console.error("[stripe-webhook] Erro ao enviar e-mail de ativação:", err);
+    console.error(`[stripe-webhook] Erro ao enviar ${contexto}:`, err);
   }
+}
+
+async function buscarEmailPorUserId(userId: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+  if (error || !data.user) {
+    console.error("[stripe-webhook] Erro ao buscar e-mail por user_id:", error);
+    return null;
+  }
+  return data.user.email ?? null;
+}
+
+async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
+  await enviarViaResend(
+    "Sua compra foi confirmada — crie sua senha",
+    `Sua compra na Pólia foi confirmada.\n\nCria sua senha e entra pela primeira vez:\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
+    emailPolia({
+      preheader: "Sua compra foi confirmada — crie sua senha.",
+      headline: "Sua compra foi confirmada",
+      paragrafos: [
+        "Cria sua senha e entra pela primeira vez na Pólia.",
+        "Esse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.",
+      ],
+      ctaLabel: "Criar minha senha",
+      ctaUrl: linkAtivacao,
+    }),
+    email,
+    "e-mail de ativação",
+  );
+}
+
+async function enviarEmailPagamentoRecusado(email: string) {
+  await enviarViaResend(
+    "Não conseguimos cobrar seu cartão",
+    `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter o acesso sem interrupção:\n${SITE_URL}/configuracoes`,
+    emailPolia({
+      preheader: "A cobrança da sua assinatura não passou.",
+      headline: "Problema no pagamento",
+      paragrafos: [
+        "A cobrança da sua assinatura na Pólia não passou. Atualiza a forma de pagamento pra manter o acesso sem interrupção.",
+      ],
+      ctaLabel: "Atualizar pagamento",
+      ctaUrl: `${SITE_URL}/configuracoes`,
+    }),
+    email,
+    "e-mail de pagamento recusado",
+  );
+}
+
+async function enviarEmailCancelamento(email: string, dataFimAcesso: string | null) {
+  const paragrafo1 = dataFimAcesso
+    ? `Seu acesso à Pólia continua até ${dataFimAcesso}.`
+    : "Seu acesso à Pólia continua até o fim do período já pago.";
+  await enviarViaResend(
+    "Sua assinatura foi cancelada",
+    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser — seus dados continuam guardados.\n\n${SITE_URL}/precos`,
+    emailPolia({
+      preheader: "Sua assinatura na Pólia foi cancelada.",
+      headline: "Assinatura cancelada",
+      paragrafos: [
+        paragrafo1,
+        "Mudou de ideia? É só assinar de novo quando quiser — seus dados continuam guardados.",
+      ],
+      ctaLabel: "Assinar de novo",
+      ctaUrl: `${SITE_URL}/precos`,
+    }),
+    email,
+    "e-mail de cancelamento",
+  );
+}
+
+async function enviarEmailRenovacao(email: string, valorFormatado: string, dataCobranca: string | null) {
+  const paragrafo = dataCobranca
+    ? `Em ${dataCobranca} vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia.`
+    : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia.`;
+  await enviarViaResend(
+    "Sua assinatura renova em breve",
+    `${paragrafo}\n\n${SITE_URL}/configuracoes`,
+    emailPolia({
+      preheader: "Sua assinatura na Pólia renova em breve.",
+      headline: "Renovação chegando",
+      paragrafos: [paragrafo],
+      ctaLabel: "Ver minha assinatura",
+      ctaUrl: `${SITE_URL}/configuracoes`,
+    }),
+    email,
+    "e-mail de renovação",
+  );
 }
 
 // Resolve o e-mail de quem comprou pra um user_id: reaproveita conta existente
@@ -248,10 +326,18 @@ Deno.serve(async (req) => {
           .from("assinaturas")
           .update({ status: "canceled", cancel_at_period_end: false })
           .eq("stripe_subscription_id", subscription.id)
-          .select("user_id");
+          .select("user_id, current_period_end");
         const userId = data?.[0]?.user_id as string | undefined;
+        const currentPeriodEnd = data?.[0]?.current_period_end as string | undefined;
         if (userId) {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);
+          const email = await buscarEmailPorUserId(userId);
+          if (email) {
+            const dataFim = currentPeriodEnd
+              ? new Date(currentPeriodEnd).toLocaleDateString("pt-BR")
+              : null;
+            await enviarEmailCancelamento(email, dataFim);
+          }
         }
         break;
       }
@@ -261,12 +347,41 @@ Deno.serve(async (req) => {
           invoice.parent?.type === "subscription_details" ? invoice.parent.subscription_details?.subscription : null;
         const subscriptionId = typeof subRef === "string" ? subRef : subRef?.id;
         if (subscriptionId) {
-          await supabaseAdmin
+          const { data } = await supabaseAdmin
             .from("assinaturas")
             .update({ status: "past_due" })
             .eq("stripe_subscription_id", subscriptionId)
-            .neq("status", "canceled");
+            .neq("status", "canceled")
+            .select("user_id");
+          const userId = data?.[0]?.user_id as string | undefined;
+          if (userId) {
+            const email = await buscarEmailPorUserId(userId);
+            if (email) await enviarEmailPagamentoRecusado(email);
+          }
         }
+        break;
+      }
+      case "invoice.upcoming": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        if (!customerId) break;
+        const { data } = await supabaseAdmin
+          .from("assinaturas")
+          .select("user_id")
+          .eq("stripe_customer_id", customerId)
+          .maybeSingle();
+        const userId = (data as { user_id: string } | null)?.user_id;
+        if (!userId) break;
+        const email = await buscarEmailPorUserId(userId);
+        if (!email) break;
+        const valorFormatado = (invoice.amount_due / 100).toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+        const dataCobranca = invoice.next_payment_attempt
+          ? new Date(invoice.next_payment_attempt * 1000).toLocaleDateString("pt-BR")
+          : null;
+        await enviarEmailRenovacao(email, valorFormatado, dataCobranca);
         break;
       }
       default:
