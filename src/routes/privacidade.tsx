@@ -53,8 +53,9 @@ const DADOS = [
   },
   {
     categoria: "Uso",
-    exemplos: "Páginas acessadas, ações no app, dispositivo, IP",
-    origem: "Coleta automática",
+    exemplos:
+      "Páginas acessadas e ações no app (medição própria, sem IP, sem identificador de dispositivo e sem localização)",
+    origem: "Coleta automática, só com consentimento",
   },
 ];
 
@@ -153,6 +154,16 @@ function PrivacidadePage() {
                 A gente coleta o mínimo necessário para a Pólia funcionar. Não pedimos dado
                 sensível que o serviço não precisa.
               </p>
+              <p>
+                Quando a titular cadastra dados de terceiros (por exemplo, os clientes do negócio
+                dela), ela é a controladora desses dados e a Pólia atua como operadora, tratando-os
+                só para prestar o serviço e conforme as instruções dela. A titular é responsável por
+                ter base legal para inserir esses dados.
+              </p>
+              <p>
+                A Pólia é destinada a maiores de 18 anos e não coleta dados de menores de forma
+                intencional.
+              </p>
 
               <h2 id="uso">3. Para que usamos (e com qual base legal)</h2>
               <ul>
@@ -184,9 +195,10 @@ function PrivacidadePage() {
               <h2 id="cookies">4. Cookies</h2>
               <p>
                 Usamos cookies essenciais (pra manter a sessão logada) e, mediante permissão,
-                cookies de medição para entender o uso e melhorar o produto. O controle fica no
-                banner de cookies e nas configurações do navegador.{" "}
-                <Ph>[Listar as ferramentas de analytics usadas.]</Ph>
+                medição de uso para entender o produto e melhorá-lo. O controle fica no banner de
+                cookies e nas configurações do navegador. A medição é própria da Pólia, sem
+                ferramenta de analytics de terceiros, e só roda depois do seu consentimento — sem
+                IP, sem identificador de dispositivo e sem localização.
               </p>
 
               <h2 id="compartilha">5. Com quem compartilhamos</h2>
@@ -195,14 +207,23 @@ function PrivacidadePage() {
               </p>
               <ul>
                 <li>
-                  Provedor de hospedagem e banco de dados{" "}
-                  <Ph>[ex.: Supabase / provedor de nuvem]</Ph>
+                  <strong className="text-[var(--ink)]">Supabase</strong> — banco de dados,
+                  autenticação e armazenamento
                 </li>
                 <li>
-                  Provedor de pagamento <Ph>[ex.: Stripe / gateway]</Ph>
+                  <strong className="text-[var(--ink)]">Cloudflare</strong> — hospedagem do
+                  aplicativo e proteção contra bots (Turnstile)
                 </li>
                 <li>
-                  Ferramenta de e-mail e de medição <Ph>[preencher]</Ph>
+                  <strong className="text-[var(--ink)]">Stripe</strong> — processamento de
+                  pagamento (a Pólia não guarda os dados do cartão)
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">Resend</strong> — envio dos e-mails da conta
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">Google</strong> — apenas se a titular
+                  conectar o Google Agenda, para ler os próprios eventos
                 </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
@@ -217,6 +238,11 @@ function PrivacidadePage() {
                 o consentimento. Para exercer, o contato é pela seção 12. A gente responde no
                 prazo da lei.
               </p>
+              <p>
+                A exclusão pode ser feita na hora, pela própria titular, em{" "}
+                <strong className="text-[var(--ink)]">Configurações → Excluir conta</strong>: isso
+                apaga os dados da conta e cancela a assinatura, sem depender de pedido por e-mail.
+              </p>
 
               <h2 id="seguranca">7. Segurança</h2>
               <p>
@@ -228,16 +254,18 @@ function PrivacidadePage() {
 
               <h2 id="retencao">8. Por quanto tempo guardamos</h2>
               <p>
-                Guardamos os dados enquanto a conta existir e pelo tempo necessário para
-                cumprir obrigações legais. Ao cancelar, a titular pode pedir a exclusão; alguns dados
+                Guardamos os dados enquanto a conta existir. A titular pode excluir a conta a
+                qualquer momento (seção 6), e os dados da conta são apagados na hora. Alguns dados
                 podem ser mantidos por prazos legais <Ph>[definir prazos, ex.: fiscais por 5 anos]</Ph>.
               </p>
 
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
-                Alguns parceiros podem processar dados fora do Brasil. Quando isso acontece,
-                exigimos garantias adequadas de proteção, conforme a LGPD.{" "}
-                <Ph>[Confirmar onde ficam os servidores.]</Ph>
+                Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
+                East). Provedores como Cloudflare, Stripe, Resend e Google também podem processar
+                dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias
+                adequadas previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos
+                de tratamento de dados (DPA) desses provedores.
               </p>
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>
