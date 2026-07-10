@@ -2,6 +2,17 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { dispararAlerta } from "./lib/alertas.server";
+
+// Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
+// responde antes de qualquer roteamento do TanStack Start, pra não depender
+// de SSR/React estarem de pé. Ver docs/observabilidade-alertas.md.
+function respostaHealth(): Response {
+  return new Response(JSON.stringify({ status: "ok", timestamp: new Date().toISOString() }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  });
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -62,18 +73,28 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
     return response;
   }
 
-  console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
+  const erro = consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`);
+  console.error(erro);
+  void dispararAlerta("erro_servidor_critico", "Erro crítico no servidor (SSR)", {
+    mensagem: erro instanceof Error ? erro.message : String(erro),
+  });
   return brandedErrorResponse();
 }
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const url = new URL(request.url);
+    if (url.pathname === "/health") return respostaHealth();
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);
+      void dispararAlerta("erro_servidor_critico", "Erro crítico no servidor (fetch handler)", {
+        mensagem: error instanceof Error ? error.message : String(error),
+      });
       return brandedErrorResponse();
     }
   },

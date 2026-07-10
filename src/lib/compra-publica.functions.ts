@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { stripeClient, precoParaPlano } from "@/lib/stripe.functions";
+import { dispararAlerta } from "@/lib/alertas.server";
 
 const SITE_URL = "https://usepolia.com.br";
 
@@ -35,6 +36,9 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
       return { url: session.url, error: null };
     } catch (err) {
       console.error("[CompraPublica] Erro ao criar checkout session:", err);
+      void dispararAlerta("checkout_erro", "Erro ao criar checkout público (sem conta)", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
       return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo." };
     }
   });

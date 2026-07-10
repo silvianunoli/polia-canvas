@@ -3,6 +3,7 @@
 // persiste em erros_app (origem "server") — antes esse erro só existia 5s em
 // memória e sumia se ninguém consumisse a tempo.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { dispararAlerta } from "@/lib/alertas.server";
 
 let lastCapturedError: { error: unknown; at: number } | undefined;
 const TTL_MS = 5_000;
@@ -13,8 +14,8 @@ function record(error: unknown) {
 }
 
 async function persistirErroServer(error: unknown) {
+  const err = error instanceof Error ? error : new Error(String(error));
   try {
-    const err = error instanceof Error ? error : new Error(String(error));
     await supabaseAdmin.from("erros_app").insert({
       origem: "server",
       mensagem: err.message.slice(0, 2000),
@@ -23,6 +24,9 @@ async function persistirErroServer(error: unknown) {
   } catch {
     // Nunca deixa o log de erro derrubar o handler de erro.
   }
+  void dispararAlerta("erro_servidor_critico", "Erro não tratado no servidor", {
+    mensagem: err.message.slice(0, 500),
+  });
 }
 
 if (typeof globalThis.addEventListener === "function") {

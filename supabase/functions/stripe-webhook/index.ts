@@ -28,6 +28,26 @@ const PRICE_ANUAL = Deno.env.get("STRIPE_PRICE_ID_ANUAL");
 if (PRICE_MENSAL) PRICE_TO_PLANO[PRICE_MENSAL] = "mensal";
 if (PRICE_ANUAL) PRICE_TO_PLANO[PRICE_ANUAL] = "anual";
 
+// Mesmo segredo compartilhado usado pelo Worker Cloudflare — ver
+// docs/observabilidade-alertas.md. Fire-and-forget: nunca deixa uma falha de
+// alerta atrasar a resposta ao Stripe (que reentrega em não-2xx).
+const ALERTAS_SECRET = Deno.env.get("ALERTAS_SECRET") ?? "";
+async function dispararAlerta(tipo: string, titulo: string, detalhes?: Record<string, unknown>) {
+  if (!ALERTAS_SECRET) {
+    console.error("[stripe-webhook] Missing ALERTAS_SECRET — alerta não disparado:", tipo);
+    return;
+  }
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/alertas-criticos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-alertas-secret": ALERTAS_SECRET },
+      body: JSON.stringify({ tipo, titulo, detalhes, link: `${SITE_URL}/admin/qualidade` }),
+    });
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao chamar alertas-criticos:", err);
+  }
+}
+
 async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription) {
   const item = subscription.items.data[0];
   const priceId = item?.price.id ?? null;
@@ -286,6 +306,9 @@ Deno.serve(async (req) => {
     event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret, undefined, cryptoProvider);
   } catch (err) {
     console.error("[stripe-webhook] Assinatura inválida:", err);
+    void dispararAlerta("stripe_webhook_assinatura_invalida", "Assinatura inválida no webhook do Stripe", {
+      mensagem: err instanceof Error ? err.message : String(err),
+    });
     return new Response("Assinatura inválida.", { status: 400 });
   }
 
@@ -404,6 +427,10 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error(`[stripe-webhook] Erro ao processar ${event.type}:`, err);
+    void dispararAlerta("stripe_webhook_erro_processamento", "Erro ao processar evento do webhook do Stripe", {
+      evento: event.type,
+      mensagem: err instanceof Error ? err.message : String(err),
+    });
     return new Response("Erro ao processar evento.", { status: 500 });
   }
 

@@ -53,6 +53,7 @@ Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs
 - Erro sem stack trace pro cliente. TLS sempre. CORS restrito. Rate limiting em login e operações caras.
 - Dependências sem vulnerabilidade conhecida (rode SCA). LGPD: minimize coleta, mascare dado em dev/qa, criptografe dado sensível.
 - Depois de codar, rode o agente `revisor-de-seguranca`.
+- Alerta crítico de incidente de produção (webhook Stripe, taxa de erro, health-check externo) vai pro Telegram via edge function `alertas-criticos`, com dedup de 10 min por tipo. Detalhe completo, gatilhos e setup em `docs/observabilidade-alertas.md`.
 
 ## Arquitetura (regras)
 - SOLID: responsabilidade única; aberto/fechado (polimorfismo, não if por tipo); Liskov; interfaces pequenas; inversão de dependência (injeção, não instanciar concreto na regra).

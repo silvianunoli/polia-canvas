@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { dispararAlerta } from "@/lib/alertas.server";
 
 let _stripe: Stripe | undefined;
 
@@ -105,6 +106,9 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       return { clientSecret, error: null };
     } catch (err) {
       console.error("[Stripe] Erro ao criar assinatura:", err);
+      void dispararAlerta("checkout_erro", "Erro ao criar assinatura (checkout)", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
       return { clientSecret: null, error: "Não consegui iniciar sua assinatura agora. Tenta de novo." };
     }
   });
