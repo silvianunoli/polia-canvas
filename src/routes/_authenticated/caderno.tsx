@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search } from "lucide-react";
 
 function usePrefersReducedMotion() {
@@ -188,6 +189,7 @@ function CadernoPage() {
     },
     onError: () => toastErro("Não consegui criar a nota. Tenta de novo."),
     onSuccess: ({ id, titulo: tituloCriado }) => {
+      track("nota_criada");
       invalidar();
       if (!id) return;
       // Abre a nota recém-criada direto, sem esperar o refetch da lista

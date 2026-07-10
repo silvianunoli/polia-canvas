@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { track } from "@/lib/analytics";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
 
@@ -859,6 +860,7 @@ function ModalProduto({
         setErro(error.message || "Erro ao salvar.");
         return;
       }
+      track("produto_criado", { tipo });
     }
     onSaved();
   };

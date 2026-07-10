@@ -148,6 +148,8 @@ export function Sidebar() {
                   key={item.to}
                   to={item.to}
                   onClick={onNavigate}
+                  data-track="nav_clicado"
+                  data-track-props={JSON.stringify({ destino: item.to })}
                   aria-current={active ? "page" : undefined}
                   className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
                     active
@@ -249,6 +251,7 @@ export function Sidebar() {
             <button
               type="button"
               onClick={signOut}
+              data-track="sair_clicado"
               className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
             >
               <LogOut size={20} aria-hidden="true" />

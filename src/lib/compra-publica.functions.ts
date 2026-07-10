@@ -27,18 +27,22 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         success_url: `${SITE_URL}/compra-confirmada`,
         cancel_url: `${SITE_URL}/precos`,
         allow_promotion_codes: true,
+        // metadata.plano vai junto no evento do webhook (checkout.session.completed),
+        // e session.id correlaciona o checkout_iniciado (client) com o
+        // checkout_concluido/falhou (server) no funil de tagueamento.
+        metadata: { plano: data.plano },
       });
 
       if (!session.url) {
         console.error("[CompraPublica] Sessão criada sem URL de checkout.");
-        return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo." };
+        return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo.", sessionId: null };
       }
-      return { url: session.url, error: null };
+      return { url: session.url, error: null, sessionId: session.id };
     } catch (err) {
       console.error("[CompraPublica] Erro ao criar checkout session:", err);
       void dispararAlerta("checkout_erro", "Erro ao criar checkout público (sem conta)", {
         mensagem: err instanceof Error ? err.message : String(err),
       });
-      return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo." };
+      return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo.", sessionId: null };
     }
   });

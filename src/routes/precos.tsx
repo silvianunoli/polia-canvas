@@ -5,6 +5,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
 import { iniciarCompraPublica } from "@/lib/compra-publica.functions";
+import { track } from "@/lib/analytics";
 
 const VALOR_PLANO_MENSAL = 29;
 const VALOR_PLANO_ANUAL = 290;
@@ -87,12 +88,15 @@ function PrecosPage() {
     try {
       const resultado = await iniciarCompraPublica({ data: { email: emailLimpo, plano: ciclo } });
       if (resultado.error || !resultado.url) {
+        track("checkout_falhou", { motivo: resultado.error ?? "sem_url", plano: ciclo });
         setErro(resultado.error ?? "Não consegui abrir o checkout agora. Tenta de novo.");
         setComprando(false);
         return;
       }
+      track("checkout_iniciado", { plano: ciclo, stripe_session_id: resultado.sessionId });
       window.location.href = resultado.url;
     } catch {
+      track("checkout_falhou", { motivo: "excecao_client", plano: ciclo });
       setErro("Não consegui abrir o checkout agora. Tenta de novo.");
       setComprando(false);
     }

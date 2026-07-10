@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { track } from "@/lib/analytics";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -141,6 +142,7 @@ function MetasPage() {
   });
 
   const concluir = (m: Meta) => {
+    track("meta_concluida");
     atualizar.mutate({
       id: m.id,
       patch: {
@@ -682,6 +684,7 @@ function ModalMeta({
         setErro(error.message || "Erro ao salvar.");
         return;
       }
+      track("meta_criada", { formato });
     }
     onSaved();
   };

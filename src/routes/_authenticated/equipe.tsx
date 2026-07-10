@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 import { Users, Plus, Trash2, Crown } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/equipe")({
@@ -84,6 +85,7 @@ function EquipePage() {
       if (error) throw error;
     },
     onSuccess: () => {
+      track("membro_adicionado", { papel });
       setNome("");
       setEmail("");
       setPapel("membro");

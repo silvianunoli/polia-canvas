@@ -16,6 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { toastErro } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -333,7 +334,9 @@ function PlannerBoard() {
     if (error) {
       toastErro("Não consegui mover o cartão. Tenta de novo.");
       invalidar();
+      return;
     }
+    if (status === "concluido") track("tarefa_concluida");
   };
 
   const mudarPrioridade = async (id: string, prioridade: string) => {
@@ -587,6 +590,7 @@ function PlannerBoard() {
       toastErro("Não consegui salvar o cartão. Tenta de novo.");
       return;
     }
+    track("tarefa_criada", { status });
     setNovoTitulo("");
     setComposerCol(null);
     invalidar();

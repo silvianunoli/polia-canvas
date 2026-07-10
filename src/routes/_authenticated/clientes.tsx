@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro, toastSucesso } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -256,6 +257,7 @@ function LinhaCliente({
       if (jaRegistrada) onRegistrado();
       return;
     }
+    track("venda_registrada");
     setPopAberto(false);
     onRegistrado();
     toastSucesso("Venda registrada no Financeiro.");
@@ -417,6 +419,7 @@ function ModalCliente({
       setErro((error as { message?: string }).message || "Erro ao salvar.");
       return;
     }
+    track("cliente_criado");
     onSaved();
   };
 

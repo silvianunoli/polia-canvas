@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { iniciarAssinatura, statusAssinatura } from "@/lib/stripe.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
+import { track } from "@/lib/analytics";
 
 const VALOR_PLANO_MENSAL = 29;
 const VALOR_PLANO_ANUAL = 290;
@@ -55,11 +56,14 @@ function AssinarPage() {
     try {
       const resultado = await iniciarAssinatura({ data: { plano } });
       if (resultado.error || !resultado.clientSecret) {
+        track("assinatura_falhou", { plano, motivo: resultado.error ?? "sem_client_secret" });
         toastErro(resultado.error ?? "Não consegui iniciar sua assinatura agora. Tenta de novo.");
         return;
       }
+      track("assinatura_iniciada", { plano });
       setClientSecret(resultado.clientSecret);
     } catch {
+      track("assinatura_falhou", { plano, motivo: "excecao_client" });
       toastErro("Não consegui iniciar sua assinatura agora. Tenta de novo.");
     } finally {
       setPlanoIniciando(null);
@@ -109,6 +113,7 @@ function AssinarPage() {
           clientSecret={clientSecret}
           onClose={() => setClientSecret(null)}
           onSucesso={() => {
+            track("assinatura_concluida");
             setClientSecret(null);
             toastSucesso("Pagamento confirmado! Bem-vinda à Pólia.");
             queryClient.invalidateQueries({ queryKey: ["assinatura-status"] });

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { verificarConvite } from "@/lib/convites.functions";
+import { track } from "@/lib/analytics";
 import {
   AuthShell,
   AuthButton,
@@ -88,6 +89,7 @@ function CadastroPage() {
     try {
       const { permitido } = await verificarConvite({ data: { email } });
       if (!permitido) {
+        track("cadastro_falhou", { motivo: "sem_convite" });
         setErrors({
           email: (
             <>
@@ -114,6 +116,7 @@ function CadastroPage() {
       });
       if (error) {
         if (/already/i.test(error.message) || /registered/i.test(error.message)) {
+          track("cadastro_falhou", { motivo: "email_ja_cadastrado" });
           setErrors({
             email: (
               <>
@@ -129,18 +132,21 @@ function CadastroPage() {
             ),
           });
         } else {
+          track("cadastro_falhou", { motivo: "erro_signup" });
           toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
         }
         return;
       }
       // O convite é marcado como usado no servidor (trigger AFTER INSERT em
       // auth.users), não daqui — ver migração 20260709170100.
+      track("cadastro_concluido", { via_convite: !!emailConvite, precisa_verificacao: !data.session });
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {
         navigate({ to: "/onboarding" });
       }
     } catch {
+      track("cadastro_falhou", { motivo: "excecao_client" });
       toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
     } finally {
       setLoading(false);

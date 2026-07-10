@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -121,12 +122,15 @@ function ListaEsperaPage() {
       });
       if (resultado.ok) {
         if (resultado.jaEstava) toastErro("Esse email já está na lista. Já está dentro.");
+        track("lista_espera_enviada", { ja_estava: resultado.jaEstava });
         setEnviado(true);
       } else {
+        track("lista_espera_falhou", { motivo: "resultado_nao_ok" });
         turnstile.reset();
         toastErro("Não deu pra entrar agora. Tenta de novo em alguns minutos.");
       }
     } catch {
+      track("lista_espera_falhou", { motivo: "excecao_client" });
       turnstile.reset();
       toastErro("Não deu pra entrar agora. Tenta de novo em alguns minutos.");
     }

@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { track } from "@/lib/analytics";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -670,6 +671,7 @@ function ModalLancamento({
       setErro(error.message || "Erro ao salvar.");
       return;
     }
+    track("lancamento_criado", { tipo });
     onSaved();
   };
 

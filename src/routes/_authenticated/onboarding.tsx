@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding · Pólia" }] }),
@@ -469,8 +470,10 @@ function Step4({
         { onConflict: "id" },
       );
       if (upErr) throw upErr;
+      track("onboarding_concluido", { tipo_negocio: state.business_type });
       onSuccess();
     } catch (e) {
+      track("onboarding_falhou", { motivo: (e as Error).message || "erro_desconhecido" });
       setError((e as Error).message || "Algo deu errado. Tenta de novo.");
     } finally {
       setSaving(false);

@@ -143,6 +143,32 @@ function RootComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
+  // Clique instrumentado por delegação: qualquer elemento com data-track vira
+  // evento sem precisar importar/chamar track() em cada botão. Ver plano de
+  // tagueamento — data-track-props é um JSON opcional com propriedades extras.
+  useEffect(() => {
+    const onClick = (event: MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const el = target.closest<HTMLElement>("[data-track]");
+      if (!el) return;
+      const elemento = el.getAttribute("data-track");
+      if (!elemento) return;
+      const propsRaw = el.getAttribute("data-track-props");
+      let props: Record<string, unknown> = {};
+      if (propsRaw) {
+        try {
+          props = JSON.parse(propsRaw);
+        } catch {
+          // Atributo mal formado não pode quebrar o clique da usuária.
+        }
+      }
+      track("click", { elemento, ...props });
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, []);
+
   // Captura erro de JS não tratado e promise rejeitada fora da árvore React
   // (o ErrorComponent do router já cobre erro de rota/loader).
   useEffect(() => {

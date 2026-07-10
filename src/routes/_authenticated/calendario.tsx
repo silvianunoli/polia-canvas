@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { ChevronLeft, ChevronRight, ExternalLink, Link2, Unlink, Plus } from "lucide-react";
 import { toastErro, toastSucesso } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 import { BlockError } from "@/components/ui/BlockError";
 import {
   startOfMonth,
@@ -235,8 +236,10 @@ function CalendarioPage() {
     setProcessandoCallback(true);
     finalizarConexaoGoogle({ data: { code: search.code, state: search.state } })
       .then((res) => {
-        if (res.ok) toastSucesso("Google Calendar conectado.");
-        else toastErro(res.error ?? "Não consegui confirmar a conexão com o Google.");
+        if (res.ok) {
+          track("evento_google_conectado");
+          toastSucesso("Google Calendar conectado.");
+        } else toastErro(res.error ?? "Não consegui confirmar a conexão com o Google.");
         qc.invalidateQueries({ queryKey: ["google-status", userId] });
       })
       .catch(() => toastErro("Não consegui confirmar a conexão com o Google."))

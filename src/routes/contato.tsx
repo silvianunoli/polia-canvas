@@ -4,6 +4,7 @@ import { Mail, Clock, HelpCircle } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { enviarContato } from "@/lib/contato.functions";
+import { track } from "@/lib/analytics";
 import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -97,6 +98,7 @@ function Contato() {
       if (emailErro) fieldErrors.email = emailErro;
       setErrors(fieldErrors);
       const primeiroCampo = ordemCampos.find((c) => fieldErrors[c]);
+      track("formulario_invalido", { pagina: "contato", campo: primeiroCampo });
       if (primeiroCampo) refs[primeiroCampo].current?.focus();
       return;
     }
@@ -121,12 +123,15 @@ function Contato() {
         },
       });
       if (resultado.ok) {
+        track("contato_enviado", { assunto: parsed.data.assunto });
         setEnviado(true);
       } else {
+        track("contato_falhou", { motivo: "resultado_nao_ok" });
         turnstile.reset();
         toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
       }
     } catch {
+      track("contato_falhou", { motivo: "excecao_client" });
       turnstile.reset();
       toastErro("Não deu pra enviar agora. Tenta direto em oi@usepolia.com.br");
     }

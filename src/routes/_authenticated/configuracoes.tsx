@@ -8,6 +8,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 import { Switch } from "@/components/ui/switch";
 import { dadosEmissorRecibo } from "@/lib/recibo.functions";
 import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
+import { track } from "@/lib/analytics";
 import { iniciarAssinatura, statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
@@ -98,11 +99,14 @@ function ConfiguracoesPage() {
     try {
       const resultado = await iniciarAssinatura({ data: { plano: planoEscolhido } });
       if (resultado.error || !resultado.clientSecret) {
+        track("assinatura_falhou", { plano: planoEscolhido, motivo: resultado.error ?? "sem_client_secret" });
         toastErro(resultado.error ?? "Não consegui iniciar sua assinatura agora. Tenta de novo.");
         return;
       }
+      track("assinatura_iniciada", { plano: planoEscolhido });
       setClientSecret(resultado.clientSecret);
     } catch {
+      track("assinatura_falhou", { plano: planoEscolhido, motivo: "excecao_client" });
       toastErro("Não consegui iniciar sua assinatura agora. Tenta de novo.");
     } finally {
       setPlanoIniciando(null);
@@ -117,6 +121,7 @@ function ConfiguracoesPage() {
         toastErro(resultado.error ?? "Não consegui cancelar sua assinatura agora. Tenta de novo.");
         return;
       }
+      track("assinatura_cancelada");
       toastSucesso("Assinatura cancelada. Fica ativa até o fim do período já pago.");
       setConfirmandoCancelamento(false);
       invalidarAssinatura();
@@ -145,6 +150,7 @@ function ConfiguracoesPage() {
         valor: VALOR_PLANO_PAGO,
         dataEmissao: new Date(),
       });
+      track("recibo_baixado");
     } catch {
       toastErro("Não consegui gerar o recibo agora. Tenta de novo.");
     } finally {
@@ -559,6 +565,7 @@ function ConfiguracoesPage() {
             clientSecret={clientSecret}
             onClose={() => setClientSecret(null)}
             onSucesso={() => {
+              track("assinatura_concluida");
               setClientSecret(null);
               toastSucesso("Pagamento confirmado! Atualizando sua assinatura...");
               invalidarAssinatura();

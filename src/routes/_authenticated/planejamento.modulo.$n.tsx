@@ -5,10 +5,12 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { track } from "@/lib/analytics";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import {
   type Secao,
+  SECOES,
   TOTAL_MODULOS,
   ferramentaDe,
   moduloInfo,
@@ -156,6 +158,7 @@ function ModuloPage() {
       },
       { onConflict: "user_id,secao" },
     );
+    track("planejamento_secao_concluida", { modulo: n, secao: secaoAtual.id });
     await qc.invalidateQueries({ queryKey: ["modulo", userId, n] });
     const proxima = secoes[idx + 1];
     if (proxima) {
@@ -163,6 +166,15 @@ function ModuloPage() {
       if (typeof window !== "undefined") window.scrollTo({ top: 0 });
     } else {
       // Último: módulo concluído → tela de desbloqueio.
+      track("planejamento_modulo_concluido", { modulo: n });
+      // "Completo" não assume ordem — conta direto quantas seções (de todos os
+      // módulos) estão concluídas pra essa usuária e compara com o total real.
+      const { count } = await supabase
+        .from("planejamento_secoes" as never)
+        .select("secao", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .eq("concluido", true);
+      if ((count ?? 0) >= SECOES.length) track("planejamento_completo");
       qc.invalidateQueries({ queryKey: ["planejamento-mapa", userId] });
       setDesbloqueada(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0 });

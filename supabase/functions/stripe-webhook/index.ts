@@ -48,6 +48,27 @@ async function dispararAlerta(tipo: string, titulo: string, detalhes?: Record<st
   }
 }
 
+// track() (src/lib/analytics.ts) é client-only (depende de window/sessionStorage),
+// então o webhook grava direto em eventos_analytics pelo mesmo formato — usa o
+// id da checkout session como sessao_id pra correlacionar com o
+// checkout_iniciado disparado no client (ver src/routes/precos.tsx).
+async function registrarEventoAnalytics(
+  evento: string,
+  stripeSessionId: string,
+  propriedades: Record<string, unknown> = {},
+) {
+  try {
+    await supabaseAdmin.from("eventos_analytics").insert({
+      evento,
+      pagina: "server:stripe-webhook",
+      sessao_id: stripeSessionId,
+      propriedades,
+    });
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao gravar evento de analytics:", err);
+  }
+}
+
 async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription) {
   const item = subscription.items.data[0];
   const priceId = item?.price.id ?? null;
@@ -339,11 +360,15 @@ Deno.serve(async (req) => {
 
         if (!email || !customerId || !subscriptionId) {
           console.error("[stripe-webhook] checkout.session.completed sem e-mail/customer/subscription.");
+          await registrarEventoAnalytics("checkout_falhou", session.id, { motivo: "dados_ausentes" });
           break;
         }
 
         const userId = await resolverContaDaCompra(email, customerId);
-        if (!userId) break;
+        if (!userId) {
+          await registrarEventoAnalytics("checkout_falhou", session.id, { motivo: "erro_criar_conta" });
+          break;
+        }
 
         // A assinatura em si (status, ciclo, plano) é gravada pelo mesmo
         // caminho de customer.subscription.created/updated — busca a
@@ -351,6 +376,9 @@ Deno.serve(async (req) => {
         // Customer já tem o user_id certo nos metadados.
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
         await upsertAssinaturaDaSubscription(subscription);
+        await registrarEventoAnalytics("checkout_concluido", session.id, {
+          plano: session.metadata?.plano ?? null,
+        });
         break;
       }
       case "customer.subscription.created":

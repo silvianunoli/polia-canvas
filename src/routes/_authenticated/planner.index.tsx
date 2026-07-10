@@ -6,6 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { LayoutGrid, Plus, ArrowRight } from "lucide-react";
 import { toastErro } from "@/lib/toast";
+import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
@@ -125,6 +126,7 @@ function PlannerIndex() {
       return data?.slug ?? null;
     },
     onSuccess: (slug) => {
+      track("planner_quadro_criado");
       setNovoNome("");
       setCriando(false);
       qc.invalidateQueries({ queryKey: ["quadros", userId] });

@@ -10,7 +10,15 @@ export const Route = createFileRoute("/_authenticated/admin/analytics")({
   component: AdminAnalytics,
 });
 
-type Evento = Pick<Tables<"eventos_analytics">, "evento" | "pagina" | "sessao_id" | "criado_em">;
+type Evento = Pick<
+  Tables<"eventos_analytics">,
+  "evento" | "pagina" | "sessao_id" | "propriedades" | "criado_em"
+>;
+
+// Eventos automáticos não contam como "uso de feature" nem como "erro de
+// negócio" — são ruído de fundo (pageview) ou já cobertos pelo próprio nome
+// do clique (click), que aparece como elemento em propriedades, não evento.
+const EVENTOS_AUTOMATICOS = new Set(["pageview", "click"]);
 
 const DIAS_LABEL = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -30,7 +38,7 @@ function AdminAnalytics() {
     const fimDia = new Date(`${ate}T23:59:59.999`).toISOString();
     let query = supabase
       .from("eventos_analytics")
-      .select("evento,pagina,sessao_id,criado_em")
+      .select("evento,pagina,sessao_id,propriedades,criado_em")
       .gte("criado_em", new Date(`${de}T00:00:00`).toISOString())
       .lte("criado_em", fimDia)
       .order("criado_em", { ascending: false })
@@ -89,8 +97,39 @@ function AdminAnalytics() {
       .slice(0, 10);
   }, [pageviews]);
 
+  const usoPorFeature = useMemo(() => {
+    const map = new Map<string, { total: number; sessoes: Set<string> }>();
+    eventos.forEach((e) => {
+      if (EVENTOS_AUTOMATICOS.has(e.evento) || e.evento.endsWith("_falhou")) return;
+      const atual = map.get(e.evento) ?? { total: 0, sessoes: new Set<string>() };
+      atual.total++;
+      atual.sessoes.add(e.sessao_id);
+      map.set(e.evento, atual);
+    });
+    return Array.from(map.entries())
+      .map(([evento, v]) => ({ evento, total: v.total, sessoesUnicas: v.sessoes.size }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12);
+  }, [eventos]);
+
+  const errosNegocio = useMemo(() => {
+    const map = new Map<string, number>();
+    eventos.forEach((e) => {
+      if (!e.evento.endsWith("_falhou")) return;
+      const motivo = (e.propriedades as { motivo?: string } | null)?.motivo ?? "sem_motivo";
+      const chave = `${e.evento} · ${motivo}`;
+      map.set(chave, (map.get(chave) ?? 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([chave, total]) => ({ chave, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 12);
+  }, [eventos]);
+
   const maxDia = Math.max(1, ...porDia.map((d) => d.total));
   const maxPagina = Math.max(1, ...topPaginas.map((p) => p.total));
+  const maxFeature = Math.max(1, ...usoPorFeature.map((f) => f.total));
+  const maxErro = Math.max(1, ...errosNegocio.map((e) => e.total));
 
   return (
     <>
@@ -254,6 +293,73 @@ function AdminAnalytics() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+            Uso por feature
+          </p>
+          <p className="mb-4 font-sans text-[12px] text-[var(--muted)]">
+            Quais ações ela mais faz no período, e em quantas sessões diferentes.
+          </p>
+          {usoPorFeature.length === 0 ? (
+            <p className="font-sans text-[13px] text-[var(--muted)]">Sem dados no período.</p>
+          ) : (
+            <div className="space-y-3">
+              {usoPorFeature.map((f) => (
+                <div key={f.evento}>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="truncate font-mono text-[12px] text-[var(--ink)]">{f.evento}</p>
+                    <p className="shrink-0 pl-2 font-sans text-[12px] text-[var(--muted)]">
+                      {f.total} · {f.sessoesUnicas} sessões
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-[var(--line)]">
+                    <div
+                      className="h-1.5 rounded-full bg-[var(--secondary)]"
+                      style={{ width: `${(f.total / maxFeature) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-[var(--line)] bg-white p-6">
+          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+            Erros de negócio
+          </p>
+          <p className="mb-4 font-sans text-[12px] text-[var(--muted)]">
+            Fricção esperada (checkout recusado, formulário inválido) — não é crash. Crash fica em{" "}
+            <span className="font-mono">/admin/logs</span>.
+          </p>
+          {errosNegocio.length === 0 ? (
+            <p className="font-sans text-[13px] text-[var(--muted)]">
+              Nenhum erro de negócio no período.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {errosNegocio.map((e) => (
+                <div key={e.chave}>
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="truncate font-mono text-[12px] text-[var(--ink)]">{e.chave}</p>
+                    <p className="shrink-0 pl-2 font-sans text-[12px] text-[var(--muted)]">
+                      {e.total}
+                    </p>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-[var(--line)]">
+                    <div
+                      className="h-1.5 rounded-full bg-[var(--danger)]"
+                      style={{ width: `${(e.total / maxErro) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
