@@ -2,6 +2,8 @@ import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/rea
 import { supabase } from "@/integrations/supabase/client";
 import { PoliaFooter } from "@/components/layout/PoliaFooter";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { CsatPrompt } from "@/components/csat/CsatPrompt";
+import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -88,6 +90,13 @@ function showFooterFor(pathname: string) {
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const withFooter = showFooterFor(pathname);
+  // Pulso de relacionamento: fora das rotas isentas de assinatura (funil de
+  // pagamento e admin/blog-admin, que têm público e propósito diferentes).
+  const csatPulso = useCsatTrigger(
+    "pulso_periodico",
+    "pulso_relacionamento",
+    !isentoDeAssinatura(pathname),
+  );
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <a href="#main-content" className="skip-link">
@@ -100,6 +109,13 @@ function AuthenticatedLayout() {
         </main>
         {withFooter && <PoliaFooter />}
       </div>
+      {csatPulso.mostrar && (
+        <CsatPrompt
+          pergunta="Como está sendo usar a Pólia?"
+          onFechar={csatPulso.fechar}
+          onEnviar={csatPulso.enviar}
+        />
+      )}
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { CsatPrompt } from "@/components/csat/CsatPrompt";
+import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import {
   type Secao,
   TOTAL_MODULOS,
@@ -62,6 +64,7 @@ function ModuloPage() {
   const ferramenta = ferramentaDe(n);
   const [desbloqueada, setDesbloqueada] = useState(false);
   const [secaoId, setSecaoId] = useState<string | null>(null);
+  const csat = useCsatTrigger("entregavel_concluido", `modulo_${n}`, desbloqueada);
 
   const dadosQuery = useQuery({
     queryKey: ["modulo", userId, n],
@@ -204,6 +207,13 @@ function ModuloPage() {
             Ver o planejamento
           </a>
         </div>
+        {csat.mostrar && (
+          <CsatPrompt
+            pergunta={`Como foi concluir o módulo ${n}?`}
+            onFechar={csat.fechar}
+            onEnviar={csat.enviar}
+          />
+        )}
       </div>
     );
   }

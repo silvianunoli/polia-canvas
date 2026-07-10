@@ -21,6 +21,16 @@ type TicketRow = Pick<
 const tabTriggerClass =
   "rounded-lg px-4 py-1.5 text-[var(--muted)] data-[state=active]:bg-[var(--secondary-light)] data-[state=active]:text-[var(--secondary-text)] data-[state=active]:shadow-none";
 
+// item.ref vem como "trigger_type:context_ref" (ver porEtapa) — traduz pra um
+// rótulo legível na lista de CSAT.
+function rotuloContexto(chave: string): string {
+  const [tipo, ctx] = chave.split(":");
+  if (tipo === "pulso_periodico") return "Pulso de relacionamento";
+  const modulo = ctx.match(/^modulo_(\d+)$/);
+  if (modulo) return `Módulo ${modulo[1]}`;
+  return ctx;
+}
+
 function AdminChamados() {
   const navigate = useNavigate();
   const [tickets, setTickets] = useState<TicketRow[]>([]);
@@ -94,10 +104,11 @@ function AdminChamados() {
   const porEtapa = useMemo(() => {
     const map = new Map<string, Tables<"feedback_responses">[]>();
     respostas
-      .filter((r) => r.trigger_type === "entregavel_concluido")
+      .filter((r) => r.trigger_type !== "chamado_resolvido")
       .forEach((r) => {
-        if (!map.has(r.context_ref)) map.set(r.context_ref, []);
-        map.get(r.context_ref)!.push(r);
+        const chave = `${r.trigger_type}:${r.context_ref}`;
+        if (!map.has(chave)) map.set(chave, []);
+        map.get(chave)!.push(r);
       });
     return Array.from(map.entries())
       .map(([ref, items]) => {
@@ -267,7 +278,9 @@ function AdminChamados() {
             {porEtapa.map((item) => (
               <div key={item.ref} className="rounded-2xl border border-[var(--line)] bg-white p-5">
                 <div className="mb-3 flex items-center justify-between">
-                  <p className="font-sans text-[14px] font-medium text-[var(--ink)]">{item.ref}</p>
+                  <p className="font-sans text-[14px] font-medium text-[var(--ink)]">
+                    {rotuloContexto(item.ref)}
+                  </p>
                   <p
                     className="font-sans text-[11px] font-medium uppercase tracking-[1px]"
                     style={{

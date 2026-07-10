@@ -14,7 +14,9 @@ export const Route = createFileRoute("/_authenticated/admin/flags")({
 // Flags que nenhum trecho do app lê hoje — o toggle liga/desliga no banco,
 // mas não muda comportamento nenhum. Mantido explícito aqui pra não fingir
 // que existe uma feature por trás até alguém conectar de verdade.
-const FLAGS_SEM_CODIGO_CONECTADO = new Set(["csat_modal_ativo", "broadcast_ativo"]);
+// csat_modal_ativo agora é lida de verdade (src/lib/csat.ts) — desligada por
+// padrão até decidir ativar a captura em produção.
+const FLAGS_SEM_CODIGO_CONECTADO = new Set(["broadcast_ativo"]);
 
 function AdminFlags() {
   const [flags, setFlags] = useState<Tables<"feature_flags">[]>([]);
