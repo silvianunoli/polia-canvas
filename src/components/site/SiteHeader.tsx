@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
 const NAV = [
   { to: "/sobre", label: "Sobre" },
@@ -17,8 +18,8 @@ export function SiteHeader() {
   return (
     <header className="polia-v3 sticky top-0 z-40 border-b border-[var(--line)] bg-white">
       <div className="mx-auto flex min-h-16 max-w-[1120px] items-center justify-between gap-6 px-6">
-        <Link to="/" className="font-fraunces text-[24px] text-[var(--ink)] no-underline">
-          Pólia
+        <Link to="/" aria-label="Pólia, página inicial" className="text-[var(--ink)] no-underline">
+          <PoliaWordmark className="h-6 w-auto" />
         </Link>
         <nav aria-label="Principal" className="hidden items-center gap-8 md:flex">
           {NAV.map((item) => {

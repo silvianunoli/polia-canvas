@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
 export function SiteFooter() {
   return (
@@ -6,7 +7,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1120px] px-6">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
           <div>
-            <div className="font-fraunces text-[28px]">Pólia</div>
+            <PoliaWordmark className="h-7 w-auto" />
             <p className="mt-3 max-w-[34ch] opacity-80">
               A Pólia te ajuda a construir a sua marca, uma etapa de cada vez, no seu tempo.
             </p>

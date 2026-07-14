@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
 export function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -45,9 +46,9 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
                 }
           }
         >
-          <p className="mb-3 text-center font-fraunces text-[22px] leading-none text-[var(--ink)]">
-            Pólia
-          </p>
+          <div className="mb-3 flex justify-center text-[var(--ink)]">
+            <PoliaWordmark className="h-[22px] w-auto" />
+          </div>
           {children}
         </div>
       </div>
@@ -62,7 +63,7 @@ export function CaveatEyebrow({ children }: { children: ReactNode; size?: number
 export function SerifHeadline({ children, size = 40 }: { children: ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-fraunces leading-[1.1] text-[var(--ink)]"
+      className="text-center font-cabinet leading-[1.1] text-[var(--ink)]"
       style={{ fontSize: `clamp(${Math.round(size * 0.65)}px, 6vw, ${size}px)` }}
     >
       {children}

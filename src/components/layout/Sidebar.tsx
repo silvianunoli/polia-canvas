@@ -19,6 +19,7 @@ import {
   LogOut,
   CalendarDays,
 } from "lucide-react";
+import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,10 +101,13 @@ export function Sidebar() {
               to="/painel"
               onClick={onNavigate}
               aria-label="Pólia, ir para o painel"
-              className="font-fraunces text-[var(--ink)] no-underline"
-              style={{ fontSize: compact ? 18 : 24, fontWeight: 400, lineHeight: 1 }}
+              className="text-[var(--ink)] no-underline"
             >
-              {compact ? "P" : "Pólia"}
+              {compact ? (
+                <PoliaIcon className="h-7 w-auto" />
+              ) : (
+                <PoliaWordmark className="h-6 w-auto" />
+              )}
             </Link>
             {!compact && meta.businessName && (
               <p className="text-[13px] text-[var(--muted)] leading-tight -mt-1">
@@ -309,7 +313,7 @@ export function Sidebar() {
             <Body compact={false} onNavigate={() => setMobileOpen(false)} />
           </SheetContent>
         </Sheet>
-        <span className="font-fraunces text-[18px] text-[var(--ink)]">Pólia</span>
+        <PoliaWordmark className="h-[18px] w-auto text-[var(--ink)]" />
       </div>
     </>
   );
