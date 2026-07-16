@@ -49,13 +49,13 @@ function TermosPage() {
             </p>
 
             <p className="mt-6 text-[16px] leading-relaxed text-[var(--ink-soft)]">
-              Bem-vinda à Pólia. Estes termos explicam as regras de uso do site e do aplicativo. A
-              gente escreveu do jeito mais direto possível. Ao criar uma conta ou usar o site, a usuária
-              concorda com o que está aqui.
+              Bem-vinda à Pólia. Estes termos explicam as regras de uso do site e do aplicativo.
+              Nós escrevemos do jeito mais direto possível. Ao criar uma conta ou usar o site, a
+              usuária concorda com o que está aqui.
             </p>
             <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-soft)]">
               A Pólia é operada por Silvia Nunoli Soluções Digitais ME, CNPJ 18.305.925/0001-06, com
-              sede na Rua Kenkiti Shimomoto, São Paulo/SP (“Pólia”, “a gente”). Contato:{" "}
+              sede na Rua Kenkiti Shimomoto, São Paulo/SP (“Pólia”, “nós”). Contato:{" "}
               <a href="mailto:oi@usepolia.com.br" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                 oi@usepolia.com.br
               </a>
@@ -91,23 +91,23 @@ function TermosPage() {
               <p>
                 A Pólia é um ambiente digital que organiza a operação da marca em etapas e
                 tarefas, com registro de clientes, números e progresso. A Pólia é uma ferramenta de
-                apoio: as decisões sobre o negócio são sempre da usuária. A gente não presta
+                apoio: as decisões sobre o negócio são sempre da usuária. Nós não prestamos
                 consultoria contábil, jurídica ou financeira.
               </p>
 
               <h2 id="conta">3. A conta</h2>
               <p>
                 A usuária é responsável por manter os dados de acesso em segurança e por tudo que
-                acontece na conta. Deve avisar a gente se notar uso indevido. Os dados informados
+                acontece na conta. Deve nos avisar se notar uso indevido. Os dados informados
                 devem ser verdadeiros e atualizados.
               </p>
 
               <h2 id="planos">4. Planos e pagamento</h2>
               <ul>
                 <li>
-                  Os valores e ciclos de cobrança vigentes são os informados na página de{" "}
+                  Os valores e ciclos de cobrança vigentes são os informados na seção de{" "}
                   <Link to="/" hash="planos" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
-                    Preços
+                    Planos
                   </Link>
                   .
                 </li>
@@ -123,15 +123,15 @@ function TermosPage() {
               <p>
                 A usuária concorda em não usar a Pólia para: violar leis, infringir direitos de
                 terceiros, tentar burlar segurança, revender o acesso sem autorização, ou
-                sobrecarregar a plataforma de forma indevida. A gente pode suspender contas que
+                sobrecarregar a plataforma de forma indevida. Nós podemos suspender contas que
                 quebrem estas regras.
               </p>
 
               <h2 id="conteudo">6. O conteúdo</h2>
               <p>
                 Tudo que é cadastrado na Pólia (dados da marca, clientes, números) continua sendo
-                da usuária. Ela dá pra gente apenas a permissão necessária para operar o serviço:
-                armazenar, processar e mostrar esse conteúdo de volta. A gente não vende esse
+                da usuária. Ela nos dá apenas a permissão necessária para operar o serviço:
+                armazenar, processar e mostrar esse conteúdo de volta. Nós não vendemos esse
                 conteúdo. O tratamento de dados pessoais segue a{" "}
                 <Link to="/privacidade" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                   Política de Privacidade
@@ -141,21 +141,21 @@ function TermosPage() {
 
               <h2 id="propriedade">7. Propriedade da Pólia</h2>
               <p>
-                A marca Pólia, o software, o design e os textos são nossos ou licenciados para a
-                gente. Estes termos não transferem esses direitos para a usuária, além do uso normal do
-                serviço.
+                A marca Pólia, o software, o design e os textos são nossos ou licenciados para
+                nós. Estes termos não transferem esses direitos para a usuária, além do uso normal
+                do serviço.
               </p>
 
               <h2 id="cancelamento">8. Cancelamento</h2>
               <p>
                 O cancelamento pode ser feito quando quiser, direto no aplicativo, sem precisar ligar ou
-                justificar. O acesso continua até o fim do ciclo já pago. A gente pode encerrar
+                justificar. O acesso continua até o fim do ciclo já pago. Nós podemos encerrar
                 contas que violem estes termos, avisando quando for possível.
               </p>
 
               <h2 id="garantias">9. Garantias e responsabilidade</h2>
               <p>
-                A gente se esforça para manter a Pólia no ar e funcionando, mas o serviço é
+                Nós nos esforçamos para manter a Pólia no ar e funcionando, mas o serviço é
                 fornecido “como está”, sem garantia de disponibilidade ininterrupta. Na medida
                 permitida pela lei, a responsabilidade da Pólia se limita ao valor pago nos
                 últimos 12 meses, sem prejuízo dos direitos garantidos pelo Código de Defesa do
@@ -164,7 +164,7 @@ function TermosPage() {
 
               <h2 id="mudancas">10. Mudanças nos termos</h2>
               <p>
-                A gente pode atualizar estes termos. Quando a mudança for relevante, avisamos por
+                Nós podemos atualizar estes termos. Quando a mudança for relevante, avisamos por
                 e-mail ou dentro do aplicativo, com antecedência razoável. Continuar usando a Pólia
                 depois disso significa aceitar a nova versão.
               </p>
@@ -182,9 +182,9 @@ function TermosPage() {
                 <a href="mailto:oi@usepolia.com.br" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                   oi@usepolia.com.br
                 </a>{" "}
-                ou pela página de{" "}
+                ou pela nossa{" "}
                 <Link to="/ajuda" hash="contato" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
-                  Contato
+                  Central de Ajuda
                 </Link>
                 .
               </p>

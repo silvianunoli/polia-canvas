@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/privacidade")({
       {
         name: "description",
         content:
-          "Política de Privacidade da Pólia, no padrão LGPD. Os dados são da titular. A gente explica o que coleta, por quê e como ela controla.",
+          "Política de Privacidade da Pólia, no padrão LGPD. Os dados são da titular. Nós explicamos o que coletamos, por quê e como ela controla.",
       },
     ],
   }),
@@ -95,8 +95,8 @@ function PrivacidadePage() {
               <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
                 O controlador dos dados é Silvia Nunoli Soluções Digitais ME, CNPJ
-                18.305.925/0001-06, com sede na Rua Kenkiti Shimomoto, São Paulo/SP. É a gente quem
-                decide como e por que os dados são tratados.
+                18.305.925/0001-06, com sede na Rua Kenkiti Shimomoto, São Paulo/SP. Somos nós que
+                decidimos como e por que os dados são tratados.
               </p>
 
               <h2 id="coleta">2. Dados que coletamos</h2>
@@ -133,7 +133,7 @@ function PrivacidadePage() {
                 </table>
               </div>
               <p>
-                A gente coleta o mínimo necessário para a Pólia funcionar. Não pedimos dado
+                Nós coletamos o mínimo necessário para a Pólia funcionar. Não pedimos dado
                 sensível que o serviço não precisa.
               </p>
               <p>
@@ -184,7 +184,7 @@ function PrivacidadePage() {
                   obrigação legal.
                 </li>
               </ul>
-              <p>A gente não vende os dados. Ponto.</p>
+              <p>Nós não vendemos os dados. Ponto.</p>
 
               <h2 id="cookies">4. Cookies</h2>
               <p>
@@ -235,11 +235,11 @@ function PrivacidadePage() {
 
               <h2 id="direitos">6. Direitos da titular (LGPD art. 18)</h2>
               <p>
-                A qualquer momento, a titular pode pedir para: confirmar se a gente trata os dados
+                A qualquer momento, a titular pode pedir para: confirmar se nós tratamos os dados
                 dela; acessar os dados; corrigir dados incompletos ou errados; anonimizar,
                 bloquear ou eliminar dados desnecessários; portar os dados; eliminar dados
-                tratados com base no consentimento; saber com quem a gente compartilha; e revogar
-                o consentimento. Para exercer, o contato é pela seção 12. A gente responde no
+                tratados com base no consentimento; saber com quem nós compartilhamos; e revogar
+                o consentimento. Para exercer, o contato é pela seção 12. Nós respondemos no
                 prazo da lei.
               </p>
               <p>
@@ -251,9 +251,9 @@ function PrivacidadePage() {
               <h2 id="seguranca">7. Segurança</h2>
               <p>
                 Usamos medidas técnicas e organizacionais para proteger os dados, como controle
-                de acesso e criptografia em trânsito. Nenhum sistema é 100% infalível, mas a gente
-                trata segurança como prioridade e avisa a titular e a ANPD se acontecer um incidente
-                relevante.
+                de acesso e criptografia em trânsito. Nenhum sistema é 100% infalível, mas nós
+                tratamos segurança como prioridade e avisamos a titular e a ANPD se acontecer um
+                incidente relevante.
               </p>
 
               <h2 id="retencao">8. Por quanto tempo guardamos</h2>
@@ -275,8 +275,8 @@ function PrivacidadePage() {
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>
               <p>
-                Nosso encarregado pela proteção de dados é a própria Silvia Nunoli, fundadora da
-                Pólia, pelo e-mail{" "}
+                Nosso encarregado pela proteção de dados é a própria Silvia Nunes de Oliveira,
+                fundadora da Pólia, pelo e-mail{" "}
                 <a
                   href="mailto:privacidade@usepolia.com.br"
                   className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
@@ -288,27 +288,19 @@ function PrivacidadePage() {
 
               <h2 id="mudancas">11. Mudanças nesta política</h2>
               <p>
-                Se a gente atualizar esta política, avisamos por aqui e, quando for relevante, por
+                Se nós atualizarmos esta política, avisamos por aqui e, quando for relevante, por
                 e-mail. A data no topo mostra a última versão.
               </p>
 
               <h2 id="contato">12. Contato</h2>
               <p>
-                Assuntos de privacidade:{" "}
+                Assuntos de privacidade, somente por e-mail:{" "}
                 <a
                   href="mailto:privacidade@usepolia.com.br"
                   className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
                 >
                   privacidade@usepolia.com.br
-                </a>{" "}
-                ou pela página de{" "}
-                <Link
-                  to="/ajuda"
-                  hash="contato"
-                  className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
-                >
-                  Contato
-                </Link>
+                </a>
                 .
               </p>
             </div>
