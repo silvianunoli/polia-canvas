@@ -191,16 +191,29 @@ function SobrePage() {
         {/* HERO */}
         <section className="pb-12 pt-16 md:pb-16 md:pt-24">
           <div className="mx-auto max-w-[1120px] px-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              A marca
-            </p>
-            <h1 className="font-cabinet mt-4 max-w-[20ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
-              Por que a Pólia existe.
-            </h1>
-            <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              A história de quem largou um negócio que dava certo, no que a Pólia acredita, e pra
-              quem ela é feita.
-            </p>
+            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
+              <div>
+                <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                  A marca
+                </p>
+                <h1 className="font-cabinet mt-4 max-w-[20ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+                  Por que a Pólia existe.
+                </h1>
+                <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
+                  A história de quem largou um negócio que dava certo, no que a Pólia acredita, e
+                  pra quem ela é feita.
+                </p>
+              </div>
+              <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--bg)]">
+                <img
+                  src="/marketing/sobre-hero.png"
+                  alt="Sil, fundadora da Pólia, trabalhando no notebook"
+                  className="h-full w-full object-cover"
+                  width={2224}
+                  height={1664}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -407,6 +420,16 @@ function SobrePage() {
               uns dias, o vermelho da meta jogado na sua cara, o “faz tempo que você não
               aparece”. A Pólia recusa isso por inteiro. Aqui vai o que a gente defende.
             </p>
+            <div className="mt-8 overflow-hidden rounded-xl border border-[var(--line)]">
+              <img
+                src="/marketing/sobre-manifesto.jpg"
+                alt=""
+                aria-hidden="true"
+                className="h-[220px] w-full object-cover md:h-[320px]"
+                width={2224}
+                height={1664}
+              />
+            </div>
           </div>
         </section>
 
@@ -587,19 +610,29 @@ function SobrePage() {
         </section>
 
         {/* CTA FINAL */}
-        <section className="pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6 text-center">
-            <h2 className="mx-auto max-w-[16ch] text-[32px] text-[var(--ink)] md:text-[40px]">
-              A marca clara é a que fatura. Comece pela sua.
-            </h2>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/"
-                hash="planos"
-                className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
-              >
-                Começar de graça
-              </Link>
+        <section className="relative overflow-hidden pb-16 md:pb-24">
+          <div className="mx-auto max-w-[1120px] px-6">
+            <div className="relative overflow-hidden rounded-xl">
+              <img
+                src="/marketing/sobre-fechamento.jpg"
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div aria-hidden="true" className="absolute inset-0 bg-[var(--ink)] opacity-40" />
+              <div className="relative flex flex-col items-center gap-8 px-8 py-16 text-center md:py-24">
+                <PoliaWordmark className="h-8 w-auto text-white md:h-10" />
+                <h2 className="mx-auto max-w-[16ch] text-[28px] leading-[1.25] text-white md:text-[36px]">
+                  A marca clara é a que fatura. Comece pela sua.
+                </h2>
+                <Link
+                  to="/"
+                  hash="planos"
+                  className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  Começar de graça
+                </Link>
+              </div>
             </div>
           </div>
         </section>
