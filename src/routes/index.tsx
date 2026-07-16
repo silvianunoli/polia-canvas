@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -512,12 +513,22 @@ function HomePage() {
             <h2 className="mb-6 text-[24px] text-[var(--ink)] md:text-[30px]">
               Dúvidas sobre os planos
             </h2>
-            {faqs.map((f) => (
-              <div key={f.pergunta} className="border-t border-[var(--line)] py-6">
-                <h3 className="text-[18px] text-[var(--ink)]">{f.pergunta}</h3>
-                <p className="mt-2 text-[var(--ink-soft)]">{f.resposta}</p>
-              </div>
-            ))}
+            <Accordion type="single" collapsible>
+              {faqs.map((f) => (
+                <AccordionItem
+                  key={f.pergunta}
+                  value={f.pergunta}
+                  className="border-t border-b-0 border-[var(--line)] first:border-t-0"
+                >
+                  <AccordionTrigger className="py-6 text-[18px] font-normal text-[var(--ink)] no-underline hover:no-underline [&>svg]:text-[var(--muted)]">
+                    {f.pergunta}
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-6 pt-0 text-[16px] text-[var(--ink-soft)]">
+                    {f.resposta}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
         </section>
 

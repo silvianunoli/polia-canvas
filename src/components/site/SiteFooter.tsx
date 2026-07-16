@@ -40,8 +40,8 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-6 text-[13px] opacity-70">
-          <span>© 2026 Pólia · usepolia.com.br</span>
-          <span>Feito no Brasil, pra quem toca sozinha.</span>
+          <span>© 2026 Pólia · CNPJ: 18.305.925/0001-06</span>
+          <span>Desenvolvido por Prismia Soluções Digitais</span>
         </div>
       </div>
     </footer>
