@@ -110,9 +110,19 @@
   --cat-admin: #B9B2A6;       /* categoria "Admin" do Planner — idem */
 }
 
+/* Itálico de acento (pull-quotes, saudação "Bom dia, [nome]."). Cabinet Grotesk
+   não tem peso itálico — Fraunces continua restrita a esse uso pontual. */
 .font-fraunces {
   font-family: "Fraunces", ui-serif, Georgia, serif;
   letter-spacing: -0.015em;
+}
+
+/* Display: maior título de cada tela, números decorativos/stats e wordmark.
+   Cabinet Grotesk tem mais personalidade que uma grotesca neutra, mas ainda
+   tem contraste de traço — por isso fica restrita a tamanho grande/curto. */
+.font-cabinet {
+  font-family: "Cabinet Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.02em;
 }
 
 :root {
@@ -232,8 +242,14 @@
     font-family: inherit;
   }
 
+  /* Todo título (h1-h6) usa Cabinet Grotesk por padrão, sem precisar da
+     classe .font-cabinet. Serif (DM Serif Display, legado) continua só
+     via classe explícita (.font-serif). */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Cabinet Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+  }
+
   h1, h2, h3, h4 {
-    font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }
 }
