@@ -15,14 +15,6 @@ export const Route = createFileRoute("/termos")({
   component: TermosPage,
 });
 
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-[3px] bg-[var(--highlight)] px-1.5 font-semibold text-[var(--highlight-ink)]">
-      {children}
-    </span>
-  );
-}
-
 const TOC = [
   ["aceitacao", "1. Aceitação"],
   ["servico", "2. O que é a Pólia"],
@@ -53,18 +45,8 @@ function TermosPage() {
               Termos de uso
             </h1>
             <p className="mt-3 text-[14px] text-[var(--muted)]">
-              Última atualização: <Ph>[DD/MM/AAAA]</Ph>
+              Última atualização: 16/07/2026
             </p>
-
-            <div className="mt-6 flex gap-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-5">
-              <span aria-hidden="true" className="text-[var(--danger)]">•</span>
-              <p className="text-[15px] leading-relaxed text-[var(--ink-soft)]">
-                <strong className="text-[var(--ink)]">Rascunho, não revisado por advogado.</strong>{" "}
-                Este texto é uma base em linguagem clara, feita pra não começar do zero. Antes de ir
-                ao ar, precisa passar por um advogado e ter os campos marcados em <Ph>amarelo</Ph>{" "}
-                preenchidos com os dados reais da empresa.
-              </p>
-            </div>
 
             <p className="mt-6 text-[16px] leading-relaxed text-[var(--ink-soft)]">
               Bem-vinda à Pólia. Estes termos explicam as regras de uso do site e do aplicativo. A
@@ -72,8 +54,8 @@ function TermosPage() {
               concorda com o que está aqui.
             </p>
             <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-soft)]">
-              A Pólia é operada por <Ph>[Razão social]</Ph>, CNPJ <Ph>[00.000.000/0001-00]</Ph>, com
-              sede em <Ph>[endereço]</Ph> (“Pólia”, “a gente”). Contato:{" "}
+              A Pólia é operada por Silvia Nunoli Soluções Digitais ME, CNPJ 18.305.925/0001-06, com
+              sede na Rua Kenkiti Shimomoto, São Paulo/SP (“Pólia”, “a gente”). Contato:{" "}
               <a href="mailto:oi@usepolia.com.br" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                 oi@usepolia.com.br
               </a>
@@ -131,7 +113,8 @@ function TermosPage() {
                 </li>
                 <li>A cobrança é recorrente e renova automaticamente até ser cancelada.</li>
                 <li>
-                  <Ph>[Definir política de reembolso e período de teste.]</Ph>
+                  Não há reembolso de valores já pagos nem período de teste do plano pago. Quem
+                  quer experimentar a Pólia antes de assinar pode usar o plano Começo, gratuito.
                 </li>
                 <li>Impostos aplicáveis podem incidir conforme a legislação brasileira.</li>
               </ul>
@@ -174,9 +157,9 @@ function TermosPage() {
               <p>
                 A gente se esforça para manter a Pólia no ar e funcionando, mas o serviço é
                 fornecido “como está”, sem garantia de disponibilidade ininterrupta. Na medida
-                permitida pela lei, a responsabilidade da Pólia se limita ao valor pago
-                nos últimos <Ph>[12]</Ph> meses.{" "}
-                <Ph>[Revisar limitação com advogado, à luz do Código de Defesa do Consumidor.]</Ph>
+                permitida pela lei, a responsabilidade da Pólia se limita ao valor pago nos
+                últimos 12 meses, sem prejuízo dos direitos garantidos pelo Código de Defesa do
+                Consumidor.
               </p>
 
               <h2 id="mudancas">10. Mudanças nos termos</h2>
@@ -188,9 +171,9 @@ function TermosPage() {
 
               <h2 id="lei">11. Lei e foro</h2>
               <p>
-                Estes termos seguem as leis do Brasil. Fica eleito o foro da comarca de{" "}
-                <Ph>[cidade/UF]</Ph> para resolver questões, sem prejuízo dos direitos que a
-                legislação de consumo garante à usuária.
+                Estes termos seguem as leis do Brasil. Fica eleito o foro da comarca de São
+                Paulo/SP para resolver questões, sem prejuízo dos direitos que a legislação de
+                consumo garante à usuária.
               </p>
 
               <h2 id="contato">12. Contato</h2>

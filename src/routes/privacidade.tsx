@@ -16,14 +16,6 @@ export const Route = createFileRoute("/privacidade")({
   component: PrivacidadePage,
 });
 
-function Ph({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="rounded-[3px] bg-[var(--highlight)] px-1.5 font-semibold text-[var(--highlight-ink)]">
-      {children}
-    </span>
-  );
-}
-
 const TOC = [
   ["controlador", "1. Quem trata os dados"],
   ["coleta", "2. Dados que coletamos"],
@@ -74,18 +66,8 @@ function PrivacidadePage() {
               Política de Privacidade
             </h1>
             <p className="mt-3 text-[14px] text-[var(--muted)]">
-              Última atualização: <Ph>[DD/MM/AAAA]</Ph> · Alinhada à LGPD (Lei 13.709/2018)
+              Última atualização: 16/07/2026 · Alinhada à LGPD (Lei 13.709/2018)
             </p>
-
-            <div className="mt-6 flex gap-3 rounded-lg border border-[var(--danger)]/25 bg-[var(--danger-soft)] p-5">
-              <span aria-hidden="true" className="text-[var(--danger)]">•</span>
-              <p className="text-[15px] leading-relaxed text-[var(--ink-soft)]">
-                <strong className="text-[var(--ink)]">Rascunho, não revisado por advogado.</strong>{" "}
-                Base em linguagem clara no padrão LGPD. Antes de publicar, precisa de revisão
-                jurídica e do preenchimento dos campos em <Ph>amarelo</Ph> (controlador,
-                encarregado, ferramentas usadas e prazos reais de retenção).
-              </p>
-            </div>
 
             <p className="mt-6 text-[16px] leading-relaxed text-[var(--ink-soft)]">
               Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -112,8 +94,8 @@ function PrivacidadePage() {
             <div className="[&>h2]:mt-12 [&>h2]:scroll-mt-24 [&>h2]:text-[22px] [&>h2]:text-[var(--ink)] [&>p]:mt-3 [&>p]:leading-relaxed [&>p]:text-[var(--ink-soft)] [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:text-[var(--ink-soft)] [&>ul>li]:mt-2">
               <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
-                O controlador dos dados é <Ph>[Razão social]</Ph>, CNPJ{" "}
-                <Ph>[00.000.000/0001-00]</Ph>, com sede em <Ph>[endereço]</Ph>. É a gente quem
+                O controlador dos dados é Silvia Nunoli Soluções Digitais ME, CNPJ
+                18.305.925/0001-06, com sede na Rua Kenkiti Shimomoto, São Paulo/SP. É a gente quem
                 decide como e por que os dados são tratados.
               </p>
 
@@ -180,10 +162,22 @@ function PrivacidadePage() {
                   base: legítimo interesse.
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">Enviar avisos importantes sobre a conta</strong>{" "}
+                  · base: execução de contrato / legítimo interesse.
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">Enviar a newsletter</strong>, com novidades
+                  e conteúdo sobre a Pólia · base: consentimento. O cadastro na newsletter é opcional
+                  e separado da criação de conta: a titular escolhe ativamente receber, e cada
+                  e-mail enviado traz um link para descadastro imediato, sem precisar entrar em
+                  contato.
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">
-                    Enviar avisos importantes e, mediante aceite, novidades
+                    Medir o uso do site e das campanhas de divulgação
                   </strong>{" "}
-                  · base: consentimento / legítimo interesse.
+                  (Google Analytics, Google Ads e Meta Ads) · base: consentimento, coletado no
+                  banner de cookies.
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">Cumprir obrigações legais</strong> · base:
@@ -195,10 +189,12 @@ function PrivacidadePage() {
               <h2 id="cookies">4. Cookies</h2>
               <p>
                 Usamos cookies essenciais (pra manter a sessão logada) e, mediante permissão,
-                medição de uso para entender o produto e melhorá-lo. O controle fica no banner de
-                cookies e nas configurações do navegador. A medição é própria da Pólia, sem
-                ferramenta de analytics de terceiros, e só roda depois do seu consentimento — sem
-                IP, sem identificador de dispositivo e sem localização.
+                cookies de análise e publicidade: Google Analytics (para entender como o site é
+                usado), Google Ads e Meta Ads / Meta Pixel (para medir o resultado dos nossos
+                anúncios e, quando aplicável, mostrar publicidade da Pólia em outros sites). O
+                controle fica no banner de cookies e nas configurações do navegador: quem visita
+                pode aceitar só os essenciais, e os cookies de análise e publicidade só rodam depois
+                do consentimento.
               </p>
 
               <h2 id="compartilha">5. Com quem compartilhamos</h2>
@@ -222,8 +218,16 @@ function PrivacidadePage() {
                   <strong className="text-[var(--ink)]">Resend</strong> — envio dos e-mails da conta
                 </li>
                 <li>
-                  <strong className="text-[var(--ink)]">Google</strong> — apenas se a titular
-                  conectar o Google Agenda, para ler os próprios eventos
+                  <strong className="text-[var(--ink)]">Google Agenda</strong> — apenas se a
+                  titular conectar, para ler os próprios eventos
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">Google Analytics e Google Ads</strong> —
+                  medição de uso do site e das campanhas de anúncio, só com consentimento
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">Meta Ads (Meta Pixel)</strong> — medição
+                  do resultado dos anúncios no Instagram e Facebook, só com consentimento
                 </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
@@ -256,23 +260,30 @@ function PrivacidadePage() {
               <p>
                 Guardamos os dados enquanto a conta existir. A titular pode excluir a conta a
                 qualquer momento (seção 6), e os dados da conta são apagados na hora. Alguns dados
-                podem ser mantidos por prazos legais <Ph>[definir prazos, ex.: fiscais por 5 anos]</Ph>.
+                podem ser mantidos por prazos legais, como documentos fiscais e financeiros, por
+                até 5 anos, conforme exige a legislação tributária brasileira.
               </p>
 
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
-                East). Provedores como Cloudflare, Stripe, Resend e Google também podem processar
-                dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias
-                adequadas previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos
-                de tratamento de dados (DPA) desses provedores.
+                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics e
+                Ads) e Meta (Meta Ads) também podem processar dados fora do Brasil. Nesses casos, a
+                transferência se apoia nas garantias adequadas previstas na LGPD (art. 33), como as
+                cláusulas contratuais e os acordos de tratamento de dados (DPA) desses provedores.
               </p>
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>
               <p>
-                Nosso encarregado pela proteção de dados é{" "}
-                <Ph>[nome / e-mail do encarregado]</Ph>. É com quem a titular fala sobre qualquer
-                assunto de privacidade.
+                Nosso encarregado pela proteção de dados é a própria Silvia Nunoli, fundadora da
+                Pólia, pelo e-mail{" "}
+                <a
+                  href="mailto:privacidade@usepolia.com.br"
+                  className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                >
+                  privacidade@usepolia.com.br
+                </a>
+                . É com quem a titular fala sobre qualquer assunto de privacidade.
               </p>
 
               <h2 id="mudancas">11. Mudanças nesta política</h2>
