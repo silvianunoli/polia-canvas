@@ -25,9 +25,6 @@ export function SiteFooter() {
             </h4>
             <ul className="grid gap-3">
               <li><Link to="/sobre" className="no-underline opacity-80 hover:opacity-100 hover:underline">Sobre</Link></li>
-              <li><Link to="/" hash="como-funciona" className="no-underline opacity-80 hover:opacity-100 hover:underline">Como funciona</Link></li>
-              <li><Link to="/" hash="planos" className="no-underline opacity-80 hover:opacity-100 hover:underline">Preços</Link></li>
-              <li><Link to="/sobre" hash="manifesto" className="no-underline opacity-80 hover:opacity-100 hover:underline">Manifesto</Link></li>
               <li><Link to="/blog" className="no-underline opacity-80 hover:opacity-100 hover:underline">Blog</Link></li>
             </ul>
           </div>
@@ -37,7 +34,6 @@ export function SiteFooter() {
             </h4>
             <ul className="grid gap-3">
               <li><Link to="/ajuda" className="no-underline opacity-80 hover:opacity-100 hover:underline">Ajuda</Link></li>
-              <li><Link to="/contato" className="no-underline opacity-80 hover:opacity-100 hover:underline">Contato</Link></li>
               <li><Link to="/termos" className="no-underline opacity-80 hover:opacity-100 hover:underline">Termos</Link></li>
               <li><Link to="/privacidade" className="no-underline opacity-80 hover:opacity-100 hover:underline">Privacidade</Link></li>
             </ul>

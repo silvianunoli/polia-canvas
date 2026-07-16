@@ -136,7 +136,7 @@ const planos = [
     botaoLabel: "Assinar o Alcance",
     apoio: "O produto inteiro que você usa todo dia.",
     destaque: true,
-    href: "/contato?assunto=assinar-alcance",
+    href: "/ajuda?assunto=assinar-alcance#contato",
   },
   {
     nome: "Voo",
@@ -152,7 +152,7 @@ const planos = [
     botaoLabel: "Assinar o Voo",
     apoio: "Pra quando a marca está pronta pra crescer.",
     destaque: false,
-    href: "/contato?assunto=assinar-voo",
+    href: "/ajuda?assunto=assinar-voo#contato",
   },
 ];
 

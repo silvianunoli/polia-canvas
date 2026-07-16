@@ -14,7 +14,6 @@ import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
-import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
@@ -92,11 +91,6 @@ const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
 const DesignSystemRoute = DesignSystemRouteImport.update({
   id: '/design-system',
   path: '/design-system',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContatoRoute = ContatoRouteImport.update({
-  id: '/contato',
-  path: '/contato',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
@@ -388,7 +382,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -448,7 +441,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -509,7 +501,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -571,7 +562,6 @@ export interface FileRouteTypes {
     | '/'
     | '/ajuda'
     | '/compra-confirmada'
-    | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/privacidade'
@@ -631,7 +621,6 @@ export interface FileRouteTypes {
     | '/'
     | '/ajuda'
     | '/compra-confirmada'
-    | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/privacidade'
@@ -691,7 +680,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/ajuda'
     | '/compra-confirmada'
-    | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/privacidade'
@@ -753,7 +741,6 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AjudaRoute: typeof AjudaRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
-  ContatoRoute: typeof ContatoRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -804,13 +791,6 @@ declare module '@tanstack/react-router' {
       path: '/design-system'
       fullPath: '/design-system'
       preLoaderRoute: typeof DesignSystemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contato': {
-      id: '/contato'
-      path: '/contato'
-      fullPath: '/contato'
-      preLoaderRoute: typeof ContatoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compra-confirmada': {
@@ -1294,7 +1274,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AjudaRoute: AjudaRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
-  ContatoRoute: ContatoRoute,
   DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   PrivacidadeRoute: PrivacidadeRoute,

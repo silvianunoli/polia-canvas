@@ -200,7 +200,7 @@ function TermosPage() {
                   oi@usepolia.com.br
                 </a>{" "}
                 ou pela página de{" "}
-                <Link to="/contato" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
+                <Link to="/ajuda" hash="contato" className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]">
                   Contato
                 </Link>
                 .

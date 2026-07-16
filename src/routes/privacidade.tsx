@@ -70,7 +70,7 @@ function PrivacidadePage() {
             <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
               Jurídico
             </p>
-            <h1 className="font-fraunces mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
+            <h1 className="font-cabinet mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
               Política de Privacidade
             </h1>
             <p className="mt-3 text-[14px] text-[var(--muted)]">
@@ -109,7 +109,7 @@ function PrivacidadePage() {
               ))}
             </ul>
 
-            <div className="[&>h2]:font-fraunces [&>h2]:mt-12 [&>h2]:scroll-mt-24 [&>h2]:text-[22px] [&>h2]:text-[var(--ink)] [&>p]:mt-3 [&>p]:leading-relaxed [&>p]:text-[var(--ink-soft)] [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:text-[var(--ink-soft)] [&>ul>li]:mt-2">
+            <div className="[&>h2]:mt-12 [&>h2]:scroll-mt-24 [&>h2]:text-[22px] [&>h2]:text-[var(--ink)] [&>p]:mt-3 [&>p]:leading-relaxed [&>p]:text-[var(--ink-soft)] [&>ul]:mt-3 [&>ul]:list-disc [&>ul]:pl-5 [&>ul]:text-[var(--ink-soft)] [&>ul>li]:mt-2">
               <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
                 O controlador dos dados é <Ph>[Razão social]</Ph>, CNPJ{" "}
@@ -292,7 +292,8 @@ function PrivacidadePage() {
                 </a>{" "}
                 ou pela página de{" "}
                 <Link
-                  to="/contato"
+                  to="/ajuda"
+                  hash="contato"
                   className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
                 >
                   Contato

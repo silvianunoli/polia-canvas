@@ -44,7 +44,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Página não encontrada",
     icon: Compass,
     primaryAction: { label: "Ir pro início", href: "/painel" },
-    secondaryAction: { label: "Falar com a gente", href: "/contato" },
+    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
   },
   "500": {
     title: "Algo travou do nosso lado.",
@@ -60,7 +60,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Acesso restrito",
     icon: Lock,
     primaryAction: { label: "Voltar", href: "/painel" },
-    secondaryAction: { label: "Falar com a gente", href: "/contato" },
+    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
   },
   manutencao: {
     title: "A Pólia está em manutenção rápida.",
@@ -97,7 +97,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Fim do período de teste",
     icon: CreditCard,
     primaryAction: { label: "Ver planos", href: "/#planos" },
-    secondaryAction: { label: "Falar com a gente", href: "/contato" },
+    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
   },
 };
 
