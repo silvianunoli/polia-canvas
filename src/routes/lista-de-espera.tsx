@@ -149,7 +149,7 @@ function ListaEsperaPage() {
                 <span className="inline-flex rounded-sm bg-[var(--highlight)] px-3 py-1 text-[13px] font-semibold text-[var(--highlight-ink)]">
                   Vagas limitadas
                 </span>
-                <h1 className="font-fraunces mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+                <h1 className="font-cabinet mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
                   A Pólia está abrindo aos poucos. Fique sabendo primeiro.
                 </h1>
                 <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
@@ -328,7 +328,7 @@ function ListaEsperaPage() {
                     role="status"
                     aria-live="polite"
                   >
-                    <h2 className="font-fraunces max-w-[20ch] text-[24px] text-[var(--ink)]">
+                    <h2 className="max-w-[20ch] text-[24px] text-[var(--ink)]">
                       Pronto. Nome na lista.
                     </h2>
                     <p className="mt-3 max-w-[48ch] text-[var(--ink-soft)]">
@@ -343,7 +343,8 @@ function ListaEsperaPage() {
                         Ler o manifesto
                       </Link>
                       <Link
-                        to="/como-funciona"
+                        to="/"
+                        hash="como-funciona"
                         className="rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
                       >
                         Ver como funciona

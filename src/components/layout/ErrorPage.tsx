@@ -96,7 +96,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     subtitle: "Pra continuar com as suas etapas, escolha um plano. Nada some enquanto isso.",
     pageTitle: "Fim do período de teste",
     icon: CreditCard,
-    primaryAction: { label: "Ver planos", href: "/precos" },
+    primaryAction: { label: "Ver planos", href: "/#planos" },
     secondaryAction: { label: "Falar com a gente", href: "/contato" },
   },
 };
@@ -166,7 +166,7 @@ export function ErrorPage({
         <h1
           ref={headingRef}
           tabIndex={-1}
-          className="font-fraunces text-[32px] leading-[1.15] text-[var(--ink)] outline-none md:text-[40px]"
+          className="font-cabinet text-[32px] leading-[1.15] text-[var(--ink)] outline-none md:text-[40px]"
         >
           {title ?? copy.title}
         </h1>

@@ -9,13 +9,14 @@ export function SiteFooter() {
           <div>
             <PoliaWordmark className="h-7 w-auto" />
             <p className="mt-3 max-w-[34ch] opacity-80">
-              A Pólia te ajuda a construir a sua marca, uma etapa de cada vez, no seu tempo.
+              A clareza sobre a sua marca é o que faz ela faturar mais. A Pólia é onde tudo isso
+              se decide.
             </p>
             <Link
-              to="/precos"
+              to="/auth/login"
               className="mt-6 inline-flex rounded-lg border border-[var(--secondary)] bg-[var(--secondary)] px-6 py-3 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
             >
-              Começar
+              Já é assinante?
             </Link>
           </div>
           <div>
@@ -24,8 +25,8 @@ export function SiteFooter() {
             </h4>
             <ul className="grid gap-3">
               <li><Link to="/sobre" className="no-underline opacity-80 hover:opacity-100 hover:underline">Sobre</Link></li>
-              <li><Link to="/como-funciona" className="no-underline opacity-80 hover:opacity-100 hover:underline">Como funciona</Link></li>
-              <li><Link to="/precos" className="no-underline opacity-80 hover:opacity-100 hover:underline">Preços</Link></li>
+              <li><Link to="/" hash="como-funciona" className="no-underline opacity-80 hover:opacity-100 hover:underline">Como funciona</Link></li>
+              <li><Link to="/" hash="planos" className="no-underline opacity-80 hover:opacity-100 hover:underline">Preços</Link></li>
               <li><Link to="/manifesto" className="no-underline opacity-80 hover:opacity-100 hover:underline">Manifesto</Link></li>
               <li><Link to="/blog" className="no-underline opacity-80 hover:opacity-100 hover:underline">Blog</Link></li>
             </ul>
@@ -44,7 +45,7 @@ export function SiteFooter() {
         </div>
         <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-6 text-[13px] opacity-70">
           <span>© 2026 Pólia · usepolia.com.br</span>
-          <span>Feito no Brasil, no seu tempo.</span>
+          <span>Feito no Brasil, pra quem toca sozinha.</span>
         </div>
       </div>
     </footer>

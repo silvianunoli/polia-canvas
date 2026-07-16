@@ -77,7 +77,7 @@ function SobrePage() {
             <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
               Sobre
             </p>
-            <h1 className="font-fraunces mt-4 max-w-[16ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+            <h1 className="font-cabinet mt-4 max-w-[16ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
               A Pólia é a ferramenta que eu não tive.
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
@@ -91,7 +91,7 @@ function SobrePage() {
         <section className="pb-12 md:pb-16">
           <div className="mx-auto max-w-[1120px] px-6">
             <div className="rounded-xl bg-[var(--secondary)] p-8 md:p-12">
-              <p className="font-fraunces max-w-[22ch] text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--secondary-ink)] md:text-[44px]">
+              <p className="max-w-[22ch] text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--secondary-ink)] md:text-[44px]">
                 Eu já tive um negócio que deu certo. E larguei mesmo assim.
               </p>
             </div>
@@ -120,19 +120,19 @@ function SobrePage() {
           <div className="mx-auto max-w-[720px] px-6">
             <div className="grid grid-cols-3 gap-6">
               <div>
-                <div className="font-fraunces text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+                <div className="font-cabinet text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
                   8
                 </div>
                 <div className="mt-2 text-[14px] text-[var(--muted)]">anos de e-commerce</div>
               </div>
               <div>
-                <div className="font-fraunces text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+                <div className="font-cabinet text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
                   10
                 </div>
                 <div className="mt-2 text-[14px] text-[var(--muted)]">anos atrás do método</div>
               </div>
               <div>
-                <div className="font-fraunces text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+                <div className="font-cabinet text-[40px] leading-none tracking-[-0.02em] text-[var(--ink)]">
                   4
                 </div>
                 <div className="mt-2 text-[14px] text-[var(--muted)]">grandes marcas na bagagem</div>
@@ -156,7 +156,7 @@ function SobrePage() {
                   }`}
                 >
                   <span className="absolute -left-[7px] top-[3px] h-3 w-3 rounded-[3px] bg-[var(--secondary)]" />
-                  <span className="font-fraunces block text-[18px] font-semibold text-[var(--ink)]">
+                  <span className="block text-[18px] font-semibold text-[var(--ink)]">
                     {m.ano}
                   </span>
                   <p className="mt-1 text-[var(--ink-soft)]">{m.texto}</p>
@@ -170,7 +170,7 @@ function SobrePage() {
         <section className="pb-12 md:pb-16">
           <div className="mx-auto max-w-[720px] px-6">
             <div className="rounded-xl bg-[var(--surface-pink)] p-8">
-              <p className="font-fraunces max-w-[22ch] text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
+              <p className="max-w-[22ch] text-[30px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
                 Meu negócio não morreu por falta de venda. Morreu por falta de método, e de
                 alguém do lado.
               </p>
@@ -182,7 +182,7 @@ function SobrePage() {
         <section className="pb-12 md:pb-16">
           <div className="mx-auto max-w-[1120px] px-6">
             <div className="max-w-[720px]">
-              <h2 className="font-fraunces text-[24px] text-[var(--ink)] md:text-[30px]">
+              <h2 className="text-[24px] text-[var(--ink)] md:text-[30px]">
                 Foi isso que virou a Pólia.
               </h2>
               <p className="mt-3 max-w-[60ch] text-[var(--ink-soft)]">
@@ -196,7 +196,7 @@ function SobrePage() {
                 return (
                   <div key={p.titulo} className="rounded-xl border border-[var(--line)] bg-white p-8">
                     <Icon size={24} className="text-[var(--secondary-ink)]" aria-hidden="true" />
-                    <h3 className="font-fraunces mt-3 text-[18px] text-[var(--ink)]">{p.titulo}</h3>
+                    <h3 className="mt-3 text-[18px] text-[var(--ink)]">{p.titulo}</h3>
                     <p className="mt-2 text-[15px] leading-[1.6] text-[var(--ink-soft)]">{p.desc}</p>
                   </div>
                 );
@@ -248,7 +248,7 @@ function SobrePage() {
               ))}
             </div>
             <div className="mt-8 flex items-center gap-4">
-              <div className="font-fraunces flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
+              <div className="font-cabinet flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
                 S
               </div>
               <div>
@@ -262,12 +262,13 @@ function SobrePage() {
         {/* CTA FINAL */}
         <section className="pb-16 md:pb-24">
           <div className="mx-auto max-w-[1120px] px-6 text-center">
-            <h2 className="font-fraunces mx-auto max-w-[18ch] text-[32px] text-[var(--ink)] md:text-[40px]">
+            <h2 className="mx-auto max-w-[18ch] text-[32px] text-[var(--ink)] md:text-[40px]">
               Quer ver a Pólia funcionando?
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                to="/como-funciona"
+                to="/"
+                hash="como-funciona"
                 className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
               >
                 Ver como a Pólia funciona

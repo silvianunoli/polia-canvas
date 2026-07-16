@@ -82,7 +82,7 @@ function ManifestoPage() {
             <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
               Manifesto
             </p>
-            <h1 className="font-fraunces mt-4 max-w-[20ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+            <h1 className="font-cabinet mt-4 max-w-[20ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
               A gente acredita no seu ritmo, não na cobrança.
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
@@ -135,7 +135,7 @@ function ManifestoPage() {
                 <span className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
                   {String(i + 1).padStart(2, "0")}
                 </span>
-                <p className="font-fraunces mt-3 max-w-[20ch] text-[30px] font-semibold leading-[1.12] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
+                <p className="mt-3 max-w-[20ch] text-[30px] font-semibold leading-[1.12] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
                   {item.linha}
                 </p>
                 <p className="mt-4 max-w-[54ch] text-[var(--ink-soft)]">{item.texto}</p>
@@ -161,12 +161,13 @@ function ManifestoPage() {
         {/* CTA FINAL */}
         <section className="pb-16 md:pb-24">
           <div className="mx-auto max-w-[1120px] px-6 text-center">
-            <h2 className="font-fraunces mx-auto max-w-[16ch] text-[32px] text-[var(--ink)] md:text-[40px]">
+            <h2 className="mx-auto max-w-[16ch] text-[32px] text-[var(--ink)] md:text-[40px]">
               Se isso é o seu jeito, a gente te espera.
             </h2>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
-                to="/precos"
+                to="/"
+                hash="planos"
                 className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
               >
                 Começar

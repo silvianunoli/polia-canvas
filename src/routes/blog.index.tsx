@@ -80,7 +80,7 @@ function BlogList() {
             <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
               Blog
             </p>
-            <h1 className="font-fraunces mt-4 max-w-[16ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+            <h1 className="font-cabinet mt-4 max-w-[16ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
               Pra quem toca a marca sozinha.
             </h1>
             <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
@@ -116,7 +116,7 @@ function BlogList() {
                     <CoverBlock post={destaque} index={0} />
                   </div>
                   <div className="flex flex-col gap-3 p-6 md:p-8">
-                    <h2 className="font-fraunces max-w-[20ch] text-[28px] leading-[1.15] text-[var(--ink)]">
+                    <h2 className="max-w-[20ch] text-[28px] leading-[1.15] text-[var(--ink)]">
                       {destaque.titulo}
                     </h2>
                     {destaque.resumo && <p className="text-[var(--ink-soft)]">{destaque.resumo}</p>}
@@ -143,7 +143,7 @@ function BlogList() {
                       >
                         <CoverBlock post={post} index={i + 1} />
                         <div className="flex flex-1 flex-col gap-2 p-6">
-                          <h3 className="font-fraunces text-[20px] text-[var(--ink)]">
+                          <h3 className="text-[20px] text-[var(--ink)]">
                             {post.titulo}
                           </h3>
                           {post.resumo && (
@@ -167,7 +167,7 @@ function BlogList() {
           <div className="mx-auto max-w-[1120px] px-6">
             <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl bg-[var(--secondary)] p-8 md:p-12">
               <div>
-                <h2 className="font-fraunces max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
+                <h2 className="max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
                   Gostou de ler? A Pólia é isso na prática.
                 </h2>
                 <p className="mt-3 max-w-[46ch] text-[var(--secondary-ink)]">
@@ -176,7 +176,8 @@ function BlogList() {
                 </p>
               </div>
               <Link
-                to="/precos"
+                to="/"
+                hash="planos"
                 className="inline-flex rounded-lg border border-[var(--ink)] px-8 py-4 text-[18px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
               >
                 Começar

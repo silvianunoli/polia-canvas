@@ -25,7 +25,7 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         customer_email: data.email,
         line_items: [{ price: priceId, quantity: 1 }],
         success_url: `${SITE_URL}/compra-confirmada`,
-        cancel_url: `${SITE_URL}/precos`,
+        cancel_url: `${SITE_URL}/#planos`,
         allow_promotion_codes: true,
         // metadata.plano vai junto no evento do webhook (checkout.session.completed),
         // e session.id correlaciona o checkout_iniciado (client) com o

@@ -12,13 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as PrecosRouteImport } from './routes/precos'
 import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ContatoRouteImport } from './routes/contato'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
-import { Route as ComoFuncionaRouteImport } from './routes/como-funciona'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -87,11 +85,6 @@ const PrivacidadeRoute = PrivacidadeRouteImport.update({
   path: '/privacidade',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrecosRoute = PrecosRouteImport.update({
-  id: '/precos',
-  path: '/precos',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ManifestoRoute = ManifestoRouteImport.update({
   id: '/manifesto',
   path: '/manifesto',
@@ -115,11 +108,6 @@ const ContatoRoute = ContatoRouteImport.update({
 const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
   id: '/compra-confirmada',
   path: '/compra-confirmada',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComoFuncionaRoute = ComoFuncionaRouteImport.update({
-  id: '/como-funciona',
-  path: '/como-funciona',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AjudaRoute = AjudaRouteImport.update({
@@ -405,13 +393,11 @@ const AuthenticatedAdminChamadosIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
-  '/como-funciona': typeof ComoFuncionaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manifesto': typeof ManifestoRoute
-  '/precos': typeof PrecosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -468,13 +454,11 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
-  '/como-funciona': typeof ComoFuncionaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manifesto': typeof ManifestoRoute
-  '/precos': typeof PrecosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -532,13 +516,11 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/ajuda': typeof AjudaRoute
-  '/como-funciona': typeof ComoFuncionaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manifesto': typeof ManifestoRoute
-  '/precos': typeof PrecosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -597,13 +579,11 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ajuda'
-    | '/como-funciona'
     | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/manifesto'
-    | '/precos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -660,13 +640,11 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/ajuda'
-    | '/como-funciona'
     | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/manifesto'
-    | '/precos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -723,13 +701,11 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/ajuda'
-    | '/como-funciona'
     | '/compra-confirmada'
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
     | '/manifesto'
-    | '/precos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -788,13 +764,11 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AjudaRoute: typeof AjudaRoute
-  ComoFuncionaRoute: typeof ComoFuncionaRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
   ContatoRoute: typeof ContatoRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   ManifestoRoute: typeof ManifestoRoute
-  PrecosRoute: typeof PrecosRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -831,13 +805,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacidadeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/precos': {
-      id: '/precos'
-      path: '/precos'
-      fullPath: '/precos'
-      preLoaderRoute: typeof PrecosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/manifesto': {
       id: '/manifesto'
       path: '/manifesto'
@@ -871,13 +838,6 @@ declare module '@tanstack/react-router' {
       path: '/compra-confirmada'
       fullPath: '/compra-confirmada'
       preLoaderRoute: typeof CompraConfirmadaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/como-funciona': {
-      id: '/como-funciona'
-      path: '/como-funciona'
-      fullPath: '/como-funciona'
-      preLoaderRoute: typeof ComoFuncionaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ajuda': {
@@ -1353,13 +1313,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AjudaRoute: AjudaRoute,
-  ComoFuncionaRoute: ComoFuncionaRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
   ContatoRoute: ContatoRoute,
   DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   ManifestoRoute: ManifestoRoute,
-  PrecosRoute: PrecosRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,

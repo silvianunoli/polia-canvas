@@ -104,7 +104,7 @@ function BlogPost() {
                   {post.categoria}
                 </span>
               )}
-              <h1 className="font-fraunces mt-4 text-[36px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
+              <h1 className="font-cabinet mt-4 text-[36px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
                 {post.titulo}
               </h1>
               {post.resumo && (
@@ -113,7 +113,7 @@ function BlogPost() {
                 </p>
               )}
               <div className="mt-6 flex items-center gap-4">
-                <div className="font-fraunces flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
+                <div className="font-cabinet flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
                   S
                 </div>
                 <div>
@@ -152,13 +152,13 @@ function BlogPost() {
             )}
 
             <div
-              className="[&>*+*]:mt-6 [&_p]:text-[18px] [&_p]:leading-[1.65] [&_p]:text-[var(--ink-soft)] [&_li]:text-[18px] [&_li]:leading-[1.65] [&_li]:text-[var(--ink-soft)] [&_h2]:font-fraunces [&_h2]:mt-12 [&_h2]:text-[26px] [&_h2]:text-[var(--ink)] [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mt-3 [&_strong]:font-semibold [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:decoration-[var(--secondary)] [&_a]:decoration-2 [&_a]:underline-offset-[3px] [&_blockquote]:font-fraunces [&_blockquote]:my-12 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--secondary)] [&_blockquote]:pl-6 [&_blockquote_p]:text-[26px] [&_blockquote_p]:font-medium [&_blockquote_p]:leading-[1.3] [&_blockquote_p]:text-[var(--ink)]"
+              className="[&>*+*]:mt-6 [&_p]:text-[18px] [&_p]:leading-[1.65] [&_p]:text-[var(--ink-soft)] [&_li]:text-[18px] [&_li]:leading-[1.65] [&_li]:text-[var(--ink-soft)] [&_h2]:mt-12 [&_h2]:text-[26px] [&_h2]:text-[var(--ink)] [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mt-3 [&_strong]:font-semibold [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:decoration-[var(--secondary)] [&_a]:decoration-2 [&_a]:underline-offset-[3px] [&_blockquote]:my-12 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--secondary)] [&_blockquote]:pl-6 [&_blockquote_p]:text-[26px] [&_blockquote_p]:font-medium [&_blockquote_p]:leading-[1.3] [&_blockquote_p]:text-[var(--ink)]"
               dangerouslySetInnerHTML={{ __html: html }}
             />
 
             <hr className="my-12 h-px border-0 bg-[var(--line)]" />
             <div className="flex items-center gap-4">
-              <div className="font-fraunces flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
+              <div className="font-cabinet flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
                 S
               </div>
               <div>
@@ -175,7 +175,7 @@ function BlogPost() {
         {related.length > 0 && (
           <section className="pb-16">
             <div className="mx-auto max-w-[1120px] px-6">
-              <h2 className="font-fraunces mb-6 text-[24px] text-[var(--ink)] md:text-[30px]">
+              <h2 className="mb-6 text-[24px] text-[var(--ink)] md:text-[30px]">
                 Pra continuar
               </h2>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -188,7 +188,7 @@ function BlogPost() {
                   >
                     <RelatedCover post={r} index={i + 1} />
                     <div className="p-4">
-                      <h3 className="font-fraunces text-[18px] text-[var(--ink)]">{r.titulo}</h3>
+                      <h3 className="text-[18px] text-[var(--ink)]">{r.titulo}</h3>
                       {r.tempo_leitura && (
                         <p className="mt-2 text-[14px] text-[var(--muted)]">
                           {r.tempo_leitura} min
@@ -205,12 +205,13 @@ function BlogPost() {
         <section className="pb-16 md:pb-24">
           <div className="mx-auto max-w-[1120px] px-6 text-center">
             <div className="rounded-xl bg-[var(--secondary)] p-8 md:p-12">
-              <h2 className="font-fraunces mx-auto max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
+              <h2 className="mx-auto max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
                 Quer uma ferramenta que te ajuda a continuar, no seu ritmo?
               </h2>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link
-                  to="/precos"
+                  to="/"
+                  hash="planos"
                   className="inline-flex rounded-lg border border-[var(--ink)] px-8 py-4 text-[18px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
                 >
                   Começar

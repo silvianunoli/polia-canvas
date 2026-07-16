@@ -105,6 +105,85 @@ const qualificacaoNao = [
   "Você tem equipe e processo já rodando. A Pólia é feita pra quem toca sozinha.",
 ];
 
+const planos = [
+  {
+    nome: "Começo",
+    preco: "R$ 0",
+    ciclo: "pra sempre",
+    precoAnual: null,
+    praQuem: "Pra quem está organizando a marca antes de tudo.",
+    features: ["Planejamento completo da marca", "Painel básico pra acompanhar os primeiros passos"],
+    botaoLabel: "Criar conta grátis",
+    apoio: "Sem cartão, e é seu pra sempre.",
+    destaque: false,
+    href: "/auth/cadastro",
+  },
+  {
+    nome: "Alcance",
+    preco: "R$ 29,90",
+    ciclo: "/mês",
+    precoAnual: "ou R$ 299 por ano, dois meses saem de graça",
+    praQuem: "Pra quem já vende e quer o negócio inteiro num lugar só.",
+    features: [
+      "Tudo do Começo, mais:",
+      "Produtos, com a margem de cada venda na sua frente",
+      "Clientes, com a entrega que vira caixa sozinha",
+      "Financeiro do mês fechado num lugar",
+      "Painel completo, com quanto falta pra meta",
+      "Planner pra tocar a semana",
+      "Calendário, Caderno e Metas",
+    ],
+    botaoLabel: "Assinar o Alcance",
+    apoio: "O produto inteiro que você usa todo dia.",
+    destaque: true,
+    href: "/contato?assunto=assinar-alcance",
+  },
+  {
+    nome: "Voo",
+    preco: "R$ 47,90",
+    ciclo: "/mês",
+    precoAnual: "ou R$ 479 por ano, dois meses saem de graça",
+    praQuem: "Pra quem já roda o negócio e quer ir mais longe.",
+    features: [
+      "Tudo do Alcance, mais:",
+      "A Aimer, sua assistente que ajuda a preencher o Planejamento e tira dúvida na hora",
+      "Um plano de conteúdo do ano pras suas redes",
+    ],
+    botaoLabel: "Assinar o Voo",
+    apoio: "Pra quando a marca está pronta pra crescer.",
+    destaque: false,
+    href: "/contato?assunto=assinar-voo",
+  },
+];
+
+const faqs = [
+  {
+    pergunta: "Tem versão grátis mesmo?",
+    resposta:
+      "Tem, e não é teste que expira. O Começo é seu pra sempre: você monta o Planejamento inteiro da marca e acompanha o Painel básico sem colocar cartão. Quando quiser o resto do negócio num lugar só, passa pro Alcance.",
+  },
+  {
+    pergunta: "Posso cancelar quando quiser?",
+    resposta:
+      "Pode, num clique, direto nas configurações. Você continua com acesso até o fim do período que já pagou. Depois disso volta pro Começo, e o seu Planejamento fica intacto.",
+  },
+  {
+    pergunta: "O preço pode mudar depois?",
+    resposta:
+      "Se a gente reajustar os planos algum dia, quem já assina mantém o valor que contratou. Você não descobre um preço novo de um mês pro outro.",
+  },
+  {
+    pergunta: "Quais as formas de pagamento?",
+    resposta:
+      "Cartão e boleto valem no plano mensal e no anual. O Pix é uma opção quando você escolhe pagar o ano de uma vez.",
+  },
+  {
+    pergunta: "Posso trocar de plano depois?",
+    resposta:
+      "Pode, quando quiser. Sobe pro Voo ou volta pro Alcance nas configurações, e o valor se ajusta sozinho na próxima cobrança.",
+  },
+];
+
 function HomePage() {
   const { mostrarModal, escondendoHome, explorar } = useAppEntryGate();
 
@@ -133,7 +212,8 @@ function HomePage() {
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
                   <Link
-                    to="/precos"
+                    to="/"
+                    hash="planos"
                     data-track="cadastro_cta_clicado"
                     data-track-props='{"contexto":"hero"}'
                     className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
@@ -148,7 +228,7 @@ function HomePage() {
                   </a>
                 </div>
                 <p className="mt-3 text-[13px] text-[var(--muted)]">
-                  Ver planos e assinar · a partir de R$ 29/mês
+                  Ver planos e assinar · começa grátis
                 </p>
               </div>
 
@@ -272,7 +352,8 @@ function HomePage() {
 
             <div className="mt-16 flex flex-col items-center gap-3">
               <Link
-                to="/precos"
+                to="/"
+                hash="planos"
                 data-track="cadastro_cta_clicado"
                 data-track-props='{"contexto":"tour_modulos"}'
                 className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
@@ -280,7 +361,7 @@ function HomePage() {
                 Quero faturar
               </Link>
               <p className="text-[13px] text-[var(--muted)]">
-                Ver planos e assinar · a partir de R$ 29/mês
+                Ver planos e assinar · começa grátis
               </p>
             </div>
 
@@ -355,7 +436,92 @@ function HomePage() {
           </div>
         </section>
 
-        {/* 7. CTA FINAL */}
+        {/* 6. PLANOS */}
+        <section id="planos" className="pb-12 md:pb-16">
+          <div className="mx-auto max-w-[1120px] px-6">
+            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+              Planos
+            </p>
+            <h2 className="mt-3 max-w-[24ch] text-[24px] text-[var(--ink)] md:text-[30px]">
+              Comece a enxergar o negócio sem pagar nada.
+            </h2>
+            <p className="mt-4 max-w-[60ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
+              O Planejamento é grátis pra sempre. Quando quiser o negócio inteiro num lugar só,
+              você passa pro Alcance. Sem fidelidade, cancela quando quiser.
+            </p>
+
+            <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+              {planos.map((plano) => (
+                <div
+                  key={plano.nome}
+                  className={`flex flex-col rounded-xl border bg-white p-8 ${
+                    plano.destaque ? "border-2 border-[var(--secondary)]" : "border-[var(--line)]"
+                  }`}
+                >
+                  {plano.destaque && (
+                    <span className="mb-3 inline-block w-fit rounded-[4px] bg-[var(--secondary-light)] px-2 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-[var(--secondary-ink)]">
+                      Mais escolhido
+                    </span>
+                  )}
+                  <h3 className="text-[22px] text-[var(--ink)]">{plano.nome}</h3>
+                  <p className="mt-1 text-[14px] text-[var(--ink-soft)]">{plano.praQuem}</p>
+
+                  <div className="mt-5 flex items-baseline gap-2">
+                    <span className="font-cabinet text-[36px] leading-none tracking-[-0.02em] text-[var(--ink)]">
+                      {plano.preco}
+                    </span>
+                    <span className="text-[var(--ink-soft)]">{plano.ciclo}</span>
+                  </div>
+                  {plano.precoAnual && (
+                    <p className="mt-1 text-[13px] text-[var(--muted)]">{plano.precoAnual}</p>
+                  )}
+
+                  <a
+                    href={plano.href}
+                    data-track="cadastro_cta_clicado"
+                    data-track-props={`{"contexto":"planos_${plano.nome.toLowerCase()}"}`}
+                    className={`mt-6 block rounded-lg px-6 py-3 text-center text-[16px] font-semibold no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
+                      plano.destaque
+                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                        : "border border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white"
+                    }`}
+                  >
+                    {plano.botaoLabel}
+                  </a>
+                  <p className="mt-2 text-center text-[13px] text-[var(--muted)]">{plano.apoio}</p>
+
+                  <ul className="mt-6 flex flex-col gap-3 border-t border-[var(--line)] pt-6">
+                    {plano.features.map((item) => (
+                      <li
+                        key={item}
+                        className="text-[14px] leading-[1.5] text-[var(--ink-soft)]"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* 7. FAQ */}
+        <section className="pb-12 md:pb-16">
+          <div className="mx-auto max-w-[720px] px-6">
+            <h2 className="mb-6 text-[24px] text-[var(--ink)] md:text-[30px]">
+              Dúvidas sobre os planos
+            </h2>
+            {faqs.map((f) => (
+              <div key={f.pergunta} className="border-t border-[var(--line)] py-6">
+                <h3 className="text-[18px] text-[var(--ink)]">{f.pergunta}</h3>
+                <p className="mt-2 text-[var(--ink-soft)]">{f.resposta}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 8. CTA FINAL */}
         <section className="relative overflow-hidden pb-16 md:pb-24">
           <div className="mx-auto max-w-[1120px] px-6">
             <div className="relative overflow-hidden rounded-xl">
@@ -376,7 +542,8 @@ function HomePage() {
                 </h2>
                 <div className="flex flex-col items-center gap-3">
                   <Link
-                    to="/precos"
+                    to="/"
+                    hash="planos"
                     data-track="cadastro_cta_clicado"
                     data-track-props='{"contexto":"cta_final"}'
                     className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
@@ -384,7 +551,7 @@ function HomePage() {
                     Quero faturar
                   </Link>
                   <p className="text-[13px] text-white/70">
-                    Ver planos e assinar · a partir de R$ 29/mês
+                    Ver planos e assinar · começa grátis
                   </p>
                 </div>
               </div>
