@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
-import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as ContatoRouteImport } from './routes/contato'
@@ -83,11 +82,6 @@ const SobreRoute = SobreRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManifestoRoute = ManifestoRouteImport.update({
-  id: '/manifesto',
-  path: '/manifesto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
@@ -397,7 +391,6 @@ export interface FileRoutesByFullPath {
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
-  '/manifesto': typeof ManifestoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -458,7 +451,6 @@ export interface FileRoutesByTo {
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
-  '/manifesto': typeof ManifestoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -520,7 +512,6 @@ export interface FileRoutesById {
   '/contato': typeof ContatoRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
-  '/manifesto': typeof ManifestoRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -583,7 +574,6 @@ export interface FileRouteTypes {
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
-    | '/manifesto'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -644,7 +634,6 @@ export interface FileRouteTypes {
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
-    | '/manifesto'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -705,7 +694,6 @@ export interface FileRouteTypes {
     | '/contato'
     | '/design-system'
     | '/lista-de-espera'
-    | '/manifesto'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -768,7 +756,6 @@ export interface RootRouteChildren {
   ContatoRoute: typeof ContatoRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
-  ManifestoRoute: typeof ManifestoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -803,13 +790,6 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/manifesto': {
-      id: '/manifesto'
-      path: '/manifesto'
-      fullPath: '/manifesto'
-      preLoaderRoute: typeof ManifestoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lista-de-espera': {
@@ -1317,7 +1297,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContatoRoute: ContatoRoute,
   DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
-  ManifestoRoute: ManifestoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,

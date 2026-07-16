@@ -337,7 +337,8 @@ function ListaEsperaPage() {
                     </p>
                     <div className="mt-5 flex flex-wrap gap-3">
                       <Link
-                        to="/manifesto"
+                        to="/sobre"
+                        hash="manifesto"
                         className="rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
                       >
                         Ler o manifesto

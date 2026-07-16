@@ -27,7 +27,7 @@ export function SiteFooter() {
               <li><Link to="/sobre" className="no-underline opacity-80 hover:opacity-100 hover:underline">Sobre</Link></li>
               <li><Link to="/" hash="como-funciona" className="no-underline opacity-80 hover:opacity-100 hover:underline">Como funciona</Link></li>
               <li><Link to="/" hash="planos" className="no-underline opacity-80 hover:opacity-100 hover:underline">Preços</Link></li>
-              <li><Link to="/manifesto" className="no-underline opacity-80 hover:opacity-100 hover:underline">Manifesto</Link></li>
+              <li><Link to="/sobre" hash="manifesto" className="no-underline opacity-80 hover:opacity-100 hover:underline">Manifesto</Link></li>
               <li><Link to="/blog" className="no-underline opacity-80 hover:opacity-100 hover:underline">Blog</Link></li>
             </ul>
           </div>
