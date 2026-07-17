@@ -16,7 +16,7 @@ export function SiteFooter() {
               to="/auth/login"
               className="mt-6 inline-flex rounded-lg border border-[var(--secondary)] bg-[var(--secondary)] px-6 py-3 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
             >
-              Já é assinante?
+              Já tem conta?
             </Link>
           </div>
           <div>

@@ -12,7 +12,7 @@ export function SiteHeader() {
           to="/auth/login"
           className="rounded-lg border border-[var(--line)] px-6 py-3 text-[16px] font-semibold text-[var(--ink)] no-underline transition-colors hover:border-[var(--ink)]"
         >
-          Já é assinante?
+          Já tem conta?
         </Link>
       </div>
     </header>
