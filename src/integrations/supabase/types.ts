@@ -114,6 +114,48 @@ export type Database = {
           },
         ]
       }
+      alertas_enviados: {
+        Row: {
+          atualizado_em: string
+          criado_em: string
+          detalhes: Json
+          enviado: boolean
+          id: string
+          janela_fim: string
+          link: string | null
+          ocorrencias: number
+          resposta_provedor: string | null
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          atualizado_em?: string
+          criado_em?: string
+          detalhes?: Json
+          enviado?: boolean
+          id?: string
+          janela_fim: string
+          link?: string | null
+          ocorrencias?: number
+          resposta_provedor?: string | null
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          atualizado_em?: string
+          criado_em?: string
+          detalhes?: Json
+          enviado?: boolean
+          id?: string
+          janela_fim?: string
+          link?: string | null
+          ocorrencias?: number
+          resposta_provedor?: string | null
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       assinaturas: {
         Row: {
           cancel_at_period_end: boolean
@@ -993,6 +1035,7 @@ export type Database = {
           email: string
           id: string
           nome: string
+          novidades: boolean
           tipo_negocio: string | null
         }
         Insert: {
@@ -1000,6 +1043,7 @@ export type Database = {
           email: string
           id?: string
           nome: string
+          novidades?: boolean
           tipo_negocio?: string | null
         }
         Update: {
@@ -1007,6 +1051,7 @@ export type Database = {
           email?: string
           id?: string
           nome?: string
+          novidades?: boolean
           tipo_negocio?: string | null
         }
         Relationships: []
@@ -1592,6 +1637,24 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_webhook_events: {
+        Row: {
+          id: string
+          processed_at: string
+          type: string | null
+        }
+        Insert: {
+          id: string
+          processed_at?: string
+          type?: string | null
+        }
+        Update: {
+          id?: string
+          processed_at?: string
+          type?: string | null
+        }
+        Relationships: []
+      }
       tarefas: {
         Row: {
           assigned_to: string | null
@@ -1837,8 +1900,137 @@ export type Database = {
           tamanho_legivel: string
         }[]
       }
+      bytea_to_text: { Args: { data: string }; Returns: string }
+      checar_taxa_erro_e_alertar: { Args: never; Returns: undefined }
+      checar_uptimerobot_e_alertar: { Args: never; Returns: undefined }
       compor_nota_presenca: { Args: { p_uid: string }; Returns: undefined }
+      excluir_dados_do_usuario: { Args: never; Returns: undefined }
       hook_checar_convite_cadastro: { Args: { event: Json }; Returns: Json }
+      http: {
+        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "http_request"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      http_delete:
+        | {
+            Args: { uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { content: string; content_type: string; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      http_get:
+        | {
+            Args: { uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { data: Json; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      http_head: {
+        Args: { uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      http_header: {
+        Args: { field: string; value: string }
+        Returns: Database["public"]["CompositeTypes"]["http_header"]
+        SetofOptions: {
+          from: "*"
+          to: "http_header"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      http_list_curlopt: {
+        Args: never
+        Returns: {
+          curlopt: string
+          value: string
+        }[]
+      }
+      http_patch: {
+        Args: { content: string; content_type: string; uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      http_post:
+        | {
+            Args: { content: string; content_type: string; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+        | {
+            Args: { data: Json; uri: string }
+            Returns: Database["public"]["CompositeTypes"]["http_response"]
+            SetofOptions: {
+              from: "*"
+              to: "http_response"
+              isOneToOne: true
+              isSetofReturn: false
+            }
+          }
+      http_put: {
+        Args: { content: string; content_type: string; uri: string }
+        Returns: Database["public"]["CompositeTypes"]["http_response"]
+        SetofOptions: {
+          from: "*"
+          to: "http_response"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      http_reset_curlopt: { Args: never; Returns: boolean }
+      http_set_curlopt: {
+        Args: { curlopt: string; value: string }
+        Returns: boolean
+      }
       is_admin: { Args: { _uid: string }; Returns: boolean }
       parse_primeiro_numero: { Args: { p: string }; Returns: number }
       publish_due_posts: { Args: never; Returns: undefined }
@@ -1846,12 +2038,43 @@ export type Database = {
         Args: { p_cliente_id: string }
         Returns: string
       }
+      text_to_bytea: { Args: { data: string }; Returns: string }
+      urlencode:
+        | { Args: { data: Json }; Returns: string }
+        | {
+            Args: { string: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
+        | {
+            Args: { string: string }
+            Returns: {
+              error: true
+            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
+          }
     }
     Enums: {
       [_ in never]: never
     }
     CompositeTypes: {
-      [_ in never]: never
+      http_header: {
+        field: string | null
+        value: string | null
+      }
+      http_request: {
+        method: unknown
+        uri: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content_type: string | null
+        content: string | null
+      }
+      http_response: {
+        status: number | null
+        content_type: string | null
+        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
+        content: string | null
+      }
     }
   }
 }

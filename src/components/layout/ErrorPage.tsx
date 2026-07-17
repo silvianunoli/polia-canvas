@@ -8,7 +8,6 @@ import {
   WifiOff,
   Clock,
   Link2Off,
-  CreditCard,
   type LucideIcon,
 } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
@@ -20,8 +19,7 @@ export type ErrorCode =
   | "manutencao"
   | "offline"
   | "sessao-expirada"
-  | "link-expirado"
-  | "paywall";
+  | "link-expirado";
 
 export type ErrorAction = { label: string; href: string } | { label: string; onClick: () => void };
 
@@ -64,7 +62,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   },
   manutencao: {
     title: "A Pólia está em manutenção rápida.",
-    subtitle: "A gente volta já. As suas etapas estão a salvo.",
+    subtitle: "A gente volta já. O que você já construiu está a salvo.",
     pageTitle: "Manutenção",
     icon: Wrench,
     primaryAction: { label: "Tentar de novo", href: "/painel" },
@@ -90,14 +88,6 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Link expirado",
     icon: Link2Off,
     primaryAction: { label: "Enviar novo link", href: "/auth/esqueci-senha" },
-  },
-  paywall: {
-    title: "Seu período de teste terminou.",
-    subtitle: "Pra continuar com as suas etapas, escolha um plano. Nada some enquanto isso.",
-    pageTitle: "Fim do período de teste",
-    icon: CreditCard,
-    primaryAction: { label: "Ver planos", href: "/#planos" },
-    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
   },
 };
 

@@ -7,6 +7,7 @@ const inputSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   email: z.string().trim().toLowerCase().email().max(255),
   tipo_negocio: z.string().trim().max(120).nullish(),
+  novidades: z.boolean().default(false),
   turnstileToken: z.string().optional(),
   // Honeypot: campo invisível que só um bot preenche. Vindo preenchido,
   // fingimos sucesso sem gravar nada.
@@ -30,6 +31,7 @@ export const entrarListaEspera = createServerFn({ method: "POST" })
       nome: data.nome,
       email: data.email,
       tipo_negocio: data.tipo_negocio ?? null,
+      novidades: data.novidades,
     });
 
     if (error) {

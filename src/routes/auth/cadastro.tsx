@@ -230,13 +230,13 @@ function CadastroPage() {
       </p>
       <p className="mt-2 text-center text-[12px] text-[var(--muted)]">
         Ao criar a conta, a usuária concorda com os nossos{" "}
-        <a href="#" className="text-[var(--ink-soft)] underline">
+        <Link to="/termos" className="text-[var(--ink-soft)] underline">
           Termos de Uso
-        </a>{" "}
+        </Link>{" "}
         e{" "}
-        <a href="#" className="text-[var(--ink-soft)] underline">
+        <Link to="/privacidade" className="text-[var(--ink-soft)] underline">
           Política de Privacidade
-        </a>
+        </Link>
         .
       </p>
     </AuthShell>

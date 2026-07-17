@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { renderBlogMarkdown } from "@/lib/blogRenderMarkdown";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -187,13 +188,15 @@ function BlogPost() {
                     className="flex flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white no-underline transition-colors hover:border-[var(--secondary)]"
                   >
                     <RelatedCover post={r} index={i + 1} />
-                    <div className="p-4">
+                    <div className="flex flex-1 flex-col gap-1 p-4">
                       <h3 className="text-[18px] text-[var(--ink)]">{r.titulo}</h3>
                       {r.tempo_leitura && (
-                        <p className="mt-2 text-[14px] text-[var(--muted)]">
-                          {r.tempo_leitura} min
-                        </p>
+                        <p className="text-[14px] text-[var(--muted)]">{r.tempo_leitura} min</p>
                       )}
+                      <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[14px] font-semibold text-[var(--ink)]">
+                        Ler mais
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </span>
                     </div>
                   </Link>
                 ))}
@@ -206,7 +209,7 @@ function BlogPost() {
           <div className="mx-auto max-w-[1120px] px-6 text-center">
             <div className="rounded-xl bg-[var(--secondary)] p-8 md:p-12">
               <h2 className="mx-auto max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
-                Quer uma ferramenta que te ajuda a continuar, no seu ritmo?
+                Quer uma ferramenta que te ajuda a decidir com clareza?
               </h2>
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 <Link
@@ -214,7 +217,7 @@ function BlogPost() {
                   hash="planos"
                   className="inline-flex rounded-lg border border-[var(--ink)] px-8 py-4 text-[18px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
                 >
-                  Começar
+                  Começar de graça
                 </Link>
               </div>
             </div>

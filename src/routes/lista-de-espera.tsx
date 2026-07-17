@@ -16,7 +16,7 @@ export const Route = createFileRoute("/lista-de-espera")({
       {
         name: "description",
         content:
-          "A Pólia está abrindo aos poucos. Entre na lista e seja das primeiras a construir a sua marca com a gente, uma etapa de cada vez, no seu tempo.",
+          "A Pólia está abrindo aos poucos. Entre na lista e seja das primeiras a decidir o preço, o caixa e a meta da sua marca com clareza.",
       },
       { property: "og:title", content: "Entrar na lista · Pólia" },
       {
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/lista-de-espera")({
 const PASSOS = [
   "Entra na lista",
   "A gente te avisa quando abrir",
-  "Fecha a primeira etapa",
+  "Começa pelo Planejamento",
 ];
 
 const RAZOES = [
@@ -117,6 +117,7 @@ function ListaEsperaPage() {
           nome: nome.trim(),
           email: email.trim(),
           tipo_negocio: trava || null,
+          novidades,
           turnstileToken: turnstile.token,
         },
       });
@@ -370,8 +371,8 @@ function ListaEsperaPage() {
                 </ul>
                 <hr className="my-6 h-px border-0 bg-[var(--line)]" />
                 <p className="text-[14px] text-[var(--ink-soft)]">
-                  A Pólia te ajuda a tocar a sua marca sozinha: uma etapa de cada vez, no seu tempo,
-                  com alguém do lado apontando o próximo passo.{" "}
+                  A Pólia te ajuda a tocar a sua marca sozinha: decisão por decisão, com o preço,
+                  o caixa e a meta no mesmo lugar.{" "}
                   <Link
                     to="/sobre"
                     className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
