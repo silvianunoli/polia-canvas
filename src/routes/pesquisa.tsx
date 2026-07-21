@@ -67,7 +67,7 @@ function Casca({ children }: { children: React.ReactNode }) {
       <header className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-[640px] items-center px-6 py-5">
           <Link
-            to="/"
+            to="/lista-de-espera"
             className="font-cabinet text-[20px] tracking-[-0.02em] text-[var(--ink)] no-underline"
           >
             pólia
@@ -464,7 +464,7 @@ function TelaFim() {
       </p>
       <div className="mt-5">
         <Link
-          to="/"
+          to="/lista-de-espera"
           className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
         >
           Conhecer a Pólia
@@ -604,7 +604,7 @@ function PesquisaPage() {
         </p>
         <div className="mt-5">
           <Link
-            to="/"
+            to="/lista-de-espera"
             className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
           >
             Conhecer a Pólia
@@ -625,7 +625,7 @@ function PesquisaPage() {
         </p>
         <div className="mt-5">
           <Link
-            to="/"
+            to="/lista-de-espera"
             className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
           >
             Conhecer a Pólia
