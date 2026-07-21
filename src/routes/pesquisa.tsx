@@ -6,6 +6,7 @@ import { track } from "@/lib/analytics";
 import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { getPesquisaAberta, salvarPesquisa } from "@/lib/pesquisa.functions";
+import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import {
   PESQUISA_DISCOVERY,
   PERGUNTAS_POR_ID,
@@ -66,11 +67,8 @@ function Casca({ children }: { children: React.ReactNode }) {
     <div className="polia-v3 flex min-h-screen flex-col bg-white text-[var(--ink)]">
       <header className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-[640px] items-center px-6 py-5">
-          <Link
-            to="/lista-de-espera"
-            className="font-cabinet text-[20px] tracking-[-0.02em] text-[var(--ink)] no-underline"
-          >
-            pólia
+          <Link to="/lista-de-espera" aria-label="Pólia" className="text-[var(--ink)] no-underline">
+            <PoliaWordmark className="h-6 w-auto" />
           </Link>
         </div>
       </header>

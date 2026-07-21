@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Mail, User } from "lucide-react";
 import { z } from "zod";
@@ -28,6 +28,14 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth/cadastro")({
   validateSearch: (search) => searchSchema.parse(search),
+  // Pré-lançamento: autocadastro público fica fechado. Quem chega com
+  // ?email= veio de um link de convite (allowlist) — deixa passar, a
+  // checagem de convite de verdade acontece no submit (verificarConvite).
+  beforeLoad: async ({ search }) => {
+    if (typeof window === "undefined" || search.email) return;
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/lista-de-espera" });
+  },
   head: () => ({
     meta: [
       { title: "Criar conta · Pólia" },

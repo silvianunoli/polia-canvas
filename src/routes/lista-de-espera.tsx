@@ -6,7 +6,6 @@ import { track } from "@/lib/analytics";
 import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
-import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
 
 export const Route = createFileRoute("/lista-de-espera")({
@@ -140,7 +139,7 @@ function ListaEsperaPage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
-      <SiteHeader />
+      <SiteHeader semLogin />
 
       <main>
         <section className="pb-16 pt-16 md:pb-24 md:pt-24">
@@ -387,7 +386,12 @@ function ListaEsperaPage() {
         </section>
       </main>
 
-      <SiteFooter />
+      <footer className="polia-v3 mt-24 border-t border-[var(--line)] bg-white py-8">
+        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-6 text-[13px] text-[var(--muted)]">
+          <span>© 2026 Pólia · CNPJ: 18.305.925/0001-06</span>
+          <span>Desenvolvido por Prismia Soluções Digitais</span>
+        </div>
+      </footer>
     </div>
   );
 }
