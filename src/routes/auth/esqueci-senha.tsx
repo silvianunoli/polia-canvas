@@ -118,7 +118,7 @@ function EsqueciSenhaPage() {
           <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
             <Check size={22} aria-hidden="true" />
           </div>
-          <h2 className="font-fraunces mt-3 text-[22px] leading-snug text-[var(--ink)]">
+          <h2 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
             Se esse e-mail tiver conta,
             <br />a gente manda o link.
           </h2>

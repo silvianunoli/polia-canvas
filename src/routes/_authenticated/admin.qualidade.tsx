@@ -59,7 +59,7 @@ function AdminQualidade() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Qualidade</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Qualidade</h1>
       <p className="mb-6 max-w-[560px] font-sans text-[14px] text-[var(--muted)]">
         Sinal real de saúde a partir do que já rastreamos (erros de client/server e chamadas de
         edge function) — não roda suite de teste automatizada. A Pólia não tem CI hoje, e o Worker
@@ -72,7 +72,7 @@ function AdminQualidade() {
             Erros de app · 24h
           </p>
           <p
-            className="font-fraunces text-[32px] leading-none"
+            className="font-cabinet text-[32px] leading-none"
             style={{ color: errosApp24h.length > 0 ? "var(--danger)" : "var(--secondary-text)" }}
           >
             {carregando ? "…" : errosApp24h.length}
@@ -83,7 +83,7 @@ function AdminQualidade() {
             Edge functions com erro · 24h
           </p>
           <p
-            className="font-fraunces text-[32px] leading-none"
+            className="font-cabinet text-[32px] leading-none"
             style={{ color: logsComErro24h.length > 0 ? "var(--danger)" : "var(--secondary-text)" }}
           >
             {carregando ? "…" : logsComErro24h.length}
@@ -94,7 +94,7 @@ function AdminQualidade() {
             Taxa de sucesso · 24h
           </p>
           <p
-            className="font-fraunces text-[32px] leading-none"
+            className="font-cabinet text-[32px] leading-none"
             style={{ color: taxaSucesso24h >= 95 ? "var(--secondary-text)" : "var(--danger)" }}
           >
             {carregando ? "…" : `${taxaSucesso24h}%`}

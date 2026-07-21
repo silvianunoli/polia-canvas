@@ -58,7 +58,7 @@ function AdminGovernanca() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Governança</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Governança</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Retenção de dado, tamanho de tabela e limpeza de log antigo.
       </p>

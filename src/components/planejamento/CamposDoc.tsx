@@ -39,7 +39,7 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
         return (
           <div key={campo}>
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="font-fraunces text-[1.05rem] text-[var(--ink)]">
+              <h2 className="text-[1.05rem] text-[var(--ink)]">
                 {CAMPO_LABEL[campo] ?? campo}
               </h2>
               {secId && moduloN && (

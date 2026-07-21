@@ -108,7 +108,7 @@ function BlogAdminIndex() {
       <div className="mx-auto max-w-[1000px] px-6 py-10 md:py-14">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="font-fraunces text-[28px] text-[var(--ink)]">Blog</h1>
+            <h1 className="font-cabinet text-[28px] text-[var(--ink)]">Blog</h1>
             <p className="mt-1 text-[14px] text-[var(--muted)]">
               Gerencie os posts do blog da Pólia.
             </p>
@@ -141,7 +141,7 @@ function BlogAdminIndex() {
           </div>
         ) : posts.length === 0 ? (
           <div className="mt-10 rounded-xl border border-dashed border-[var(--line)] bg-white p-10 text-center">
-            <p className="font-fraunces text-[20px] text-[var(--ink)]">Nenhum post ainda.</p>
+            <p className="text-[20px] text-[var(--ink)]">Nenhum post ainda.</p>
             <p className="mt-2 text-[var(--ink-soft)]">Escreva o primeiro.</p>
             <a
               href="/blog-admin/novo"
@@ -154,19 +154,19 @@ function BlogAdminIndex() {
           <>
             <div className="mt-8 flex flex-wrap gap-3">
               <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-[14px] text-[var(--ink-soft)]">
-                <strong className="font-fraunces text-[18px] text-[var(--ink)]">
+                <strong className="font-cabinet text-[18px] text-[var(--ink)]">
                   {contagens.publicado}
                 </strong>{" "}
                 publicados
               </div>
               <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-[14px] text-[var(--ink-soft)]">
-                <strong className="font-fraunces text-[18px] text-[var(--ink)]">
+                <strong className="font-cabinet text-[18px] text-[var(--ink)]">
                   {contagens.agendado}
                 </strong>{" "}
                 agendados
               </div>
               <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-2 text-[14px] text-[var(--ink-soft)]">
-                <strong className="font-fraunces text-[18px] text-[var(--ink)]">
+                <strong className="font-cabinet text-[18px] text-[var(--ink)]">
                   {contagens.rascunho}
                 </strong>{" "}
                 rascunhos

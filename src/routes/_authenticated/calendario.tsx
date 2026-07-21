@@ -305,7 +305,7 @@ function CalendarioPage() {
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <section className="mx-auto max-w-[1120px] px-6 py-8 md:px-10">
-        <h1 className="font-fraunces mb-1 text-[clamp(28px,5vw,36px)] leading-tight text-[var(--ink)]">
+        <h1 className="font-cabinet mb-1 text-[clamp(28px,5vw,36px)] leading-tight text-[var(--ink)]">
           Calendário
         </h1>
         <p className="mb-6 text-[14px] text-[var(--ink-soft)]">
@@ -324,7 +324,7 @@ function CalendarioPage() {
             >
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
-            <p className="font-fraunces w-[150px] text-center text-[18px] text-[var(--ink)] sm:w-[190px]">
+            <p className="w-[150px] text-center text-[18px] text-[var(--ink)] sm:w-[190px]">
               {format(mes, "MMMM 'de' yyyy", { locale: ptBR })}
             </p>
             <button
@@ -522,7 +522,7 @@ function CalendarioPage() {
             style={TOKEN_BRIDGE_V3}
           >
             <SheetHeader className="mb-3 text-left">
-              <SheetTitle className="font-fraunces text-[18px] font-normal text-[var(--ink)]">
+              <SheetTitle className="text-[18px] font-normal text-[var(--ink)]">
                 {diaSelecionado
                   ? format(parseISO(diaSelecionado), "EEEE, d 'de' MMMM", { locale: ptBR })
                   : ""}

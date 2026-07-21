@@ -137,7 +137,7 @@ function ClientesPage() {
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
               SEUS CLIENTES
             </p>
-            <h1 className="font-fraunces text-[clamp(28px,5vw,44px)] leading-tight text-[var(--ink)]">
+            <h1 className="font-cabinet text-[clamp(28px,5vw,44px)] leading-tight text-[var(--ink)]">
               Do primeiro contato ao sim.
             </h1>
             <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
@@ -437,7 +437,7 @@ function ModalCliente({
         <p className="mb-2 text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
           NOVA CLIENTE
         </p>
-        <h2 className="mb-6 font-fraunces text-[26px] text-[var(--ink)]">Adicionar cliente</h2>
+        <h2 className="mb-6 text-[26px] text-[var(--ink)]">Adicionar cliente</h2>
 
         <div className="mb-4">
           <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Nome</label>

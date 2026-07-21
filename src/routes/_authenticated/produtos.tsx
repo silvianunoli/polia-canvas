@@ -203,7 +203,7 @@ function ProdutosPage() {
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
             Produtos
           </p>
-          <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
+          <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
             Seus produtos e preços.
           </h1>
         </header>
@@ -381,20 +381,20 @@ function ProdutoCard({
           style={{ background: AVATAR_BGS[indice % AVATAR_BGS.length] }}
           aria-hidden="true"
         >
-          <span className="font-fraunces text-[28px] leading-none text-[var(--ink)]">
+          <span className="text-[28px] leading-none text-[var(--ink)]">
             {(produto.nome.charAt(0) || "?").toUpperCase()}
           </span>
         </div>
       )}
 
       {/* Nome */}
-      <p className="font-fraunces mt-3 text-[var(--ink)]">{produto.nome}</p>
+      <p className="mt-3 text-[var(--ink)]">{produto.nome}</p>
 
       {/* Tipo */}
       <p className="text-[12px] text-[var(--muted)]">{TIPO_LABEL[produto.tipo] ?? produto.tipo}</p>
 
       {/* Preço de venda */}
-      <p className="font-fraunces mt-2 text-[18px] text-[var(--ink)]">
+      <p className="font-cabinet mt-2 text-[18px] text-[var(--ink)]">
         {precoVenda > 0 ? (
           fmt(precoVenda)
         ) : (
@@ -659,7 +659,7 @@ function Calculadora({
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--secondary-text)]">
           Preço sugerido
         </p>
-        <p className="font-fraunces mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
+        <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
           {fmt(round2(calc.precoSugerido))}
         </p>
         {calc.invalido && (
@@ -874,7 +874,7 @@ function ModalProduto({
         className="max-h-[90vh] w-full max-w-[440px] overflow-y-auto rounded-2xl bg-white p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">
+        <h2 className="mb-5 text-[24px] text-[var(--ink)]">
           {edit ? "Editar produto" : "Adicionar produto"}
         </h2>
 

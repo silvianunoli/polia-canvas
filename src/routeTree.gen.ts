@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
@@ -54,6 +55,7 @@ import { Route as AuthenticatedEtapaNRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
 import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
 import { Route as AuthenticatedAdminQualidadeRouteImport } from './routes/_authenticated/admin.qualidade'
+import { Route as AuthenticatedAdminPesquisasRouteImport } from './routes/_authenticated/admin.pesquisas'
 import { Route as AuthenticatedAdminNegocioRouteImport } from './routes/_authenticated/admin.negocio'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminGovernancaRouteImport } from './routes/_authenticated/admin.governanca'
@@ -81,6 +83,11 @@ const SobreRoute = SobreRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PesquisaRoute = PesquisaRouteImport.update({
+  id: '/pesquisa',
+  path: '/pesquisa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
@@ -303,6 +310,12 @@ const AuthenticatedAdminQualidadeRoute =
     path: '/qualidade',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPesquisasRoute =
+  AuthenticatedAdminPesquisasRouteImport.update({
+    id: '/pesquisas',
+    path: '/pesquisas',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminNegocioRoute =
   AuthenticatedAdminNegocioRouteImport.update({
     id: '/negocio',
@@ -384,6 +397,7 @@ export interface FileRoutesByFullPath {
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -422,6 +436,7 @@ export interface FileRoutesByFullPath {
   '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -443,6 +458,7 @@ export interface FileRoutesByTo {
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -480,6 +496,7 @@ export interface FileRoutesByTo {
   '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -503,6 +520,7 @@ export interface FileRoutesById {
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
+  '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -541,6 +559,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/negocio': typeof AuthenticatedAdminNegocioRoute
+  '/_authenticated/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/_authenticated/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -564,6 +583,7 @@ export interface FileRouteTypes {
     | '/compra-confirmada'
     | '/design-system'
     | '/lista-de-espera'
+    | '/pesquisa'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -602,6 +622,7 @@ export interface FileRouteTypes {
     | '/admin/governanca'
     | '/admin/logs'
     | '/admin/negocio'
+    | '/admin/pesquisas'
     | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
@@ -623,6 +644,7 @@ export interface FileRouteTypes {
     | '/compra-confirmada'
     | '/design-system'
     | '/lista-de-espera'
+    | '/pesquisa'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -660,6 +682,7 @@ export interface FileRouteTypes {
     | '/admin/governanca'
     | '/admin/logs'
     | '/admin/negocio'
+    | '/admin/pesquisas'
     | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
@@ -682,6 +705,7 @@ export interface FileRouteTypes {
     | '/compra-confirmada'
     | '/design-system'
     | '/lista-de-espera'
+    | '/pesquisa'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -720,6 +744,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/governanca'
     | '/_authenticated/admin/logs'
     | '/_authenticated/admin/negocio'
+    | '/_authenticated/admin/pesquisas'
     | '/_authenticated/admin/qualidade'
     | '/_authenticated/blog-admin/$id'
     | '/_authenticated/blog-admin/novo'
@@ -743,6 +768,7 @@ export interface RootRouteChildren {
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
   DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
+  PesquisaRoute: typeof PesquisaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -777,6 +803,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pesquisa': {
+      id: '/pesquisa'
+      path: '/pesquisa'
+      fullPath: '/pesquisa'
+      preLoaderRoute: typeof PesquisaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lista-de-espera': {
@@ -1073,6 +1106,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminQualidadeRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/pesquisas': {
+      id: '/_authenticated/admin/pesquisas'
+      path: '/pesquisas'
+      fullPath: '/admin/pesquisas'
+      preLoaderRoute: typeof AuthenticatedAdminPesquisasRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/negocio': {
       id: '/_authenticated/admin/negocio'
       path: '/negocio'
@@ -1177,6 +1217,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminGovernancaRoute: typeof AuthenticatedAdminGovernancaRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminNegocioRoute: typeof AuthenticatedAdminNegocioRoute
+  AuthenticatedAdminPesquisasRoute: typeof AuthenticatedAdminPesquisasRoute
   AuthenticatedAdminQualidadeRoute: typeof AuthenticatedAdminQualidadeRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
@@ -1194,6 +1235,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminGovernancaRoute: AuthenticatedAdminGovernancaRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminNegocioRoute: AuthenticatedAdminNegocioRoute,
+  AuthenticatedAdminPesquisasRoute: AuthenticatedAdminPesquisasRoute,
   AuthenticatedAdminQualidadeRoute: AuthenticatedAdminQualidadeRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
@@ -1276,6 +1318,7 @@ const rootRouteChildren: RootRouteChildren = {
   CompraConfirmadaRoute: CompraConfirmadaRoute,
   DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
+  PesquisaRoute: PesquisaRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,

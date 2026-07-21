@@ -277,7 +277,7 @@ function ConfiguracoesPage() {
 
       <main className="mx-auto max-w-[880px] px-12 py-12">
         <div className="mb-10">
-          <h1 className="font-fraunces text-[var(--ink)] text-[40px] leading-tight mb-2">
+          <h1 className="font-cabinet text-[var(--ink)] text-[40px] leading-tight mb-2">
             Configurações
           </h1>
           <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
@@ -475,7 +475,7 @@ function ConfiguracoesPage() {
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">
+                  <p className="font-cabinet text-[28px] leading-none text-[var(--ink)]">
                     R$ {plano === "anual" ? VALOR_PLANO_ANUAL : VALOR_PLANO_PAGO}
                   </p>
                   <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
@@ -575,7 +575,7 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
-          <h2 className="font-fraunces text-[20px] leading-tight text-[var(--danger)]">
+          <h2 className="text-[20px] leading-tight text-[var(--danger)]">
             Excluir conta
           </h2>
           <p className="mt-2 font-sans text-[14px] text-[var(--ink-soft)]">
@@ -643,7 +643,7 @@ function Secao({
 }) {
   return (
     <section className="mb-8 bg-white rounded-2xl p-6 border border-[var(--line)]">
-      <h2 className="font-fraunces text-[var(--ink)] text-[22px] leading-tight mb-1">{titulo}</h2>
+      <h2 className="text-[var(--ink)] text-[22px] leading-tight mb-1">{titulo}</h2>
       {subtitulo && (
         <p className="font-sans text-[var(--ink-soft)] text-[13px] mb-5">{subtitulo}</p>
       )}
@@ -694,7 +694,7 @@ function PlanoCard({
       <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
         {titulo}
       </p>
-      <p className="mt-1 font-fraunces text-[28px] leading-none text-[var(--ink)]">{preco}</p>
+      <p className="mt-1 font-cabinet text-[28px] leading-none text-[var(--ink)]">{preco}</p>
       <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{periodo}</p>
       <button
         type="button"

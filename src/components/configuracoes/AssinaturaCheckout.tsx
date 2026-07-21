@@ -24,7 +24,7 @@ export function AssinaturaCheckout({
         <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
           ASSINATURA
         </p>
-        <h2 className="mb-6 font-fraunces text-[26px] text-[var(--ink)]">Confirmar pagamento</h2>
+        <h2 className="mb-6 text-[26px] text-[var(--ink)]">Confirmar pagamento</h2>
         <Elements stripe={getStripe()} options={{ clientSecret }}>
           <FormularioPagamento onClose={onClose} onSucesso={onSucesso} />
         </Elements>

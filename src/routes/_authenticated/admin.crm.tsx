@@ -195,7 +195,7 @@ function AdminCRM() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">CRM</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">CRM</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Suas clientes da Pólia, quem está na fila do beta e quem pode se cadastrar.
       </p>
@@ -507,7 +507,7 @@ function KpiPill({
       }`}
     >
       <span
-        className={`font-fraunces text-[18px] leading-none ${ativo ? "text-[var(--secondary-text)]" : "text-[var(--ink)]"}`}
+        className={`font-cabinet text-[18px] leading-none ${ativo ? "text-[var(--secondary-text)]" : "text-[var(--ink)]"}`}
       >
         {valor}
       </span>

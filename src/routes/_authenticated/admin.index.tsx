@@ -242,7 +242,7 @@ function AdminHome() {
             <TooltipContent>módulos do Planejamento concluídos por usuária ativa</TooltipContent>
           </Tooltip>
         </p>
-        <p className="font-fraunces mb-1 text-[56px] leading-none text-white">
+        <p className="font-cabinet mb-1 text-[56px] leading-none text-white">
           {stats.mod_m.toFixed(1)}
         </p>
         <p className="font-sans text-[14px] text-white/60">
@@ -280,7 +280,7 @@ function AdminHome() {
               )}
             </p>
             <p
-              className="font-fraunces mb-1 text-[32px] leading-none"
+              className="font-cabinet mb-1 text-[32px] leading-none"
               style={{ color: item.ok ? "var(--secondary-text)" : "var(--danger)" }}
             >
               {item.valor}
@@ -344,7 +344,7 @@ function AdminHome() {
             <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {m.label}
             </p>
-            <p className="font-fraunces text-[32px] leading-none" style={{ color: m.cor }}>
+            <p className="font-cabinet text-[32px] leading-none" style={{ color: m.cor }}>
               {m.valor}
             </p>
           </div>
@@ -359,7 +359,7 @@ function AdminHome() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
           {censo.map((c) => (
             <div key={c.label}>
-              <p className="font-fraunces text-[28px] leading-none text-[var(--ink)]">{c.valor}</p>
+              <p className="font-cabinet text-[28px] leading-none text-[var(--ink)]">{c.valor}</p>
               <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{c.label}</p>
             </div>
           ))}
@@ -372,7 +372,7 @@ function AdminHome() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               Lista de espera
             </p>
-            <p className="font-fraunces text-[32px] text-[var(--ink)]">
+            <p className="font-cabinet text-[32px] text-[var(--ink)]">
               {stats.lista_espera_total}
             </p>
           </div>

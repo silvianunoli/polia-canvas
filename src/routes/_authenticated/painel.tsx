@@ -459,7 +459,7 @@ function PainelPage() {
           <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
             {saudacao}, {meta.displayName}.
           </p>
-          <h1 className="font-fraunces mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)]">
+          <h1 className="font-cabinet mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)]">
             {headline}
           </h1>
 
@@ -521,7 +521,7 @@ function PainelPage() {
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
               Dia no planejamento
             </span>
-            <span className="font-fraunces rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
+            <span className="font-cabinet rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
               {ordinal(diasDesdeCadastro)}
             </span>
           </div>
@@ -558,7 +558,7 @@ function PainelPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Receita · mês
               </p>
-              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
                 {fmtBRL(receitaMes)}
               </p>
               {metaCelebracao > 0 && (
@@ -599,7 +599,7 @@ function PainelPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Pedidos · mês
               </p>
-              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
                 {pedidosMes}
               </p>
               <p className="mt-2 text-[13px] text-[var(--muted)]">
@@ -617,7 +617,7 @@ function PainelPage() {
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Clientes
               </p>
-              <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
                 {clientesCount}
               </p>
               <p className="mt-2 text-[13px] text-[var(--muted)]">
@@ -637,7 +637,7 @@ function PainelPage() {
                   <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="font-fraunces text-[18px] text-[var(--ink)]">Suas tarefas</p>
+                  <p className="text-[18px] text-[var(--ink)]">Suas tarefas</p>
                   <p className="text-[13px] text-[var(--muted)]">
                     do Planner · {gruposTarefas.atrasadas.length}{" "}
                     {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
@@ -707,7 +707,7 @@ function PainelPage() {
                   <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="font-fraunces text-[18px] text-[var(--ink)]">
+                  <p className="text-[18px] text-[var(--ink)]">
                     Sua semana de trabalho
                   </p>
                   <p className="text-[13px] text-[var(--muted)]">tarefas concluídas por dia</p>

@@ -21,7 +21,7 @@ function CompraConfirmadaPage() {
         <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface-pink)]">
           <Mail size={26} aria-hidden="true" />
         </div>
-        <h1 className="font-fraunces text-[32px] leading-tight text-[var(--ink)] md:text-[40px]">
+        <h1 className="font-cabinet text-[32px] leading-tight text-[var(--ink)] md:text-[40px]">
           Compra confirmada.
         </h1>
         <p className="mt-4 text-[17px] leading-relaxed text-[var(--ink-soft)]">

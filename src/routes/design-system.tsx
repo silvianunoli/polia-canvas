@@ -69,6 +69,12 @@ const TIPOS = [
     uso: "títulos · v3 (Painel, Sidebar, CRM)",
   },
   {
+    fam: "Cabinet Grotesk",
+    classe: "font-cabinet",
+    amostra: "A sua marca inteira, uma etapa por vez.",
+    uso: "títulos de destaque · hero, números/preços, logo",
+  },
+  {
     fam: "DM Serif Display",
     classe: "font-serif",
     amostra: "Cada estrela acesa marca um ponto no seu mapa.",
@@ -99,7 +105,7 @@ function DesignSystemPage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)]">
       <header className="border-b border-[var(--line)] bg-white px-6 py-5 md:px-12">
         <div className="mx-auto flex max-w-[1100px] items-center justify-between">
-          <a href="/" className="font-fraunces text-[20px] text-[var(--ink)] no-underline">
+          <a href="/" className="font-cabinet text-[20px] text-[var(--ink)] no-underline">
             Pólia
           </a>
           <span className="font-accent text-[10px] font-bold uppercase tracking-[2px] text-[var(--secondary-text)]">
@@ -110,7 +116,7 @@ function DesignSystemPage() {
 
       <main className="mx-auto max-w-[1100px] px-6 py-12 md:px-12">
         <div className="mb-4 max-w-[640px]">
-          <h1 className="font-fraunces mb-3 text-[44px] leading-tight text-[var(--ink)] md:text-[56px]">
+          <h1 className="font-cabinet mb-3 text-[44px] leading-tight text-[var(--ink)] md:text-[56px]">
             O mundo visual da Pólia
           </h1>
           <p className="font-sans text-[17px] leading-relaxed text-[var(--ink-soft)]">
@@ -246,7 +252,7 @@ function DesignSystemPage() {
             {/* Card */}
             <Bloco titulo="Card">
               <div className="rounded-xl border border-[var(--line)] bg-white p-4 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
-                <p className="font-fraunces text-[17px] text-[var(--ink)]">
+                <p className="text-[17px] text-[var(--ink)]">
                   Uma etapa no seu mapa
                 </p>
                 <p className="mt-1 font-sans text-[13px] text-[var(--muted)]">

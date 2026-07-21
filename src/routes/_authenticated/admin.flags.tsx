@@ -41,7 +41,7 @@ function AdminFlags() {
 
   return (
     <>
-      <h2 className="font-fraunces mb-2 text-[40px] text-[var(--ink)]">Feature Flags</h2>
+      <h2 className="font-cabinet mb-2 text-[40px] text-[var(--ink)]">Feature Flags</h2>
       <p className="mb-6 max-w-[560px] font-sans text-[13px] text-[var(--muted)]">
         Ligar/desligar aqui só muda o valor no banco. Só vale pra flags que o código
         efetivamente lê — as marcadas abaixo ainda não estão conectadas a nada.

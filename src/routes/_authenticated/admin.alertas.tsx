@@ -108,7 +108,7 @@ function AdminAlertas() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Motor de Alertas</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Motor de Alertas</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Regras avaliadas sob demanda — ainda sem verificação automática em background.
       </p>

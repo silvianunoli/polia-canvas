@@ -76,7 +76,7 @@ function AssinarPage() {
         <p className="mb-2 text-center font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
           ÚLTIMO PASSO
         </p>
-        <h1 className="mb-3 text-center font-fraunces text-[36px] leading-tight text-[var(--ink)]">
+        <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
           Escolha seu plano
         </h1>
         <p className="mb-10 text-center font-fraunces italic text-[16px] text-[var(--ink-soft)]">
@@ -156,7 +156,7 @@ function PlanoCard({
       <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
         {titulo}
       </p>
-      <p className="mt-1 font-fraunces text-[32px] leading-none text-[var(--ink)]">{preco}</p>
+      <p className="mt-1 font-cabinet text-[32px] leading-none text-[var(--ink)]">{preco}</p>
       <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{periodo}</p>
       <button
         type="button"

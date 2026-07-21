@@ -133,7 +133,7 @@ function AdminAnalytics() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Analytics</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Analytics</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Comportamento nas páginas públicas e logadas · só quem aceitou cookies de análise entra na
         conta.
@@ -189,7 +189,7 @@ function AdminAnalytics() {
           <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
             Pageviews
           </p>
-          <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+          <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
             {pageviews.length}
           </p>
         </div>
@@ -197,7 +197,7 @@ function AdminAnalytics() {
           <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
             Sessões
           </p>
-          <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+          <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
             {sessoesUnicas}
           </p>
         </div>
@@ -205,7 +205,7 @@ function AdminAnalytics() {
           <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
             Páginas/sessão
           </p>
-          <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+          <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
             {sessoesUnicas ? (pageviews.length / sessoesUnicas).toFixed(1) : "0"}
           </p>
         </div>

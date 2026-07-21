@@ -64,7 +64,7 @@ function MercadoPage() {
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
             Mapa de Mercado
           </p>
-          <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,40px)] leading-[1.1] text-[var(--ink)]">
+          <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,40px)] leading-[1.1] text-[var(--ink)]">
             Quem a marca serve.
           </h1>
           <p className="mt-2 text-[1rem] text-[var(--ink-soft)]">

@@ -466,7 +466,7 @@ function PlanejamentoPage() {
             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
               Planejamento
             </p>
-            <h1 className="font-fraunces mt-1 text-[clamp(28px,6vw,48px)] leading-[1.1] text-[var(--ink)]">
+            <h1 className="font-cabinet mt-1 text-[clamp(28px,6vw,48px)] leading-[1.1] text-[var(--ink)]">
               {businessName || "A base do seu negócio."}
             </h1>
             <p className="mt-2 text-[17px] text-[var(--ink-soft)]">
@@ -561,7 +561,7 @@ function PlanejamentoPage() {
                           style={{ border: emAndamento ? "2px solid var(--secondary)" : "1px solid var(--line)" }}
                         >
                           <span
-                            className={`font-fraunces text-[12px] ${
+                            className={`font-cabinet text-[12px] ${
                               emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                             }`}
                           >
@@ -680,7 +680,7 @@ function PlanejamentoPage() {
 
             {moduloAtual > TOTAL_MODULOS && (
               <div className="mt-12 rounded-[var(--radius-md)] border border-[var(--line)] bg-white p-6 text-center">
-                <p className="font-fraunces text-[1.25rem] leading-snug text-[var(--ink)]">
+                <p className="text-[1.25rem] leading-snug text-[var(--ink)]">
                   Seu planejamento está completo.
                 </p>
                 <p className="mt-1 text-[0.9rem] text-[var(--ink-soft)]">Agora coloca em prática.</p>
@@ -735,7 +735,7 @@ function BlocoView({
     return (
       <div className="mb-8 max-w-[30em] border-l-[3px] border-[var(--secondary)] pl-6">
         <Rotulo campo={bloco.c} />
-        <p className="font-fraunces mt-1 whitespace-pre-line text-[26px] leading-[1.35] text-[var(--ink)]">
+        <p className="mt-1 whitespace-pre-line text-[26px] leading-[1.35] text-[var(--ink)]">
           {v}
         </p>
       </div>
@@ -842,12 +842,12 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
   const recorrente = /assinatura/i.test(produto.canal ?? "");
   return (
     <div className="col-span-12 rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)] sm:col-span-6 lg:col-span-3">
-      <p className="font-fraunces text-[19px] leading-tight text-[var(--ink)]">{produto.nome}</p>
+      <p className="text-[19px] leading-tight text-[var(--ink)]">{produto.nome}</p>
       <p className="mt-0.5 text-[12px] text-[var(--muted)]">
         {TIPO_LABEL[produto.tipo] ?? produto.tipo}
         {produto.canal ? ` · ${produto.canal}` : ""}
       </p>
-      <p className="font-fraunces mt-3 text-[24px] text-[var(--ink)]">
+      <p className="font-cabinet mt-3 text-[24px] text-[var(--ink)]">
         R$ {produto.preco_venda.toLocaleString("pt-BR")}
         {recorrente && <span className="text-[14px] text-[var(--muted)]">/mês</span>}
       </p>
@@ -938,7 +938,7 @@ function MetaTrack({
             style={{ borderColor: i === marcas.length - 1 ? "var(--secondary)" : "var(--line)" }}
           >
             <Rotulo campo={m.campo} />
-            <p className="font-fraunces mt-1 text-[24px] leading-none text-[var(--ink)]">{m.texto}</p>
+            <p className="mt-1 text-[24px] leading-none text-[var(--ink)]">{m.texto}</p>
           </div>
         ))}
       </div>

@@ -201,7 +201,7 @@ function MetasPage() {
           <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
             Suas metas
           </p>
-          <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
+          <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
             Onde a marca quer chegar.
           </h1>
         </header>
@@ -555,7 +555,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 font-fraunces text-[17px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
       />
     );
   }
@@ -565,7 +565,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
       type="button"
       onClick={start}
       aria-label="Editar título da meta"
-      className="min-w-0 flex-1 text-left font-fraunces text-[17px] leading-snug text-[var(--ink)] hover:text-[var(--secondary-text)]"
+      className="min-w-0 flex-1 text-left text-[17px] leading-snug text-[var(--ink)] hover:text-[var(--secondary-text)]"
     >
       {titulo}
     </button>
@@ -698,7 +698,7 @@ function ModalMeta({
         className="max-h-[90vh] w-full max-w-[440px] overflow-y-auto rounded-2xl bg-white p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">
+        <h2 className="mb-5 text-[24px] text-[var(--ink)]">
           {edit ? "Editar meta" : "Nova meta"}
         </h2>
 

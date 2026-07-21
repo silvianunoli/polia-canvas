@@ -655,7 +655,7 @@ export function PostEditor({ post }: PostEditorProps) {
             placeholder="Título do post"
             aria-label="Título do post"
             aria-invalid={erroTitulo ? true : undefined}
-            className={`w-full border-none bg-transparent font-fraunces text-[32px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] ${
+            className={`w-full border-none bg-transparent text-[32px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] ${
               erroTitulo ? "text-[var(--danger)]" : ""
             }`}
           />
@@ -731,7 +731,7 @@ export function PostEditor({ post }: PostEditorProps) {
         {/* Painel lateral */}
         <aside className="flex flex-col gap-6">
           <section className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <h4 className="font-fraunces text-[17px] text-[var(--ink)]">Publicação</h4>
+            <h4 className="text-[17px] text-[var(--ink)]">Publicação</h4>
             <div className="mt-3 flex flex-col gap-3">
               {statusSalvo.publicado && statusSalvo.publicadoEm && (
                 <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[var(--secondary-light)] px-3 py-2">
@@ -813,7 +813,7 @@ export function PostEditor({ post }: PostEditorProps) {
           </section>
 
           <section className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <h4 className="font-fraunces text-[17px] text-[var(--ink)]">Imagem de capa</h4>
+            <h4 className="text-[17px] text-[var(--ink)]">Imagem de capa</h4>
             <input
               ref={capaFileInputRef}
               type="file"
@@ -889,7 +889,7 @@ export function PostEditor({ post }: PostEditorProps) {
           </section>
 
           <section className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <h4 className="font-fraunces text-[17px] text-[var(--ink)]">Detalhes</h4>
+            <h4 className="text-[17px] text-[var(--ink)]">Detalhes</h4>
             <div className="mt-3 flex flex-col gap-3">
               <div>
                 <label

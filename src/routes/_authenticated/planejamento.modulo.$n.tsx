@@ -199,7 +199,7 @@ function ModuloPage() {
             Módulo {n} concluído
           </p>
           <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">Acabou de nascer a</p>
-          <h1 className="font-fraunces mt-1 text-[2.5rem] leading-[1.05] text-[var(--ink)]">
+          <h1 className="font-cabinet mt-1 text-[2.5rem] leading-[1.05] text-[var(--ink)]">
             {ferramenta.nome}
           </h1>
           <p className="mt-3 max-w-[420px] text-[0.9rem] leading-relaxed text-[var(--ink-soft)]">
@@ -378,7 +378,7 @@ function SecaoForm({
           {status === "saving" ? "Salvando…" : status === "saved" ? "Salvo" : ""}
         </span>
       </div>
-      <h1 className="font-fraunces mt-1 text-[1.75rem] leading-[1.1] text-[var(--ink)]">
+      <h1 className="font-cabinet mt-1 text-[1.75rem] leading-[1.1] text-[var(--ink)]">
         {secao.titulo}
       </h1>
       <p className="mt-1 text-[0.9rem] italic text-[var(--ink-soft)]">{secao.subtitulo}</p>

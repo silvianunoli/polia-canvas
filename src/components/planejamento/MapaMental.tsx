@@ -104,7 +104,7 @@ export function MapaMental({
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-white/50">
               Seu negócio
             </p>
-            <p className="font-fraunces mt-1 text-[26px] leading-tight text-white">
+            <p className="font-cabinet mt-1 text-[26px] leading-tight text-white">
               {businessName || "Seu negócio"}
             </p>
             <p className="mt-1.5 text-[12px] text-white/70">
@@ -185,7 +185,7 @@ function NoCard({
         >
           <Icone size={16} className="text-[var(--ink)]" aria-hidden="true" />
         </span>
-        <span className="font-fraunces text-[16px] leading-tight text-[var(--ink)]">
+        <span className="text-[16px] leading-tight text-[var(--ink)]">
           {node.nome}
         </span>
       </div>

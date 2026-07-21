@@ -613,7 +613,7 @@ function PlannerBoard() {
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <PainelNav navActive="/planner" />
         <main className="mx-auto max-w-[600px] px-6 py-20 text-center">
-          <p className="font-fraunces mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</p>
+          <p className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</p>
           <a href="/planner" className="text-[14px] text-[var(--secondary-text)] hover:underline">
             ← voltar ao Planner
           </a>
@@ -636,7 +636,7 @@ function PlannerBoard() {
           </a>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="font-fraunces mb-1 text-[clamp(28px,5vw,40px)] leading-tight text-[var(--ink)]">
+              <h1 className="font-cabinet mb-1 text-[clamp(28px,5vw,40px)] leading-tight text-[var(--ink)]">
                 {quadroQuery.data?.nome ?? "Quadro"}
               </h1>
               <p className="italic text-[var(--ink-soft)]">
@@ -1015,7 +1015,7 @@ function PlannerBoard() {
               value={dTitulo}
               onChange={(e) => setDTitulo(e.target.value)}
               placeholder="Título do cartão (obrigatório)"
-              className="font-fraunces w-full border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] text-[var(--ink)] outline-none focus:border-[var(--secondary)]"
+              className="w-full border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] text-[var(--ink)] outline-none focus:border-[var(--secondary)]"
             />
 
             <div className="mt-5">
@@ -1271,7 +1271,7 @@ function PlannerBoard() {
           style={TOKEN_BRIDGE_V3}
         >
           <AlertDialogHeader>
-            <AlertDialogTitle className="font-fraunces text-[var(--ink)]">
+            <AlertDialogTitle className="text-[var(--ink)]">
               Concluir esta tarefa?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-[var(--ink-soft)]">

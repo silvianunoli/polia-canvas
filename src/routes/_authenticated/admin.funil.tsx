@@ -63,7 +63,7 @@ function AdminFunil() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Funil de jornada</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Funil de jornada</h1>
       <p className="mb-8 font-sans text-[14px] text-[var(--muted)]">
         Quantas usuárias chegaram em cada módulo do Planejamento.
       </p>
@@ -125,7 +125,7 @@ function AdminFunil() {
         ].map((s) => (
           <div key={s.label} className="rounded-2xl border border-[var(--line)] bg-white p-6">
             <p
-              className="font-fraunces mb-2 text-[48px] leading-none"
+              className="font-cabinet mb-2 text-[48px] leading-none"
               style={{ color: s.cor }}
             >
               {s.count}

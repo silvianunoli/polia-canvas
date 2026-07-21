@@ -103,7 +103,7 @@ function StepIndicator({ step }: { step: number }) {
 }
 
 function LogoPlaceholder() {
-  return <p className="text-center font-fraunces text-[27px] text-[var(--ink)]">Pólia</p>;
+  return <p className="text-center font-cabinet text-[27px] text-[var(--ink)]">Pólia</p>;
 }
 
 function Caveat({ children }: { children: React.ReactNode }) {
@@ -113,7 +113,7 @@ function Caveat({ children }: { children: React.ReactNode }) {
 function Headline({ children, size = 64 }: { children: React.ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-fraunces text-[var(--ink)]"
+      className="text-center font-cabinet text-[var(--ink)]"
       style={{
         fontSize: `clamp(${Math.round(size * 0.55)}px, 6vw, ${size}px)`,
         lineHeight: 1.15,
@@ -268,7 +268,7 @@ function ChoiceCard({
         {tag}
       </span>
       <span
-        className="font-fraunces text-[var(--ink)]"
+        className="text-[var(--ink)]"
         style={{ fontSize: 22, lineHeight: "28px" }}
       >
         {title}
@@ -653,7 +653,7 @@ function Step5({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => 
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
           Módulo 1 de 6
         </p>
-        <p className="mt-3 font-fraunces text-[24px] text-[var(--ink)]">Razão de existir</p>
+        <p className="mt-3 text-[24px] text-[var(--ink)]">Razão de existir</p>
         <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">{desc}</p>
         <p className="mt-4 text-[13px] text-[var(--secondary-text)]">→ Abre agora</p>
       </div>

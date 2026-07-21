@@ -323,7 +323,7 @@ function FinanceiroPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Entradas
             </p>
-            <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+            <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
               {fmt(entradas)}
             </p>
             <p className="mt-1 text-[13px] text-[var(--muted)]">{numEntradasMes} registros</p>
@@ -333,7 +333,7 @@ function FinanceiroPage() {
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Saídas
             </p>
-            <p className="font-fraunces mt-1 text-[32px] leading-none text-[var(--ink)]">
+            <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
               {fmt(saidas)}
             </p>
             <p className="mt-1 text-[13px] text-[var(--muted)]">
@@ -346,7 +346,7 @@ function FinanceiroPage() {
               Lucro líquido
             </p>
             <p
-              className={`font-fraunces mt-1 text-[32px] leading-none ${
+              className={`font-cabinet mt-1 text-[32px] leading-none ${
                 lucro < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
               }`}
             >
@@ -425,7 +425,7 @@ function FinanceiroPage() {
 
         {/* ───────── 4. Histórico ───────── */}
         <section className="mt-10">
-          <p className="font-fraunces text-[18px] text-[var(--ink)]">Histórico</p>
+          <p className="text-[18px] text-[var(--ink)]">Histórico</p>
 
           {/* Filtros */}
           <div className="mt-4 flex flex-col gap-3">
@@ -533,7 +533,7 @@ function FinanceiroPage() {
                       </p>
                     </div>
                     <p
-                      className={`font-fraunces shrink-0 text-[19px] tabular-nums ${
+                      className={`font-cabinet shrink-0 text-[19px] tabular-nums ${
                         entrada ? "text-[var(--ink)]" : "text-[var(--ink-soft)]"
                       }`}
                     >
@@ -693,7 +693,7 @@ function ModalLancamento({
         className="w-full max-w-[440px] rounded-2xl bg-white p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">Novo lançamento</h2>
+        <h2 className="mb-5 text-[24px] text-[var(--ink)]">Novo lançamento</h2>
 
         {/* Tipo */}
         <div className="mb-4">
@@ -731,7 +731,7 @@ function ModalLancamento({
             onChange={() => {}}
             placeholder="R$ 0,00"
             autoFocus
-            className="font-fraunces w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
         </div>
 

@@ -57,7 +57,7 @@ function AdminUsuarioPerfil() {
           <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--secondary-text)]">
             Usuária
           </p>
-          <h1 className="font-fraunces text-[40px] text-[var(--ink)]">
+          <h1 className="font-cabinet text-[40px] text-[var(--ink)]">
             {usuario.full_name ?? "—"}
           </h1>
           <p className="font-sans text-[14px] text-[var(--muted)]">
@@ -80,7 +80,7 @@ function AdminUsuarioPerfil() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {item.label}
             </p>
-            <p className="font-fraunces text-[22px] leading-tight text-[var(--ink)]">
+            <p className="font-cabinet text-[22px] leading-tight text-[var(--ink)]">
               {item.valor}
             </p>
           </div>

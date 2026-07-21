@@ -85,7 +85,7 @@ function AdminLogs() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-6 text-[40px] text-[var(--ink)]">Logs do sistema</h1>
+      <h1 className="font-cabinet mb-6 text-[40px] text-[var(--ink)]">Logs do sistema</h1>
 
       <Tabs defaultValue="logs">
         <TabsList className="mb-6 h-auto gap-1 rounded-xl border border-[var(--line)] bg-white p-1">
@@ -99,7 +99,7 @@ function AdminLogs() {
 
         {/* LOGS DE EDGE FUNCTION */}
         <TabsContent value="logs">
-          <h2 className="font-fraunces mb-4 text-[20px] text-[var(--ink)]">
+          <h2 className="mb-4 text-[20px] text-[var(--ink)]">
             Edge Functions · últimas 24h
           </h2>
           <div className="overflow-x-auto rounded-2xl border border-[var(--line)] bg-white">
@@ -267,7 +267,7 @@ function FiltroPill({
       }`}
     >
       <span
-        className={`font-fraunces text-[18px] leading-none ${ativo ? "text-[var(--secondary-text)]" : "text-[var(--ink)]"}`}
+        className={`font-cabinet text-[18px] leading-none ${ativo ? "text-[var(--secondary-text)]" : "text-[var(--ink)]"}`}
       >
         {valor}
       </span>

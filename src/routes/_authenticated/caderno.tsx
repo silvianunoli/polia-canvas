@@ -281,7 +281,7 @@ function CadernoPage() {
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
               Caderno
             </p>
-            <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
+            <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
               Suas anotações.
             </h1>
             <p className="mt-2 italic text-[var(--ink-soft)]">
@@ -374,7 +374,7 @@ function CadernoPage() {
                             <Pin size={13} aria-hidden="true" fill={n.fixada ? "currentColor" : "none"} />
                           </button>
                           <div className="min-w-0 flex-1">
-                            <p className="font-fraunces truncate text-[16px] text-[var(--ink)]">
+                            <p className="truncate text-[16px] text-[var(--ink)]">
                               {destacar(n.titulo.trim() || "sem título", termo)}
                             </p>
                             <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">
@@ -438,7 +438,7 @@ function CadernoPage() {
                   onChange={(e) => setTitulo(e.target.value)}
                   maxLength={160}
                   placeholder="Título da nota"
-                  className="font-fraunces mb-3 w-full bg-transparent text-[26px] leading-tight text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
+                  className="mb-3 w-full bg-transparent text-[26px] leading-tight text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
                 <textarea
                   value={conteudo}

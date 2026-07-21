@@ -48,6 +48,7 @@ function AdminLayout() {
     { href: "/admin/funil", label: "Funil de jornada" },
     { href: "/admin/negocio", label: "Negócio" },
     { href: "/admin/analytics", label: "Analytics" },
+    { href: "/admin/pesquisas", label: "Pesquisas" },
     {
       href: "/admin/chamados",
       label: `Chamados${ticketsAbertos > 0 ? ` (${ticketsAbertos})` : ""}`,
@@ -63,7 +64,7 @@ function AdminLayout() {
   return (
     <div className="polia-v3 flex min-h-screen bg-[var(--bg)]">
       <aside className="fixed flex h-full w-[220px] flex-col border-r border-[var(--line)] bg-white px-4 py-6">
-        <p className="font-fraunces mb-1 text-[18px] text-[var(--ink)]">Pólia Admin</p>
+        <p className="font-cabinet mb-1 text-[18px] text-[var(--ink)]">Pólia Admin</p>
         <p className="mb-8 font-sans text-[11px] text-[var(--secondary-text)]">{nome}</p>
         <nav className="flex flex-col gap-1">
           {items.map((item) => {

@@ -147,7 +147,7 @@ function PlannerIndex() {
             <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
               Planner
             </p>
-            <h1 className="font-fraunces mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
+            <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
               Planner
             </h1>
             <p className="mt-1 italic text-[var(--ink-soft)]">
@@ -202,7 +202,7 @@ function PlannerIndex() {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--secondary-light)] text-[var(--secondary-text)]">
               <LayoutGrid size={24} aria-hidden="true" />
             </div>
-            <p className="font-fraunces text-[20px] text-[var(--ink)]">Nenhum quadro ainda</p>
+            <p className="text-[20px] text-[var(--ink)]">Nenhum quadro ainda</p>
             <p className="mx-auto mt-1.5 max-w-[400px] text-[14px] leading-relaxed text-[var(--muted)]">
               Quadros são pra projetos que têm vida própria · um lançamento, um evento, uma
               campanha.
@@ -227,7 +227,7 @@ function PlannerIndex() {
                         <LayoutGrid size={20} aria-hidden="true" />
                       </span>
                       <div>
-                        <p className="font-fraunces text-[18px] text-[var(--ink)]">{q.nome}</p>
+                        <p className="text-[18px] text-[var(--ink)]">{q.nome}</p>
                         <p className="text-[13px] text-[var(--muted)]">
                           {(() => {
                             const n = contagem.get(q.id) ?? 0;

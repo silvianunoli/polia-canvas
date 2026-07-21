@@ -1146,6 +1146,80 @@ export type Database = {
         }
         Relationships: []
       }
+      pesquisa_respostas: {
+        Row: {
+          atualizado_em: string
+          concluida: boolean
+          criado_em: string
+          id: string
+          pesquisa_id: string
+          progresso: number
+          respostas: Json
+          sessao_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          concluida?: boolean
+          criado_em?: string
+          id?: string
+          pesquisa_id: string
+          progresso?: number
+          respostas?: Json
+          sessao_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          concluida?: boolean
+          criado_em?: string
+          id?: string
+          pesquisa_id?: string
+          progresso?: number
+          respostas?: Json
+          sessao_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pesquisa_respostas_pesquisa_id_fkey"
+            columns: ["pesquisa_id"]
+            isOneToOne: false
+            referencedRelation: "pesquisas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pesquisas: {
+        Row: {
+          abre_em: string | null
+          ativa: boolean
+          criado_em: string
+          fecha_em: string | null
+          id: string
+          slug: string
+          subtitulo: string | null
+          titulo: string
+        }
+        Insert: {
+          abre_em?: string | null
+          ativa?: boolean
+          criado_em?: string
+          fecha_em?: string | null
+          id?: string
+          slug: string
+          subtitulo?: string | null
+          titulo: string
+        }
+        Update: {
+          abre_em?: string | null
+          ativa?: boolean
+          criado_em?: string
+          fecha_em?: string | null
+          id?: string
+          slug?: string
+          subtitulo?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
       planejamento_campos: {
         Row: {
           campo: string

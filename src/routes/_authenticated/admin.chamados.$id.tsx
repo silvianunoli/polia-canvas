@@ -81,7 +81,7 @@ function AdminTicket() {
       </Link>
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <h1 className="font-fraunces text-[32px] text-[var(--ink)]">{ticket.title}</h1>
+          <h1 className="font-cabinet text-[32px] text-[var(--ink)]">{ticket.title}</h1>
           <p className="font-sans text-[13px] text-[var(--muted)]">
             {userNome} · {ticket.module_ref ?? "sem contexto"} ·{" "}
             {new Date(ticket.created_at).toLocaleString("pt-BR")}

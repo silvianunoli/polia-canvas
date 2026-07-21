@@ -53,7 +53,7 @@ function AdminAuditoria() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Auditoria</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Auditoria</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Trilha imutável de ações administrativas — quem fez o quê e quando. {logs.length} registros
         (últimos 300).
@@ -66,7 +66,7 @@ function AdminAuditoria() {
               key={nome}
               className="flex items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3.5 py-2"
             >
-              <span className="font-fraunces text-[18px] leading-none text-[var(--ink)]">
+              <span className="font-cabinet text-[18px] leading-none text-[var(--ink)]">
                 {total}
               </span>
               <span className="font-sans text-[13px] text-[var(--ink-soft)]">{nome}</span>

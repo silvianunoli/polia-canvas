@@ -148,7 +148,7 @@ function AdminChamados() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-6 text-[40px] text-[var(--ink)]">Chamados</h1>
+      <h1 className="font-cabinet mb-6 text-[40px] text-[var(--ink)]">Chamados</h1>
 
       <Tabs defaultValue="chamados">
         <TabsList className="mb-6 h-auto gap-1 rounded-xl border border-[var(--line)] bg-white p-1">
@@ -340,7 +340,7 @@ function AdminChamados() {
         {/* COMUNICAÇÃO */}
         <TabsContent value="comunicacao">
           <div className="mb-10">
-            <h2 className="font-fraunces mb-5 text-[24px] text-[var(--ink)]">
+            <h2 className="mb-5 text-[24px] text-[var(--ink)]">
               Mensagens recebidas
             </h2>
             <div className="space-y-3">
@@ -374,7 +374,7 @@ function AdminChamados() {
           </div>
 
           <div className="rounded-2xl border border-[var(--line)] bg-white p-7">
-            <h2 className="font-fraunces mb-2 text-[24px] text-[var(--ink)]">Broadcast por email</h2>
+            <h2 className="mb-2 text-[24px] text-[var(--ink)]">Broadcast por email</h2>
             <p className="font-sans text-[13px] text-[var(--muted)]">
               Em breve. A flag <code className="font-mono text-[12px]">broadcast_ativo</code>{" "}
               precisa estar ligada e o Resend configurado.

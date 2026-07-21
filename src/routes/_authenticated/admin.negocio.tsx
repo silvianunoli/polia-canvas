@@ -63,7 +63,7 @@ function AdminNegocio() {
 
   return (
     <>
-      <h1 className="font-fraunces mb-1 text-[40px] text-[var(--ink)]">Negócio</h1>
+      <h1 className="font-cabinet mb-1 text-[40px] text-[var(--ink)]">Negócio</h1>
       <p className="mb-6 font-sans text-[14px] text-[var(--muted)]">
         Uso real (a partir dos eventos rastreados) e monetização (dados ao vivo do Stripe).
       </p>
@@ -82,7 +82,7 @@ function AdminNegocio() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {m.label}
             </p>
-            <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+            <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
               {carregandoUso ? "…" : m.valor}
             </p>
             <p className="mt-1 font-sans text-[11px] text-[var(--muted)]">{m.desc}</p>
@@ -109,7 +109,7 @@ function AdminNegocio() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               MRR
             </p>
-            <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+            <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
               {carregandoMonetizacao ? "…" : formatarBRL(mrrCentavos)}
             </p>
             <p className="mt-1 font-sans text-[11px] text-[var(--muted)]">valor real via Stripe</p>
@@ -118,7 +118,7 @@ function AdminNegocio() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               Assinantes ativas
             </p>
-            <p className="font-fraunces text-[32px] leading-none text-[var(--ink)]">
+            <p className="font-cabinet text-[32px] leading-none text-[var(--ink)]">
               {carregandoMonetizacao ? "…" : assinantesAtivas}
             </p>
             <p className="mt-1 font-sans text-[11px] text-[var(--muted)]">
