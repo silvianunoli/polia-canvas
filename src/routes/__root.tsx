@@ -14,6 +14,7 @@ import { Toaster } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 import { CookieConsent } from "@/components/ui/CookieConsent";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ErrorPage, type ErrorPageProps } from "@/components/layout/ErrorPage";
 import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
@@ -246,6 +247,7 @@ function RootComponent() {
         }}
       />
       <CookieConsent />
+      <GoogleAnalytics />
       {import.meta.env.DEV && <DiagnosticPanel />}
     </QueryClientProvider>
   );
