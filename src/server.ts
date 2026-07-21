@@ -84,6 +84,10 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
+    if (url.hostname === "www.usepolia.com.br") {
+      url.hostname = "usepolia.com.br";
+      return Response.redirect(url.toString(), 301);
+    }
     if (url.pathname === "/health") return respostaHealth();
 
     try {
