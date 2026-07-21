@@ -5,6 +5,7 @@ import { renderBlogMarkdown } from "@/lib/blogRenderMarkdown";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import type { Tables } from "@/integrations/supabase/types";
+import { gatePublico } from "@/lib/site-gate";
 
 type PostRow = Pick<
   Tables<"blog_posts">,
@@ -28,6 +29,7 @@ type RelatedPost = Pick<
 const CAPAS = ["var(--secondary)", "var(--accent)", "var(--surface-pink)"];
 
 export const Route = createFileRoute("/blog/$slug")({
+  beforeLoad: gatePublico,
   loader: async ({ params }) => {
     const { data: post } = await supabase
       .from("blog_posts")

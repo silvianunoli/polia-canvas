@@ -6,8 +6,10 @@ import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
+import { gatePublico } from "@/lib/site-gate";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       {

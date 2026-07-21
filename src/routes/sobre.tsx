@@ -3,8 +3,10 @@ import { ClipboardList, LineChart, Route as RouteIcon, Check, X } from "lucide-r
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { PoliaWordmark, PoliaIcon } from "@/components/brand/PoliaLogo";
+import { gatePublico } from "@/lib/site-gate";
 
 export const Route = createFileRoute("/sobre")({
+  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       { title: "A marca · Pólia" },

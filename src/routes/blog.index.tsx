@@ -5,8 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import type { Tables } from "@/integrations/supabase/types";
+import { gatePublico } from "@/lib/site-gate";
 
 export const Route = createFileRoute("/blog/")({
+  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       { title: "Blog · Pólia" },
