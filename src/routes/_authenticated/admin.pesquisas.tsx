@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   PESQUISA_DISCOVERY,
@@ -15,6 +15,7 @@ import {
   filtrarPorSegmento,
   type RespostaRow,
 } from "@/lib/pesquisa-agg";
+import { ImportarRespostasPesquisa } from "@/components/admin/ImportarRespostasPesquisa";
 
 export const Route = createFileRoute("/_authenticated/admin/pesquisas")({
   head: () => ({
@@ -61,35 +62,37 @@ function AdminPesquisas() {
   const [valorDim, setValorDim] = useState("");
   const [buscaAberta, setBuscaAberta] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      const { data: pesquisa } = await supabase
-        .from("pesquisas")
-        .select("id, ativa, titulo")
-        .eq("slug", SLUG_PESQUISA)
-        .maybeSingle();
-      if (pesquisa) {
-        setAtiva(pesquisa.ativa);
-        setTituloPesquisa(pesquisa.titulo);
-        const { data: rr } = await supabase
-          .from("pesquisa_respostas")
-          .select("progresso, concluida, respostas, criado_em")
-          .eq("pesquisa_id", pesquisa.id)
-          .limit(10000);
-        setRows((rr as RespostaRow[] | null) ?? []);
-      }
-      try {
-        const { count } = await supabase
-          .from("eventos_analytics")
-          .select("id", { count: "exact", head: true })
-          .eq("evento", "pesquisa_vista");
-        setViram(count ?? null);
-      } catch {
-        setViram(null);
-      }
-      setCarregando(false);
-    })();
+  const carregar = useCallback(async () => {
+    const { data: pesquisa } = await supabase
+      .from("pesquisas")
+      .select("id, ativa, titulo")
+      .eq("slug", SLUG_PESQUISA)
+      .maybeSingle();
+    if (pesquisa) {
+      setAtiva(pesquisa.ativa);
+      setTituloPesquisa(pesquisa.titulo);
+      const { data: rr } = await supabase
+        .from("pesquisa_respostas")
+        .select("progresso, concluida, respostas, criado_em")
+        .eq("pesquisa_id", pesquisa.id)
+        .limit(10000);
+      setRows((rr as RespostaRow[] | null) ?? []);
+    }
+    try {
+      const { count } = await supabase
+        .from("eventos_analytics")
+        .select("id", { count: "exact", head: true })
+        .eq("evento", "pesquisa_vista");
+      setViram(count ?? null);
+    } catch {
+      setViram(null);
+    }
+    setCarregando(false);
   }, []);
+
+  useEffect(() => {
+    void carregar();
+  }, [carregar]);
 
   const filtradas = useMemo(() => filtrarPorSegmento(rows, dim, valorDim), [rows, dim, valorDim]);
   const resumo = useMemo(() => funil(filtradas), [filtradas]);
@@ -164,6 +167,8 @@ function AdminPesquisas() {
         {tituloPesquisa || "Discovery do negócio"} · aderência e resultados. Começaram e concluíram
         vêm da própria pesquisa (não dependem de cookie).
       </p>
+
+      <ImportarRespostasPesquisa onImportado={() => void carregar()} />
 
       {/* Recorte + export */}
       <div className="mb-6 flex flex-wrap items-end gap-3 rounded-2xl border border-[var(--line)] bg-white p-4">

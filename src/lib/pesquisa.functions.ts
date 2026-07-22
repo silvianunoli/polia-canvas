@@ -1,12 +1,26 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
-import { PESQUISA_DISCOVERY, SLUG_PESQUISA } from "@/lib/pesquisa-discovery.config";
+import {
+  PESQUISA_DISCOVERY,
+  SLUG_PESQUISA,
+  TOTAL_PERGUNTAS,
+} from "@/lib/pesquisa-discovery.config";
 import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 function db() {
   return supabaseAdmin;
+}
+
+async function assertAdmin(userId: string) {
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+  if (!profile?.is_admin) throw new Error("Forbidden");
 }
 
 type PesquisaRow = Tables<"pesquisas">;
@@ -152,4 +166,44 @@ export const salvarPesquisa = createServerFn({ method: "POST" })
       return { ok: false as const, motivo: "erro" as const };
     }
     return { ok: true as const };
+  });
+
+const importarSchema = z.object({
+  linhas: z.array(z.record(z.unknown())).min(1).max(2000),
+});
+
+// POST admin-only: importa respostas coletadas fora da pesquisa própria (ex.:
+// Google Forms, Typeform) pro mesmo funil de análise. O cliente já mapeou cada
+// coluna do arquivo pra um id de pergunta e cada valor pro id da opção (ou
+// texto, se aberta); aqui só valida a sessão de admin e reaplica o mesmo
+// sanitizador da pesquisa pública, então uma linha malformada não corrompe
+// as agregações. Cada linha vira uma resposta concluída, sessão sintética.
+export const importarRespostasPesquisa = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => importarSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    const { data: pesquisaData } = await db()
+      .from("pesquisas")
+      .select("id")
+      .eq("slug", SLUG_PESQUISA)
+      .maybeSingle();
+    const pesquisa = pesquisaData as Pick<PesquisaRow, "id"> | null;
+    if (!pesquisa) return { ok: false as const, motivo: "nao_encontrada" as const, inseridas: 0 };
+
+    const linhas = data.linhas.map((brutas) => ({
+      pesquisa_id: pesquisa.id,
+      sessao_id: `externo-${crypto.randomUUID()}`,
+      progresso: TOTAL_PERGUNTAS,
+      concluida: true,
+      respostas: sanitizarRespostas(brutas),
+    }));
+
+    const { error } = await db().from("pesquisa_respostas").insert(linhas);
+    if (error) {
+      console.error("[Pesquisa] Falha ao importar:", error);
+      return { ok: false as const, motivo: "erro" as const, inseridas: 0 };
+    }
+    return { ok: true as const, inseridas: linhas.length };
   });
