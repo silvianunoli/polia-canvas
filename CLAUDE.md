@@ -26,7 +26,7 @@ Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
 - Acessibilidade (já é piso no projeto): contraste AA, `:focus-visible` visível, navegação por teclado, labels, skip link.
 - Cores de fase (`--polia-sonho/construcao/venda/evolucao`) só para diferenciar etapa da jornada, nunca como enfeite.
 - Mobile-first e responsivo.
-- Copy seca, concreta, sem hype. Verbo no comando. (Use a skill `copy-sem-positividade`.)
+- Copy concreta e sem hype, no tom de conversa de café: duas profissionais adultas, de igual para igual. Voz honesta com dinheiro, acolhedora sem infantilizar. Nunca travessão.
 
 ## Design tokens
 Fonte única: `src/styles.css` (`@theme inline` + `:root`). Não duplicar valores. Principais: ação = `--primary` (terracota #C96B3E); fundo = `--background` (creme #FDF8F5); texto = `--foreground` (noite #1A1A2E); destaque = `--accent` (dourado #C8A96E). Detalhe completo em `DESIGN.md`.
