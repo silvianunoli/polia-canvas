@@ -458,14 +458,15 @@ function TelaFim() {
         Pronto. Obrigada por dividir isso.
       </h2>
       <p className="mt-3 text-[16px] leading-[1.5] text-[var(--ink-soft)]">
-        Cada resposta ajuda a Pólia a nascer do jeito certo pra quem já vende. De verdade.
+        Cada resposta ajuda a Pólia a nascer do jeito certo pra ajudar quem toca ou tá começando o
+        seu negócio. De verdade.
       </p>
       <div className="mt-5">
         <Link
           to="/lista-de-espera"
           className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
         >
-          Conhecer a Pólia
+          Entrar na lista de espera
         </Link>
       </div>
     </div>
@@ -598,14 +599,14 @@ function PesquisaPage() {
           A pesquisa está fechada por enquanto.
         </h1>
         <p className="mt-3 text-[16px] text-[var(--ink-soft)]">
-          Obrigada pelo interesse. Enquanto isso, dá pra conhecer a Pólia.
+          Obrigada pelo interesse. Enquanto isso, dá pra entrar na lista de espera.
         </p>
         <div className="mt-5">
           <Link
             to="/lista-de-espera"
             className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
           >
-            Conhecer a Pólia
+            Entrar na lista de espera
           </Link>
         </div>
       </Casca>
@@ -626,7 +627,7 @@ function PesquisaPage() {
             to="/lista-de-espera"
             className="inline-flex rounded-lg border border-[var(--ink)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white"
           >
-            Conhecer a Pólia
+            Entrar na lista de espera
           </Link>
         </div>
       </Casca>
