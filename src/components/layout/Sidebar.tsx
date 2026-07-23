@@ -124,7 +124,7 @@ export function Sidebar() {
   function Body({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
     return (
       <TooltipProvider delayDuration={150}>
-        <div className="flex h-full flex-col bg-white">
+        <div className="flex h-full flex-col overflow-y-auto bg-white">
           {/* Topo: logo + negócio + presença + avatar */}
           <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
             <Link
