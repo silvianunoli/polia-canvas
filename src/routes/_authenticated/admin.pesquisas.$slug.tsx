@@ -30,12 +30,15 @@ const DIMENSOES = ["categoria", "quem_toca", "tem_marca", "inseguranca"];
 // tela sem rolar. Com mais opções, a pilha ordenada continua sendo a leitura
 // melhor.
 const MAX_OPCOES_SEGMENTADA = 6;
+// Tokens do escopo .polia-v3 (não os --chart-1..5, que resolvem pra paleta
+// v1/terracota fora desse escopo — ver DESIGN.md/styles.css).
 const CORES_SEGMENTO = [
-  "var(--chart-1)",
-  "var(--chart-2)",
-  "var(--chart-3)",
-  "var(--chart-4)",
-  "var(--chart-5)",
+  "var(--secondary)",
+  "var(--accent)",
+  "var(--highlight)",
+  "var(--secondary-light)",
+  "var(--ink-soft)",
+  "var(--muted)",
 ];
 
 function rotuloResposta(p: Pergunta, v: unknown): string {
@@ -59,7 +62,7 @@ function StatTile({ label, valor }: { label: string; valor: string }) {
   );
 }
 
-function Barra({ pct, cor = "var(--chart-1)" }: { pct: number; cor?: string }) {
+function Barra({ pct, cor = "var(--secondary)" }: { pct: number; cor?: string }) {
   return (
     <div className="h-1.5 w-full rounded-full bg-[var(--line)]">
       <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: cor }} />
@@ -377,7 +380,7 @@ function AdminPesquisaDetalheConteudo({
                             <p className="font-sans text-[13px] text-[var(--ink)]">{x.rot}</p>
                             <p className="font-sans text-[12px] text-[var(--muted)]">{x.n}</p>
                           </div>
-                          <Barra pct={(x.n / maxFunil) * 100} cor="var(--chart-1)" />
+                          <Barra pct={(x.n / maxFunil) * 100} cor="var(--secondary)" />
                         </div>
                       ))}
                   </div>
@@ -404,7 +407,7 @@ function AdminPesquisaDetalheConteudo({
                           {semResposta}
                         </p>
                       </div>
-                      <Barra pct={(semResposta / maxAband) * 100} cor="var(--chart-4)" />
+                      <Barra pct={(semResposta / maxAband) * 100} cor="var(--danger)" />
                     </div>
                     {abandono.map((a) => (
                       <div key={a.id}>
@@ -416,7 +419,7 @@ function AdminPesquisaDetalheConteudo({
                             {a.abandonos}
                           </p>
                         </div>
-                        <Barra pct={(a.abandonos / maxAband) * 100} cor="var(--chart-4)" />
+                        <Barra pct={(a.abandonos / maxAband) * 100} cor="var(--danger)" />
                       </div>
                     ))}
                   </div>

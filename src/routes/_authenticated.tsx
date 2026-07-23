@@ -1,6 +1,5 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { PoliaFooter } from "@/components/layout/PoliaFooter";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
@@ -78,18 +77,8 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthenticatedLayout,
 });
 
-// Só o painel admin mostra o footer. As páginas do produto (Painel, Jornada,
-// Tarefas, Clientes, Financeiro, Biblioteca, Etapa, Configurações) ficam sem
-// footer pra manter a mesma proposta limpa no flow de trabalho.
-const FOOTER_PATHS = ["/admin"];
-
-function showFooterFor(pathname: string) {
-  return FOOTER_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
-}
-
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const withFooter = showFooterFor(pathname);
   // Pulso de relacionamento: fora das rotas isentas de assinatura (funil de
   // pagamento e admin/blog-admin, que têm público e propósito diferentes).
   const csatPulso = useCsatTrigger(
@@ -107,7 +96,6 @@ function AuthenticatedLayout() {
         <main id="main-content" className="flex-1">
           <Outlet />
         </main>
-        {withFooter && <PoliaFooter />}
       </div>
       {csatPulso.mostrar && (
         <CsatPrompt

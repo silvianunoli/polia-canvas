@@ -43,14 +43,31 @@ const NAV: NavItem[] = [
 ];
 
 function isActive(itemTo: string, pathname: string) {
-  if (itemTo === "/painel") return pathname === "/painel";
+  // "/painel" e "/admin" são raízes: sem isso, todo subcaminho (ex. /admin/funil)
+  // também marcaria "Painel"/"Visão geral" como ativos.
+  if (itemTo === "/painel" || itemTo === "/admin") return pathname === itemTo;
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
 
+// Único menu de admin (o antigo aside próprio de admin.tsx foi removido —
+// os dois competiam pelo mesmo canto esquerdo da tela). "Chamados" ganha a
+// contagem de abertos via ticketsAbertos, calculada abaixo.
 const ADMIN_SUBLINKS = [
-  { to: "/blog-admin", label: "Blog", external: true },
-  { to: "/admin/crm", label: "CRM", external: false },
-  { to: "/design-system", label: "Design System", external: false },
+  { to: "/admin", label: "Visão geral" },
+  { to: "/admin/crm", label: "CRM" },
+  { to: "/admin/chamados", label: "Chamados" },
+  { to: "/admin/pesquisas", label: "Pesquisas" },
+  { to: "/admin/funil", label: "Funil de jornada" },
+  { to: "/admin/negocio", label: "Negócio" },
+  { to: "/admin/analytics", label: "Analytics" },
+  { to: "/admin/qualidade", label: "Qualidade" },
+  { to: "/blog-admin", label: "Blog" },
+  { to: "/admin/governanca", label: "Governança" },
+  { to: "/admin/auditoria", label: "Auditoria" },
+  { to: "/admin/alertas", label: "Alertas" },
+  { to: "/admin/logs", label: "Logs do sistema" },
+  { to: "/admin/flags", label: "Feature Flags" },
+  { to: "/design-system", label: "Design System" },
 ] as const;
 
 async function signOut() {
@@ -64,6 +81,19 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [ticketsAbertos, setTicketsAbertos] = useState(0);
+
+  // Contagem de chamados abertos, só pra quem é admin (aparece no submenu).
+  useEffect(() => {
+    if (!meta.isAdmin) return;
+    (async () => {
+      const { count } = await supabase
+        .from("tickets")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "aberto");
+      setTicketsAbertos(count ?? 0);
+    })();
+  }, [meta.isAdmin]);
 
   // ≤1366px: colapsa para ícones automaticamente.
   useEffect(() => {
@@ -190,7 +220,7 @@ export function Sidebar() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
-                    to="/admin/crm"
+                    to="/admin"
                     onClick={onNavigate}
                     aria-label="Administração"
                     className="flex min-h-11 items-center justify-center rounded-lg px-3 text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
@@ -207,7 +237,12 @@ export function Sidebar() {
                   type="button"
                   onClick={() => setAdminOpen((o) => !o)}
                   aria-expanded={adminOpen}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                  aria-current={!adminOpen && pathname.startsWith("/admin") ? "page" : undefined}
+                  className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] hover:bg-[var(--surface)] ${
+                    !adminOpen && pathname.startsWith("/admin")
+                      ? "font-medium text-[var(--ink)]"
+                      : "text-[var(--ink-soft)]"
+                  }`}
                 >
                   <Shield size={20} aria-hidden="true" />
                   <span className="flex-1 text-left">Administração</span>
@@ -219,35 +254,27 @@ export function Sidebar() {
                 </button>
                 {adminOpen && (
                   <div className="ml-8 flex flex-col gap-1 py-1">
-                    {ADMIN_SUBLINKS.map((s) =>
-                      s.external ? (
-                        <a
-                          key={s.to}
-                          href={s.to}
-                          onClick={onNavigate}
-                          className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
-                            pathname.startsWith(s.to)
-                              ? "font-medium text-[var(--ink)]"
-                              : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                          }`}
-                        >
-                          {s.label}
-                        </a>
-                      ) : (
+                    {ADMIN_SUBLINKS.map((s) => {
+                      const label =
+                        s.to === "/admin/chamados" && ticketsAbertos > 0
+                          ? `${s.label} (${ticketsAbertos})`
+                          : s.label;
+                      return (
                         <Link
                           key={s.to}
                           to={s.to}
                           onClick={onNavigate}
+                          aria-current={isActive(s.to, pathname) ? "page" : undefined}
                           className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
                             isActive(s.to, pathname)
                               ? "font-medium text-[var(--ink)]"
                               : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                           }`}
                         >
-                          {s.label}
+                          {label}
                         </Link>
-                      ),
-                    )}
+                      );
+                    })}
                   </div>
                 )}
               </div>
