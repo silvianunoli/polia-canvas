@@ -87,7 +87,7 @@ const CATEGORIAS = [
       {
         pergunta: "Criar um quadro no Planner",
         resposta:
-          "No Planner, clique em novo quadro e dê um nome ao projeto. Cada quadro tem colunas que você organiza do seu jeito, tipo um kanban.",
+          "No Planner, clique em novo quadro e dê um nome ao projeto. Cada quadro tem colunas que você arruma como quiser, tipo um kanban.",
       },
       {
         pergunta: "Organizar as tarefas da semana",
@@ -134,7 +134,7 @@ const CATEGORIAS = [
       {
         pergunta: "Entender o resumo do mês",
         resposta:
-          "O Financeiro mostra entradas, saídas e o que sobrou, com uma régua que compara o mês atual com os marcos que vieram do seu Planejamento.",
+          "O Financeiro mostra entradas, saídas e o que sobrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
       },
       {
         pergunta: "De onde vêm esses valores",
@@ -154,7 +154,7 @@ const CATEGORIAS = [
       {
         pergunta: "Como cancelar",
         resposta:
-          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Começo, sem apagar o Planejamento.",
+          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Confere, sem apagar o Planejamento.",
       },
       {
         pergunta: "Como funciona a cobrança",

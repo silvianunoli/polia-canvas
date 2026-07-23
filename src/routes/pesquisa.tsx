@@ -18,7 +18,7 @@ export const Route = createFileRoute("/pesquisa")({
       {
         name: "description",
         content:
-          "Uma pesquisa anônima e rápida sobre como é tocar o seu negócio hoje. Sua marca fatura mais quando você sabe quem ela é.",
+          "Me conta como está o seu negócio hoje: uma pesquisa rápida e anônima sobre preço, lucro e o que mais aperta.",
       },
     ],
   }),

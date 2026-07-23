@@ -4,8 +4,9 @@
 > Fonte da verdade visual: `DESIGN.md` + `src/styles.css`. A restrição mora aqui, não na memória.
 
 ## Princípio inegociável
-Mundo visual **Territorial Diurno**: creme, terracota, mostarda, marrom. Parece papel pautado e carimbo, não dashboard de SaaS.
+Mundo visual **Pólia v3** (escopo `.polia-v3`, em 100% das rotas): pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta. Parece editorial territorial, não dashboard de SaaS genérico.
 Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
+⚠️ `DESIGN.md` ainda documenta só a paleta v1 (Territorial Diurno: creme/terracota/mostarda/marrom) e não reflete a v3 abaixo — pendência de atualização própria, fora desta correção.
 
 ## PROIBIDO (nunca gere)
 - Cor, sombra ou raio fora dos tokens de `src/styles.css`. Nada de hex hardcoded no componente.
@@ -29,7 +30,7 @@ Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
 - Copy concreta e sem hype, no tom de conversa de café: duas profissionais adultas, de igual para igual. Voz honesta com dinheiro, acolhedora sem infantilizar. Nunca travessão.
 
 ## Design tokens
-Fonte única: `src/styles.css` (`@theme inline` + `:root`). Não duplicar valores. Principais: ação = `--primary` (terracota #C96B3E); fundo = `--background` (creme #FDF8F5); texto = `--foreground` (noite #1A1A2E); destaque = `--accent` (dourado #C8A96E). Detalhe completo em `DESIGN.md`.
+Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #2C7E80 pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo deveria estar em `DESIGN.md`, mas o arquivo ainda não foi atualizado pra v3 (ver nota acima).
 
 ## Referências de qualidade (mire neste nível)
 [Liste 3–5 produtos padrão-ouro pra Pólia — ver DESIGN.md §9.] NÃO se inspire em dashboards genéricos de template.

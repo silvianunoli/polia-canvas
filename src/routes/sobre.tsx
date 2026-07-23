@@ -329,7 +329,7 @@ function SobrePage() {
               </h3>
               <p className="mt-3 max-w-[60ch] text-[var(--ink-soft)]">
                 A Pólia é o que eu não tive: um lugar onde as decisões da marca, o preço, o caixa
-                e a rotina moram juntos, sem planilha por fora.
+                e a rotina moram juntos, sem planilha perdida.
               </p>
             </div>
             <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-3">

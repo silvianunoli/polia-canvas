@@ -114,7 +114,7 @@ function TermosPage() {
                 <li>A cobrança é recorrente e renova automaticamente até ser cancelada.</li>
                 <li>
                   Não há reembolso de valores já pagos nem período de teste do plano pago. Quem
-                  quer experimentar a Pólia antes de assinar pode usar o plano Começo, gratuito.
+                  quer experimentar a Pólia antes de assinar pode usar o plano Confere, gratuito.
                 </li>
                 <li>Impostos aplicáveis podem incidir conforme a legislação brasileira.</li>
               </ul>

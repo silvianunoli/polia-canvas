@@ -31,7 +31,7 @@ export const Route = createFileRoute("/lista-de-espera")({
 const BENEFICIOS = [
   {
     titulo: "Uma marca com valor de verdade",
-    desc: "Você deixa claro quem a sua marca atende, o que entrega e por que vale o que cobra. Marca clara é marca que fatura mais.",
+    desc: "Você descobre se o seu negócio dá lucro, vê quanto sobra em cada venda e para de cobrar no chute. Depois, deixa claro quem a sua marca atende e por que vale o que ela cobra.",
   },
   {
     titulo: "Um preço que fecha a conta",

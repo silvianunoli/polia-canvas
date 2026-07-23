@@ -470,7 +470,7 @@ function PlanejamentoPage() {
               {businessName || "A base do seu negócio."}
             </h1>
             <p className="mt-2 text-[17px] text-[var(--ink-soft)]">
-              {businessName ? "Seu planejamento de negócio." : "Construída no seu ritmo."}
+              {businessName ? "Seu planejamento de negócio." : "Construída um passo de cada vez."}
             </p>
           </div>
 

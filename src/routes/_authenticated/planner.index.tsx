@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
     meta: [
       { title: "Planner · Pólia" },
-      { name: "description", content: "Planner pra organizar projetos do seu jeito." },
+      { name: "description", content: "Planner pra organizar os seus projetos sem se perder." },
     ],
   }),
   component: PlannerIndex,
@@ -151,7 +151,7 @@ function PlannerIndex() {
               Planner
             </h1>
             <p className="mt-1 italic text-[var(--ink-soft)]">
-              organize projetos do seu jeito, fora do planejamento.
+              organize os seus projetos como quiser, fora do planejamento.
             </p>
           </header>
           <button

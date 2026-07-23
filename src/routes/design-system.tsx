@@ -95,7 +95,7 @@ const TIPOS = [
   {
     fam: "Caveat",
     classe: "caveat-informacional",
-    amostra: "feito com carinho, do seu jeito.",
+    amostra: "feito com carinho, sem achismo.",
     uso: "toques manuscritos",
   },
 ];

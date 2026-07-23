@@ -352,7 +352,7 @@ function FinanceiroPage() {
             >
               {fmt(lucro)}
             </p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% de margem no mês</p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% do que entrou virou lucro</p>
           </div>
         </section>
 
@@ -402,8 +402,8 @@ function FinanceiroPage() {
           )}
 
           <p className="mt-0 text-[13px] text-[var(--muted)]">
-            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas. Os 3 marcos vêm de
-            Quanto vale, no seu Planejamento.
+            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas. As 3 referências vêm
+            de Quanto vale, no seu Planejamento.
           </p>
         </section>
 

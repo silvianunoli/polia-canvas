@@ -1,7 +1,8 @@
 # BRAND.md — Pólia
 
 > Estratégia de marca. Mora no repo; o `DESIGN.md`, a copy e o PRD puxam daqui.
-> **Relock 2026-07-21:** posicionamento, território e promessa atualizados para o modelo **marca-primeiro** (clareza de marca + clareza de números, com a marca na frente e o lucro como prova). Personalidade, valores e tom de voz preservados. O posicionamento aqui é a **aposta atual da fundadora**, a ser validada pela pesquisa pública de discovery (que substituiu as entrevistas 1:1). Fonte: produto ao vivo (usepolia.com.br) + dossiê oficial. O Notion foi descontinuado.
+> **Relock 2026-07-23:** eixo invertido para **número-primeiro** (saber se o negócio dá lucro vem na frente; a marca é o porquê você cobra mais). O norte de comunicação e o CTA principal mudam. A frase antiga do norte marca-primeiro não desaparece: vira a frase da camada de marca, o aprofundamento que vem depois do número (usada em `/sobre`). Motivo: a pesquisa pública de discovery mostrou a dor de dinheiro ("não sei se dou lucro de verdade") liderando sobre a dor de marca, na própria voz da persona. Fonte: dossiê oficial jul/2026. Personalidade, valores e tom de voz seguem preservados.
+> **Relock 2026-07-21 (histórico):** posicionamento, território e promessa relockados para o modelo **marca-primeiro** (clareza de marca + clareza de números, com a marca na frente e o lucro como prova). O posicionamento era a aposta então-atual da fundadora, a ser validada pela pesquisa pública de discovery (que substituiu as entrevistas 1:1). O Notion foi descontinuado.
 >
 > Nome: o produto nasceu como **"Bússola"** e virou **"Pólia"** em maio/2026. Racional: **POL** (de estrela polar, que orienta navegadores há séculos) + **IA** (sufixo feminino em PT/italiano e a inteligência artificial que move o produto). A persona chama **"Aimer"**.
 
@@ -25,9 +26,14 @@
   4. Entrego a ferramenta certa na hora certa, sem infantilizar.
 
 ## 3. Promessa
-- A marca promete (relock, a confirmar): **"Quando a sua marca fica clara, você cobra o que ela vale e passa a ver custo, preço e lucro sem chute."**
-- Norte da comunicação: *"Sua marca fatura mais quando você sabe quem ela é."*
-- Régua: se uma feature não deixa a marca ou os números mais claros (não ajuda a vender por valor nem a enxergar o lucro), ela está brigando com a marca.
+- Eixo: **"Saber se o negócio dá lucro na frente; a marca é o porquê você cobra mais."**
+- A marca promete: **"Na hora de cobrar, comprar ou fechar, você vê quanto sobra e para de decidir no chute. Depois, constrói a marca que cobra mais."**
+- Norte da comunicação: *"Descubra se o seu negócio dá lucro, e cobre o que ele vale."*
+- A frase antiga do norte marca-primeiro, *"Sua marca fatura mais quando você sabe quem ela é"*, não some: deixa de ser o norte e vira a frase da camada de marca, o aprofundamento que vem depois do número (é a frase de `/sobre`, a página que já é o mergulho na marca).
+- CTA principal: **"Quero ver se dá lucro."**
+- Regra de copy: inverte "a marca lidera, o preço entra depois" para **"o número abre, a marca aprofunda"**. Headline e benefícios abrem pelo dinheiro (descobrir se dá lucro, ver quanto sobra, parar de cobrar no chute); a marca entra na sequência, não na largada.
+- Dor na decisão: a copy fala do momento — na hora de cobrar, comprar ou fechar — não de um estado abstrato de "clareza".
+- Régua: se uma feature não ajuda a ver se o negócio dá lucro nem a cobrar o que vale, ela está brigando com o eixo.
 
 ## 4. Personalidade
 - Adjetivos-âncora: **acolhedora** (sem ser infantil), **direta** (sem ser grossa), **autêntica** (celebra na medida, sem ser pueril).
@@ -62,6 +68,7 @@
 ---
 
 ## Saída desta fase (gate)
+- [x] Eixo invertido para número-primeiro: lucro na frente, marca como o porquê do preço (2026-07-23). Aplicado no site (hero, planos, léxico) na mesma passada.
 - [x] Posicionamento, território e promessa relockados para o modelo marca-primeiro (2026-07-21).
 - [x] Personalidade, valores e tom de voz preservados (seguem válidos).
 - [x] "NÃO É" e o léxico "nunca usa" seguem valendo; adicionado: não se posiciona contra curso/mentoria (diferenciação positiva).

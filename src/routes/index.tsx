@@ -13,20 +13,20 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       {
-        title: "Pólia · Sua marca fatura mais quando você sabe quem ela é",
+        title: "Pólia · Descubra se o seu negócio dá lucro",
       },
       {
         name: "description",
         content:
-          "Tudo começa no Planejamento: você decide quem sua marca é e isso vira preço, caixa, meta e o dia a dia do negócio. Uma decisão só, sem planilha por fora.",
+          "Veja quanto sobra em cada venda, sem planilha e sem achismo. Isso começa no Planejamento, quando você decide quem sua marca atende, o que entrega e quanto vale, e vira preço, caixa e meta, tudo ligado.",
       },
       {
         property: "og:title",
-        content: "Pólia · Sua marca fatura mais quando você sabe quem ela é",
+        content: "Pólia · Descubra se o seu negócio dá lucro",
       },
       {
         property: "og:description",
-        content: "Decidir quem sua marca é e ver quanto ela fatura no mesmo lugar.",
+        content: "Ver quanto sobra em cada venda e cobrar o que o negócio vale, no mesmo lugar.",
       },
     ],
   }),
@@ -41,7 +41,7 @@ const mecanismo = [
   },
   {
     n: "02",
-    titulo: "Veja a margem",
+    titulo: "Veja quanto sobra",
     desc: "Cada preço mostra o lucro que sobra antes de você fechar.",
   },
   {
@@ -78,7 +78,7 @@ const modulos = [
   {
     titulo: "O extrato deixa de ser surpresa",
     nomeModulo: "Financeiro",
-    body: "Entradas, saídas e lucro do mês num lugar só, com uma régua que mostra onde você está entre o mês mínimo e o mês bom. Os marcos vêm do seu Planejamento, não de um número que você chutou.",
+    body: "Entradas, saídas e lucro do mês num lugar só, com uma régua que mostra onde você está entre o mês mínimo e o mês bom. As referências vêm do seu Planejamento, não de um número que você chutou.",
     printLabel: "print de Financeiro",
   },
   {
@@ -110,7 +110,7 @@ const qualificacaoNao = [
 
 const planos = [
   {
-    nome: "Começo",
+    nome: "Confere",
     preco: "R$ 0",
     ciclo: "pra sempre",
     precoAnual: null,
@@ -122,13 +122,13 @@ const planos = [
     href: "/auth/cadastro",
   },
   {
-    nome: "Alcance",
+    nome: "Controle",
     preco: "R$ 29,90",
     ciclo: "/mês",
     precoAnual: "ou R$ 299 por ano, dois meses saem de graça",
     praQuem: "Pra quem já vende e quer o negócio inteiro num lugar só.",
     features: [
-      "Tudo do Começo, mais:",
+      "Tudo do Confere, mais:",
       "Produtos, com a margem de cada venda na sua frente",
       "Clientes, com a entrega que vira caixa sozinha",
       "Financeiro do mês fechado num lugar",
@@ -136,26 +136,26 @@ const planos = [
       "Planner pra tocar a semana",
       "Calendário, Caderno e Metas",
     ],
-    botaoLabel: "Assinar o Alcance",
+    botaoLabel: "Assinar o Controle",
     apoio: "O produto inteiro que você usa todo dia.",
     destaque: true,
-    href: "/ajuda?assunto=assinar-alcance#contato",
+    href: "/ajuda?assunto=assinar-controle#contato",
   },
   {
-    nome: "Voo",
+    nome: "Projete",
     preco: "R$ 47,90",
     ciclo: "/mês",
     precoAnual: "ou R$ 479 por ano, dois meses saem de graça",
     praQuem: "Pra quem já roda o negócio e quer ir mais longe.",
     features: [
-      "Tudo do Alcance, mais:",
+      "Tudo do Controle, mais:",
       "A Aimer, sua assistente que ajuda a preencher o Planejamento e tira dúvida na hora",
       "Um plano de conteúdo do ano pras suas redes",
     ],
-    botaoLabel: "Assinar o Voo",
+    botaoLabel: "Assinar o Projete",
     apoio: "Pra quando a marca está pronta pra crescer.",
     destaque: false,
-    href: "/ajuda?assunto=assinar-voo#contato",
+    href: "/ajuda?assunto=assinar-projete#contato",
   },
 ];
 
@@ -163,12 +163,12 @@ const faqs = [
   {
     pergunta: "Tem versão grátis mesmo?",
     resposta:
-      "Tem, e não é teste que expira. O Começo é seu pra sempre: você monta o Planejamento inteiro da marca e acompanha o Painel básico sem colocar cartão. Quando quiser o resto do negócio num lugar só, passa pro Alcance.",
+      "Tem, e não é teste que expira. O Confere é seu pra sempre: você monta o Planejamento inteiro da marca e acompanha o Painel básico sem colocar cartão. Quando quiser o resto do negócio num lugar só, passa pro Controle.",
   },
   {
     pergunta: "Posso cancelar quando quiser?",
     resposta:
-      "Pode, num clique, direto nas configurações. Você continua com acesso até o fim do período que já pagou. Depois disso volta pro Começo, e o seu Planejamento fica intacto.",
+      "Pode, num clique, direto nas configurações. Você continua com acesso até o fim do período que já pagou. Depois disso volta pro Confere, e o seu Planejamento fica intacto.",
   },
   {
     pergunta: "O preço pode mudar depois?",
@@ -183,7 +183,7 @@ const faqs = [
   {
     pergunta: "Posso trocar de plano depois?",
     resposta:
-      "Pode, quando quiser. Sobe pro Voo ou volta pro Alcance nas configurações, e o valor se ajusta sozinho na próxima cobrança.",
+      "Pode, quando quiser. Sobe pro Projete ou volta pro Controle nas configurações, e o valor se ajusta sozinho na próxima cobrança.",
   },
 ];
 
@@ -206,12 +206,12 @@ function HomePage() {
             <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
               <div>
                 <h1 className="font-cabinet max-w-[20ch] text-[36px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
-                  Sua marca fatura mais quando você sabe quem ela é.
+                  Descubra se o seu negócio dá lucro.
                 </h1>
                 <p className="mt-6 max-w-[60ch] text-[19px] leading-[1.55] text-[var(--ink-soft)] md:text-[21px]">
-                  Tudo começa no Planejamento: você decide quem sua marca atende, o que entrega e
-                  quanto vale. Essa decisão vira preço, caixa, meta e a rotina do dia a dia, tudo
-                  ligado, sem planilha por fora.
+                  Veja quanto sobra em cada venda, sem planilha e sem achismo. Isso começa no
+                  Planejamento, quando você decide quem sua marca atende, o que entrega e quanto
+                  vale, e vira preço, caixa e meta, tudo ligado.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
                   <Link
@@ -221,7 +221,7 @@ function HomePage() {
                     data-track-props='{"contexto":"hero"}'
                     className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                   >
-                    Quero faturar
+                    Quero ver se dá lucro
                   </Link>
                   <a
                     href="#como-funciona"
@@ -361,7 +361,7 @@ function HomePage() {
                 data-track-props='{"contexto":"tour_modulos"}'
                 className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
               >
-                Quero faturar
+                Quero ver se dá lucro
               </Link>
               <p className="text-[13px] text-[var(--muted)]">
                 Ver planos e assinar · começa grátis
@@ -450,7 +450,7 @@ function HomePage() {
             </h2>
             <p className="mt-4 max-w-[60ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
               O Planejamento é grátis pra sempre. Quando quiser o negócio inteiro num lugar só,
-              você passa pro Alcance. Sem fidelidade, cancela quando quiser.
+              você passa pro Controle. Sem fidelidade, cancela quando quiser.
             </p>
 
             <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -561,7 +561,7 @@ function HomePage() {
                     data-track-props='{"contexto":"cta_final"}'
                     className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                   >
-                    Quero faturar
+                    Quero ver se dá lucro
                   </Link>
                   <p className="text-[13px] text-white/70">
                     Ver planos e assinar · começa grátis

@@ -218,7 +218,7 @@ function Step2({
       <LogoPlaceholder />
       <Caveat>Um pouquinho sobre o que essa marca faz.</Caveat>
       <Headline size={64}>Como é o que essa marca vende?</Headline>
-      <Body>Isso me ajuda a montar seu painel já do seu jeito.</Body>
+      <Body>Isso me ajuda a montar o seu painel já pronto pra você.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
         {BIZ_TYPES.map((o) => (
           <ChoiceCard
