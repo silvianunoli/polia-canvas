@@ -1,7 +1,13 @@
 import { useMemo, useRef, useState } from "react";
 import { parseCsv } from "@/lib/csv";
 import { importarRespostasPesquisa } from "@/lib/pesquisa.functions";
-import { PESQUISA_DISCOVERY, type Pergunta } from "@/lib/pesquisa-discovery.config";
+import type { PesquisaConfig, Pergunta } from "@/lib/pesquisas/tipos";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion";
 import { toastErro, toastSucesso } from "@/lib/toast";
 
 const IGNORAR = "__ignorar__";
@@ -13,9 +19,9 @@ function normalizar(s: string): string {
 // Tenta casar automaticamente uma coluna do arquivo com uma pergunta da
 // pesquisa, pelo título. Admin sempre revisa e pode corrigir antes de
 // confirmar — isso é só o ponto de partida.
-function sugerirPergunta(cabecalho: string): string {
+function sugerirPergunta(config: PesquisaConfig, cabecalho: string): string {
   const alvo = normalizar(cabecalho);
-  const match = PESQUISA_DISCOVERY.perguntas.find(
+  const match = config.perguntas.find(
     (p) => normalizar(p.titulo) === alvo || normalizar(p.id) === alvo,
   );
   return match?.id ?? IGNORAR;
@@ -52,10 +58,12 @@ function converterValor(pergunta: Pergunta, celula: string): unknown {
 }
 
 interface Props {
+  slug: string;
+  config: PesquisaConfig;
   onImportado: () => void;
 }
 
-export function ImportarRespostasPesquisa({ onImportado }: Props) {
+export function ImportarRespostasPesquisa({ slug, config, onImportado }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [cabecalhos, setCabecalhos] = useState<string[] | null>(null);
   const [linhas, setLinhas] = useState<string[][]>([]);
@@ -79,7 +87,7 @@ export function ImportarRespostasPesquisa({ onImportado }: Props) {
     setNomeArquivo(arquivo.name);
     setCabecalhos(cab);
     setLinhas(resto);
-    setMapeamento(cab.map((c) => sugerirPergunta(c)));
+    setMapeamento(cab.map((c) => sugerirPergunta(config, c)));
   }
 
   function cancelar() {
@@ -102,7 +110,7 @@ export function ImportarRespostasPesquisa({ onImportado }: Props) {
         .map((linha) => {
           const respostas: Record<string, unknown> = {};
           for (const { perguntaId, i } of colunasMapeadas) {
-            const pergunta = PESQUISA_DISCOVERY.perguntas.find((p) => p.id === perguntaId);
+            const pergunta = config.perguntas.find((p) => p.id === perguntaId);
             if (!pergunta) continue;
             const valor = converterValor(pergunta, linha[i] ?? "");
             if (valor !== undefined) respostas[perguntaId] = valor;
@@ -116,7 +124,9 @@ export function ImportarRespostasPesquisa({ onImportado }: Props) {
         return;
       }
 
-      const resultado = await importarRespostasPesquisa({ data: { linhas: linhasConvertidas } });
+      const resultado = await importarRespostasPesquisa({
+        data: { slug, linhas: linhasConvertidas },
+      });
       if (!resultado.ok) {
         toastErro("Não consegui importar. Tenta de novo em instantes.");
         return;
@@ -134,88 +144,92 @@ export function ImportarRespostasPesquisa({ onImportado }: Props) {
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1">
-          <p className="font-sans text-[13px] font-semibold text-[var(--ink)]">
-            Importar respostas de outro formulário
-          </p>
-          <p className="font-sans text-[12px] text-[var(--muted)]">
+    <Accordion
+      type="single"
+      collapsible
+      className="mb-6 rounded-2xl border border-[var(--line)] bg-white px-4"
+    >
+      <AccordionItem value="importar" className="border-b-0">
+        <AccordionTrigger className="font-sans text-[13px] font-semibold text-[var(--ink)] no-underline hover:no-underline">
+          Importar respostas de outro formulário
+        </AccordionTrigger>
+        <AccordionContent>
+          <p className="mb-3 font-sans text-[12px] text-[var(--muted)]">
             Envie um CSV exportado do Google Forms, Typeform etc. Você mapeia cada coluna pra uma
             pergunta antes de confirmar.
           </p>
-        </div>
-        <input
-          ref={inputRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="hidden"
-          onChange={(e) => {
-            const arquivo = e.target.files?.[0];
-            if (arquivo) void lerArquivo(arquivo);
-          }}
-        />
-        <button
-          onClick={() => inputRef.current?.click()}
-          className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)]"
-        >
-          Escolher arquivo CSV
-        </button>
-      </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(e) => {
+              const arquivo = e.target.files?.[0];
+              if (arquivo) void lerArquivo(arquivo);
+            }}
+          />
+          <button
+            onClick={() => inputRef.current?.click()}
+            className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)]"
+          >
+            Escolher arquivo CSV
+          </button>
 
-      {cabecalhos && (
-        <div className="mt-4 border-t border-[var(--line)] pt-4">
-          <p className="mb-3 font-sans text-[12px] text-[var(--muted)]">
-            <strong className="text-[var(--ink)]">{nomeArquivo}</strong> · {linhas.length} linha
-            {linhas.length === 1 ? "" : "s"} · {perguntasMapeadas} coluna
-            {perguntasMapeadas === 1 ? "" : "s"} mapeada{perguntasMapeadas === 1 ? "" : "s"}
-          </p>
-          <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
-            {cabecalhos.map((cab, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <p
-                  className="w-1/2 truncate font-sans text-[13px] text-[var(--ink-soft)]"
-                  title={cab}
-                >
-                  {cab}
-                </p>
-                <select
-                  value={mapeamento[i] ?? IGNORAR}
-                  onChange={(e) =>
-                    setMapeamento((m) => m.map((v, idx) => (idx === i ? e.target.value : v)))
-                  }
-                  className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 font-sans text-[13px] text-[var(--ink)]"
-                >
-                  <option value={IGNORAR}>Ignorar essa coluna</option>
-                  {PESQUISA_DISCOVERY.perguntas.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.ordem}. {p.titulo}
-                    </option>
-                  ))}
-                </select>
+          {cabecalhos && (
+            <div className="mt-4 border-t border-[var(--line)] pt-4">
+              <p className="mb-3 font-sans text-[12px] text-[var(--muted)]">
+                <strong className="text-[var(--ink)]">{nomeArquivo}</strong> · {linhas.length} linha
+                {linhas.length === 1 ? "" : "s"} · {perguntasMapeadas} coluna
+                {perguntasMapeadas === 1 ? "" : "s"} mapeada{perguntasMapeadas === 1 ? "" : "s"}
+              </p>
+              <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
+                {cabecalhos.map((cab, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <p
+                      className="w-1/2 truncate font-sans text-[13px] text-[var(--ink-soft)]"
+                      title={cab}
+                    >
+                      {cab}
+                    </p>
+                    <select
+                      value={mapeamento[i] ?? IGNORAR}
+                      onChange={(e) =>
+                        setMapeamento((m) => m.map((v, idx) => (idx === i ? e.target.value : v)))
+                      }
+                      className="flex-1 rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 font-sans text-[13px] text-[var(--ink)]"
+                    >
+                      <option value={IGNORAR}>Ignorar essa coluna</option>
+                      {config.perguntas.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.ordem}. {p.titulo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-center gap-3">
-            <button
-              onClick={() => void confirmarImportacao()}
-              disabled={importando || perguntasMapeadas === 0}
-              className="rounded-lg bg-[var(--secondary)] px-4 py-1.5 font-sans text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {importando
-                ? "Importando…"
-                : `Importar ${linhas.length} resposta${linhas.length === 1 ? "" : "s"}`}
-            </button>
-            <button
-              onClick={cancelar}
-              disabled={importando}
-              className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 font-sans text-[13px] text-[var(--ink-soft)] disabled:opacity-40"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={() => void confirmarImportacao()}
+                  disabled={importando || perguntasMapeadas === 0}
+                  className="rounded-lg bg-[var(--secondary)] px-4 py-1.5 font-sans text-[13px] font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+                >
+                  {importando
+                    ? "Importando…"
+                    : `Importar ${linhas.length} resposta${linhas.length === 1 ? "" : "s"}`}
+                </button>
+                <button
+                  onClick={cancelar}
+                  disabled={importando}
+                  className="rounded-lg border border-[var(--line)] bg-white px-4 py-1.5 font-sans text-[13px] text-[var(--ink-soft)] disabled:opacity-40"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }

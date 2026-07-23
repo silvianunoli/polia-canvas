@@ -3,11 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
-import {
-  PESQUISA_DISCOVERY,
-  SLUG_PESQUISA,
-  TOTAL_PERGUNTAS,
-} from "@/lib/pesquisa-discovery.config";
+import { pesquisaPorSlug, totalPerguntas, type PesquisaConfig } from "@/lib/pesquisas/registro";
 import type { Json, Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 function db() {
@@ -33,30 +29,40 @@ function estaAberta(p: Pick<PesquisaRow, "ativa" | "abre_em" | "fecha_em">): boo
   return true;
 }
 
-// GET: a página pública usa isto pra saber se renderiza o formulário ou uma tela
-// de "pesquisa encerrada", e pra pegar título/subtítulo. Não expõe a tabela: lê
-// pelo service role no servidor.
-export const getPesquisaAberta = createServerFn({ method: "GET" }).handler(async () => {
+// Qual pesquisa está pública agora: a mais recente com ativa=true. Só uma
+// fica pública por vez (ver alternarPesquisaAtiva); isso blinda contra um
+// estado inconsistente no banco escolhendo a mais recente em vez de estourar.
+async function buscarPesquisaAtiva(): Promise<PesquisaRow | null> {
   const { data } = await db()
     .from("pesquisas")
-    .select("id, titulo, subtitulo, ativa, abre_em, fecha_em")
-    .eq("slug", SLUG_PESQUISA)
-    .maybeSingle();
+    .select("*")
+    .eq("ativa", true)
+    .order("criado_em", { ascending: false })
+    .limit(1);
+  return (data as PesquisaRow[] | null)?.[0] ?? null;
+}
 
-  const row = data as PesquisaRow | null;
-  if (!row) return { aberta: false, titulo: "", subtitulo: "" };
+// GET: a página pública usa isto pra saber se renderiza o formulário ou uma tela
+// de "pesquisa encerrada", pegar título/subtítulo e saber QUAL pesquisa (slug)
+// resolver a config no cliente. Não expõe a tabela: lê pelo service role.
+export const getPesquisaAberta = createServerFn({ method: "GET" }).handler(async () => {
+  const row = await buscarPesquisaAtiva();
+  if (!row || !pesquisaPorSlug(row.slug)) {
+    return { aberta: false, titulo: "", subtitulo: "", slug: "" };
+  }
   return {
     aberta: estaAberta(row),
     titulo: row.titulo,
     subtitulo: row.subtitulo ?? "",
+    slug: row.slug,
   };
 });
 
 // Limpa as respostas contra a config: só entram perguntas e opções que existem,
 // texto aberto é aparado. Blinda contra payload inflado ou forjado.
-function sanitizarRespostas(brutas: Record<string, unknown>): Json {
+function sanitizarRespostas(config: PesquisaConfig, brutas: Record<string, unknown>): Json {
   const limpo: Record<string, unknown> = {};
-  for (const p of PESQUISA_DISCOVERY.perguntas) {
+  for (const p of config.perguntas) {
     const v = brutas[p.id];
     if (v === undefined || v === null) continue;
 
@@ -94,7 +100,8 @@ const salvarSchema = z.object({
   hp: z.string().optional(),
 });
 
-// POST: cria/atualiza a resposta da sessão (upsert por sessao_id).
+// POST: cria/atualiza a resposta da sessão (upsert por sessao_id), sempre na
+// pesquisa ativa no momento da chamada.
 // - Criar a linha exige Turnstile válido (gate anti-abuso, uma vez por sessão).
 // - Atualizações seguintes da MESMA sessão não repetem o Turnstile (o token é de
 //   uso único); a linha já existe e é só avançar progresso / mesclar respostas.
@@ -104,20 +111,12 @@ export const salvarPesquisa = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     if (data.hp) return { ok: true as const };
 
-    const { data: pesquisaData } = await db()
-      .from("pesquisas")
-      .select("id, ativa, abre_em, fecha_em")
-      .eq("slug", SLUG_PESQUISA)
-      .maybeSingle();
-
-    const pesquisa = pesquisaData as Pick<
-      PesquisaRow,
-      "id" | "ativa" | "abre_em" | "fecha_em"
-    > | null;
-    if (!pesquisa) return { ok: false as const, motivo: "nao_encontrada" as const };
+    const pesquisa = await buscarPesquisaAtiva();
+    const config = pesquisa ? pesquisaPorSlug(pesquisa.slug) : undefined;
+    if (!pesquisa || !config) return { ok: false as const, motivo: "nao_encontrada" as const };
     if (!estaAberta(pesquisa)) return { ok: false as const, motivo: "fechada" as const };
 
-    const respostas = sanitizarRespostas(data.respostas);
+    const respostas = sanitizarRespostas(config, data.respostas);
 
     const { data: existenteData } = await db()
       .from("pesquisa_respostas")
@@ -169,25 +168,30 @@ export const salvarPesquisa = createServerFn({ method: "POST" })
   });
 
 const importarSchema = z.object({
+  slug: z.string().trim().min(1),
   linhas: z.array(z.record(z.unknown())).min(1).max(2000),
 });
 
 // POST admin-only: importa respostas coletadas fora da pesquisa própria (ex.:
-// Google Forms, Typeform) pro mesmo funil de análise. O cliente já mapeou cada
-// coluna do arquivo pra um id de pergunta e cada valor pro id da opção (ou
-// texto, se aberta); aqui só valida a sessão de admin e reaplica o mesmo
-// sanitizador da pesquisa pública, então uma linha malformada não corrompe
-// as agregações. Cada linha vira uma resposta concluída, sessão sintética.
+// Google Forms, Typeform) pro mesmo funil de análise, pra UMA pesquisa
+// específica (slug). O cliente já mapeou cada coluna do arquivo pra um id de
+// pergunta e cada valor pro id da opção (ou texto, se aberta); aqui só valida
+// a sessão de admin e reaplica o mesmo sanitizador da pesquisa pública, então
+// uma linha malformada não corrompe as agregações. Cada linha vira uma
+// resposta concluída, sessão sintética.
 export const importarRespostasPesquisa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => importarSchema.parse(input))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.userId);
 
+    const config = pesquisaPorSlug(data.slug);
+    if (!config) return { ok: false as const, motivo: "nao_encontrada" as const, inseridas: 0 };
+
     const { data: pesquisaData } = await db()
       .from("pesquisas")
       .select("id")
-      .eq("slug", SLUG_PESQUISA)
+      .eq("slug", data.slug)
       .maybeSingle();
     const pesquisa = pesquisaData as Pick<PesquisaRow, "id"> | null;
     if (!pesquisa) return { ok: false as const, motivo: "nao_encontrada" as const, inseridas: 0 };
@@ -195,9 +199,9 @@ export const importarRespostasPesquisa = createServerFn({ method: "POST" })
     const linhas = data.linhas.map((brutas) => ({
       pesquisa_id: pesquisa.id,
       sessao_id: `externo-${crypto.randomUUID()}`,
-      progresso: TOTAL_PERGUNTAS,
+      progresso: totalPerguntas(config),
       concluida: true,
-      respostas: sanitizarRespostas(brutas),
+      respostas: sanitizarRespostas(config, brutas),
     }));
 
     const { error } = await db().from("pesquisa_respostas").insert(linhas);
@@ -206,4 +210,40 @@ export const importarRespostasPesquisa = createServerFn({ method: "POST" })
       return { ok: false as const, motivo: "erro" as const, inseridas: 0 };
     }
     return { ok: true as const, inseridas: linhas.length };
+  });
+
+const alternarSchema = z.object({
+  slug: z.string().trim().min(1),
+  ativa: z.boolean(),
+});
+
+// POST admin-only: liga/desliga uma pesquisa. Só uma fica pública por vez —
+// ao ativar, desativa todas as outras (a página pública em /pesquisa resolve
+// "a ativa" sem slug na URL, então duas ativas ao mesmo tempo seria ambíguo).
+export const alternarPesquisaAtiva = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => alternarSchema.parse(input))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.userId);
+
+    if (data.ativa) {
+      const { error: erroDesativar } = await db()
+        .from("pesquisas")
+        .update({ ativa: false })
+        .neq("slug", data.slug);
+      if (erroDesativar) {
+        console.error("[Pesquisa] Falha ao desativar as demais:", erroDesativar);
+        return { ok: false as const };
+      }
+    }
+
+    const { error } = await db()
+      .from("pesquisas")
+      .update({ ativa: data.ativa })
+      .eq("slug", data.slug);
+    if (error) {
+      console.error("[Pesquisa] Falha ao alternar:", error);
+      return { ok: false as const };
+    }
+    return { ok: true as const };
   });

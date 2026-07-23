@@ -7,7 +7,7 @@ import {
   filtrarPorSegmento,
   type RespostaRow,
 } from "@/lib/pesquisa-agg";
-import type { Pergunta } from "@/lib/pesquisa-discovery.config";
+import type { Pergunta } from "@/lib/pesquisas/tipos";
 
 const rows: RespostaRow[] = [
   {

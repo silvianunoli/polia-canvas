@@ -55,7 +55,6 @@ import { Route as AuthenticatedEtapaNRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
 import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
 import { Route as AuthenticatedAdminQualidadeRouteImport } from './routes/_authenticated/admin.qualidade'
-import { Route as AuthenticatedAdminPesquisasRouteImport } from './routes/_authenticated/admin.pesquisas'
 import { Route as AuthenticatedAdminNegocioRouteImport } from './routes/_authenticated/admin.negocio'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
 import { Route as AuthenticatedAdminGovernancaRouteImport } from './routes/_authenticated/admin.governanca'
@@ -65,9 +64,11 @@ import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAdminAlertasRouteImport } from './routes/_authenticated/admin.alertas'
+import { Route as AuthenticatedAdminPesquisasIndexRouteImport } from './routes/_authenticated/admin.pesquisas.index'
 import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_authenticated/admin.chamados.index'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
+import { Route as AuthenticatedAdminPesquisasSlugRouteImport } from './routes/_authenticated/admin.pesquisas.$slug'
 import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_authenticated/admin.chamados.$id'
 
 const TermosRoute = TermosRouteImport.update({
@@ -310,12 +311,6 @@ const AuthenticatedAdminQualidadeRoute =
     path: '/qualidade',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
-const AuthenticatedAdminPesquisasRoute =
-  AuthenticatedAdminPesquisasRouteImport.update({
-    id: '/pesquisas',
-    path: '/pesquisas',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const AuthenticatedAdminNegocioRoute =
   AuthenticatedAdminNegocioRouteImport.update({
     id: '/negocio',
@@ -366,6 +361,12 @@ const AuthenticatedAdminAlertasRoute =
     path: '/alertas',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminPesquisasIndexRoute =
+  AuthenticatedAdminPesquisasIndexRouteImport.update({
+    id: '/pesquisas/',
+    path: '/pesquisas/',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminChamadosIndexRoute =
   AuthenticatedAdminChamadosIndexRouteImport.update({
     id: '/chamados/',
@@ -382,6 +383,12 @@ const AuthenticatedAdminUsuariosIdRoute =
   AuthenticatedAdminUsuariosIdRouteImport.update({
     id: '/usuarios/$id',
     path: '/usuarios/$id',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminPesquisasSlugRoute =
+  AuthenticatedAdminPesquisasSlugRouteImport.update({
+    id: '/pesquisas/$slug',
+    path: '/pesquisas/$slug',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminChamadosIdRoute =
@@ -436,7 +443,6 @@ export interface FileRoutesByFullPath {
   '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -448,9 +454,11 @@ export interface FileRoutesByFullPath {
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
+  '/admin/pesquisas/': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -496,7 +504,6 @@ export interface FileRoutesByTo {
   '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -508,9 +515,11 @@ export interface FileRoutesByTo {
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
   '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/admin/chamados': typeof AuthenticatedAdminChamadosIndexRoute
+  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -559,7 +568,6 @@ export interface FileRoutesById {
   '/_authenticated/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/_authenticated/admin/pesquisas': typeof AuthenticatedAdminPesquisasRoute
   '/_authenticated/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
   '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
@@ -571,9 +579,11 @@ export interface FileRoutesById {
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
+  '/_authenticated/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
   '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/_authenticated/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
+  '/_authenticated/admin/pesquisas/': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -622,7 +632,6 @@ export interface FileRouteTypes {
     | '/admin/governanca'
     | '/admin/logs'
     | '/admin/negocio'
-    | '/admin/pesquisas'
     | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
@@ -634,9 +643,11 @@ export interface FileRouteTypes {
     | '/planejamento/'
     | '/planner/'
     | '/admin/chamados/$id'
+    | '/admin/pesquisas/$slug'
     | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
     | '/admin/chamados/'
+    | '/admin/pesquisas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -682,7 +693,6 @@ export interface FileRouteTypes {
     | '/admin/governanca'
     | '/admin/logs'
     | '/admin/negocio'
-    | '/admin/pesquisas'
     | '/admin/qualidade'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
@@ -694,9 +704,11 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/planner'
     | '/admin/chamados/$id'
+    | '/admin/pesquisas/$slug'
     | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
     | '/admin/chamados'
+    | '/admin/pesquisas'
   id:
     | '__root__'
     | '/'
@@ -744,7 +756,6 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/governanca'
     | '/_authenticated/admin/logs'
     | '/_authenticated/admin/negocio'
-    | '/_authenticated/admin/pesquisas'
     | '/_authenticated/admin/qualidade'
     | '/_authenticated/blog-admin/$id'
     | '/_authenticated/blog-admin/novo'
@@ -756,9 +767,11 @@ export interface FileRouteTypes {
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
     | '/_authenticated/admin/chamados/$id'
+    | '/_authenticated/admin/pesquisas/$slug'
     | '/_authenticated/admin/usuarios/$id'
     | '/_authenticated/planejamento/modulo/$n'
     | '/_authenticated/admin/chamados/'
+    | '/_authenticated/admin/pesquisas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1106,13 +1119,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminQualidadeRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
-    '/_authenticated/admin/pesquisas': {
-      id: '/_authenticated/admin/pesquisas'
-      path: '/pesquisas'
-      fullPath: '/admin/pesquisas'
-      preLoaderRoute: typeof AuthenticatedAdminPesquisasRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/admin/negocio': {
       id: '/_authenticated/admin/negocio'
       path: '/negocio'
@@ -1176,6 +1182,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAlertasRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/pesquisas/': {
+      id: '/_authenticated/admin/pesquisas/'
+      path: '/pesquisas'
+      fullPath: '/admin/pesquisas/'
+      preLoaderRoute: typeof AuthenticatedAdminPesquisasIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/chamados/': {
       id: '/_authenticated/admin/chamados/'
       path: '/chamados'
@@ -1195,6 +1208,13 @@ declare module '@tanstack/react-router' {
       path: '/usuarios/$id'
       fullPath: '/admin/usuarios/$id'
       preLoaderRoute: typeof AuthenticatedAdminUsuariosIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/pesquisas/$slug': {
+      id: '/_authenticated/admin/pesquisas/$slug'
+      path: '/pesquisas/$slug'
+      fullPath: '/admin/pesquisas/$slug'
+      preLoaderRoute: typeof AuthenticatedAdminPesquisasSlugRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/chamados/$id': {
@@ -1217,12 +1237,13 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminGovernancaRoute: typeof AuthenticatedAdminGovernancaRoute
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminNegocioRoute: typeof AuthenticatedAdminNegocioRoute
-  AuthenticatedAdminPesquisasRoute: typeof AuthenticatedAdminPesquisasRoute
   AuthenticatedAdminQualidadeRoute: typeof AuthenticatedAdminQualidadeRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
+  AuthenticatedAdminPesquisasSlugRoute: typeof AuthenticatedAdminPesquisasSlugRoute
   AuthenticatedAdminUsuariosIdRoute: typeof AuthenticatedAdminUsuariosIdRoute
   AuthenticatedAdminChamadosIndexRoute: typeof AuthenticatedAdminChamadosIndexRoute
+  AuthenticatedAdminPesquisasIndexRoute: typeof AuthenticatedAdminPesquisasIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
@@ -1235,12 +1256,13 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminGovernancaRoute: AuthenticatedAdminGovernancaRoute,
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminNegocioRoute: AuthenticatedAdminNegocioRoute,
-  AuthenticatedAdminPesquisasRoute: AuthenticatedAdminPesquisasRoute,
   AuthenticatedAdminQualidadeRoute: AuthenticatedAdminQualidadeRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
+  AuthenticatedAdminPesquisasSlugRoute: AuthenticatedAdminPesquisasSlugRoute,
   AuthenticatedAdminUsuariosIdRoute: AuthenticatedAdminUsuariosIdRoute,
   AuthenticatedAdminChamadosIndexRoute: AuthenticatedAdminChamadosIndexRoute,
+  AuthenticatedAdminPesquisasIndexRoute: AuthenticatedAdminPesquisasIndexRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =

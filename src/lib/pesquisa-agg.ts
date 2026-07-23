@@ -2,7 +2,7 @@
 // O painel /admin/pesquisas monta os gráficos a partir daqui, e o teste cobre
 // a lógica que é fácil de errar (taxa, abandono, distribuição sobre respondentes).
 
-import type { Pergunta } from "@/lib/pesquisa-discovery.config";
+import type { Pergunta } from "@/lib/pesquisas/tipos";
 
 export interface RespostaRow {
   progresso: number;

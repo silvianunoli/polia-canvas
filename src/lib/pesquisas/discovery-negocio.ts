@@ -1,8 +1,4 @@
-// Config da pesquisa de discovery da Pólia (pública e anônima).
-//
-// UMA pesquisa, sem construtor (KISS). As perguntas moram aqui, versionadas e
-// tipadas; a página pública renderiza a partir daqui e o painel de admin usa os
-// mesmos rótulos para agregar. Mudou pergunta? Muda aqui.
+// Pesquisa de discovery da Pólia (pública e anônima).
 //
 // Enxuta (15 perguntas) pra tráfego frio: quanto mais curta, mais respostas, e a
 // validação vem da largura. Só fica o que testa hipótese ou segmenta a leitura.
@@ -15,36 +11,10 @@
 // Posicionamento marca-primeiro: o bloco de marca/valor (compra_pesa, tem_marca,
 // inseguranca) é o que valida a tese "a dor lidera pela marca, não só pelo preço".
 
-export type TipoPergunta = "unica" | "multipla" | "aberta";
+import type { PesquisaConfig } from "./tipos";
 
-export interface OpcaoPergunta {
-  id: string;
-  rotulo: string;
-}
-
-export interface Pergunta {
-  id: string; // estável: é a chave em pesquisa_respostas.respostas
-  ordem: number;
-  parte: 1 | 2; // 1 = seu negócio, 2 = sobre você (perfil opcional)
-  tipo: TipoPergunta;
-  titulo: string;
-  ajuda?: string;
-  opcional?: boolean; // pode pular sem responder
-  sensivel?: boolean; // dado pessoal (LGPD): sempre opcional + "prefiro não dizer"
-  opcoes?: OpcaoPergunta[]; // unica / multipla
-  maxSelecoes?: number; // multipla
-  placeholder?: string; // aberta
-}
-
-export interface PesquisaConfig {
-  slug: string;
-  perguntas: Pergunta[];
-}
-
-export const SLUG_PESQUISA = "discovery-negocio";
-
-export const PESQUISA_DISCOVERY: PesquisaConfig = {
-  slug: SLUG_PESQUISA,
+export const discoveryNegocio: PesquisaConfig = {
+  slug: "discovery-negocio",
   perguntas: [
     {
       id: "estagio",
@@ -264,13 +234,3 @@ export const PESQUISA_DISCOVERY: PesquisaConfig = {
     },
   ],
 };
-
-export const TOTAL_PERGUNTAS = PESQUISA_DISCOVERY.perguntas.length;
-
-export const PERGUNTAS_POR_ID: Record<string, Pergunta> = Object.fromEntries(
-  PESQUISA_DISCOVERY.perguntas.map((p) => [p.id, p]),
-);
-
-export function perguntaPorOrdem(ordem: number): Pergunta | undefined {
-  return PESQUISA_DISCOVERY.perguntas.find((p) => p.ordem === ordem);
-}

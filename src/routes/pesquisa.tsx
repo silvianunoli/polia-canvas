@@ -7,13 +7,8 @@ import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { getPesquisaAberta, salvarPesquisa } from "@/lib/pesquisa.functions";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
-import {
-  PESQUISA_DISCOVERY,
-  PERGUNTAS_POR_ID,
-  SLUG_PESQUISA,
-  TOTAL_PERGUNTAS,
-  type Pergunta,
-} from "@/lib/pesquisa-discovery.config";
+import { pesquisaPorSlug, perguntasPorId, totalPerguntas } from "@/lib/pesquisas/registro";
+import type { Pergunta } from "@/lib/pesquisas/tipos";
 import { FieldError } from "@/components/ui/FieldError";
 
 export const Route = createFileRoute("/pesquisa")({
@@ -34,15 +29,12 @@ export const Route = createFileRoute("/pesquisa")({
 type Valor = string | string[];
 type Respostas = Record<string, Valor>;
 
-const FEITA_KEY = `polia-pesquisa-feita-${SLUG_PESQUISA}`;
-const SESSAO_KEY = `polia-pesquisa-sessao-${SLUG_PESQUISA}`;
-
-function getOrCreateSessao(): string {
+function getOrCreateSessao(sessaoKey: string): string {
   if (typeof window === "undefined") return "";
-  let id = localStorage.getItem(SESSAO_KEY);
+  let id = localStorage.getItem(sessaoKey);
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem(SESSAO_KEY, id);
+    localStorage.setItem(sessaoKey, id);
   }
   return id;
 }
@@ -162,6 +154,7 @@ function TelaIntro({
 function TelaPergunta({
   pergunta,
   idx,
+  total,
   valor,
   onResponder,
   onAvancar,
@@ -170,13 +163,13 @@ function TelaPergunta({
 }: {
   pergunta: Pergunta;
   idx: number;
+  total: number;
   valor: Valor | undefined;
   onResponder: (v: Valor) => void;
   onAvancar: () => void;
   onVoltar: () => void;
   concluindo: boolean;
 }) {
-  const total = TOTAL_PERGUNTAS;
   const pct = Math.round(((idx + 1) / total) * 100);
   const ehUltima = idx === total - 1;
   const jaRespondeu = respondida(pergunta, valor);
@@ -476,6 +469,10 @@ function TelaFim() {
 // ── Página ──────────────────────────────────────────────────────────────────
 function PesquisaPage() {
   const dados = Route.useLoaderData();
+  const config = dados.slug ? pesquisaPorSlug(dados.slug) : undefined;
+  const feitaKey = `polia-pesquisa-feita-${dados.slug}`;
+  const sessaoKey = `polia-pesquisa-sessao-${dados.slug}`;
+
   const [sessaoId, setSessaoId] = useState("");
   const [pronto, setPronto] = useState(false);
   const [jaRespondeu, setJaRespondeu] = useState(false);
@@ -486,13 +483,18 @@ function PesquisaPage() {
   const [concluindo, setConcluindo] = useState(false);
 
   useEffect(() => {
-    setSessaoId(getOrCreateSessao());
-    if (typeof window !== "undefined" && localStorage.getItem(FEITA_KEY) === "1") {
+    if (!dados.slug) {
+      setPronto(true);
+      return;
+    }
+    setSessaoId(getOrCreateSessao(sessaoKey));
+    if (typeof window !== "undefined" && localStorage.getItem(feitaKey) === "1") {
       setJaRespondeu(true);
     }
     setPronto(true);
     track("pesquisa_vista");
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dados.slug]);
 
   function salvarSilencioso(resp: Respostas, progresso: number, concluida: boolean) {
     void salvarPesquisa({
@@ -525,14 +527,14 @@ function PesquisaPage() {
   }
 
   function responder(v: Valor) {
-    const p = PESQUISA_DISCOVERY.perguntas[idx];
+    const p = config!.perguntas[idx];
     setRespostas((r) => ({ ...r, [p.id]: v }));
   }
 
   async function avancar() {
-    const p = PESQUISA_DISCOVERY.perguntas[idx];
+    const p = config!.perguntas[idx];
     const progresso = p.ordem;
-    if (idx === TOTAL_PERGUNTAS - 1) {
+    if (idx === totalPerguntas(config!) - 1) {
       setConcluindo(true);
       try {
         await salvarPesquisa({
@@ -542,7 +544,7 @@ function PesquisaPage() {
         // Se a gravação final falhar, ainda deixamos ela seguir pro contato; o
         // progresso anterior já está salvo. Não travamos a experiência.
       }
-      if (typeof window !== "undefined") localStorage.setItem(FEITA_KEY, "1");
+      if (typeof window !== "undefined") localStorage.setItem(feitaKey, "1");
       track("pesquisa_concluida");
       setConcluindo(false);
       setJaRespondeu(true);
@@ -563,8 +565,8 @@ function PesquisaPage() {
     token: string;
   }): Promise<boolean> {
     const categoriaRotulo =
-      PERGUNTAS_POR_ID["categoria"]?.opcoes?.find((o) => o.id === respostas["categoria"])?.rotulo ??
-      null;
+      perguntasPorId(config!)["categoria"]?.opcoes?.find((o) => o.id === respostas["categoria"])
+        ?.rotulo ?? null;
     try {
       const r = await entrarListaEspera({
         data: {
@@ -592,7 +594,7 @@ function PesquisaPage() {
     return <Casca>{null}</Casca>;
   }
 
-  if (!dados.aberta) {
+  if (!dados.aberta || !config) {
     return (
       <Casca>
         <h1 className="font-cabinet text-[28px] tracking-[-0.02em] text-[var(--ink)]">
@@ -641,9 +643,10 @@ function PesquisaPage() {
       )}
       {tela === "pergunta" && (
         <TelaPergunta
-          pergunta={PESQUISA_DISCOVERY.perguntas[idx]}
+          pergunta={config.perguntas[idx]}
           idx={idx}
-          valor={respostas[PESQUISA_DISCOVERY.perguntas[idx].id]}
+          total={totalPerguntas(config)}
+          valor={respostas[config.perguntas[idx].id]}
           onResponder={responder}
           onAvancar={avancar}
           onVoltar={voltar}
