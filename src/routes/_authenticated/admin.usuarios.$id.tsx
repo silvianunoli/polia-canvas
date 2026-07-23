@@ -13,7 +13,8 @@ export const Route = createFileRoute("/_authenticated/admin/usuarios/$id")({
 
 function AdminUsuarioPerfil() {
   const { id } = Route.useParams();
-  const [usuario, setUsuario] = useState<Tables<"profiles"> | null>(null);
+  // undefined = ainda buscando; null = buscou e não achou.
+  const [usuario, setUsuario] = useState<Tables<"profiles"> | null | undefined>(undefined);
   const [totalTickets, setTotalTickets] = useState(0);
   const [totalEntregaveis, setTotalEntregaveis] = useState(0);
   const [moduloAtual, setModuloAtual] = useState(0);
@@ -21,7 +22,7 @@ function AdminUsuarioPerfil() {
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
-      setUsuario(data);
+      setUsuario(data ?? null);
       const { count: ct } = await supabase
         .from("tickets")
         .select("*", { count: "exact", head: true })
@@ -42,7 +43,21 @@ function AdminUsuarioPerfil() {
     })();
   }, [id]);
 
-  if (!usuario) return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
+  if (usuario === undefined) {
+    return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
+  }
+
+  if (usuario === null) {
+    return (
+      <p className="font-sans text-[15px] text-[var(--ink-soft)]">
+        Não achei essa usuária.{" "}
+        <Link to="/admin/crm" className="text-[var(--secondary-text)] hover:underline">
+          ← Voltar pro CRM
+        </Link>
+        .
+      </p>
+    );
+  }
 
   return (
     <>
@@ -57,12 +72,8 @@ function AdminUsuarioPerfil() {
           <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--secondary-text)]">
             Usuária
           </p>
-          <h1 className="font-cabinet text-[40px] text-[var(--ink)]">
-            {usuario.full_name ?? "—"}
-          </h1>
-          <p className="font-sans text-[14px] text-[var(--muted)]">
-            {usuario.business_name ?? ""}
-          </p>
+          <h1 className="font-cabinet text-[40px] text-[var(--ink)]">{usuario.full_name ?? "—"}</h1>
+          <p className="font-sans text-[14px] text-[var(--muted)]">{usuario.business_name ?? ""}</p>
         </div>
       </div>
 
@@ -70,7 +81,8 @@ function AdminUsuarioPerfil() {
         {[
           {
             label: "Módulo atual",
-            valor: moduloAtual > 0 ? `M${moduloAtual} · ${moduloInfo(moduloAtual).nome}` : "não iniciou",
+            valor:
+              moduloAtual > 0 ? `M${moduloAtual} · ${moduloInfo(moduloAtual).nome}` : "não iniciou",
           },
           { label: "Streak", valor: `${usuario.streak ?? 0} dias` },
           { label: "Entregáveis", valor: totalEntregaveis },
@@ -80,9 +92,7 @@ function AdminUsuarioPerfil() {
             <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[1.5px] text-[var(--muted)]">
               {item.label}
             </p>
-            <p className="font-cabinet text-[22px] leading-tight text-[var(--ink)]">
-              {item.valor}
-            </p>
+            <p className="font-cabinet text-[22px] leading-tight text-[var(--ink)]">{item.valor}</p>
           </div>
         ))}
       </div>

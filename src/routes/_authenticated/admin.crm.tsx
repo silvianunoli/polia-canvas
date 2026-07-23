@@ -150,6 +150,13 @@ function AdminCRM() {
   }
 
   async function handleRemoverConvite(email: string) {
+    if (
+      !window.confirm(
+        `Remover o convite de ${email}? Ela não vai conseguir se cadastrar até você liberar de novo.`,
+      )
+    ) {
+      return;
+    }
     setRemovendo(email);
     try {
       await removerConvite({ data: { email } });
@@ -288,7 +295,9 @@ function AdminCRM() {
                       <td className="px-5 py-3 font-sans text-[13px] text-[var(--ink-soft)]">
                         E{c.etapa_atual ?? 1}
                       </td>
-                      <td className={tdMuted}>{new Date(c.created_at).toLocaleDateString("pt-BR")}</td>
+                      <td className={tdMuted}>
+                        {new Date(c.created_at).toLocaleDateString("pt-BR")}
+                      </td>
                       <td className="px-5 py-3">
                         <button
                           type="button"
@@ -374,8 +383,8 @@ function AdminCRM() {
         {/* CONVITES (allowlist de e-mails liberados pro cadastro) */}
         <TabsContent value="convites">
           <p className="mb-4 font-sans text-[13px] text-[var(--muted)]">
-            {convites.length} e-mails liberados · {pendentesConvites} ainda não usaram o convite.
-            O cadastro é fechado: só quem está aqui consegue criar conta.
+            {convites.length} e-mails liberados · {pendentesConvites} ainda não usaram o convite. O
+            cadastro é fechado: só quem está aqui consegue criar conta.
           </p>
 
           <form onSubmit={handleAdicionarConvite} className="mb-6 flex gap-3">
@@ -409,9 +418,7 @@ function AdminCRM() {
                     key={c.email}
                     className="border-b border-[var(--line)] hover:bg-[var(--surface)]"
                   >
-                    <td className="px-5 py-3 font-sans text-[14px] text-[var(--ink)]">
-                      {c.email}
-                    </td>
+                    <td className="px-5 py-3 font-sans text-[14px] text-[var(--ink)]">{c.email}</td>
                     <td className="px-5 py-3">
                       <span
                         className={`rounded-full px-2.5 py-1 font-sans text-[11px] font-medium ${

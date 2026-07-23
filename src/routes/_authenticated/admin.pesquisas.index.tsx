@@ -58,6 +58,9 @@ function AdminPesquisasLista() {
   }, [carregar]);
 
   async function alternar(slug: string, ativa: boolean) {
+    if (!ativa && !window.confirm("Fechar essa pesquisa? Ela some de /pesquisa imediatamente.")) {
+      return;
+    }
     setAlternando(slug);
     try {
       const r = await alternarPesquisaAtiva({ data: { slug, ativa } });

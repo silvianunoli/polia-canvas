@@ -14,17 +14,45 @@ export const Route = createFileRoute("/_authenticated/admin/governanca")({
 type TamanhoTabela = { tabela: string; tamanho_bytes: number; tamanho_legivel: string };
 
 const RETENCAO = [
-  { tabela: "edge_function_logs", politica: "30 dias", motivo: "log operacional, sem valor depois disso" },
+  {
+    tabela: "edge_function_logs",
+    politica: "30 dias",
+    motivo: "log operacional, sem valor depois disso",
+  },
   { tabela: "erros_app", politica: "90 dias", motivo: "diagnóstico de erro, útil por mais tempo" },
-  { tabela: "eventos_analytics", politica: "sem limpeza ainda", motivo: "dado de negócio — decisão de reter fica pra depois" },
-  { tabela: "admin_audit_log", politica: "permanente", motivo: "trilha de compliance, nunca apaga" },
+  {
+    tabela: "eventos_analytics",
+    politica: "sem limpeza ainda",
+    motivo: "dado de negócio — decisão de reter fica pra depois",
+  },
+  {
+    tabela: "admin_audit_log",
+    politica: "permanente",
+    motivo: "trilha de compliance, nunca apaga",
+  },
 ];
 
 const DOCS = [
-  { titulo: "Política de Backup", desc: "Regras de backup, retenção e RPCs de limpeza", arquivo: "docs/backup-policy.md" },
-  { titulo: "Plano de Rollback", desc: "Como reverter código, schema e dado em caso de falha", arquivo: "docs/rollback-plan.md" },
-  { titulo: "Checklist de Segurança", desc: "Gate de segurança antes de subir pra produção", arquivo: "docs/checklist-seguranca.md" },
-  { titulo: "Checklist de Arquitetura", desc: "SOLID, camadas, quando escrever um ADR", arquivo: "docs/checklist-arquitetura.md" },
+  {
+    titulo: "Política de Backup",
+    desc: "Regras de backup, retenção e RPCs de limpeza",
+    arquivo: "docs/backup-policy.md",
+  },
+  {
+    titulo: "Plano de Rollback",
+    desc: "Como reverter código, schema e dado em caso de falha",
+    arquivo: "docs/rollback-plan.md",
+  },
+  {
+    titulo: "Checklist de Segurança",
+    desc: "Gate de segurança antes de subir pra produção",
+    arquivo: "docs/checklist-seguranca.md",
+  },
+  {
+    titulo: "Checklist de Arquitetura",
+    desc: "SOLID, camadas, quando escrever um ADR",
+    arquivo: "docs/checklist-arquitetura.md",
+  },
 ];
 
 function AdminGovernanca() {
@@ -41,6 +69,13 @@ function AdminGovernanca() {
   }, []);
 
   const limpar = async () => {
+    if (
+      !window.confirm(
+        "Remover edge_function_logs com mais de 30 dias e erros_app com mais de 90 dias? Essa ação não pode ser desfeita.",
+      )
+    ) {
+      return;
+    }
     setLimpando(true);
     try {
       const { data, error } = await supabase.rpc("admin_limpar_logs_antigos");
@@ -69,7 +104,10 @@ function AdminGovernanca() {
         </p>
         <div className="space-y-3">
           {RETENCAO.map((r) => (
-            <div key={r.tabela} className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-3 last:border-0 last:pb-0">
+            <div
+              key={r.tabela}
+              className="flex items-center justify-between gap-3 border-b border-[var(--line)] pb-3 last:border-0 last:pb-0"
+            >
               <div>
                 <p className="font-mono text-[13px] text-[var(--ink)]">{r.tabela}</p>
                 <p className="font-sans text-[12px] text-[var(--muted)]">{r.motivo}</p>

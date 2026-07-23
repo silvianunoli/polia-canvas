@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { logAcaoAdmin } from "@/lib/audit-log";
+import { toastErro } from "@/lib/toast";
 
 export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
   head: () => ({
@@ -13,14 +14,17 @@ export const Route = createFileRoute("/_authenticated/admin/chamados/$id")({
 
 function AdminTicket() {
   const { id } = Route.useParams();
-  const [ticket, setTicket] = useState<Tables<"tickets"> | null>(null);
+  // undefined = ainda buscando; null = buscou e não achou (id inválido, RLS).
+  const [ticket, setTicket] = useState<Tables<"tickets"> | null | undefined>(undefined);
   const [mensagens, setMensagens] = useState<Tables<"ticket_messages">[]>([]);
   const [resposta, setResposta] = useState("");
   const [userNome, setUserNome] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [resolvendo, setResolvendo] = useState(false);
 
   const carregar = async () => {
     const { data: t } = await supabase.from("tickets").select("*").eq("id", id).maybeSingle();
-    setTicket(t);
+    setTicket(t ?? null);
     if (t?.user_id) {
       const { data: p } = await supabase
         .from("profiles")
@@ -43,33 +47,67 @@ function AdminTicket() {
 
   const enviarResposta = async () => {
     if (!resposta.trim()) return;
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return;
-    await supabase.from("ticket_messages").insert({
-      ticket_id: id,
-      author_id: u.user.id,
-      author_role: "admin",
-      body: resposta,
-    });
-    await supabase
-      .from("tickets")
-      .update({ status: "em_andamento" })
-      .eq("id", id)
-      .eq("status", "aberto");
-    setResposta("");
-    carregar();
+    setEnviando(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) throw new Error("sem sessão");
+      const { error } = await supabase.from("ticket_messages").insert({
+        ticket_id: id,
+        author_id: u.user.id,
+        author_role: "admin",
+        body: resposta,
+      });
+      if (error) throw error;
+      await supabase
+        .from("tickets")
+        .update({ status: "em_andamento" })
+        .eq("id", id)
+        .eq("status", "aberto");
+      // Só limpa o campo depois de confirmar que salvou — senão uma falha de
+      // rede apaga o que a admin escreveu sem aviso.
+      setResposta("");
+      await carregar();
+    } catch {
+      toastErro("Não consegui enviar essa resposta. Tenta de novo.");
+    } finally {
+      setEnviando(false);
+    }
   };
 
   const resolverTicket = async () => {
-    await supabase
-      .from("tickets")
-      .update({ status: "resolvido", resolved_at: new Date().toISOString() })
-      .eq("id", id);
-    await logAcaoAdmin("resolver_chamado", id, { titulo: ticket?.title });
-    carregar();
+    setResolvendo(true);
+    try {
+      const { error } = await supabase
+        .from("tickets")
+        .update({ status: "resolvido", resolved_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      await logAcaoAdmin("resolver_chamado", id, { titulo: ticket?.title });
+      await carregar();
+    } catch {
+      toastErro("Não consegui marcar como resolvido. Tenta de novo.");
+    } finally {
+      setResolvendo(false);
+    }
   };
 
-  if (!ticket) return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
+  if (ticket === undefined) {
+    return <p className="font-sans text-[var(--muted)]">Carregando…</p>;
+  }
+
+  if (ticket === null) {
+    return (
+      <div>
+        <p className="font-sans text-[15px] text-[var(--ink-soft)]">
+          Não achei esse chamado.{" "}
+          <Link to="/admin/chamados" className="text-[var(--secondary-text)] hover:underline">
+            ← Voltar aos chamados
+          </Link>
+          .
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-[760px]">
@@ -90,17 +128,16 @@ function AdminTicket() {
         {ticket.status !== "resolvido" && (
           <button
             onClick={resolverTicket}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
+            disabled={resolvendo}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            Resolver
+            {resolvendo ? "Resolvendo…" : "Resolver"}
           </button>
         )}
       </div>
 
       <div className="mb-6 rounded-2xl border border-[var(--line)] bg-white p-5">
-        <p className="whitespace-pre-wrap font-sans text-[14px] text-[var(--ink)]">
-          {ticket.body}
-        </p>
+        <p className="whitespace-pre-wrap font-sans text-[14px] text-[var(--ink)]">{ticket.body}</p>
       </div>
 
       <div className="mb-6 space-y-4">
@@ -120,13 +157,9 @@ function AdminTicket() {
                 {msg.body}
               </p>
               <p
-                className="font-sans text-[11px]"
-                style={{
-                  color:
-                    msg.author_role === "admin"
-                      ? "rgba(255,255,255,0.55)"
-                      : "var(--muted)",
-                }}
+                className={`font-sans text-[11px] ${
+                  msg.author_role === "admin" ? "text-white/55" : "text-[var(--muted)]"
+                }`}
               >
                 {msg.author_role === "admin" ? "Você" : userNome} ·{" "}
                 {new Date(msg.created_at).toLocaleString("pt-BR")}
@@ -142,16 +175,17 @@ function AdminTicket() {
             value={resposta}
             onChange={(e) => setResposta(e.target.value)}
             placeholder="Escreva sua resposta…"
+            aria-label="Escreva sua resposta"
             rows={4}
             className="mb-4 w-full resize-none font-sans text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)]"
           />
           <div className="flex justify-end">
             <button
               onClick={enviarResposta}
-              disabled={!resposta.trim()}
+              disabled={!resposta.trim() || enviando}
               className="rounded-xl bg-[var(--secondary)] px-6 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
             >
-              Enviar resposta
+              {enviando ? "Enviando…" : "Enviar resposta"}
             </button>
           </div>
         </div>
