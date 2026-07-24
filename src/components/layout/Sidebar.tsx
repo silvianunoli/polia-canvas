@@ -55,6 +55,7 @@ function isActive(itemTo: string, pathname: string) {
 const ADMIN_SUBLINKS = [
   { to: "/admin", label: "Visão geral" },
   { to: "/admin/crm", label: "CRM" },
+  { to: "/admin/social", label: "Social" },
   { to: "/admin/chamados", label: "Chamados" },
   { to: "/admin/pesquisas", label: "Pesquisas" },
   { to: "/admin/funil", label: "Funil de jornada" },

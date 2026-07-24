@@ -487,6 +487,80 @@ export type Database = {
         }
         Relationships: []
       }
+      dm_conversas: {
+        Row: {
+          comment_id: string | null
+          criado_em: string
+          erro: string | null
+          estado: string
+          gatilho_id: string | null
+          id: string
+          ig_user_id: string
+          log: Json
+          ultima_msg_em: string | null
+        }
+        Insert: {
+          comment_id?: string | null
+          criado_em?: string
+          erro?: string | null
+          estado?: string
+          gatilho_id?: string | null
+          id?: string
+          ig_user_id: string
+          log?: Json
+          ultima_msg_em?: string | null
+        }
+        Update: {
+          comment_id?: string | null
+          criado_em?: string
+          erro?: string | null
+          estado?: string
+          gatilho_id?: string | null
+          id?: string
+          ig_user_id?: string
+          log?: Json
+          ultima_msg_em?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_conversas_gatilho_id_fkey"
+            columns: ["gatilho_id"]
+            isOneToOne: false
+            referencedRelation: "dm_gatilhos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_gatilhos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          max_por_dia: number
+          palavra: string
+          post_ig_id: string | null
+          resposta: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          max_por_dia?: number
+          palavra: string
+          post_ig_id?: string | null
+          resposta: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          max_por_dia?: number
+          palavra?: string
+          post_ig_id?: string | null
+          resposta?: string
+        }
+        Relationships: []
+      }
       edge_function_logs: {
         Row: {
           created_at: string
@@ -966,6 +1040,30 @@ export type Database = {
           ordem?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      integracao_instagram: {
+        Row: {
+          access_token: string | null
+          atualizado_em: string
+          expira_em: string | null
+          id: number
+          ig_user_id: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          atualizado_em?: string
+          expira_em?: string | null
+          id?: number
+          ig_user_id?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          atualizado_em?: string
+          expira_em?: string | null
+          id?: number
+          ig_user_id?: string | null
         }
         Relationships: []
       }
@@ -1711,6 +1809,248 @@ export type Database = {
         }
         Relationships: []
       }
+      social_geracoes: {
+        Row: {
+          acao: string | null
+          criado_em: string
+          id: string
+          modelo: string | null
+          post_id: string | null
+          tokens_in: number | null
+          tokens_out: number | null
+          veredito_revisora: string | null
+        }
+        Insert: {
+          acao?: string | null
+          criado_em?: string
+          id?: string
+          modelo?: string | null
+          post_id?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          veredito_revisora?: string | null
+        }
+        Update: {
+          acao?: string | null
+          criado_em?: string
+          id?: string
+          modelo?: string | null
+          post_id?: string | null
+          tokens_in?: number | null
+          tokens_out?: number | null
+          veredito_revisora?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_geracoes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_lotes: {
+        Row: {
+          criado_em: string
+          custo_estimado_tokens: number | null
+          id: string
+          modo: string
+          origem: string
+          quantidade: number
+          status: string
+          tema: string | null
+          tipo: Database["public"]["Enums"]["social_tipo"]
+        }
+        Insert: {
+          criado_em?: string
+          custo_estimado_tokens?: number | null
+          id?: string
+          modo: string
+          origem: string
+          quantidade: number
+          status?: string
+          tema?: string | null
+          tipo: Database["public"]["Enums"]["social_tipo"]
+        }
+        Update: {
+          criado_em?: string
+          custo_estimado_tokens?: number | null
+          id?: string
+          modo?: string
+          origem?: string
+          quantidade?: number
+          status?: string
+          tema?: string | null
+          tipo?: Database["public"]["Enums"]["social_tipo"]
+        }
+        Relationships: []
+      }
+      social_metricas: {
+        Row: {
+          comments: number | null
+          dia: string
+          follows: number | null
+          likes: number | null
+          post_id: string
+          reach: number | null
+          saves: number | null
+          shares: number | null
+        }
+        Insert: {
+          comments?: number | null
+          dia: string
+          follows?: number | null
+          likes?: number | null
+          post_id: string
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Update: {
+          comments?: number | null
+          dia?: string
+          follows?: number | null
+          likes?: number | null
+          post_id?: string
+          reach?: number | null
+          saves?: number | null
+          shares?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_metricas_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_pauta: {
+        Row: {
+          cta: string
+          dia: string
+          estrutura: string | null
+          formato: Database["public"]["Enums"]["social_tipo"]
+          gancho: string
+          id: string
+          pilar: string | null
+          post_id: string | null
+          semana: string
+          status: string
+        }
+        Insert: {
+          cta: string
+          dia: string
+          estrutura?: string | null
+          formato: Database["public"]["Enums"]["social_tipo"]
+          gancho: string
+          id?: string
+          pilar?: string | null
+          post_id?: string | null
+          semana: string
+          status?: string
+        }
+        Update: {
+          cta?: string
+          dia?: string
+          estrutura?: string | null
+          formato?: Database["public"]["Enums"]["social_tipo"]
+          gancho?: string
+          id?: string
+          pilar?: string | null
+          post_id?: string | null
+          semana?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_pauta_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_posts: {
+        Row: {
+          alt_text: string[] | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          caption: string
+          created_at: string
+          erro: string | null
+          gancho: string
+          id: string
+          ig_media_id: string | null
+          legenda_por_ia: boolean
+          lote_id: string | null
+          midias: string[]
+          origem_criacao: string
+          permalink: string | null
+          pilar: string | null
+          scheduled_at: string | null
+          slides: Json | null
+          status: Database["public"]["Enums"]["social_status"]
+          tipo: Database["public"]["Enums"]["social_tipo"]
+          versoes: Json
+        }
+        Insert: {
+          alt_text?: string[] | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          caption: string
+          created_at?: string
+          erro?: string | null
+          gancho: string
+          id?: string
+          ig_media_id?: string | null
+          legenda_por_ia?: boolean
+          lote_id?: string | null
+          midias: string[]
+          origem_criacao?: string
+          permalink?: string | null
+          pilar?: string | null
+          scheduled_at?: string | null
+          slides?: Json | null
+          status?: Database["public"]["Enums"]["social_status"]
+          tipo: Database["public"]["Enums"]["social_tipo"]
+          versoes?: Json
+        }
+        Update: {
+          alt_text?: string[] | null
+          aprovado_em?: string | null
+          aprovado_por?: string | null
+          caption?: string
+          created_at?: string
+          erro?: string | null
+          gancho?: string
+          id?: string
+          ig_media_id?: string | null
+          legenda_por_ia?: boolean
+          lote_id?: string | null
+          midias?: string[]
+          origem_criacao?: string
+          permalink?: string | null
+          pilar?: string | null
+          scheduled_at?: string | null
+          slides?: Json | null
+          status?: Database["public"]["Enums"]["social_status"]
+          tipo?: Database["public"]["Enums"]["social_tipo"]
+          versoes?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_lote_id_fkey"
+            columns: ["lote_id"]
+            isOneToOne: false
+            referencedRelation: "social_lotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           id: string
@@ -1978,6 +2318,9 @@ export type Database = {
       checar_taxa_erro_e_alertar: { Args: never; Returns: undefined }
       checar_uptimerobot_e_alertar: { Args: never; Returns: undefined }
       compor_nota_presenca: { Args: { p_uid: string }; Returns: undefined }
+      disparar_social_metricas: { Args: never; Returns: undefined }
+      disparar_social_publisher: { Args: never; Returns: undefined }
+      disparar_social_token_renovar: { Args: never; Returns: undefined }
       excluir_dados_do_usuario: { Args: never; Returns: undefined }
       hook_checar_convite_cadastro: { Args: { event: Json }; Returns: Json }
       http: {
@@ -2107,6 +2450,37 @@ export type Database = {
       }
       is_admin: { Args: { _uid: string }; Returns: boolean }
       parse_primeiro_numero: { Args: { p: string }; Returns: number }
+      pegar_e_travar_posts_agendados: {
+        Args: never
+        Returns: {
+          alt_text: string[] | null
+          aprovado_em: string | null
+          aprovado_por: string | null
+          caption: string
+          created_at: string
+          erro: string | null
+          gancho: string
+          id: string
+          ig_media_id: string | null
+          legenda_por_ia: boolean
+          lote_id: string | null
+          midias: string[]
+          origem_criacao: string
+          permalink: string | null
+          pilar: string | null
+          scheduled_at: string | null
+          slides: Json | null
+          status: Database["public"]["Enums"]["social_status"]
+          tipo: Database["public"]["Enums"]["social_tipo"]
+          versoes: Json
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "social_posts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       publish_due_posts: { Args: never; Returns: undefined }
       registrar_venda_cliente: {
         Args: { p_cliente_id: string }
@@ -2129,7 +2503,16 @@ export type Database = {
           }
     }
     Enums: {
-      [_ in never]: never
+      social_status:
+        | "rascunho"
+        | "revisado"
+        | "aprovado"
+        | "agendado"
+        | "publicando"
+        | "publicado"
+        | "falhou"
+        | "cancelado"
+      social_tipo: "feed" | "carrossel" | "reel" | "story"
     }
     CompositeTypes: {
       http_header: {
@@ -2272,6 +2655,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      social_status: [
+        "rascunho",
+        "revisado",
+        "aprovado",
+        "agendado",
+        "publicando",
+        "publicado",
+        "falhou",
+        "cancelado",
+      ],
+      social_tipo: ["feed", "carrossel", "reel", "story"],
+    },
   },
 } as const

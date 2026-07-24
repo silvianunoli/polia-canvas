@@ -37,7 +37,6 @@ import { Route as AuthenticatedMarcaVivaRouteImport } from './routes/_authentica
 import { Route as AuthenticatedMarcaRouteImport } from './routes/_authenticated/marca'
 import { Route as AuthenticatedJornadaRouteImport } from './routes/_authenticated/jornada'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedEquipeRouteImport } from './routes/_authenticated/equipe'
 import { Route as AuthenticatedEntregaveisRouteImport } from './routes/_authenticated/entregaveis'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
@@ -54,6 +53,7 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedEtapaNRouteImport } from './routes/_authenticated/etapa.$n'
 import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
 import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
+import { Route as AuthenticatedAdminSocialRouteImport } from './routes/_authenticated/admin.social'
 import { Route as AuthenticatedAdminQualidadeRouteImport } from './routes/_authenticated/admin.qualidade'
 import { Route as AuthenticatedAdminNegocioRouteImport } from './routes/_authenticated/admin.negocio'
 import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
@@ -211,11 +211,6 @@ const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedEquipeRoute = AuthenticatedEquipeRouteImport.update({
-  id: '/equipe',
-  path: '/equipe',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedEntregaveisRoute =
   AuthenticatedEntregaveisRouteImport.update({
     id: '/entregaveis',
@@ -304,6 +299,12 @@ const AuthenticatedBlogAdminIdRoute =
     id: '/blog-admin/$id',
     path: '/blog-admin/$id',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedAdminSocialRoute =
+  AuthenticatedAdminSocialRouteImport.update({
+    id: '/social',
+    path: '/social',
+    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminQualidadeRoute =
   AuthenticatedAdminQualidadeRouteImport.update({
@@ -415,7 +416,6 @@ export interface FileRoutesByFullPath {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
-  '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -444,6 +444,7 @@ export interface FileRoutesByFullPath {
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
+  '/admin/social': typeof AuthenticatedAdminSocialRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -476,7 +477,6 @@ export interface FileRoutesByTo {
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/entregaveis': typeof AuthenticatedEntregaveisRoute
-  '/equipe': typeof AuthenticatedEquipeRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/jornada': typeof AuthenticatedJornadaRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -505,6 +505,7 @@ export interface FileRoutesByTo {
   '/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
   '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
+  '/admin/social': typeof AuthenticatedAdminSocialRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -540,7 +541,6 @@ export interface FileRoutesById {
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/entregaveis': typeof AuthenticatedEntregaveisRoute
-  '/_authenticated/equipe': typeof AuthenticatedEquipeRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/jornada': typeof AuthenticatedJornadaRoute
   '/_authenticated/marca': typeof AuthenticatedMarcaRoute
@@ -569,6 +569,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
   '/_authenticated/admin/negocio': typeof AuthenticatedAdminNegocioRoute
   '/_authenticated/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
+  '/_authenticated/admin/social': typeof AuthenticatedAdminSocialRoute
   '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/_authenticated/etapa/$n': typeof AuthenticatedEtapaNRoute
@@ -604,7 +605,6 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracoes'
     | '/entregaveis'
-    | '/equipe'
     | '/financeiro'
     | '/jornada'
     | '/marca'
@@ -633,6 +633,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/negocio'
     | '/admin/qualidade'
+    | '/admin/social'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/etapa/$n'
@@ -665,7 +666,6 @@ export interface FileRouteTypes {
     | '/clientes'
     | '/configuracoes'
     | '/entregaveis'
-    | '/equipe'
     | '/financeiro'
     | '/jornada'
     | '/marca'
@@ -694,6 +694,7 @@ export interface FileRouteTypes {
     | '/admin/logs'
     | '/admin/negocio'
     | '/admin/qualidade'
+    | '/admin/social'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/etapa/$n'
@@ -728,7 +729,6 @@ export interface FileRouteTypes {
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
     | '/_authenticated/entregaveis'
-    | '/_authenticated/equipe'
     | '/_authenticated/financeiro'
     | '/_authenticated/jornada'
     | '/_authenticated/marca'
@@ -757,6 +757,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/logs'
     | '/_authenticated/admin/negocio'
     | '/_authenticated/admin/qualidade'
+    | '/_authenticated/admin/social'
     | '/_authenticated/blog-admin/$id'
     | '/_authenticated/blog-admin/novo'
     | '/_authenticated/etapa/$n'
@@ -993,13 +994,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/equipe': {
-      id: '/_authenticated/equipe'
-      path: '/equipe'
-      fullPath: '/equipe'
-      preLoaderRoute: typeof AuthenticatedEquipeRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/entregaveis': {
       id: '/_authenticated/entregaveis'
       path: '/entregaveis'
@@ -1111,6 +1105,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog-admin/$id'
       preLoaderRoute: typeof AuthenticatedBlogAdminIdRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/admin/social': {
+      id: '/_authenticated/admin/social'
+      path: '/social'
+      fullPath: '/admin/social'
+      preLoaderRoute: typeof AuthenticatedAdminSocialRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/qualidade': {
       id: '/_authenticated/admin/qualidade'
@@ -1238,6 +1239,7 @@ interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
   AuthenticatedAdminNegocioRoute: typeof AuthenticatedAdminNegocioRoute
   AuthenticatedAdminQualidadeRoute: typeof AuthenticatedAdminQualidadeRoute
+  AuthenticatedAdminSocialRoute: typeof AuthenticatedAdminSocialRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
   AuthenticatedAdminPesquisasSlugRoute: typeof AuthenticatedAdminPesquisasSlugRoute
@@ -1257,6 +1259,7 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
   AuthenticatedAdminNegocioRoute: AuthenticatedAdminNegocioRoute,
   AuthenticatedAdminQualidadeRoute: AuthenticatedAdminQualidadeRoute,
+  AuthenticatedAdminSocialRoute: AuthenticatedAdminSocialRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
   AuthenticatedAdminPesquisasSlugRoute: AuthenticatedAdminPesquisasSlugRoute,
@@ -1276,7 +1279,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedEntregaveisRoute: typeof AuthenticatedEntregaveisRoute
-  AuthenticatedEquipeRoute: typeof AuthenticatedEquipeRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedJornadaRoute: typeof AuthenticatedJornadaRoute
   AuthenticatedMarcaRoute: typeof AuthenticatedMarcaRoute
@@ -1306,7 +1308,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedEntregaveisRoute: AuthenticatedEntregaveisRoute,
-  AuthenticatedEquipeRoute: AuthenticatedEquipeRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedJornadaRoute: AuthenticatedJornadaRoute,
   AuthenticatedMarcaRoute: AuthenticatedMarcaRoute,
