@@ -48,23 +48,21 @@ export function useUserMeta() {
       desde.setDate(desde.getDate() - 365);
       const desdeKey = desde.toISOString().slice(0, 10);
 
-      const [{ data: profile }, { data: tarefas }, { data: checkins }, { data: presencas }] =
-        await Promise.all([
-          supabase
-            .from("profiles")
-            .select("full_name, is_admin, business_name")
-            .eq("id", userId!)
-            .maybeSingle(),
-          supabase
-            .from("tarefas")
-            .select("status, updated_at")
-            .eq("user_id", userId!)
-            .eq("status", "floresceu")
-            .gte("updated_at", desdeKey)
-            .limit(400),
-          supabase.from("checkins").select("data").eq("user_id", userId!).gte("data", desdeKey),
-          supabase.from("presencas").select("data").eq("user_id", userId!).gte("data", desdeKey),
-        ]);
+      const [{ data: profile }, { data: tarefas }, { data: presencas }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("full_name, is_admin, business_name")
+          .eq("id", userId!)
+          .maybeSingle(),
+        supabase
+          .from("tarefas")
+          .select("status, updated_at")
+          .eq("user_id", userId!)
+          .eq("status", "concluido")
+          .gte("updated_at", desdeKey)
+          .limit(400),
+        supabase.from("presencas").select("data").eq("user_id", userId!).gte("data", desdeKey),
+      ]);
 
       const full =
         (profile?.full_name as string | undefined) ??
@@ -73,18 +71,15 @@ export function useUserMeta() {
       const displayName = full.trim().split(" ")[0] || "você";
       const initial = (displayName.charAt(0) || "P").toUpperCase();
 
-      // Presença = dias distintos em que a usuária apareceu: abriu o app (presencas),
-      // fez check-in no Diário (checkins) ou concluiu uma tarefa (floresceu).
-      // É um total que só cresce — não um streak consecutivo que zera com uma falha.
+      // Presença = dias distintos em que a usuária apareceu: abriu o app (presencas)
+      // ou concluiu uma tarefa (concluido). É um total que só cresce — não um streak
+      // consecutivo que zera com uma falha.
       const ativos = new Set<string>();
       (presencas ?? []).forEach((p: { data: string }) => {
         if (p.data) ativos.add(p.data);
       });
-      (checkins ?? []).forEach((c: { data: string }) => {
-        if (c.data) ativos.add(c.data);
-      });
       (tarefas ?? []).forEach((t: { status: string; updated_at: string }) => {
-        if (t.status === "floresceu") ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
+        if (t.status === "concluido") ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
       });
       const streak = ativos.size;
 

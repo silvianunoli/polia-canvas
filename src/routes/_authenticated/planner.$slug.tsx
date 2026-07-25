@@ -137,7 +137,6 @@ interface Card {
   meta_id: string | null;
   notas_execucao: string | null;
   tags: string[];
-  assigned_to: string | null;
   created_at: string;
 }
 
@@ -246,7 +245,7 @@ function PlannerBoard() {
       const { data } = await supabase
         .from("tarefas")
         .select(
-          "id, titulo, descricao, status, prioridade, prazo, data_inicio, horario, horas_por_dia, meta_id, notas_execucao, assigned_to, created_at, tags",
+          "id, titulo, descricao, status, prioridade, prazo, data_inicio, horario, horas_por_dia, meta_id, notas_execucao, created_at, tags",
         )
         .eq("quadro_id", quadroId!)
         .order("created_at", { ascending: false });
@@ -271,21 +270,6 @@ function PlannerBoard() {
   });
   const metas = metasQuery.data ?? [];
   const metaTitulo = (id: string | null) => metas.find((m) => m.id === id)?.titulo ?? null;
-
-  const membrosQuery = useQuery({
-    queryKey: ["equipe-ativa", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("equipe_membros")
-        .select("id, nome")
-        .eq("user_id", userId!)
-        .eq("status", "ativo")
-        .order("nome", { ascending: true });
-      return (data ?? []) as { id: string; nome: string }[];
-    },
-  });
-  const membros = membrosQuery.data ?? [];
 
   const search = Route.useSearch();
   const [filtro, setFiltro] = useState<FiltroId>(search.filtro ?? "all");
@@ -344,16 +328,6 @@ function PlannerBoard() {
     const { error } = await supabase.from("tarefas").update({ prioridade }).eq("id", id);
     if (error) {
       toastErro("Não consegui mudar a prioridade.");
-      invalidar();
-    }
-  };
-
-  const mudarAssignee = async (id: string, assignee: string) => {
-    const valor = assignee || null;
-    updateLocal((l) => l.map((c) => (c.id === id ? { ...c, assigned_to: valor } : c)));
-    const { error } = await supabase.from("tarefas").update({ assigned_to: valor }).eq("id", id);
-    if (error) {
-      toastErro("Não consegui salvar o responsável.");
       invalidar();
     }
   };
@@ -958,25 +932,6 @@ function PlannerBoard() {
                                 </button>
                               </div>
                             </div>
-                            {membros.length > 0 && (
-                              <select
-                                value={c.assigned_to ?? ""}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) => mudarAssignee(c.id, e.target.value)}
-                                className={`mt-2 w-full rounded-lg border px-2 py-1 text-[12px] focus:outline-none ${
-                                  c.assigned_to
-                                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                                    : "border-[var(--line)] text-[var(--muted)]"
-                                }`}
-                              >
-                                <option value="">Sem responsável</option>
-                                {membros.map((m) => (
-                                  <option key={m.id} value={m.id}>
-                                    {m.nome}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
                           </article>
                         );
                       })

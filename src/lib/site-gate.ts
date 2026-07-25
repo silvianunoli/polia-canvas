@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 // /lista-de-espera. Quem já tem sessão (assinante paga ou admin) continua
 // vendo as páginas normalmente — a trava é só pra quem ainda não é cliente,
 // não pra tirar acesso de quem já paga. /pesquisa, /lista-de-espera,
-// /termos, /privacidade, /ajuda e /auth/* não usam este guard — ficam
-// sempre abertas.
+// /termos, /privacidade e /auth/* não usam este guard — ficam sempre
+// abertas. /blog e /blog/$slug também ficam abertos (é o canal de
+// aquisição, tem que existir pra quem não é cliente ainda).
 //
 // Client-only (mesmo padrão de _authenticated.tsx): a sessão só existe no
 // localStorage do navegador, então SSR não tem como checar. Não é fronteira
@@ -14,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 export async function gatePublico() {
   if (typeof window === "undefined") return;
   const { data } = await supabase.auth.getSession();
-  if (!data.session) {
+  if (!data.session && !import.meta.env.DEV) {
     throw redirect({ to: "/lista-de-espera" });
   }
 }

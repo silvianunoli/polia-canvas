@@ -207,7 +207,7 @@ function camposDoLayout(n: number): string[] {
       out.push("financeiro.meta_minima", "financeiro.meta_boa", "financeiro.meta_celebracao");
     else if (b.t === "canais") out.push("caderno.canais", "caderno.canal_principal");
     else if (b.t === "timeline")
-      out.push("metas.meta_mes", "metas.meta_trimestre", "metas.meta_semestre", "metas.visao_3anos");
+      out.push("metas.meta_trimestre", "metas.meta_semestre", "metas.visao_3anos");
     else if (b.t === "primeiraAcao") out.push("metas.proxima_acao", "metas.data_proxima_acao");
   }
   return out;
@@ -816,7 +816,6 @@ function BlocoView({
   if (bloco.t === "timeline") {
     const steps = (
       [
-        { quando: "Próximo mês", texto: val("metas.meta_mes") },
         { quando: "3 meses", texto: val("metas.meta_trimestre") },
         { quando: "6 meses", texto: val("metas.meta_semestre") },
         { quando: "3 anos", texto: val("metas.visao_3anos") },

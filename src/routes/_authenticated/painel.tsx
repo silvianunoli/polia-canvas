@@ -220,6 +220,7 @@ function PainelPage() {
         profileRes,
         secoesRes,
         camposRes,
+        metaMesRes,
         lancRes,
         clientesRes,
         quadrosRes,
@@ -235,7 +236,14 @@ function PainelPage() {
           .from("planejamento_campos" as never)
           .select("campo, valor")
           .eq("user_id", userId!)
-          .in("campo", ["financeiro.meta_boa", "financeiro.meta_celebracao"]),
+          .in("campo", ["financeiro.meta_celebracao"]),
+        // Meta do mês: fonte única (mesma que Financeiro e a calculadora de Produtos lêem).
+        supabase
+          .from("metas")
+          .select("valor_alvo")
+          .eq("user_id", userId!)
+          .eq("titulo", "Meta do mês")
+          .maybeSingle(),
         supabase.from("lancamentos").select("tipo, valor, data").eq("user_id", userId!),
         supabase
           .from("clientes" as never)
@@ -258,6 +266,7 @@ function PainelPage() {
         createdAt: (profileRes.data as { created_at: string } | null)?.created_at ?? null,
         secoes: ((secoesRes as unknown as { data: SecaoRow[] | null }).data ?? []) as SecaoRow[],
         campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
+        metaMesAlvo: (metaMesRes.data as { valor_alvo: number | null } | null)?.valor_alvo ?? 0,
         lancamentos: (lancRes.data ?? []) as unknown as LancRow[],
         clientes: ((clientesRes as unknown as { data: ClienteRow[] | null }).data ??
           []) as ClienteRow[],
@@ -296,10 +305,8 @@ function PainelPage() {
     for (const c of dados?.campos ?? []) if (c.valor && c.valor.trim()) m.set(c.campo, c.valor);
     return m;
   }, [dados?.campos]);
-  const metaBoa = useMemo(() => {
-    const v = campoValor.get("financeiro.meta_boa");
-    return v ? numeroDe(v) : 0;
-  }, [campoValor]);
+  // Meta do mês: mesma fonte que Financeiro e a calculadora de Produtos (tabela `metas`).
+  const metaBoa = dados?.metaMesAlvo ?? 0;
   const metaCelebracao = useMemo(() => {
     const v = campoValor.get("financeiro.meta_celebracao");
     return v ? numeroDe(v) : 0;
@@ -308,22 +315,26 @@ function PainelPage() {
   // ── Métricas reais do mês corrente (calculado no cliente pra não divergir na hidratação SSR) ──
   const [clientReady, setClientReady] = useState(false);
   useEffect(() => setClientReady(true), []);
-  const { receitaMes, pedidosMes } = useMemo(() => {
-    if (!clientReady) return { receitaMes: 0, pedidosMes: 0 };
+  const { receitaMes, pedidosMes, lucroMes } = useMemo(() => {
+    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, lucroMes: 0 };
     const agora = new Date();
     // lancamentos.data é coluna DATE ("YYYY-MM-DD"). Comparar por prefixo de string, não
     // via new Date(): "2026-07-01" viraria UTC meia-noite e em GMT-3 cairia no mês anterior,
     // fazendo a venda do dia 1º sumir da receita do mês. Ver financeiro.tsx (mesAnoDe).
     const prefixoMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
     let receita = 0;
+    let saida = 0;
     let pedidos = 0;
     for (const l of dados?.lancamentos ?? []) {
-      if (l.tipo !== "entrada") continue;
       if (!l.data?.startsWith(prefixoMes)) continue;
-      receita += Number(l.valor);
-      pedidos += 1;
+      if (l.tipo === "entrada") {
+        receita += Number(l.valor);
+        pedidos += 1;
+      } else if (l.tipo === "saida") {
+        saida += Number(l.valor);
+      }
     }
-    return { receitaMes: receita, pedidosMes: pedidos };
+    return { receitaMes: receita, pedidosMes: pedidos, lucroMes: receita - saida };
   }, [dados?.lancamentos, clientReady]);
 
   const clientes = dados?.clientes ?? [];
@@ -548,8 +559,33 @@ function PainelPage() {
           </div>
         </Reveal>
 
+        {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela */}
+        <Reveal className="mt-6">
+          <a
+            href="/financeiro"
+            className="group block rounded-xl border border-[var(--line)] bg-white p-6 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+          >
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Quanto sobrou · mês
+            </p>
+            <p
+              className={`font-cabinet mt-1 text-[40px] leading-none ${
+                lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+              }`}
+            >
+              {fmtBRL(lucroMes)}
+            </p>
+            <p className="mt-2 text-[13px] text-[var(--muted)]">
+              {receitaMes > 0
+                ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% do que entrou virou lucro`
+                : "registre entradas e saídas pra ver"}{" "}
+              · <span className="text-[var(--ink-soft)]">Financeiro</span>
+            </p>
+          </a>
+        </Reveal>
+
         {/* Bento de dados */}
-        <div className="mt-8 grid grid-cols-12 gap-4">
+        <div className="mt-6 grid grid-cols-12 gap-4">
           <Reveal className={SPAN_CLASS[5]}>
             <a
               href="/financeiro"

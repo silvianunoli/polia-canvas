@@ -376,8 +376,7 @@ function AdminChamados() {
           <div className="rounded-2xl border border-[var(--line)] bg-white p-7">
             <h2 className="mb-2 text-[24px] text-[var(--ink)]">Broadcast por email</h2>
             <p className="font-sans text-[13px] text-[var(--muted)]">
-              Em breve. A flag <code className="font-mono text-[12px]">broadcast_ativo</code>{" "}
-              precisa estar ligada e o Resend configurado.
+              Em breve. Precisa do Resend configurado antes de existir de verdade.
             </p>
           </div>
         </TabsContent>

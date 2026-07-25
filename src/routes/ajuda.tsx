@@ -191,8 +191,28 @@ function validarEmail(v: string): string | undefined {
 
 type Campo = "nome" | "email" | "assunto" | "mensagem";
 
+function normalizar(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
+
 function AjudaPage() {
   const [faqAtiva, setFaqAtiva] = useState<{ pergunta: string; resposta: string } | null>(null);
+  const [busca, setBusca] = useState("");
+  const buscaNormalizada = normalizar(busca.trim());
+  const categoriasFiltradas =
+    buscaNormalizada.length < 2
+      ? CATEGORIAS
+      : CATEGORIAS.map((cat) => ({
+          ...cat,
+          itens: cat.itens.filter(
+            (item) =>
+              normalizar(item.pergunta).includes(buscaNormalizada) ||
+              normalizar(item.resposta).includes(buscaNormalizada),
+          ),
+        })).filter((cat) => cat.itens.length > 0);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [assunto, setAssunto] = useState("");
@@ -301,7 +321,10 @@ function AjudaPage() {
             </p>
             <form
               role="search"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={(e) => {
+                e.preventDefault();
+                document.getElementById("resultados-ajuda")?.scrollIntoView({ behavior: "smooth" });
+              }}
               className="mt-8 flex max-w-[620px] flex-col gap-3 sm:flex-row"
             >
               <label htmlFor="q" className="sr-only">
@@ -310,6 +333,8 @@ function AjudaPage() {
               <input
                 id="q"
                 type="search"
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
                 placeholder="Buscar: preço, cancelar, Planner..."
                 className="w-full flex-1 rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--secondary)]"
               />
@@ -324,10 +349,16 @@ function AjudaPage() {
         </section>
 
         {/* CATEGORIAS */}
-        <section className="pb-12 md:pb-16">
+        <section id="resultados-ajuda" className="pb-12 md:pb-16 scroll-mt-6">
           <div className="mx-auto max-w-[1120px] px-6">
+            {categoriasFiltradas.length === 0 ? (
+              <p className="text-[15px] text-[var(--ink-soft)]">
+                Nada encontrado pra "{busca.trim()}". Escreve pra gente aqui embaixo que a gente
+                responde.
+              </p>
+            ) : (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {CATEGORIAS.map((cat) => {
+              {categoriasFiltradas.map((cat) => {
                 const Icon = cat.icon;
                 return (
                   <div key={cat.titulo} className="rounded-xl border border-[var(--line)] bg-white p-6">
@@ -350,6 +381,7 @@ function AjudaPage() {
                 );
               })}
             </div>
+            )}
           </div>
         </section>
 

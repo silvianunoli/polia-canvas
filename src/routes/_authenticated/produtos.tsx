@@ -55,6 +55,13 @@ interface PrecoHistorico {
   data: string;
 }
 
+// Composição que gerou o preço sugerido pela calculadora: persistida junto ao
+// produto pra permitir "recalcular preço" sem perder custos/taxas/%s digitados.
+interface CalculadoraBreakdown {
+  perfil: "produto" | "servico";
+  valores: Record<string, string>;
+}
+
 interface Produto {
   id: string;
   user_id: string;
@@ -68,6 +75,7 @@ interface Produto {
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];
+  calculadora_breakdown: CalculadoraBreakdown | null;
   created_at: string;
   updated_at: string;
 }
@@ -77,6 +85,7 @@ interface Prefill {
   preco_venda?: number;
   preco_custo?: number;
   tipo?: ProdutoTipo;
+  calculadora_breakdown?: CalculadoraBreakdown;
 }
 
 const TIPO_LABEL: Record<string, string> = {
@@ -106,16 +115,6 @@ function hojeISODate() {
   ).padStart(2, "0")}`;
 }
 
-// Extrai o primeiro número de um texto livre (ex: "R$ 6.000" -> 6000).
-function numeroDe(texto: string | null | undefined): number | null {
-  if (!texto) return null;
-  const limpo = texto.replace(/\./g, "").replace(",", ".");
-  const match = limpo.match(/\d+(\.\d+)?/);
-  if (!match) return null;
-  const v = parseFloat(match[0]);
-  return Number.isFinite(v) && v > 0 ? v : null;
-}
-
 type TabId = "produtos" | "calculadora";
 
 function ProdutosPage() {
@@ -129,6 +128,7 @@ function ProdutosPage() {
   const [modalAberto, setModalAberto] = useState(false);
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   const [produtoEdit, setProdutoEdit] = useState<Produto | null>(null);
+  const [produtoRecalcular, setProdutoRecalcular] = useState<Produto | null>(null);
 
   const initial = (user?.user_metadata?.full_name ?? user?.email ?? "P").charAt(0).toUpperCase();
 
@@ -139,7 +139,7 @@ function ProdutosPage() {
       const { data } = await supabase
         .from("produtos")
         .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, created_at, updated_at",
+          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
         )
         .eq("user_id", userId!)
         .eq("arquivado", false)
@@ -150,18 +150,19 @@ function ProdutosPage() {
 
   const produtos = useMemo(() => produtosQuery.data ?? [], [produtosQuery.data]);
 
+  // Meta do mês: mesma fonte que Painel e Financeiro (tabela `metas`), não mais
+  // uma leitura própria do texto do Planejamento.
   const metaBoaQuery = useQuery({
-    queryKey: ["planejamento-meta-boa", userId],
+    queryKey: ["meta-do-mes", userId],
     enabled: !!userId,
     queryFn: async () => {
       const { data } = await supabase
-        .from("planejamento_campos" as never)
-        .select("campo, valor")
+        .from("metas")
+        .select("valor_alvo")
         .eq("user_id", userId!)
-        .eq("campo", "financeiro.meta_boa")
+        .eq("titulo", "Meta do mês")
         .maybeSingle();
-      const row = data as unknown as { campo: string; valor: string } | null;
-      return numeroDe(row?.valor);
+      return (data as { valor_alvo: number | null } | null)?.valor_alvo || null;
     },
   });
 
@@ -177,6 +178,11 @@ function ProdutosPage() {
     setPrefill(null);
     setProdutoEdit(p);
     setModalAberto(true);
+  };
+
+  const abrirRecalcular = (p: Produto) => {
+    setProdutoRecalcular(p);
+    setTab("calculadora");
   };
 
   const arquivar = async (p: Produto) => {
@@ -265,6 +271,7 @@ function ProdutosPage() {
                     indice={i}
                     onEditar={() => abrirEditar(p)}
                     onArquivar={() => arquivar(p)}
+                    onRecalcular={() => abrirRecalcular(p)}
                   />
                 ))}
               </div>
@@ -274,7 +281,20 @@ function ProdutosPage() {
 
         {/* ───────── TAB 2 — Calculadora ───────── */}
         {tab === "calculadora" && (
-          <Calculadora onSalvarComoProduto={abrirAdicionar} metaBoa={metaBoa} />
+          <Calculadora
+            onSalvarComoProduto={abrirAdicionar}
+            metaBoa={metaBoa}
+            produtoRecalcular={produtoRecalcular}
+            onCancelarRecalculo={() => {
+              setProdutoRecalcular(null);
+              setTab("produtos");
+            }}
+            onAtualizado={() => {
+              setProdutoRecalcular(null);
+              setTab("produtos");
+              qc.invalidateQueries({ queryKey: ["produtos", userId] });
+            }}
+          />
         )}
       </div>
 
@@ -303,11 +323,13 @@ function ProdutoCard({
   indice,
   onEditar,
   onArquivar,
+  onRecalcular,
 }: {
   produto: Produto;
   indice: number;
   onEditar: () => void;
   onArquivar: () => void;
+  onRecalcular: () => void;
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
   const reduce = usePrefersReducedMotion();
@@ -355,6 +377,15 @@ function ProdutoCard({
                 className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
               >
                 Editar
+              </button>
+              <button
+                onClick={() => {
+                  fecharMenu();
+                  onRecalcular();
+                }}
+                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
+              >
+                Recalcular preço
               </button>
               <button
                 onClick={() => {
@@ -448,33 +479,50 @@ function num(s: string) {
 function Calculadora({
   onSalvarComoProduto,
   metaBoa,
+  produtoRecalcular,
+  onCancelarRecalculo,
+  onAtualizado,
 }: {
   onSalvarComoProduto: (pf: Prefill) => void;
   metaBoa: number | null;
+  produtoRecalcular?: Produto | null;
+  onCancelarRecalculo?: () => void;
+  onAtualizado?: () => void;
 }) {
-  const [perfil, setPerfil] = useState<PerfilCalc>("produto");
+  const bk = produtoRecalcular?.calculadora_breakdown ?? null;
+  const v = (campo: string) => bk?.valores?.[campo] ?? "";
+
+  const [perfil, setPerfil] = useState<PerfilCalc>(
+    bk?.perfil ?? (produtoRecalcular?.tipo === "servico" ? "servico" : "produto"),
+  );
 
   // ── Perfil Produto ──
-  const [materiaPrima, setMateriaPrima] = useState("");
-  const [embalagem, setEmbalagem] = useState("");
-  const [maoObra, setMaoObra] = useState("");
-  const [outrosDiretos, setOutrosDiretos] = useState("");
-  const [despesasFixas, setDespesasFixas] = useState("");
-  const [qtd, setQtd] = useState("");
-  const [taxaVenda, setTaxaVenda] = useState("");
-  const [impostos, setImpostos] = useState("");
-  const [margem, setMargem] = useState("");
+  const [materiaPrima, setMateriaPrima] = useState(() => v("materiaPrima"));
+  const [embalagem, setEmbalagem] = useState(() => v("embalagem"));
+  const [maoObra, setMaoObra] = useState(() => v("maoObra"));
+  const [outrosDiretos, setOutrosDiretos] = useState(() => v("outrosDiretos"));
+  const [despesasFixas, setDespesasFixas] = useState(() => v("despesasFixas"));
+  const [qtd, setQtd] = useState(() => v("qtd"));
+  const [taxaVenda, setTaxaVenda] = useState(() => v("taxaVenda"));
+  const [impostos, setImpostos] = useState(() => v("impostos"));
+  const [margem, setMargem] = useState(() => v("margem"));
 
   // ── Perfil Serviço ──
-  const [valorHora, setValorHora] = useState("");
-  const [horas, setHoras] = useState("");
-  const [materiais, setMateriais] = useState("");
-  const [deslocamento, setDeslocamento] = useState("");
-  const [ferramentas, setFerramentas] = useState("");
-  const [outrosServico, setOutrosServico] = useState("");
-  const [taxaVendaS, setTaxaVendaS] = useState("");
-  const [impostosS, setImpostosS] = useState("");
-  const [margemSeg, setMargemSeg] = useState("");
+  const [valorHora, setValorHora] = useState(() => v("valorHora"));
+  const [horas, setHoras] = useState(() => v("horas"));
+  const [materiais, setMateriais] = useState(() => v("materiais"));
+  const [deslocamento, setDeslocamento] = useState(() => v("deslocamento"));
+  const [ferramentas, setFerramentas] = useState(() => v("ferramentas"));
+  const [outrosServico, setOutrosServico] = useState(() => v("outrosServico"));
+  const [taxaVendaS, setTaxaVendaS] = useState(() => v("taxaVendaS"));
+  const [impostosS, setImpostosS] = useState(() => v("impostosS"));
+  const [margemSeg, setMargemSeg] = useState(() => v("margemSeg"));
+
+  // ── Simulador de desconto ──
+  const [desconto, setDesconto] = useState("");
+
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
 
   // Fórmula "preço por dentro": taxa, imposto e lucro são % do PREÇO final,
   // então o preço = custo / (1 − soma_dos_percentuais/100).
@@ -549,18 +597,105 @@ function Calculadora({
   const lucroPorVenda = round2(calc.lucroReais);
   const vendasParaMetaBoa =
     lucroPorVenda > 0 && metaBoa ? Math.ceil(metaBoa / lucroPorVenda) : null;
+  const pctVenda = perfil === "produto" ? num(taxaVenda) + num(impostos) : num(taxaVendaS) + num(impostosS);
 
-  const salvar = () => {
-    onSalvarComoProduto({
-      nome: "",
-      tipo: perfil === "produto" ? "fisico" : "servico",
-      preco_venda: round2(calc.precoSugerido),
-      preco_custo: round2(custoBase) || undefined,
-    });
+  // Com desconto de X%: taxa/imposto são % do preço, então caem junto com ele.
+  const descontoPct = num(desconto);
+  const simulacaoDesconto = useMemo(() => {
+    if (!descontoPct) return null;
+    const precoComDesconto = calc.precoSugerido * (1 - descontoPct / 100);
+    const taxasComDesconto = precoComDesconto * (pctVenda / 100);
+    const lucroComDesconto = precoComDesconto - custoBase - taxasComDesconto;
+    return { precoComDesconto, lucroComDesconto };
+  }, [descontoPct, calc.precoSugerido, custoBase, pctVenda]);
+
+  function buildBreakdown(): CalculadoraBreakdown {
+    return perfil === "produto"
+      ? {
+          perfil,
+          valores: { materiaPrima, embalagem, maoObra, outrosDiretos, despesasFixas, qtd, taxaVenda, impostos, margem },
+        }
+      : {
+          perfil,
+          valores: {
+            valorHora,
+            horas,
+            materiais,
+            deslocamento,
+            ferramentas,
+            outrosServico,
+            taxaVendaS,
+            impostosS,
+            margemSeg,
+          },
+        };
+  }
+
+  const salvar = async () => {
+    const precoVenda = round2(calc.precoSugerido);
+    const precoCusto = round2(custoBase) || undefined;
+    const breakdown = buildBreakdown();
+
+    if (!produtoRecalcular) {
+      onSalvarComoProduto({
+        nome: "",
+        tipo: perfil === "produto" ? "fisico" : "servico",
+        preco_venda: precoVenda,
+        preco_custo: precoCusto,
+        calculadora_breakdown: breakdown,
+      });
+      return;
+    }
+
+    // Recalculando: atualiza o mesmo produto direto, sem passar pelo modal.
+    setSalvando(true);
+    setErro(null);
+    const update: Record<string, unknown> = {
+      preco_venda: precoVenda,
+      preco_custo: precoCusto ?? null,
+      calculadora_breakdown: breakdown,
+      updated_at: new Date().toISOString(),
+    };
+    if (Number(produtoRecalcular.preco_venda) !== precoVenda) {
+      const atual = Array.isArray(produtoRecalcular.historico_precos)
+        ? produtoRecalcular.historico_precos
+        : [];
+      update.historico_precos = [
+        { preco: Number(produtoRecalcular.preco_venda), data: hojeISODate() },
+        ...atual,
+      ] as unknown as Json;
+      update.preco_atualizado_em = new Date().toISOString();
+    }
+    const { error } = await supabase
+      .from("produtos")
+      .update(update as never)
+      .eq("id", produtoRecalcular.id);
+    setSalvando(false);
+    if (error) {
+      setErro(error.message || "Não consegui atualizar o preço. Tenta de novo.");
+      return;
+    }
+    track("produto_preco_recalculado");
+    onAtualizado?.();
   };
 
   return (
     <section className="mt-8 max-w-[640px]">
+      {produtoRecalcular && (
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-xl bg-[var(--secondary-light)] px-4 py-3 text-[13px] text-[var(--secondary-text)]">
+          <span>
+            Recalculando preço de <b>{produtoRecalcular.nome}</b>.
+          </span>
+          <button
+            type="button"
+            onClick={onCancelarRecalculo}
+            className="shrink-0 font-medium underline hover:opacity-80"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
       {/* Seletor de perfil */}
       <div className="flex flex-wrap gap-2">
         {(
@@ -700,12 +835,42 @@ function Calculadora({
         )}
       </div>
 
-      {/* Salvar como produto */}
+      {/* Simulador de desconto */}
+      <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-5">
+        <CampoNum
+          label="Simular com desconto de X% (opcional)"
+          value={desconto}
+          onChange={setDesconto}
+        />
+        {simulacaoDesconto && (
+          <p
+            className={`mt-3 text-[13px] ${
+              simulacaoDesconto.lucroComDesconto < 0
+                ? "text-[var(--danger)]"
+                : "text-[var(--ink-soft)]"
+            }`}
+          >
+            Com {descontoPct}% de desconto, o preço cai pra{" "}
+            {fmt(round2(simulacaoDesconto.precoComDesconto))} e sobram{" "}
+            {fmt(round2(simulacaoDesconto.lucroComDesconto))}.
+            {simulacaoDesconto.lucroComDesconto < 0 && " Esse desconto dá prejuízo."}
+          </p>
+        )}
+      </div>
+
+      {erro && <p className="mt-4 text-[13px] text-[var(--danger)]">{erro}</p>}
+
+      {/* Salvar */}
       <button
         onClick={salvar}
-        className="mt-4 rounded-xl border border-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
+        disabled={salvando}
+        className="mt-4 rounded-xl border border-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-text)] hover:bg-[var(--secondary-light)] disabled:opacity-50"
       >
-        Salvar como produto
+        {salvando
+          ? "Salvando..."
+          : produtoRecalcular
+            ? "Salvar novo preço"
+            : "Salvar como produto"}
       </button>
 
       <p className="mt-4 text-[13px] text-[var(--muted)]">
@@ -854,6 +1019,7 @@ function ModalProduto({
         preco_custo: precoCustoNum,
         descricao: descricao.trim() || null,
         canal: canal.trim() || null,
+        calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
       } as never);
       setSalvando(false);
       if (error) {

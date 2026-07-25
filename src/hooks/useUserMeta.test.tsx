@@ -23,7 +23,7 @@ const fakeSession = { user: { id: "user-1", user_metadata: {} } } as unknown as 
 
 // Builder de mock "postgrest-like": select/eq/gte/limit encadeiam e retornam a si
 // mesmo; o objeto inteiro é thenable (resolve como se fosse `await` direto na
-// query, do jeito que tarefas/checkins/presencas são lidos no hook real).
+// query, do jeito que tarefas/presencas são lidos no hook real).
 function chainResolvingTo(value: unknown) {
   const chain: Record<string, unknown> = {
     select: vi.fn(() => chain),
@@ -47,11 +47,10 @@ function chainWithMaybeSingle(value: unknown) {
 interface MockData {
   profile?: { full_name?: string; is_admin?: boolean; business_name?: string } | null;
   tarefas?: { status: string; updated_at: string }[];
-  checkins?: { data: string }[];
   presencas?: { data: string }[];
 }
 
-function setupSupabaseMocks({ profile = null, tarefas = [], checkins = [], presencas = [] }: MockData = {}) {
+function setupSupabaseMocks({ profile = null, tarefas = [], presencas = [] }: MockData = {}) {
   onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }));
   getSessionMock.mockResolvedValue({ data: { session: fakeSession } });
 
@@ -60,7 +59,6 @@ function setupSupabaseMocks({ profile = null, tarefas = [], checkins = [], prese
   fromMock.mockImplementation((table: string) => {
     if (table === "profiles") return chainWithMaybeSingle({ data: profile });
     if (table === "tarefas") return chainResolvingTo({ data: tarefas });
-    if (table === "checkins") return chainResolvingTo({ data: checkins });
     if (table === "presencas") {
       // presencas serve duas finalidades no hook: upsert (registrar presença de
       // hoje) e select (ler o histórico) — o mesmo mock precisa responder às duas.
@@ -141,26 +139,39 @@ describe("useUserMeta", () => {
     await waitFor(() => expect(result.current.businessName).toBe("Ateliê da Ana"));
   });
 
-  it("streak conta dias distintos, deduplicando data repetida entre presença/check-in/tarefa", async () => {
+  it("streak conta dias distintos, deduplicando data repetida entre presença e tarefa", async () => {
     setupSupabaseMocks({
       profile: { full_name: "Ana" },
       presencas: [{ data: "2026-07-01" }, { data: "2026-07-02" }],
-      checkins: [{ data: "2026-07-02" }], // mesmo dia da presença -> não deve contar 2x
-      tarefas: [{ status: "floresceu", updated_at: "2026-07-03T10:00:00Z" }],
+      tarefas: [{ status: "concluido", updated_at: "2026-07-02T10:00:00Z" }], // mesmo dia -> não conta 2x
     });
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
-    await waitFor(() => expect(result.current.streak).toBe(3)); // 07-01, 07-02, 07-03
+    await waitFor(() => expect(result.current.streak).toBe(2)); // 07-01, 07-02
   });
 
-  it("streak ignora tarefa com status diferente de 'floresceu' (já vem filtrado, mas a soma não deve contar duplicidade indevida)", async () => {
+  it("streak ignora tarefa com status diferente de 'concluido' (já vem filtrado, mas a soma não deve contar duplicidade indevida)", async () => {
     setupSupabaseMocks({
       profile: { full_name: "Ana" },
-      tarefas: [{ status: "floresceu", updated_at: "2026-07-03T10:00:00Z" }],
+      tarefas: [{ status: "concluido", updated_at: "2026-07-03T10:00:00Z" }],
     });
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
     await waitFor(() => expect(result.current.streak).toBe(1));
+  });
+
+  // Regressão: o vocabulário de tarefa concluída já foi "floresceu" (mundo jardim,
+  // revertido em 2026-05-30). Um "concluido" com status desatualizado não deve
+  // nunca mais silenciosamente parar de contar pra presença.
+  it("streak não conta tarefa com o vocabulário antigo 'floresceu'", async () => {
+    setupSupabaseMocks({
+      profile: { full_name: "Ana" },
+      tarefas: [{ status: "floresceu", updated_at: "2026-07-03T10:00:00Z" }],
+    });
+    const { result } = renderHook(() => useUserMeta(), { wrapper });
+
+    await waitFor(() => expect(result.current.displayName).toBe("Ana"));
+    expect(result.current.streak).toBe(0);
   });
 
   it("registra presença de hoje via upsert idempotente (onConflict user_id,data)", async () => {

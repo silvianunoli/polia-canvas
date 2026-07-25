@@ -45,3 +45,27 @@ export function parseCsv(texto: string): string[][] {
 
   return linhas.filter((l) => l.some((c) => c.trim().length > 0));
 }
+
+// Escapa um campo pra CSV (RFC 4180): aspas quando tem vírgula, aspas ou quebra de linha.
+function escaparCampoCsv(valor: string): string {
+  if (/[",\n]/.test(valor)) return `"${valor.replace(/"/g, '""')}"`;
+  return valor;
+}
+
+export function gerarCsv(cabecalho: string[], linhas: string[][]): string {
+  const todas = [cabecalho, ...linhas];
+  return todas.map((linha) => linha.map(escaparCampoCsv).join(",")).join("\r\n");
+}
+
+// Baixa o CSV com BOM UTF-8 (senão o Excel abre acento quebrado no Windows).
+export function baixarCsv(nomeArquivo: string, conteudo: string): void {
+  const blob = new Blob(["﻿" + conteudo], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = nomeArquivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}

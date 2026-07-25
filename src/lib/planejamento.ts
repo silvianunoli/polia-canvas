@@ -242,11 +242,13 @@ export const SECOES: Secao[] = [
     modulo: 4,
     titulo: "Sua meta do mês",
     subtitulo: "Um número claro transforma intenção em foco.",
-    // 3 campos: meta_minima / meta_boa / meta_celebracao.
+    // 3 campos: meta_minima / meta_boa / meta_celebracao. meta_boa é a Meta do
+    // mês canônica: materializa em `metas` (trigger) e é lida por Painel,
+    // Financeiro e a calculadora de Produtos.
     perguntas: [
-      { label: "Quantas vendas você precisaria fazer no próximo mês pra pagar as contas?", campo: "financeiro.meta_minima" },
-      { label: "Quantas vendas fariam esse mês ser considerado um mês bom?", campo: "financeiro.meta_boa" },
-      { label: "Qual seria o número que faria você comemorar?", campo: "financeiro.meta_celebracao" },
+      { label: "Quanto você precisaria faturar no próximo mês pra pagar as contas?", campo: "financeiro.meta_minima" },
+      { label: "Quanto faria esse mês ser considerado um mês bom?", campo: "financeiro.meta_boa" },
+      { label: "Qual valor faria você comemorar?", campo: "financeiro.meta_celebracao" },
     ],
   },
 
@@ -322,11 +324,11 @@ export const SECOES: Secao[] = [
   {
     id: "6.2",
     modulo: 6,
-    titulo: "Sua primeira grande meta",
-    subtitulo: "Um número que orienta o mês.",
-    // 3 campos: meta_mes (o número que vira meta ativa) / trimestre / semestre.
+    titulo: "Depois do mês que vem",
+    subtitulo: "A Meta do mês já está no módulo Quanto vale; aqui é o resto do caminho.",
+    // 2 campos: meta_trimestre / meta_semestre. A meta do próximo mês vive só
+    // em financeiro.meta_boa (módulo 4); pergunta duplicada removida daqui.
     perguntas: [
-      { label: "Qual meta financeira pro próximo mês te faria sentir que está no caminho?", campo: "metas.meta_mes" },
       { label: "Qual seria o número pra 3 meses?", campo: "metas.meta_trimestre" },
       { label: "E pra 6 meses? Essa meta é realista dado o que você tem hoje? O que precisaria mudar?", campo: "metas.meta_semestre" },
     ],
@@ -454,7 +456,7 @@ export const CAMPO_LABEL: Record<string, string> = {
   "mercado.posicionamento": "Seu posicionamento",
   "financeiro.custo_fixo": "Custo fixo do mês",
   "financeiro.custo_unitario": "Custo por produto",
-  "financeiro.meta_mensal": "Meta do mês",
+  "financeiro.meta_mensal": "Meta pessoal · quanto quer receber",
   "financeiro.preco_ideal": "Preço que você quer cobrar",
   "financeiro.estrategia_preco": "Como você se posiciona no mercado",
   "financeiro.meta_minima": "Mínimo para pagar as contas",
@@ -469,7 +471,6 @@ export const CAMPO_LABEL: Record<string, string> = {
   "caderno.link": "Como ela chega até você",
   "metas.visao_1ano": "Onde você quer chegar em 1 ano",
   "metas.visao_3anos": "Onde você quer chegar em 3 anos",
-  "metas.meta_mes": "Meta do próximo mês",
   "metas.meta_trimestre": "Meta para 3 meses",
   "metas.meta_semestre": "Meta para 6 meses",
   "metas.metricas": "O que você vai medir",

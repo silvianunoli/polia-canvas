@@ -85,8 +85,9 @@ function OnboardingPage() {
             />
           )}
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
-          {step === 5 && (
-            <Step5 tipo={state.business_type} onFinish={() => navigate({ to: "/assinar" })} />
+          {step === 5 && <Step5Dinheiro state={state} onSuccess={() => setStep(6)} />}
+          {step === 6 && (
+            <StepFinal tipo={state.business_type} onFinish={() => navigate({ to: "/assinar" })} />
           )}
         </div>
       </div>
@@ -97,9 +98,13 @@ function OnboardingPage() {
 function StepIndicator({ step }: { step: number }) {
   return (
     <p className="text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-      Passo {step} de 5
+      Passo {step} de 6
     </p>
   );
+}
+
+function fmt(v: number) {
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function LogoPlaceholder() {
@@ -218,7 +223,7 @@ function Step2({
       <LogoPlaceholder />
       <Caveat>Um pouquinho sobre o que essa marca faz.</Caveat>
       <Headline size={64}>Como é o que essa marca vende?</Headline>
-      <Body>Isso me ajuda a montar o seu painel já pronto pra você.</Body>
+      <Body>Isso ajusta as próximas perguntas pro seu tipo de negócio.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
         {BIZ_TYPES.map((o) => (
           <ChoiceCard
@@ -633,7 +638,113 @@ function Toggle({
   );
 }
 
-/* ---------------- STEP 5 ---------------- */
+/* ---------------- STEP 5 — Quanto cobra e quanto custa ---------------- */
+function tipoProdutoDe(tipo: BusinessType | null): "fisico" | "digital" | "servico" {
+  if (tipo === "produto_digital") return "digital";
+  if (tipo === "servico") return "servico";
+  return "fisico";
+}
+
+function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess: () => void }) {
+  const [preco, setPreco] = useState("");
+  const [custo, setCusto] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sobrou, setSobrou] = useState<number | null>(null);
+
+  const precoNum = parseFloat(preco.replace(",", ".")) || 0;
+  const custoNum = custo.trim() ? parseFloat(custo.replace(",", ".")) || 0 : null;
+
+  async function handleSubmit() {
+    if (precoNum <= 0) {
+      setError("Coloca um preço pra continuar.");
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const userId = sess.session?.user.id;
+      if (!userId) throw new Error("Sessão expirou");
+      const nome = state.c1.trim() || state.business_name.trim() || "Meu primeiro produto";
+      const { error: insErr } = await supabase.from("produtos").insert({
+        user_id: userId,
+        nome,
+        tipo: tipoProdutoDe(state.business_type),
+        preco_venda: precoNum,
+        preco_custo: custoNum,
+      });
+      if (insErr) throw insErr;
+      track("onboarding_primeiro_produto", { com_custo: custoNum !== null });
+      setSobrou(precoNum - (custoNum ?? 0));
+    } catch (e) {
+      setError((e as Error).message || "Algo deu errado. Tenta de novo.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (sobrou !== null) {
+    return (
+      <div className="flex flex-col items-center gap-7 pt-12">
+        <LogoPlaceholder />
+        <Caveat>Primeiro número no lugar.</Caveat>
+        <Headline size={56}>Sobram {fmt(sobrou)} por venda.</Headline>
+        <Body>Isso já é mais do que a maioria sabe sobre o próprio negócio.</Body>
+        <PrimaryCTA onClick={onSuccess}>Continuar →</PrimaryCTA>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-7 pt-12">
+      <LogoPlaceholder />
+      <Caveat>Antes da marca, o número.</Caveat>
+      <Headline size={56}>Quanto cobra e quanto custa?</Headline>
+      <Body>
+        Pega {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar depois.
+      </Body>
+
+      <div className="flex w-full max-w-[420px] flex-col gap-5">
+        <label className="flex flex-col gap-2">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+            Preço de venda (R$)
+          </span>
+          <input
+            type="number"
+            inputMode="decimal"
+            value={preco}
+            onChange={(e) => setPreco(e.target.value)}
+            placeholder="0"
+            autoFocus
+            className={`${CAMPO_CLS} h-14`}
+          />
+        </label>
+        <label className="flex flex-col gap-2">
+          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+            Quanto custa pra você fazer, se souber (R$)
+          </span>
+          <input
+            type="number"
+            inputMode="decimal"
+            value={custo}
+            onChange={(e) => setCusto(e.target.value)}
+            placeholder="opcional"
+            className={`${CAMPO_CLS} h-14`}
+          />
+        </label>
+      </div>
+
+      {error && <p className="text-center text-[14px] text-[var(--danger)]">{error}</p>}
+
+      <PrimaryCTA onClick={handleSubmit} disabled={saving}>
+        {saving ? "Calculando..." : "Ver quanto sobra →"}
+      </PrimaryCTA>
+    </div>
+  );
+}
+
+/* ---------------- STEP 6 ---------------- */
 const ETAPA1_DESC: Record<BusinessType, string> = {
   produto_fisico: "Quem está por trás da marca, o que ela produz e de onde vem o que vende.",
   produto_digital: "Quem está por trás da marca, o que ela ensina e qual problema resolve.",
@@ -641,7 +752,7 @@ const ETAPA1_DESC: Record<BusinessType, string> = {
   hibrido: "Quem está por trás da marca e como as duas frentes do negócio se complementam.",
 };
 
-function Step5({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
+function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
   const desc = tipo ? ETAPA1_DESC[tipo] : ETAPA1_DESC.produto_fisico;
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-7 pt-12">

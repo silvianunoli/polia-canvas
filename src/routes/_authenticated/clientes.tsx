@@ -6,6 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { gerarCsv, baixarCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -76,6 +77,8 @@ function statusPedidoCor(status: StatusPedido) {
   }
 }
 
+const STATUS_PEDIDO_OPTIONS: StatusPedido[] = ["Em espera", "Em produção", "Entregue", "Atrasado"];
+
 function ClientesPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
@@ -127,6 +130,29 @@ function ClientesPage() {
     return produtos.find((p) => p.id === produtoId)?.nome || "sem produto";
   };
 
+  const exportarCsv = () => {
+    const cabecalho = [
+      "Nome",
+      "Contato",
+      "Status do pedido",
+      "Produto",
+      "Valor",
+      "Data de cadastro",
+      "Venda registrada",
+    ];
+    const linhas = clientes.map((c) => [
+      c.nome,
+      c.contato ?? "",
+      c.status_pedido ?? "",
+      nomeProduto(c.produto_id),
+      c.valor != null ? String(c.valor) : "",
+      formatarDataCurta(c.created_at),
+      c.venda_registrada ? "sim" : "não",
+    ]);
+    baixarCsv(`clientes-polia-${new Date().toISOString().slice(0, 10)}.csv`, gerarCsv(cabecalho, linhas));
+    track("clientes_exportados", { total: clientes.length });
+  };
+
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <PainelNav initial={initial} streak={streak} navActive="/clientes" />
@@ -144,12 +170,22 @@ function ClientesPage() {
               suas clientes e seus pedidos, num lugar só.
             </p>
           </div>
-          <button
-            onClick={() => setModalAberto(true)}
-            className="shrink-0 rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
-          >
-            + Adicionar cliente
-          </button>
+          <div className="flex shrink-0 gap-2">
+            {clientes.length > 0 && (
+              <button
+                onClick={exportarCsv}
+                className="rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 font-sans text-[14px] text-[var(--ink)] transition-colors hover:border-[var(--secondary)]"
+              >
+                Exportar CSV
+              </button>
+            )}
+            <button
+              onClick={() => setModalAberto(true)}
+              className="rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
+            >
+              + Adicionar cliente
+            </button>
+          </div>
         </header>
 
         {dadosQuery.isLoading ? (
@@ -206,20 +242,47 @@ function LinhaCliente({
   const [popAberto, setPopAberto] = useState(false);
   const [duplicataData, setDuplicataData] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
+  const [statusAberto, setStatusAberto] = useState(false);
+  const [salvandoStatus, setSalvandoStatus] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!popAberto) return;
+    if (!popAberto && !statusAberto) return;
     const aoClicarFora = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setPopAberto(false);
+        setStatusAberto(false);
       }
     };
     document.addEventListener("mousedown", aoClicarFora);
     return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, [popAberto]);
+  }, [popAberto, statusAberto]);
+
+  const mudarStatus = async (novo: StatusPedido) => {
+    if (novo === cliente.status_pedido) {
+      setStatusAberto(false);
+      return;
+    }
+    setSalvandoStatus(true);
+    const { error } = await (
+      supabase.from("clientes" as never) as unknown as {
+        update: (p: Record<string, unknown>) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+      }
+    )
+      .update({ status_pedido: novo, updated_at: new Date().toISOString() })
+      .eq("id", cliente.id);
+    setSalvandoStatus(false);
+    if (error) {
+      toastErro("Não consegui atualizar o status. Tenta de novo.");
+      return;
+    }
+    track("cliente_status_atualizado", { status: novo });
+    setStatusAberto(false);
+    onRegistrado();
+  };
 
   const abrirPopover = async () => {
+    setStatusAberto(false);
     setPopAberto(true);
     setDuplicataData(null);
     const seteDiasAtras = new Date();
@@ -289,13 +352,42 @@ function LinhaCliente({
         </div>
       </div>
       <div className="flex items-center gap-3">
-        {cliente.status_pedido && (
-          <span
-            className={`font-sans text-[11px] px-3 py-1 rounded ${statusPedidoCor(cliente.status_pedido)}`}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => {
+              setPopAberto(false);
+              setStatusAberto((v) => !v);
+            }}
+            disabled={salvandoStatus}
+            aria-label="Alterar status do pedido"
+            title="Alterar status do pedido"
+            className={`font-sans text-[11px] px-3 py-1 rounded transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-50 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
           >
-            {cliente.status_pedido}
-          </span>
-        )}
+            {salvandoStatus ? "Salvando…" : cliente.status_pedido ?? "Sem pedido"}
+          </button>
+          {statusAberto && (
+            <div
+              className="absolute right-0 top-[calc(100%+6px)] z-20 w-[190px] rounded-xl border border-[var(--line)] bg-white p-1.5 shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {STATUS_PEDIDO_OPTIONS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => mudarStatus(s)}
+                  className={`block w-full rounded-lg px-3 py-2 text-left font-sans text-[13px] transition-colors ${
+                    s === cliente.status_pedido
+                      ? "bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                      : "text-[var(--ink)] hover:bg-[var(--bg)]"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         {cliente.venda_registrada ? (
           <span className="shrink-0 font-sans text-[13px] text-[var(--ink-soft)]">
             Registrada ·{" "}
@@ -423,7 +515,7 @@ function ModalCliente({
     onSaved();
   };
 
-  const statusOptions: StatusPedido[] = ["Em espera", "Em produção", "Entregue", "Atrasado"];
+  const statusOptions = STATUS_PEDIDO_OPTIONS;
 
   return (
     <div

@@ -15,8 +15,9 @@ export const Route = createFileRoute("/_authenticated/admin/flags")({
 // mas não muda comportamento nenhum. Mantido explícito aqui pra não fingir
 // que existe uma feature por trás até alguém conectar de verdade.
 // csat_modal_ativo agora é lida de verdade (src/lib/csat.ts) — desligada por
-// padrão até decidir ativar a captura em produção.
-const FLAGS_SEM_CODIGO_CONECTADO = new Set(["broadcast_ativo"]);
+// padrão até decidir ativar a captura em produção. broadcast_ativo foi
+// removida do seed (faxina 2026-07-25): sem leitor, sem uso planejado.
+const FLAGS_SEM_CODIGO_CONECTADO = new Set<string>([]);
 
 function AdminFlags() {
   const [flags, setFlags] = useState<Tables<"feature_flags">[]>([]);
