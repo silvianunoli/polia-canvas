@@ -195,6 +195,22 @@ Deno.serve(async (req: Request) => {
     const dadoRalo = total <= 2;
     const produtosSobra = produtosPorSobra((produtos ?? []) as Produto[]);
 
+    // Reserva ANTES de chamar o Gemini (mesmo padrão do caminho manual em
+    // raiox.functions.ts) — se a cota do mês já estiver no teto (ex.: a
+    // usuária já regenerou pelo app), pula esse usuário em vez de gerar de
+    // graça, ignorando o retorno da RPC. Mesmo guard de "1 por mês" que o
+    // caminho manual, sem contar duas vezes.
+    const { data: liberado } = await supabaseAdmin.rpc("incrementar_ia_uso", {
+      p_user_id: userId,
+      p_feature: FEATURE,
+      p_periodo: mesLabel,
+      p_limite: LIMITE_MENSAL,
+    });
+    if (!liberado) {
+      pulados++;
+      continue;
+    }
+
     const partesPrompt = [
       `Mês analisado: ${mesLabel}`,
       `Entradas: R$ ${entradas.toFixed(2)}`,
@@ -247,12 +263,6 @@ Deno.serve(async (req: Request) => {
         },
         { onConflict: "user_id,mes" },
       );
-      await supabaseAdmin.rpc("incrementar_ia_uso", {
-        p_user_id: userId,
-        p_feature: FEATURE,
-        p_periodo: mesLabel,
-        p_limite: LIMITE_MENSAL,
-      });
       await supabaseAdmin.from("ia_geracoes").insert({
         user_id: userId,
         feature: FEATURE,
@@ -267,13 +277,20 @@ Deno.serve(async (req: Request) => {
       gerados++;
     } catch (erro) {
       erros++;
-      await supabaseAdmin.from("ia_geracoes").insert({
-        user_id: userId,
-        feature: FEATURE,
-        modelo: MODELO_PRO,
-        sucesso: false,
-        erro: erro instanceof Error ? erro.message : String(erro),
-      });
+      await Promise.all([
+        supabaseAdmin.rpc("estornar_ia_uso", {
+          p_user_id: userId,
+          p_feature: FEATURE,
+          p_periodo: mesLabel,
+        }),
+        supabaseAdmin.from("ia_geracoes").insert({
+          user_id: userId,
+          feature: FEATURE,
+          modelo: MODELO_PRO,
+          sucesso: false,
+          erro: erro instanceof Error ? erro.message : String(erro),
+        }),
+      ]);
     }
   }
 

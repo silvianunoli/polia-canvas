@@ -1417,6 +1417,7 @@ export type Database = {
           positioning_statement: string | null
           presence_finalized_at: string | null
           price_range: string | null
+          pro_labore_desejado: number | null
           problem_solved: string | null
           problem_urgency: string | null
           product_description: string | null
@@ -1511,6 +1512,7 @@ export type Database = {
           positioning_statement?: string | null
           presence_finalized_at?: string | null
           price_range?: string | null
+          pro_labore_desejado?: number | null
           problem_solved?: string | null
           problem_urgency?: string | null
           product_description?: string | null
@@ -1605,6 +1607,7 @@ export type Database = {
           positioning_statement?: string | null
           presence_finalized_at?: string | null
           price_range?: string | null
+          pro_labore_desejado?: number | null
           problem_solved?: string | null
           problem_urgency?: string | null
           product_description?: string | null
@@ -2178,18 +2181,6 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      v_user: {
-        Row: {
-          id: string | null
-        }
-        Insert: {
-          id?: string | null
-        }
-        Update: {
-          id?: string | null
         }
         Relationships: []
       }

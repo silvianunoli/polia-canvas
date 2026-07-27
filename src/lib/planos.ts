@@ -33,6 +33,7 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/caderno", tier: "confere" }, // cotada
   { prefixo: "/raiox", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Resumo/Encomenda
   { prefixo: "/plano-conteudo", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Raio-x
+  { prefixo: "/projecao", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/clientes", tier: "controle" },
   { prefixo: "/financeiro", tier: "controle" },
   { prefixo: "/metas", tier: "controle" },
