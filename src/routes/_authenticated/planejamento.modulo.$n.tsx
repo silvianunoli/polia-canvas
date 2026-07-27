@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
@@ -16,6 +16,7 @@ import {
   moduloInfo,
   secoesDoModulo,
 } from "@/lib/planejamento";
+import { gerarRascunhoPlanejamento } from "@/lib/planejamentoIa.functions";
 
 export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -255,7 +256,10 @@ function ModuloPage() {
         {!secaoAtual ? (
           <div className="space-y-3">
             {[0, 1].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)]" />
+              <div
+                key={i}
+                className="h-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)]"
+              />
             ))}
           </div>
         ) : (
@@ -308,6 +312,14 @@ function SecaoForm({
   const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [avancando, setAvancando] = useState(false);
 
+  // ── Gerar com a Aimer (IA) ──
+  const [rascunho, setRascunho] = useState<Record<number, string | null>>({});
+  const [valorAntesDeGerar, setValorAntesDeGerar] = useState<Record<number, string>>({});
+  const [gerando, setGerando] = useState<Record<number, boolean>>({});
+  const [erroGeracao, setErroGeracao] = useState<Record<number, string | null>>({});
+  const [cotaAtingida, setCotaAtingida] = useState<Record<number, boolean>>({});
+  const [contextoInsuf, setContextoInsuf] = useState<Record<number, boolean>>({});
+
   const salvarUm = useCallback(
     async (i: number) => {
       pendentes.current.delete(i);
@@ -327,7 +339,9 @@ function SecaoForm({
     timers.current = {};
     if (idxs.length === 0) return;
     setStatus("saving");
-    await Promise.all(idxs.map((i) => onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i])));
+    await Promise.all(
+      idxs.map((i) => onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i])),
+    );
     setStatus("saved");
   }, [onUpsert, secao]);
 
@@ -347,10 +361,62 @@ function SecaoForm({
       valoresRef.current = c;
       return c;
     });
+    // Qualquer edição (inclusive "usar", que rechama isto com o mesmo valor)
+    // já basta pra considerar o rascunho aceito e sumir com o selo.
+    setRascunho((s) => (s[i] != null ? { ...s, [i]: null } : s));
     pendentes.current.add(i);
     setStatus("saving");
     if (timers.current[i]) clearTimeout(timers.current[i]);
     timers.current[i] = setTimeout(() => void salvarUm(i), 1000);
+  };
+
+  const gerarComAimer = async (i: number) => {
+    setErroGeracao((s) => ({ ...s, [i]: null }));
+    setCotaAtingida((s) => ({ ...s, [i]: false }));
+    setContextoInsuf((s) => ({ ...s, [i]: false }));
+    setGerando((s) => ({ ...s, [i]: true }));
+    setValorAntesDeGerar((s) => ({ ...s, [i]: valoresRef.current[i] }));
+    try {
+      const resultado = await gerarRascunhoPlanejamento({
+        data: { secao: secao.id, perguntaIdx: i },
+      });
+      if (resultado.ok) {
+        setValores((prev) => {
+          const c = [...prev];
+          c[i] = resultado.texto;
+          valoresRef.current = c;
+          return c;
+        });
+        setRascunho((s) => ({ ...s, [i]: resultado.texto }));
+        track("planejamento_ia_gerado", { campo: secao.perguntas[i].campo });
+      } else if (resultado.motivo === "cota_atingida") {
+        setCotaAtingida((s) => ({ ...s, [i]: true }));
+      } else if (resultado.motivo === "contexto_insuficiente") {
+        setContextoInsuf((s) => ({ ...s, [i]: true }));
+      } else {
+        setErroGeracao((s) => ({
+          ...s,
+          [i]: "Não consegui gerar o rascunho agora. Tenta de novo.",
+        }));
+      }
+    } catch {
+      setErroGeracao((s) => ({ ...s, [i]: "Não consegui gerar o rascunho agora. Tenta de novo." }));
+    } finally {
+      setGerando((s) => ({ ...s, [i]: false }));
+    }
+  };
+
+  const usarRascunho = (i: number) => onChange(i, valoresRef.current[i]);
+
+  const descartarRascunho = (i: number) => {
+    const original = valorAntesDeGerar[i] ?? "";
+    setValores((prev) => {
+      const c = [...prev];
+      c[i] = original;
+      valoresRef.current = c;
+      return c;
+    });
+    setRascunho((s) => ({ ...s, [i]: null }));
   };
 
   const concluir = async () => {
@@ -390,9 +456,91 @@ function SecaoForm({
             <textarea
               value={valores[i]}
               onChange={(e) => onChange(i, e.target.value)}
+              disabled={gerando[i]}
               placeholder="Escreva aqui…"
-              className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none"
+              className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none disabled:bg-[var(--surface)]"
             />
+
+            {cotaAtingida[i] ? (
+              <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                Você já usou a sua geração de IA do mês. No Controle dá pra re-gerar quantas vezes
+                precisar.{" "}
+                <Link
+                  to="/upgrade"
+                  search={{ rota: "/planejamento", tier: "controle" }}
+                  className="font-medium text-[var(--secondary-text)] no-underline"
+                >
+                  Conhecer o Controle
+                </Link>
+              </p>
+            ) : contextoInsuf[i] ? (
+              <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                Preciso saber o básico do seu negócio antes. Responda o que você vende (
+                <Link
+                  to="/produtos"
+                  className="font-medium text-[var(--secondary-text)] no-underline"
+                >
+                  Produtos
+                </Link>
+                ) e o tipo do seu negócio (
+                <Link
+                  to="/configuracoes"
+                  className="font-medium text-[var(--secondary-text)] no-underline"
+                >
+                  Configurações
+                </Link>
+                ) e a Aimer rascunha o resto.
+              </p>
+            ) : erroGeracao[i] ? (
+              <p className="mt-2 text-[13px] text-[var(--danger)]">
+                {erroGeracao[i]}{" "}
+                <button
+                  type="button"
+                  onClick={() => void gerarComAimer(i)}
+                  className="font-medium underline"
+                >
+                  Tentar de novo
+                </button>
+              </p>
+            ) : rascunho[i] != null ? (
+              <div className="mt-2 flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
+                  <Sparkles size={11} aria-hidden="true" />
+                  rascunho de IA
+                </span>
+                <button
+                  type="button"
+                  onClick={() => usarRascunho(i)}
+                  className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                >
+                  Usar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => descartarRascunho(i)}
+                  className="text-[13px] text-[var(--muted)] hover:underline"
+                >
+                  Descartar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void gerarComAimer(i)}
+                  className="text-[13px] text-[var(--muted)] hover:underline"
+                >
+                  Gerar outro
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void gerarComAimer(i)}
+                disabled={gerando[i]}
+                className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+              >
+                <Sparkles size={13} aria-hidden="true" />
+                {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "gerar com a Aimer"}
+              </button>
+            )}
           </label>
         ))}
       </div>

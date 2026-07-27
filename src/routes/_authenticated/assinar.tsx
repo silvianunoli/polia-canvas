@@ -6,39 +6,16 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib/stripe.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
+import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
 
-type TierId = "controle" | "projete";
+type TierId = TierPago;
 type CicloId = "mensal" | "anual";
 
 interface AssinarSearch {
   plano?: TierId;
 }
 
-const TIERS: Record<
-  TierId,
-  { titulo: string; precoMensal: number; precoAnual: number; features: string[]; destaque?: boolean }
-> = {
-  controle: {
-    titulo: "Controle",
-    precoMensal: 29.9,
-    precoAnual: 299,
-    features: [
-      "Tudo do Confere, mais:",
-      "Produtos, com a margem de cada venda na sua frente",
-      "Clientes, com a entrega que vira caixa sozinha",
-      "Financeiro do mês fechado num lugar",
-      "Painel completo, com quanto falta pra meta",
-      "Planner, Calendário, Caderno e Metas",
-    ],
-    destaque: true,
-  },
-  projete: {
-    titulo: "Projete",
-    precoMensal: 47.9,
-    precoAnual: 479,
-    features: ["Tudo do Controle, mais:", "Um plano de conteúdo do ano pras suas redes"],
-  },
-};
+const TIERS = TIERS_PAGOS;
 
 function fmtPreco(v: number) {
   return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v % 1 ? 2 : 0 })}`;

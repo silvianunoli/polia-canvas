@@ -16,6 +16,8 @@ import {
   Settings,
   LogOut,
   CalendarDays,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -23,6 +25,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
+import { ehBeta, tierDoPlano, tierMinimoDaRota } from "@/lib/planos";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
@@ -31,6 +34,7 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 // o planejamento + as ferramentas de trabalho do dia a dia.
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
+  { to: "/aimer", label: "Aimer", icon: Sparkles },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
@@ -129,7 +133,11 @@ export function Sidebar() {
             {NAV.map((item) => {
               const active = isActive(item.to, pathname);
               const Icon = item.icon;
-              const content = (
+              const liberado =
+                ehBeta(meta.plano) ||
+                tierMinimoDaRota(item.to) === "confere" ||
+                tierDoPlano(meta.plano) === "controle";
+              const content = liberado ? (
                 <Link
                   key={item.to}
                   to={item.to}
@@ -146,12 +154,39 @@ export function Sidebar() {
                   <Icon size={20} aria-hidden="true" />
                   {!compact && <span>{item.label}</span>}
                 </Link>
+              ) : (
+                <Link
+                  key={item.to}
+                  to="/upgrade"
+                  search={{ rota: item.to, tier: "controle" }}
+                  onClick={onNavigate}
+                  data-track="nav_bloqueado_clicado"
+                  data-track-props={JSON.stringify({ destino: item.to })}
+                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] border-l-[3px] border-transparent ${
+                    compact ? "justify-center" : ""
+                  }`}
+                >
+                  {compact ? (
+                    <Lock size={18} aria-hidden="true" />
+                  ) : (
+                    <>
+                      <Icon size={20} aria-hidden="true" />
+                      <span className="flex flex-1 items-center justify-between gap-2">
+                        {item.label}
+                        <Lock size={14} aria-hidden="true" />
+                      </span>
+                    </>
+                  )}
+                </Link>
               );
+              const tooltipLabel = liberado
+                ? item.label
+                : `${item.label} — desbloqueie com o Controle`;
               return compact ? (
                 <Tooltip key={item.to}>
                   <TooltipTrigger asChild>{content}</TooltipTrigger>
                   <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                    {item.label}
+                    {tooltipLabel}
                   </TooltipContent>
                 </Tooltip>
               ) : (

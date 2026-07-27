@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, FileText, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
@@ -12,6 +12,8 @@ import {
   taxasDoBreakdown,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
+import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
+import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -93,7 +95,13 @@ interface MetaMesRow {
 
 // Semente padrão pra usuárias novas; some assim que o histórico real tiver categorias.
 const CATEGORIAS_ENTRADA = ["Venda de produto", "Prestação de serviço", "Outros"];
-const CATEGORIAS_SAIDA = ["Insumos / estoque", "Marketing", "Ferramentas e assinaturas", "Outros"];
+const CATEGORIAS_SAIDA = [
+  "Insumos / estoque",
+  "Marketing",
+  "Ferramentas e assinaturas",
+  "Pró-labore",
+  "Outros",
+];
 const NOVA_CATEGORIA = "+ nova categoria";
 
 function fmt(v: number) {
@@ -105,11 +113,6 @@ function fmtData(iso: string) {
   const [y, m, d] = iso.split("-").map(Number);
   if (!y || !m || !d) return iso;
   return `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}`;
-}
-
-function mesAnoDe(iso: string) {
-  const [y, m] = iso.split("-").map(Number);
-  return { ano: y, mes: m };
 }
 
 // Extrai o primeiro número de um texto livre em pt-BR ("R$ 2.500" → 2500).
@@ -140,10 +143,14 @@ function FinanceiroPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
 
-  const hoje = useMemo(() => new Date(), []);
-  const mesAtual = hoje.getMonth() + 1;
-  const anoAtual = hoje.getFullYear();
-  const hojeISO = hoje.toISOString().slice(0, 10);
+  // ── "Agora" só é lido no cliente pra não divergir da hidratação SSR (mesmo padrão de painel.tsx) ──
+  const [clientReady, setClientReady] = useState(false);
+  useEffect(() => setClientReady(true), []);
+  const { ano: anoAtual, mes: mesAtual } = useMemo(
+    () => (clientReady ? mesAnoAtual() : { ano: 0, mes: 0 }),
+    [clientReady],
+  );
+  const hojeISOStr = useMemo(() => (clientReady ? hojeISO() : ""), [clientReady]);
 
   // ── Modal ──
   const [modalAberto, setModalAberto] = useState(false);
@@ -197,9 +204,27 @@ function FinanceiroPage() {
     [dadosQuery.data?.lancamentos],
   );
 
+  // Resumo pro contador (Projete): plano checado direto, não por tierDoPlano
+  // (que funde controle/projete no mesmo tier de rota da Fase 1).
+  const perfilResumoQuery = useQuery({
+    queryKey: ["financeiro-perfil", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("plano, razao_social, cnpj")
+        .eq("id", userId!)
+        .maybeSingle();
+      return data as { plano: string; razao_social: string | null; cnpj: string | null } | null;
+    },
+  });
+  const ehProjete = perfilResumoQuery.data?.plano === "projete";
+  const [resumoContadorAberto, setResumoContadorAberto] = useState(false);
+
   const campoValor = useMemo(() => {
     const m = new Map<string, string>();
-    for (const c of dadosQuery.data?.campos ?? []) if (c.valor && c.valor.trim()) m.set(c.campo, c.valor);
+    for (const c of dadosQuery.data?.campos ?? [])
+      if (c.valor && c.valor.trim()) m.set(c.campo, c.valor);
     return m;
   }, [dadosQuery.data?.campos]);
 
@@ -210,25 +235,23 @@ function FinanceiroPage() {
 
   // ── Computado: mês corrente ──
   const { entradas, saidas } = useMemo(() => {
+    if (!clientReady) return { entradas: 0, saidas: 0 };
     let e = 0;
     let s = 0;
     for (const l of lancamentos) {
-      const { ano, mes } = mesAnoDe(l.data);
-      if (ano !== anoAtual || mes !== mesAtual) continue;
+      if (!l.data || !ehMesAtual(l.data)) continue;
       if (l.tipo === "entrada") e += Number(l.valor);
       else if (l.tipo === "saida") s += Number(l.valor);
     }
     return { entradas: e, saidas: s };
-  }, [lancamentos, anoAtual, mesAtual]);
+  }, [lancamentos, clientReady]);
 
   const lucro = entradas - saidas;
 
   const lancamentosMes = useMemo(() => {
-    return lancamentos.filter((l) => {
-      const { ano, mes } = mesAnoDe(l.data);
-      return ano === anoAtual && mes === mesAtual;
-    });
-  }, [lancamentos, anoAtual, mesAtual]);
+    if (!clientReady) return [];
+    return lancamentos.filter((l) => l.data && ehMesAtual(l.data));
+  }, [lancamentos, clientReady]);
 
   const numEntradasMes = lancamentosMes.filter((l) => l.tipo === "entrada").length;
 
@@ -342,10 +365,33 @@ function FinanceiroPage() {
       <PainelNav initial={initial} streak={0} navActive="/financeiro" />
 
       <div className="mx-auto max-w-[1120px] px-6 py-12 md:px-10">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-          Este mês ·{" "}
-          {hoje.toLocaleDateString("pt-BR", { month: "long" })}
-        </p>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+            Este mês
+            {clientReady && mesAtual > 0
+              ? ` · ${new Date(anoAtual, mesAtual - 1, 1).toLocaleDateString("pt-BR", { month: "long" })}`
+              : ""}
+          </p>
+          {ehProjete ? (
+            <button
+              type="button"
+              onClick={() => setResumoContadorAberto(true)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+            >
+              <FileText size={14} aria-hidden="true" />
+              Resumo pro contador
+            </button>
+          ) : (
+            <Link
+              to="/upgrade"
+              search={{ rota: "/financeiro", tier: "projete" }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--muted)] no-underline hover:bg-[var(--surface)]"
+            >
+              <Lock size={14} aria-hidden="true" />
+              Resumo pro contador
+            </Link>
+          )}
+        </div>
 
         {/* ───────── 1. Cards de resumo ───────── */}
         <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -382,7 +428,9 @@ function FinanceiroPage() {
             >
               {fmt(lucro)}
             </p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% do que entrou virou lucro</p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">
+              {margemPct}% do que entrou virou lucro
+            </p>
           </div>
         </section>
 
@@ -566,7 +614,7 @@ function FinanceiroPage() {
         <ModalLancamento
           userId={userId}
           tipoInicial={modalTipo}
-          dataPadrao={hojeISO}
+          dataPadrao={hojeISOStr}
           prefill={prefill}
           lancamentoEdit={lancamentoEdit}
           historico={lancamentos}
@@ -582,13 +630,30 @@ function FinanceiroPage() {
       {modalVendaAberto && userId && (
         <ModalRegistrarVendaProduto
           userId={userId}
-          dataPadrao={hojeISO}
+          dataPadrao={hojeISOStr}
           onClose={() => setModalVendaAberto(false)}
           onSaved={(msg) => {
             qc.invalidateQueries({ queryKey: ["financeiro", userId] });
             setModalVendaAberto(false);
             toastSucesso(msg);
           }}
+        />
+      )}
+
+      {/* ───────── 7. Modal: resumo pro contador (Projete) ───────── */}
+      {resumoContadorAberto && ehProjete && (
+        <ResumoContadorModal
+          lancamentos={lancamentos}
+          razaoSocial={perfilResumoQuery.data?.razao_social ?? null}
+          cnpj={perfilResumoQuery.data?.cnpj ?? null}
+          onClose={() => setResumoContadorAberto(false)}
+          onEditarLancamento={(id) => {
+            const l = lancamentos.find((x) => x.id === id);
+            if (!l) return;
+            setResumoContadorAberto(false);
+            abrirEditar(l);
+          }}
+          onIrParaFinanceiro={() => setResumoContadorAberto(false)}
         />
       )}
     </div>
@@ -792,7 +857,7 @@ function ModalLancamento({
   };
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);

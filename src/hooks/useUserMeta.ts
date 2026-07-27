@@ -10,6 +10,7 @@ export interface UserMeta {
   isAdmin: boolean;
   streak: number;
   avatarUrl: string | null;
+  plano: string;
 }
 
 /**
@@ -51,7 +52,7 @@ export function useUserMeta() {
       const [{ data: profile }, { data: tarefas }, { data: presencas }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, is_admin, business_name")
+          .select("full_name, is_admin, business_name, plano")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
@@ -93,6 +94,7 @@ export function useUserMeta() {
         isAdmin: !!profile?.is_admin,
         streak,
         avatarUrl: null,
+        plano: (profile?.plano as string | undefined) ?? "confere",
       };
     },
   });
@@ -105,6 +107,7 @@ export function useUserMeta() {
       isAdmin: false,
       streak: 0,
       avatarUrl: null,
+      plano: "confere",
     }
   );
 }

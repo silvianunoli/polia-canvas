@@ -254,60 +254,6 @@ export type Database = {
           },
         ]
       }
-      checkins: {
-        Row: {
-          agua_litros: number | null
-          alimentacao: number | null
-          created_at: string
-          data: string
-          energia: number | null
-          estresse: number | null
-          exercicio: boolean | null
-          humor: number | null
-          id: string
-          intencao: string | null
-          nota: string | null
-          sono_horas: number | null
-          updated_at: string
-          user_id: string
-          vitoria: string | null
-        }
-        Insert: {
-          agua_litros?: number | null
-          alimentacao?: number | null
-          created_at?: string
-          data?: string
-          energia?: number | null
-          estresse?: number | null
-          exercicio?: boolean | null
-          humor?: number | null
-          id?: string
-          intencao?: string | null
-          nota?: string | null
-          sono_horas?: number | null
-          updated_at?: string
-          user_id: string
-          vitoria?: string | null
-        }
-        Update: {
-          agua_litros?: number | null
-          alimentacao?: number | null
-          created_at?: string
-          data?: string
-          energia?: number | null
-          estresse?: number | null
-          exercicio?: boolean | null
-          humor?: number | null
-          id?: string
-          intencao?: string | null
-          nota?: string | null
-          sono_horas?: number | null
-          updated_at?: string
-          user_id?: string
-          vitoria?: string | null
-        }
-        Relationships: []
-      }
       clientes: {
         Row: {
           contato: string | null
@@ -357,57 +303,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      coach_insights: {
-        Row: {
-          conteudo: string
-          contexto: string
-          created_at: string
-          expires_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          conteudo: string
-          contexto: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          conteudo?: string
-          contexto?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      coach_mensagens: {
-        Row: {
-          conteudo: string
-          created_at: string
-          id: string
-          papel: string
-          user_id: string
-        }
-        Insert: {
-          conteudo: string
-          created_at?: string
-          id?: string
-          papel: string
-          user_id: string
-        }
-        Update: {
-          conteudo?: string
-          created_at?: string
-          id?: string
-          papel?: string
-          user_id?: string
-        }
-        Relationships: []
       }
       conquistas: {
         Row: {
@@ -623,39 +518,6 @@ export type Database = {
           status?: string
           tipo?: string
           titulo?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      equipe_membros: {
-        Row: {
-          created_at: string
-          email: string | null
-          id: string
-          nome: string
-          papel: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          nome: string
-          papel?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          id?: string
-          nome?: string
-          papel?: string
-          status?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -892,53 +754,6 @@ export type Database = {
         }
         Relationships: []
       }
-      foco_sessoes: {
-        Row: {
-          concluida: boolean
-          created_at: string
-          duracao_min: number
-          id: string
-          meta_id: string | null
-          modo: string | null
-          nota: string | null
-          rotulo: string | null
-          tipo: string
-          user_id: string
-        }
-        Insert: {
-          concluida?: boolean
-          created_at?: string
-          duracao_min: number
-          id?: string
-          meta_id?: string | null
-          modo?: string | null
-          nota?: string | null
-          rotulo?: string | null
-          tipo?: string
-          user_id: string
-        }
-        Update: {
-          concluida?: boolean
-          created_at?: string
-          duracao_min?: number
-          id?: string
-          meta_id?: string | null
-          modo?: string | null
-          nota?: string | null
-          rotulo?: string | null
-          tipo?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "foco_sessoes_meta_id_fkey"
-            columns: ["meta_id"]
-            isOneToOne: false
-            referencedRelation: "metas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       google_calendar_conexoes: {
         Row: {
           access_token: string | null
@@ -972,73 +787,143 @@ export type Database = {
         }
         Relationships: []
       }
-      habito_logs: {
+      ia_geracoes: {
         Row: {
-          created_at: string
-          data: string
-          habito_id: string
+          criado_em: string
+          erro: string | null
+          feature: string
           id: string
+          modelo: string
+          pergunta: string | null
+          resposta: string | null
+          sucesso: boolean
+          tokens_in: number | null
+          tokens_out: number | null
           user_id: string
         }
         Insert: {
-          created_at?: string
-          data?: string
-          habito_id: string
+          criado_em?: string
+          erro?: string | null
+          feature: string
           id?: string
+          modelo: string
+          pergunta?: string | null
+          resposta?: string | null
+          sucesso: boolean
+          tokens_in?: number | null
+          tokens_out?: number | null
           user_id: string
         }
         Update: {
-          created_at?: string
-          data?: string
-          habito_id?: string
+          criado_em?: string
+          erro?: string | null
+          feature?: string
           id?: string
+          modelo?: string
+          pergunta?: string | null
+          resposta?: string | null
+          sucesso?: boolean
+          tokens_in?: number | null
+          tokens_out?: number | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "habito_logs_habito_id_fkey"
-            columns: ["habito_id"]
-            isOneToOne: false
-            referencedRelation: "habitos"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      habitos: {
+      ia_plano_conteudo: {
         Row: {
-          ativo: boolean
-          categoria: string | null
-          cor: string | null
-          created_at: string
-          emoji: string | null
+          ano: number
+          criado_em: string
+          data: string
           id: string
-          nome: string
-          ordem: number
-          updated_at: string
+          ideia: string
+          postado: boolean
+          postado_em: string | null
+          tipo: string
+          titulo: string
           user_id: string
         }
         Insert: {
-          ativo?: boolean
-          categoria?: string | null
-          cor?: string | null
-          created_at?: string
-          emoji?: string | null
+          ano: number
+          criado_em?: string
+          data: string
           id?: string
-          nome: string
-          ordem?: number
-          updated_at?: string
+          ideia: string
+          postado?: boolean
+          postado_em?: string | null
+          tipo: string
+          titulo: string
           user_id: string
         }
         Update: {
-          ativo?: boolean
-          categoria?: string | null
-          cor?: string | null
-          created_at?: string
-          emoji?: string | null
+          ano?: number
+          criado_em?: string
+          data?: string
           id?: string
-          nome?: string
-          ordem?: number
-          updated_at?: string
+          ideia?: string
+          postado?: boolean
+          postado_em?: string | null
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ia_raiox: {
+        Row: {
+          causas: string
+          criado_em: string
+          dado_ralo: boolean
+          email_enviado_em: string | null
+          id: string
+          mes: string
+          placar: string
+          sugestoes: Json
+          user_id: string
+        }
+        Insert: {
+          causas: string
+          criado_em?: string
+          dado_ralo?: boolean
+          email_enviado_em?: string | null
+          id?: string
+          mes: string
+          placar: string
+          sugestoes: Json
+          user_id: string
+        }
+        Update: {
+          causas?: string
+          criado_em?: string
+          dado_ralo?: boolean
+          email_enviado_em?: string | null
+          id?: string
+          mes?: string
+          placar?: string
+          sugestoes?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ia_uso: {
+        Row: {
+          atualizado_em: string
+          contagem: number
+          feature: string
+          periodo: string
+          user_id: string
+        }
+        Insert: {
+          atualizado_em?: string
+          contagem?: number
+          feature: string
+          periodo: string
+          user_id: string
+        }
+        Update: {
+          atualizado_em?: string
+          contagem?: number
+          feature?: string
+          periodo?: string
           user_id?: string
         }
         Relationships: []
@@ -1417,6 +1302,7 @@ export type Database = {
       produtos: {
         Row: {
           arquivado: boolean
+          calculadora_breakdown: Json | null
           canal: string | null
           created_at: string
           da_jornada: boolean
@@ -1434,6 +1320,7 @@ export type Database = {
         }
         Insert: {
           arquivado?: boolean
+          calculadora_breakdown?: Json | null
           canal?: string | null
           created_at?: string
           da_jornada?: boolean
@@ -1451,6 +1338,7 @@ export type Database = {
         }
         Update: {
           arquivado?: boolean
+          calculadora_breakdown?: Json | null
           canal?: string | null
           created_at?: string
           da_jornada?: boolean
@@ -1485,6 +1373,7 @@ export type Database = {
           business_why: string | null
           care_finalized_at: string | null
           closing_method: string | null
+          cnpj: string | null
           competitors: string | null
           content_finalized_at: string | null
           created_at: string
@@ -1536,6 +1425,7 @@ export type Database = {
           profile_story: string | null
           publishing_rhythm: string | null
           purchase_path: string | null
+          razao_social: string | null
           restock_triggers: string | null
           review_rhythm: string | null
           routine_finalized_at: string | null
@@ -1557,6 +1447,7 @@ export type Database = {
           timeline_goal: string | null
           tracking_system: string | null
           updated_at: string
+          valor_hora_padrao: number | null
           visual_presence: string | null
           welcome_protocol: string | null
         }
@@ -1576,6 +1467,7 @@ export type Database = {
           business_why?: string | null
           care_finalized_at?: string | null
           closing_method?: string | null
+          cnpj?: string | null
           competitors?: string | null
           content_finalized_at?: string | null
           created_at?: string
@@ -1627,6 +1519,7 @@ export type Database = {
           profile_story?: string | null
           publishing_rhythm?: string | null
           purchase_path?: string | null
+          razao_social?: string | null
           restock_triggers?: string | null
           review_rhythm?: string | null
           routine_finalized_at?: string | null
@@ -1648,6 +1541,7 @@ export type Database = {
           timeline_goal?: string | null
           tracking_system?: string | null
           updated_at?: string
+          valor_hora_padrao?: number | null
           visual_presence?: string | null
           welcome_protocol?: string | null
         }
@@ -1667,6 +1561,7 @@ export type Database = {
           business_why?: string | null
           care_finalized_at?: string | null
           closing_method?: string | null
+          cnpj?: string | null
           competitors?: string | null
           content_finalized_at?: string | null
           created_at?: string
@@ -1718,6 +1613,7 @@ export type Database = {
           profile_story?: string | null
           publishing_rhythm?: string | null
           purchase_path?: string | null
+          razao_social?: string | null
           restock_triggers?: string | null
           review_rhythm?: string | null
           routine_finalized_at?: string | null
@@ -1739,6 +1635,7 @@ export type Database = {
           timeline_goal?: string | null
           tracking_system?: string | null
           updated_at?: string
+          valor_hora_padrao?: number | null
           visual_presence?: string | null
           welcome_protocol?: string | null
         }
@@ -2071,7 +1968,6 @@ export type Database = {
       }
       tarefas: {
         Row: {
-          assigned_to: string | null
           categoria: string | null
           created_at: string
           data_inicio: string | null
@@ -2095,7 +1991,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          assigned_to?: string | null
           categoria?: string | null
           created_at?: string
           data_inicio?: string | null
@@ -2119,7 +2014,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          assigned_to?: string | null
           categoria?: string | null
           created_at?: string
           data_inicio?: string | null
@@ -2143,13 +2037,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tarefas_assigned_to_fkey"
-            columns: ["assigned_to"]
-            isOneToOne: false
-            referencedRelation: "equipe_membros"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tarefas_meta_id_fkey"
             columns: ["meta_id"]
@@ -2294,6 +2181,18 @@ export type Database = {
         }
         Relationships: []
       }
+      v_user: {
+        Row: {
+          id: string | null
+        }
+        Insert: {
+          id?: string | null
+        }
+        Update: {
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2314,138 +2213,26 @@ export type Database = {
           tamanho_legivel: string
         }[]
       }
-      bytea_to_text: { Args: { data: string }; Returns: string }
       checar_taxa_erro_e_alertar: { Args: never; Returns: undefined }
       checar_uptimerobot_e_alertar: { Args: never; Returns: undefined }
       compor_nota_presenca: { Args: { p_uid: string }; Returns: undefined }
+      disparar_raiox_mensal: { Args: never; Returns: undefined }
       disparar_social_metricas: { Args: never; Returns: undefined }
       disparar_social_publisher: { Args: never; Returns: undefined }
       disparar_social_token_renovar: { Args: never; Returns: undefined }
+      estornar_ia_uso: {
+        Args: { p_feature: string; p_periodo: string; p_user_id: string }
+        Returns: undefined
+      }
       excluir_dados_do_usuario: { Args: never; Returns: undefined }
       hook_checar_convite_cadastro: { Args: { event: Json }; Returns: Json }
-      http: {
-        Args: { request: Database["public"]["CompositeTypes"]["http_request"] }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-        SetofOptions: {
-          from: "http_request"
-          to: "http_response"
-          isOneToOne: true
-          isSetofReturn: false
+      incrementar_ia_uso: {
+        Args: {
+          p_feature: string
+          p_limite: number
+          p_periodo: string
+          p_user_id: string
         }
-      }
-      http_delete:
-        | {
-            Args: { uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: { content: string; content_type: string; uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-      http_get:
-        | {
-            Args: { uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: { data: Json; uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-      http_head: {
-        Args: { uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-        SetofOptions: {
-          from: "*"
-          to: "http_response"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      http_header: {
-        Args: { field: string; value: string }
-        Returns: Database["public"]["CompositeTypes"]["http_header"]
-        SetofOptions: {
-          from: "*"
-          to: "http_header"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      http_list_curlopt: {
-        Args: never
-        Returns: {
-          curlopt: string
-          value: string
-        }[]
-      }
-      http_patch: {
-        Args: { content: string; content_type: string; uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-        SetofOptions: {
-          from: "*"
-          to: "http_response"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      http_post:
-        | {
-            Args: { content: string; content_type: string; uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-        | {
-            Args: { data: Json; uri: string }
-            Returns: Database["public"]["CompositeTypes"]["http_response"]
-            SetofOptions: {
-              from: "*"
-              to: "http_response"
-              isOneToOne: true
-              isSetofReturn: false
-            }
-          }
-      http_put: {
-        Args: { content: string; content_type: string; uri: string }
-        Returns: Database["public"]["CompositeTypes"]["http_response"]
-        SetofOptions: {
-          from: "*"
-          to: "http_response"
-          isOneToOne: true
-          isSetofReturn: false
-        }
-      }
-      http_reset_curlopt: { Args: never; Returns: boolean }
-      http_set_curlopt: {
-        Args: { curlopt: string; value: string }
         Returns: boolean
       }
       is_admin: { Args: { _uid: string }; Returns: boolean }
@@ -2486,21 +2273,6 @@ export type Database = {
         Args: { p_cliente_id: string }
         Returns: string
       }
-      text_to_bytea: { Args: { data: string }; Returns: string }
-      urlencode:
-        | { Args: { data: Json }; Returns: string }
-        | {
-            Args: { string: string }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
-        | {
-            Args: { string: string }
-            Returns: {
-              error: true
-            } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
-          }
     }
     Enums: {
       social_status:
@@ -2515,23 +2287,7 @@ export type Database = {
       social_tipo: "feed" | "carrossel" | "reel" | "story"
     }
     CompositeTypes: {
-      http_header: {
-        field: string | null
-        value: string | null
-      }
-      http_request: {
-        method: unknown
-        uri: string | null
-        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
-        content_type: string | null
-        content: string | null
-      }
-      http_response: {
-        status: number | null
-        content_type: string | null
-        headers: Database["public"]["CompositeTypes"]["http_header"][] | null
-        content: string | null
-      }
+      [_ in never]: never
     }
   }
 }

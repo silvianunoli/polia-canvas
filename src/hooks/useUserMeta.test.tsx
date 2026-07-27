@@ -45,13 +45,20 @@ function chainWithMaybeSingle(value: unknown) {
 }
 
 interface MockData {
-  profile?: { full_name?: string; is_admin?: boolean; business_name?: string } | null;
+  profile?: {
+    full_name?: string;
+    is_admin?: boolean;
+    business_name?: string;
+    plano?: string;
+  } | null;
   tarefas?: { status: string; updated_at: string }[];
   presencas?: { data: string }[];
 }
 
 function setupSupabaseMocks({ profile = null, tarefas = [], presencas = [] }: MockData = {}) {
-  onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }));
+  onAuthStateChangeMock.mockImplementation(() => ({
+    data: { subscription: { unsubscribe: vi.fn() } },
+  }));
   getSessionMock.mockResolvedValue({ data: { session: fakeSession } });
 
   const upsertMock = vi.fn(() => Promise.resolve({ error: null }));
@@ -93,6 +100,7 @@ describe("useUserMeta", () => {
       isAdmin: false,
       streak: 0,
       avatarUrl: null,
+      plano: "confere",
     });
 
     // drena a query pendente, senão ela resolve depois do fim do teste e vaza
@@ -122,6 +130,13 @@ describe("useUserMeta", () => {
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
     await waitFor(() => expect(result.current.isAdmin).toBe(true));
+  });
+
+  it("propaga plano a partir do profile, com 'confere' como fallback quando ausente", async () => {
+    setupSupabaseMocks({ profile: { full_name: "Ana", plano: "controle" } });
+    const { result } = renderHook(() => useUserMeta(), { wrapper });
+
+    await waitFor(() => expect(result.current.plano).toBe("controle"));
   });
 
   it("businessName vira null quando vazio ou só espaços em branco", async () => {
@@ -179,15 +194,17 @@ describe("useUserMeta", () => {
     renderHook(() => useUserMeta(), { wrapper });
 
     await waitFor(() => expect(upsertMock).toHaveBeenCalledTimes(1));
-    expect(upsertMock).toHaveBeenCalledWith(
-      expect.objectContaining({ user_id: "user-1" }),
-      { onConflict: "user_id,data", ignoreDuplicates: true },
-    );
+    expect(upsertMock).toHaveBeenCalledWith(expect.objectContaining({ user_id: "user-1" }), {
+      onConflict: "user_id,data",
+      ignoreDuplicates: true,
+    });
   });
 
   it("fica no fallback e não dispara a query quando não há usuário logado", async () => {
     getSessionMock.mockResolvedValue({ data: { session: null } });
-    onAuthStateChangeMock.mockImplementation(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }));
+    onAuthStateChangeMock.mockImplementation(() => ({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    }));
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
     await waitFor(() => expect(fromMock).not.toHaveBeenCalled());

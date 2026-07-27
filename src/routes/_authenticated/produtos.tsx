@@ -1,17 +1,20 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Lock, Plus, Trash2, Copy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { track } from "@/lib/analytics";
+import { COTAS_CONFERE } from "@/lib/planos";
 import {
   calcularQuantoSobra,
   calcularSobraPct,
   calcularPrecoSugerido,
   calcularTaxas,
+  calcularEncomenda,
   taxasDoBreakdown,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
@@ -122,6 +125,26 @@ function ProdutosPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
+  const meta = useUserMeta();
+  const ehConfere = meta.plano === "confere";
+  const ehProjete = meta.plano === "projete";
+
+  // Valor-hora padrão (Fase 2 — modo Encomenda, Projete): persistido em
+  // profiles pra reaproveitar entre os modos Serviço/Encomenda e entre
+  // sessões (antes só existia dentro do calculadora_breakdown de um produto
+  // tipo serviço já salvo).
+  const valorHoraPadraoQuery = useQuery({
+    queryKey: ["produtos-valor-hora-padrao", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("valor_hora_padrao")
+        .eq("id", userId!)
+        .maybeSingle();
+      return (data?.valor_hora_padrao as number | null) ?? null;
+    },
+  });
 
   const [tab, setTab] = useState<TabId>("produtos");
 
@@ -150,6 +173,16 @@ function ProdutosPage() {
   });
 
   const produtos = useMemo(() => produtosQuery.data ?? [], [produtosQuery.data]);
+
+  // Cota do Confere: 5 produtos ativos. Os mais antigos por created_at ficam
+  // dentro da cota; o excedente (de um downgrade, por ex.) vira somente
+  // leitura — mesma regra imposta pela trigger do banco (20260727130000).
+  const idsExcedentes = useMemo(() => {
+    if (!ehConfere) return new Set<string>();
+    const porCriacao = [...produtos].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    return new Set(porCriacao.slice(COTAS_CONFERE.produtos).map((p) => p.id));
+  }, [ehConfere, produtos]);
+  const cotaAtingida = ehConfere && produtos.length >= COTAS_CONFERE.produtos;
 
   // Meta do mês: mesma fonte que Painel e Financeiro (tabela `metas`), não mais
   // uma leitura própria do texto do Planejamento.
@@ -245,10 +278,25 @@ function ProdutosPage() {
           <section className="mt-8">
             <button
               onClick={() => abrirAdicionar(null)}
-              className="rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90"
+              disabled={cotaAtingida}
+              className="rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               + Adicionar produto
             </button>
+
+            {cotaAtingida && (
+              <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
+                No Confere você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Controle pra
+                deixar ilimitado.{" "}
+                <Link
+                  to="/upgrade"
+                  search={{ rota: "/produtos", tier: "controle" }}
+                  className="font-medium text-[var(--secondary-text)] no-underline"
+                >
+                  Assinar o Controle
+                </Link>
+              </div>
+            )}
 
             {produtos.length === 0 ? (
               <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
@@ -270,6 +318,7 @@ function ProdutosPage() {
                     key={p.id}
                     produto={p}
                     indice={i}
+                    somenteLeitura={idsExcedentes.has(p.id)}
                     onEditar={() => abrirEditar(p)}
                     onArquivar={() => arquivar(p)}
                     onRecalcular={() => abrirRecalcular(p)}
@@ -285,6 +334,10 @@ function ProdutosPage() {
           <Calculadora
             onSalvarComoProduto={abrirAdicionar}
             metaBoa={metaBoa}
+            userId={userId}
+            ehProjete={ehProjete}
+            valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
+            valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
             produtoRecalcular={produtoRecalcular}
             onCancelarRecalculo={() => {
               setProdutoRecalcular(null);
@@ -322,12 +375,14 @@ const AVATAR_BGS = ["var(--secondary-light)", "var(--surface-pink)", "var(--surf
 function ProdutoCard({
   produto,
   indice,
+  somenteLeitura,
   onEditar,
   onArquivar,
   onRecalcular,
 }: {
   produto: Produto;
   indice: number;
+  somenteLeitura?: boolean;
   onEditar: () => void;
   onArquivar: () => void;
   onRecalcular: () => void;
@@ -379,7 +434,8 @@ function ProdutoCard({
                   fecharMenu();
                   onEditar();
                 }}
-                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
+                disabled={somenteLeitura}
+                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:hover:bg-transparent"
               >
                 Editar
               </button>
@@ -388,7 +444,8 @@ function ProdutoCard({
                   fecharMenu();
                   onRecalcular();
                 }}
-                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
+                disabled={somenteLeitura}
+                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:hover:bg-transparent"
               >
                 Recalcular preço
               </button>
@@ -424,10 +481,19 @@ function ProdutoCard({
       )}
 
       {/* Nome */}
-      <p className="mt-3 text-[var(--ink)]">{produto.nome}</p>
+      <p className="mt-3 flex items-center gap-1.5 text-[var(--ink)]">
+        {produto.nome}
+        {somenteLeitura && (
+          <Lock size={13} className="shrink-0 text-[var(--muted)]" aria-hidden="true" />
+        )}
+      </p>
 
       {/* Tipo */}
-      <p className="text-[12px] text-[var(--muted)]">{TIPO_LABEL[produto.tipo] ?? produto.tipo}</p>
+      <p className="text-[12px] text-[var(--muted)]">
+        {somenteLeitura
+          ? "somente leitura · acima da cota do Confere"
+          : (TIPO_LABEL[produto.tipo] ?? produto.tipo)}
+      </p>
 
       {/* Preço de venda */}
       <p className="font-cabinet mt-2 text-[18px] text-[var(--ink)]">
@@ -474,22 +540,55 @@ function ProdutoCard({
 }
 
 /* ============== Calculadora de preço ============== */
-type PerfilCalc = "produto" | "servico";
+type PerfilCalc = "produto" | "servico" | "encomenda";
 
 function num(s: string) {
   const v = parseFloat(s.replace(",", "."));
   return Number.isFinite(v) ? v : 0;
 }
 
+interface ItemMaterial {
+  id: string;
+  nome: string;
+  quantidade: string;
+  custoUnitario: string;
+}
+interface ItemExtra {
+  id: string;
+  descricao: string;
+  valor: string;
+}
+
+function novoId(): string {
+  return crypto.randomUUID();
+}
+
+function parseItens<T>(json: string): T[] {
+  try {
+    const v = JSON.parse(json);
+    return Array.isArray(v) ? (v as T[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 function Calculadora({
   onSalvarComoProduto,
   metaBoa,
+  userId,
+  ehProjete,
+  valorHoraPadrao,
+  valorHoraPadraoCarregando,
   produtoRecalcular,
   onCancelarRecalculo,
   onAtualizado,
 }: {
   onSalvarComoProduto: (pf: Prefill) => void;
   metaBoa: number | null;
+  userId?: string;
+  ehProjete: boolean;
+  valorHoraPadrao: number | null;
+  valorHoraPadraoCarregando: boolean;
   produtoRecalcular?: Produto | null;
   onCancelarRecalculo?: () => void;
   onAtualizado?: () => void;
@@ -523,6 +622,42 @@ function Calculadora({
   const [impostosS, setImpostosS] = useState(() => v("impostosS"));
   const [margemSeg, setMargemSeg] = useState(() => v("margemSeg"));
 
+  // ── Perfil Encomenda (Projete) ──
+  // valorHora/horas são os MESMOS estados do perfil Serviço acima (de propósito:
+  // trocar de aba não perde o que já foi digitado, e "puxar o valor-hora do
+  // modo serviço" já acontece de graça por ser o mesmo estado).
+  const [itensMaterial, setItensMaterial] = useState<ItemMaterial[]>(() =>
+    bk?.perfil === "encomenda" ? parseItens<ItemMaterial>(v("itensMaterial") || "[]") : [],
+  );
+  const [itensExtras, setItensExtras] = useState<ItemExtra[]>(() =>
+    bk?.perfil === "encomenda" ? parseItens<ItemExtra>(v("itensExtras") || "[]") : [],
+  );
+  const [taxaVendaE, setTaxaVendaE] = useState(() => v("taxaVendaE"));
+  const [impostosE, setImpostosE] = useState(() => v("impostosE"));
+  const [quantoSobraPct, setQuantoSobraPct] = useState(() => v("quantoSobraPct"));
+  const [valorHoraSalvo, setValorHoraSalvo] = useState(false);
+  const valorHoraFocusRef = useRef<HTMLInputElement>(null);
+
+  // Preenche o valor-hora com o padrão salvo assim que ele carrega, só se o
+  // campo ainda estiver vazio (nunca sobrescreve o que veio do breakdown ou
+  // o que ela já digitou nesta sessão).
+  useEffect(() => {
+    if (valorHoraPadrao != null && !valorHora) {
+      setValorHora(String(valorHoraPadrao));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [valorHoraPadrao]);
+
+  const salvarValorHoraPadrao = async () => {
+    if (!userId || num(valorHora) <= 0) return;
+    await supabase
+      .from("profiles")
+      .update({ valor_hora_padrao: num(valorHora) })
+      .eq("id", userId);
+    setValorHoraSalvo(true);
+    setTimeout(() => setValorHoraSalvo(false), 1600);
+  };
+
   // ── Simulador de desconto ──
   const [desconto, setDesconto] = useState("");
 
@@ -542,7 +677,12 @@ function Calculadora({
     const invalido = pctTotal >= 100;
     const precoMinimo = calcularPrecoSugerido(custoUnitario, pctVenda);
     const precoSugerido = calcularPrecoSugerido(custoUnitario, pctTotal);
-    const sobraInput = { precoVenda: precoSugerido, precoCusto: custoUnitario, taxaVendaPct, impostosPct };
+    const sobraInput = {
+      precoVenda: precoSugerido,
+      precoCusto: custoUnitario,
+      taxaVendaPct,
+      impostosPct,
+    };
     const taxasReais = calcularTaxas(sobraInput);
     const lucroReais = calcularQuantoSobra(sobraInput);
     return {
@@ -578,7 +718,12 @@ function Calculadora({
     const pctTotal = pctVenda + num(margemSeg);
     const invalido = pctTotal >= 100;
     const precoSugerido = calcularPrecoSugerido(custoTotal, pctTotal);
-    const sobraInput = { precoVenda: precoSugerido, precoCusto: custoTotal, taxaVendaPct, impostosPct };
+    const sobraInput = {
+      precoVenda: precoSugerido,
+      precoCusto: custoTotal,
+      taxaVendaPct,
+      impostosPct,
+    };
     const taxasReais = calcularTaxas(sobraInput);
     const lucroReais = calcularQuantoSobra(sobraInput);
     return {
@@ -602,14 +747,54 @@ function Calculadora({
     margemSeg,
   ]);
 
-  const calc = perfil === "produto" ? produtoCalc : servicoCalc;
-  const custoBase = perfil === "produto" ? produtoCalc.custoUnitario : servicoCalc.custoTotal;
+  const encomendaCalc = useMemo(
+    () =>
+      calcularEncomenda({
+        itensMaterial: itensMaterial.map((it) => ({
+          quantidade: num(it.quantidade),
+          custoUnitario: num(it.custoUnitario),
+        })),
+        horas: num(horas),
+        valorHora: num(valorHora),
+        itensExtras: itensExtras.map((it) => ({ valor: num(it.valor) })),
+        taxaVendaPct: num(taxaVendaE),
+        impostosPct: num(impostosE),
+        quantoSobraPct: num(quantoSobraPct),
+      }),
+    [itensMaterial, horas, valorHora, itensExtras, taxaVendaE, impostosE, quantoSobraPct],
+  );
+
+  const calc =
+    perfil === "produto" ? produtoCalc : perfil === "servico" ? servicoCalc : encomendaCalc;
+  const custoBase =
+    perfil === "produto"
+      ? produtoCalc.custoUnitario
+      : perfil === "servico"
+        ? servicoCalc.custoTotal
+        : encomendaCalc.custoTotal;
   const round2 = (v: number) => Math.round(v * 100) / 100;
   const lucroPorVenda = round2(calc.lucroReais);
   const vendasParaMetaBoa =
     lucroPorVenda > 0 && metaBoa ? Math.ceil(metaBoa / lucroPorVenda) : null;
-  const taxaVendaPctAtual = perfil === "produto" ? num(taxaVenda) : num(taxaVendaS);
-  const impostosPctAtual = perfil === "produto" ? num(impostos) : num(impostosS);
+  const taxaVendaPctAtual =
+    perfil === "produto"
+      ? num(taxaVenda)
+      : perfil === "servico"
+        ? num(taxaVendaS)
+        : num(taxaVendaE);
+  const impostosPctAtual =
+    perfil === "produto" ? num(impostos) : perfil === "servico" ? num(impostosS) : num(impostosE);
+
+  // Estados específicos do modo Encomenda (PRD): vazio, parcial (sem
+  // valor-hora com horas lançadas) e erro de negócio (preço abaixo do piso).
+  const encomendaVazia =
+    perfil === "encomenda" &&
+    itensMaterial.length === 0 &&
+    itensExtras.length === 0 &&
+    num(horas) <= 0;
+  const encomendaSemValorHora = perfil === "encomenda" && num(horas) > 0 && num(valorHora) <= 0;
+  const encomendaAbaixoDoPiso =
+    perfil === "encomenda" && !encomendaVazia && num(quantoSobraPct) < 0;
 
   // Com desconto de X%: taxa/imposto são % do preço, então caem junto com ele.
   const descontoPct = num(desconto);
@@ -626,25 +811,50 @@ function Calculadora({
   }, [descontoPct, calc.precoSugerido, custoBase, taxaVendaPctAtual, impostosPctAtual]);
 
   function buildBreakdown(): CalculadoraBreakdown {
-    return perfil === "produto"
-      ? {
-          perfil,
-          valores: { materiaPrima, embalagem, maoObra, outrosDiretos, despesasFixas, qtd, taxaVenda, impostos, margem },
-        }
-      : {
-          perfil,
-          valores: {
-            valorHora,
-            horas,
-            materiais,
-            deslocamento,
-            ferramentas,
-            outrosServico,
-            taxaVendaS,
-            impostosS,
-            margemSeg,
-          },
-        };
+    if (perfil === "produto") {
+      return {
+        perfil,
+        valores: {
+          materiaPrima,
+          embalagem,
+          maoObra,
+          outrosDiretos,
+          despesasFixas,
+          qtd,
+          taxaVenda,
+          impostos,
+          margem,
+        },
+      };
+    }
+    if (perfil === "encomenda") {
+      return {
+        perfil,
+        valores: {
+          itensMaterial: JSON.stringify(itensMaterial),
+          valorHora,
+          horas,
+          itensExtras: JSON.stringify(itensExtras),
+          taxaVendaE,
+          impostosE,
+          quantoSobraPct,
+        },
+      };
+    }
+    return {
+      perfil,
+      valores: {
+        valorHora,
+        horas,
+        materiais,
+        deslocamento,
+        ferramentas,
+        outrosServico,
+        taxaVendaS,
+        impostosS,
+        margemSeg,
+      },
+    };
   }
 
   const salvar = async () => {
@@ -655,7 +865,7 @@ function Calculadora({
     if (!produtoRecalcular) {
       onSalvarComoProduto({
         nome: "",
-        tipo: perfil === "produto" ? "fisico" : "servico",
+        tipo: perfil === "produto" ? "fisico" : perfil === "encomenda" ? "fisico" : "servico",
         preco_venda: precoVenda,
         preco_custo: precoCusto,
         calculadora_breakdown: breakdown,
@@ -735,6 +945,27 @@ function Calculadora({
             </button>
           );
         })}
+        {ehProjete ? (
+          <button
+            onClick={() => setPerfil("encomenda")}
+            className={`rounded-full px-4 py-2 text-[13px] ${
+              perfil === "encomenda"
+                ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+            }`}
+          >
+            Encomenda (sob medida)
+          </button>
+        ) : (
+          <Link
+            to="/upgrade"
+            search={{ rota: "/produtos", tier: "projete" }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-[13px] text-[var(--muted)] no-underline hover:border-[var(--secondary)]"
+          >
+            <Lock size={13} aria-hidden="true" />
+            Encomenda (sob medida)
+          </Link>
+        )}
       </div>
 
       {/* Campos */}
@@ -773,7 +1004,7 @@ function Calculadora({
             <CampoNum label="Lucro desejado (%)" value={margem} onChange={setMargem} />
           </GrupoCalc>
         </>
-      ) : (
+      ) : perfil === "servico" ? (
         <>
           <GrupoCalc titulo="Seu trabalho">
             <CampoNum label="Valor da sua hora (R$)" value={valorHora} onChange={setValorHora} />
@@ -803,91 +1034,246 @@ function Calculadora({
             />
           </GrupoCalc>
         </>
+      ) : (
+        <>
+          {encomendaVazia && (
+            <p className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-5 py-8 text-center text-[13px] leading-relaxed text-[var(--muted)]">
+              Monte a encomenda: adicione os materiais, as horas de trabalho e os custos extras. O
+              preço aparece embaixo.
+            </p>
+          )}
+
+          <div className="mt-6">
+            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              Materiais
+            </p>
+            <div className="mt-3 space-y-2">
+              {itensMaterial.map((item) => (
+                <LinhaMaterial
+                  key={item.id}
+                  item={item}
+                  onChange={(novo) =>
+                    setItensMaterial((lista) => lista.map((i) => (i.id === item.id ? novo : i)))
+                  }
+                  onRemover={() =>
+                    setItensMaterial((lista) => lista.filter((i) => i.id !== item.id))
+                  }
+                  onDuplicar={() =>
+                    setItensMaterial((lista) => {
+                      const i = lista.findIndex((x) => x.id === item.id);
+                      const copia = { ...item, id: novoId() };
+                      return [...lista.slice(0, i + 1), copia, ...lista.slice(i + 1)];
+                    })
+                  }
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setItensMaterial((lista) => [
+                  ...lista,
+                  { id: novoId(), nome: "", quantidade: "1", custoUnitario: "" },
+                ])
+              }
+              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              <Plus size={14} aria-hidden="true" />
+              adicionar material
+            </button>
+          </div>
+
+          <GrupoCalc titulo="Seu trabalho">
+            <label className="block">
+              <span className="mb-1 block text-[12px] text-[var(--muted)]">
+                Valor da sua hora (R$)
+              </span>
+              <input
+                ref={valorHoraFocusRef}
+                type="number"
+                inputMode="decimal"
+                value={valorHora}
+                onChange={(e) => setValorHora(e.target.value)}
+                disabled={valorHoraPadraoCarregando && !valorHora}
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none disabled:bg-[var(--surface)]"
+                placeholder={valorHoraPadraoCarregando && !valorHora ? "carregando..." : "0"}
+              />
+              {ehProjete && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
+                <button
+                  type="button"
+                  onClick={salvarValorHoraPadrao}
+                  className="mt-1 text-[11px] font-medium text-[var(--secondary-text)] hover:underline"
+                >
+                  {valorHoraSalvo ? "valor-hora padrão salvo" : "usar como meu valor-hora padrão"}
+                </button>
+              )}
+            </label>
+            <CampoNum label="Horas estimadas" value={horas} onChange={setHoras} />
+          </GrupoCalc>
+          {encomendaSemValorHora && (
+            <p className="mt-2 text-[13px] text-[var(--danger)]">
+              Defina quanto vale a sua hora pra entrar na conta.{" "}
+              <button
+                type="button"
+                onClick={() => valorHoraFocusRef.current?.focus()}
+                className="font-medium underline"
+              >
+                Definir valor por hora
+              </button>
+            </p>
+          )}
+
+          <div className="mt-6">
+            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+              Custos extras
+            </p>
+            <div className="mt-3 space-y-2">
+              {itensExtras.map((item) => (
+                <LinhaExtra
+                  key={item.id}
+                  item={item}
+                  onChange={(novo) =>
+                    setItensExtras((lista) => lista.map((i) => (i.id === item.id ? novo : i)))
+                  }
+                  onRemover={() => setItensExtras((lista) => lista.filter((i) => i.id !== item.id))}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                setItensExtras((lista) => [...lista, { id: novoId(), descricao: "", valor: "" }])
+              }
+              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              <Plus size={14} aria-hidden="true" />
+              adicionar custo extra
+            </button>
+          </div>
+
+          <GrupoCalc titulo="Sobre o preço (%)">
+            <CampoNum label="Taxa / comissão (%)" value={taxaVendaE} onChange={setTaxaVendaE} />
+            <CampoNum
+              label="Impostos sobre a venda (%)"
+              value={impostosE}
+              onChange={setImpostosE}
+            />
+            <CampoNum
+              label="Quanto quer que sobre (%)"
+              value={quantoSobraPct}
+              onChange={setQuantoSobraPct}
+            />
+          </GrupoCalc>
+        </>
       )}
 
-      {/* Resultado */}
-      <div className="mt-8 rounded-xl bg-[var(--secondary-light)] p-5">
-        <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--secondary-text)]">
-          Preço sugerido
-        </p>
-        <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
-          {fmt(round2(calc.precoSugerido))}
-        </p>
-        {calc.invalido && (
-          <p className="mt-2 text-[13px] text-[var(--danger)]">
-            As porcentagens (taxas + impostos + lucro) somam 100% ou mais. Reduza alguma pra
-            calcular o preço.
-          </p>
-        )}
-        <div className="mt-4 space-y-1.5 text-[13px] text-[var(--ink-soft)]">
-          {perfil === "produto" ? (
-            <>
-              <LinhaCalc label="Custo por unidade" valor={fmt(round2(produtoCalc.custoUnitario))} />
-              <p className="text-[12px] text-[var(--muted)]">
-                diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
-                {fmt(round2(produtoCalc.rateio))}
+      {/* Resultado — na Encomenda, só aparece com algo lançado (estado "vazio" não calcula) */}
+      {!encomendaVazia && (
+        <>
+          <div className="mt-8 rounded-xl bg-[var(--secondary-light)] p-5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--secondary-text)]">
+              Preço sugerido
+            </p>
+            <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
+              {fmt(round2(calc.precoSugerido))}
+            </p>
+            {calc.invalido && (
+              <p className="mt-2 text-[13px] text-[var(--danger)]">
+                As porcentagens (taxas + impostos + lucro) somam 100% ou mais. Reduza alguma pra
+                calcular o preço.
               </p>
-              <LinhaCalc
-                label="Preço mínimo (sem lucro)"
-                valor={fmt(round2(produtoCalc.precoMinimo))}
-              />
-            </>
-          ) : (
-            <>
-              <LinhaCalc label="Custo total" valor={fmt(round2(servicoCalc.custoTotal))} />
-              <p className="text-[12px] text-[var(--muted)]">
-                mão de obra {fmt(round2(servicoCalc.maoDeObra))} + custos do projeto{" "}
-                {fmt(round2(servicoCalc.custosProjeto))}
+            )}
+            {encomendaAbaixoDoPiso && (
+              <p className="mt-2 text-[13px] text-[var(--danger)]">
+                Esse preço não cobre os custos. O mínimo pra não ter prejuízo é{" "}
+                {fmt(round2(encomendaCalc.piso))}.
               </p>
-            </>
-          )}
-          <LinhaCalc label="Taxas e impostos" valor={fmt(round2(calc.taxasReais))} />
-          <LinhaCalc label="Seu lucro" valor={fmt(round2(calc.lucroReais))} />
-        </div>
-        {vendasParaMetaBoa !== null && (
-          <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
-            Pra bater o mês bom ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa} vendas.
-          </p>
-        )}
-      </div>
+            )}
+            <div className="mt-4 space-y-1.5 text-[13px] text-[var(--ink-soft)]">
+              {perfil === "produto" ? (
+                <>
+                  <LinhaCalc
+                    label="Custo por unidade"
+                    valor={fmt(round2(produtoCalc.custoUnitario))}
+                  />
+                  <p className="text-[12px] text-[var(--muted)]">
+                    diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
+                    {fmt(round2(produtoCalc.rateio))}
+                  </p>
+                  <LinhaCalc
+                    label="Preço mínimo (sem lucro)"
+                    valor={fmt(round2(produtoCalc.precoMinimo))}
+                  />
+                </>
+              ) : perfil === "servico" ? (
+                <>
+                  <LinhaCalc label="Custo total" valor={fmt(round2(servicoCalc.custoTotal))} />
+                  <p className="text-[12px] text-[var(--muted)]">
+                    mão de obra {fmt(round2(servicoCalc.maoDeObra))} + custos do projeto{" "}
+                    {fmt(round2(servicoCalc.custosProjeto))}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <LinhaCalc label="Custo total" valor={fmt(round2(encomendaCalc.custoTotal))} />
+                  <p className="text-[12px] text-[var(--muted)]">
+                    material {fmt(round2(encomendaCalc.custoMaterial))} + trabalho{" "}
+                    {fmt(round2(encomendaCalc.custoTrabalho))} + extras{" "}
+                    {fmt(round2(encomendaCalc.custoExtras))}
+                  </p>
+                  <LinhaCalc label="Piso (sem prejuízo)" valor={fmt(round2(encomendaCalc.piso))} />
+                </>
+              )}
+              <LinhaCalc label="Taxas e impostos" valor={fmt(round2(calc.taxasReais))} />
+              <LinhaCalc label="Seu lucro" valor={fmt(round2(calc.lucroReais))} />
+            </div>
+            {vendasParaMetaBoa !== null && (
+              <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
+                Pra bater o mês bom ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
+                vendas.
+              </p>
+            )}
+          </div>
 
-      {/* Simulador de desconto */}
-      <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-5">
-        <CampoNum
-          label="Simular com desconto de X% (opcional)"
-          value={desconto}
-          onChange={setDesconto}
-        />
-        {simulacaoDesconto && (
-          <p
-            className={`mt-3 text-[13px] ${
-              simulacaoDesconto.lucroComDesconto < 0
-                ? "text-[var(--danger)]"
-                : "text-[var(--ink-soft)]"
-            }`}
+          {/* Simulador de desconto */}
+          <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-5">
+            <CampoNum
+              label="Simular com desconto de X% (opcional)"
+              value={desconto}
+              onChange={setDesconto}
+            />
+            {simulacaoDesconto && (
+              <p
+                className={`mt-3 text-[13px] ${
+                  simulacaoDesconto.lucroComDesconto < 0
+                    ? "text-[var(--danger)]"
+                    : "text-[var(--ink-soft)]"
+                }`}
+              >
+                Com {descontoPct}% de desconto, o preço cai pra{" "}
+                {fmt(round2(simulacaoDesconto.precoComDesconto))} e sobram{" "}
+                {fmt(round2(simulacaoDesconto.lucroComDesconto))}.
+                {simulacaoDesconto.lucroComDesconto < 0 && " Esse desconto dá prejuízo."}
+              </p>
+            )}
+          </div>
+
+          {erro && <p className="mt-4 text-[13px] text-[var(--danger)]">{erro}</p>}
+
+          {/* Salvar */}
+          <button
+            onClick={salvar}
+            disabled={salvando}
+            className="mt-4 rounded-xl border border-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-text)] hover:bg-[var(--secondary-light)] disabled:opacity-50"
           >
-            Com {descontoPct}% de desconto, o preço cai pra{" "}
-            {fmt(round2(simulacaoDesconto.precoComDesconto))} e sobram{" "}
-            {fmt(round2(simulacaoDesconto.lucroComDesconto))}.
-            {simulacaoDesconto.lucroComDesconto < 0 && " Esse desconto dá prejuízo."}
-          </p>
-        )}
-      </div>
-
-      {erro && <p className="mt-4 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-      {/* Salvar */}
-      <button
-        onClick={salvar}
-        disabled={salvando}
-        className="mt-4 rounded-xl border border-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-text)] hover:bg-[var(--secondary-light)] disabled:opacity-50"
-      >
-        {salvando
-          ? "Salvando..."
-          : produtoRecalcular
-            ? "Salvar novo preço"
-            : "Salvar como produto"}
-      </button>
+            {salvando
+              ? "Salvando..."
+              : produtoRecalcular
+                ? "Salvar novo preço"
+                : "Salvar como produto"}
+          </button>
+        </>
+      )}
 
       <p className="mt-4 text-[13px] text-[var(--muted)]">
         Esses são valores de referência. Considere também o mercado e o posicionamento da sua marca.
@@ -940,6 +1326,122 @@ function LinhaCalc({ label, valor }: { label: string; valor: string }) {
       <span>{label}</span>
       <span className="font-medium text-[var(--ink)]">{valor}</span>
     </p>
+  );
+}
+
+// "Coloque um número." inline — negativo ou texto não-numérico num campo que
+// já tem algo digitado (campo vazio não é erro, é só ainda-não-preenchido).
+function numInvalido(s: string): boolean {
+  if (!s.trim()) return false;
+  const v = parseFloat(s.replace(",", "."));
+  return !Number.isFinite(v) || v < 0;
+}
+
+/* ============== Modo Encomenda: linha de material/extra ============== */
+function LinhaMaterial({
+  item,
+  onChange,
+  onRemover,
+  onDuplicar,
+}: {
+  item: ItemMaterial;
+  onChange: (novo: ItemMaterial) => void;
+  onRemover: () => void;
+  onDuplicar: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--line)] p-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_90px_120px_auto]">
+        <input
+          value={item.nome}
+          onChange={(e) => onChange({ ...item, nome: e.target.value })}
+          placeholder="Ex: Farinha"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        />
+        <input
+          type="number"
+          inputMode="decimal"
+          value={item.quantidade}
+          onChange={(e) => onChange({ ...item, quantidade: e.target.value })}
+          placeholder="qtd"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        />
+        <input
+          type="number"
+          inputMode="decimal"
+          value={item.custoUnitario}
+          onChange={(e) => onChange({ ...item, custoUnitario: e.target.value })}
+          placeholder="custo unit. (R$)"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        />
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={onDuplicar}
+            aria-label="Duplicar material"
+            title="Duplicar"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+          >
+            <Copy size={15} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={onRemover}
+            aria-label="Remover material"
+            title="Remover"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+          >
+            <Trash2 size={15} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      {(numInvalido(item.quantidade) || numInvalido(item.custoUnitario)) && (
+        <p className="mt-1.5 text-[12px] text-[var(--danger)]">Coloque um número.</p>
+      )}
+    </div>
+  );
+}
+
+function LinhaExtra({
+  item,
+  onChange,
+  onRemover,
+}: {
+  item: ItemExtra;
+  onChange: (novo: ItemExtra) => void;
+  onRemover: () => void;
+}) {
+  return (
+    <div className="rounded-lg border border-[var(--line)] p-3">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_auto]">
+        <input
+          value={item.descricao}
+          onChange={(e) => onChange({ ...item, descricao: e.target.value })}
+          placeholder="Ex: Embalagem especial"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        />
+        <input
+          type="number"
+          inputMode="decimal"
+          value={item.valor}
+          onChange={(e) => onChange({ ...item, valor: e.target.value })}
+          placeholder="valor (R$)"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={onRemover}
+          aria-label="Remover custo extra"
+          title="Remover"
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+        >
+          <Trash2 size={15} aria-hidden="true" />
+        </button>
+      </div>
+      {numInvalido(item.valor) && (
+        <p className="mt-1.5 text-[12px] text-[var(--danger)]">Coloque um número.</p>
+      )}
+    </div>
   );
 }
 
@@ -1153,7 +1655,9 @@ function ModalProduto({
 
         {/* Canal de venda */}
         <div className="mb-6">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Onde a compra acontece</label>
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">
+            Onde a compra acontece
+          </label>
           <input
             value={canal}
             onChange={(e) => setCanal(e.target.value)}

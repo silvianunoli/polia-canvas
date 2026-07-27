@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
 import { PainelNav } from "@/components/painel/PainelNav";
-import { LayoutGrid, Plus, ArrowRight } from "lucide-react";
+import { LayoutGrid, Plus, ArrowRight, Lock } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { COTAS_CONFERE } from "@/lib/planos";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
@@ -23,6 +25,7 @@ interface Quadro {
   nome: string;
   slug: string;
   ordem: number;
+  created_at: string;
 }
 
 // Mesma ordem de colunas do quadro kanban (planner.$slug.tsx), usada só pra
@@ -53,6 +56,8 @@ function PlannerIndex() {
   const userId = user?.id;
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const meta = useUserMeta();
+  const ehConfere = meta.plano === "confere";
 
   const quadrosQuery = useQuery({
     queryKey: ["quadros", userId],
@@ -60,7 +65,7 @@ function PlannerIndex() {
     queryFn: async () => {
       const { data } = await supabase
         .from("quadros")
-        .select("id, nome, slug, ordem")
+        .select("id, nome, slug, ordem, created_at")
         .eq("user_id", userId!)
         .order("ordem", { ascending: true })
         .order("created_at", { ascending: true });
@@ -103,6 +108,17 @@ function PlannerIndex() {
     () => contagemQuery.data?.porStatus ?? new Map<string, Map<string, number>>(),
     [contagemQuery.data],
   );
+
+  // Cota do Confere: 1 quadro. O(s) mais antigo(s) por created_at ficam
+  // dentro da cota; o excedente (de um downgrade, por ex.) fica marcado como
+  // somente-leitura — mesma regra que a trigger do banco aplica na tabela
+  // quadros (migração 20260727130000).
+  const idsExcedentes = useMemo(() => {
+    if (!ehConfere) return new Set<string>();
+    const porCriacao = [...quadros].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    return new Set(porCriacao.slice(COTAS_CONFERE.planner).map((q) => q.id));
+  }, [ehConfere, quadros]);
+  const cotaAtingida = ehConfere && quadros.length >= COTAS_CONFERE.planner;
 
   const [novoNome, setNovoNome] = useState("");
   const [criando, setCriando] = useState(false);
@@ -157,12 +173,26 @@ function PlannerIndex() {
           <button
             type="button"
             onClick={() => setCriando((v) => !v)}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90"
+            disabled={cotaAtingida}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus size={16} aria-hidden="true" />
             <span className="hidden sm:inline">Novo quadro</span>
           </button>
         </div>
+
+        {cotaAtingida && (
+          <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
+            No Confere você tem 1 quadro. Suba pro Controle pra deixar ilimitado.{" "}
+            <Link
+              to="/upgrade"
+              search={{ rota: "/planner", tier: "controle" }}
+              className="font-medium text-[var(--secondary-text)] no-underline"
+            >
+              Assinar o Controle
+            </Link>
+          </div>
+        )}
 
         {criando && (
           <section className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5">
@@ -227,12 +257,19 @@ function PlannerIndex() {
                         <LayoutGrid size={20} aria-hidden="true" />
                       </span>
                       <div>
-                        <p className="text-[18px] text-[var(--ink)]">{q.nome}</p>
+                        <p className="flex items-center gap-1.5 text-[18px] text-[var(--ink)]">
+                          {q.nome}
+                          {idsExcedentes.has(q.id) && (
+                            <Lock size={13} className="text-[var(--muted)]" aria-hidden="true" />
+                          )}
+                        </p>
                         <p className="text-[13px] text-[var(--muted)]">
-                          {(() => {
-                            const n = contagem.get(q.id) ?? 0;
-                            return n === 0 ? "vazio" : `${n} ${n === 1 ? "cartão" : "cartões"}`;
-                          })()}
+                          {idsExcedentes.has(q.id)
+                            ? "somente leitura · acima da cota do Confere"
+                            : (() => {
+                                const n = contagem.get(q.id) ?? 0;
+                                return n === 0 ? "vazio" : `${n} ${n === 1 ? "cartão" : "cartões"}`;
+                              })()}
                         </p>
                       </div>
                     </div>

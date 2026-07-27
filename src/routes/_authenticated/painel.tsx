@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
+import { hojeISO, ehMesAtual } from "@/lib/data.functions";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -122,11 +123,6 @@ interface TarefaRow {
   updated_at: string;
 }
 
-function hojeISO(): string {
-  const d = new Date();
-  const tz = d.getTimezoneOffset();
-  return new Date(d.getTime() - tz * 60000).toISOString().slice(0, 10);
-}
 function addDias(iso: string, n: number): string {
   const d = new Date(iso + "T12:00:00");
   d.setDate(d.getDate() + n);
@@ -318,16 +314,11 @@ function PainelPage() {
   useEffect(() => setClientReady(true), []);
   const { receitaMes, pedidosMes, lucroMes } = useMemo(() => {
     if (!clientReady) return { receitaMes: 0, pedidosMes: 0, lucroMes: 0 };
-    const agora = new Date();
-    // lancamentos.data é coluna DATE ("YYYY-MM-DD"). Comparar por prefixo de string, não
-    // via new Date(): "2026-07-01" viraria UTC meia-noite e em GMT-3 cairia no mês anterior,
-    // fazendo a venda do dia 1º sumir da receita do mês. Ver financeiro.tsx (mesAnoDe).
-    const prefixoMes = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
     let receita = 0;
     let saida = 0;
     let pedidos = 0;
     for (const l of dados?.lancamentos ?? []) {
-      if (!l.data?.startsWith(prefixoMes)) continue;
+      if (!l.data || !ehMesAtual(l.data)) continue;
       if (l.tipo === "entrada") {
         receita += Number(l.valor);
         pedidos += 1;

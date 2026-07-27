@@ -28,7 +28,11 @@ const NOME_PLANO: Record<string, string> = {
 
 function formatarData(iso: string | null): string {
   if (!iso) return "";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
 }
 
 export const Route = createFileRoute("/_authenticated/configuracoes")({
@@ -59,7 +63,7 @@ function ConfiguracoesPage() {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "full_name, business_name, business_type, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
+          "full_name, business_name, business_type, razao_social, cnpj, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
         )
         .eq("id", userId!)
         .maybeSingle();
@@ -72,6 +76,14 @@ function ConfiguracoesPage() {
   const [nomeSalvo, setNomeSalvo] = useState(false);
   const [nomeNegocioSalvo, setNomeNegocioSalvo] = useState(false);
   const businessNameAtual = profileQuery.data?.business_name ?? "";
+
+  // Razão social + CNPJ: só usados no cabeçalho do Resumo pro contador
+  // (Projete), mas coletados aqui sem gate de plano — dado útil de já ter
+  // preenchido se ela upgradar depois.
+  const [razaoSocial, setRazaoSocial] = useState("");
+  const [cnpj, setCnpj] = useState("");
+  const [razaoSocialSalvo, setRazaoSocialSalvo] = useState(false);
+  const [cnpjSalvo, setCnpjSalvo] = useState(false);
 
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
@@ -196,12 +208,16 @@ function ConfiguracoesPage() {
   const carregouInicial = useRef(false);
   const nomeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nomeNegocioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const razaoSocialTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cnpjTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const p = profileQuery.data;
     if (p) {
       setNome(p.full_name ?? "");
       setNomeNegocio(p.business_name ?? "");
+      setRazaoSocial(p.razao_social ?? "");
+      setCnpj(p.cnpj ?? "");
       setNotifResumo(p.notif_resumo_semanal ?? true);
       setNotifNovidades(p.notif_novidades ?? true);
       setNotifDicas(p.notif_dicas ?? true);
@@ -234,6 +250,32 @@ function ConfiguracoesPage() {
       if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
     };
   }, [nomeNegocio, userId]);
+
+  useEffect(() => {
+    if (!userId || !carregouInicial.current) return;
+    if (razaoSocialTimer.current) clearTimeout(razaoSocialTimer.current);
+    razaoSocialTimer.current = setTimeout(async () => {
+      await supabase.from("profiles").update({ razao_social: razaoSocial }).eq("id", userId);
+      setRazaoSocialSalvo(true);
+      setTimeout(() => setRazaoSocialSalvo(false), 1600);
+    }, 600);
+    return () => {
+      if (razaoSocialTimer.current) clearTimeout(razaoSocialTimer.current);
+    };
+  }, [razaoSocial, userId]);
+
+  useEffect(() => {
+    if (!userId || !carregouInicial.current) return;
+    if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
+    cnpjTimer.current = setTimeout(async () => {
+      await supabase.from("profiles").update({ cnpj }).eq("id", userId);
+      setCnpjSalvo(true);
+      setTimeout(() => setCnpjSalvo(false), 1600);
+    }, 600);
+    return () => {
+      if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
+    };
+  }, [cnpj, userId]);
 
   const toggleNotif = async (
     campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas",
@@ -433,7 +475,8 @@ function ConfiguracoesPage() {
               )}
               {emailOk && (
                 <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mt-3">
-                  quase lá: confira a caixa de entrada do novo e-mail e clique no link de confirmação.
+                  quase lá: confira a caixa de entrada do novo e-mail e clique no link de
+                  confirmação.
                 </p>
               )}
               {!alterandoEmail && !emailOk && (
@@ -459,6 +502,31 @@ function ConfiguracoesPage() {
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               aparece no topo do seu planejamento
             </p>
+          </Campo>
+
+          <Campo label="RAZÃO SOCIAL" saved={razaoSocialSalvo}>
+            <input
+              type="text"
+              value={razaoSocial}
+              onChange={(e) => setRazaoSocial(e.target.value)}
+              maxLength={120}
+              placeholder="Ex: Aimer Confecções e Serviços LTDA"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+            />
+            <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
+              usada no cabeçalho do Resumo pro contador (Projete)
+            </p>
+          </Campo>
+
+          <Campo label="CNPJ" saved={cnpjSalvo}>
+            <input
+              type="text"
+              value={cnpj}
+              onChange={(e) => setCnpj(e.target.value)}
+              maxLength={18}
+              placeholder="00.000.000/0000-00"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+            />
           </Campo>
         </Secao>
 
@@ -739,9 +807,7 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
-          <h2 className="text-[20px] leading-tight text-[var(--danger)]">
-            Excluir conta
-          </h2>
+          <h2 className="text-[20px] leading-tight text-[var(--danger)]">Excluir conta</h2>
           <p className="mt-2 font-sans text-[14px] text-[var(--ink-soft)]">
             Excluir a conta apaga planejamento, financeiro, clientes e notas. Não tem volta.
           </p>

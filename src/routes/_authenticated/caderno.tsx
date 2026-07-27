@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
-import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search } from "lucide-react";
+import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
+import { COTAS_CONFERE } from "@/lib/planos";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -61,6 +63,8 @@ function CadernoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
+  const meta = useUserMeta();
+  const ehConfere = meta.plano === "confere";
 
   const notasQuery = useQuery({
     queryKey: ["notas", userId],
@@ -82,6 +86,17 @@ function CadernoPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selecionada = notas.find((n) => n.id === selectedId) ?? null;
   const reduceMotion = usePrefersReducedMotion();
+
+  // Cota do Confere: 1 nota ativa. As mais antigas por created_at ficam
+  // dentro da cota; o excedente (de um downgrade, por ex.) vira somente
+  // leitura — mesma regra imposta pela trigger do banco (20260727130000).
+  const idsExcedentes = useMemo(() => {
+    if (!ehConfere) return new Set<string>();
+    const porCriacao = [...notas].sort((a, b) => a.created_at.localeCompare(b.created_at));
+    return new Set(porCriacao.slice(COTAS_CONFERE.caderno).map((n) => n.id));
+  }, [ehConfere, notas]);
+  const cotaAtingida = ehConfere && notas.length >= COTAS_CONFERE.caderno;
+  const notaExcedente = selecionada ? idsExcedentes.has(selecionada.id) : false;
 
   const [busca, setBusca] = useState("");
 
@@ -142,7 +157,10 @@ function CadernoPage() {
 
   const salvar = useMutation({
     mutationFn: async ({ id, t, c }: { id: string; t: string; c: string }) => {
-      const { error } = await supabase.from("notas").update({ titulo: t, conteudo: c }).eq("id", id);
+      const { error } = await supabase
+        .from("notas")
+        .update({ titulo: t, conteudo: c })
+        .eq("id", id);
       if (error) throw error;
       return id;
     },
@@ -167,6 +185,7 @@ function CadernoPage() {
     const idNoMomento = selectedId;
     const n = notas.find((x) => x.id === idNoMomento);
     if (!n) return;
+    if (idsExcedentes.has(idNoMomento)) return;
     if (n.titulo === titulo && n.conteudo === conteudo) return;
     const t = window.setTimeout(() => {
       if (idCarregadoRef.current !== idNoMomento) return;
@@ -291,13 +310,26 @@ function CadernoPage() {
           <button
             type="button"
             onClick={() => criar.mutate(undefined)}
-            disabled={criar.isPending}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
+            disabled={criar.isPending || cotaAtingida}
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Plus size={16} aria-hidden="true" />
             <span className="hidden sm:inline">Nova nota</span>
           </button>
         </div>
+
+        {cotaAtingida && (
+          <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
+            No Confere você tem 1 nota. Suba pro Controle pra deixar ilimitado.{" "}
+            <Link
+              to="/upgrade"
+              search={{ rota: "/caderno", tier: "controle" }}
+              className="font-medium text-[var(--secondary-text)] no-underline"
+            >
+              Assinar o Controle
+            </Link>
+          </div>
+        )}
 
         <div className="grid gap-5 lg:grid-cols-[330px_1fr]">
           {/* Lista (esquerda) */}
@@ -371,14 +403,29 @@ function CadernoPage() {
                               n.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                             }`}
                           >
-                            <Pin size={13} aria-hidden="true" fill={n.fixada ? "currentColor" : "none"} />
+                            <Pin
+                              size={13}
+                              aria-hidden="true"
+                              fill={n.fixada ? "currentColor" : "none"}
+                            />
                           </button>
                           <div className="min-w-0 flex-1">
-                            <p className="truncate text-[16px] text-[var(--ink)]">
+                            <p className="flex items-center gap-1.5 truncate text-[16px] text-[var(--ink)]">
                               {destacar(n.titulo.trim() || "sem título", termo)}
+                              {idsExcedentes.has(n.id) && (
+                                <Lock
+                                  size={12}
+                                  className="shrink-0 text-[var(--muted)]"
+                                  aria-hidden="true"
+                                />
+                              )}
                             </p>
                             <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">
-                              {preview ? destacar(preview, termo) : "nota vazia"}
+                              {idsExcedentes.has(n.id)
+                                ? "somente leitura · acima da cota do Confere"
+                                : preview
+                                  ? destacar(preview, termo)
+                                  : "nota vazia"}
                             </p>
                           </div>
                         </div>
@@ -417,9 +464,10 @@ function CadernoPage() {
                     <button
                       type="button"
                       onClick={() => fixar.mutate(selecionada)}
+                      disabled={notaExcedente}
                       aria-label={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
                       title={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface)] ${
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-40 ${
                         selecionada.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                       }`}
                     >
@@ -432,18 +480,34 @@ function CadernoPage() {
                   </div>
                 </div>
 
+                {notaExcedente && (
+                  <div className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+                    <Lock size={14} className="shrink-0" aria-hidden="true" />
+                    Somente leitura · essa nota está acima da cota do Confere.{" "}
+                    <Link
+                      to="/upgrade"
+                      search={{ rota: "/caderno", tier: "controle" }}
+                      className="font-medium text-[var(--secondary-text)] no-underline"
+                    >
+                      Assinar o Controle
+                    </Link>
+                  </div>
+                )}
+
                 <input
                   type="text"
                   value={titulo}
                   onChange={(e) => setTitulo(e.target.value)}
                   maxLength={160}
                   placeholder="Título da nota"
+                  readOnly={notaExcedente}
                   className="mb-3 w-full bg-transparent text-[26px] leading-tight text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
                 <textarea
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
                   placeholder="Comece a escrever…"
+                  readOnly={notaExcedente}
                   className="min-h-[48vh] w-full resize-none bg-transparent text-[15.5px] leading-[1.85] text-[var(--ink-soft)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
 
@@ -514,7 +578,10 @@ function ListaVazia({ onCriar }: { onCriar: () => void }) {
       </button>
       <p className="mt-3 text-[12px] text-[var(--muted)]">
         ou monte seu guia de presença pelo{" "}
-        <a href="/planejamento/modulo/5" className="font-medium text-[var(--secondary-text)] hover:underline">
+        <a
+          href="/planejamento/modulo/5"
+          className="font-medium text-[var(--secondary-text)] hover:underline"
+        >
           Planejamento →
         </a>
       </p>

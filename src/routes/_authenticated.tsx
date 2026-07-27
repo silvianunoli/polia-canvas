@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
+import { rotaLiberada } from "@/lib/planos";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -10,28 +11,11 @@ import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 // vista; se sumir depois, foi expiração, não primeiro acesso.
 const TEVE_SESSAO_KEY = "polia-teve-sessao";
 
-const STATUS_ATIVOS = ["active", "past_due", "trialing"];
-
-// Rotas fora da trava de assinatura: só o próprio funil de pagamento, pra não
-// virar loop de redirect. Admin/blog-admin/design-system foram extraídos pro
-// polia-admin (27/07/2026) — não existem mais aqui.
+// Rotas fora da trava de plano: o funil de pagamento e a própria tela de
+// upgrade, pra não virar loop de redirect. Admin/blog-admin/design-system
+// foram extraídos pro polia-admin (27/07/2026) — não existem mais aqui.
 function isentoDeAssinatura(pathname: string): boolean {
-  return pathname === "/onboarding" || pathname === "/assinar";
-}
-
-// O que o plano Confere (gratuito, pra sempre) já libera sem assinatura:
-// Planejamento inteiro, Painel, Configurações (pra gerenciar a própria conta
-// e fazer upgrade sem ficar presa fora do app) e Chamados (suporte não pode
-// depender de pagar).
-function isRotaConfere(pathname: string): boolean {
-  return (
-    pathname === "/painel" ||
-    pathname === "/configuracoes" ||
-    pathname === "/chamados" ||
-    pathname.startsWith("/chamados/") ||
-    pathname === "/planejamento" ||
-    pathname.startsWith("/planejamento/")
-  );
+  return pathname === "/onboarding" || pathname === "/assinar" || pathname === "/upgrade";
 }
 
 export const Route = createFileRoute("/_authenticated")({
@@ -39,8 +23,7 @@ export const Route = createFileRoute("/_authenticated")({
     // NOTA DE SEGURANÇA: este guard é client-only (retorna no SSR logo abaixo) e
     // serve pra NAVEGAÇÃO, não como fronteira de segurança. A entitlement real é
     // imposta no banco por RLS — a usuária não forja `plano` (congelado na policy
-    // de update, migração 20260709170000) nem `assinaturas.status` (sem policy de
-    // escrita pra ela; só o webhook grava). Furar este redirect no máximo deixa
+    // de update, migração 20260709170000). Furar este redirect no máximo deixa
     // ver os PRÓPRIOS dados sem pagar; nunca dado de terceiros.
     if (typeof window === "undefined") return;
     const { data } = await supabase.auth.getSession();
@@ -58,18 +41,17 @@ export const Route = createFileRoute("/_authenticated")({
           throw redirect({ to: "/onboarding" });
         }
 
-        // Contas beta (de antes do Stripe) ficam liberadas sem assinatura, e
-        // qualquer plano (mesmo sem pagar) sempre tem o Confere: Planejamento,
-        // Painel e Configurações.
-        if (profile.plano !== "beta" && !isRotaConfere(location.pathname)) {
-          const { data: assinatura } = await supabase
-            .from("assinaturas" as never)
-            .select("status")
-            .eq("user_id", data.session.user.id)
-            .maybeSingle();
-          const status = (assinatura as { status: string } | null)?.status;
-          const ativa = status ? STATUS_ATIVOS.includes(status) : false;
-          if (!ativa) throw redirect({ to: "/assinar" });
+        // profiles.plano é a fonte única do direito de acesso (o webhook do
+        // Stripe já grava 'cancelada' no cancelamento — não precisa de uma
+        // segunda leitura em `assinaturas` aqui).
+        if (!rotaLiberada(location.pathname, profile.plano)) {
+          // rotaLiberada só devolve false quando a rota exige tier "controle"
+          // (rota "confere" nunca é bloqueada) — "controle" é sempre o plano
+          // certo pra nomear aqui.
+          throw redirect({
+            to: "/upgrade",
+            search: { rota: location.pathname, tier: "controle" },
+          });
         }
       }
       return;

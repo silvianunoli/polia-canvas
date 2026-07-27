@@ -27,7 +27,10 @@ import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirado'
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
+import { Route as AuthenticatedRaioxRouteImport } from './routes/_authenticated/raiox'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as AuthenticatedPlanoConteudoRouteImport } from './routes/_authenticated/plano-conteudo'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
@@ -39,6 +42,7 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
+import { Route as AuthenticatedAimerRouteImport } from './routes/_authenticated/aimer'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
@@ -136,11 +140,27 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
+  id: '/upgrade',
+  path: '/upgrade',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedRaioxRoute = AuthenticatedRaioxRouteImport.update({
+  id: '/raiox',
+  path: '/raiox',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedPlanoConteudoRoute =
+  AuthenticatedPlanoConteudoRouteImport.update({
+    id: '/plano-conteudo',
+    path: '/plano-conteudo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -197,6 +217,11 @@ const AuthenticatedAssinarRoute = AuthenticatedAssinarRouteImport.update({
   path: '/assinar',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAimerRoute = AuthenticatedAimerRouteImport.update({
+  id: '/aimer',
+  path: '/aimer',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPlannerIndexRoute =
   AuthenticatedPlannerIndexRouteImport.update({
     id: '/planner/',
@@ -249,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
@@ -260,7 +286,10 @@ export interface FileRoutesByFullPath {
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/raiox': typeof AuthenticatedRaioxRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
@@ -287,6 +316,7 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
@@ -298,7 +328,10 @@ export interface FileRoutesByTo {
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/raiox': typeof AuthenticatedRaioxRoute
+  '/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
@@ -327,6 +360,7 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/_authenticated/aimer': typeof AuthenticatedAimerRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
@@ -338,7 +372,10 @@ export interface FileRoutesById {
   '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/_authenticated/raiox': typeof AuthenticatedRaioxRoute
+  '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
@@ -367,6 +404,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calendario'
@@ -378,7 +416,10 @@ export interface FileRouteTypes {
     | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/plano-conteudo'
     | '/produtos'
+    | '/raiox'
+    | '/upgrade'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
@@ -405,6 +446,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calendario'
@@ -416,7 +458,10 @@ export interface FileRouteTypes {
     | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/plano-conteudo'
     | '/produtos'
+    | '/raiox'
+    | '/upgrade'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
@@ -444,6 +489,7 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/_authenticated/aimer'
     | '/_authenticated/assinar'
     | '/_authenticated/caderno'
     | '/_authenticated/calendario'
@@ -455,7 +501,10 @@ export interface FileRouteTypes {
     | '/_authenticated/metas'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
+    | '/_authenticated/plano-conteudo'
     | '/_authenticated/produtos'
+    | '/_authenticated/raiox'
+    | '/_authenticated/upgrade'
     | '/auth/cadastro'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
@@ -622,11 +671,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/upgrade': {
+      id: '/_authenticated/upgrade'
+      path: '/upgrade'
+      fullPath: '/upgrade'
+      preLoaderRoute: typeof AuthenticatedUpgradeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/raiox': {
+      id: '/_authenticated/raiox'
+      path: '/raiox'
+      fullPath: '/raiox'
+      preLoaderRoute: typeof AuthenticatedRaioxRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/produtos': {
       id: '/_authenticated/produtos'
       path: '/produtos'
       fullPath: '/produtos'
       preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/plano-conteudo': {
+      id: '/_authenticated/plano-conteudo'
+      path: '/plano-conteudo'
+      fullPath: '/plano-conteudo'
+      preLoaderRoute: typeof AuthenticatedPlanoConteudoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/painel': {
@@ -706,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/aimer': {
+      id: '/_authenticated/aimer'
+      path: '/aimer'
+      fullPath: '/aimer'
+      preLoaderRoute: typeof AuthenticatedAimerRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/planner/': {
       id: '/_authenticated/planner/'
       path: '/planner'
@@ -759,6 +836,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAimerRoute: typeof AuthenticatedAimerRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
@@ -770,7 +848,10 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedPlanoConteudoRoute: typeof AuthenticatedPlanoConteudoRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
+  AuthenticatedRaioxRoute: typeof AuthenticatedRaioxRoute
+  AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
@@ -781,6 +862,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAimerRoute: AuthenticatedAimerRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
@@ -792,7 +874,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedPlanoConteudoRoute: AuthenticatedPlanoConteudoRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
+  AuthenticatedRaioxRoute: AuthenticatedRaioxRoute,
+  AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
