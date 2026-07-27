@@ -3,11 +3,19 @@
   "name": "tanstack-start-app",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": ["nodejs_compat"],
-  // Nitro (preset cloudflare-module) gera dist/server/wrangler.json com
-  // main, assets, no_bundle, base_dir, rules corretos.
-  // Wrangler descobre via .wrangler/deploy/config.json e usa ele em vez deste.
-  // Não defina main, assets, base_dir, rules ou no_bundle aqui — Nitro sobrescreve
-  // (com aviso) e paths relativos podem duplicar.
+  // Nitro (preset cloudflare-module) mescla isto em dist/server/wrangler.json
+  // (junto com main/no_bundle/rules, gerados automaticamente). Sem
+  // run_worker_first, toda rota SSR cai em 404 direto do asset server, sem
+  // rodar o Worker — derrubou o site em produção em 2026-07-27. Causa real:
+  // node_modules estava dessincronizado do package-lock.json
+  // (@cloudflare/vite-plugin 1.33.1 instalado vs 1.43.3 travado no lockfile),
+  // e a versão antiga não gerava dist/server/wrangler.json corretamente. `npm
+  // install` resincronizou; deixando explícito aqui como defesa a mais, caso
+  // o node_modules destrave de novo no futuro.
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
   "observability": {
     "enabled": true
   },
