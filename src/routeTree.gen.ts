@@ -14,7 +14,6 @@ import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
-import { Route as DesignSystemRouteImport } from './routes/design-system'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
 import { Route as CentralRouteImport } from './routes/central'
 import { Route as AjudaRouteImport } from './routes/ajuda'
@@ -43,12 +42,9 @@ import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
-import { Route as AuthenticatedBlogAdminIndexRouteImport } from './routes/_authenticated/blog-admin.index'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
-import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
-import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 
 const TermosRoute = TermosRouteImport.update({
@@ -74,11 +70,6 @@ const PesquisaRoute = PesquisaRouteImport.update({
 const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
   id: '/lista-de-espera',
   path: '/lista-de-espera',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DesignSystemRoute = DesignSystemRouteImport.update({
-  id: '/design-system',
-  path: '/design-system',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
@@ -224,12 +215,6 @@ const AuthenticatedChamadosIndexRoute =
     path: '/chamados/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedBlogAdminIndexRoute =
-  AuthenticatedBlogAdminIndexRouteImport.update({
-    id: '/blog-admin/',
-    path: '/blog-admin/',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedPlannerSlugRoute =
   AuthenticatedPlannerSlugRouteImport.update({
     id: '/planner/$slug',
@@ -247,18 +232,6 @@ const AuthenticatedChamadosIdRoute = AuthenticatedChamadosIdRouteImport.update({
   path: '/chamados/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedBlogAdminNovoRoute =
-  AuthenticatedBlogAdminNovoRouteImport.update({
-    id: '/blog-admin/novo',
-    path: '/blog-admin/novo',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedBlogAdminIdRoute =
-  AuthenticatedBlogAdminIdRouteImport.update({
-    id: '/blog-admin/$id',
-    path: '/blog-admin/$id',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedPlanejamentoModuloNRoute =
   AuthenticatedPlanejamentoModuloNRouteImport.update({
     id: '/planejamento/modulo/$n',
@@ -271,7 +244,6 @@ export interface FileRoutesByFullPath {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -297,12 +269,9 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
-  '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
@@ -313,7 +282,6 @@ export interface FileRoutesByTo {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -339,12 +307,9 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
-  '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
-  '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/blog-admin': typeof AuthenticatedBlogAdminIndexRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
@@ -357,7 +322,6 @@ export interface FileRoutesById {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
-  '/design-system': typeof DesignSystemRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -383,12 +347,9 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
-  '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/_authenticated/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
@@ -401,7 +362,6 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
-    | '/design-system'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -427,12 +387,9 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/blog-admin/$id'
-    | '/blog-admin/novo'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
-    | '/blog-admin/'
     | '/chamados/'
     | '/planejamento/'
     | '/planner/'
@@ -443,7 +400,6 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
-    | '/design-system'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -469,12 +425,9 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog'
-    | '/blog-admin/$id'
-    | '/blog-admin/novo'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
-    | '/blog-admin'
     | '/chamados'
     | '/planejamento'
     | '/planner'
@@ -486,7 +439,6 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
-    | '/design-system'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -512,12 +464,9 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/_authenticated/blog-admin/$id'
-    | '/_authenticated/blog-admin/novo'
     | '/_authenticated/chamados/$id'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
-    | '/_authenticated/blog-admin/'
     | '/_authenticated/chamados/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
@@ -530,7 +479,6 @@ export interface RootRouteChildren {
   AjudaRoute: typeof AjudaRoute
   CentralRoute: typeof CentralRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
-  DesignSystemRoute: typeof DesignSystemRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   PesquisaRoute: typeof PesquisaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -581,13 +529,6 @@ declare module '@tanstack/react-router' {
       path: '/lista-de-espera'
       fullPath: '/lista-de-espera'
       preLoaderRoute: typeof ListaDeEsperaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/design-system': {
-      id: '/design-system'
-      path: '/design-system'
-      fullPath: '/design-system'
-      preLoaderRoute: typeof DesignSystemRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compra-confirmada': {
@@ -786,13 +727,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChamadosIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/blog-admin/': {
-      id: '/_authenticated/blog-admin/'
-      path: '/blog-admin'
-      fullPath: '/blog-admin/'
-      preLoaderRoute: typeof AuthenticatedBlogAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/planner/$slug': {
       id: '/_authenticated/planner/$slug'
       path: '/planner/$slug'
@@ -812,20 +746,6 @@ declare module '@tanstack/react-router' {
       path: '/chamados/$id'
       fullPath: '/chamados/$id'
       preLoaderRoute: typeof AuthenticatedChamadosIdRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/blog-admin/novo': {
-      id: '/_authenticated/blog-admin/novo'
-      path: '/blog-admin/novo'
-      fullPath: '/blog-admin/novo'
-      preLoaderRoute: typeof AuthenticatedBlogAdminNovoRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/blog-admin/$id': {
-      id: '/_authenticated/blog-admin/$id'
-      path: '/blog-admin/$id'
-      fullPath: '/blog-admin/$id'
-      preLoaderRoute: typeof AuthenticatedBlogAdminIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planejamento/modulo/$n': {
@@ -851,12 +771,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
-  AuthenticatedBlogAdminIdRoute: typeof AuthenticatedBlogAdminIdRoute
-  AuthenticatedBlogAdminNovoRoute: typeof AuthenticatedBlogAdminNovoRoute
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
-  AuthenticatedBlogAdminIndexRoute: typeof AuthenticatedBlogAdminIndexRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
@@ -876,13 +793,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
-  AuthenticatedBlogAdminIdRoute: AuthenticatedBlogAdminIdRoute,
-  AuthenticatedBlogAdminNovoRoute: AuthenticatedBlogAdminNovoRoute,
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
-  AuthenticatedBlogAdminIndexRoute: AuthenticatedBlogAdminIndexRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
@@ -899,7 +813,6 @@ const rootRouteChildren: RootRouteChildren = {
   AjudaRoute: AjudaRoute,
   CentralRoute: CentralRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
-  DesignSystemRoute: DesignSystemRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   PesquisaRoute: PesquisaRoute,
   PrivacidadeRoute: PrivacidadeRoute,

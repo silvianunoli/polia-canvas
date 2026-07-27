@@ -12,17 +12,11 @@ const TEVE_SESSAO_KEY = "polia-teve-sessao";
 
 const STATUS_ATIVOS = ["active", "past_due", "trialing"];
 
-// Rotas fora da trava de assinatura: o próprio funil de pagamento (pra não
-// virar loop de redirect) e as áreas de admin/blog-admin, que já têm seu
-// próprio guard por papel (is_admin) e não devem depender da assinatura de
-// quem está logada pra gerenciar o app.
+// Rotas fora da trava de assinatura: só o próprio funil de pagamento, pra não
+// virar loop de redirect. Admin/blog-admin/design-system foram extraídos pro
+// polia-admin (27/07/2026) — não existem mais aqui.
 function isentoDeAssinatura(pathname: string): boolean {
-  return (
-    pathname === "/onboarding" ||
-    pathname === "/assinar" ||
-    pathname.startsWith("/admin") ||
-    pathname.startsWith("/blog-admin")
-  );
+  return pathname === "/onboarding" || pathname === "/assinar";
 }
 
 // O que o plano Confere (gratuito, pra sempre) já libera sem assinatura:

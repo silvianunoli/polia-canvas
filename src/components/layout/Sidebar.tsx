@@ -13,9 +13,7 @@ import {
   Menu,
   ChevronsLeft,
   ChevronsRight,
-  ChevronDown,
   Settings,
-  Shield,
   LogOut,
   CalendarDays,
 } from "lucide-react";
@@ -25,7 +23,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
-import { DOMINIO_GESTAO } from "@/lib/dominio-gestao";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
@@ -49,16 +46,6 @@ function isActive(itemTo: string, pathname: string) {
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
 
-// A área de gestão (CRM, Social, Financeiro interno, etc.) foi extraída pro
-// projeto polia-admin (deploy e domínio próprios, silvianunoli.com.br) em
-// 27/07/2026 — não mora mais nas rotas deste app. Blog e Design System
-// continuam aqui (fora do escopo da extração).
-const ADMIN_SUBLINKS = [
-  { to: "/blog-admin", label: "Blog" },
-  { to: "/design-system", label: "Design System" },
-] as const;
-const URL_GESTAO = "https://silvianunoli.com.br";
-
 async function signOut() {
   await supabase.auth.signOut();
   window.location.href = "/auth/login";
@@ -69,15 +56,6 @@ export function Sidebar() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  // Domínio de gestão só serve a área de gestão (agora no polia-admin) — o
-  // sidebar não deve mostrar nem linkar as seções da assinante
-  // (Painel/Planejamento/...) aqui. Checado só no client (via useEffect) pra
-  // não divergir do HTML renderizado no SSR.
-  const [emDominioGestao, setEmDominioGestao] = useState(false);
-  useEffect(() => {
-    setEmDominioGestao(window.location.hostname === DOMINIO_GESTAO);
-  }, []);
 
   // ≤1366px: colapsa para ícones automaticamente.
   useEffect(() => {
@@ -88,13 +66,6 @@ export function Sidebar() {
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
   }, []);
-
-  // Abre o submenu de Administração automaticamente se já está numa página dele.
-  useEffect(() => {
-    if (pathname.startsWith("/blog-admin") || pathname.startsWith("/design-system")) {
-      setAdminOpen(true);
-    }
-  }, [pathname]);
 
   const streakLabel =
     meta.streak > 0
@@ -108,11 +79,9 @@ export function Sidebar() {
           {/* Topo: logo + negócio + presença + avatar */}
           <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
             <Link
-              to={emDominioGestao ? "/central" : "/painel"}
+              to="/painel"
               onClick={onNavigate}
-              aria-label={
-                emDominioGestao ? "Pólia, ir para a central de administração" : "Pólia, ir para o painel"
-              }
+              aria-label="Pólia, ir para o painel"
               className="text-[var(--ink)] no-underline"
             >
               {compact ? (
@@ -156,9 +125,8 @@ export function Sidebar() {
 
           <div className="mx-3 h-px bg-[var(--line)]" />
 
-          {/* Navegação — some no domínio de gestão, que só serve /admin. */}
           <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 px-2 py-3">
-            {!emDominioGestao && NAV.map((item) => {
+            {NAV.map((item) => {
               const active = isActive(item.to, pathname);
               const Icon = item.icon;
               const content = (
@@ -192,81 +160,16 @@ export function Sidebar() {
             })}
           </nav>
 
-          {/* Rodapé: config, admin, sair, toggle colapso */}
+          {/* Rodapé: config, sair, toggle colapso */}
           <div className="flex flex-col gap-1 border-t border-[var(--line)] px-2 py-3">
-            {!emDominioGestao && (
-              <Link
-                to="/configuracoes"
-                onClick={onNavigate}
-                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-              >
-                <Settings size={20} aria-hidden="true" />
-                {!compact && <span>Configurações</span>}
-              </Link>
-            )}
-            {meta.isAdmin && compact && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <a
-                    href={URL_GESTAO}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label="Administração"
-                    className="flex min-h-11 items-center justify-center rounded-lg px-3 text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
-                  >
-                    <Shield size={20} aria-hidden="true" />
-                  </a>
-                </TooltipTrigger>
-                <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                  Administração
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {meta.isAdmin && !compact && (
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setAdminOpen((o) => !o)}
-                  aria-expanded={adminOpen}
-                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                >
-                  <Shield size={20} aria-hidden="true" />
-                  <span className="flex-1 text-left">Administração</span>
-                  <ChevronDown
-                    size={16}
-                    aria-hidden="true"
-                    className={`transition-transform ${adminOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-                {adminOpen && (
-                  <div className="ml-8 flex flex-col gap-1 py-1">
-                    <a
-                      href={URL_GESTAO}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex min-h-9 items-center rounded-lg px-3 text-[13px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
-                    >
-                      Gestão (CRM, Financeiro...) ↗
-                    </a>
-                    {ADMIN_SUBLINKS.map((s) => (
-                      <Link
-                        key={s.to}
-                        to={s.to}
-                        onClick={onNavigate}
-                        aria-current={isActive(s.to, pathname) ? "page" : undefined}
-                        className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
-                          isActive(s.to, pathname)
-                            ? "font-medium text-[var(--ink)]"
-                            : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                        }`}
-                      >
-                        {s.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+            <Link
+              to="/configuracoes"
+              onClick={onNavigate}
+              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+            >
+              <Settings size={20} aria-hidden="true" />
+              {!compact && <span>Configurações</span>}
+            </Link>
             <button
               type="button"
               onClick={signOut}
