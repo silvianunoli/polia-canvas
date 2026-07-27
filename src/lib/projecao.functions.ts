@@ -122,14 +122,24 @@ export function montarProjecao(params: {
   const { custosFixos, proLaboreDesejado, metaAlvo, ticketMedio: ticket, sobra } = params;
   if (sobra <= 0) return null;
 
+  // Empatar e se pagar são metas de CONTRIBUIÇÃO (cobrir custo/pró-labore) —
+  // dividem pela sobra por venda.
   const item = (alvo: number): ItemProjecao => {
     const vendas = vendasParaAlvo(alvo, sobra) ?? 0;
     return { vendas, faturamento: vendas * ticket };
   };
 
+  // Meta do mês é meta de FATURAMENTO, não de lucro — mesma leitura do Painel
+  // e do Financeiro (receita ÷ meta). Divide pelo ticket médio, não pela
+  // sobra, e o faturamento da linha É a própria meta (não vendas × ticket).
+  const itemMeta = (alvo: number): ItemProjecao => ({
+    vendas: ticket > 0 ? Math.ceil(alvo / ticket) : 0,
+    faturamento: alvo,
+  });
+
   return {
     empatar: item(custosFixos),
     sePagar: item(custosFixos + proLaboreDesejado),
-    meta: metaAlvo != null ? item(metaAlvo) : null,
+    meta: metaAlvo != null ? itemMeta(metaAlvo) : null,
   };
 }

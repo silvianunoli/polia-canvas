@@ -139,7 +139,21 @@ describe("montarProjecao", () => {
     expect(resultado).not.toBeNull();
     expect(resultado!.empatar).toEqual({ vendas: 20, faturamento: 2000 });
     expect(resultado!.sePagar).toEqual({ vendas: 60, faturamento: 6000 });
-    expect(resultado!.meta).toEqual({ vendas: 100, faturamento: 10000 });
+    // Meta do mês é faturamento (mesma leitura do Painel/Financeiro): divide
+    // pelo ticket, não pela sobra — 5000/100 = 50 vendas, faturamento = 5000.
+    expect(resultado!.meta).toEqual({ vendas: 50, faturamento: 5000 });
+  });
+
+  it("meta divide pelo ticket, não pela sobra", () => {
+    const resultado = montarProjecao({
+      custosFixos: 0,
+      proLaboreDesejado: 0,
+      metaAlvo: 3000,
+      ticketMedio: 100,
+      sobra: 50,
+    });
+    expect(resultado!.meta).toEqual({ vendas: 30, faturamento: 3000 });
+    expect(resultado!.meta).not.toEqual({ vendas: 60, faturamento: 6000 });
   });
 
   it("retorna meta null quando não há Meta do mês cadastrada", () => {
