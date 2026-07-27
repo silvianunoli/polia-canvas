@@ -22,6 +22,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
+import { DOMINIO_GESTAO, caminhoPermitidoNoDominioGestao } from "@/lib/dominio-gestao";
 
 import appCss from "../styles.css?url";
 
@@ -147,6 +148,17 @@ function RootComponent() {
   useEffect(() => {
     track("pageview");
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  // src/server.ts já bloqueia isso na entrada, mas navegação dentro do SPA
+  // (client-side, via <Link>) nunca passa pelo servidor — sem essa trava
+  // aqui, qualquer link pro site público navegado de dentro do /admin
+  // renderizava a página normalmente no domínio de gestão.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.hostname !== DOMINIO_GESTAO) return;
+    if (caminhoPermitidoNoDominioGestao(pathname)) return;
+    window.location.href = `https://usepolia.com.br${pathname}${window.location.search}`;
   }, [pathname]);
 
   // Clique instrumentado por delegação: qualquer elemento com data-track vira

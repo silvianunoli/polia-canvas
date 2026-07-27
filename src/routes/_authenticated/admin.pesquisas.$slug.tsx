@@ -30,8 +30,8 @@ const DIMENSOES = ["categoria", "quem_toca", "tem_marca", "inseguranca"];
 // tela sem rolar. Com mais opções, a pilha ordenada continua sendo a leitura
 // melhor.
 const MAX_OPCOES_SEGMENTADA = 6;
-// Tokens do escopo .polia-v3 (não os --chart-1..5, que resolvem pra paleta
-// v1/terracota fora desse escopo — ver DESIGN.md/styles.css).
+// Tokens do escopo .polia-v3 (não os --chart-1..5, que são só bridge pra
+// libs de gráfico externas — ver DESIGN.md/styles.css).
 const CORES_SEGMENTO = [
   "var(--secondary)",
   "var(--accent)",

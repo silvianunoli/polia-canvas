@@ -19,19 +19,22 @@ Um ponto único de disparo: a edge function `supabase/functions/alertas-criticos
 3. Envia a mensagem via Telegram Bot API (`sendMessage`).
 4. Grava tudo em `alertas_enviados` (RLS: só admin lê; só a função — service role — escreve).
 
-Três chamadores, três runtimes diferentes, todos batendo no mesmo endpoint HTTP:
+Quatro chamadores, todos batendo no mesmo endpoint HTTP:
 
 | Chamador | Runtime | Onde |
 |---|---|---|
 | Worker Cloudflare | Node (nodejs_compat) | `src/lib/alertas.server.ts`, usado em `src/server.ts`, `src/lib/error-capture.ts`, `src/lib/stripe.functions.ts`, `src/lib/compra-publica.functions.ts` |
 | Webhook do Stripe | Deno | `supabase/functions/stripe-webhook/index.ts` (função local `dispararAlerta`, mesmo segredo) |
 | Checagem periódica de taxa de erro | Postgres (pg_cron + pg_net) | função `public.checar_taxa_erro_e_alertar()`, agendada a cada 5 min |
+| Checagem periódica de uptime externo | Postgres (pg_cron + extensão `http` + `pg_net`) | função `public.checar_uptimerobot_e_alertar()`, agendada a cada 5 min |
+
+O `health_down` não usa webhook do UptimeRobot: o plano grátis deles bloqueou tanto Webhook quanto Telegram nativo (só em planos pagos). Em vez disso, é **polling invertido** — a cada 5 min o `pg_cron` pergunta pra API de leitura do UptimeRobot (`getMonitors`, com a `uptimerobot_api_key` guardada no Vault) se o monitor `usepolia.com.br/health` está no ar (status `8`/`9` = seems down/down). Continua funcionando pro caso que importa (Cloudflare inteira fora do ar), porque quem sonda de fora é o UptimeRobot — o Postgres só lê o resultado dele.
 
 ## Gatilhos configurados
 
 | `tipo` | Onde dispara | O que significa |
 |---|---|---|
-| `health_down` | Webhook do monitor de uptime externo (configurar — ver abaixo) | `/health` não respondeu 200 — Worker ou Cloudflare fora do ar |
+| `health_down` | `checar_uptimerobot_e_alertar()` (pg_cron, a cada 5 min, lendo a API do UptimeRobot) | `/health` não respondeu 200 pro UptimeRobot — Worker ou Cloudflare fora do ar |
 | `stripe_webhook_assinatura_invalida` | `stripe-webhook/index.ts` | Assinatura HMAC do Stripe não validou |
 | `stripe_webhook_erro_processamento` | `stripe-webhook/index.ts` | Exceção ao processar um evento (`checkout.session.completed` etc.) — dinheiro passando batido |
 | `erro_taxa_alta` | `checar_taxa_erro_e_alertar()` (pg_cron, a cada 5 min) | Mais de 15 linhas em `erros_app` nos últimos 10 min |
@@ -73,21 +76,24 @@ npx supabase secrets set TELEGRAM_BOT_TOKEN="<token do passo 1>" TELEGRAM_CHAT_I
 Isso **não pode viver dentro da Cloudflare** — se a Cloudflare cair, nada rodando dentro dela avisa sobre a própria queda.
 
 1. Crie conta grátis em [uptimerobot.com](https://uptimerobot.com).
-2. **Add New Monitor** → tipo HTTP(s) → URL `https://usepolia.com.br/health` → intervalo 5 min.
-3. Em **Alert Contacts**, crie um contato tipo **Webhook**:
-   - URL: `https://egzwkyqpkexgrhbxwcvb.supabase.co/functions/v1/alertas-criticos?secret=<ALERTAS_SECRET>`
-   - Método: POST
-   - Corpo customizado (JSON):
-     ```json
-     {"tipo":"health_down","titulo":"Health-check externo falhou","detalhes":{"monitor":"*monitorFriendlyName*","status":"*alertType*"},"link":"https://usepolia.com.br/admin/qualidade"}
-     ```
-4. Associe esse Alert Contact ao monitor do passo 2.
+2. **Add New Monitor** → tipo HTTP(s) → URL `https://usepolia.com.br/health` (uma barra só antes de `health`) → intervalo 5 min.
+3. Em **Integrações → API**, gere uma **Read-only API Key**.
+4. Guarde essa key no Vault do Postgres (rodar no SQL Editor do Supabase Dashboard):
+   ```sql
+   select vault.create_secret('<a read-only API key do passo 3>', 'uptimerobot_api_key', 'API key somente-leitura do UptimeRobot, usada pelo pg_cron.');
+   ```
 
-O valor de `ALERTAS_SECRET` está salvo no Vault do Postgres (`vault.decrypted_secrets`, nome `alertas_secret`) e nos secrets do Worker/Supabase — não está em nenhum arquivo versionado.
+Não precisa configurar Webhook nem Telegram nativo no UptimeRobot — o plano grátis bloqueia os dois (só em Solo/Team/Enterprise). O `pg_cron` já faz o polling sozinho a cada 5 min (`checar_uptimerobot_e_alertar()`), lendo o status pela API em vez de esperar um webhook deles.
+
+`ALERTAS_SECRET` e `uptimerobot_api_key` estão salvos no Vault do Postgres (`vault.decrypted_secrets`) e nos secrets do Worker/Supabase — nenhum dos dois está em arquivo versionado.
 
 ## Auditoria
 
 `select * from alertas_enviados order by criado_em desc;` (via SQL Editor ou RPC admin) — mostra todo alerta disparado, se foi enviado com sucesso (`enviado`), a resposta do Telegram (`resposta_provedor`), e quantas ocorrências foram agregadas.
+
+## Testado ao vivo (2026-07-10)
+
+Todos os gatilhos foram exercitados de ponta a ponta em produção, com mensagem real chegando no Telegram: assinatura inválida no webhook do Stripe, taxa de erro alta (inserindo erros de teste em `erros_app`), e queda real do `/health` (URL do monitor trocada de propósito por um caminho inexistente) — o `pg_cron` de polling do UptimeRobot detectou sozinho, sem intervenção manual, em dois ciclos consecutivos de 5 min.
 
 ## O que falta (aberto)
 

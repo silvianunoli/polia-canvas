@@ -6,8 +6,8 @@
 
 /*
  * Pólia — Design System
- * Mundo visual: Territorial Diurno (creme + terracota + mostarda + marrom).
- * Todas as cores em oklch. Tokens semânticos mapeados em @theme inline.
+ * Mundo visual: Pólia v3 (pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta).
+ * Tokens semânticos mapeados em @theme inline; paleta viva no bloco .polia-v3 abaixo.
  */
 
 @theme inline {
@@ -54,38 +54,14 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Paleta Pólia — utilitários: bg-polia-terracota, text-polia-musgo, etc. */
-  --color-polia-terracota: var(--polia-terracota);
-  --color-polia-musgo: var(--polia-musgo);
-  --color-polia-noite: var(--polia-noite);
-  --color-polia-dourado: var(--polia-dourado);
-  --color-polia-creme: var(--polia-creme);
-  --color-polia-cinza-claro: var(--polia-cinza-claro);
-  --color-polia-sonho: var(--polia-sonho);
-  --color-polia-construcao: var(--polia-construcao);
-  --color-polia-venda: var(--polia-venda);
-  --color-polia-evolucao: var(--polia-evolucao);
-  --color-polia-estrela: var(--polia-estrela);
-  --color-polia-estrela-soft: var(--polia-estrela-soft);
-  --color-polia-terracota-glow: var(--polia-terracota-glow);
-  --color-polia-marco: var(--polia-marco);
-  --color-polia-marco-soft: var(--polia-marco-soft);
-  --color-polia-mostarda: var(--polia-mostarda);
-  --color-polia-mostarda-intenso: var(--polia-mostarda-intenso);
-  --color-polia-marrom: var(--polia-marrom);
-  --color-polia-cinza-areia: var(--polia-cinza-areia);
-  --color-polia-papel-creme: var(--polia-papel-creme);
-
-  /* Tipografia: font-serif, font-sans, font-accent, font-handwritten */
+  /* Tipografia: font-sans, font-accent, font-handwritten */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "DM Serif Display", ui-serif, Georgia, serif;
   --font-accent: "DM Sans", "Inter", sans-serif;
   --font-handwritten: "Caveat", cursive;
 }
 
-/* ── Paleta Pólia v3 (pêssego/turquesa/amarelo) ──────────────────────────────
-   Escopada à classe .polia-v3 (sidebar + painel redesenhados). NÃO afeta o
-   resto da v1, que segue Territorial Diurno (terracota). Migração incremental.
+/* ── Paleta Pólia v3 (pedra/turquesa/pêssego/amarelo/tinta) ──────────────────
+   Escopada à classe .polia-v3, presente em 100% das rotas do produto.
    Regra de contraste: pêssego e turquesa-claro SÓ em fundo/borda/gráfico,
    nunca em texto. Texto sempre --ink / --ink-soft / --muted (ou --secondary-text). */
 .polia-v3 {
@@ -108,6 +84,21 @@
   --danger-soft: #FBEAE7;     /* fundo sutil da zona de perigo */
   --cat-vendas: #E0A8C0;      /* categoria "Vendas" do Planner — só fundo/borda/dot, nunca texto corrido */
   --cat-admin: #B9B2A6;       /* categoria "Admin" do Planner — idem */
+
+  /* Bridge pros defaults internos dos primitivos shadcn (Switch, Checkbox, etc.)
+     que usam --primary/--background direto e NÃO são portalados — ficam dentro
+     da própria árvore .polia-v3, então herdam isto sem precisar de prop extra.
+     Componentes portalados (Tooltip, AlertDialog, Popover, Select) escapam do
+     DOM e continuam precisando do TOKEN_BRIDGE_V3 explícito (ver uiTokenBridge.ts). */
+  --primary: var(--secondary);
+  --primary-foreground: var(--secondary-ink);
+  --background: #ffffff;
+  --popover: #ffffff;
+  --popover-foreground: var(--ink);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--secondary);
+  --muted-foreground: var(--muted);
 }
 
 /* Itálico de acento (pull-quotes, saudação "Bom dia, [nome]."). Cabinet Grotesk
@@ -128,96 +119,43 @@
 :root {
   --radius: 0.75rem;
 
-  /* Paleta Pólia (oklch) */
-  --polia-terracota: oklch(0.652 0.137 45.5);       /* #C96B3E */
-  --polia-musgo: oklch(0.467 0.087 158.5);          /* #2D6A4F */
-  --polia-noite: oklch(0.196 0.04 280);             /* #1A1A2E */
-  --polia-dourado: oklch(0.733 0.092 80);           /* #C8A96E */
-  --polia-creme: oklch(0.976 0.009 60);             /* #FDF8F5 */
-  --polia-cinza-claro: oklch(0.969 0.005 280);      /* #F5F5FA */
-  --polia-sonho: oklch(0.566 0.196 354);            /* #C9407A */
-  --polia-construcao: oklch(0.575 0.131 240);       /* #1A7FAD */
-  --polia-venda: oklch(0.567 0.135 156);            /* #1A8F5C */
-  --polia-evolucao: oklch(0.502 0.197 295);         /* #6B50CC */
-  --polia-estrela: oklch(0.976 0.009 60);
-  --polia-estrela-soft: oklch(0.762 0.043 60);
-  --polia-terracota-glow: oklch(0.738 0.13 50);     /* #E89770 */
+  /* Tokens semânticos — paleta v3, mesmos valores do bloco .polia-v3.
+     Existem aqui como piso pro que estiver fora da árvore .polia-v3
+     (ex.: <body> antes do wrapper de página montar). */
+  --background: #F2F0ED;
+  --foreground: #0A0A0A;
+  --card: #ffffff;
+  --card-foreground: #0A0A0A;
+  --popover: #ffffff;
+  --popover-foreground: #0A0A0A;
+  --primary: #7CCBCD;
+  --primary-foreground: #0A0A0A;
+  --secondary: #7CCBCD;
+  --secondary-foreground: #0A0A0A;
+  --muted: #F9EFEE;
+  --muted-foreground: #767676;
+  --accent: #F3B9A9;
+  --accent-foreground: #2C2C2C;
+  --destructive: #C0392B;
+  --destructive-foreground: #ffffff;
+  --border: #E6E6E6;
+  --input: #E6E6E6;
+  --ring: #7CCBCD;
 
-  /* Tokens territoriais — virada terrena 2026-06 */
-  --polia-marco: var(--polia-terracota);            /* círculo de marco preenchido */
-  --polia-marco-soft: var(--polia-terracota-glow);  /* halo/pulse marco em curso */
-  --polia-mostarda: oklch(0.78 0.10 80);            /* #D4A574 highlight palavra-chave */
-  --polia-mostarda-intenso: oklch(0.65 0.13 75);    /* #B8862E selos cerimoniais */
-  --polia-marrom: oklch(0.30 0.04 40);              /* #3A2A1F texto/marco concluído */
-  --polia-cinza-areia: oklch(0.80 0.02 60);         /* #C9BFB2 marco a-caminho */
-  --polia-papel-creme: oklch(0.96 0.012 70);        /* #F5EFE5 papel pautado */
+  --chart-1: #7CCBCD;
+  --chart-2: #F3B9A9;
+  --chart-3: #FFC629;
+  --chart-4: #C0392B;
+  --chart-5: #2C7E80;
 
-  /* Tokens semânticos — Mundo 2 (clean, padrão) */
-  --background: var(--polia-creme);
-  --foreground: var(--polia-noite);
-  --card: oklch(1 0 0);
-  --card-foreground: var(--polia-noite);
-  --popover: oklch(1 0 0);
-  --popover-foreground: var(--polia-noite);
-  --primary: var(--polia-terracota);
-  --primary-foreground: var(--polia-creme);
-  --secondary: var(--polia-cinza-claro);
-  --secondary-foreground: var(--polia-noite);
-  --muted: var(--polia-cinza-claro);
-  --muted-foreground: oklch(0.5 0.02 280);
-  --accent: var(--polia-dourado);
-  --accent-foreground: var(--polia-noite);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: var(--polia-creme);
-  --border: oklch(0.9 0.01 60);
-  --input: oklch(0.92 0.008 60);
-  --ring: var(--polia-terracota);
-
-  --chart-1: var(--polia-terracota);
-  --chart-2: var(--polia-musgo);
-  --chart-3: var(--polia-dourado);
-  --chart-4: var(--polia-construcao);
-  --chart-5: var(--polia-evolucao);
-
-  --sidebar: var(--polia-creme);
-  --sidebar-foreground: var(--polia-noite);
-  --sidebar-primary: var(--polia-terracota);
-  --sidebar-primary-foreground: var(--polia-creme);
-  --sidebar-accent: var(--polia-cinza-claro);
-  --sidebar-accent-foreground: var(--polia-noite);
-  --sidebar-border: oklch(0.9 0.01 60);
-  --sidebar-ring: var(--polia-terracota);
-}
-
-/* Legacy: sobrescritas cósmicas (.cosmic / .dark). Mantidas só pra não quebrar AuthShell + Conclusao das etapas que ainda usam fundo noite. NÃO aplicar em containers raiz. */
-.cosmic {
-  --background: var(--polia-noite);
-  --foreground: var(--polia-creme);
-  --card: oklch(0.25 0.04 280);
-  --card-foreground: var(--polia-creme);
-  --popover: oklch(0.25 0.04 280);
-  --popover-foreground: var(--polia-creme);
-  --primary: var(--polia-terracota);
-  --primary-foreground: var(--polia-creme);
-  --secondary: oklch(0.28 0.04 280);
-  --secondary-foreground: var(--polia-creme);
-  --muted: oklch(0.28 0.04 280);
-  --muted-foreground: oklch(0.75 0.02 60);
-  --accent: var(--polia-dourado);
-  --accent-foreground: var(--polia-noite);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: var(--polia-creme);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 14%);
-  --ring: var(--polia-terracota-glow);
-  --sidebar: var(--polia-noite);
-  --sidebar-foreground: var(--polia-creme);
-  --sidebar-primary: var(--polia-terracota);
-  --sidebar-primary-foreground: var(--polia-creme);
-  --sidebar-accent: oklch(0.28 0.04 280);
-  --sidebar-accent-foreground: var(--polia-creme);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: var(--polia-terracota-glow);
+  --sidebar: #F2F0ED;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #7CCBCD;
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent: #F9EFEE;
+  --sidebar-accent-foreground: #0A0A0A;
+  --sidebar-border: #E6E6E6;
+  --sidebar-ring: #7CCBCD;
 }
 
 @layer base {
@@ -243,8 +181,7 @@
   }
 
   /* Todo título (h1-h6) usa Cabinet Grotesk por padrão, sem precisar da
-     classe .font-cabinet. Serif (DM Serif Display, legado) continua só
-     via classe explícita (.font-serif). */
+     classe .font-cabinet. */
   h1, h2, h3, h4, h5, h6 {
     font-family: "Cabinet Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
   }
@@ -255,7 +192,7 @@
 }
 
 /* Barra de rolagem fina — DESIGN-3.md §6. Global (nunca esconder scroll).
-   Fallback pros tokens legado fora do escopo .polia-v3, que não define --line/--muted. */
+   var(--line, var(--border)) cai no piso do :root se algo renderizar fora do .polia-v3. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--line, var(--border)) transparent;
@@ -270,18 +207,6 @@
 }
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--muted, var(--muted-foreground));
-}
-
-/* Landing page hex vars + utilities */
-:root {
-  --terracota: #C96B3E;
-  --verde-musgo: #2D6A4F;
-  --azul-noite: #1A1A2E;
-  --dourado: #C8A96E;
-  --dourado-escuro: #9A7728;
-  --creme: #FDF8F5;
-  --cinza-claro: #F5F5FA;
-  --creme-escuro: #F0E9E2;
 }
 
 /* Caveat: piso de legibilidade. A altura-x da Caveat é menor que Inter, então
@@ -318,55 +243,17 @@
   line-height: 1.4;
   opacity: 1 !important;
 }
-.caveat-cta {
-  font-family: "Caveat", cursive;
-  font-size: 18px;
-  line-height: 1.3;
-  opacity: 1 !important;
-  color: #FDF8F5;
-}
 @media (max-width: 768px) {
   .caveat-decorativo { font-size: 20px; }
   .caveat-informacional { font-size: 22px; }
-  .caveat-cta { font-size: 20px; }
-}
-
-/* Caveat contrast utilities (WCAG AA) */
-.caveat-on-light {
-  font-family: "Caveat", cursive;
-  color: #9A7728; /* ~5:1 sobre creme */
-}
-.caveat-on-dark {
-  font-family: "Caveat", cursive;
-  color: #C8A96E; /* dourado original — bom contraste sobre azul-noite */
 }
 
 /* Focus ring global — WCAG 2.1 AA */
 *:focus-visible {
-  outline: 2px solid #C96B3E;
+  outline: 2px solid #7CCBCD;
   outline-offset: 2px;
   border-radius: 4px;
 }
-.cosmic *:focus-visible,
-.dark *:focus-visible,
-[data-theme="immersive"] *:focus-visible {
-  outline-color: #C8A96E;
-}
-
-/* Utility classes — para casos onde o componente quer override explícito
-   (ex.: botão inline-styled em fundo cream que queira ring dourado). */
-.focus-ring-terracota:focus-visible {
-  outline: 2px solid #C96B3E !important;
-  outline-offset: 2px;
-}
-.focus-ring-dourado:focus-visible {
-  outline: 2px solid #C8A96E !important;
-  outline-offset: 2px;
-}
-.focus-ring-none:focus-visible {
-  outline: none !important;
-}
-
 
 /* Skip link */
 .skip-link {
@@ -378,8 +265,8 @@
 .skip-link:focus {
   left: 8px;
   top: 8px;
-  background: #C96B3E;
-  color: #FDF8F5;
+  background: #7CCBCD;
+  color: #0A0A0A;
   padding: 8px 16px;
   border-radius: 6px;
   font-family: var(--font-sans);

@@ -61,7 +61,7 @@ export async function enviarEmailResend(params: {
 // Layout em tabela + estilo inline: é o padrão robusto pra e-mail — Outlook
 // desktop não lê <style>/flexbox/grid, então nada de CSS moderno aqui.
 // Paleta e tokens iguais ao .polia-v3 (src/styles.css) — bg pedra, ink quase
-// preto, botão turquesa/ink (não terracota — essa é a paleta v1, legada).
+// preto, botão turquesa/ink.
 // Fonte web (Fraunces) não carrega em cliente de e-mail; o fallback Georgia
 // imita o peso serifado sem depender do carregamento.
 export function emailPolia({

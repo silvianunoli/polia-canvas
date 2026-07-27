@@ -1,11 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 // Renovação semanal do token de longa duração do Instagram (@usepolia), via
-// pg_cron (segunda-feira). Fluxo "Instagram API with Facebook Login": o token
-// de página de longa duração se renova trocando o atual por um novo com o
-// mesmo prazo (~60 dias), usando App ID + App Secret do app na Meta for
-// Developers. Guarda o resultado em integracao_instagram (não em secret de
+// pg_cron (segunda-feira). Fluxo "Instagram API with Instagram Login": o
+// token de usuário do Instagram (IGAA...) se renova via GET em
+// graph.instagram.com/refresh_access_token com grant_type=ig_refresh_token —
+// não usa App ID/Secret nem o endpoint do Facebook (diferente do fluxo de
+// Página). Guarda o resultado em integracao_instagram (não em secret de
 // função — o valor muda toda semana, tabela é o lugar certo).
+//
+// Só funciona em token com mais de 24h de vida e ainda não vencido — se
+// vencer antes da renovação semanal rodar, precisa reconectar na mão.
 //
 // Falhou: dispara e-mail pra Sil via Resend (ela precisa renovar na mão antes
 // que a conexão vença). Sem token configurado ainda (pré-requisito do Meta
@@ -14,11 +18,9 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SOCIAL_CRON_SECRET = Deno.env.get("SOCIAL_CRON_SECRET") ?? "";
-const META_APP_ID = Deno.env.get("META_APP_ID") ?? "";
-const META_APP_SECRET = Deno.env.get("META_APP_SECRET") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 
-const GRAPH = "https://graph.facebook.com/v23.0";
+const GRAPH = "https://graph.instagram.com";
 const EMAIL_SIL = "oi@usepolia.com.br";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -63,22 +65,14 @@ Deno.serve(async (req) => {
   if (!atual?.access_token) {
     return new Response(JSON.stringify({ skipped: true, motivo: "Nenhum token configurado ainda" }), { status: 200 });
   }
-  if (!META_APP_ID || !META_APP_SECRET) {
-    console.error("[social-token-renovar] Faltam META_APP_ID/META_APP_SECRET.");
-    return new Response(JSON.stringify({ skipped: true, motivo: "META_APP_ID/META_APP_SECRET não configurados" }), {
-      status: 200,
-    });
-  }
 
   const params = new URLSearchParams({
-    grant_type: "fb_exchange_token",
-    client_id: META_APP_ID,
-    client_secret: META_APP_SECRET,
-    fb_exchange_token: atual.access_token,
+    grant_type: "ig_refresh_token",
+    access_token: atual.access_token,
   });
 
   try {
-    const resp = await fetch(`${GRAPH}/oauth/access_token?${params}`);
+    const resp = await fetch(`${GRAPH}/refresh_access_token?${params}`);
     const json = await resp.json();
     if (json.error || !json.access_token) {
       const motivo = json.error?.message ?? "Resposta sem access_token";

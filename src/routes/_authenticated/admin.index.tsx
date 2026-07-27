@@ -4,6 +4,7 @@ import { HelpCircle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { TOTAL_MODULOS } from "@/lib/planejamento";
+import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   head: () => ({
@@ -239,7 +240,9 @@ function AdminHome() {
                 <HelpCircle size={14} />
               </button>
             </TooltipTrigger>
-            <TooltipContent>módulos do Planejamento concluídos por usuária ativa</TooltipContent>
+            <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
+              módulos do Planejamento concluídos por usuária ativa
+            </TooltipContent>
           </Tooltip>
         </p>
         <p className="font-cabinet mb-1 text-[56px] leading-none text-white">
@@ -275,7 +278,9 @@ function AdminHome() {
                       <HelpCircle size={11} />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent>{item.tooltip}</TooltipContent>
+                  <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                    {item.tooltip}
+                  </TooltipContent>
                 </Tooltip>
               )}
             </p>

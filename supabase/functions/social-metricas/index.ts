@@ -14,7 +14,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "
 const SOCIAL_CRON_SECRET = Deno.env.get("SOCIAL_CRON_SECRET") ?? "";
 const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
 
-const GRAPH = "https://graph.facebook.com/v23.0";
+const GRAPH = "https://graph.instagram.com/v23.0";
 const DIAS_JANELA = 28;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);

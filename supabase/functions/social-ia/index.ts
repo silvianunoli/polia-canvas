@@ -463,34 +463,47 @@ async function produzirComRevisao(
   return { peca: ultimaPeca!, veredito: ultimoVeredito! };
 }
 
+// Chamada direta do painel (browser): precisa responder o preflight de CORS
+// antes de qualquer outra checagem, senão o navegador nunca manda o POST.
+const CORS_HEADERS: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+function jsonResponse(body: unknown, status = 200): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
+  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
 
   let userId: string;
   try {
     userId = await assertAdmin(req);
   } catch {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+    return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
   if (!ANTHROPIC_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "A chave da IA falhou. Confere o segredo ANTHROPIC_API_KEY." }),
-      { status: 200 },
-    );
+    return jsonResponse({ error: "A chave da IA falhou. Confere o segredo ANTHROPIC_API_KEY." });
   }
 
   let body: { acao: string; [key: string]: unknown };
   try {
     body = await req.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Payload inválido." }), { status: 400 });
+    return jsonResponse({ error: "Payload inválido." }, 400);
   }
 
   try {
     if (body.acao === "pauta") {
       const resultado = await handlePauta(body as unknown as Parameters<typeof handlePauta>[0]);
-      return new Response(JSON.stringify(resultado), { status: 200, headers: { "Content-Type": "application/json" } });
+      return jsonResponse(resultado);
     }
 
     if (body.acao === "produzir") {
@@ -500,7 +513,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", pauta_id)
         .maybeSingle();
-      if (erroPauta || !pautaItem) return new Response(JSON.stringify({ error: "Item de pauta não encontrado." }), { status: 404 });
+      if (erroPauta || !pautaItem) return jsonResponse({ error: "Item de pauta não encontrado." }, 404);
 
       const item: ItemPauta = {
         pilar: pautaItem.pilar ?? "",
@@ -527,15 +540,12 @@ Deno.serve(async (req) => {
         slides: peca.slides,
         versoes: [{ v: 1, caption: peca.caption, slides: peca.slides, criado_em: new Date().toISOString() }],
       });
-      if (erroInsert) return new Response(JSON.stringify({ error: "Não salvou a peça." }), { status: 500 });
+      if (erroInsert) return jsonResponse({ error: "Não salvou a peça." }, 500);
 
       await supabaseAdmin.from("social_pauta").update({ status: "produzida", post_id: postId }).eq("id", pauta_id);
       await supabaseAdmin.from("admin_audit_log").insert({ admin_id: userId, acao: "produzir_peca_social", alvo: postId });
 
-      return new Response(JSON.stringify({ post_id: postId, veredito }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ post_id: postId, veredito });
     }
 
     if (body.acao === "ajustar") {
@@ -545,7 +555,7 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", post_id)
         .maybeSingle();
-      if (erroPost || !post) return new Response(JSON.stringify({ error: "Post não encontrado." }), { status: 404 });
+      if (erroPost || !post) return jsonResponse({ error: "Post não encontrado." }, 404);
 
       const item: ItemPauta = {
         pilar: post.pilar ?? "",
@@ -577,18 +587,15 @@ Deno.serve(async (req) => {
           status: novoStatus,
         })
         .eq("id", post_id);
-      if (erroUpdate) return new Response(JSON.stringify({ error: "Não salvou o ajuste." }), { status: 500 });
+      if (erroUpdate) return jsonResponse({ error: "Não salvou o ajuste." }, 500);
 
       await supabaseAdmin.from("admin_audit_log").insert({ admin_id: userId, acao: "ajustar_peca_social", alvo: post_id });
-      return new Response(JSON.stringify({ post_id, veredito }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
+      return jsonResponse({ post_id, veredito });
     }
 
-    return new Response(JSON.stringify({ error: "Ação desconhecida." }), { status: 400 });
+    return jsonResponse({ error: "Ação desconhecida." }, 400);
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : String(err);
-    return new Response(JSON.stringify({ error: `O motor não respondeu. Tenta de novo. (${mensagem})` }), { status: 200 });
+    return jsonResponse({ error: `O motor não respondeu. Tenta de novo. (${mensagem})` });
   }
 });

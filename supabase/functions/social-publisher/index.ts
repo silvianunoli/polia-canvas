@@ -19,7 +19,7 @@ const SOCIAL_CRON_SECRET = Deno.env.get("SOCIAL_CRON_SECRET") ?? "";
 const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
 const IG_USER_ID_ENV = Deno.env.get("IG_USER_ID") ?? "";
 
-const GRAPH = "https://graph.facebook.com/v23.0";
+const GRAPH = "https://graph.instagram.com/v23.0";
 const CODIGOS_TETO_DIARIO = [4, 17, 32, 613];
 const CODIGO_TOKEN_VENCIDO = 190;
 const TIMEOUT_PROCESSAMENTO_MS = 150_000;
@@ -89,11 +89,11 @@ async function esperarProcessamento(token: string, mediaId: string): Promise<voi
     const json = await resp.json();
     if (json.status_code === "FINISHED") return;
     if (json.status_code === "ERROR") {
-      throw new ErroPublicacao("O Instagram não processou esse vídeo. Confere o arquivo e tenta de novo.");
+      throw new ErroPublicacao("O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.");
     }
     await new Promise((r) => setTimeout(r, INTERVALO_POLL_MS));
   }
-  throw new ErroPublicacao("O Instagram não processou esse vídeo. Confere o arquivo e tenta de novo.");
+  throw new ErroPublicacao("O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.");
 }
 
 async function obterPermalink(token: string, mediaId: string): Promise<string | null> {
@@ -111,6 +111,7 @@ async function publicarFeed(token: string, igUserId: string, post: PostRow): Pro
     image_url: post.midias[0],
     caption: post.caption,
   });
+  await esperarProcessamento(token, id);
   const pub = await chamarGraphAPI(token, `${igUserId}/media_publish`, { creation_id: id });
   return pub.id;
 }
@@ -129,6 +130,7 @@ async function publicarCarrossel(token: string, igUserId: string, post: PostRow)
     children: filhos.join(","),
     caption: post.caption,
   });
+  await esperarProcessamento(token, creationId);
   const pub = await chamarGraphAPI(token, `${igUserId}/media_publish`, { creation_id: creationId });
   return pub.id;
 }
@@ -155,7 +157,7 @@ async function publicarStory(token: string, igUserId: string, post: PostRow): Pr
         media_type: "STORIES",
         ...(ehVideo ? { video_url: url } : { image_url: url }),
       });
-      if (ehVideo) await esperarProcessamento(token, id);
+      await esperarProcessamento(token, id);
       const pub = await chamarGraphAPI(token, `${igUserId}/media_publish`, { creation_id: id });
       idsPublicados.push(pub.id);
       if (i < post.midias.length - 1) {

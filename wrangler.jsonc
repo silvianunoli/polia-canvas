@@ -16,7 +16,10 @@
     // www não tinha DNS nenhum (não resolvia). Custom domain do Worker
     // provisiona o registro sozinho; o handler em src/server.ts redireciona
     // 301 pro domínio sem www.
-    { "pattern": "www.usepolia.com.br", "custom_domain": true }
+    { "pattern": "www.usepolia.com.br", "custom_domain": true },
+    // Domínio da área de gestão (/admin) — separado do domínio do produto.
+    // src/server.ts redireciona /admin de usepolia.com.br pra cá.
+    { "pattern": "silvianunoli.com.br", "custom_domain": true }
   ],
   // Mantém o subdomínio *.workers.dev ativo como fallback além do domínio
   // próprio (Wrangler desativa ele por padrão assim que "routes" aparece).

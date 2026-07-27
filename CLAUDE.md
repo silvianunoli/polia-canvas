@@ -6,11 +6,10 @@
 ## Princípio inegociável
 Mundo visual **Pólia v3** (escopo `.polia-v3`, em 100% das rotas): pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta. Parece editorial territorial, não dashboard de SaaS genérico.
 Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
-⚠️ `DESIGN.md` ainda documenta só a paleta v1 (Territorial Diurno: creme/terracota/mostarda/marrom) e não reflete a v3 abaixo — pendência de atualização própria, fora desta correção.
 
 ## PROIBIDO (nunca gere)
 - Cor, sombra ou raio fora dos tokens de `src/styles.css`. Nada de hex hardcoded no componente.
-- Aplicar o tema `.cosmic` (legacy/noite) em containers raiz. Ele está em remoção; código novo é só Territorial Diurno.
+- Recriar um tema alternativo de fundo escuro/noite. O `.cosmic` foi removido do CSS em 2026-07-23; código novo é só Pólia v3.
 - Caveat com `opacity < 1` ou abaixo do piso (18px / 20px mobile). Use as classes canônicas.
 - Gradientes e glassmorphism (cards translúcidos com blur).
 - Sombras grandes ou coloridas. Separe com borda 1px (`--border`).
@@ -21,19 +20,24 @@ Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
 - 3 cards idênticos como única forma de mostrar features.
 
 ## OBRIGATÓRIO
-- Use SOMENTE os design tokens de `src/styles.css` (semânticos e `--polia-*`). Cor nova entra como token primeiro.
+- Use SOMENTE os design tokens de `src/styles.css` (escopo `.polia-v3`). Cor nova entra como token primeiro.
 - Espaçamento só na escala 4/8/12/16/24/32/48/64/96/128.
 - Para cada componente interativo, implemente os estados: normal, hover, foco, carregando, vazio, erro, desabilitado.
 - Acessibilidade (já é piso no projeto): contraste AA, `:focus-visible` visível, navegação por teclado, labels, skip link.
-- Cores de fase (`--polia-sonho/construcao/venda/evolucao`) só para diferenciar etapa da jornada, nunca como enfeite.
 - Mobile-first e responsivo.
 - Copy concreta e sem hype, no tom de conversa de café: duas profissionais adultas, de igual para igual. Voz honesta com dinheiro, acolhedora sem infantilizar. Nunca travessão.
 
+## Vocabulário e persona (fonte: `BRAND.md`)
+- Eixo: número-primeiro. Saber se o negócio dá lucro vem na frente; a marca é o porquê de cobrar mais. Copy e feature abrem pelo dinheiro (dá lucro, quanto sobra, parar de cobrar no chute), a marca aprofunda depois, nunca na largada.
+- Persona citada no produto é sempre **Ana**. **Aimer** é só a cara da marca (chatbot de suporte e influenciadora), nunca o nome da cliente.
+- Palavras e frases proibidas (varrer e reescrever, nunca deixar entrar em copy nova): "marca-primeiro" como eixo ativo (só como registro histórico), "fatura mais" como norte, "Quero faturar", "Começo"/"Alcance"/"Voo" (nomes de plano mortos; os atuais são Confere/Controle/Projete), "margem" fora da calculadora interna (na copy de marketing vira "quanto sobra"), "Dani", "marca clara é marca que fatura", "do seu jeito", "no seu tempo", "no seu ritmo" (vendem ausência; a marca lidera pela ajuda, nunca pelo "faça sozinha"), "planilha por fora" (vira "planilha perdida"), "infoproduto" (vira "produto digital" com exemplo), "turma", "marco/marcos" como jargão de território (mundo territorial morreu; se for referência numérica do Planejamento, chama de "referência", nunca "módulo" nem "meta" a menos que seja literalmente isso).
+- Indicativo em 3ª pessoa nas páginas públicas e na área logada: nunca "você" como sujeito da frase. Use imperativo sem pronome ("Confere o @.", "Altere sua senha") ou reestruture a frase. "seu/sua" possessivo e "você" como objeto de preposição não são o alvo da regra.
+
 ## Design tokens
-Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #2C7E80 pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo deveria estar em `DESIGN.md`, mas o arquivo ainda não foi atualizado pra v3 (ver nota acima).
+Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #2C7E80 pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo em `DESIGN.md` (reescrito pra v3 em 2026-07-23).
 
 ## Referências de qualidade (mire neste nível)
-[Liste 3–5 produtos padrão-ouro pra Pólia — ver DESIGN.md §9.] NÃO se inspire em dashboards genéricos de template.
+Notion, Linear, Duolingo, Vercel, Framer — ver DESIGN.md §7. NÃO se inspire em dashboards genéricos de template.
 
 ## Antes de gerar qualquer tela
 1. Confirme qual é a UMA ação principal.

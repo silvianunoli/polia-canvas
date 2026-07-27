@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardList, CircleCheck, Target } from "lucide-react";
+import { ClipboardList, CircleCheck, Target, ArrowDown, ArrowUpRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
@@ -7,6 +9,8 @@ import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { gatePublico } from "@/lib/site-gate";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
+import { HighlightWord } from "@/components/site/HighlightWord";
 
 export const Route = createFileRoute("/")({
   beforeLoad: gatePublico,
@@ -114,8 +118,13 @@ const planos = [
     preco: "R$ 0",
     ciclo: "pra sempre",
     precoAnual: null,
-    praQuem: "Pra quem está organizando a marca antes de tudo.",
-    features: ["Planejamento completo da marca", "Painel básico pra acompanhar os primeiros passos"],
+    praQuem: "Confere se o seu negócio dá lucro.",
+    features: [
+      "Precificar até 5 produtos, ver o lucro de cada um e quanto sobra pra você",
+      "1 Planner, 1 Caderno e Painel básico",
+      "Planejamento completo, com 1 geração por IA",
+      "Chatbot Aimer pra tirar dúvida na hora",
+    ],
     botaoLabel: "Criar conta grátis",
     apoio: "Sem cartão, e é seu pra sempre.",
     destaque: false,
@@ -126,18 +135,16 @@ const planos = [
     preco: "R$ 29,90",
     ciclo: "/mês",
     precoAnual: "ou R$ 299 por ano, dois meses saem de graça",
-    praQuem: "Pra quem já vende e quer o negócio inteiro num lugar só.",
+    praQuem: "Controle o negócio inteiro, mês a mês.",
     features: [
       "Tudo do Confere, mais:",
-      "Produtos, com a margem de cada venda na sua frente",
-      "Clientes, com a entrega que vira caixa sozinha",
-      "Financeiro do mês fechado num lugar",
-      "Painel completo, com quanto falta pra meta",
-      "Planner pra tocar a semana",
-      "Calendário, Caderno e Metas",
+      "Financeiro completo, contínuo: caixa e memória mês a mês",
+      "Catálogo e Clientes ilimitados",
+      "Metas, Calendário e Mapa de Mercado",
+      "Re-gerações do Planejamento por IA",
     ],
     botaoLabel: "Assinar o Controle",
-    apoio: "O produto inteiro que você usa todo dia.",
+    apoio: "O produto inteiro usado todo dia.",
     destaque: true,
     href: "/assinar?plano=controle",
   },
@@ -146,11 +153,13 @@ const planos = [
     preco: "R$ 47,90",
     ciclo: "/mês",
     precoAnual: "ou R$ 479 por ano, dois meses saem de graça",
-    praQuem: "Pra quem já roda o negócio e quer ir mais longe.",
+    praQuem: "A Pólia lê os números e diz o que fazer.",
     features: [
       "Tudo do Controle, mais:",
-      "A Aimer, sua assistente que ajuda a preencher o Planejamento e tira dúvida na hora",
-      "Um plano de conteúdo do ano pras suas redes",
+      "Projeção e cenários: quanto vender pra se pagar",
+      "Precificação inteligente (encomenda, hora, meta)",
+      "Raio-x do mês pela IA + relatório pro contador",
+      "Plano de conteúdo do ano",
     ],
     botaoLabel: "Assinar o Projete",
     apoio: "Pra quando a marca está pronta pra crescer.",
@@ -189,6 +198,14 @@ const faqs = [
 
 function HomePage() {
   const { mostrarModal, escondendoHome, explorar } = useAppEntryGate();
+  const [mostrarCtaFlutuante, setMostrarCtaFlutuante] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setMostrarCtaFlutuante(window.scrollY > window.innerHeight * 0.9);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // App Android/iOS com sessão ativa (ou sessão ainda carregando): a Home de
   // marketing não deve piscar antes do redirect automático pro painel.
@@ -199,113 +216,181 @@ function HomePage() {
       {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
       <SiteHeader />
 
+      <AnimatePresence>
+        {mostrarCtaFlutuante && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-6 right-6 z-30 hidden md:block"
+          >
+            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                to="/"
+                hash="planos"
+                data-track="cadastro_cta_clicado"
+                data-track-props='{"contexto":"flutuante"}'
+                className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)] bg-[var(--secondary)] px-6 py-3 text-[15px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+              >
+                Quero ver se dá lucro
+                <ArrowUpRight size={16} aria-hidden="true" />
+              </Link>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main>
-        {/* 1. HERO */}
-        <section className="pb-12 pt-16 md:pb-16 md:pt-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[1.05fr_0.95fr] md:gap-16">
-              <div>
-                <h1 className="font-cabinet max-w-[20ch] text-[36px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[48px]">
-                  Descubra se o seu negócio dá lucro.
-                </h1>
-                <p className="mt-6 max-w-[60ch] text-[19px] leading-[1.55] text-[var(--ink-soft)] md:text-[21px]">
-                  Veja quanto sobra em cada venda, sem planilha e sem achismo. Isso começa no
-                  Planejamento, quando você decide quem sua marca atende, o que entrega e quanto
-                  vale, e vira preço, caixa e meta, tudo ligado.
+        {/* 1. HERO — tela quase cheia, tinta cheia, tipografia enorme, destaque animado */}
+        <section className="relative flex min-h-[92vh] flex-col justify-center overflow-hidden bg-[var(--ink)] pb-16 pt-12 text-[var(--bg)] md:pt-16">
+          <div className="mx-auto w-full max-w-[1120px] px-6">
+            <Reveal delay={0.05}>
+              <p className="font-cabinet text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--secondary)]">
+                Planejamento · Preço · Caixa · Meta
+              </p>
+            </Reveal>
+
+            <h1 className="mt-4 font-cabinet text-[13vw] leading-[0.96] tracking-[-0.03em] text-white sm:text-[68px] md:text-[92px] lg:text-[108px]">
+              <div className="overflow-hidden">
+                <motion.span
+                  className="block"
+                  initial={{ y: "100%", opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  Descubra se o seu
+                </motion.span>
+              </div>
+              <div className="overflow-hidden">
+                <motion.span
+                  className="block"
+                  initial={{ y: "100%", opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.09, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  negócio dá <HighlightWord delay={0.55}>lucro.</HighlightWord>
+                </motion.span>
+              </div>
+            </h1>
+
+            <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-[1.1fr_0.9fr] md:gap-16">
+              <Reveal delay={0.45}>
+                <p className="max-w-[60ch] text-[19px] leading-[1.55] text-[var(--bg)]/80 md:text-[21px]">
+                  Veja quanto sobra em cada venda,{" "}
+                  <span className="font-fraunces italic text-white">sem planilha e sem achismo</span>. Isso começa
+                  no Planejamento, quando você decide quem sua marca atende, o que entrega e
+                  quanto vale, e vira preço, caixa e meta, tudo ligado.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                  <Link
-                    to="/"
-                    hash="planos"
-                    data-track="cadastro_cta_clicado"
-                    data-track-props='{"contexto":"hero"}'
-                    className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-                  >
-                    Quero ver se dá lucro
-                  </Link>
+                  <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
+                    <Link
+                      to="/"
+                      hash="planos"
+                      data-track="cadastro_cta_clicado"
+                      data-track-props='{"contexto":"hero"}'
+                      className="inline-flex items-center gap-2 rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    >
+                      Quero ver se dá lucro
+                      <ArrowUpRight size={18} aria-hidden="true" />
+                    </Link>
+                  </motion.div>
                   <a
                     href="#como-funciona"
-                    className="text-[16px] text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+                    className="group inline-flex items-center gap-2 text-[16px] text-white underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                   >
                     ver como funciona
+                    <ArrowDown size={15} className="transition-transform group-hover:translate-y-0.5" aria-hidden="true" />
                   </a>
                 </div>
-                <p className="mt-3 text-[13px] text-[var(--muted)]">
+                <p className="mt-3 text-[13px] text-[var(--bg)]/60">
                   Ver planos e assinar · começa grátis
                 </p>
-              </div>
+              </Reveal>
 
-              <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--bg)]">
-                <img
-                  src="/marketing/hero.png"
-                  alt="Tela da Pólia mostrando o Planejamento da marca conectado ao preço e ao caixa"
-                  className="h-full w-full object-cover"
-                  width={1344}
-                  height={752}
-                />
-              </div>
+              <Reveal delay={0.6} y={32}>
+                <div className="overflow-hidden rounded-xl border border-white/15 bg-white/5">
+                  <img
+                    src="/marketing/hero.png"
+                    alt="Tela da Pólia mostrando o Planejamento da marca conectado ao preço e ao caixa"
+                    className="h-full w-full object-cover"
+                    width={1344}
+                    height={752}
+                  />
+                </div>
+              </Reveal>
             </div>
           </div>
+
+          <motion.div
+            aria-hidden="true"
+            className="mx-auto mt-14 hidden md:block"
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ArrowDown size={20} className="text-[var(--bg)]/60" />
+          </motion.div>
         </section>
 
-        {/* 2. FAIXA DE MECANISMO */}
-        <section id="como-funciona" className="pb-12 md:pb-16">
+        {/* 2. FAIXA DE MECANISMO — bloco de tinta cheia, teste de mais preto na home */}
+        <section id="como-funciona" className="bg-[var(--ink)] py-16 md:py-24">
           <div className="mx-auto max-w-[1120px] px-6">
-            <div className="rounded-xl border border-[var(--line)] bg-white p-8 md:p-12">
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+            <RevealGroup className="rounded-xl border border-white/15 p-8 md:p-12">
+              <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">
                 {mecanismo.map((passo) => (
-                  <div key={passo.n}>
-                    <span className="font-cabinet text-[28px] leading-none text-[var(--secondary-text)]">
+                  <RevealItem key={passo.n}>
+                    <span className="font-cabinet text-[56px] leading-none text-[var(--secondary)] md:text-[64px]">
                       {passo.n}
                     </span>
-                    <h3 className="mt-3 text-[18px] text-[var(--ink)]">{passo.titulo}</h3>
-                    <p className="mt-2 text-[14px] leading-[1.6] text-[var(--ink-soft)]">
+                    <h3 className="mt-3 text-[18px] text-white">{passo.titulo}</h3>
+                    <p className="mt-2 text-[14px] leading-[1.6] text-[var(--bg)]/75">
                       {passo.desc}
                     </p>
-                  </div>
+                  </RevealItem>
                 ))}
               </div>
-              <p className="mt-10 max-w-[60ch] border-t border-[var(--line)] pt-6 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+              <p className="mt-10 max-w-[60ch] border-t border-white/15 pt-6 text-[15px] leading-[1.6] text-[var(--bg)]/75">
                 Um passo puxa o outro. A clareza que você tem no começo é o que vira dinheiro no
                 fim.
               </p>
-            </div>
+            </RevealGroup>
           </div>
         </section>
 
-        {/* 3. PROBLEMA/VILÃO */}
-        <section className="pb-12 md:pb-16">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="grid grid-cols-1 items-center gap-8 md:grid-cols-[0.95fr_1.05fr] md:gap-16">
-              {/* TODO: ilustração humana da Sil */}
-              <div
-                aria-hidden="true"
-                className="order-2 h-[280px] rounded-xl bg-[var(--accent)] md:order-1 md:h-[360px]"
-              />
-              <div className="order-1 md:order-2">
-                <p className="max-w-[32ch] text-[22px] leading-[1.4] text-[var(--ink)] md:text-[26px]">
-                  O problema quase nunca é falta de esforço. É tocar o negócio no escuro, uma
-                  decisão de cada vez, sem ninguém juntando os números pra você.
-                </p>
-                <p className="mt-5 max-w-[54ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-                  Preço definido olhando a concorrente. Gasto sem saber o que sobra. Cliente que
-                  você corre atrás sem saber se dá lucro. Cada escolha dessas parece pequena, mas
-                  junto elas decidem quanto entra no fim do mês. O preço é só onde a conta aparece
-                  mais rápido: quem cobra no chute quase sempre lucra menos do que pensa.
-                </p>
-                <a
-                  href="#tour"
-                  className="mt-6 inline-block text-[16px] text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-                >
-                  Ver onde as decisões se juntam
-                </a>
-              </div>
-            </div>
+        {/* 3. PROBLEMA/VILÃO — bloco de citação em tinta cheia, efeito editorial */}
+        <section className="bg-[var(--ink)] py-20 text-[var(--bg)] md:py-28">
+          <div className="mx-auto max-w-[860px] px-6">
+            <Reveal y={28}>
+              <span aria-hidden="true" className="font-cabinet block text-[64px] leading-none text-[var(--secondary)] md:text-[80px]">
+                “
+              </span>
+              <p className="mt-2 font-cabinet text-[28px] leading-[1.25] tracking-[-0.01em] md:text-[42px]">
+                O problema quase nunca é falta de esforço. É tocar o negócio no escuro, uma
+                decisão de cada vez, sem ninguém juntando os números pra você.
+              </p>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <p className="mt-8 max-w-[62ch] text-[16px] leading-[1.7] text-[var(--bg)]/75 md:text-[18px]">
+                Preço definido olhando a concorrente. Gasto sem saber o que sobra. Cliente que
+                você corre atrás sem saber se dá lucro. Cada escolha dessas parece pequena, mas
+                junto elas decidem quanto entra no fim do mês. O preço é só onde a conta aparece
+                mais rápido: quem cobra no chute quase sempre lucra menos do que pensa.
+              </p>
+              <a
+                href="#tour"
+                className="mt-6 inline-flex items-center gap-2 text-[16px] text-[var(--bg)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bg)]"
+              >
+                Ver onde as decisões se juntam
+                <ArrowDown size={15} aria-hidden="true" />
+              </a>
+            </Reveal>
           </div>
         </section>
 
         {/* 4. TOUR DE MÓDULOS */}
-        <section id="tour" className="relative overflow-hidden pb-12 md:pb-16">
+        <section id="tour" className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
           <img
             src="/marketing/moldura-modulos.jpg"
             alt=""
@@ -313,22 +398,28 @@ function HomePage() {
             className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.06]"
           />
           <div className="relative mx-auto max-w-[1120px] px-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              Como funciona por dentro
-            </p>
-            <h2 className="mt-3 max-w-[28ch] text-[24px] text-[var(--ink)] md:text-[30px]">
-              Seis telas, uma decisão que atravessa todas.
-            </h2>
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                Como funciona por dentro
+              </p>
+              <h2 className="mt-3 max-w-[28ch] font-cabinet text-[32px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
+                Seis telas, uma decisão que atravessa todas.
+              </h2>
+            </Reveal>
 
             <div className="mt-10 flex flex-col gap-16 md:gap-20">
               {modulos.map((m, i) => (
                 <div
                   key={m.nomeModulo}
-                  className="grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16"
+                  className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16"
                 >
-                  <div
-                    className={i % 2 === 1 ? "md:order-2" : "md:order-1"}
+                  <span
+                    aria-hidden="true"
+                    className="font-cabinet pointer-events-none absolute -top-6 right-0 select-none text-[120px] leading-none text-[var(--ink)]/[0.04] md:-top-10 md:text-[180px]"
                   >
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <Reveal className={i % 2 === 1 ? "md:order-2" : "md:order-1"}>
                     <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--secondary-text)]">
                       {m.nomeModulo}
                     </p>
@@ -338,38 +429,42 @@ function HomePage() {
                     <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
                       {m.body}
                     </p>
-                  </div>
-                  <div className={i % 2 === 1 ? "md:order-1" : "md:order-2"}>
+                  </Reveal>
+                  <Reveal delay={0.12} y={32} className={i % 2 === 1 ? "md:order-1" : "md:order-2"}>
                     {/* TODO: print real de {m.printLabel} aqui, ver print capturado na sessão */}
-                    <div
+                    <motion.div
+                      whileHover={{ y: -4 }}
+                      transition={{ duration: 0.25 }}
                       role="img"
                       aria-label={`Espaço reservado para ${m.printLabel}`}
                       className="flex h-[240px] items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[13px] text-[var(--muted)] md:h-[300px]"
                     >
                       {m.printLabel}
-                    </div>
-                  </div>
+                    </motion.div>
+                  </Reveal>
                 </div>
               ))}
             </div>
 
-            <div className="mt-16 flex flex-col items-center gap-3">
-              <Link
-                to="/"
-                hash="planos"
-                data-track="cadastro_cta_clicado"
-                data-track-props='{"contexto":"tour_modulos"}'
-                className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-              >
-                Quero ver se dá lucro
-              </Link>
+            <Reveal className="mt-16 flex flex-col items-center gap-3">
+              <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  to="/"
+                  hash="planos"
+                  data-track="cadastro_cta_clicado"
+                  data-track-props='{"contexto":"tour_modulos"}'
+                  className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+                >
+                  Quero ver se dá lucro
+                </Link>
+              </motion.div>
               <p className="text-[13px] text-[var(--muted)]">
                 Ver planos e assinar · começa grátis
               </p>
-            </div>
+            </Reveal>
 
             {/* 4.6 reforço menor */}
-            <div className="mt-16 grid grid-cols-1 gap-6 border-t border-[var(--line)] pt-10 sm:grid-cols-3">
+            <Reveal className="mt-16 grid grid-cols-1 gap-6 border-t border-[var(--line)] pt-10 sm:grid-cols-3">
               <div className="flex items-start gap-3">
                 <ClipboardList
                   size={20}
@@ -384,83 +479,98 @@ function HomePage() {
                 Agenda e notas também ficam na Pólia, no mesmo lugar do preço, do caixa e do
                 Planner.
               </p>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         {/* 5. QUALIFICAÇÃO */}
-        <section className="pb-12 md:pb-16">
+        <section className="py-16 md:py-20">
           <div className="mx-auto max-w-[1120px] px-6">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              <div className="rounded-xl border border-[var(--line)] bg-white p-8">
-                <div className="flex items-center gap-3">
-                  <CircleCheck
-                    size={22}
-                    className="flex-none text-[var(--secondary-text)]"
-                    aria-hidden="true"
-                  />
-                  <h3 className="text-[19px] text-[var(--ink)]">
-                    Pra quem já vende e quer enxergar o negócio inteiro
-                  </h3>
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                É pra você?
+              </p>
+            </Reveal>
+            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+              <Reveal>
+                <div className="h-full rounded-xl border-2 border-[var(--secondary)] bg-white p-8">
+                  <div className="flex items-center gap-3">
+                    <CircleCheck
+                      size={22}
+                      className="flex-none text-[var(--secondary-text)]"
+                      aria-hidden="true"
+                    />
+                    <h3 className="text-[19px] text-[var(--ink)]">
+                      Pra quem já vende e quer enxergar o negócio inteiro
+                    </h3>
+                  </div>
+                  <ul className="mt-5 flex flex-col gap-4">
+                    {qualificacaoSim.map((item) => (
+                      <li
+                        key={item}
+                        className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="mt-5 flex flex-col gap-4">
-                  {qualificacaoSim.map((item) => (
-                    <li
-                      key={item}
-                      className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
-                    >
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </Reveal>
 
-              <div className="rounded-xl border border-[var(--line)] bg-white p-8">
-                <div className="flex items-center gap-3">
-                  <Target
-                    size={22}
-                    className="flex-none text-[var(--muted)]"
-                    aria-hidden="true"
-                  />
-                  <h3 className="text-[19px] text-[var(--ink)]">Ainda não é pra você</h3>
+              <Reveal delay={0.12}>
+                <div className="h-full rounded-xl border border-[var(--line)] bg-[var(--bg)] p-8">
+                  <div className="flex items-center gap-3">
+                    <Target
+                      size={22}
+                      className="flex-none text-[var(--muted)]"
+                      aria-hidden="true"
+                    />
+                    <h3 className="text-[19px] text-[var(--ink)]">Ainda não é pra você</h3>
+                  </div>
+                  <ul className="mt-5 flex flex-col gap-4">
+                    {qualificacaoNao.map((item) => (
+                      <li
+                        key={item}
+                        className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="mt-5 flex flex-col gap-4">
-                  {qualificacaoNao.map((item) => (
-                    <li
-                      key={item}
-                      className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
-                    >
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
 
         {/* 6. PLANOS */}
-        <section id="planos" className="pb-12 md:pb-16">
+        <section id="planos" className="bg-[var(--bg)] py-16 md:py-20">
           <div className="mx-auto max-w-[1120px] px-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              Planos
-            </p>
-            <h2 className="mt-3 max-w-[24ch] text-[24px] text-[var(--ink)] md:text-[30px]">
-              Comece a enxergar o negócio sem pagar nada.
-            </h2>
-            <p className="mt-4 max-w-[60ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-              O Planejamento é grátis pra sempre. Quando quiser o negócio inteiro num lugar só,
-              você passa pro Controle. Sem fidelidade, cancela quando quiser.
-            </p>
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                Planos
+              </p>
+              <h2 className="mt-3 max-w-[24ch] font-cabinet text-[28px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[38px]">
+                Comece a enxergar o negócio sem pagar nada.
+              </h2>
+              <p className="mt-4 max-w-[60ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
+                O Planejamento é grátis pra sempre. Quando quiser o negócio inteiro num lugar só,
+                você passa pro Controle. Sem fidelidade, cancela quando quiser.
+              </p>
+            </Reveal>
 
-            <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+            <RevealGroup className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
               {planos.map((plano) => (
-                <div
+                <RevealItem
                   key={plano.nome}
-                  className={`flex flex-col rounded-xl border bg-white p-8 ${
-                    plano.destaque ? "border-2 border-[var(--secondary)]" : "border-[var(--line)]"
+                  className={`flex flex-col rounded-xl border p-8 transition-transform duration-300 hover:-translate-y-1 ${
+                    plano.destaque
+                      ? "border-2 border-[var(--secondary)] bg-[var(--surface-pink)]"
+                      : "border-[var(--line)] bg-white"
                   }`}
                 >
+                  <div className="flex flex-1 flex-col">
+                  {/* mantém a estrutura interna original */}
                   {plano.destaque && (
                     <span className="mb-3 inline-block w-fit rounded-[4px] bg-[var(--secondary-light)] px-2 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-[var(--secondary-ink)]">
                       Mais escolhido
@@ -503,57 +613,62 @@ function HomePage() {
                       </li>
                     ))}
                   </ul>
-                </div>
+                  </div>
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           </div>
         </section>
 
-        {/* 7. FAQ */}
-        <section className="pb-12 md:pb-16">
+        {/* 7. FAQ — tinta cheia */}
+        <section className="bg-[var(--ink)] py-16 md:py-20">
           <div className="mx-auto max-w-[720px] px-6">
-            <h2 className="mb-6 text-[24px] text-[var(--ink)] md:text-[30px]">
-              Dúvidas sobre os planos
-            </h2>
-            <Accordion type="single" collapsible>
-              {faqs.map((f) => (
-                <AccordionItem
-                  key={f.pergunta}
-                  value={f.pergunta}
-                  className="border-t border-b-0 border-[var(--line)] first:border-t-0"
-                >
-                  <AccordionTrigger className="py-6 text-[18px] font-normal text-[var(--ink)] no-underline hover:no-underline [&>svg]:text-[var(--muted)]">
-                    {f.pergunta}
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-6 pt-0 text-[16px] text-[var(--ink-soft)]">
-                    {f.resposta}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--bg)]/70">
+                Antes de assinar
+              </p>
+              <h2 className="mt-3 mb-6 font-cabinet text-[26px] leading-[1.1] tracking-[-0.02em] text-white md:text-[34px]">
+                Dúvidas sobre os planos
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1} className="rounded-xl border border-white/15 bg-white px-6 md:px-8">
+              <Accordion type="single" collapsible>
+                {faqs.map((f) => (
+                  <AccordionItem
+                    key={f.pergunta}
+                    value={f.pergunta}
+                    className="border-t border-b-0 border-[var(--line)] first:border-t-0"
+                  >
+                    <AccordionTrigger className="group py-6 text-[18px] font-normal text-[var(--ink)] no-underline hover:no-underline hover:text-[var(--secondary-text)] [&>svg]:text-[var(--muted)] [&>svg]:transition-colors [&>svg]:group-hover:text-[var(--secondary-text)]">
+                      {f.pergunta}
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-6 pt-0 text-[16px] text-[var(--ink-soft)]">
+                      {f.resposta}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </Reveal>
           </div>
         </section>
 
-        {/* 8. CTA FINAL */}
-        <section className="relative overflow-hidden pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="relative overflow-hidden rounded-xl">
-              <img
-                src="/marketing/fechamento.jpg"
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div
-                aria-hidden="true"
-                className="absolute inset-0 bg-[var(--ink)] opacity-40"
-              />
-              <div className="relative flex flex-col items-center gap-8 px-8 py-16 text-center md:py-24">
-                <PoliaWordmark className="h-8 w-auto text-white md:h-10" />
-                <h2 className="mx-auto max-w-[20ch] text-[28px] leading-[1.25] text-white md:text-[36px]">
-                  Tocar o negócio sozinha não precisa ser no escuro.
-                </h2>
-                <div className="flex flex-col items-center gap-3">
+        {/* 8. CTA FINAL — cheio, sem margem, encosta direto no FAQ acima */}
+        <section className="relative overflow-hidden">
+          <img
+            src="/marketing/fechamento.jpg"
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div aria-hidden="true" className="absolute inset-0 bg-[var(--ink)] opacity-[0.55]" />
+          <div className="relative mx-auto max-w-[720px] px-6 py-20 md:py-28">
+            <Reveal className="flex flex-col items-center gap-8 text-center">
+              <PoliaWordmark className="h-8 w-auto text-white md:h-10" />
+              <h2 className="mx-auto max-w-[20ch] font-cabinet text-[30px] leading-[1.15] tracking-[-0.02em] text-white md:text-[44px]">
+                Tocar o negócio sozinha não precisa ser no escuro.
+              </h2>
+              <div className="flex flex-col items-center gap-3">
+                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
                   <Link
                     to="/"
                     hash="planos"
@@ -563,17 +678,17 @@ function HomePage() {
                   >
                     Quero ver se dá lucro
                   </Link>
-                  <p className="text-[13px] text-white/70">
-                    Ver planos e assinar · começa grátis
-                  </p>
-                </div>
+                </motion.div>
+                <p className="text-[13px] text-white/70">
+                  Ver planos e assinar · começa grátis
+                </p>
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
 
-      <SiteFooter />
+      <SiteFooter semMargemTopo />
     </div>
   );
 }

@@ -50,6 +50,52 @@ export function validarQuantidadeETipo(tipo: SocialTipoManual, arquivos: File[])
   return null;
 }
 
+// A Graph API do Instagram só processa imagem em JPEG (PNG/webp viram
+// "Media ID is not available" na publicação, silenciosamente). O formulário
+// aceita os 3 formatos por conveniência de upload, então convertemos aqui.
+function converterParaJpeg(arquivo: File): Promise<File> {
+  if (arquivo.type === "image/jpeg" || arquivo.type === "image/jpg") {
+    return Promise.resolve(arquivo);
+  }
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(arquivo);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        URL.revokeObjectURL(url);
+        reject(new Error("Não deu pra converter essa imagem."));
+        return;
+      }
+      // Fundo branco: PNG/webp podem ter transparência, JPEG não tem canal alfa.
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(url);
+          if (!blob) {
+            reject(new Error("Não deu pra converter essa imagem."));
+            return;
+          }
+          const nomeBase = arquivo.name.replace(/\.[a-zA-Z0-9]{1,5}$/, "");
+          resolve(new File([blob], `${nomeBase}.jpg`, { type: "image/jpeg" }));
+        },
+        "image/jpeg",
+        0.92,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Não deu pra converter essa imagem."));
+    };
+    img.src = url;
+  });
+}
+
 function obterProporcao(arquivo: File): Promise<number> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(arquivo);
@@ -140,7 +186,14 @@ export async function criarPostManual(
   const id = crypto.randomUUID();
   const midias: string[] = [];
   for (let i = 0; i < input.arquivos.length; i++) {
-    const arquivo = input.arquivos[i];
+    let arquivo = input.arquivos[i];
+    if (arquivo.type.startsWith("image/")) {
+      try {
+        arquivo = await converterParaJpeg(arquivo);
+      } catch {
+        return { ok: false, erro: "Não deu pra preparar essa imagem. Tenta outro arquivo." };
+      }
+    }
     const caminho = `${id}/${i}-${crypto.randomUUID()}.${extensaoSeguraSocial(arquivo.name)}`;
     const { error } = await supabase.storage.from(BUCKET).upload(caminho, arquivo, {
       cacheControl: "3600",

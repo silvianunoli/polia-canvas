@@ -16,7 +16,7 @@ const WEBHOOK_VERIFY_TOKEN = Deno.env.get("WEBHOOK_VERIFY_TOKEN") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
 const EMAIL_SIL = "oi@usepolia.com.br";
-const GRAPH = "https://graph.facebook.com/v23.0";
+const GRAPH = "https://graph.instagram.com/v23.0";
 const JANELA_GATILHO_MS = 7 * 24 * 60 * 60 * 1000;
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -220,6 +220,10 @@ Deno.serve(async (req) => {
   } catch {
     return new Response("Payload inválido", { status: 400 });
   }
+
+  // Log temporário pra diagnosticar por que comentários reais não estão
+  // batendo gatilho nenhum — remover depois de confirmar a causa.
+  console.log("[ig-webhook] payload recebido:", JSON.stringify(body));
 
   for (const entry of body.entry ?? []) {
     const entryTimeMs = entry.time;

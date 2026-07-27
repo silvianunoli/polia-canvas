@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
+import { DOMINIO_GESTAO, caminhoPermitidoNoDominioGestao } from "./lib/dominio-gestao";
 
 // Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
 // responde antes de qualquer roteamento do TanStack Start, pra não depender
@@ -84,6 +85,23 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
+    // Área de gestão (/admin) mora em domínio à parte do produto — separa a
+    // ferramenta interna do domínio voltado pra Aimer.
+    if (
+      url.pathname.startsWith("/admin") &&
+      (url.hostname === "usepolia.com.br" || url.hostname === "www.usepolia.com.br")
+    ) {
+      url.hostname = DOMINIO_GESTAO;
+      return Response.redirect(url.toString(), 301);
+    }
+    if (url.hostname === DOMINIO_GESTAO && url.pathname === "/") {
+      url.pathname = "/central";
+      return Response.redirect(url.toString(), 301);
+    }
+    if (url.hostname === DOMINIO_GESTAO && !caminhoPermitidoNoDominioGestao(url.pathname)) {
+      url.hostname = "usepolia.com.br";
+      return Response.redirect(url.toString(), 301);
+    }
     if (url.hostname === "www.usepolia.com.br") {
       url.hostname = "usepolia.com.br";
       return Response.redirect(url.toString(), 301);

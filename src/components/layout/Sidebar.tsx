@@ -24,6 +24,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
+import { DOMINIO_GESTAO } from "@/lib/dominio-gestao";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
@@ -83,6 +85,13 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [ticketsAbertos, setTicketsAbertos] = useState(0);
+  // Domínio de gestão só serve /admin — o sidebar não deve mostrar nem
+  // linkar as seções da assinante (Painel/Planejamento/...) aqui. Checado só
+  // no client (via useEffect) pra não divergir do HTML renderizado no SSR.
+  const [emDominioGestao, setEmDominioGestao] = useState(false);
+  useEffect(() => {
+    setEmDominioGestao(window.location.hostname === DOMINIO_GESTAO);
+  }, []);
 
   // Contagem de chamados abertos, só pra quem é admin (aparece no submenu).
   useEffect(() => {
@@ -129,9 +138,11 @@ export function Sidebar() {
           {/* Topo: logo + negócio + presença + avatar */}
           <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
             <Link
-              to="/painel"
+              to={emDominioGestao ? "/central" : "/painel"}
               onClick={onNavigate}
-              aria-label="Pólia, ir para o painel"
+              aria-label={
+                emDominioGestao ? "Pólia, ir para a central de administração" : "Pólia, ir para o painel"
+              }
               className="text-[var(--ink)] no-underline"
             >
               {compact ? (
@@ -160,7 +171,9 @@ export function Sidebar() {
                     )}
                   </span>
                 </TooltipTrigger>
-                <TooltipContent>{streakLabel}</TooltipContent>
+                <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                  {streakLabel}
+                </TooltipContent>
               </Tooltip>
               <span
                 aria-hidden="true"
@@ -173,9 +186,9 @@ export function Sidebar() {
 
           <div className="mx-3 h-px bg-[var(--line)]" />
 
-          {/* Navegação */}
+          {/* Navegação — some no domínio de gestão, que só serve /admin. */}
           <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 px-2 py-3">
-            {NAV.map((item) => {
+            {!emDominioGestao && NAV.map((item) => {
               const active = isActive(item.to, pathname);
               const Icon = item.icon;
               const content = (
@@ -199,7 +212,9 @@ export function Sidebar() {
               return compact ? (
                 <Tooltip key={item.to}>
                   <TooltipTrigger asChild>{content}</TooltipTrigger>
-                  <TooltipContent side="right">{item.label}</TooltipContent>
+                  <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                    {item.label}
+                  </TooltipContent>
                 </Tooltip>
               ) : (
                 content
@@ -209,14 +224,16 @@ export function Sidebar() {
 
           {/* Rodapé: config, admin, sair, toggle colapso */}
           <div className="flex flex-col gap-1 border-t border-[var(--line)] px-2 py-3">
-            <Link
-              to="/configuracoes"
-              onClick={onNavigate}
-              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-            >
-              <Settings size={20} aria-hidden="true" />
-              {!compact && <span>Configurações</span>}
-            </Link>
+            {!emDominioGestao && (
+              <Link
+                to="/configuracoes"
+                onClick={onNavigate}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+              >
+                <Settings size={20} aria-hidden="true" />
+                {!compact && <span>Configurações</span>}
+              </Link>
+            )}
             {meta.isAdmin && compact && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -229,7 +246,9 @@ export function Sidebar() {
                     <Shield size={20} aria-hidden="true" />
                   </Link>
                 </TooltipTrigger>
-                <TooltipContent side="right">Administração</TooltipContent>
+                <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                  Administração
+                </TooltipContent>
               </Tooltip>
             )}
             {meta.isAdmin && !compact && (

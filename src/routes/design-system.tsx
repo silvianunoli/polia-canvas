@@ -45,22 +45,6 @@ const CORES_V3 = [
   { nome: "Linha", hex: "#E6E6E6", uso: "border-[var(--line)]", borda: true },
 ];
 
-// Paleta v1 — Territorial Diurno. Ainda em uso nas telas que não migraram pra
-// .polia-v3 (landing pública, wizard antigo, parte do admin). Não usar em
-// telas novas: cor nova entra pelo v3.
-const CORES_V1 = [
-  { nome: "Terracota", hex: "#C96B3E", uso: "primária · ações" },
-  { nome: "Creme", hex: "#FDF8F5", uso: "fundo", borda: true },
-  { nome: "Noite", hex: "#1A1A2E", uso: "texto" },
-  { nome: "Musgo", hex: "#2D6A4F", uso: "sucesso · concluído" },
-  { nome: "Dourado", hex: "#C8A96E", uso: "destaque" },
-  { nome: "Mostarda", hex: "#B8862E", uso: "atenção · selos" },
-  { nome: "Marrom", hex: "#3A2A1F", uso: "papel · caderno" },
-  { nome: "Construção", hex: "#1A7FAD", uso: "em progresso" },
-  { nome: "Evolução", hex: "#6B50CC", uso: "planejado" },
-  { nome: "Sonho", hex: "#C9407A", uso: "alerta · remover" },
-];
-
 const TIPOS = [
   {
     fam: "Fraunces",
@@ -73,12 +57,6 @@ const TIPOS = [
     classe: "font-cabinet",
     amostra: "A sua marca inteira, uma etapa por vez.",
     uso: "títulos de destaque · hero, números/preços, logo",
-  },
-  {
-    fam: "DM Serif Display",
-    classe: "font-serif",
-    amostra: "Cada estrela acesa marca um ponto no seu mapa.",
-    uso: "títulos · v1 (legado)",
   },
   {
     fam: "Inter",
@@ -125,44 +103,16 @@ function DesignSystemPage() {
         </div>
         <div className="mb-14 max-w-[640px] rounded-xl border border-[var(--line)] bg-white p-4">
           <p className="font-sans text-[13px] text-[var(--ink-soft)]">
-            <strong className="text-[var(--ink)]">Em migração:</strong> a paleta{" "}
-            <strong>v3 (pêssego + turquesa)</strong> abaixo é a atual — Painel, Sidebar, Clientes,
-            Financeiro e CRM já usam ela. A paleta v1 (terracota, Territorial Diurno) ainda
-            aparece nas telas que não migraram. Tela nova = tokens v3, sempre.
+            <strong className="text-[var(--ink)]">Paleta única:</strong> a{" "}
+            <strong>v3 (pêssego + turquesa)</strong> abaixo é a única em uso, em 100% das rotas. A
+            paleta v1 (terracota, Territorial Diurno) foi removida do código em 2026-07-23.
           </p>
         </div>
 
-        {/* CORES V3 */}
-        <Secao titulo="Cores · v3 (atual)">
+        {/* CORES */}
+        <Secao titulo="Cores">
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             {CORES_V3.map((c) => (
-              <div
-                key={c.nome}
-                className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white"
-              >
-                <div
-                  className="h-24 w-full"
-                  style={{
-                    background: c.hex,
-                    borderBottom: c.borda ? "1px solid var(--line)" : "none",
-                  }}
-                />
-                <div className="p-3">
-                  <p className="font-sans text-[14px] font-medium text-[var(--ink)]">{c.nome}</p>
-                  <p className="font-mono text-[11px] uppercase tracking-[1px] text-[var(--muted)]">
-                    {c.hex}
-                  </p>
-                  <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{c.uso}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Secao>
-
-        {/* CORES V1 */}
-        <Secao titulo="Cores · v1 (legado)">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {CORES_V1.map((c) => (
               <div
                 key={c.nome}
                 className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white"

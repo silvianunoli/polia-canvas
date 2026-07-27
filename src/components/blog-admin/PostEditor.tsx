@@ -17,6 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
 type Post = Tables<"blog_posts">;
 
@@ -955,10 +956,10 @@ export function PostEditor({ post }: PostEditorProps) {
       </div>
 
       <AlertDialog open={confirmarExclusaoAberto} onOpenChange={setConfirmarExclusaoAberto}>
-        <AlertDialogContent>
+        <AlertDialogContent className="polia-v3 border border-[var(--line)] bg-white" style={TOKEN_BRIDGE_V3}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir este post</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-[var(--ink)]">Excluir este post</AlertDialogTitle>
+            <AlertDialogDescription className="text-[var(--ink-soft)]">
               Essa exclusão é definitiva, não tem como desfazer. O post some do blog e do painel
               agora mesmo.
             </AlertDialogDescription>
@@ -988,7 +989,7 @@ export function PostEditor({ post }: PostEditorProps) {
           onClick={() => setPreviewAberto(false)}
         >
           <div
-            className="mx-auto my-10 max-w-3xl rounded-2xl bg-[#FDF8F5] shadow-lg"
+            className="polia-v3 mx-auto my-10 max-w-3xl rounded-2xl bg-white shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-[var(--line)] px-6 py-4">
@@ -1003,30 +1004,24 @@ export function PostEditor({ post }: PostEditorProps) {
               </button>
             </div>
             {/*
-              Hex aqui embaixo NÃO é estilo novo — é cópia proposital da
-              paleta que src/routes/blog.$slug.tsx (o post público real)
-              ainda usa hoje (não migrado pros tokens .polia-v3). O preview
-              só cumpre a promessa de "bater com produção de verdade" se
-              usar exatamente essas cores. Quando a Fase 4 atualizar a
-              página pública pra .polia-v3, atualize este bloco junto.
+              Espelha src/routes/blog.$slug.tsx (o post público real, já em
+              .polia-v3): categoria em pill --highlight, título font-cabinet,
+              corpo em --ink-soft com link sublinhado --secondary. Se o post
+              público mudar de estilo, atualize este bloco junto.
             */}
-            <article className="bg-[#FDF8F5]">
-              <header className="bg-[#1A1A2E] py-16 px-6 rounded-t-none">
-                {categoria && (
-                  <p className="font-sans font-semibold text-[#E89770] text-[11px] uppercase tracking-[0.18em] mb-3">
-                    {categoria}
-                  </p>
-                )}
-                <h1 className="font-serif text-[#FDF8F5] text-[32px] md:text-[44px] leading-tight mb-4">
-                  {titulo || "Título do post"}
-                </h1>
-              </header>
-              <div className="px-6 py-10">
-                <div
-                  className="prose prose-lg max-w-none font-sans text-[#1A1A2E] [&_h2]:font-serif [&_h2]:text-[28px] [&_h2]:mt-10 [&_h2]:mb-4 [&_h3]:font-serif [&_h3]:text-[22px] [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:text-[17px] [&_p]:leading-relaxed [&_p]:mb-5 [&_a]:text-[#C96B3E] [&_a]:underline [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-5 [&_li]:mb-2 [&_strong]:font-semibold"
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
-              </div>
+            <article className="bg-white px-6 py-10">
+              {categoria && (
+                <span className="inline-flex rounded-sm bg-[var(--highlight)] px-3 py-1 text-[13px] font-semibold text-[var(--highlight-ink)]">
+                  {categoria}
+                </span>
+              )}
+              <h1 className="font-cabinet mt-4 text-[32px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
+                {titulo || "Título do post"}
+              </h1>
+              <div
+                className="mt-8 [&>*+*]:mt-6 [&_p]:text-[18px] [&_p]:leading-[1.65] [&_p]:text-[var(--ink-soft)] [&_li]:text-[18px] [&_li]:leading-[1.65] [&_li]:text-[var(--ink-soft)] [&_h2]:mt-12 [&_h2]:text-[26px] [&_h2]:text-[var(--ink)] [&_ul]:list-disc [&_ul]:pl-6 [&_li]:mt-3 [&_strong]:font-semibold [&_a]:text-[var(--ink)] [&_a]:underline [&_a]:decoration-[var(--secondary)] [&_a]:decoration-2 [&_a]:underline-offset-[3px] [&_blockquote]:my-12 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--secondary)] [&_blockquote]:pl-6 [&_blockquote_p]:text-[26px] [&_blockquote_p]:font-medium [&_blockquote_p]:leading-[1.3] [&_blockquote_p]:text-[var(--ink)]"
+                dangerouslySetInnerHTML={{ __html: previewHtml }}
+              />
             </article>
           </div>
         </div>
