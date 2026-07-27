@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
+import { gtagEvent } from "@/components/GoogleAnalytics";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -677,6 +678,9 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
       });
       if (insErr) throw insErr;
       track("onboarding_primeiro_produto", { com_custo: custoNum !== null });
+      // Ativação de verdade pro GA: primeira vez que a usuária vê "quanto
+      // sobra" na própria venda, não um clique genérico de onboarding.
+      gtagEvent("ativacao_viu_quanto_sobra", { com_custo: custoNum !== null });
       setSobrou(calcularQuantoSobra({ precoVenda: precoNum, precoCusto: custoNum ?? 0 }));
     } catch (e) {
       setError((e as Error).message || "Algo deu errado. Tenta de novo.");

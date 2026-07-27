@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { hasConsent } from "@/lib/cookieConsent";
+import { DOMINIO_GESTAO } from "@/lib/dominio-gestao";
 
 declare global {
   interface Window {
@@ -25,12 +26,21 @@ function carregarGtag(measurementId: string) {
   gtag("config", measurementId);
 }
 
+// Dispara um evento GA4 (ex.: ativação). Não faz nada se o GA ainda não
+// carregou (sem consentimento ou domínio de gestão) — nunca quebra o app.
+export function gtagEvent(nome: string, propriedades?: Record<string, unknown>) {
+  if (typeof window === "undefined" || !window.dataLayer) return;
+  window.dataLayer.push(["event", nome, propriedades ?? {}]);
+}
+
 // Só carrega o GA4 se a usuária aceitou cookies de análise (mesmo gate do
 // analytics próprio em lib/analytics.ts) — reage à troca de consentimento
-// sem precisar recarregar a página.
+// sem precisar recarregar a página. Nunca carrega no domínio de gestão
+// (silvianunoli.com.br): é tráfego interno, não da base de clientes.
 export function GoogleAnalytics() {
   useEffect(() => {
     if (typeof window === "undefined" || !MEASUREMENT_ID) return;
+    if (window.location.hostname === DOMINIO_GESTAO) return;
 
     const tentarCarregar = () => {
       if (hasConsent("analytics")) carregarGtag(MEASUREMENT_ID);
