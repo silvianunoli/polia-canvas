@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
+import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding · Pólia" }] }),
@@ -87,7 +88,7 @@ function OnboardingPage() {
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
           {step === 5 && <Step5Dinheiro state={state} onSuccess={() => setStep(6)} />}
           {step === 6 && (
-            <StepFinal tipo={state.business_type} onFinish={() => navigate({ to: "/assinar" })} />
+            <StepFinal tipo={state.business_type} onFinish={() => navigate({ to: "/painel" })} />
           )}
         </div>
       </div>
@@ -676,7 +677,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
       });
       if (insErr) throw insErr;
       track("onboarding_primeiro_produto", { com_custo: custoNum !== null });
-      setSobrou(precoNum - (custoNum ?? 0));
+      setSobrou(calcularQuantoSobra({ precoVenda: precoNum, precoCusto: custoNum ?? 0 }));
     } catch (e) {
       setError((e as Error).message || "Algo deu errado. Tenta de novo.");
     } finally {

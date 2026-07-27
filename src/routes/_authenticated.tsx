@@ -25,6 +25,21 @@ function isentoDeAssinatura(pathname: string): boolean {
   );
 }
 
+// O que o plano Confere (gratuito, pra sempre) já libera sem assinatura:
+// Planejamento inteiro, Painel, Configurações (pra gerenciar a própria conta
+// e fazer upgrade sem ficar presa fora do app) e Chamados (suporte não pode
+// depender de pagar).
+function isRotaConfere(pathname: string): boolean {
+  return (
+    pathname === "/painel" ||
+    pathname === "/configuracoes" ||
+    pathname === "/chamados" ||
+    pathname.startsWith("/chamados/") ||
+    pathname === "/planejamento" ||
+    pathname.startsWith("/planejamento/")
+  );
+}
+
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async ({ location }) => {
     // NOTA DE SEGURANÇA: este guard é client-only (retorna no SSR logo abaixo) e
@@ -49,8 +64,10 @@ export const Route = createFileRoute("/_authenticated")({
           throw redirect({ to: "/onboarding" });
         }
 
-        // Contas beta (de antes do Stripe) ficam liberadas sem assinatura.
-        if (profile.plano !== "beta") {
+        // Contas beta (de antes do Stripe) ficam liberadas sem assinatura, e
+        // qualquer plano (mesmo sem pagar) sempre tem o Confere: Planejamento,
+        // Painel e Configurações.
+        if (profile.plano !== "beta" && !isRotaConfere(location.pathname)) {
           const { data: assinatura } = await supabase
             .from("assinaturas" as never)
             .select("status")

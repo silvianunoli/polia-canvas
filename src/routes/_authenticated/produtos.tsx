@@ -7,6 +7,14 @@ import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { track } from "@/lib/analytics";
+import {
+  calcularQuantoSobra,
+  calcularSobraPct,
+  calcularPrecoSugerido,
+  calcularTaxas,
+  taxasDoBreakdown,
+  type CalculadoraBreakdown,
+} from "@/lib/precificacao.functions";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
 
@@ -53,13 +61,6 @@ export const Route = createFileRoute("/_authenticated/produtos")({
 interface PrecoHistorico {
   preco: number;
   data: string;
-}
-
-// Composição que gerou o preço sugerido pela calculadora: persistida junto ao
-// produto pra permitir "recalcular preço" sem perder custos/taxas/%s digitados.
-interface CalculadoraBreakdown {
-  perfil: "produto" | "servico";
-  valores: Record<string, string>;
 }
 
 interface Produto {
@@ -348,8 +349,12 @@ function ProdutoCard({
 
   const precoVenda = Number(produto.preco_venda);
   const custo = produto.preco_custo != null ? Number(produto.preco_custo) : 0;
-  const margem =
-    precoVenda > 0 ? Math.max(0, Math.round(((precoVenda - custo) / precoVenda) * 100)) : 0;
+  // Mesma fonte que a calculadora: lê taxa/imposto do breakdown salvo (se o
+  // produto veio de lá), pra não divergir do preço sugerido na mesma sessão.
+  const { taxaVendaPct, impostosPct } = taxasDoBreakdown(produto.calculadora_breakdown);
+  const sobraInput = { precoVenda, precoCusto: custo, taxaVendaPct, impostosPct };
+  const sobraPct = calcularSobraPct(sobraInput);
+  const temTaxas = taxaVendaPct > 0 || impostosPct > 0;
 
   return (
     <div className="group relative rounded-xl border border-[var(--line)] bg-white p-4">
@@ -440,15 +445,15 @@ function ProdutoCard({
             <div
               className="h-full rounded-full bg-[var(--secondary)]"
               style={{
-                width: shown ? `${margem}%` : "0%",
+                width: shown ? `${sobraPct}%` : "0%",
                 transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
               }}
             />
           </div>
           <p className="mt-1.5 text-[12px] text-[var(--muted)]">
             {produto.preco_custo != null
-              ? `custo ${fmt(custo)} · margem ${margem}%`
-              : `custo estimado · margem ${margem}%`}
+              ? `custo ${fmt(custo)} · sobra ${sobraPct}%${temTaxas ? "" : " (sem taxa/imposto)"}`
+              : `custo estimado · sobra ${sobraPct}%`}
           </p>
         </>
       )}
@@ -530,13 +535,16 @@ function Calculadora({
     const custoDireto = num(materiaPrima) + num(embalagem) + num(maoObra) + num(outrosDiretos);
     const rateio = num(despesasFixas) / Math.max(num(qtd), 1);
     const custoUnitario = custoDireto + rateio;
-    const pctVenda = num(taxaVenda) + num(impostos);
+    const taxaVendaPct = num(taxaVenda);
+    const impostosPct = num(impostos);
+    const pctVenda = taxaVendaPct + impostosPct;
     const pctTotal = pctVenda + num(margem);
     const invalido = pctTotal >= 100;
-    const precoMinimo = pctVenda < 100 ? custoUnitario / (1 - pctVenda / 100) : custoUnitario;
-    const precoSugerido = invalido ? custoUnitario : custoUnitario / (1 - pctTotal / 100);
-    const taxasReais = precoSugerido * (pctVenda / 100);
-    const lucroReais = precoSugerido * (num(margem) / 100);
+    const precoMinimo = calcularPrecoSugerido(custoUnitario, pctVenda);
+    const precoSugerido = calcularPrecoSugerido(custoUnitario, pctTotal);
+    const sobraInput = { precoVenda: precoSugerido, precoCusto: custoUnitario, taxaVendaPct, impostosPct };
+    const taxasReais = calcularTaxas(sobraInput);
+    const lucroReais = calcularQuantoSobra(sobraInput);
     return {
       custoDireto,
       rateio,
@@ -564,12 +572,15 @@ function Calculadora({
     const custosProjeto =
       num(materiais) + num(deslocamento) + num(ferramentas) + num(outrosServico);
     const custoTotal = maoDeObra + custosProjeto;
-    const pctVenda = num(taxaVendaS) + num(impostosS);
+    const taxaVendaPct = num(taxaVendaS);
+    const impostosPct = num(impostosS);
+    const pctVenda = taxaVendaPct + impostosPct;
     const pctTotal = pctVenda + num(margemSeg);
     const invalido = pctTotal >= 100;
-    const precoSugerido = invalido ? custoTotal : custoTotal / (1 - pctTotal / 100);
-    const taxasReais = precoSugerido * (pctVenda / 100);
-    const lucroReais = precoSugerido * (num(margemSeg) / 100);
+    const precoSugerido = calcularPrecoSugerido(custoTotal, pctTotal);
+    const sobraInput = { precoVenda: precoSugerido, precoCusto: custoTotal, taxaVendaPct, impostosPct };
+    const taxasReais = calcularTaxas(sobraInput);
+    const lucroReais = calcularQuantoSobra(sobraInput);
     return {
       maoDeObra,
       custosProjeto,
@@ -597,17 +608,22 @@ function Calculadora({
   const lucroPorVenda = round2(calc.lucroReais);
   const vendasParaMetaBoa =
     lucroPorVenda > 0 && metaBoa ? Math.ceil(metaBoa / lucroPorVenda) : null;
-  const pctVenda = perfil === "produto" ? num(taxaVenda) + num(impostos) : num(taxaVendaS) + num(impostosS);
+  const taxaVendaPctAtual = perfil === "produto" ? num(taxaVenda) : num(taxaVendaS);
+  const impostosPctAtual = perfil === "produto" ? num(impostos) : num(impostosS);
 
   // Com desconto de X%: taxa/imposto são % do preço, então caem junto com ele.
   const descontoPct = num(desconto);
   const simulacaoDesconto = useMemo(() => {
     if (!descontoPct) return null;
     const precoComDesconto = calc.precoSugerido * (1 - descontoPct / 100);
-    const taxasComDesconto = precoComDesconto * (pctVenda / 100);
-    const lucroComDesconto = precoComDesconto - custoBase - taxasComDesconto;
+    const lucroComDesconto = calcularQuantoSobra({
+      precoVenda: precoComDesconto,
+      precoCusto: custoBase,
+      taxaVendaPct: taxaVendaPctAtual,
+      impostosPct: impostosPctAtual,
+    });
     return { precoComDesconto, lucroComDesconto };
-  }, [descontoPct, calc.precoSugerido, custoBase, pctVenda]);
+  }, [descontoPct, calc.precoSugerido, custoBase, taxaVendaPctAtual, impostosPctAtual]);
 
   function buildBreakdown(): CalculadoraBreakdown {
     return perfil === "produto"

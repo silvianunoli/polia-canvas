@@ -7,7 +7,11 @@ const SITE_URL = "https://usepolia.com.br";
 
 const inputSchema = z.object({
   email: z.string().trim().email().max(255),
-  plano: z.enum(["mensal", "anual"]),
+  // Checkout público hoje só oferece o Controle (o Projete exige decidir se
+  // a Aimer/plano de conteúdo compensam vender sem conta prévia).
+  plano: z.enum(["mensal", "anual"]).transform((p): "controle_mensal" | "controle_anual" =>
+    p === "mensal" ? "controle_mensal" : "controle_anual",
+  ),
 });
 
 // Checkout hospedado do Stripe, sem exigir conta prévia: quem compra aqui

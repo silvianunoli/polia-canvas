@@ -10,22 +10,19 @@ import { Switch } from "@/components/ui/switch";
 import { dadosEmissorRecibo } from "@/lib/recibo.functions";
 import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
 import { track } from "@/lib/analytics";
-import { iniciarAssinatura, statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
+import { statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import {
   statusConexaoGoogle,
   iniciarConexaoGoogle,
   desconectarGoogle,
 } from "@/lib/calendarGoogle.functions";
-import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
-
-const VALOR_PLANO_PAGO = 29;
-const VALOR_PLANO_ANUAL = 290;
 
 const NOME_PLANO: Record<string, string> = {
   beta: "Plano de lançamento",
-  mensal: "Mensal",
-  anual: "Anual",
+  confere: "Confere",
+  controle: "Controle",
+  projete: "Projete",
   cancelada: "Assinatura cancelada",
 };
 
@@ -90,8 +87,6 @@ function ConfiguracoesPage() {
   });
   const assinatura = assinaturaQuery.data;
 
-  const [planoIniciando, setPlanoIniciando] = useState<"mensal" | "anual" | null>(null);
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
   const [cancelando, setCancelando] = useState(false);
 
@@ -130,25 +125,6 @@ function ConfiguracoesPage() {
     onError: () => toastErro("Não consegui desconectar agora."),
   });
 
-  const assinar = async (planoEscolhido: "mensal" | "anual") => {
-    setPlanoIniciando(planoEscolhido);
-    try {
-      const resultado = await iniciarAssinatura({ data: { plano: planoEscolhido } });
-      if (resultado.error || !resultado.clientSecret) {
-        track("assinatura_falhou", { plano: planoEscolhido, motivo: resultado.error ?? "sem_client_secret" });
-        toastErro(resultado.error ?? "Não consegui iniciar sua assinatura agora. Tenta de novo.");
-        return;
-      }
-      track("assinatura_iniciada", { plano: planoEscolhido });
-      setClientSecret(resultado.clientSecret);
-    } catch {
-      track("assinatura_falhou", { plano: planoEscolhido, motivo: "excecao_client" });
-      toastErro("Não consegui iniciar sua assinatura agora. Tenta de novo.");
-    } finally {
-      setPlanoIniciando(null);
-    }
-  };
-
   const cancelar = async () => {
     setCancelando(true);
     try {
@@ -176,15 +152,20 @@ function ConfiguracoesPage() {
         toastErro("O recibo ainda não está configurado. Fala com o suporte.");
         return;
       }
-      const anual = plano === "anual";
+      const preco = assinatura?.preco;
+      if (!preco) {
+        toastErro("Não consegui identificar o valor da sua assinatura. Fala com o suporte.");
+        return;
+      }
+      const anual = preco.intervalo === "year";
       gerarReciboPdf({
         emissorNome: emissor.nome,
         emissorCpf: emissor.cpf,
         emissorEndereco: emissor.endereco,
         pagadorNome: profileQuery.data?.full_name || "Assinante Pólia",
         pagadorEmail: user?.email ?? "",
-        descricao: `Assinatura Pólia, plano ${anual ? "anual" : "mensal"}`,
-        valor: anual ? VALOR_PLANO_ANUAL : VALOR_PLANO_PAGO,
+        descricao: `Assinatura Pólia, plano ${NOME_PLANO[preco.tier] ?? preco.tier} (${anual ? "anual" : "mensal"})`,
+        valor: preco.valorCentavos / 100,
         dataEmissao: new Date(),
       });
       track("recibo_baixado");
@@ -649,44 +630,43 @@ function ConfiguracoesPage() {
                       : `Próxima cobrança em ${formatarData(assinatura.currentPeriodEnd)}.`}
                   </p>
                 </div>
-                <div className="text-right">
-                  <p className="font-cabinet text-[28px] leading-none text-[var(--ink)]">
-                    R$ {plano === "anual" ? VALOR_PLANO_ANUAL : VALOR_PLANO_PAGO}
-                  </p>
-                  <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
-                    {plano === "anual" ? "por ano" : "por mês"}
-                  </p>
-                </div>
+                {assinatura.preco && (
+                  <div className="text-right">
+                    <p className="font-cabinet text-[28px] leading-none text-[var(--ink)]">
+                      R${" "}
+                      {(assinatura.preco.valorCentavos / 100).toLocaleString("pt-BR", {
+                        minimumFractionDigits: assinatura.preco.valorCentavos % 100 ? 2 : 0,
+                      })}
+                    </p>
+                    <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
+                      {assinatura.preco.intervalo === "year" ? "por ano" : "por mês"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
-          {!assinaturaQuery.isLoading && !assinatura?.ativa && (
+          {!assinaturaQuery.isLoading && !assinatura?.ativa && plano !== "beta" && (
             <>
               <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
                 {plano === "cancelada"
                   ? "sua assinatura foi cancelada. assine de novo quando quiser."
-                  : "escolha um plano pra sair do beta e manter a Pólia funcionando."}
+                  : "no Confere agora. Passa pro Controle ou Projete pra abrir o negócio inteiro."}
               </p>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <PlanoCard
-                  titulo="Mensal"
-                  preco={`R$ ${VALOR_PLANO_PAGO}`}
-                  periodo="por mês"
-                  carregando={planoIniciando === "mensal"}
-                  desabilitado={planoIniciando !== null}
-                  onAssinar={() => assinar("mensal")}
-                />
-                <PlanoCard
-                  titulo="Anual"
-                  preco={`R$ ${VALOR_PLANO_ANUAL}`}
-                  periodo="por ano · 2 meses grátis"
-                  carregando={planoIniciando === "anual"}
-                  desabilitado={planoIniciando !== null}
-                  onAssinar={() => assinar("anual")}
-                />
-              </div>
+              <a
+                href="/assinar"
+                className="inline-block rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-colors hover:opacity-90"
+              >
+                Ver planos
+              </a>
             </>
+          )}
+
+          {!assinaturaQuery.isLoading && !assinatura?.ativa && plano === "beta" && (
+            <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
+              plano de lançamento: acesso completo, sem cobrança.
+            </p>
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -735,18 +715,27 @@ function ConfiguracoesPage() {
           </div>
         </Secao>
 
-        {clientSecret && (
-          <AssinaturaCheckout
-            clientSecret={clientSecret}
-            onClose={() => setClientSecret(null)}
-            onSucesso={() => {
-              track("assinatura_concluida");
-              setClientSecret(null);
-              toastSucesso("Pagamento confirmado! Atualizando sua assinatura...");
-              invalidarAssinatura();
-            }}
-          />
-        )}
+        {/* SEÇÃO 7 — AJUDA */}
+        <Secao titulo="Ajuda">
+          <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
+            dúvida rápida, fala com a gente em Ajuda. Coisa que precisa de acompanhamento, abre um
+            chamado.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a
+              href="/ajuda#contato"
+              className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
+            >
+              Central de ajuda
+            </a>
+            <a
+              href="/chamados"
+              className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
+            >
+              Seus chamados
+            </a>
+          </div>
+        </Secao>
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
@@ -845,40 +834,6 @@ function ToggleLinha({
         <p className="font-sans text-[12px] text-[var(--ink-soft)]">{descricao}</p>
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
-    </div>
-  );
-}
-
-function PlanoCard({
-  titulo,
-  preco,
-  periodo,
-  carregando,
-  desabilitado,
-  onAssinar,
-}: {
-  titulo: string;
-  preco: string;
-  periodo: string;
-  carregando: boolean;
-  desabilitado: boolean;
-  onAssinar: () => void;
-}) {
-  return (
-    <div className="rounded-xl border border-[var(--line)] p-5">
-      <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
-        {titulo}
-      </p>
-      <p className="mt-1 font-cabinet text-[28px] leading-none text-[var(--ink)]">{preco}</p>
-      <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{periodo}</p>
-      <button
-        type="button"
-        onClick={onAssinar}
-        disabled={desabilitado}
-        className="mt-4 w-full rounded-xl bg-[var(--secondary)] px-4 py-2 font-sans text-[13px] font-semibold text-[var(--secondary-ink)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {carregando ? "Preparando..." : "Assinar"}
-      </button>
     </div>
   );
 }

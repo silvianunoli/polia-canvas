@@ -23,10 +23,21 @@ const supabaseAuthSchema = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
 });
 
 const PRICE_TO_PLANO: Record<string, string> = {};
-const PRICE_MENSAL = Deno.env.get("STRIPE_PRICE_ID_MENSAL");
-const PRICE_ANUAL = Deno.env.get("STRIPE_PRICE_ID_ANUAL");
-if (PRICE_MENSAL) PRICE_TO_PLANO[PRICE_MENSAL] = "mensal";
-if (PRICE_ANUAL) PRICE_TO_PLANO[PRICE_ANUAL] = "anual";
+// Legado: os primeiros price ids (só "Assinatura", sem plano diferenciado)
+// mapeiam pra "controle" — era o único plano pago que existia até 26/jul.
+const PRICE_LEGADO_MENSAL = Deno.env.get("STRIPE_PRICE_ID_MENSAL");
+const PRICE_LEGADO_ANUAL = Deno.env.get("STRIPE_PRICE_ID_ANUAL");
+if (PRICE_LEGADO_MENSAL) PRICE_TO_PLANO[PRICE_LEGADO_MENSAL] = "controle";
+if (PRICE_LEGADO_ANUAL) PRICE_TO_PLANO[PRICE_LEGADO_ANUAL] = "controle";
+
+const PRICE_CONTROLE_MENSAL = Deno.env.get("STRIPE_PRICE_ID_CONTROLE_MENSAL");
+const PRICE_CONTROLE_ANUAL = Deno.env.get("STRIPE_PRICE_ID_CONTROLE_ANUAL");
+const PRICE_PROJETE_MENSAL = Deno.env.get("STRIPE_PRICE_ID_PROJETE_MENSAL");
+const PRICE_PROJETE_ANUAL = Deno.env.get("STRIPE_PRICE_ID_PROJETE_ANUAL");
+if (PRICE_CONTROLE_MENSAL) PRICE_TO_PLANO[PRICE_CONTROLE_MENSAL] = "controle";
+if (PRICE_CONTROLE_ANUAL) PRICE_TO_PLANO[PRICE_CONTROLE_ANUAL] = "controle";
+if (PRICE_PROJETE_MENSAL) PRICE_TO_PLANO[PRICE_PROJETE_MENSAL] = "projete";
+if (PRICE_PROJETE_ANUAL) PRICE_TO_PLANO[PRICE_PROJETE_ANUAL] = "projete";
 
 // Mesmo segredo compartilhado usado pelo Worker Cloudflare — ver
 // docs/observabilidade-alertas.md. Fire-and-forget: nunca deixa uma falha de

@@ -139,7 +139,7 @@ const planos = [
     botaoLabel: "Assinar o Controle",
     apoio: "O produto inteiro que você usa todo dia.",
     destaque: true,
-    href: "/ajuda?assunto=assinar-controle#contato",
+    href: "/assinar?plano=controle",
   },
   {
     nome: "Projete",
@@ -155,7 +155,7 @@ const planos = [
     botaoLabel: "Assinar o Projete",
     apoio: "Pra quando a marca está pronta pra crescer.",
     destaque: false,
-    href: "/ajuda?assunto=assinar-projete#contato",
+    href: "/assinar?plano=projete",
   },
 ];
 

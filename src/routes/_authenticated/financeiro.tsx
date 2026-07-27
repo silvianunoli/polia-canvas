@@ -7,6 +7,11 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import {
+  calcularQuantoSobra,
+  taxasDoBreakdown,
+  type CalculadoraBreakdown,
+} from "@/lib/precificacao.functions";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -941,6 +946,7 @@ interface ProdutoVenda {
   nome: string;
   preco_venda: number;
   preco_custo: number | null;
+  calculadora_breakdown: CalculadoraBreakdown | null;
 }
 
 function ModalRegistrarVendaProduto({
@@ -964,16 +970,22 @@ function ModalRegistrarVendaProduto({
     queryFn: async () => {
       const { data } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda, preco_custo")
+        .select("id, nome, preco_venda, preco_custo, calculadora_breakdown")
         .eq("user_id", userId)
         .eq("arquivado", false)
         .order("nome");
-      return (data ?? []) as ProdutoVenda[];
+      return (data ?? []) as unknown as ProdutoVenda[];
     },
   });
   const produtos = produtosQuery.data ?? [];
   const produto = produtos.find((p) => p.id === produtoId) ?? null;
-  const sobrou = produto ? Number(produto.preco_venda) - Number(produto.preco_custo ?? 0) : null;
+  const sobrou = produto
+    ? calcularQuantoSobra({
+        precoVenda: Number(produto.preco_venda),
+        precoCusto: Number(produto.preco_custo ?? 0),
+        ...taxasDoBreakdown(produto.calculadora_breakdown),
+      })
+    : null;
 
   const salvar = async () => {
     if (!produto) return;

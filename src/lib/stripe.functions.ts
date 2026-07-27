@@ -18,9 +18,17 @@ export function stripeClient(): Stripe {
   return _stripe;
 }
 
-export function precoParaPlano(plano: "mensal" | "anual"): string {
-  const priceId =
-    plano === "mensal" ? process.env.STRIPE_PRICE_ID_MENSAL : process.env.STRIPE_PRICE_ID_ANUAL;
+export type PlanoAssinatura = "controle_mensal" | "controle_anual" | "projete_mensal" | "projete_anual";
+
+const ENV_PRICE_POR_PLANO: Record<PlanoAssinatura, string | undefined> = {
+  controle_mensal: process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL,
+  controle_anual: process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL,
+  projete_mensal: process.env.STRIPE_PRICE_ID_PROJETE_MENSAL,
+  projete_anual: process.env.STRIPE_PRICE_ID_PROJETE_ANUAL,
+};
+
+export function precoParaPlano(plano: PlanoAssinatura): string {
+  const priceId = ENV_PRICE_POR_PLANO[plano];
   if (!priceId) {
     console.error(`[Stripe] Missing STRIPE_PRICE_ID_${plano.toUpperCase()} environment variable.`);
     throw new Error(`Missing price id for plano "${plano}".`);
@@ -34,20 +42,64 @@ interface AssinaturaRow {
   status: string;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  price_id: string | null;
 }
 
 async function lerAssinatura(userId: string): Promise<AssinaturaRow | null> {
   const { data } = await supabaseAdmin
     .from("assinaturas" as never)
-    .select("stripe_customer_id, stripe_subscription_id, status, current_period_end, cancel_at_period_end")
+    .select(
+      "stripe_customer_id, stripe_subscription_id, status, current_period_end, cancel_at_period_end, price_id",
+    )
     .eq("user_id", userId)
     .maybeSingle();
   return (data as unknown as AssinaturaRow) ?? null;
 }
 
+interface InfoPreco {
+  valorCentavos: number;
+  intervalo: "month" | "year";
+  tier: "controle" | "projete";
+}
+
+// Sem chamada extra ao Stripe: os valores são os mesmos que a gente cadastrou
+// (ver criarPlanosStripe), então mapeia direto do price id conhecido por env.
+function infoDoPreco(priceId: string | null): InfoPreco | null {
+  const mapa: Record<string, InfoPreco> = {};
+  const add = (id: string | undefined, info: InfoPreco) => {
+    if (id) mapa[id] = info;
+  };
+  add(process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL, {
+    valorCentavos: 2990,
+    intervalo: "month",
+    tier: "controle",
+  });
+  add(process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL, {
+    valorCentavos: 29900,
+    intervalo: "year",
+    tier: "controle",
+  });
+  add(process.env.STRIPE_PRICE_ID_PROJETE_MENSAL, {
+    valorCentavos: 4790,
+    intervalo: "month",
+    tier: "projete",
+  });
+  add(process.env.STRIPE_PRICE_ID_PROJETE_ANUAL, {
+    valorCentavos: 47900,
+    intervalo: "year",
+    tier: "projete",
+  });
+  // Legado: price ids de antes de 26/jul, quando só existia um plano pago.
+  add(process.env.STRIPE_PRICE_ID_MENSAL, { valorCentavos: 2900, intervalo: "month", tier: "controle" });
+  add(process.env.STRIPE_PRICE_ID_ANUAL, { valorCentavos: 29000, intervalo: "year", tier: "controle" });
+  return priceId ? (mapa[priceId] ?? null) : null;
+}
+
 const STATUS_ATIVOS = new Set(["active", "past_due", "trialing"]);
 
-const iniciarAssinaturaInput = z.object({ plano: z.enum(["mensal", "anual"]) });
+const iniciarAssinaturaInput = z.object({
+  plano: z.enum(["controle_mensal", "controle_anual", "projete_mensal", "projete_anual"]),
+});
 
 export const iniciarAssinatura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -117,12 +169,21 @@ export const statusAssinatura = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const assinatura = await lerAssinatura(context.userId);
-    if (!assinatura) return { ativa: false, status: null, currentPeriodEnd: null, cancelAtPeriodEnd: false };
+    if (!assinatura) {
+      return {
+        ativa: false,
+        status: null,
+        currentPeriodEnd: null,
+        cancelAtPeriodEnd: false,
+        preco: null,
+      };
+    }
     return {
       ativa: STATUS_ATIVOS.has(assinatura.status),
       status: assinatura.status,
       currentPeriodEnd: assinatura.current_period_end,
       cancelAtPeriodEnd: assinatura.cancel_at_period_end,
+      preco: infoDoPreco(assinatura.price_id),
     };
   });
 

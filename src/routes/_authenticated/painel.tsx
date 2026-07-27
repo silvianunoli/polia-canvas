@@ -119,6 +119,7 @@ interface TarefaRow {
   prazo: string | null;
   horario: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 function hojeISO(): string {
@@ -252,7 +253,7 @@ function PainelPage() {
         supabase.from("quadros").select("id, nome, slug").eq("user_id", userId!),
         supabase
           .from("tarefas")
-          .select("id, titulo, status, quadro_id, prazo, horario, created_at")
+          .select("id, titulo, status, quadro_id, prazo, horario, created_at, updated_at")
           .eq("user_id", userId!)
           .order("created_at", { ascending: false }),
         supabase
@@ -445,7 +446,9 @@ function PainelPage() {
       d.setDate(ini.getDate() + i);
       const count = tarefas.filter((t) => {
         if (t.status !== "concluido") return false;
-        const td = new Date(t.created_at);
+        // Conta pelo dia da conclusão (updated_at), não da criação — senão uma
+        // tarefa criada segunda e concluída sexta aparecia contada na segunda.
+        const td = new Date(t.updated_at);
         return (
           td.getFullYear() === d.getFullYear() &&
           td.getMonth() === d.getMonth() &&
