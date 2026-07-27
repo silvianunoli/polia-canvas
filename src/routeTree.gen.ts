@@ -40,34 +40,16 @@ import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
-import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
 import { Route as AuthenticatedBlogAdminIndexRouteImport } from './routes/_authenticated/blog-admin.index'
-import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedBlogAdminNovoRouteImport } from './routes/_authenticated/blog-admin.novo'
 import { Route as AuthenticatedBlogAdminIdRouteImport } from './routes/_authenticated/blog-admin.$id'
-import { Route as AuthenticatedAdminSocialRouteImport } from './routes/_authenticated/admin.social'
-import { Route as AuthenticatedAdminQualidadeRouteImport } from './routes/_authenticated/admin.qualidade'
-import { Route as AuthenticatedAdminNegocioRouteImport } from './routes/_authenticated/admin.negocio'
-import { Route as AuthenticatedAdminLogsRouteImport } from './routes/_authenticated/admin.logs'
-import { Route as AuthenticatedAdminGovernancaRouteImport } from './routes/_authenticated/admin.governanca'
-import { Route as AuthenticatedAdminFunilRouteImport } from './routes/_authenticated/admin.funil'
-import { Route as AuthenticatedAdminFlagsRouteImport } from './routes/_authenticated/admin.flags'
-import { Route as AuthenticatedAdminCrmRouteImport } from './routes/_authenticated/admin.crm'
-import { Route as AuthenticatedAdminAuditoriaRouteImport } from './routes/_authenticated/admin.auditoria'
-import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
-import { Route as AuthenticatedAdminAlertasRouteImport } from './routes/_authenticated/admin.alertas'
-import { Route as AuthenticatedAdminPesquisasIndexRouteImport } from './routes/_authenticated/admin.pesquisas.index'
-import { Route as AuthenticatedAdminChamadosIndexRouteImport } from './routes/_authenticated/admin.chamados.index'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
-import { Route as AuthenticatedAdminUsuariosIdRouteImport } from './routes/_authenticated/admin.usuarios.$id'
-import { Route as AuthenticatedAdminPesquisasSlugRouteImport } from './routes/_authenticated/admin.pesquisas.$slug'
-import { Route as AuthenticatedAdminChamadosIdRouteImport } from './routes/_authenticated/admin.chamados.$id'
 
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
@@ -224,11 +206,6 @@ const AuthenticatedAssinarRoute = AuthenticatedAssinarRouteImport.update({
   path: '/assinar',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedPlannerIndexRoute =
   AuthenticatedPlannerIndexRouteImport.update({
     id: '/planner/',
@@ -253,11 +230,6 @@ const AuthenticatedBlogAdminIndexRoute =
     path: '/blog-admin/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
 const AuthenticatedPlannerSlugRoute =
   AuthenticatedPlannerSlugRouteImport.update({
     id: '/planner/$slug',
@@ -287,103 +259,11 @@ const AuthenticatedBlogAdminIdRoute =
     path: '/blog-admin/$id',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedAdminSocialRoute =
-  AuthenticatedAdminSocialRouteImport.update({
-    id: '/social',
-    path: '/social',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminQualidadeRoute =
-  AuthenticatedAdminQualidadeRouteImport.update({
-    id: '/qualidade',
-    path: '/qualidade',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminNegocioRoute =
-  AuthenticatedAdminNegocioRouteImport.update({
-    id: '/negocio',
-    path: '/negocio',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminLogsRoute = AuthenticatedAdminLogsRouteImport.update({
-  id: '/logs',
-  path: '/logs',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminGovernancaRoute =
-  AuthenticatedAdminGovernancaRouteImport.update({
-    id: '/governanca',
-    path: '/governanca',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminFunilRoute = AuthenticatedAdminFunilRouteImport.update({
-  id: '/funil',
-  path: '/funil',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminFlagsRoute = AuthenticatedAdminFlagsRouteImport.update({
-  id: '/flags',
-  path: '/flags',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminCrmRoute = AuthenticatedAdminCrmRouteImport.update({
-  id: '/crm',
-  path: '/crm',
-  getParentRoute: () => AuthenticatedAdminRoute,
-} as any)
-const AuthenticatedAdminAuditoriaRoute =
-  AuthenticatedAdminAuditoriaRouteImport.update({
-    id: '/auditoria',
-    path: '/auditoria',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminAnalyticsRoute =
-  AuthenticatedAdminAnalyticsRouteImport.update({
-    id: '/analytics',
-    path: '/analytics',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminAlertasRoute =
-  AuthenticatedAdminAlertasRouteImport.update({
-    id: '/alertas',
-    path: '/alertas',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminPesquisasIndexRoute =
-  AuthenticatedAdminPesquisasIndexRouteImport.update({
-    id: '/pesquisas/',
-    path: '/pesquisas/',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminChamadosIndexRoute =
-  AuthenticatedAdminChamadosIndexRouteImport.update({
-    id: '/chamados/',
-    path: '/chamados/',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
 const AuthenticatedPlanejamentoModuloNRoute =
   AuthenticatedPlanejamentoModuloNRouteImport.update({
     id: '/planejamento/modulo/$n',
     path: '/planejamento/modulo/$n',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedAdminUsuariosIdRoute =
-  AuthenticatedAdminUsuariosIdRouteImport.update({
-    id: '/usuarios/$id',
-    path: '/usuarios/$id',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminPesquisasSlugRoute =
-  AuthenticatedAdminPesquisasSlugRouteImport.update({
-    id: '/pesquisas/$slug',
-    path: '/pesquisas/$slug',
-    getParentRoute: () => AuthenticatedAdminRoute,
-  } as any)
-const AuthenticatedAdminChamadosIdRoute =
-  AuthenticatedAdminChamadosIdRouteImport.update({
-    id: '/chamados/$id',
-    path: '/chamados/$id',
-    getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -397,7 +277,6 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
@@ -418,33 +297,16 @@ export interface FileRoutesByFullPath {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/admin/alertas': typeof AuthenticatedAdminAlertasRoute
-  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
-  '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/flags': typeof AuthenticatedAdminFlagsRoute
-  '/admin/funil': typeof AuthenticatedAdminFunilRoute
-  '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
-  '/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
-  '/admin/social': typeof AuthenticatedAdminSocialRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
-  '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
-  '/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
-  '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
-  '/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
-  '/admin/pesquisas/': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -477,33 +339,16 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog': typeof BlogIndexRoute
-  '/admin/alertas': typeof AuthenticatedAdminAlertasRoute
-  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
-  '/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/admin/flags': typeof AuthenticatedAdminFlagsRoute
-  '/admin/funil': typeof AuthenticatedAdminFunilRoute
-  '/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
-  '/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
-  '/admin/social': typeof AuthenticatedAdminSocialRoute
   '/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/admin': typeof AuthenticatedAdminIndexRoute
   '/blog-admin': typeof AuthenticatedBlogAdminIndexRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
-  '/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
-  '/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
-  '/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
-  '/admin/chamados': typeof AuthenticatedAdminChamadosIndexRoute
-  '/admin/pesquisas': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -518,7 +363,6 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
@@ -539,33 +383,16 @@ export interface FileRoutesById {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/blog/': typeof BlogIndexRoute
-  '/_authenticated/admin/alertas': typeof AuthenticatedAdminAlertasRoute
-  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/_authenticated/admin/auditoria': typeof AuthenticatedAdminAuditoriaRoute
-  '/_authenticated/admin/crm': typeof AuthenticatedAdminCrmRoute
-  '/_authenticated/admin/flags': typeof AuthenticatedAdminFlagsRoute
-  '/_authenticated/admin/funil': typeof AuthenticatedAdminFunilRoute
-  '/_authenticated/admin/governanca': typeof AuthenticatedAdminGovernancaRoute
-  '/_authenticated/admin/logs': typeof AuthenticatedAdminLogsRoute
-  '/_authenticated/admin/negocio': typeof AuthenticatedAdminNegocioRoute
-  '/_authenticated/admin/qualidade': typeof AuthenticatedAdminQualidadeRoute
-  '/_authenticated/admin/social': typeof AuthenticatedAdminSocialRoute
   '/_authenticated/blog-admin/$id': typeof AuthenticatedBlogAdminIdRoute
   '/_authenticated/blog-admin/novo': typeof AuthenticatedBlogAdminNovoRoute
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
-  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/blog-admin/': typeof AuthenticatedBlogAdminIndexRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
-  '/_authenticated/admin/chamados/$id': typeof AuthenticatedAdminChamadosIdRoute
-  '/_authenticated/admin/pesquisas/$slug': typeof AuthenticatedAdminPesquisasSlugRoute
-  '/_authenticated/admin/usuarios/$id': typeof AuthenticatedAdminUsuariosIdRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
-  '/_authenticated/admin/chamados/': typeof AuthenticatedAdminChamadosIndexRoute
-  '/_authenticated/admin/pesquisas/': typeof AuthenticatedAdminPesquisasIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -580,7 +407,6 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
-    | '/admin'
     | '/assinar'
     | '/caderno'
     | '/calendario'
@@ -601,33 +427,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/admin/alertas'
-    | '/admin/analytics'
-    | '/admin/auditoria'
-    | '/admin/crm'
-    | '/admin/flags'
-    | '/admin/funil'
-    | '/admin/governanca'
-    | '/admin/logs'
-    | '/admin/negocio'
-    | '/admin/qualidade'
-    | '/admin/social'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
-    | '/admin/'
     | '/blog-admin/'
     | '/chamados/'
     | '/planejamento/'
     | '/planner/'
-    | '/admin/chamados/$id'
-    | '/admin/pesquisas/$slug'
-    | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
-    | '/admin/chamados/'
-    | '/admin/pesquisas/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -660,33 +469,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog'
-    | '/admin/alertas'
-    | '/admin/analytics'
-    | '/admin/auditoria'
-    | '/admin/crm'
-    | '/admin/flags'
-    | '/admin/funil'
-    | '/admin/governanca'
-    | '/admin/logs'
-    | '/admin/negocio'
-    | '/admin/qualidade'
-    | '/admin/social'
     | '/blog-admin/$id'
     | '/blog-admin/novo'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
-    | '/admin'
     | '/blog-admin'
     | '/chamados'
     | '/planejamento'
     | '/planner'
-    | '/admin/chamados/$id'
-    | '/admin/pesquisas/$slug'
-    | '/admin/usuarios/$id'
     | '/planejamento/modulo/$n'
-    | '/admin/chamados'
-    | '/admin/pesquisas'
   id:
     | '__root__'
     | '/'
@@ -700,7 +492,6 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
-    | '/_authenticated/admin'
     | '/_authenticated/assinar'
     | '/_authenticated/caderno'
     | '/_authenticated/calendario'
@@ -721,33 +512,16 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/blog/'
-    | '/_authenticated/admin/alertas'
-    | '/_authenticated/admin/analytics'
-    | '/_authenticated/admin/auditoria'
-    | '/_authenticated/admin/crm'
-    | '/_authenticated/admin/flags'
-    | '/_authenticated/admin/funil'
-    | '/_authenticated/admin/governanca'
-    | '/_authenticated/admin/logs'
-    | '/_authenticated/admin/negocio'
-    | '/_authenticated/admin/qualidade'
-    | '/_authenticated/admin/social'
     | '/_authenticated/blog-admin/$id'
     | '/_authenticated/blog-admin/novo'
     | '/_authenticated/chamados/$id'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
-    | '/_authenticated/admin/'
     | '/_authenticated/blog-admin/'
     | '/_authenticated/chamados/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
-    | '/_authenticated/admin/chamados/$id'
-    | '/_authenticated/admin/pesquisas/$slug'
-    | '/_authenticated/admin/usuarios/$id'
     | '/_authenticated/planejamento/modulo/$n'
-    | '/_authenticated/admin/chamados/'
-    | '/_authenticated/admin/pesquisas/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -991,13 +765,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAssinarRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/planner/': {
       id: '/_authenticated/planner/'
       path: '/planner'
@@ -1025,13 +792,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/blog-admin/'
       preLoaderRoute: typeof AuthenticatedBlogAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/admin/': {
-      id: '/_authenticated/admin/'
-      path: '/'
-      fullPath: '/admin/'
-      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/planner/$slug': {
       id: '/_authenticated/planner/$slug'
@@ -1068,97 +828,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlogAdminIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/social': {
-      id: '/_authenticated/admin/social'
-      path: '/social'
-      fullPath: '/admin/social'
-      preLoaderRoute: typeof AuthenticatedAdminSocialRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/qualidade': {
-      id: '/_authenticated/admin/qualidade'
-      path: '/qualidade'
-      fullPath: '/admin/qualidade'
-      preLoaderRoute: typeof AuthenticatedAdminQualidadeRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/negocio': {
-      id: '/_authenticated/admin/negocio'
-      path: '/negocio'
-      fullPath: '/admin/negocio'
-      preLoaderRoute: typeof AuthenticatedAdminNegocioRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/logs': {
-      id: '/_authenticated/admin/logs'
-      path: '/logs'
-      fullPath: '/admin/logs'
-      preLoaderRoute: typeof AuthenticatedAdminLogsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/governanca': {
-      id: '/_authenticated/admin/governanca'
-      path: '/governanca'
-      fullPath: '/admin/governanca'
-      preLoaderRoute: typeof AuthenticatedAdminGovernancaRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/funil': {
-      id: '/_authenticated/admin/funil'
-      path: '/funil'
-      fullPath: '/admin/funil'
-      preLoaderRoute: typeof AuthenticatedAdminFunilRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/flags': {
-      id: '/_authenticated/admin/flags'
-      path: '/flags'
-      fullPath: '/admin/flags'
-      preLoaderRoute: typeof AuthenticatedAdminFlagsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/crm': {
-      id: '/_authenticated/admin/crm'
-      path: '/crm'
-      fullPath: '/admin/crm'
-      preLoaderRoute: typeof AuthenticatedAdminCrmRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/auditoria': {
-      id: '/_authenticated/admin/auditoria'
-      path: '/auditoria'
-      fullPath: '/admin/auditoria'
-      preLoaderRoute: typeof AuthenticatedAdminAuditoriaRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/analytics': {
-      id: '/_authenticated/admin/analytics'
-      path: '/analytics'
-      fullPath: '/admin/analytics'
-      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/alertas': {
-      id: '/_authenticated/admin/alertas'
-      path: '/alertas'
-      fullPath: '/admin/alertas'
-      preLoaderRoute: typeof AuthenticatedAdminAlertasRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/pesquisas/': {
-      id: '/_authenticated/admin/pesquisas/'
-      path: '/pesquisas'
-      fullPath: '/admin/pesquisas/'
-      preLoaderRoute: typeof AuthenticatedAdminPesquisasIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/chamados/': {
-      id: '/_authenticated/admin/chamados/'
-      path: '/chamados'
-      fullPath: '/admin/chamados/'
-      preLoaderRoute: typeof AuthenticatedAdminChamadosIndexRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
     '/_authenticated/planejamento/modulo/$n': {
       id: '/_authenticated/planejamento/modulo/$n'
       path: '/planejamento/modulo/$n'
@@ -1166,75 +835,10 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanejamentoModuloNRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/admin/usuarios/$id': {
-      id: '/_authenticated/admin/usuarios/$id'
-      path: '/usuarios/$id'
-      fullPath: '/admin/usuarios/$id'
-      preLoaderRoute: typeof AuthenticatedAdminUsuariosIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/pesquisas/$slug': {
-      id: '/_authenticated/admin/pesquisas/$slug'
-      path: '/pesquisas/$slug'
-      fullPath: '/admin/pesquisas/$slug'
-      preLoaderRoute: typeof AuthenticatedAdminPesquisasSlugRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
-    '/_authenticated/admin/chamados/$id': {
-      id: '/_authenticated/admin/chamados/$id'
-      path: '/chamados/$id'
-      fullPath: '/admin/chamados/$id'
-      preLoaderRoute: typeof AuthenticatedAdminChamadosIdRouteImport
-      parentRoute: typeof AuthenticatedAdminRoute
-    }
   }
 }
 
-interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminAlertasRoute: typeof AuthenticatedAdminAlertasRoute
-  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
-  AuthenticatedAdminAuditoriaRoute: typeof AuthenticatedAdminAuditoriaRoute
-  AuthenticatedAdminCrmRoute: typeof AuthenticatedAdminCrmRoute
-  AuthenticatedAdminFlagsRoute: typeof AuthenticatedAdminFlagsRoute
-  AuthenticatedAdminFunilRoute: typeof AuthenticatedAdminFunilRoute
-  AuthenticatedAdminGovernancaRoute: typeof AuthenticatedAdminGovernancaRoute
-  AuthenticatedAdminLogsRoute: typeof AuthenticatedAdminLogsRoute
-  AuthenticatedAdminNegocioRoute: typeof AuthenticatedAdminNegocioRoute
-  AuthenticatedAdminQualidadeRoute: typeof AuthenticatedAdminQualidadeRoute
-  AuthenticatedAdminSocialRoute: typeof AuthenticatedAdminSocialRoute
-  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
-  AuthenticatedAdminChamadosIdRoute: typeof AuthenticatedAdminChamadosIdRoute
-  AuthenticatedAdminPesquisasSlugRoute: typeof AuthenticatedAdminPesquisasSlugRoute
-  AuthenticatedAdminUsuariosIdRoute: typeof AuthenticatedAdminUsuariosIdRoute
-  AuthenticatedAdminChamadosIndexRoute: typeof AuthenticatedAdminChamadosIndexRoute
-  AuthenticatedAdminPesquisasIndexRoute: typeof AuthenticatedAdminPesquisasIndexRoute
-}
-
-const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminAlertasRoute: AuthenticatedAdminAlertasRoute,
-  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
-  AuthenticatedAdminAuditoriaRoute: AuthenticatedAdminAuditoriaRoute,
-  AuthenticatedAdminCrmRoute: AuthenticatedAdminCrmRoute,
-  AuthenticatedAdminFlagsRoute: AuthenticatedAdminFlagsRoute,
-  AuthenticatedAdminFunilRoute: AuthenticatedAdminFunilRoute,
-  AuthenticatedAdminGovernancaRoute: AuthenticatedAdminGovernancaRoute,
-  AuthenticatedAdminLogsRoute: AuthenticatedAdminLogsRoute,
-  AuthenticatedAdminNegocioRoute: AuthenticatedAdminNegocioRoute,
-  AuthenticatedAdminQualidadeRoute: AuthenticatedAdminQualidadeRoute,
-  AuthenticatedAdminSocialRoute: AuthenticatedAdminSocialRoute,
-  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
-  AuthenticatedAdminChamadosIdRoute: AuthenticatedAdminChamadosIdRoute,
-  AuthenticatedAdminPesquisasSlugRoute: AuthenticatedAdminPesquisasSlugRoute,
-  AuthenticatedAdminUsuariosIdRoute: AuthenticatedAdminUsuariosIdRoute,
-  AuthenticatedAdminChamadosIndexRoute: AuthenticatedAdminChamadosIndexRoute,
-  AuthenticatedAdminPesquisasIndexRoute: AuthenticatedAdminPesquisasIndexRoute,
-}
-
-const AuthenticatedAdminRouteWithChildren =
-  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
-
 interface AuthenticatedRouteChildren {
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
@@ -1260,7 +864,6 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,

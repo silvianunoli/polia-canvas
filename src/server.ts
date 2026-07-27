@@ -3,7 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
-import { DOMINIO_GESTAO, caminhoPermitidoNoDominioGestao } from "./lib/dominio-gestao";
+import { DOMINIO_GESTAO } from "./lib/dominio-gestao";
 
 // Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
 // responde antes de qualquer roteamento do TanStack Start, pra não depender
@@ -85,21 +85,17 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
-    // Área de gestão (/admin) mora em domínio à parte do produto — separa a
-    // ferramenta interna do domínio voltado pra Aimer.
+    // Área de gestão (/admin) mora em deploy e domínio à parte do produto
+    // desde 27/07/2026 (projeto polia-admin/, Worker "polia-admin") — separa
+    // a ferramenta interna do domínio voltado pra Aimer. O app novo não tem
+    // mais o prefixo /admin nas rotas (ex.: /admin/crm virou /crm), então o
+    // redirect precisa tirar esse prefixo, não só trocar o hostname.
     if (
-      url.pathname.startsWith("/admin") &&
+      (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) &&
       (url.hostname === "usepolia.com.br" || url.hostname === "www.usepolia.com.br")
     ) {
       url.hostname = DOMINIO_GESTAO;
-      return Response.redirect(url.toString(), 301);
-    }
-    if (url.hostname === DOMINIO_GESTAO && url.pathname === "/") {
-      url.pathname = "/central";
-      return Response.redirect(url.toString(), 301);
-    }
-    if (url.hostname === DOMINIO_GESTAO && !caminhoPermitidoNoDominioGestao(url.pathname)) {
-      url.hostname = "usepolia.com.br";
+      url.pathname = url.pathname.slice("/admin".length) || "/";
       return Response.redirect(url.toString(), 301);
     }
     if (url.hostname === "www.usepolia.com.br") {

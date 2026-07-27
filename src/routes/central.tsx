@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import type { ComponentType } from "react";
 import { ArrowRight, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,7 +42,7 @@ const PRODUTOS: Produto[] = [
   {
     nome: "Pólia",
     descricao: "Usuárias, conteúdo, métricas e operação do produto.",
-    href: "/admin",
+    href: "https://silvianunoli.com.br",
     icone: PoliaIcon,
   },
 ];
@@ -76,9 +76,9 @@ function CentralAdmin() {
           {PRODUTOS.map((produto) => {
             const Icone = produto.icone;
             return (
-              <Link
+              <a
                 key={produto.nome}
-                to={produto.href}
+                href={produto.href}
                 className="group flex flex-col gap-3 rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-colors hover:border-[var(--secondary)]"
               >
                 <Icone className="h-8 w-auto text-[var(--ink)]" />
@@ -94,7 +94,7 @@ function CentralAdmin() {
                     aria-hidden="true"
                   />
                 </span>
-              </Link>
+              </a>
             );
           })}
         </div>

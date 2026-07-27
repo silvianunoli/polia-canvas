@@ -45,33 +45,19 @@ const NAV: NavItem[] = [
 ];
 
 function isActive(itemTo: string, pathname: string) {
-  // "/painel" e "/admin" são raízes: sem isso, todo subcaminho (ex. /admin/funil)
-  // também marcaria "Painel"/"Visão geral" como ativos.
-  if (itemTo === "/painel" || itemTo === "/admin") return pathname === itemTo;
+  if (itemTo === "/painel") return pathname === itemTo;
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
 
-// Único menu de admin (o antigo aside próprio de admin.tsx foi removido —
-// os dois competiam pelo mesmo canto esquerdo da tela). "Chamados" ganha a
-// contagem de abertos via ticketsAbertos, calculada abaixo.
+// A área de gestão (CRM, Social, Financeiro interno, etc.) foi extraída pro
+// projeto polia-admin (deploy e domínio próprios, silvianunoli.com.br) em
+// 27/07/2026 — não mora mais nas rotas deste app. Blog e Design System
+// continuam aqui (fora do escopo da extração).
 const ADMIN_SUBLINKS = [
-  { to: "/admin", label: "Visão geral" },
-  { to: "/admin/crm", label: "CRM" },
-  { to: "/admin/social", label: "Social" },
-  { to: "/admin/chamados", label: "Chamados" },
-  { to: "/admin/pesquisas", label: "Pesquisas" },
-  { to: "/admin/funil", label: "Funil de jornada" },
-  { to: "/admin/negocio", label: "Negócio" },
-  { to: "/admin/analytics", label: "Analytics" },
-  { to: "/admin/qualidade", label: "Qualidade" },
   { to: "/blog-admin", label: "Blog" },
-  { to: "/admin/governanca", label: "Governança" },
-  { to: "/admin/auditoria", label: "Auditoria" },
-  { to: "/admin/alertas", label: "Alertas" },
-  { to: "/admin/logs", label: "Logs do sistema" },
-  { to: "/admin/flags", label: "Feature Flags" },
   { to: "/design-system", label: "Design System" },
 ] as const;
+const URL_GESTAO = "https://silvianunoli.com.br";
 
 async function signOut() {
   await supabase.auth.signOut();
@@ -84,26 +70,14 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
-  const [ticketsAbertos, setTicketsAbertos] = useState(0);
-  // Domínio de gestão só serve /admin — o sidebar não deve mostrar nem
-  // linkar as seções da assinante (Painel/Planejamento/...) aqui. Checado só
-  // no client (via useEffect) pra não divergir do HTML renderizado no SSR.
+  // Domínio de gestão só serve a área de gestão (agora no polia-admin) — o
+  // sidebar não deve mostrar nem linkar as seções da assinante
+  // (Painel/Planejamento/...) aqui. Checado só no client (via useEffect) pra
+  // não divergir do HTML renderizado no SSR.
   const [emDominioGestao, setEmDominioGestao] = useState(false);
   useEffect(() => {
     setEmDominioGestao(window.location.hostname === DOMINIO_GESTAO);
   }, []);
-
-  // Contagem de chamados abertos, só pra quem é admin (aparece no submenu).
-  useEffect(() => {
-    if (!meta.isAdmin) return;
-    (async () => {
-      const { count } = await supabase
-        .from("tickets")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "aberto");
-      setTicketsAbertos(count ?? 0);
-    })();
-  }, [meta.isAdmin]);
 
   // ≤1366px: colapsa para ícones automaticamente.
   useEffect(() => {
@@ -117,11 +91,7 @@ export function Sidebar() {
 
   // Abre o submenu de Administração automaticamente se já está numa página dele.
   useEffect(() => {
-    if (
-      pathname.startsWith("/admin") ||
-      pathname.startsWith("/blog-admin") ||
-      pathname.startsWith("/design-system")
-    ) {
+    if (pathname.startsWith("/blog-admin") || pathname.startsWith("/design-system")) {
       setAdminOpen(true);
     }
   }, [pathname]);
@@ -237,14 +207,15 @@ export function Sidebar() {
             {meta.isAdmin && compact && (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link
-                    to="/admin"
-                    onClick={onNavigate}
+                  <a
+                    href={URL_GESTAO}
+                    target="_blank"
+                    rel="noreferrer"
                     aria-label="Administração"
                     className="flex min-h-11 items-center justify-center rounded-lg px-3 text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
                   >
                     <Shield size={20} aria-hidden="true" />
-                  </Link>
+                  </a>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
                   Administração
@@ -257,12 +228,7 @@ export function Sidebar() {
                   type="button"
                   onClick={() => setAdminOpen((o) => !o)}
                   aria-expanded={adminOpen}
-                  aria-current={!adminOpen && pathname.startsWith("/admin") ? "page" : undefined}
-                  className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] hover:bg-[var(--surface)] ${
-                    !adminOpen && pathname.startsWith("/admin")
-                      ? "font-medium text-[var(--ink)]"
-                      : "text-[var(--ink-soft)]"
-                  }`}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                 >
                   <Shield size={20} aria-hidden="true" />
                   <span className="flex-1 text-left">Administração</span>
@@ -274,27 +240,29 @@ export function Sidebar() {
                 </button>
                 {adminOpen && (
                   <div className="ml-8 flex flex-col gap-1 py-1">
-                    {ADMIN_SUBLINKS.map((s) => {
-                      const label =
-                        s.to === "/admin/chamados" && ticketsAbertos > 0
-                          ? `${s.label} (${ticketsAbertos})`
-                          : s.label;
-                      return (
-                        <Link
-                          key={s.to}
-                          to={s.to}
-                          onClick={onNavigate}
-                          aria-current={isActive(s.to, pathname) ? "page" : undefined}
-                          className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
-                            isActive(s.to, pathname)
-                              ? "font-medium text-[var(--ink)]"
-                              : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                          }`}
-                        >
-                          {label}
-                        </Link>
-                      );
-                    })}
+                    <a
+                      href={URL_GESTAO}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex min-h-9 items-center rounded-lg px-3 text-[13px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)]"
+                    >
+                      Gestão (CRM, Financeiro...) ↗
+                    </a>
+                    {ADMIN_SUBLINKS.map((s) => (
+                      <Link
+                        key={s.to}
+                        to={s.to}
+                        onClick={onNavigate}
+                        aria-current={isActive(s.to, pathname) ? "page" : undefined}
+                        className={`flex min-h-9 items-center rounded-lg px-3 text-[13px] no-underline ${
+                          isActive(s.to, pathname)
+                            ? "font-medium text-[var(--ink)]"
+                            : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                        }`}
+                      >
+                        {s.label}
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
