@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pólia</string>
+    <string name="title_activity_main">Pólia</string>
+    <string name="package_name">br.com.usepolia.app</string>
+    <string name="custom_url_scheme">br.com.usepolia.app</string>
+</resources>

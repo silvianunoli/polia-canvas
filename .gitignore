@@ -39,3 +39,11 @@ dist-ssr
 # Supabase CLI (temporários locais)
 supabase/.temp/
 coverage
+
+# Scratch local (não versiona)
+_claude_tmp/
+
+# Docs de rascunho, não fazem parte da fonte da verdade do projeto
+docs/BLUEPRINT_POLIA.md
+docs/HISTORICO_COMPLETO_POLIA.md
+docs/PASSO_A_PASSO_POLIA.md

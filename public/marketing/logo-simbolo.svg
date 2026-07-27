@@ -1,0 +1,9 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pólia">
+  <g fill="#0A0A0A">
+    <rect x="26" y="18" width="15" height="64" rx="7.5" />
+    <circle cx="54" cy="34" r="16" fill="none" stroke="#0A0A0A" stroke-width="9" />
+  </g>
+  <circle cx="60" cy="84" r="4" fill="#7CCBCD" />
+  <circle cx="72" cy="86" r="5" fill="#F3B9A9" />
+  <circle cx="86" cy="88" r="7" fill="#FFC629" />
+</svg>
