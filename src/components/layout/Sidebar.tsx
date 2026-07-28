@@ -18,6 +18,9 @@ import {
   CalendarDays,
   Lock,
   Sparkles,
+  TrendingUp,
+  Stethoscope,
+  Megaphone,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -37,11 +40,14 @@ const NAV: NavItem[] = [
   { to: "/aimer", label: "Aimer", icon: Sparkles },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
+  { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
+  { to: "/raiox", label: "Raio-x do mês", icon: Stethoscope },
   { to: "/clientes", label: "Clientes", icon: Users },
   { to: "/metas", label: "Metas", icon: Target },
   { to: "/caderno", label: "Caderno", icon: Notebook },
   { to: "/planner", label: "Planner", icon: LayoutList },
+  { to: "/plano-conteudo", label: "Plano de conteúdo", icon: Megaphone },
   { to: "/calendario", label: "Calendário", icon: CalendarDays },
 ];
 

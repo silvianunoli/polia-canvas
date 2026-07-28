@@ -538,7 +538,7 @@ function SecaoForm({
                 className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
               >
                 <Sparkles size={13} aria-hidden="true" />
-                {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "gerar com a Aimer"}
+                {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
               </button>
             )}
           </label>
