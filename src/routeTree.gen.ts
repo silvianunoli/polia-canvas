@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
-import { Route as QuizRouteImport } from './routes/quiz'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
@@ -20,6 +19,7 @@ import { Route as CentralRouteImport } from './routes/central'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QuizIndexRouteImport } from './routes/quiz.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as QuizSplatRouteImport } from './routes/quiz.$'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -64,11 +64,6 @@ const SobreRoute = SobreRouteImport.update({
   path: '/sobre',
   getParentRoute: () => rootRouteImport,
 } as any)
-const QuizRoute = QuizRouteImport.update({
-  id: '/quiz',
-  path: '/quiz',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
@@ -108,15 +103,20 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizIndexRoute = QuizIndexRouteImport.update({
+  id: '/quiz/',
+  path: '/quiz/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizSplatRoute = QuizSplatRouteImport.update({
-  id: '/$',
-  path: '/$',
-  getParentRoute: () => QuizRoute,
+  id: '/quiz/$',
+  path: '/quiz/$',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/blog/$slug',
@@ -290,7 +290,6 @@ export interface FileRoutesByFullPath {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/aimer': typeof AuthenticatedAimerRoute
@@ -319,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog/': typeof BlogIndexRoute
+  '/quiz/': typeof QuizIndexRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
@@ -335,7 +335,6 @@ export interface FileRoutesByTo {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/aimer': typeof AuthenticatedAimerRoute
@@ -364,6 +363,7 @@ export interface FileRoutesByTo {
   '/blog/$slug': typeof BlogSlugRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog': typeof BlogIndexRoute
+  '/quiz': typeof QuizIndexRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
@@ -382,7 +382,6 @@ export interface FileRoutesById {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
-  '/quiz': typeof QuizRouteWithChildren
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
   '/_authenticated/aimer': typeof AuthenticatedAimerRoute
@@ -411,6 +410,7 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog/': typeof BlogIndexRoute
+  '/quiz/': typeof QuizIndexRoute
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
@@ -429,7 +429,6 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
-    | '/quiz'
     | '/sobre'
     | '/termos'
     | '/aimer'
@@ -458,6 +457,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/quiz/$'
     | '/blog/'
+    | '/quiz/'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
@@ -474,7 +474,6 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
-    | '/quiz'
     | '/sobre'
     | '/termos'
     | '/aimer'
@@ -503,6 +502,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/quiz/$'
     | '/blog'
+    | '/quiz'
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
@@ -520,7 +520,6 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
-    | '/quiz'
     | '/sobre'
     | '/termos'
     | '/_authenticated/aimer'
@@ -549,6 +548,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/quiz/$'
     | '/blog/'
+    | '/quiz/'
     | '/_authenticated/chamados/$id'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
@@ -567,7 +567,6 @@ export interface RootRouteChildren {
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   PesquisaRoute: typeof PesquisaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
-  QuizRoute: typeof QuizRouteWithChildren
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
@@ -577,7 +576,9 @@ export interface RootRouteChildren {
   AuthRedefinirSenhaRoute: typeof AuthRedefinirSenhaRoute
   AuthVerificacaoRoute: typeof AuthVerificacaoRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  QuizSplatRoute: typeof QuizSplatRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  QuizIndexRoute: typeof QuizIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -594,13 +595,6 @@ declare module '@tanstack/react-router' {
       path: '/sobre'
       fullPath: '/sobre'
       preLoaderRoute: typeof SobreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quiz': {
-      id: '/quiz'
-      path: '/quiz'
-      fullPath: '/quiz'
-      preLoaderRoute: typeof QuizRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -659,6 +653,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quiz/': {
+      id: '/quiz/'
+      path: '/quiz'
+      fullPath: '/quiz/'
+      preLoaderRoute: typeof QuizIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog/': {
       id: '/blog/'
       path: '/blog'
@@ -668,10 +669,10 @@ declare module '@tanstack/react-router' {
     }
     '/quiz/$': {
       id: '/quiz/$'
-      path: '/$'
+      path: '/quiz/$'
       fullPath: '/quiz/$'
       preLoaderRoute: typeof QuizSplatRouteImport
-      parentRoute: typeof QuizRoute
+      parentRoute: typeof rootRouteImport
     }
     '/blog/$slug': {
       id: '/blog/$slug'
@@ -952,16 +953,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
-interface QuizRouteChildren {
-  QuizSplatRoute: typeof QuizSplatRoute
-}
-
-const QuizRouteChildren: QuizRouteChildren = {
-  QuizSplatRoute: QuizSplatRoute,
-}
-
-const QuizRouteWithChildren = QuizRoute._addFileChildren(QuizRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
@@ -971,7 +962,6 @@ const rootRouteChildren: RootRouteChildren = {
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   PesquisaRoute: PesquisaRoute,
   PrivacidadeRoute: PrivacidadeRoute,
-  QuizRoute: QuizRouteWithChildren,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   AuthCadastroRoute: AuthCadastroRoute,
@@ -981,7 +971,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRedefinirSenhaRoute: AuthRedefinirSenhaRoute,
   AuthVerificacaoRoute: AuthVerificacaoRoute,
   BlogSlugRoute: BlogSlugRoute,
+  QuizSplatRoute: QuizSplatRoute,
   BlogIndexRoute: BlogIndexRoute,
+  QuizIndexRoute: QuizIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

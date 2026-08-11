@@ -30,7 +30,7 @@ const ERRO_REDE =
 const ERRO_EMAIL = "Esse e-mail não parece completo. Confere pra gente?";
 const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
 
-export const Route = createFileRoute("/quiz")({
+export const Route = createFileRoute("/quiz/")({
   validateSearch: (search: Record<string, unknown>) => ({
     origem:
       typeof search.origem === "string" && /^[a-z0-9_-]{1,40}$/i.test(search.origem)
