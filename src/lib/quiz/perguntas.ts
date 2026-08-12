@@ -210,7 +210,9 @@ export const FAIXAS: Faixa[] = [
  *  (coluna consent_texto) pra auditoria LGPD: precisa ser exatamente o que a
  *  pessoa leu na tela. Alterou a frase aqui, os leads novos guardam a nova.
  *
- *  Não promete o diagnóstico por e-mail: ele é a tela de resultado, e o v1
- *  não dispara e-mail nenhum. Consentir com e-mail que nunca chega é pedir
- *  dado sob pretexto falso. */
-export const CONSENT_TEXTO = "Aceito receber e-mails da Pólia. Sem spam, e você sai quando quiser.";
+ *  Promete o diagnóstico por e-mail, e isso só é verdade porque
+ *  src/lib/quiz/email.ts existe e o envio acontece em quiz.functions.ts logo
+ *  depois de gravar. Tirando o envio, esta frase tem que sair junto: pedir
+ *  aceite pra uma entrega que não acontece é coletar dado sob pretexto falso. */
+export const CONSENT_TEXTO =
+  "Aceito receber meu diagnóstico e conteúdos da Pólia por e-mail. Sem spam, e você sai quando quiser.";

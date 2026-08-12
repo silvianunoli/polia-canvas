@@ -2,7 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
+import { enviarEmailResend } from "@/lib/email-template";
 import { CONSENT_TEXTO } from "@/lib/quiz/perguntas";
+import { montarEmailDiagnostico } from "@/lib/quiz/email";
 import { calcularResultado, respostasCompletas, sanitizarRespostas } from "@/lib/quiz/pontuacao";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -73,6 +75,24 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
       console.error("[Quiz] Falha ao gravar o lead:", error);
       return { ok: false, motivo: "erro" };
     }
+
+    // O diagnóstico por e-mail é o que o gate promete, então sai aqui, na hora.
+    // Best-effort de propósito: o lead JÁ está gravado, e derrubar a tela de
+    // resultado por causa de uma falha do Resend seria trocar um problema
+    // pequeno (e-mail que não chegou) por um grande (a pessoa respondeu 8
+    // perguntas e não viu o resultado). A falha fica no log.
+    //
+    // Refazer o quiz manda de novo, e isso é intencional: respostas novas,
+    // diagnóstico novo. O Turnstile no gate é o que segura repetição em massa.
+    const email = montarEmailDiagnostico({ faixa, territorio: territorioFraco });
+    await enviarEmailResend({
+      to: [data.email],
+      subject: email.subject,
+      text: email.text,
+      html: email.html,
+      replyTo: "oi@usepolia.com.br",
+      contexto: "[Quiz]",
+    });
 
     return { ok: true };
   });

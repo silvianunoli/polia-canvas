@@ -377,12 +377,11 @@ function TelaResultado({
         </p>
       </div>
 
-      {/* Nada de "seus próximos passos chegam no e-mail": o v1 não dispara
-          e-mail nenhum (no-go do PRD, o provedor da sequência ainda não está
-          decidido). O diagnóstico é ESTA tela. Só volta a prometer entrega
-          por e-mail quando o disparo existir de verdade. */}
+      {/* Esta frase só pode existir enquanto o envio existir: quem grava o lead
+          (src/lib/quiz.functions.ts) manda o diagnóstico na hora, por
+          src/lib/quiz/email.ts. Mexeu no envio, mexe aqui junto. */}
       <p className="mt-8 text-[16px] leading-[1.5] text-[var(--ink-soft)]">
-        O e-mail fica guardado pra avisar quando a Pólia abrir.
+        Seus próximos passos chegam no seu e-mail.
       </p>
 
       <a

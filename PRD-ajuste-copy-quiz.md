@@ -48,7 +48,7 @@ A pontuação, o cálculo de faixa e o critério de desempate continuam associad
 
 **Depois (restaura o texto exato da Seção 5 do `PRD-quiz.md`):** "Aceito receber meu diagnóstico e conteúdos da Pólia por e-mail. Sem spam, e você sai quando quiser." + link "Política de privacidade"
 
-> ⏸ **Em aberto, ver Seção 6.** Este texto pede aceite pra receber o diagnóstico por e-mail, e hoje nenhum e-mail sai. Não implementado até a decisão da Seção 6.
+> ✅ Implementado em 12/08/2026, junto com o envio que torna a frase verdadeira. Ver Seção 6.
 
 ### 2.4 Tela de resultado completo (as 6 contas)
 
@@ -88,7 +88,7 @@ A conta pra fazer hoje: some suas contas fixas do mês (aluguel, ferramentas, o 
 Seus próximos passos chegam no seu e-mail.
 Seguir @usepolia →
 
-> ⏸ **A primeira linha do fechamento está em aberto, ver Seção 6.** "Seus próximos passos chegam no seu e-mail" promete uma entrega que o v1 não faz. No ar hoje está "O e-mail fica guardado pra avisar quando a Pólia abrir." O botão "Seguir @usepolia →" está implementado e não muda.
+> ✅ Implementado em 12/08/2026. "Seus próximos passos chegam no seu e-mail" voltou porque o e-mail passou a sair de verdade. Ver Seção 6.
 
 ## 3. Regras de voz (herdadas do `PRD-quiz.md`, sem mudança)
 
@@ -101,8 +101,8 @@ Seguir @usepolia →
 - [x] Subtítulo da abertura atualizado com o texto da Seção 2.1.
 - [x] Ordem de exibição das 8 perguntas atualizada conforme a tabela da Seção 2.2. Texto de cada pergunta e de cada alternativa sem alteração.
 - [x] Pontuação, faixas e cálculo de território fraco testados de novo depois da reordenação. 28 testes passam, incluindo tudo A, tudo C e os 3 empates de território, todos escritos por id de pergunta e não por posição. Dois testes novos travam o mapa pergunta/território e a ordem de exibição.
-- [ ] Checkbox de consentimento com o texto da Seção 2.3. **Segurado pela Seção 6.**
-- [x] As 6 contas de território da Seção 2.4 implementadas na tela de resultado completo, substituindo o texto placeholder. (A frase de fechamento fica segurada pela Seção 6.)
+- [x] Checkbox de consentimento com o texto da Seção 2.3.
+- [x] As 6 contas de território da Seção 2.4 implementadas na tela de resultado completo, substituindo o texto placeholder, com a frase de fechamento.
 - [x] Sem travessão e sem palavra banida em nenhum texto novo. Travessão travado por teste.
 - [ ] Testado em viewport 390px e no webview do Instagram. **Não feito**, depende de celular real.
 
@@ -121,7 +121,7 @@ As Seções 2.3 e 2.4 restauram dois textos que foram removidos de propósito em
 
 Os dois prometem que algo chega por e-mail. Hoje nada chega: o disparo é no-go do v1 (Seção 1 do `PRD-quiz.md`), o diagnóstico é a própria tela de resultado, e a tabela `quiz_leads` só guarda o endereço. Pedir aceite de LGPD pra uma entrega que não existe é coletar dado sob pretexto que não se cumpre, e a lista é justamente o ativo que o quiz existe pra construir.
 
-Três saídas, sem terceira via boa:
+**Decidido em 12/08/2026: saída A.** O e-mail foi construído e as duas frases entraram como o PRD pede. Registro das opções que estavam na mesa:
 
 | Saída | O que exige | Consequência |
 | --- | --- | --- |
@@ -129,4 +129,16 @@ Três saídas, sem terceira via boa:
 | **B. Restaurar os textos assim mesmo** | Nada. | A pessoa espera um e-mail que não chega. Queima a lista na primeira impressão. |
 | **C. Manter o texto honesto que está no ar** | Nada. | Copy fraca em relação à do PRD, mas cumpre o que promete. |
 
-Enquanto a decisão não vem, o que está no ar é a saída C.
+### Como ficou
+
+O e-mail é montado em `src/lib/quiz/email.ts` (função pura, testada) e sai em `src/lib/quiz.functions.ts` logo depois do upsert, pelo Resend, com a casca de marca de `src/lib/email-template.ts`. Leva a faixa, o território fraco, a explicação e a conta pra fazer hoje, mais o botão de seguir o @usepolia. Como o consentimento promete "você sai quando quiser" e não existe rota de descadastro, o corpo traz `oi@usepolia.com.br` como saída, e o `reply_to` aponta pra lá.
+
+O envio é best-effort: o lead já está gravado quando ele acontece, então uma falha do Resend fica no log e não derruba a tela de resultado. O contrário seria trocar um problema pequeno (e-mail que não chegou) por um grande (responder 8 perguntas e não ver o resultado).
+
+Refazer o quiz manda de novo, de propósito: respostas novas, diagnóstico novo. O Turnstile do gate é o que segura repetição em massa.
+
+### Uma dependência de configuração
+
+O envio depende de `RESEND_API_KEY` existir no ambiente do Worker, e ela não estava documentada em `.env.example` (agora está). Não dá pra confirmar do terminal se ela existe em produção: `wrangler secret list` só mostra 4 secrets e não mostra `STRIPE_SECRET_KEY`, que comprovadamente funciona, então existe configuração no painel da Cloudflare que o comando não enxerga.
+
+Consequência prática: **o primeiro envio de verdade é o teste**. Se o e-mail não chegar, a causa quase certa é essa chave, e o conserto é `npx wrangler secret put RESEND_API_KEY`. Enquanto isso não estiver confirmado, as duas frases da Seção 2 prometem algo que pode não estar saindo, e essa é a única coisa entre o quiz e o link da bio.
