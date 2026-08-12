@@ -298,23 +298,33 @@ function TelaGate({
           <FieldError id="quiz-email-erro">{erroEmail}</FieldError>
         </div>
 
-        <label className="flex cursor-pointer items-start gap-3 text-[14px] leading-[1.5] text-[var(--ink-soft)]">
+        {/* O link fica FORA do <label> de propósito. Dentro, clicar nele conta
+            como clique no label e marca/desmarca o consentimento junto. E abre
+            em aba nova: o quiz não guarda progresso entre visitas, então sair
+            da página aqui, com as 8 já respondidas e o e-mail digitado, joga
+            tudo fora. */}
+        <div className="flex items-start gap-3 text-[14px] leading-[1.5] text-[var(--ink-soft)]">
           <input
+            id="quiz-consent"
             type="checkbox"
             checked={aceite}
             onChange={(e) => setAceite(e.target.checked)}
             className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
           />
           <span>
-            {CONSENT_TEXTO}{" "}
+            <label htmlFor="quiz-consent" className="cursor-pointer">
+              {CONSENT_TEXTO}
+            </label>{" "}
             <Link
               to="/privacidade"
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
             >
               Política de privacidade
             </Link>
           </span>
-        </label>
+        </div>
 
         <TurnstileWidget containerRef={ts.containerRef} />
 

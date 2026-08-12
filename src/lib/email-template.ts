@@ -19,6 +19,23 @@ export function resendApiKey(): string {
   return key;
 }
 
+// Falha de e-mail é engolida de propósito (ver enviarEmailResend), e por isso
+// mesmo ela precisa aparecer em algum lugar: só o console.error deixava o erro
+// no log do Worker, que ninguém lê. Aqui ela vira linha em erros_app, que já
+// tem tela no admin. Sem o endereço do destinatário: a mensagem de erro não é
+// lugar de guardar e-mail de ninguém.
+async function registrarFalhaDeEmail(contexto: string, detalhe: string) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("erros_app").insert({
+      origem: "server",
+      mensagem: `${contexto} Falha ao enviar e-mail: ${detalhe}`.slice(0, 2000),
+    });
+  } catch {
+    // O log do erro nunca pode virar um erro.
+  }
+}
+
 // Envio best-effort: quem chama decide se uma falha de e-mail deve derrubar
 // a operação principal (normalmente não deve — o dado já foi salvo/o estado
 // já mudou, o e-mail é só a notificação).
@@ -47,12 +64,15 @@ export async function enviarEmailResend(params: {
       }),
     });
     if (!resp.ok) {
-      console.error(`${params.contexto} Falha ao enviar e-mail:`, await resp.text());
+      const corpo = await resp.text();
+      console.error(`${params.contexto} Falha ao enviar e-mail:`, corpo);
+      await registrarFalhaDeEmail(params.contexto, `HTTP ${resp.status} ${corpo}`);
       return false;
     }
     return true;
   } catch (err) {
     console.error(`${params.contexto} Erro ao enviar e-mail:`, err);
+    await registrarFalhaDeEmail(params.contexto, err instanceof Error ? err.message : String(err));
     return false;
   }
 }
@@ -84,8 +104,9 @@ export function emailPolia({
     )
     .join("\n");
 
-  const botao = ctaLabel && ctaUrl
-    ? `
+  const botao =
+    ctaLabel && ctaUrl
+      ? `
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
         <tr>
           <td style="border-radius:8px;background-color:#7CCBCD;">
@@ -95,7 +116,7 @@ export function emailPolia({
           </td>
         </tr>
       </table>`
-    : "";
+      : "";
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
