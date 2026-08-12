@@ -34,7 +34,9 @@ Isca digital do pré-lançamento da Pólia. Página pública com 8 perguntas, re
 1. Ana toca o link da bio → abre `/quiz` (tela de abertura): título "Você está pagando pra trabalhar?", subtítulo "8 perguntas, 2 minutos, sem julgamento", botão "Quero descobrir".
 2. Toca "Quero descobrir" → pergunta 1 de 8, com barra de progresso ("1 de 8"). Uma pergunta por tela, 3 alternativas, avança ao tocar.
 3. Responde as 8 → tela de faixa: mostra na hora a faixa dela (ex.: "Seu resultado: No escuro nos pontos que doem") + a frase "Seu diagnóstico completo mostra onde está o chute e a primeira conta pra sair dele." + campo de e-mail + checkbox de consentimento + botão "Quero meu diagnóstico".
-4. Preenche e-mail válido, marca o consentimento, toca o botão → sistema grava o lead no Supabase → tela de resultado completo: faixa + território mais fraco (com o nome do módulo, ex.: "Quanto vale") + explicação curta + UMA conta pra fazer hoje + "seus próximos passos chegam no seu e-mail" + botão "Seguir @usepolia →".
+4. Preenche e-mail válido, marca o consentimento, toca o botão → sistema grava o lead no Supabase → tela de resultado completo: faixa + território mais fraco (com o nome do módulo, ex.: "Quanto vale") + explicação curta + UMA conta pra fazer hoje + ~~"seus próximos passos chegam no seu e-mail"~~ "O e-mail fica guardado pra avisar quando a Pólia abrir." + botão "Seguir @usepolia →".
+
+> **Correção de 11/08/2026.** O texto original prometia que os próximos passos chegariam por e-mail, o que contradiz o no-go da Seção 1 (o v1 não dispara e-mail nenhum). Promessa trocada por uma que a Pólia cumpre hoje. Se o disparo passar a existir, dá pra voltar a prometer entrega.
 
 Fim. Sem redirect automático.
 
@@ -107,7 +109,7 @@ As 8 perguntas (fixas, nesta ordem), alternativas e pontos. Formato: alternativa
 
 **LGPD:**
 
-- Checkbox obrigatório, desmarcado por padrão. Texto exato: "Aceito receber meu diagnóstico e conteúdos da Pólia por e-mail. Sem spam, e você sai quando quiser." + link "Política de privacidade".
+- Checkbox obrigatório, desmarcado por padrão. Texto exato: "Aceito receber e-mails da Pólia. Sem spam, e você sai quando quiser." + link "Política de privacidade". (Corrigido em 11/08/2026: era "Aceito receber meu diagnóstico e conteúdos da Pólia por e-mail", e o diagnóstico não vai por e-mail nenhum no v1. Mesmo motivo da correção da Seção 2.)
 - URL da política de privacidade: `/privacidade` (já existe no site). Dependência resolvida.
 
 **Voz e visual (não negociável):**

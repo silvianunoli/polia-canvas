@@ -374,8 +374,12 @@ function TelaResultado({
         <p className="mt-3 text-[17px] leading-[1.55] text-[var(--ink)]">{territorioFraco.conta}</p>
       </div>
 
+      {/* Nada de "seus próximos passos chegam no e-mail": o v1 não dispara
+          e-mail nenhum (no-go do PRD, o provedor da sequência ainda não está
+          decidido). O diagnóstico é ESTA tela. Só volta a prometer entrega
+          por e-mail quando o disparo existir de verdade. */}
       <p className="mt-8 text-[16px] leading-[1.5] text-[var(--ink-soft)]">
-        Seus próximos passos chegam no seu e-mail.
+        O e-mail fica guardado pra avisar quando a Pólia abrir.
       </p>
 
       <a
