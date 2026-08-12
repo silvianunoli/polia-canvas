@@ -7,54 +7,58 @@
 /** Os 6 territórios são os 6 módulos do Planejamento (src/lib/planejamento.ts).
  *  A ORDEM deste array é a ordem oficial dos módulos e também a regra de
  *  desempate do território fraco: empatou, vale o primeiro daqui. */
+// `explicacao` e `conta` são os textos fechados no PRD-ajuste-copy-quiz.md §2.4
+// (antes eram "[A DEFINIR]" no PRD original, e o que estava no ar era rascunho
+// meu). A `conta` começa em minúscula de propósito: na tela ela vem logo depois
+// do rótulo "A conta pra fazer hoje:", na mesma frase.
 export const TERRITORIOS = [
   {
     id: "razao",
     nome: "Razão de existir",
     explicacao:
-      "Quando a explicação do negócio não sai redonda, quem ouve não entende o que está comprando. O orçamento vira um vou pensar que não volta.",
+      'Alguém te pergunta o que você faz, e a resposta sai enrolada, cheia de "depende" e de exemplo. A pessoa some antes de você terminar de explicar.',
     conta:
-      "Conta quantos orçamentos saíram esse mês e quantos viraram venda. A diferença é o tamanho do que não ficou claro.",
+      "conte quantas vezes isso aconteceu esse mês, alguém perguntando o que você faz e sumindo depois. Esse número é o quanto a frase que falta já te custou.",
   },
   {
     id: "quem",
     nome: "Quem você serve",
     explicacao:
-      "Cliente que volta custa bem menos que cliente nova. Sem esse número, não dá pra saber se o negócio está crescendo ou só repondo quem foi embora.",
+      "Você corre atrás de cliente novo todo mês, com o mesmo esforço, o mesmo desconto, a mesma pressa, e não sabe se as antigas ainda compram de você.",
     conta:
-      "Pega as últimas 10 clientes e marca quantas já compraram mais de uma vez. Esse número é a sua taxa de retorno.",
+      "pegue suas últimas 10 vendas e conte quantas dessas clientes voltaram a comprar. Esse número, não o que você imagina, mostra quantas ficam de verdade.",
   },
   {
     id: "vende",
     nome: "O que você vende",
     explicacao:
-      "Vender muito não é a mesma coisa que sobrar dinheiro. O produto que mais sai costuma ser o que menos deixa.",
+      "Você fecha vendas o mês inteiro, mas na hora de pagar as contas não sabe dizer qual produto pagou o quê.",
     conta:
-      "Escolhe um produto: preço de venda menos tudo que entrou nele (material, embalagem, taxa, entrega, seu tempo). O que sobra é o que ele deixa por unidade.",
+      "escolha os 3 produtos ou serviços que mais saem e calcule quanto cada um deixa depois do custo. O que mais sai nem sempre é o que mais paga.",
   },
   {
     id: "vale",
     nome: "Quanto vale",
     explicacao:
-      "Desconto dado na hora sai do que sobra, não do preço. Sem saber quanto sobra, todo desconto é aposta.",
+      "Uma cliente pede desconto, você concede na hora pra não perder a venda, e só percebe o tamanho do prejuízo quando fecha a conta do mês.",
     conta:
-      "Pega o produto em que mais pedem desconto: preço menos custo total. O que sobra é o teto. Desconto acima disso é trabalhar de graça.",
+      "pegue seu produto mais vendido e calcule quanto ele deixa depois de todos os custos. Esse número é o teto real do seu desconto, não o que parece justo na hora.",
   },
   {
     id: "acharem",
     nome: "Como te acharem",
     explicacao:
-      "Sem saber por onde as clientes chegam, o esforço se espalha em canal que não traz pedido.",
+      "Você posta em toda rede que existe, sem saber de verdade por onde as clientes novas estão chegando até você.",
     conta:
-      "Conta quantos posts saíram na última semana e quantos pedidos vieram deles. Se não der pra ligar um ao outro, é aí que o esforço está sumindo.",
+      "puxe suas últimas 5 vendas novas e escreva por onde cada cliente te achou. O canal que mais se repete é onde vale insistir essa semana.",
   },
   {
     id: "onde",
     nome: "Onde você vai",
     explicacao:
-      "Sem o número do azul, o mês inteiro vira aposta e fechar no vermelho vira surpresa.",
+      "Toda venda parece uma vitória, mas você não sabe dizer se o mês está fechando no azul ou só parecendo fechar.",
     conta:
-      "Soma tudo que sai por mês (custo fixo, material, taxas, o quanto você precisa tirar pra viver). Esse é o número que precisa entrar pra fechar no azul.",
+      "some suas contas fixas do mês (aluguel, ferramentas, o que for) e divida pelo que você cobra em média. Esse é o tanto que precisa vender só pra empatar.",
   },
 ] as const;
 
@@ -87,24 +91,18 @@ function alternativas(a: string, b: string, c: string): [Alternativa, Alternativ
   ];
 }
 
-/** Textos exatos do PRD-quiz.md §5. Não reescrever sem atualizar o PRD. */
+/** Textos exatos do PRD-quiz.md §5. Não reescrever sem atualizar o PRD.
+ *
+ *  A ORDEM deste array é a ordem em que as perguntas aparecem na tela, e ela
+ *  segue a hierarquia dos módulos (PRD-ajuste-copy-quiz.md §2.2): abre por
+ *  Razão de existir, não por desconto. Abrir por desconto fazia o quiz inteiro
+ *  parecer ferramenta de precificação, que é o recolapso já corrigido na home.
+ *
+ *  O `id` NÃO acompanha a posição: q1 continua sendo a pergunta do desconto,
+ *  mesmo exibida em 4º. Território e pontos são propriedade da pergunta, então
+ *  reordenar a exibição não mexe em nada do cálculo, e o jsonb gravado em
+ *  quiz_leads.respostas continua querendo dizer a mesma coisa que ontem. */
 export const PERGUNTAS: PerguntaQuiz[] = [
-  {
-    id: "q1",
-    territorio: "vale",
-    enunciado: "Uma cliente pede desconto agora. Você sabe até onde pode ir sem sair no prejuízo?",
-    alternativas: alternativas(
-      "Sei na hora.",
-      "Tenho uma noção.",
-      "Decido no chute e depois fico remoendo.",
-    ),
-  },
-  {
-    id: "q2",
-    territorio: "vende",
-    enunciado: "Qual produto seu deixa mais dinheiro no fim do mês? (não o que mais vende)",
-    alternativas: alternativas("Sei qual é.", "Acho que sei.", "Nunca fiz essa conta."),
-  },
   {
     id: "q3",
     territorio: "razao",
@@ -116,6 +114,22 @@ export const PERGUNTAS: PerguntaQuiz[] = [
     territorio: "quem",
     enunciado: "De 10 clientes, quantas voltam pra comprar de novo?",
     alternativas: alternativas("Sei o número.", "Tenho uma impressão.", "Não faço ideia."),
+  },
+  {
+    id: "q2",
+    territorio: "vende",
+    enunciado: "Qual produto seu deixa mais dinheiro no fim do mês? (não o que mais vende)",
+    alternativas: alternativas("Sei qual é.", "Acho que sei.", "Nunca fiz essa conta."),
+  },
+  {
+    id: "q1",
+    territorio: "vale",
+    enunciado: "Uma cliente pede desconto agora. Você sabe até onde pode ir sem sair no prejuízo?",
+    alternativas: alternativas(
+      "Sei na hora.",
+      "Tenho uma noção.",
+      "Decido no chute e depois fico remoendo.",
+    ),
   },
   {
     id: "q5",

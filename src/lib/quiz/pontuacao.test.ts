@@ -144,6 +144,46 @@ describe("conteúdo do questionário", () => {
     }
   });
 
+  // A reordenação de 12/08 (PRD-ajuste-copy-quiz.md §2.2) mexeu só na posição.
+  // Estes dois testes seguram as duas pontas: a ordem que a pessoa vê e o
+  // vínculo pergunta/território, que é o que a pontuação usa. Enquanto o mapa
+  // abaixo valer, todos os testes de território acima continuam dizendo o que
+  // dizem, porque eles falam por id (q1, q6...), nunca por posição.
+  it("exibe na ordem dos módulos, com as de comportamento por último", () => {
+    expect(PERGUNTAS.map((p) => p.territorio)).toEqual([
+      "razao",
+      "quem",
+      "vende",
+      "vale",
+      "acharem",
+      "onde",
+      null,
+      null,
+    ]);
+  });
+
+  it("o território é do conteúdo da pergunta, não da posição dela", () => {
+    const porId = Object.fromEntries(PERGUNTAS.map((p) => [p.id, p.territorio]));
+    expect(porId).toEqual({
+      q1: "vale",
+      q2: "vende",
+      q3: "razao",
+      q4: "quem",
+      q5: "acharem",
+      q6: "onde",
+      q7: null,
+      q8: null,
+    });
+  });
+
+  it("toda conta de território encaixa depois do rótulo, em minúscula", () => {
+    for (const t of TERRITORIOS) {
+      expect(t.conta.length).toBeGreaterThan(0);
+      expect(t.explicacao.length).toBeGreaterThan(0);
+      expect(t.conta[0]).toBe(t.conta[0].toLowerCase());
+    }
+  });
+
   it("nenhum texto usa travessão", () => {
     const textos = [
       ...PERGUNTAS.flatMap((p) => [p.enunciado, ...p.alternativas.map((a) => a.rotulo)]),

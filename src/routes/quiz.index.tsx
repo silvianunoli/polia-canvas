@@ -94,7 +94,8 @@ function TelaAbertura({ onComecar }: { onComecar: () => void }) {
         Você está pagando pra trabalhar?
       </h1>
       <p className="mt-4 text-[18px] leading-[1.5] text-[var(--ink-soft)]">
-        8 perguntas, 2 minutos, sem julgamento.
+        8 perguntas, 2 minutos, sem julgamento. Descubra onde as decisões de dinheiro do seu negócio
+        ainda saem no chute.
       </p>
       <button
         type="button"
@@ -356,8 +357,8 @@ function TelaResultado({
       <p className="mt-3 text-[17px] leading-[1.5] text-[var(--ink-soft)]">{faixa.resumo}</p>
 
       <div className="mt-8 border-t border-[var(--line)] pt-8">
-        <p className="text-[13px] font-semibold tracking-[0.08em] text-[var(--muted)] uppercase">
-          Onde está o chute
+        <p className="text-[14px] font-semibold text-[var(--muted)]">
+          Onde você está mais no chute:
         </p>
         <h3 className="mt-2 font-cabinet text-[22px] leading-[1.2] text-[var(--ink)]">
           {territorioFraco.nome}
@@ -367,11 +368,13 @@ function TelaResultado({
         </p>
       </div>
 
+      {/* Rótulo e conta na mesma frase: a conta começa em minúscula porque
+          continua o "A conta pra fazer hoje:" (PRD-ajuste-copy-quiz.md §2.4).
+          Quebrar em duas linhas deixaria uma frase começando em minúscula. */}
       <div className="mt-8 rounded-2xl bg-[var(--surface-pink)] p-6">
-        <p className="text-[13px] font-semibold tracking-[0.08em] text-[var(--ink-soft)] uppercase">
-          A conta pra fazer hoje
+        <p className="text-[17px] leading-[1.55] text-[var(--ink)]">
+          <span className="font-semibold">A conta pra fazer hoje:</span> {territorioFraco.conta}
         </p>
-        <p className="mt-3 text-[17px] leading-[1.55] text-[var(--ink)]">{territorioFraco.conta}</p>
       </div>
 
       {/* Nada de "seus próximos passos chegam no e-mail": o v1 não dispara
