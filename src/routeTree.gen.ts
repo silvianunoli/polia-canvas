@@ -14,6 +14,7 @@ import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
+import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
 import { Route as CentralRouteImport } from './routes/central'
 import { Route as AjudaRouteImport } from './routes/ajuda'
@@ -77,6 +78,11 @@ const PesquisaRoute = PesquisaRouteImport.update({
 const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
   id: '/lista-de-espera',
   path: '/lista-de-espera',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DescadastrarRoute = DescadastrarRouteImport.update({
+  id: '/descadastrar',
+  path: '/descadastrar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -332,6 +339,7 @@ export interface FileRoutesByTo {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -379,6 +387,7 @@ export interface FileRoutesById {
   '/ajuda': typeof AjudaRoute
   '/central': typeof CentralRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
+  '/descadastrar': typeof DescadastrarRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/pesquisa': typeof PesquisaRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -426,6 +435,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
+    | '/descadastrar'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -471,6 +481,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
+    | '/descadastrar'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -517,6 +528,7 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/central'
     | '/compra-confirmada'
+    | '/descadastrar'
     | '/lista-de-espera'
     | '/pesquisa'
     | '/privacidade'
@@ -564,6 +576,7 @@ export interface RootRouteChildren {
   AjudaRoute: typeof AjudaRoute
   CentralRoute: typeof CentralRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
+  DescadastrarRoute: typeof DescadastrarRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   PesquisaRoute: typeof PesquisaRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -616,6 +629,13 @@ declare module '@tanstack/react-router' {
       path: '/lista-de-espera'
       fullPath: '/lista-de-espera'
       preLoaderRoute: typeof ListaDeEsperaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/descadastrar': {
+      id: '/descadastrar'
+      path: '/descadastrar'
+      fullPath: '/descadastrar'
+      preLoaderRoute: typeof DescadastrarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compra-confirmada': {
@@ -959,6 +979,7 @@ const rootRouteChildren: RootRouteChildren = {
   AjudaRoute: AjudaRoute,
   CentralRoute: CentralRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
+  DescadastrarRoute: DescadastrarRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   PesquisaRoute: PesquisaRoute,
   PrivacidadeRoute: PrivacidadeRoute,

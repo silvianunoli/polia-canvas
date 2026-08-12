@@ -45,6 +45,9 @@ export async function enviarEmailResend(params: {
   text: string;
   html: string;
   replyTo?: string;
+  /** Cabeçalhos extras. Usado pro List-Unsubscribe, que é o que faz o Gmail
+   *  mostrar "Cancelar inscrição" ao lado do remetente. */
+  headers?: Record<string, string>;
   contexto: string;
 }): Promise<boolean> {
   try {
@@ -61,6 +64,7 @@ export async function enviarEmailResend(params: {
         text: params.text,
         html: params.html,
         ...(params.replyTo ? { reply_to: params.replyTo } : {}),
+        ...(params.headers ? { headers: params.headers } : {}),
       }),
     });
     if (!resp.ok) {
@@ -78,45 +82,95 @@ export async function enviarEmailResend(params: {
 }
 
 // Casca HTML compartilhada pros e-mails transacionais da Pólia (Resend).
-// Layout em tabela + estilo inline: é o padrão robusto pra e-mail — Outlook
-// desktop não lê <style>/flexbox/grid, então nada de CSS moderno aqui.
-// Paleta e tokens iguais ao .polia-v3 (src/styles.css) — bg pedra, ink quase
-// preto, botão turquesa/ink.
-// Fonte web (Fraunces) não carrega em cliente de e-mail; o fallback Georgia
-// imita o peso serifado sem depender do carregamento.
+//
+// Layout em tabela + estilo inline: é o padrão robusto pra e-mail. Outlook
+// desktop não lê <style>, flexbox nem grid, e nenhum cliente lê variável CSS,
+// então os tokens de src/styles.css entram aqui como valor literal. Os hexes
+// abaixo NÃO são cor solta: cada um é um token do escopo .polia-v3, e mexer
+// neles sem mexer no styles.css quebra a correspondência com o site.
+//
+//   #F2F0ED  --bg            fundo da página
+//   #FFFFFF  cartão          (o site usa branco em cima de --bg)
+//   #E6E6E6  --line          borda do cartão
+//   #0A0A0A  --ink           título e texto do botão
+//   #2C2C2C  --ink-soft      corpo
+//   #767676  --muted         rodapé. NÃO usar #9E9E9E: reprova em AA e por
+//                            isso saiu do sistema.
+//   #7CCBCD  --secondary     fundo do botão
+//   #F6DAD4  --surface-pink  caixa de destaque, a mesma da tela de resultado
+//
+// Fonte: nenhum cliente de e-mail carrega fonte web de forma confiável, então
+// Cabinet Grotesk e Inter aparecem na pilha pra funcionar onde der, e o
+// fallback é a sans do sistema. Serifada seria erro: os títulos do site são
+// Cabinet Grotesk, uma grotesca. Fraunces no site é só itálico de acento.
+const FONTE_TITULO =
+  "'Cabinet Grotesk','Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
+const FONTE_CORPO = "'Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
+
 export function emailPolia({
   preheader,
   headline,
   paragrafos,
+  destaque,
   ctaLabel,
   ctaUrl,
+  descadastroUrl,
 }: {
   preheader: string;
   headline: string;
   paragrafos: string[];
+  /** Caixa pêssego, igual à da tela de resultado do quiz. Passe já escapado. */
+  destaque?: { rotulo: string; texto: string };
   ctaLabel?: string;
   ctaUrl?: string;
+  /** Link de saída de um clique. Só pros e-mails de lista: os transacionais
+   *  (conta criada, recibo, senha) não levam descadastro, porque ninguém pode
+   *  optar por não receber o recibo da própria compra. */
+  descadastroUrl?: string;
 }): string {
   const corpoParagrafos = paragrafos
     .map(
       (p) =>
-        `<p style="margin:0 0 16px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#2C2C2C;">${p}</p>`,
+        `<p style="margin:0 0 16px;font-family:${FONTE_CORPO};font-size:15px;line-height:1.6;color:#2C2C2C;">${p}</p>`,
     )
     .join("\n");
+
+  const caixaDestaque = destaque
+    ? `
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                  <tr>
+                    <td style="background-color:#F6DAD4;border-radius:12px;padding:24px;">
+                      <p style="margin:0 0 8px;font-family:${FONTE_CORPO};font-size:13px;font-weight:600;line-height:1.4;color:#2C2C2C;">
+                        ${destaque.rotulo}
+                      </p>
+                      <p style="margin:0;font-family:${FONTE_CORPO};font-size:15px;line-height:1.6;color:#0A0A0A;">
+                        ${destaque.texto}
+                      </p>
+                    </td>
+                  </tr>
+                </table>`
+    : "";
 
   const botao =
     ctaLabel && ctaUrl
       ? `
-      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
-        <tr>
-          <td style="border-radius:8px;background-color:#7CCBCD;">
-            <a href="${ctaUrl}" style="display:inline-block;padding:14px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#0A0A0A;text-decoration:none;border-radius:8px;">
-              ${ctaLabel}
-            </a>
-          </td>
-        </tr>
-      </table>`
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
+                  <tr>
+                    <td style="border-radius:8px;background-color:#7CCBCD;">
+                      <a href="${ctaUrl}" style="display:inline-block;padding:14px 32px;font-family:${FONTE_CORPO};font-size:15px;font-weight:600;color:#0A0A0A;text-decoration:none;border-radius:8px;">
+                        ${ctaLabel}
+                      </a>
+                    </td>
+                  </tr>
+                </table>`
       : "";
+
+  const linhaDescadastro = descadastroUrl
+    ? `
+                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#767676;">
+                  <a href="${descadastroUrl}" style="color:#767676;text-decoration:underline;">Não quero mais receber</a>
+                </p>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -133,23 +187,25 @@ export function emailPolia({
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
             <tr>
               <td style="padding-bottom:24px;text-align:left;">
-                <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#0A0A0A;">Pólia</span>
+                <span style="font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#0A0A0A;">Pólia</span>
               </td>
             </tr>
             <tr>
               <td style="background-color:#ffffff;border:1px solid #E6E6E6;border-radius:12px;padding:32px;">
-                <h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.3;color:#0A0A0A;">
+                <h1 style="margin:0 0 16px;font-family:${FONTE_TITULO};font-size:26px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#0A0A0A;">
                   ${headline}
                 </h1>
                 ${corpoParagrafos}
+                ${caixaDestaque}
                 ${botao}
               </td>
             </tr>
             <tr>
               <td style="padding-top:24px;text-align:left;">
-                <p style="margin:0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#9E9E9E;">
+                <p style="margin:0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#767676;">
                   Pólia · usepolia.com.br
                 </p>
+                ${linhaDescadastro}
               </td>
             </tr>
           </table>

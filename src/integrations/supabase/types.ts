@@ -1714,6 +1714,8 @@ export type Database = {
           consent_texto: string | null
           consentimento: boolean
           created_at: string
+          descadastrado_em: string | null
+          descadastro_token: string
           email: string
           faixa: string | null
           id: string
@@ -1727,6 +1729,8 @@ export type Database = {
           consent_texto?: string | null
           consentimento: boolean
           created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
           email: string
           faixa?: string | null
           id?: string
@@ -1740,6 +1744,8 @@ export type Database = {
           consent_texto?: string | null
           consentimento?: boolean
           created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
           email?: string
           faixa?: string | null
           id?: string

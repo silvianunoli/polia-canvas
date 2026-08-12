@@ -14,12 +14,6 @@ import { escapeHtml, emailPolia } from "@/lib/email-template";
 import type { Faixa, Territorio } from "./perguntas";
 
 const INSTAGRAM_URL = "https://www.instagram.com/usepolia/";
-const CONTATO = "oi@usepolia.com.br";
-
-// A promessa do consentimento é "você sai quando quiser". Sem uma rota de
-// descadastro, a saída honesta é o endereço que uma pessoa de verdade lê, o
-// mesmo que já aparece em /ajuda, /termos e no rodapé da compra.
-const SAIDA = `Pra sair da lista, é só escrever pra ${CONTATO}.`;
 
 export interface EmailDiagnostico {
   subject: string;
@@ -30,9 +24,14 @@ export interface EmailDiagnostico {
 export function montarEmailDiagnostico({
   faixa,
   territorio,
+  descadastroUrl,
 }: {
   faixa: Faixa;
   territorio: Territorio;
+  /** Link de saída de um clique. O consentimento promete "você sai quando
+   *  quiser", então ele não é opcional na prática: sem ele, a promessa fica
+   *  sem cumprimento. */
+  descadastroUrl: string;
 }): EmailDiagnostico {
   const ondeLabel = "Onde você está mais no chute:";
   const contaLabel = "A conta pra fazer hoje:";
@@ -49,7 +48,7 @@ export function montarEmailDiagnostico({
     "",
     `Seguir @usepolia: ${INSTAGRAM_URL}`,
     "",
-    SAIDA,
+    `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
 
   const html = emailPolia({
@@ -59,11 +58,13 @@ export function montarEmailDiagnostico({
       escapeHtml(faixa.resumo),
       `<strong>${escapeHtml(ondeLabel)}</strong> ${escapeHtml(territorio.nome)}`,
       escapeHtml(territorio.explicacao),
-      `<strong>${escapeHtml(contaLabel)}</strong> ${escapeHtml(territorio.conta)}`,
-      `<span style="color:#9E9E9E;font-size:13px;">${escapeHtml(SAIDA)}</span>`,
     ],
+    // Mesma caixa pêssego da tela de resultado: quem abre o e-mail reconhece
+    // o que acabou de ver.
+    destaque: { rotulo: escapeHtml(contaLabel), texto: escapeHtml(territorio.conta) },
     ctaLabel: "Seguir @usepolia",
     ctaUrl: INSTAGRAM_URL,
+    descadastroUrl,
   });
 
   return { subject: `Seu diagnóstico: ${faixa.nome}`, text, html };
