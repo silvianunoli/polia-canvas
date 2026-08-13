@@ -128,8 +128,8 @@ export const TIERS_PAGOS: Record<
     precoAnual: 299,
     features: [
       "Tudo do Confere, mais:",
-      "Calculadora de preço: mostra quanto sobra em cada venda, antes de cobrar",
-      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês pra comemorar",
+      "Calculadora de preço sem limite de produtos: quanto sobra em cada venda, antes de cobrar",
+      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       "Clientes com o status de cada pedido, do orçamento à entrega",
       "Quadros ilimitados no Planner",
     ],

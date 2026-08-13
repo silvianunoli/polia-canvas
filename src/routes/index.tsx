@@ -217,6 +217,7 @@ const planos: {
     features: [
       "Os 6 módulos do Planejamento: a razão de existir, o público, o preço e o rumo do negócio, respondidos do zero",
       "Painel diário: quanto já entrou e quanto falta pra fechar as contas do mês",
+      "Calculadora de preço em até 5 produtos: quanto sobra em cada venda, antes de cobrar",
       "Até 3 metas acompanhadas sozinhas, sem planilha",
       "Um quadro no Planner pra organizar a semana",
     ],
@@ -231,8 +232,8 @@ const planos: {
     ciclo: "/mês",
     features: [
       "Tudo do Confere",
-      "Calculadora de preço: mostra quanto sobra em cada venda, antes de cobrar",
-      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês pra comemorar",
+      "Calculadora de preço sem limite de produtos: quanto sobra em cada venda, antes de cobrar",
+      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       "Clientes com o status de cada pedido, do orçamento à entrega",
       "Quadros ilimitados no Planner",
     ],

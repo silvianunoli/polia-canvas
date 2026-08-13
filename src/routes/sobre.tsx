@@ -528,7 +528,7 @@ function SobrePage() {
             <div className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-2">
               <Reveal>
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Provavelmente é você</h3>
+                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Provavelmente sim</h3>
                   <ul className="mt-5 flex list-none flex-col gap-4">
                     {publicoSim.map((item) => (
                       <li
@@ -549,7 +549,7 @@ function SobrePage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <div className="h-full rounded-2xl border border-[var(--line)] p-8">
-                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Provavelmente não é</h3>
+                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Provavelmente não</h3>
                   <ul className="mt-5 flex list-none flex-col gap-4">
                     {publicoNao.map((item) => (
                       <li
