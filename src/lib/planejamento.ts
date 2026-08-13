@@ -248,7 +248,7 @@ export const SECOES: Secao[] = [
     perguntas: [
       { label: "Quanto você precisaria faturar no próximo mês pra pagar as contas?", campo: "financeiro.meta_minima" },
       { label: "Quanto faria esse mês ser considerado um mês bom?", campo: "financeiro.meta_boa" },
-      { label: "Qual valor faria você comemorar?", campo: "financeiro.meta_celebracao" },
+      { label: "Qual valor faria você celebrar?", campo: "financeiro.meta_celebracao" },
     ],
   },
 
@@ -461,7 +461,7 @@ export const CAMPO_LABEL: Record<string, string> = {
   "financeiro.estrategia_preco": "Como você se posiciona no mercado",
   "financeiro.meta_minima": "Mínimo para pagar as contas",
   "financeiro.meta_boa": "Um mês bom",
-  "financeiro.meta_celebracao": "Um mês para comemorar",
+  "financeiro.meta_celebracao": "Um mês para celebrar",
   "caderno.canais": "Seus canais",
   "caderno.canal_principal": "Onde focar agora",
   "caderno.voz": "Sua voz",

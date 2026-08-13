@@ -110,7 +110,7 @@ const recusa = [
   "Meta no vermelho jogada como cobrança",
   "Hype: “transforme”, “fature 6 dígitos”",
   "Tutorial bobo, mascote, professora de cima",
-  "Jargão e feature de empresa grande",
+  "Jargão e feature de sistema grande",
 ];
 
 const escolhe = [
@@ -119,7 +119,7 @@ const escolhe = [
   "Dona da marca, nunca devedora dela",
   "O concreto: o preço que saiu do chute",
   "Respeitar a sua inteligência, do seu lado",
-  "Sem a complicação de empresa grande",
+  "Do tamanho de quem manda no negócio",
 ];
 
 const credo = [
@@ -501,7 +501,7 @@ function SobrePage() {
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                     Que nenhuma empreendedora precise largar um negócio que dá certo por falta de
                     método. Que decidir o preço, ver o caixa e tocar a rotina seja simples pra quem
-                    decide de perto.
+                    toca o negócio.
                   </p>
                 </div>
               </Reveal>

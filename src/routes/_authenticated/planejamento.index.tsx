@@ -1012,7 +1012,7 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
 const META_MARCAS: { campo: string; curto: string }[] = [
   { campo: "financeiro.meta_minima", curto: "mínimo" },
   { campo: "financeiro.meta_boa", curto: "mês bom" },
-  { campo: "financeiro.meta_celebracao", curto: "comemorar" },
+  { campo: "financeiro.meta_celebracao", curto: "celebrar" },
 ];
 
 function MetaTrack({

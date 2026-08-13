@@ -443,7 +443,7 @@ function PainelPage() {
       return "Vamos registrar sua primeira venda?";
     }
     if (metaBoa > 0 && receitaMes >= metaBoa) {
-      return "Mês bom batido. Agora é caminho pro mês de comemorar.";
+      return "Mês bom batido. Agora é caminho pro mês de celebrar.";
     }
     if (metaBoa > 0) {
       return (
