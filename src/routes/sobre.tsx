@@ -119,7 +119,7 @@ const escolhe = [
   "Dona da marca, nunca devedora dela",
   "O concreto: o preço que saiu do chute",
   "Respeitar a sua inteligência, do seu lado",
-  "Do tamanho de uma pessoa só",
+  "Sem a complicação de empresa grande",
 ];
 
 const credo = [
@@ -501,7 +501,7 @@ function SobrePage() {
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                     Que nenhuma empreendedora precise largar um negócio que dá certo por falta de
                     método. Que decidir o preço, ver o caixa e tocar a rotina seja simples pra quem
-                    faz tudo sozinha.
+                    decide de perto.
                   </p>
                 </div>
               </Reveal>
