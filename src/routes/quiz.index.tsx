@@ -6,6 +6,9 @@ import { gtagEvent } from "@/components/GoogleAnalytics";
 import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { FieldError } from "@/components/ui/FieldError";
+import { Reveal } from "@/components/site/Reveal";
+import { HighlightWord } from "@/components/site/HighlightWord";
+import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 import { gravarLeadQuiz } from "@/lib/quiz.functions";
 import {
   CONSENT_TEXTO,
@@ -29,6 +32,15 @@ const ERRO_REDE =
   "Não conseguimos salvar agora. Suas respostas estão guardadas aqui, é só tentar de novo.";
 const ERRO_EMAIL = "Esse e-mail não parece completo. Confere pra gente?";
 const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
+
+/** Ritmo vertical das telas de fluxo (pergunta, gate, resultado). A abertura usa
+ *  SECAO, que é o respiro das páginas públicas; aqui dentro do quiz o espaço
+ *  precisa ser menor pra pergunta e alternativas caberem na dobra do celular. */
+const RESPIRO = "py-[clamp(32px,5vw,56px)]";
+/** Coluna de leitura do quiz, dentro do CONTAINER do site. */
+const COLUNA = "mx-auto w-full max-w-[600px]";
+/** CTA de tela cheia no celular, botão normal a partir de sm. */
+const CTA_LARGO = "w-full min-h-[52px] sm:w-auto";
 
 export const Route = createFileRoute("/quiz/")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -69,18 +81,21 @@ function comTimeout<T>(promessa: Promise<T>): Promise<T> {
 }
 
 // ── Casca visual ────────────────────────────────────────────────────────────
-// Sem link no wordmark: o quiz é o destino do link da bio, não tem rota de fuga
-// pro resto do site.
+// Sem SiteHeader nem SiteFooter, e sem link no wordmark: o quiz é o destino do
+// link da bio, não tem rota de fuga pro resto do site. O cabeçalho é próprio,
+// só a marca e a linha.
 function Casca({ children }: { children: React.ReactNode }) {
   return (
-    <div className="polia-v3 flex min-h-screen flex-col bg-white text-[var(--ink)]">
-      <header className="border-b border-[var(--line)]">
-        <div className="mx-auto flex max-w-[640px] items-center px-6 py-5">
+    <div className="polia-v3 flex min-h-screen flex-col bg-[var(--bg)] text-[var(--ink)]">
+      <header className="border-b border-[var(--line)] bg-[var(--bg)]">
+        <div className={`${CONTAINER} flex items-center py-5`}>
           <PoliaWordmark className="h-6 w-auto" />
         </div>
       </header>
-      <main className="flex flex-1 items-start justify-center px-6 py-10 md:py-16">
-        <div className="w-full max-w-[560px]">{children}</div>
+      <main className="flex flex-1 items-start">
+        <div className={`${CONTAINER} w-full`}>
+          <div className={COLUNA}>{children}</div>
+        </div>
       </main>
     </div>
   );
@@ -89,21 +104,26 @@ function Casca({ children }: { children: React.ReactNode }) {
 // ── Tela: abertura ──────────────────────────────────────────────────────────
 function TelaAbertura({ onComecar }: { onComecar: () => void }) {
   return (
-    <div>
-      <h1 className="font-cabinet text-[32px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[40px]">
-        Você está pagando pra trabalhar?
-      </h1>
-      <p className="mt-4 text-[18px] leading-[1.5] text-[var(--ink-soft)]">
-        8 perguntas, 2 minutos, sem julgamento. Descubra onde as decisões de dinheiro do seu negócio
-        ainda saem no chute.
-      </p>
-      <button
-        type="button"
-        onClick={onComecar}
-        className="mt-8 w-full rounded-xl bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95"
-      >
-        Quero descobrir
-      </button>
+    <div className={SECAO}>
+      <Reveal>
+        <Eyebrow>Teste da Pólia</Eyebrow>
+        <h1 className="mt-4 text-[clamp(2rem,6vw,3rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+          Você está pagando{" "}
+          <span className="whitespace-nowrap">
+            <HighlightWord delay={0.25}>pra trabalhar</HighlightWord>?
+          </span>
+        </h1>
+      </Reveal>
+      <Reveal delay={0.1}>
+        <p className="mt-5 max-w-[46ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+          8 perguntas, 2 minutos, sem julgamento. Descubra onde as decisões de dinheiro do seu
+          negócio ainda saem no chute.
+        </p>
+        <button type="button" onClick={onComecar} className={`${BTN_PRIMARIO} mt-8 ${CTA_LARGO}`}>
+          Quero descobrir
+          <span aria-hidden="true">→</span>
+        </button>
+      </Reveal>
     </div>
   );
 }
@@ -132,31 +152,31 @@ function TelaPergunta({
   }, [idx]);
 
   return (
-    <div>
+    <div className={RESPIRO}>
       <div className="mb-8">
+        <Eyebrow>
+          Pergunta {numero} de {TOTAL_PERGUNTAS}
+        </Eyebrow>
         <div
           role="progressbar"
           aria-valuenow={numero}
           aria-valuemin={1}
           aria-valuemax={TOTAL_PERGUNTAS}
           aria-label={`Pergunta ${numero} de ${TOTAL_PERGUNTAS}`}
-          className="h-[6px] w-full overflow-hidden rounded-full bg-[var(--surface)]"
+          className="mt-3 h-[6px] w-full overflow-hidden rounded-full bg-[var(--line)]"
         >
           <div
             className="h-full rounded-full bg-[var(--secondary)] transition-[width] duration-300"
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-[13px] text-[var(--muted)]">
-          {numero} de {TOTAL_PERGUNTAS}
-        </p>
       </div>
 
       <h2
         ref={tituloRef}
         tabIndex={-1}
         id={`quiz-${pergunta.id}`}
-        className="font-cabinet text-[24px] leading-[1.2] tracking-[-0.01em] text-[var(--ink)] outline-none md:text-[28px]"
+        className="text-[clamp(1.5rem,4.4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance outline-none"
       >
         {pergunta.enunciado}
       </h2>
@@ -170,12 +190,20 @@ function TelaPergunta({
               type="button"
               aria-pressed={selecionada}
               onClick={() => onResponder(alternativa.id)}
-              className={`w-full rounded-xl border px-4 py-4 text-left text-[16px] transition-colors ${
+              className={`flex min-h-[60px] w-full items-center gap-3 rounded-2xl border px-5 py-4 text-left text-[16px] leading-[1.4] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                 selecionada
                   ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--ink)]"
                   : "border-[var(--line)] bg-white text-[var(--ink)] hover:border-[var(--secondary)]"
               }`}
             >
+              <span
+                aria-hidden="true"
+                className={`h-4 w-4 flex-none rounded-md border-[1.5px] ${
+                  selecionada
+                    ? "border-[var(--ink)] bg-[var(--secondary)]"
+                    : "border-[var(--line)] bg-white"
+                }`}
+              />
               {alternativa.rotulo}
             </button>
           );
@@ -184,11 +212,7 @@ function TelaPergunta({
 
       {idx > 0 && (
         <div className="mt-8">
-          <button
-            type="button"
-            onClick={onVoltar}
-            className="rounded-lg px-3 py-2 text-[15px] text-[var(--muted)] transition-colors hover:text-[var(--ink-soft)]"
-          >
+          <button type="button" onClick={onVoltar} className={BTN_CONTORNO}>
             Voltar
           </button>
         </div>
@@ -242,18 +266,16 @@ function TelaGate({
   }
 
   return (
-    <div>
-      <p className="text-[13px] font-semibold tracking-[0.08em] text-[var(--muted)] uppercase">
-        Seu resultado
-      </p>
-      <h2 className="mt-2 font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] text-[var(--ink)] md:text-[34px]">
+    <div className={RESPIRO}>
+      <Eyebrow>Seu resultado</Eyebrow>
+      <h2 className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
         {faixaNome}
       </h2>
-      <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
+      <p className="mt-4 text-[17px] leading-[1.55] text-[var(--ink-soft)]">
         Seu diagnóstico completo mostra onde está o chute e a primeira conta pra sair dele.
       </p>
 
-      <form onSubmit={enviar} className="mt-8 grid gap-4" noValidate>
+      <form onSubmit={enviar} className="mt-8 grid gap-5" noValidate>
         <input
           type="text"
           name="empresa_site"
@@ -289,7 +311,7 @@ function TelaGate({
             }}
             aria-invalid={!!erroEmail || undefined}
             aria-describedby={erroEmail ? "quiz-email-erro" : undefined}
-            className={`w-full rounded-lg border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
+            className={`min-h-[52px] w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
               erroEmail
                 ? "border-[var(--danger)] focus:border-[var(--danger)]"
                 : "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]"
@@ -331,7 +353,7 @@ function TelaGate({
         <button
           type="submit"
           disabled={!podeEnviar}
-          className="w-full rounded-xl bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40"
+          className={`${BTN_PRIMARIO} min-h-[52px] w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0`}
         >
           {enviando ? "Enviando…" : "Quero meu diagnóstico"}
         </button>
@@ -357,23 +379,23 @@ function TelaResultado({
   const { faixa, territorioFraco } = calcularResultado(respostas);
 
   return (
-    <div>
-      <p className="text-[13px] font-semibold tracking-[0.08em] text-[var(--muted)] uppercase">
-        Seu resultado
-      </p>
-      <h2 className="mt-2 font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] text-[var(--ink)] md:text-[34px]">
+    <div className={RESPIRO}>
+      {/* Sem Reveal daqui pra baixo: a tela troca com a rolagem onde o gate
+          parou, e o whileInView deixaria o diagnóstico invisível até rolar. */}
+      <Eyebrow>Seu resultado</Eyebrow>
+      <h2 className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
         {faixa.nome}
       </h2>
-      <p className="mt-3 text-[17px] leading-[1.5] text-[var(--ink-soft)]">{faixa.resumo}</p>
+      <p className="mt-4 text-[17px] leading-[1.55] text-[var(--ink-soft)]">{faixa.resumo}</p>
 
-      <div className="mt-8 border-t border-[var(--line)] pt-8">
-        <p className="text-[14px] font-semibold text-[var(--muted)]">
+      <div className="mt-8 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8">
+        <p className="text-[14px] font-semibold text-[var(--ink-soft)]">
           Onde você está mais no chute:
         </p>
-        <h3 className="mt-2 font-cabinet text-[22px] leading-[1.2] text-[var(--ink)]">
+        <h3 className="mt-2 text-[clamp(1.25rem,3.4vw,1.5rem)] font-bold leading-[1.2] tracking-[-0.02em] text-balance">
           {territorioFraco.nome}
         </h3>
-        <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
+        <p className="mt-3 text-[16px] leading-[1.6] text-[var(--ink-soft)]">
           {territorioFraco.explicacao}
         </p>
       </div>
@@ -381,8 +403,8 @@ function TelaResultado({
       {/* Rótulo e conta na mesma frase: a conta começa em minúscula porque
           continua o "A conta pra fazer hoje:" (PRD-ajuste-copy-quiz.md §2.4).
           Quebrar em duas linhas deixaria uma frase começando em minúscula. */}
-      <div className="mt-8 rounded-2xl bg-[var(--surface-pink)] p-6">
-        <p className="text-[17px] leading-[1.55] text-[var(--ink)]">
+      <div className="mt-4 rounded-2xl bg-[var(--surface-pink)] p-6 md:p-8">
+        <p className="text-[17px] leading-[1.6] text-[var(--ink)]">
           <span className="font-semibold">A conta pra fazer hoje:</span> {territorioFraco.conta}
         </p>
       </div>
@@ -390,25 +412,21 @@ function TelaResultado({
       {/* Esta frase só pode existir enquanto o envio existir: quem grava o lead
           (src/lib/quiz.functions.ts) manda o diagnóstico na hora, por
           src/lib/quiz/email.ts. Mexeu no envio, mexe aqui junto. */}
-      <p className="mt-8 text-[16px] leading-[1.5] text-[var(--ink-soft)]">
+      <p className="mt-8 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
         Seus próximos passos chegam no seu e-mail.
       </p>
 
-      <a
-        href={INSTAGRAM_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
-      >
-        Seguir @usepolia →
-      </a>
-
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={onRefazer}
-          className="rounded-lg px-3 py-2 text-[14px] text-[var(--muted)] transition-colors hover:text-[var(--ink-soft)]"
+      <div className="mt-6 flex flex-wrap items-center gap-3">
+        <a
+          href={INSTAGRAM_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${BTN_PRIMARIO} ${CTA_LARGO}`}
         >
+          Seguir @usepolia
+          <span aria-hidden="true">→</span>
+        </a>
+        <button type="button" onClick={onRefazer} className={`${BTN_CONTORNO} ${CTA_LARGO}`}>
           Refazer o teste
         </button>
       </div>

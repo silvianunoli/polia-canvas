@@ -1,33 +1,36 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ClipboardList, CircleCheck, Target, ArrowDown, ArrowUpRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useState, useEffect, type ReactNode } from "react";
+import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
-import { PoliaWordmark } from "@/components/brand/PoliaLogo";
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { gatePublico } from "@/lib/site-gate";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
+import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
+import {
+  MockPainel,
+  MockFrasePainel,
+  MockPlanejamento,
+  MockPergunta,
+  MockModulos,
+  MockCalculadora,
+  MockMetas,
+  MockPlanner,
+} from "@/components/site/ProdutoMock";
 
 export const Route = createFileRoute("/")({
   beforeLoad: gatePublico,
   head: () => ({
     meta: [
-      {
-        title: "Pólia · Descubra se o seu negócio dá lucro",
-      },
+      { title: "Pólia · Descubra se o seu negócio dá lucro" },
       {
         name: "description",
         content:
-          "Veja quanto sobra em cada venda, sem planilha e sem achismo. Isso começa no Planejamento, quando você decide quem sua marca atende, o que entrega e quanto vale, e vira preço, caixa e meta, tudo ligado.",
+          "Veja quanto sobra em cada venda, sem planilha e sem achismo. Vinte minutos no primeiro módulo e o painel passa a dizer, todo dia, quanto já entrou e quanto falta pra fechar as contas do mês.",
       },
-      {
-        property: "og:title",
-        content: "Pólia · Descubra se o seu negócio dá lucro",
-      },
+      { property: "og:title", content: "Pólia · Descubra se o seu negócio dá lucro" },
       {
         property: "og:description",
         content: "Ver quanto sobra em cada venda e cobrar o que o negócio vale, no mesmo lugar.",
@@ -37,164 +40,350 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-const mecanismo = [
+/* ───────────────────────────── conteúdo ───────────────────────────── */
+
+const credenciais = [
+  "Feita no Brasil",
+  "Para quem vende produto ou serviço",
+  "Físico ou digital",
+  "Plano grátis de verdade",
+];
+
+const problemas: { forte: string; resto: string }[] = [
+  {
+    forte: "O preço foi definido no chute",
+    resto: ", olhando o da concorrente e tirando dois reais.",
+  },
+  {
+    forte: "A meta vive só na cabeça",
+    resto: ", e o que vive só na cabeça não fecha mês nenhum.",
+  },
+  { forte: "As tarefas moram em três aplicativos", resto: " que não se conversam." },
+  {
+    forte: "E o aperto tem hora marcada",
+    resto:
+      ": na hora de passar o orçamento, dar o desconto, fechar a compra de material. A decisão sai no escuro, e depois vem a pior parte, que é ficar remoendo se cobrou certo.",
+  },
+  {
+    forte: "Isso não se resolve com mais esforço.",
+    resto: " Se resolve com um lugar onde o negócio inteiro caiba.",
+  },
+];
+
+// Números da pesquisa aberta da Pólia (2026). Prova social real: a página não
+// tinha nenhuma, e depoimento de usuária ainda não existe.
+const pesquisa = [
+  { valor: "52%", rotulo: "definem o preço no olho" },
+  { valor: "66%", rotulo: "misturam a conta da casa com a do negócio" },
+];
+
+const movimentos: {
+  n: string;
+  titulo: string;
+  body: string;
+  resultado: string;
+  mock: ReactNode;
+}[] = [
   {
     n: "01",
-    titulo: "Defina a marca",
-    desc: "Quem ela atende, o que entrega e quanto cobra. Decidido, não chutado.",
+    titulo: "O negócio sai da cabeça",
+    body: "O Planejamento faz as perguntas certas, em português claro, sobre seis assuntos: a razão de existir, quem a marca serve, o que vende, quanto vale, como te acharem e onde a marca vai. As respostas formam um documento vivo, que dá pra pausar e retomar em qualquer ponto sem perder nada.",
+    resultado: "Resultado: o negócio inteiro, escrito, num lugar só.",
+    mock: <MockPergunta />,
   },
   {
     n: "02",
-    titulo: "Veja quanto sobra",
-    desc: "Cada preço mostra o lucro que sobra antes de você fechar.",
+    titulo: "As respostas viram ferramentas",
+    body: "Cada módulo concluído desbloqueia uma ferramenta que já nasce preenchida com as respostas: a marca, o mapa de mercado, o catálogo, o financeiro, o caderno de divulgação e as metas. Nada de começar do zero duas vezes.",
+    resultado: "Resultado: ferramentas prontas, sem retrabalho.",
+    mock: <MockModulos />,
   },
   {
     n: "03",
-    titulo: "Marque a venda",
-    desc: "Entregou, o dinheiro cai no caixa sozinho. Sem lançar de novo.",
-  },
-  {
-    n: "04",
-    titulo: "Acompanhe a meta",
-    desc: "Saiba hoje se está no ritmo, não no fim do mês, quando não dá mais pra reagir.",
+    titulo: "A rotina acontece no painel",
+    body: "Todo dia, o painel abre dizendo quanto falta pro mês bom, quais tarefas têm prazo hoje e como a semana está indo. Sem relatório pra montar, sem planilha pra alimentar: o painel se calcula sozinho com o que o negócio registra.",
+    resultado: "Resultado: clareza diária, em uma tela.",
+    mock: <MockFrasePainel />,
   },
 ];
 
-const modulos = [
+const anotacoes = [
   {
-    titulo: "É aqui que o negócio inteiro ganha forma",
-    nomeModulo: "Planejamento",
-    body: "Seis módulos onde você responde quem sua marca atende, o que entrega e quanto vale. Não é discurso de missão que morre na gaveta. É a decisão que define o seu preço, a sua meta e o rumo do negócio.",
-    printLabel: "print do Planejamento",
+    n: "1",
+    titulo: "Seis módulos, um mapa",
+    texto:
+      "A faixa mostra onde o documento está. Módulo concluído fica aberto pra reler e editar sempre.",
   },
   {
-    titulo: "Você vê o que sobra em cada venda",
-    nomeModulo: "Produtos",
-    body: "A margem de cada produto fica numa barra que você lê de relance, do lado do custo e do preço. O que sobra da venda para de ser achismo e vira número na frente do produto.",
-    printLabel: "print de Produtos",
+    n: "2",
+    titulo: "Resposta vira decisão",
+    texto:
+      "O que foi respondido sobre cliente e tom aparece aqui como o retrato da marca, não como texto perdido num formulário.",
   },
   {
-    titulo: "A entrega vira caixa sozinha",
-    nomeModulo: "Clientes",
-    body: "Marque que o produto ou serviço foi entregue e a venda entra sozinha no financeiro da empresa. Sem lançar de novo, sem abrir outra planilha.",
-    printLabel: "print de Clientes",
-  },
-  {
-    titulo: "O extrato deixa de ser surpresa",
-    nomeModulo: "Financeiro",
-    body: "Entradas, saídas e lucro do mês num lugar só, com uma régua que mostra onde você está entre o mês mínimo e o mês bom. As referências vêm do seu Planejamento, não de um número que você chutou.",
-    printLabel: "print de Financeiro",
-  },
-  {
-    titulo: "Você abre e já sabe quanto falta",
-    nomeModulo: "Painel",
-    body: "Receita do mês, pedidos, tarefas do dia e quanto falta pra fechar a meta, tudo na primeira tela. O número que decide o seu mês não fica escondido em aba nenhuma.",
-    printLabel: "print do Painel",
-  },
-  {
-    titulo: "O que precisa sair essa semana não se perde",
-    nomeModulo: "Planner",
-    body: "Quadro de projetos e tarefas pra organizar o que a semana pede, ligado à mesma meta que você definiu no Planejamento. Decisão boa não vale nada se a entrega se perde no meio do caminho.",
-    printLabel: "print do Planner",
+    n: "3",
+    titulo: "Números com nome",
+    texto: "Mês mínimo, mês bom e mês de celebrar. As metas do painel nascem destes três números.",
   },
 ];
 
-const qualificacaoSim = [
-  "Você já tem produto ou serviço rodando, mas ainda cobra no chute.",
-  "Você cobra, mas trava quando alguém pergunta como chegou naquele preço.",
-  "Sua conta pessoal e a da marca ainda são a mesma conta.",
-  "Você decide sozinha e não tem ninguém pra confirmar se o número fecha.",
+const recursos: {
+  eyebrow: string;
+  titulo: string;
+  body: string;
+  resultado: string;
+  /** Âncora de preço: liga o número do exemplo ao valor da assinatura. */
+  ancora?: string;
+  mock: ReactNode;
+}[] = [
+  {
+    eyebrow: "Preço",
+    titulo: "Quanto sobra de verdade",
+    body: "A calculadora de preço pega o custo, as taxas e o tempo de produção e mostra, em reais, quanto fica no bolso a cada venda. Sem termo técnico: a pergunta é quanto sobra, e a resposta também.",
+    resultado: "De preço no chute a preço com razão.",
+    ancora:
+      "Na conta do exemplo, cada caixa deixa R$ 18,90 limpos. Duas vendas com o preço certo pagam o mês de Controle inteiro.",
+    mock: <MockCalculadora />,
+  },
+  {
+    eyebrow: "Metas",
+    titulo: "Três metas, não trinta",
+    body: "A Pólia limita as metas ativas a três, de propósito. Cada uma mostra o caminho no formato que importa: R$ 2.570 de R$ 3.000, 7 de 10 clientes. O progresso atualiza sozinho conforme as vendas entram.",
+    resultado: "Meta que vive na tela, não na cabeça.",
+    mock: <MockMetas />,
+  },
+  {
+    eyebrow: "Rotina",
+    titulo: "Tarefas por prazo, não por pilha",
+    body: "O Planner organiza o trabalho em quadros simples, e o painel puxa dali o que tem prazo: o que atrasou, o que é de hoje, o que vem nos próximos sete dias. Concluir no painel conclui no quadro, é o mesmo dado.",
+    resultado: "Um dia de trabalho que cabe numa tela.",
+    mock: <MockPlanner />,
+  },
 ];
 
-const qualificacaoNao = [
-  "Você ainda não decidiu o que vai vender. A Pólia começa depois disso.",
-  "Você procura ferramenta de anúncio ou automação de marketing. A Pólia não faz isso.",
-  "Você tem equipe e processo já rodando. A Pólia é feita pra quem toca sozinha.",
+const ferramentas = [
+  "Marca",
+  "Preço",
+  "Catálogo",
+  "Metas",
+  "Clientes",
+  "Planner",
+  "Caderno",
+  "Financeiro",
 ];
 
-const planos = [
+const credenciaisSil = [
+  "14 anos de e-commerce, 8 deles tocando o próprio negócio",
+  "Passagens por C&A, Allied e ArcelorMittal",
+  "Consultoria para pequenas empreendedoras: o problema que a Pólia resolve foi visto de perto, muitas vezes",
+];
+
+// A faixa de "depoimento reservado" saiu da página a pedido da fundadora, até
+// existir depoimento de usuária de verdade. Está no histórico do git se voltar.
+
+const fazSentido = [
+  "O negócio já vende, mas o mês fecha sem clareza de quanto sobrou",
+  "O produto é físico, digital ou serviço, sozinha ou com ajuda",
+  "A vontade de começar existe, e falta um caminho que não seja curso",
+  "O preço atual foi definido olhando o da concorrente",
+];
+
+const aindaNao = [
+  "A busca é por fórmula pronta de enriquecer rápido: isso a Pólia não promete",
+  "Já existe equipe e sistema de gestão rodando: a Pólia é do tamanho de uma pessoa só",
+  "O que se procura é uma agência pra fazer no lugar: a Pólia organiza, quem decide é a dona",
+];
+
+// Cada plano abre com a frase-verbo do nome: "Projete" solto lê como desenhar,
+// e é a frase ao lado que devolve o sentido de projeção. Os bullets são frase de
+// resultado, não nome de recurso, porque muita visitante rola direto até aqui
+// sem ler nada acima e o card precisa vender sozinho.
+const planos: {
+  nome: string;
+  frase: string;
+  preco: string;
+  ciclo: string;
+  features: string[];
+  apoio?: string;
+  botao: string;
+  href: string;
+  destaque: boolean;
+}[] = [
   {
     nome: "Confere",
+    frase: "Confere se o seu negócio dá lucro.",
     preco: "R$ 0",
-    ciclo: "pra sempre",
-    precoAnual: null,
-    praQuem: "Confere se o seu negócio dá lucro.",
+    ciclo: "· pra sempre",
     features: [
-      "Precificar até 5 produtos, ver o lucro de cada um e quanto sobra pra você",
-      "1 Planner, 1 Caderno e Painel básico",
-      "Planejamento completo, com 1 geração por IA",
-      "Chatbot Aimer pra tirar dúvida na hora",
+      "Os 6 módulos do Planejamento: a razão de existir, o público, o preço e o rumo do negócio, respondidos do zero",
+      "Painel diário: quanto já entrou e quanto falta pra fechar as contas do mês",
+      "Até 3 metas acompanhadas sozinhas, sem planilha",
+      "Um quadro no Planner pra organizar a semana",
     ],
-    botaoLabel: "Criar conta grátis",
-    apoio: "Sem cartão, e é seu pra sempre.",
-    destaque: false,
+    botao: "Criar conta grátis",
     href: "/auth/cadastro",
+    destaque: false,
   },
   {
     nome: "Controle",
+    frase: "Controle o negócio inteiro, mês a mês.",
     preco: "R$ 29,90",
     ciclo: "/mês",
-    precoAnual: "ou R$ 299 por ano, dois meses saem de graça",
-    praQuem: "Controle o negócio inteiro, mês a mês.",
     features: [
-      "Tudo do Confere, mais:",
-      "Financeiro completo, contínuo: caixa e memória mês a mês",
-      "Catálogo e Clientes ilimitados",
-      "Metas, Calendário e Mapa de Mercado",
-      "Re-gerações do Planejamento por IA",
+      "Tudo do Confere",
+      "Calculadora de preço: mostra quanto sobra em cada venda, antes de cobrar",
+      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês pra comemorar",
+      "Clientes com o status de cada pedido, do orçamento à entrega",
+      "Quadros ilimitados no Planner",
     ],
-    botaoLabel: "Assinar o Controle",
-    apoio: "O produto inteiro usado todo dia.",
-    destaque: true,
+    apoio: "Basta um desconto dado no chute pra uma encomenda levar embora mais que R$ 29,90.",
+    botao: "Assinar o Controle",
     href: "/assinar?plano=controle",
+    destaque: true,
   },
   {
     nome: "Projete",
+    frase: "A Pólia lê os números e diz o que fazer.",
     preco: "R$ 47,90",
     ciclo: "/mês",
-    precoAnual: "ou R$ 479 por ano, dois meses saem de graça",
-    praQuem: "A Pólia lê os números e diz o que fazer.",
+    // Os bullets nomeiam o que o código realmente tranca no Projete
+    // (ROTAS_PROJETE + o Resumo pro contador em src/lib/planos.ts). Mapa de
+    // mercado é do Controle e o Caderno abre no Confere: os dois estavam
+    // listados aqui e prometiam exclusividade que não existe.
     features: [
-      "Tudo do Controle, mais:",
-      "Projeção e cenários: quanto vender pra se pagar",
-      "Precificação inteligente (encomenda, hora, meta)",
-      "Raio-x do mês pela IA + relatório pro contador",
-      "Plano de conteúdo do ano",
+      "Tudo do Controle",
+      "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
+      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
+      "Plano de conteúdo do ano: uma ideia de post por dia, ligada ao que a marca vende",
+      "Resumo do mês pro contador, em PDF e CSV",
+      "Recursos novos chegam aqui primeiro",
     ],
-    botaoLabel: "Assinar o Projete",
-    apoio: "Pra quando a marca está pronta pra crescer.",
-    destaque: false,
+    botao: "Assinar o Projete",
     href: "/assinar?plano=projete",
+    destaque: false,
   },
 ];
 
-const faqs = [
+const perguntas = [
   {
-    pergunta: "Tem versão grátis mesmo?",
+    pergunta: "A Pólia é um curso?",
     resposta:
-      "Tem, e não é teste que expira. O Confere é seu pra sempre: você monta o Planejamento inteiro da marca e acompanha o Painel básico sem colocar cartão. Quando quiser o resto do negócio num lugar só, passa pro Controle.",
+      "É uma ferramenta de uso diário. O Planejamento organiza as decisões do negócio, o painel acompanha a rotina, e o aprendizado acontece no caminho, respondendo perguntas sobre o próprio negócio.",
   },
   {
-    pergunta: "Posso cancelar quando quiser?",
+    pergunta: "O dia já é cheio. Cabe mais uma ferramenta?",
     resposta:
-      "Pode, num clique, direto nas configurações. Você continua com acesso até o fim do período que já pagou. Depois disso volta pro Confere, e o seu Planejamento fica intacto.",
+      "A Pólia foi desenhada pra rotina de quem cuida da casa e do negócio no mesmo dia. Nenhuma tela exige sessão longa: registrar uma venda leva menos tempo que anotar a venda no caderninho, e o painel faz o resto sozinho.",
   },
   {
-    pergunta: "O preço pode mudar depois?",
+    pergunta: "O negócio ainda não vende. Faz sentido entrar agora?",
     resposta:
-      "Se a gente reajustar os planos algum dia, quem já assina mantém o valor que contratou. Você não descobre um preço novo de um mês pro outro.",
+      "Faz. O Planejamento foi desenhado pra funcionar antes da primeira venda: definir o que a marca é, pra quem ela existe e quanto vai cobrar são exatamente as decisões de quem está começando. O Confere é grátis, então dá pra construir essa base sem gastar nada.",
   },
   {
-    pergunta: "Quais as formas de pagamento?",
+    pergunta: "Precisa entender de números ou de planilha?",
     resposta:
-      "Cartão e boleto valem no plano mensal e no anual. O Pix é uma opção quando você escolhe pagar o ano de uma vez.",
+      "Não. A Pólia pergunta em português claro, quanto custa fazer, quanto cobra, quanto precisa entrar no mês, e faz as contas sozinha. Nenhuma tela usa termo técnico sem explicar. Quem sabe responder sobre o próprio produto já sabe o suficiente.",
   },
   {
-    pergunta: "Posso trocar de plano depois?",
+    pergunta: "Funciona pra serviço, ou só pra produto?",
     resposta:
-      "Pode, quando quiser. Sobe pro Projete ou volta pro Controle nas configurações, e o valor se ajusta sozinho na próxima cobrança.",
+      "Funciona pros dois, e pros híbridos também. O Planejamento adapta as perguntas ao tipo de negócio: quem vende brigadeiro, quem vende consultoria e quem vende arquivo digital respondem perguntas diferentes, e a calculadora de preço tem um modo próprio pra serviço cobrado por hora.",
+  },
+  {
+    pergunta: "Quanto tempo leva pra ver o negócio organizado?",
+    resposta:
+      "Cada módulo do Planejamento leva em torno de vinte minutos. Dá pra pausar em qualquer pergunta e retomar depois, tudo salva sozinho. Muita gente conclui o primeiro módulo no mesmo dia em que cria a conta, e o painel já começa a trabalhar com o que foi respondido.",
+  },
+  {
+    pergunta: "E se a assinatura for cancelada, o que acontece com os dados?",
+    resposta:
+      "O Planejamento e os registros continuam da dona do negócio. Ao cancelar um plano pago, a conta volta pro Confere, que é grátis e não expira, e nada do que foi escrito se perde.",
   },
 ];
+
+/* ───────────────────────────── peças ───────────────────────────── */
+
+/** Faixa contínua com as ferramentas. Para de girar com prefers-reduced-motion. */
+function FaixaFerramentas() {
+  const reduzirMovimento = useReducedMotion();
+  const lista = [...ferramentas, ...ferramentas];
+
+  return (
+    <div
+      aria-hidden="true"
+      className="mt-[clamp(64px,8vw,96px)] overflow-hidden border-y border-white/[0.18] py-4"
+    >
+      <motion.div
+        className="flex w-max items-center"
+        animate={reduzirMovimento ? undefined : { x: ["0%", "-50%"] }}
+        transition={{ duration: 36, ease: "linear", repeat: Infinity }}
+      >
+        {lista.map((nome, i) => (
+          <span
+            key={`${nome}-${i}`}
+            className="flex items-center gap-14 whitespace-nowrap px-7 text-[21px] tracking-[-0.01em] text-[var(--bg)]/85 md:text-[32px]"
+          >
+            {nome}
+            <span className="text-[var(--secondary)]">·</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Retrato da fundadora. Se a foto não carregar, cai no monograma em vez de
+ * deixar um ícone de imagem quebrada no lugar do rosto.
+ */
+function FotoFundadora() {
+  const [falhou, setFalhou] = useState(false);
+
+  if (falhou) {
+    return (
+      <span
+        aria-hidden="true"
+        className="mb-5 grid h-28 w-28 place-items-center rounded-full bg-[var(--accent)] text-[40px] font-bold text-[var(--ink-soft)]"
+      >
+        S
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src="/marketing/sil.jpg"
+      alt="Sil, fundadora da Pólia"
+      width={112}
+      height={112}
+      onError={() => setFalhou(true)}
+      className="mb-5 h-28 w-28 rounded-full object-cover"
+    />
+  );
+}
+
+/** Pergunta do FAQ. `details` nativo: abre sem JS e já vem acessível. */
+function Pergunta({ pergunta, resposta }: { pergunta: string; resposta: string }) {
+  return (
+    <details className="group border-b border-[var(--line)]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-6 text-[18px] font-medium tracking-[-0.01em] text-[var(--ink)] [&::-webkit-details-marker]:hidden">
+        {pergunta}
+        <span
+          aria-hidden="true"
+          className="grid h-7 w-7 flex-none place-items-center rounded-full border border-[var(--line)] text-[16px] text-[var(--ink-soft)] transition-transform group-open:rotate-45 group-open:border-[var(--secondary)] group-open:bg-[var(--secondary)] group-open:text-[var(--secondary-ink)]"
+        >
+          +
+        </span>
+      </summary>
+      <p className="max-w-[62ch] pb-6 text-[16px] leading-[1.7] text-[var(--ink-soft)]">
+        {resposta}
+      </p>
+    </details>
+  );
+}
+
+/* ───────────────────────────── página ───────────────────────────── */
 
 function HomePage() {
   const { mostrarModal, escondendoHome, explorar } = useAppEntryGate();
@@ -212,7 +401,7 @@ function HomePage() {
   if (escondendoHome) return null;
 
   return (
-    <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]" id="topo">
       {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
       <SiteHeader />
 
@@ -223,466 +412,562 @@ function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ duration: 0.25 }}
-            className="fixed bottom-6 right-6 z-30 hidden md:block"
+            className="fixed bottom-6 right-6 z-40 hidden md:block"
           >
-            <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}>
-              <Link
-                to="/"
-                hash="planos"
-                data-track="cadastro_cta_clicado"
-                data-track-props='{"contexto":"flutuante"}'
-                className="inline-flex items-center gap-2 rounded-full border border-[var(--ink)] bg-[var(--secondary)] px-6 py-3 text-[15px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-              >
-                Quero ver se dá lucro
-                <ArrowUpRight size={16} aria-hidden="true" />
-              </Link>
-            </motion.div>
+            <a
+              href="#planos"
+              data-track="cadastro_cta_clicado"
+              data-track-props='{"contexto":"flutuante"}'
+              className={BTN_PRIMARIO}
+            >
+              Quero ver se dá lucro
+              <span aria-hidden="true">→</span>
+            </a>
           </motion.div>
         )}
       </AnimatePresence>
 
       <main>
-        {/* 1. HERO — tela quase cheia, tinta cheia, tipografia enorme, destaque animado */}
-        <section className="relative flex min-h-[92vh] flex-col justify-center overflow-hidden bg-[var(--ink)] pb-16 pt-12 text-[var(--bg)] md:pt-16">
-          <div className="mx-auto w-full max-w-[1120px] px-6">
-            <Reveal delay={0.05}>
-              <p className="font-cabinet text-[13px] font-semibold uppercase tracking-[0.16em] text-[var(--secondary)]">
-                Planejamento · Preço · Caixa · Meta
-              </p>
-            </Reveal>
-
-            <h1 className="mt-4 font-cabinet text-[13vw] leading-[0.96] tracking-[-0.03em] text-white sm:text-[68px] md:text-[92px] lg:text-[108px]">
-              <div className="overflow-hidden">
-                <motion.span
-                  className="block"
-                  initial={{ y: "100%", opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  Descubra se o seu
-                </motion.span>
-              </div>
-              <div className="overflow-hidden">
-                <motion.span
-                  className="block"
-                  initial={{ y: "100%", opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.7, delay: 0.09, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  negócio dá <HighlightWord delay={0.55}>lucro.</HighlightWord>
-                </motion.span>
-              </div>
-            </h1>
-
-            <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-[1.1fr_0.9fr] md:gap-16">
-              <Reveal delay={0.45}>
-                <p className="max-w-[60ch] text-[19px] leading-[1.55] text-[var(--bg)]/80 md:text-[21px]">
-                  Veja quanto sobra em cada venda,{" "}
-                  <span className="font-fraunces italic text-white">sem planilha e sem achismo</span>. Isso começa
-                  no Planejamento, quando você decide quem sua marca atende, o que entrega e
-                  quanto vale, e vira preço, caixa e meta, tudo ligado.
-                </p>
-                <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-                  <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }} className="inline-block">
-                    <Link
-                      to="/"
-                      hash="planos"
+        {/* HERO */}
+        <section className="overflow-hidden pb-0 pt-[clamp(48px,7vw,96px)]">
+          <div className={CONTAINER}>
+            {/* Duas colunas: a promessa à esquerda e a ficha da marca preenchendo a
+                lateral. Sem imagem de apoio, porque a tela do produto logo abaixo
+                é a prova, e sem centralizar, que a home alinha à esquerda. */}
+            <div className="grid grid-cols-1 items-end gap-x-[clamp(32px,5vw,72px)] gap-y-10 md:grid-cols-[1.15fr_0.85fr]">
+              <div>
+                <Reveal>
+                  <Eyebrow>Pólia · para quem toca o próprio negócio</Eyebrow>
+                </Reveal>
+                <h1 className="mb-6 mt-4 text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                  Descubra se o seu negócio dá{" "}
+                  <span className="whitespace-nowrap">
+                    <HighlightWord delay={0.35}>lucro</HighlightWord>.
+                  </span>
+                </h1>
+                <Reveal delay={0.1}>
+                  <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                    Veja quanto sobra em cada venda, sem planilha e sem achismo. Vinte minutos no
+                    primeiro módulo e o painel passa a dizer, todo dia, quanto já entrou e quanto
+                    falta pra fechar as contas do mês.
+                  </p>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <a
+                      href="#planos"
                       data-track="cadastro_cta_clicado"
                       data-track-props='{"contexto":"hero"}'
-                      className="inline-flex items-center gap-2 rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      className={BTN_PRIMARIO}
                     >
                       Quero ver se dá lucro
-                      <ArrowUpRight size={18} aria-hidden="true" />
-                    </Link>
-                  </motion.div>
-                  <a
-                    href="#como-funciona"
-                    className="group inline-flex items-center gap-2 text-[16px] text-white underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    ver como funciona
-                    <ArrowDown size={15} className="transition-transform group-hover:translate-y-0.5" aria-hidden="true" />
-                  </a>
-                </div>
-                <p className="mt-3 text-[13px] text-[var(--bg)]/60">
-                  Ver planos e assinar · começa grátis
-                </p>
-              </Reveal>
-
-              <Reveal delay={0.6} y={32}>
-                <div className="overflow-hidden rounded-xl border border-white/15 bg-white/5">
-                  <img
-                    src="/marketing/hero.png"
-                    alt="Tela da Pólia mostrando o Planejamento da marca conectado ao preço e ao caixa"
-                    className="h-full w-full object-cover"
-                    width={1344}
-                    height={752}
-                  />
-                </div>
-              </Reveal>
-            </div>
-          </div>
-
-          <motion.div
-            aria-hidden="true"
-            className="mx-auto mt-14 hidden md:block"
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ArrowDown size={20} className="text-[var(--bg)]/60" />
-          </motion.div>
-        </section>
-
-        {/* 2. FAIXA DE MECANISMO — bloco de tinta cheia, teste de mais preto na home */}
-        <section id="como-funciona" className="bg-[var(--ink)] py-16 md:py-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <RevealGroup className="rounded-xl border border-white/15 p-8 md:p-12">
-              <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-8">
-                {mecanismo.map((passo) => (
-                  <RevealItem key={passo.n}>
-                    <span className="font-cabinet text-[56px] leading-none text-[var(--secondary)] md:text-[64px]">
-                      {passo.n}
-                    </span>
-                    <h3 className="mt-3 text-[18px] text-white">{passo.titulo}</h3>
-                    <p className="mt-2 text-[14px] leading-[1.6] text-[var(--bg)]/75">
-                      {passo.desc}
-                    </p>
-                  </RevealItem>
-                ))}
+                      <span aria-hidden="true">→</span>
+                    </a>
+                    <a href="#produto" className={BTN_CONTORNO}>
+                      Ver o produto
+                    </a>
+                  </div>
+                  <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
+                    O Confere é grátis de verdade. Sem cartão, sem prazo.
+                  </p>
+                </Reveal>
               </div>
-              <p className="mt-10 max-w-[60ch] border-t border-white/15 pt-6 text-[15px] leading-[1.6] text-[var(--bg)]/75">
-                Um passo puxa o outro. A clareza que você tem no começo é o que vira dinheiro no
-                fim.
-              </p>
-            </RevealGroup>
-          </div>
-        </section>
 
-        {/* 3. PROBLEMA/VILÃO — bloco de citação em tinta cheia, efeito editorial */}
-        <section className="bg-[var(--ink)] py-20 text-[var(--bg)] md:py-28">
-          <div className="mx-auto max-w-[860px] px-6">
-            <Reveal y={28}>
-              <span aria-hidden="true" className="font-cabinet block text-[64px] leading-none text-[var(--secondary)] md:text-[80px]">
-                “
-              </span>
-              <p className="mt-2 font-cabinet text-[28px] leading-[1.25] tracking-[-0.01em] md:text-[42px]">
-                O problema quase nunca é falta de esforço. É tocar o negócio no escuro, uma
-                decisão de cada vez, sem ninguém juntando os números pra você.
-              </p>
-            </Reveal>
-            <Reveal delay={0.15}>
-              <p className="mt-8 max-w-[62ch] text-[16px] leading-[1.7] text-[var(--bg)]/75 md:text-[18px]">
-                Preço definido olhando a concorrente. Gasto sem saber o que sobra. Cliente que
-                você corre atrás sem saber se dá lucro. Cada escolha dessas parece pequena, mas
-                junto elas decidem quanto entra no fim do mês. O preço é só onde a conta aparece
-                mais rápido: quem cobra no chute quase sempre lucra menos do que pensa.
-              </p>
-              <a
-                href="#tour"
-                className="mt-6 inline-flex items-center gap-2 text-[16px] text-[var(--bg)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--bg)]"
-              >
-                Ver onde as decisões se juntam
-                <ArrowDown size={15} aria-hidden="true" />
-              </a>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* 4. TOUR DE MÓDULOS */}
-        <section id="tour" className="relative overflow-hidden pb-12 pt-16 md:pb-16 md:pt-24">
-          <img
-            src="/marketing/moldura-modulos.jpg"
-            alt=""
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-[0.06]"
-          />
-          <div className="relative mx-auto max-w-[1120px] px-6">
-            <Reveal>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                Como funciona por dentro
-              </p>
-              <h2 className="mt-3 max-w-[28ch] font-cabinet text-[32px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
-                Seis telas, uma decisão que atravessa todas.
-              </h2>
-            </Reveal>
-
-            <div className="mt-10 flex flex-col gap-16 md:gap-20">
-              {modulos.map((m, i) => (
-                <div
-                  key={m.nomeModulo}
-                  className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-2 md:gap-16"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="font-cabinet pointer-events-none absolute -top-6 right-0 select-none text-[120px] leading-none text-[var(--ink)]/[0.04] md:-top-10 md:text-[180px]"
-                  >
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <Reveal className={i % 2 === 1 ? "md:order-2" : "md:order-1"}>
-                    <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--secondary-text)]">
-                      {m.nomeModulo}
-                    </p>
-                    <h3 className="mt-2 max-w-[22ch] text-[22px] text-[var(--ink)] md:text-[26px]">
-                      {m.titulo}
-                    </h3>
-                    <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-                      {m.body}
-                    </p>
-                  </Reveal>
-                  <Reveal delay={0.12} y={32} className={i % 2 === 1 ? "md:order-1" : "md:order-2"}>
-                    {/* TODO: print real de {m.printLabel} aqui, ver print capturado na sessão */}
-                    <motion.div
-                      whileHover={{ y: -4 }}
-                      transition={{ duration: 0.25 }}
-                      role="img"
-                      aria-label={`Espaço reservado para ${m.printLabel}`}
-                      className="flex h-[240px] items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--bg)] text-[13px] text-[var(--muted)] md:h-[300px]"
+              <Reveal delay={0.2} className="md:pb-1">
+                <ul className="flex list-none flex-col gap-4 border-t border-[var(--line)] pt-5">
+                  {credenciais.map((c) => (
+                    <li
+                      key={c}
+                      className="font-accent flex items-start gap-3 text-[12px] font-bold uppercase leading-[1.5] tracking-[0.12em] text-[var(--ink-soft)]"
                     >
-                      {m.printLabel}
-                    </motion.div>
-                  </Reveal>
-                </div>
-              ))}
+                      <span
+                        aria-hidden="true"
+                        className="mt-[6px] h-[5px] w-[5px] flex-none rounded-full bg-[var(--secondary)]"
+                      />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
             </div>
 
-            <Reveal className="mt-16 flex flex-col items-center gap-3">
-              <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                <Link
-                  to="/"
-                  hash="planos"
-                  data-track="cadastro_cta_clicado"
-                  data-track-props='{"contexto":"tour_modulos"}'
-                  className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-                >
-                  Quero ver se dá lucro
-                </Link>
-              </motion.div>
-              <p className="text-[13px] text-[var(--muted)]">
-                Ver planos e assinar · começa grátis
-              </p>
-            </Reveal>
-
-            {/* 4.6 reforço menor */}
-            <Reveal className="mt-16 grid grid-cols-1 gap-6 border-t border-[var(--line)] pt-10 sm:grid-cols-3">
-              <div className="flex items-start gap-3">
-                <ClipboardList
-                  size={20}
-                  className="mt-0.5 flex-none text-[var(--secondary-text)]"
-                  aria-hidden="true"
-                />
-                <span className="text-[14px] leading-[1.5] text-[var(--ink-soft)]">
-                  Calendário e Caderno
-                </span>
+            {/* A tela do produto entra inteira e é cortada na base. */}
+            <Reveal delay={0.2} y={32}>
+              <div
+                className="mt-[clamp(48px,6vw,72px)]"
+                style={{
+                  maskImage: "linear-gradient(to bottom, black 78%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, black 78%, transparent 100%)",
+                }}
+              >
+                <MockPainel className="shadow-[0_24px_64px_-16px_rgba(10,10,10,0.18)]" />
               </div>
-              <p className="text-[14px] leading-[1.6] text-[var(--ink-soft)] sm:col-span-2">
-                Agenda e notas também ficam na Pólia, no mesmo lugar do preço, do caixa e do
-                Planner.
-              </p>
             </Reveal>
           </div>
         </section>
 
-        {/* 5. QUALIFICAÇÃO */}
-        <section className="py-16 md:py-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <Reveal>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                É pra você?
-              </p>
-            </Reveal>
-            <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-              <Reveal>
-                <div className="h-full rounded-xl border-2 border-[var(--secondary)] bg-white p-8">
-                  <div className="flex items-center gap-3">
-                    <CircleCheck
-                      size={22}
-                      className="flex-none text-[var(--secondary-text)]"
-                      aria-hidden="true"
-                    />
-                    <h3 className="text-[19px] text-[var(--ink)]">
-                      Pra quem já vende e quer enxergar o negócio inteiro
-                    </h3>
-                  </div>
-                  <ul className="mt-5 flex flex-col gap-4">
-                    {qualificacaoSim.map((item) => (
-                      <li
-                        key={item}
-                        className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </Reveal>
+        {/* PROVA SOCIAL */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[1.1fr_0.9fr]">
+              <div>
+                <Reveal>
+                  <Eyebrow>A pesquisa</Eyebrow>
+                  <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                    A dúvida é mais comum do que parece.
+                  </h2>
+                  <p className="mt-5 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                    Na pesquisa aberta da Pólia, com quase duzentas respostas de quem vende, 52%
+                    admitem definir o preço no olho e 66% misturam a conta da casa com a conta do
+                    negócio.
+                  </p>
+                </Reveal>
+                <RevealGroup className="mt-8 grid grid-cols-1 gap-6 border-t border-[var(--line)] pt-6 sm:grid-cols-2">
+                  {pesquisa.map((p) => (
+                    <RevealItem key={p.rotulo}>
+                      <p className="text-[clamp(2rem,4vw,2.8rem)] font-bold leading-none tracking-[-0.02em]">
+                        {p.valor}
+                      </p>
+                      <p className="mt-2 max-w-[24ch] text-[14px] leading-[1.45] text-[var(--ink-soft)]">
+                        {p.rotulo}
+                      </p>
+                    </RevealItem>
+                  ))}
+                </RevealGroup>
+              </div>
 
-              <Reveal delay={0.12}>
-                <div className="h-full rounded-xl border border-[var(--line)] bg-[var(--bg)] p-8">
-                  <div className="flex items-center gap-3">
-                    <Target
-                      size={22}
-                      className="flex-none text-[var(--muted)]"
-                      aria-hidden="true"
-                    />
-                    <h3 className="text-[19px] text-[var(--ink)]">Ainda não é pra você</h3>
-                  </div>
-                  <ul className="mt-5 flex flex-col gap-4">
-                    {qualificacaoNao.map((item) => (
-                      <li
-                        key={item}
-                        className="border-t border-[var(--line)] pt-4 text-[15px] leading-[1.6] text-[var(--ink-soft)] first:border-t-0 first:pt-0"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+              <Reveal delay={0.1}>
+                <div className="rounded-2xl bg-[var(--surface-pink)] p-8 md:p-10">
+                  <p className="text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                    E a frase que mais se repete é quase sempre a mesma:
+                  </p>
+                  <blockquote className="mt-4 font-fraunces text-[clamp(1.3rem,2.2vw,1.75rem)] italic leading-[1.35] text-[var(--ink)]">
+                    “Não sei se tô tendo lucro de verdade ou só girando dinheiro.”
+                    <footer className="mt-5 font-sans text-[13px] not-italic text-[var(--ink-soft)]">
+                      resposta da pesquisa aberta da Pólia · 2026
+                    </footer>
+                  </blockquote>
                 </div>
               </Reveal>
             </div>
           </div>
         </section>
 
-        {/* 6. PLANOS */}
-        <section id="planos" className="bg-[var(--bg)] py-16 md:py-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <Reveal>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                Planos
-              </p>
-              <h2 className="mt-3 max-w-[24ch] font-cabinet text-[28px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[38px]">
-                Comece a enxergar o negócio sem pagar nada.
+        {/* PROBLEMA */}
+        <section className={SECAO}>
+          <div
+            className={`${CONTAINER} grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[1.1fr_0.9fr]`}
+          >
+            <div>
+              <Reveal>
+                <Eyebrow>O problema</Eyebrow>
+              </Reveal>
+              <h2 className="mt-4 text-[clamp(2rem,4.4vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+                Tem negócio que vende bem e ainda assim termina o mês{" "}
+                {/* O marcador é inline-block e não quebra, então a pontuação precisa
+                    viajar junto com ele, senão o ponto final cai sozinho na linha. */}
+                <span className="whitespace-nowrap">
+                  <HighlightWord delay={0.3}>sem saber quanto sobrou</HighlightWord>.
+                </span>
               </h2>
-              <p className="mt-4 max-w-[60ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-                O Planejamento é grátis pra sempre. Quando quiser o negócio inteiro num lugar só,
-                você passa pro Controle. Sem fidelidade, cancela quando quiser.
-              </p>
-            </Reveal>
-
-            <RevealGroup className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-              {planos.map((plano) => (
-                <RevealItem
-                  key={plano.nome}
-                  className={`flex flex-col rounded-xl border p-8 transition-transform duration-300 hover:-translate-y-1 ${
-                    plano.destaque
-                      ? "border-2 border-[var(--secondary)] bg-[var(--surface-pink)]"
-                      : "border-[var(--line)] bg-white"
-                  }`}
-                >
-                  <div className="flex flex-1 flex-col">
-                  {/* mantém a estrutura interna original */}
-                  {plano.destaque && (
-                    <span className="mb-3 inline-block w-fit rounded-[4px] bg-[var(--secondary-light)] px-2 py-1 text-[12px] font-semibold uppercase tracking-[0.04em] text-[var(--secondary-ink)]">
-                      Mais escolhido
-                    </span>
-                  )}
-                  <h3 className="text-[22px] text-[var(--ink)]">{plano.nome}</h3>
-                  <p className="mt-1 text-[14px] text-[var(--ink-soft)]">{plano.praQuem}</p>
-
-                  <div className="mt-5 flex items-baseline gap-2">
-                    <span className="font-cabinet text-[36px] leading-none tracking-[-0.02em] text-[var(--ink)]">
-                      {plano.preco}
-                    </span>
-                    <span className="text-[var(--ink-soft)]">{plano.ciclo}</span>
-                  </div>
-                  {plano.precoAnual && (
-                    <p className="mt-1 text-[13px] text-[var(--muted)]">{plano.precoAnual}</p>
-                  )}
-
-                  <a
-                    href={plano.href}
-                    data-track="cadastro_cta_clicado"
-                    data-track-props={`{"contexto":"planos_${plano.nome.toLowerCase()}"}`}
-                    className={`mt-6 block rounded-lg px-6 py-3 text-center text-[16px] font-semibold no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
-                      plano.destaque
-                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                        : "border border-[var(--ink)] text-[var(--ink)] hover:bg-[var(--ink)] hover:text-white"
-                    }`}
-                  >
-                    {plano.botaoLabel}
-                  </a>
-                  <p className="mt-2 text-center text-[13px] text-[var(--muted)]">{plano.apoio}</p>
-
-                  <ul className="mt-6 flex flex-col gap-3 border-t border-[var(--line)] pt-6">
-                    {plano.features.map((item) => (
-                      <li
-                        key={item}
-                        className="text-[14px] leading-[1.5] text-[var(--ink-soft)]"
-                      >
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                  </div>
+            </div>
+            <RevealGroup className="flex flex-col gap-6 border-l border-[var(--line)] pl-8">
+              {problemas.map((p) => (
+                <RevealItem key={p.forte}>
+                  <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                    <b className="font-semibold text-[var(--ink)]">{p.forte}</b>
+                    {p.resto}
+                  </p>
                 </RevealItem>
               ))}
             </RevealGroup>
           </div>
         </section>
 
-        {/* 7. FAQ — tinta cheia */}
-        <section className="bg-[var(--ink)] py-16 md:py-20">
-          <div className="mx-auto max-w-[720px] px-6">
+        {/* COMO FUNCIONA */}
+        <section id="como-funciona" className={`scroll-mt-[88px] bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
             <Reveal>
-              <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--bg)]/70">
-                Antes de assinar
-              </p>
-              <h2 className="mt-3 mb-6 font-cabinet text-[26px] leading-[1.1] tracking-[-0.02em] text-white md:text-[34px]">
-                Dúvidas sobre os planos
+              <Eyebrow>Como funciona</Eyebrow>
+              <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Três movimentos. Do papel em branco à rotina que roda.
               </h2>
             </Reveal>
-            <Reveal delay={0.1} className="rounded-xl border border-white/15 bg-white px-6 md:px-8">
-              <Accordion type="single" collapsible>
-                {faqs.map((f) => (
-                  <AccordionItem
-                    key={f.pergunta}
-                    value={f.pergunta}
-                    className="border-t border-b-0 border-[var(--line)] first:border-t-0"
-                  >
-                    <AccordionTrigger className="group py-6 text-[18px] font-normal text-[var(--ink)] no-underline hover:no-underline hover:text-[var(--secondary-text)] [&>svg]:text-[var(--muted)] [&>svg]:transition-colors [&>svg]:group-hover:text-[var(--secondary-text)]">
-                      {f.pergunta}
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-6 pt-0 text-[16px] text-[var(--ink-soft)]">
-                      {f.resposta}
-                    </AccordionContent>
-                  </AccordionItem>
+
+            <div className="mt-4">
+              {movimentos.map((m, i) => (
+                <article
+                  key={m.n}
+                  className={`grid grid-cols-1 items-center gap-[clamp(32px,5vw,72px)] py-[clamp(48px,6vw,64px)] md:grid-cols-[0.9fr_1.1fr] ${
+                    i > 0 ? "border-t border-[var(--line)]" : ""
+                  }`}
+                >
+                  <Reveal className={i % 2 === 1 ? "md:order-2" : ""}>
+                    <p className="font-accent mb-3 inline-flex items-center gap-2.5 text-[13px] font-bold tracking-[0.1em] text-[var(--ink-soft)]">
+                      {m.n}
+                      <span aria-hidden="true" className="h-0.5 w-10 bg-[var(--secondary)]" />
+                    </p>
+                    <h3 className="mb-4 text-[clamp(1.5rem,2.6vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.015em]">
+                      {m.titulo}
+                    </h3>
+                    <p className="max-w-[46ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                      {m.body}
+                    </p>
+                    <p className="mt-4 text-[14px] font-semibold text-[var(--secondary-text)]">
+                      {m.resultado}
+                    </p>
+                  </Reveal>
+                  <Reveal delay={0.1} y={28} className={i % 2 === 1 ? "md:order-1" : ""}>
+                    {m.mock}
+                  </Reveal>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* O PRODUTO */}
+        <section id="produto" className={`scroll-mt-[88px] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal className="mb-[clamp(40px,5vw,48px)] max-w-[720px]">
+              <Eyebrow>O produto</Eyebrow>
+              <h2 className="mb-4 mt-3 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Um documento vivo, não um formulário
+              </h2>
+              <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                O Planejamento cresce junto com o negócio. Cada resposta fica guardada, editável e
+                conectada com a ferramenta que usa aquela informação.
+              </p>
+            </Reveal>
+
+            <div className="grid grid-cols-1 items-start gap-[clamp(24px,4vw,56px)] lg:grid-cols-[1fr_300px]">
+              <Reveal className="relative">
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-[11px] top-[88px] z-10 hidden h-[22px] w-[22px] place-items-center rounded-full bg-[var(--ink)] text-[11px] font-semibold text-[var(--bg)] shadow-[0_0_0_4px_var(--secondary-light)] md:grid"
+                >
+                  1
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-[11px] top-[216px] z-10 hidden h-[22px] w-[22px] place-items-center rounded-full bg-[var(--ink)] text-[11px] font-semibold text-[var(--bg)] shadow-[0_0_0_4px_var(--secondary-light)] md:grid"
+                >
+                  2
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-[64px] left-[34%] z-10 hidden h-[22px] w-[22px] place-items-center rounded-full bg-[var(--ink)] text-[11px] font-semibold text-[var(--bg)] shadow-[0_0_0_4px_var(--secondary-light)] md:grid"
+                >
+                  3
+                </span>
+                <MockPlanejamento className="shadow-[0_24px_64px_-16px_rgba(10,10,10,0.18)]" />
+              </Reveal>
+
+              <RevealGroup className="flex flex-col gap-6 lg:sticky lg:top-[104px]">
+                {anotacoes.map((a) => (
+                  <RevealItem key={a.n} className="border-l-2 border-[var(--secondary)] pl-4">
+                    <span
+                      aria-hidden="true"
+                      className="mb-1.5 grid h-5 w-5 place-items-center rounded-full bg-[var(--ink)] text-[11px] font-semibold text-[var(--bg)]"
+                    >
+                      {a.n}
+                    </span>
+                    <b className="block text-[15px] font-semibold">{a.titulo}</b>
+                    <p className="mt-0.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]">
+                      {a.texto}
+                    </p>
+                  </RevealItem>
                 ))}
-              </Accordion>
+              </RevealGroup>
+            </div>
+          </div>
+        </section>
+
+        {/* RECURSOS */}
+        <section className="pb-[clamp(72px,9vw,128px)]">
+          <div className={CONTAINER}>
+            {recursos.map((r, i) => (
+              <article
+                key={r.titulo}
+                className={`grid grid-cols-1 items-center gap-[clamp(32px,5vw,72px)] py-[clamp(48px,6vw,64px)] md:grid-cols-2 ${
+                  i > 0 ? "border-t border-[var(--line)]" : ""
+                }`}
+              >
+                <Reveal className={i % 2 === 1 ? "md:order-2" : ""}>
+                  <Eyebrow>{r.eyebrow}</Eyebrow>
+                  <h3 className="mb-4 mt-3 text-[clamp(1.5rem,2.6vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.015em]">
+                    {r.titulo}
+                  </h3>
+                  <p className="max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                    {r.body}
+                  </p>
+                  <p className="mt-4 text-[14px] font-semibold text-[var(--secondary-text)]">
+                    {r.resultado}
+                  </p>
+                  {r.ancora && (
+                    <p className="mt-4 max-w-[44ch] border-l-2 border-[var(--secondary)] pl-4 text-[15px] leading-[1.6] text-[var(--ink)]">
+                      {r.ancora}
+                    </p>
+                  )}
+                </Reveal>
+                <Reveal delay={0.1} y={28} className={i % 2 === 1 ? "md:order-1" : ""}>
+                  {r.mock}
+                </Reveal>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* O PRINCÍPIO */}
+        <section className="bg-[var(--ink)] py-[clamp(80px,10vw,140px)] text-[var(--bg)]">
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow claro>O princípio</Eyebrow>
+              <h2 className="mb-6 mt-4 max-w-[20ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                Preço, meta e rotina são{" "}
+                <em className="font-fraunces font-normal italic text-[var(--secondary-light)]">
+                  decisões de marca
+                </em>
+                .
+              </h2>
+              <p className="max-w-[52ch] text-[16px] leading-[1.7] text-[var(--bg)]/70">
+                Quando a marca sabe quem serve e quanto vale o que entrega, o preço para de ser
+                chute, a meta para de ser desejo e a rotina para de ser correria. A Pólia existe pra
+                essa conta fechar.
+              </p>
+            </Reveal>
+          </div>
+          <FaixaFerramentas />
+        </section>
+
+        {/* QUEM FEZ */}
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[0.85fr_1.15fr]">
+              <Reveal>
+                <Eyebrow>Quem fez</Eyebrow>
+                <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  Feita por quem passou 14 anos dentro do e-commerce
+                </h2>
+                <blockquote className="mt-8 max-w-[28ch] font-fraunces text-[clamp(1.35rem,2.3vw,1.9rem)] italic leading-[1.4]">
+                  “Passei anos vendo marca grande decidir com clareza e marca pequena decidir no
+                  escuro. A Pólia é o painel que eu queria ter tido no meu próprio negócio, e que eu
+                  queria ter entregado a cada cliente das consultorias.”
+                  <footer className="mt-4 font-sans text-[14px] not-italic text-[var(--ink-soft)]">
+                    Sil, fundadora da Pólia
+                  </footer>
+                </blockquote>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+                  <FotoFundadora />
+                  <b className="text-[16px] font-semibold">Sil</b>
+                  <p className="text-[14px] text-[var(--ink-soft)]">fundadora</p>
+                  <ul className="mt-6 flex list-none flex-col gap-3">
+                    {credenciaisSil.map((c) => (
+                      <li
+                        key={c}
+                        className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="mt-[7px] h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
+                        />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* PARA QUEM É */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Para quem é</Eyebrow>
+              <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Feita pra quem vende. Ou pra quem vai começar.
+              </h2>
+            </Reveal>
+
+            <div className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Reveal>
+                <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
+                  <h3 className="mb-6 text-[20px] font-bold tracking-[-0.01em]">
+                    Faz sentido quando
+                  </h3>
+                  <ul className="flex list-none flex-col gap-4">
+                    {fazSentido.map((item) => (
+                      <li
+                        key={item}
+                        className="flex gap-3 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="mt-px grid h-5 w-5 flex-none place-items-center rounded-full bg-[var(--secondary)] text-[11px] font-bold text-[var(--secondary-ink)]"
+                        >
+                          ✓
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+              <Reveal delay={0.1}>
+                <div className="h-full rounded-2xl border border-[var(--line)] p-8">
+                  <h3 className="mb-6 text-[20px] font-bold tracking-[-0.01em]">
+                    Ainda não, quando
+                  </h3>
+                  <ul className="flex list-none flex-col gap-4">
+                    {aindaNao.map((item) => (
+                      <li
+                        key={item}
+                        className="flex gap-3 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="mt-px grid h-5 w-5 flex-none place-items-center rounded-full bg-[var(--line)] text-[11px] font-bold text-[var(--muted)]"
+                        >
+                          ·
+                        </span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* PLANOS */}
+        <section id="planos" className={`scroll-mt-[88px] bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Planos</Eyebrow>
+              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Começa grátis. Cresce quando o negócio pedir.
+              </h2>
+            </Reveal>
+
+            <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 items-stretch gap-4 md:grid-cols-3">
+              {planos.map((p) => (
+                <RevealItem
+                  key={p.nome}
+                  className={`relative flex flex-col gap-4 rounded-2xl border bg-white p-8 ${
+                    p.destaque ? "border-[var(--ink)]" : "border-[var(--line)]"
+                  }`}
+                >
+                  {p.destaque && (
+                    <span className="font-accent absolute -top-3 left-8 rounded-full bg-[var(--highlight)] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--highlight-ink)]">
+                      Mais escolhido
+                    </span>
+                  )}
+                  <div>
+                    <h3 className="text-[22px] font-bold tracking-[-0.01em]">{p.nome}</h3>
+                    <p className="mt-1.5 text-[15px] leading-[1.5] text-[var(--ink-soft)]">
+                      {p.frase}
+                    </p>
+                  </div>
+                  <p className="text-[35px] font-bold leading-none tracking-[-0.02em]">
+                    {p.preco}
+                    <small className="ml-1 font-sans text-[14px] font-normal text-[var(--ink-soft)]">
+                      {p.ciclo}
+                    </small>
+                  </p>
+                  <ul className="flex flex-1 list-none flex-col gap-3">
+                    {p.features.map((f) => (
+                      <li
+                        key={f}
+                        className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
+                        />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  {p.apoio && (
+                    <p className="text-[13px] leading-[1.5] text-[var(--ink-soft)]">{p.apoio}</p>
+                  )}
+                  <a
+                    href={p.href}
+                    data-track="cadastro_cta_clicado"
+                    data-track-props={`{"contexto":"planos_${p.nome.toLowerCase()}"}`}
+                    className={`${p.destaque ? BTN_PRIMARIO : BTN_CONTORNO} w-full`}
+                  >
+                    {p.botao}
+                  </a>
+                </RevealItem>
+              ))}
+            </RevealGroup>
+
+            <Reveal>
+              <p className="mx-auto mt-6 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink-soft)]">
+                Sem cartão no Confere. Cancelamento em um clique, sem multa e sem conversa difícil.
+                E ao cancelar, a conta volta pro Confere: nada do que foi escrito se perde.
+              </p>
+              <p className="mx-auto mt-3 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink)]">
+                Na dúvida, o caminho é simples: o Confere responde se dá lucro. O Controle faz o mês
+                inteiro rodar.
+              </p>
             </Reveal>
           </div>
         </section>
 
-        {/* 8. CTA FINAL — cheio, sem margem, encosta direto no FAQ acima */}
-        <section className="relative overflow-hidden">
-          <img
-            src="/marketing/fechamento.jpg"
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div aria-hidden="true" className="absolute inset-0 bg-[var(--ink)] opacity-[0.55]" />
-          <div className="relative mx-auto max-w-[720px] px-6 py-20 md:py-28">
-            <Reveal className="flex flex-col items-center gap-8 text-center">
-              <PoliaWordmark className="h-8 w-auto text-white md:h-10" />
-              <h2 className="mx-auto max-w-[20ch] font-cabinet text-[30px] leading-[1.15] tracking-[-0.02em] text-white md:text-[44px]">
-                Tocar o negócio sozinha não precisa ser no escuro.
+        {/* PERGUNTAS */}
+        <section id="perguntas" className={`scroll-mt-[88px] ${SECAO}`}>
+          <div className={`${CONTAINER} max-w-[760px]`}>
+            <Reveal>
+              <Eyebrow>Perguntas</Eyebrow>
+              <h2 className="mb-[clamp(40px,5vw,48px)] mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Antes de criar a conta, respostas diretas
               </h2>
-              <div className="flex flex-col items-center gap-3">
-                <motion.div whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-                  <Link
-                    to="/"
-                    hash="planos"
-                    data-track="cadastro_cta_clicado"
-                    data-track-props='{"contexto":"cta_final"}'
-                    className="rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    Quero ver se dá lucro
-                  </Link>
-                </motion.div>
-                <p className="text-[13px] text-white/70">
-                  Ver planos e assinar · começa grátis
-                </p>
+            </Reveal>
+            {perguntas.map((p) => (
+              <Pergunta key={p.pergunta} pergunta={p.pergunta} resposta={p.resposta} />
+            ))}
+          </div>
+        </section>
+
+        {/* CTA FINAL */}
+        <section className="py-[clamp(80px,10vw,140px)] text-center">
+          <div className={CONTAINER}>
+            <Reveal className="flex flex-col items-center">
+              <Eyebrow>Pólia</Eyebrow>
+              <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                O negócio já existe. <HighlightWord delay={0.3}>Falta o lugar dele.</HighlightWord>
+              </h2>
+              <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                Vinte minutos no primeiro módulo e o painel começa a trabalhar. E a primeira
+                resposta que aparece é a que mais aperta: dá lucro, ou só gira dinheiro?
+              </p>
+              <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink)]">
+                O próximo orçamento vai chegar de qualquer jeito. Melhor que ele chegue com a conta
+                pronta.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link
+                  to="/auth/cadastro"
+                  data-track="cadastro_cta_clicado"
+                  data-track-props='{"contexto":"cta_final"}'
+                  className={BTN_PRIMARIO}
+                >
+                  Criar conta grátis
+                  <span aria-hidden="true">→</span>
+                </Link>
+                <a href="#planos" className={BTN_CONTORNO}>
+                  Conhecer os planos
+                </a>
               </div>
+              <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
+                Sem cartão. Se não fizer sentido, cancelar leva um clique.
+              </p>
             </Reveal>
           </div>
         </section>

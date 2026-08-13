@@ -183,7 +183,7 @@ function PlannerIndex() {
 
         {cotaAtingida && (
           <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-            No Confere você tem 1 quadro. Suba pro Controle pra deixar ilimitado.{" "}
+            No Confere cabe 1 quadro. Suba pro Controle pra deixar ilimitado.{" "}
             <Link
               to="/upgrade"
               search={{ rota: "/planner", tier: "controle" }}

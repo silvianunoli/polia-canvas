@@ -134,7 +134,13 @@ function RedefinirSenhaPage() {
 
         <div className="mt-1">
           <AuthButton type="submit" fullWidth loading={loading} disabled={salvo}>
-            {loading ? "Salvando..." : "Salvar nova senha →"}
+            {loading ? (
+              "Salvando..."
+            ) : (
+              <>
+                Salvar nova senha <span aria-hidden="true">→</span>
+              </>
+            )}
           </AuthButton>
         </div>
       </form>

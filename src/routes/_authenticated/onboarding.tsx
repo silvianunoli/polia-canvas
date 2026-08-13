@@ -60,8 +60,9 @@ function OnboardingPage() {
   });
   const navigate = useNavigate();
 
-  // Best-effort, silencioso: se falhar, não atrapalha o onboarding — a
-  // própria função é idempotente e não reenvia em loads seguintes.
+  // Best-effort, silencioso: se falhar, não atrapalha o onboarding. A função
+  // só marca a conta como notificada quando o e-mail sai de verdade, então um
+  // envio que falhou é tentado de novo no próximo load — de propósito.
   useEffect(() => {
     garantirBoasVindas().catch(() => {});
   }, []);

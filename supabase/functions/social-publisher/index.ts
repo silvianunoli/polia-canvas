@@ -16,8 +16,6 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SOCIAL_CRON_SECRET = Deno.env.get("SOCIAL_CRON_SECRET") ?? "";
-const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
-const IG_USER_ID_ENV = Deno.env.get("IG_USER_ID") ?? "";
 
 const GRAPH = "https://graph.instagram.com/v23.0";
 const CODIGOS_TETO_DIARIO = [4, 17, 32, 613];
@@ -30,6 +28,7 @@ const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 interface PostRow {
   id: string;
+  conta_id: string;
   tipo: string;
   caption: string;
   midias: string[];
@@ -55,15 +54,15 @@ function autenticado(req: Request): boolean {
   return req.headers.get("x-social-cron-secret") === SOCIAL_CRON_SECRET;
 }
 
-async function obterCredenciais(): Promise<{ token: string; igUserId: string }> {
+async function obterCredenciais(contaId: string): Promise<{ token: string; igUserId: string }> {
   const { data } = await supabaseAdmin
-    .from("integracao_instagram")
+    .from("contas_instagram_credenciais")
     .select("access_token, ig_user_id")
-    .eq("id", 1)
+    .eq("conta_id", contaId)
     .maybeSingle();
   return {
-    token: data?.access_token || META_TOKEN_ENV,
-    igUserId: data?.ig_user_id || IG_USER_ID_ENV,
+    token: data?.access_token ?? "",
+    igUserId: data?.ig_user_id ?? "",
   };
 }
 
@@ -195,21 +194,27 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: erroReserva.message }), { status: 500 });
   }
 
-  const { token, igUserId } = await obterCredenciais();
   const resultados: Array<{ id: string; status: string }> = [];
-
-  if (!token || !igUserId) {
-    // Sem credenciais configuradas ainda (pré-requisito do Meta pendente):
-    // devolve os posts pra 'agendado' e não tenta publicar nada.
-    for (const post of (posts ?? []) as PostRow[]) {
-      await supabaseAdmin.from("social_posts").update({ status: "agendado" }).eq("id", post.id);
-    }
-    return new Response(JSON.stringify({ skipped: true, motivo: "META_TOKEN/IG_USER_ID não configurados" }), {
-      status: 200,
-    });
-  }
+  // Cache por request: várias contas podem ter posts no mesmo lote, mas cada
+  // conta só precisa de uma busca de credencial, não uma por post.
+  const credenciaisPorConta = new Map<string, { token: string; igUserId: string }>();
 
   for (const post of (posts ?? []) as PostRow[]) {
+    let credenciais = credenciaisPorConta.get(post.conta_id);
+    if (!credenciais) {
+      credenciais = await obterCredenciais(post.conta_id);
+      credenciaisPorConta.set(post.conta_id, credenciais);
+    }
+    const { token, igUserId } = credenciais;
+
+    if (!token || !igUserId) {
+      // Essa conta específica não tem credencial configurada ainda: devolve
+      // só os posts DELA pra 'agendado' — não bloqueia outras contas do lote.
+      await supabaseAdmin.from("social_posts").update({ status: "agendado" }).eq("id", post.id);
+      resultados.push({ id: post.id, status: "sem_credencial" });
+      continue;
+    }
+
     try {
       const igMediaId = await publicarPost(token, igUserId, post);
       const permalink = await obterPermalink(token, igMediaId.split(",")[0]);

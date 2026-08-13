@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { temProjete } from "@/lib/planos";
 
 const FEATURE = "aimer";
 const MODELO_FLASH = "gemini-flash-latest";
@@ -192,7 +193,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
     const periodo = periodoDiario(new Date());
 
     let contextoProjete: string | null = null;
-    if (profile?.plano === "projete") {
+    if (temProjete(profile?.plano)) {
       const hoje = new Date();
       const mes = hoje.getUTCMonth() + 1;
       const ano = hoje.getUTCFullYear();
@@ -278,8 +279,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 
 export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
-  tetoAtingido:
-    "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Controle libera bem mais.",
+  tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Controle libera bem mais.",
   falhaIa: "Não consegui responder agora. Tenta de novo.",
   manutencao: "A Aimer está em manutenção rápida. Volta já já.",
 } as const;

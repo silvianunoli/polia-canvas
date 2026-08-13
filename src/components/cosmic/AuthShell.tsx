@@ -35,14 +35,15 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
     <div className="polia-v3 flex min-h-screen w-full flex-col items-center justify-center bg-[var(--bg)] px-5 py-6">
       <div className="w-full" style={{ maxWidth }}>
         <div
-          className="rounded-2xl bg-white px-5 py-6 sm:px-8 sm:py-7"
+          className="rounded-2xl border border-[var(--line)] bg-white px-5 py-6 sm:px-8 sm:py-7"
           style={
             reduce
               ? undefined
               : {
                   opacity: shown ? 1 : 0,
                   transform: shown ? "none" : "translateY(10px)",
-                  transition: "opacity 220ms cubic-bezier(0.22,1,0.36,1), transform 220ms cubic-bezier(0.22,1,0.36,1)",
+                  transition:
+                    "opacity 220ms cubic-bezier(0.22,1,0.36,1), transform 220ms cubic-bezier(0.22,1,0.36,1)",
                 }
           }
         >
@@ -56,14 +57,19 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
   );
 }
 
+/** Linha de acento acima do título. Fraunces itálica, o itálico da marca. */
 export function CaveatEyebrow({ children }: { children: ReactNode; size?: number }) {
-  return <p className="mb-2 text-center text-[15px] italic text-[var(--ink-soft)]">{children}</p>;
+  return (
+    <p className="font-fraunces mb-2 text-center text-[15px] italic text-[var(--ink-soft)]">
+      {children}
+    </p>
+  );
 }
 
 export function SerifHeadline({ children, size = 40 }: { children: ReactNode; size?: number }) {
   return (
     <h1
-      className="text-center font-cabinet leading-[1.1] text-[var(--ink)]"
+      className="text-balance text-center font-bold leading-[1.1] tracking-[-0.02em] text-[var(--ink)]"
       style={{ fontSize: `clamp(${Math.round(size * 0.65)}px, 6vw, ${size}px)` }}
     >
       {children}
@@ -88,9 +94,9 @@ export function Divider({ label = "ou" }: { label?: string }) {
 }
 
 /**
- * Botão primário das telas de auth (v3). Não reaproveita o PoliaButton porque
- * ele é compartilhado com a landing — aqui o estilo é o turquesa do v3.
- * Radius 8px (DESIGN-3 proíbe pill em elemento de conteúdo). `loading` mostra
+ * Botão primário das telas de auth. Mesma forma do botão do site público
+ * (turquesa, raio 12px, borda de tinta, 52px de altura), pra quem sai da home
+ * e cai no cadastro não sentir que trocou de produto. `loading` mostra
  * spinner de 14px, some se prefers-reduced-motion (o texto já muda pro
  * chamador, então nunca fica um botão mudo durante a espera).
  */
@@ -115,7 +121,7 @@ export function AuthButton({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`inline-flex h-[48px] items-center justify-center gap-2 rounded-lg bg-[var(--secondary)] px-6 font-medium text-[var(--secondary-ink)] transition-[transform,opacity] duration-180 hover:-translate-y-px hover:opacity-90 disabled:opacity-60 disabled:hover:translate-y-0 ${
+      className={`inline-flex h-[52px] items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-6 font-semibold text-[var(--secondary-ink)] transition-[transform,opacity] duration-180 hover:-translate-y-px hover:opacity-90 disabled:opacity-60 disabled:hover:translate-y-0 ${
         fullWidth ? "w-full" : ""
       }`}
     >

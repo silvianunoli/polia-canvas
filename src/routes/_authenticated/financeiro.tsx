@@ -13,6 +13,7 @@ import {
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
+import { temProjete } from "@/lib/planos";
 import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
 
 function usePrefersReducedMotion() {
@@ -218,7 +219,7 @@ function FinanceiroPage() {
       return data as { plano: string; razao_social: string | null; cnpj: string | null } | null;
     },
   });
-  const ehProjete = perfilResumoQuery.data?.plano === "projete";
+  const ehProjete = temProjete(perfilResumoQuery.data?.plano);
   const [resumoContadorAberto, setResumoContadorAberto] = useState(false);
 
   const campoValor = useMemo(() => {
@@ -270,13 +271,19 @@ function FinanceiroPage() {
   // "mês bom" (financeiro.meta_boa) não entra aqui: é a própria Meta do mês,
   // já o denominador da barra (metaAlvo), não uma marca adicional.
   const marcas = useMemo(() => {
-    const lista: { chave: string; texto: string; num: number }[] = [];
+    const lista: { chave: string; rotulo: string; detalhe: string; num: number }[] = [];
     for (const [campo, label] of [
       ["financeiro.meta_minima", "mínimo"],
       ["financeiro.meta_celebracao", "comemorar"],
     ] as const) {
       const texto = campoValor.get(campo);
-      if (texto) lista.push({ chave: campo, texto: `${label} · ${texto}`, num: numeroDe(texto) });
+      if (!texto) continue;
+      const num = numeroDe(texto);
+      // O rótulo mostra só o número. Antes vinha a resposta inteira do
+      // Planejamento ("R$ 4.500 paga tudo, incluindo o meu mínimo."), e como o
+      // rótulo é whitespace-nowrap, duas marcas próximas se sobrepunham em
+      // 170px, deixando as duas ilegíveis. A frase completa vai pro title.
+      lista.push({ chave: campo, rotulo: `${label} · ${fmt(num)}`, detalhe: texto, num });
     }
     return lista;
   }, [campoValor]);
@@ -462,10 +469,11 @@ function FinanceiroPage() {
                     style={{ left: `${left}%` }}
                   >
                     <span
+                      title={m.detalhe}
                       className="absolute -top-[34px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)] transition-colors duration-150 group-hover/mark:bg-[var(--secondary-light)]"
                       style={left > 90 ? { transform: "translateX(-90%)" } : undefined}
                     >
-                      {m.texto}
+                      {m.rotulo}
                     </span>
                   </div>
                 );

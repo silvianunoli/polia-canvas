@@ -1,53 +1,43 @@
 import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
+/**
+ * Rodapé de todas as páginas públicas. `semMargemTopo` é pra quando a seção
+ * anterior já encosta nele (a home fecha assim).
+ */
 export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean } = {}) {
   return (
     <footer
-      className={`polia-v3 bg-[var(--ink)] pb-8 pt-16 text-[var(--bg)] ${
-        semMargemTopo ? "border-t border-white/15" : "mt-24"
+      className={`polia-v3 bg-[var(--ink)] pb-8 pt-[clamp(48px,6vw,64px)] text-[14px] text-[var(--bg)]/75 ${
+        semMargemTopo ? "" : "mt-[clamp(48px,6vw,64px)]"
       }`}
     >
-      <div className="mx-auto max-w-[1120px] px-6">
-        <div className="grid grid-cols-1 gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
+      <div className="mx-auto w-full max-w-[1200px] px-[clamp(20px,4vw,48px)]">
+        <div className="flex flex-wrap items-start justify-between gap-8">
           <div>
-            <PoliaWordmark className="h-6 w-auto" />
-            <p className="mt-3 max-w-[34ch] text-[13px] leading-[1.6] opacity-80">
-              A clareza sobre a sua marca é o que faz ela faturar mais. A Pólia é onde tudo isso
-              se decide.
-            </p>
-            <motion.div className="mt-6 inline-block" whileHover={{ y: -2 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                to="/auth/login"
-                className="inline-flex rounded-lg border border-[var(--secondary)] bg-[var(--secondary)] px-6 py-3 text-[13px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
-              >
-                Já tem conta?
-              </Link>
-            </motion.div>
+            <PoliaWordmark className="h-6 w-auto text-[var(--bg)]" />
+            <p className="mt-3">Clareza sobre o negócio gera lucro.</p>
           </div>
-          <div>
-            <h4 className="font-sans mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] opacity-60">
-              Produto
-            </h4>
-            <ul className="grid gap-3">
-              <li><Link to="/sobre" className="text-[13px] no-underline opacity-80 hover:opacity-100 hover:underline">Sobre</Link></li>
-              <li><Link to="/blog" className="text-[13px] no-underline opacity-80 hover:opacity-100 hover:underline">Blog</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-sans mb-4 text-[13px] font-semibold uppercase tracking-[0.08em] opacity-60">
-              A gente
-            </h4>
-            <ul className="grid gap-3">
-              <li><Link to="/ajuda" className="text-[13px] no-underline opacity-80 hover:opacity-100 hover:underline">Ajuda</Link></li>
-              <li><Link to="/termos" className="text-[13px] no-underline opacity-80 hover:opacity-100 hover:underline">Termos</Link></li>
-              <li><Link to="/privacidade" className="text-[13px] no-underline opacity-80 hover:opacity-100 hover:underline">Privacidade</Link></li>
-            </ul>
-          </div>
+          <nav className="flex flex-wrap gap-6" aria-label="Links do rodapé">
+            <Link to="/sobre" className="no-underline hover:text-[var(--bg)]">
+              Sobre
+            </Link>
+            <Link to="/blog" className="no-underline hover:text-[var(--bg)]">
+              Blog
+            </Link>
+            <Link to="/ajuda" className="no-underline hover:text-[var(--bg)]">
+              Ajuda
+            </Link>
+            <Link to="/termos" className="no-underline hover:text-[var(--bg)]">
+              Termos
+            </Link>
+            <Link to="/privacidade" className="no-underline hover:text-[var(--bg)]">
+              Privacidade
+            </Link>
+          </nav>
         </div>
-        <div className="mt-16 flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-6 text-[13px] opacity-70">
-          <span>© 2026 Pólia · CNPJ: 18.305.925/0001-06</span>
+        <div className="mt-[clamp(48px,6vw,64px)] flex flex-wrap justify-between gap-4 border-t border-white/15 pt-6 text-[12px]">
+          <span>usepolia.com.br · feita no Brasil · CNPJ 18.305.925/0001-06</span>
           <span>Desenvolvido por Prismia Soluções Digitais</span>
         </div>
       </div>

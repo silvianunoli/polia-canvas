@@ -4,6 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
+import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/blog/")({
@@ -13,7 +15,7 @@ export const Route = createFileRoute("/blog/")({
       {
         name: "description",
         content:
-          "Textos da Pólia pra quem toca a marca sozinha. Sem hack de faturamento, sem promessa vazia. Uma coisa de cada vez.",
+          "Textos da Pólia pra quem toca a marca sozinha. Sem hack de faturamento, sem promessa de seis dígitos. Uma coisa de cada vez.",
       },
       { property: "og:title", content: "Blog · Pólia" },
       {
@@ -30,9 +32,13 @@ type Post = Pick<
   "id" | "slug" | "titulo" | "resumo" | "categoria" | "publicado_em" | "capa_url" | "tempo_leitura"
 >;
 
-// Rotação de cor de fundo do card quando o post não tem capa (mesma lógica do
-// mockup site/blog.html: peach/turquesa/rosa alternados, nunca como texto).
+// Rotação de cor de fundo do card quando o post não tem capa (peach/turquesa/rosa
+// alternados, sempre como fundo, nunca como texto).
 const CAPAS = ["var(--secondary)", "var(--accent)", "var(--surface-pink)"];
+
+// Cartão de post: borda de linha, canto 2xl, hover discreto. Sem sombra.
+const CARTAO =
+  "overflow-hidden rounded-2xl border border-[var(--line)] bg-white no-underline transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
 
 function CoverBlock({ post, index }: { post: Post; index: number }) {
   if (post.capa_url) {
@@ -70,30 +76,34 @@ function BlogList() {
   const [destaque, ...resto] = postsFiltrados;
 
   return (
-    <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
       <main>
         {/* HERO */}
-        <section className="pb-8 pt-16 md:pb-10 md:pt-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              Blog
-            </p>
-            <h1 className="font-cabinet mt-4 max-w-[16ch] text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
+        <section className="pb-[clamp(32px,4vw,48px)] pt-[clamp(48px,7vw,96px)]">
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Blog</Eyebrow>
+            </Reveal>
+            <h1 className="mt-4 max-w-[16ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
               Pra quem toca a marca sozinha.
             </h1>
-            <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              Sem hack de faturamento, sem "10 passos pra escalar". Textos diretos sobre o que
-              trava de verdade quando o time é uma pessoa só, e como seguir com clareza.
-            </p>
+            <Reveal delay={0.1}>
+              <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                Sem hack de faturamento, sem promessa de seis dígitos. Textos diretos sobre o que
+                trava de verdade quando o time é uma pessoa só: a razão de existir, quem a marca
+                serve, o que vende, quanto vale, como te acharem e onde ela vai.
+              </p>
+            </Reveal>
 
             {categorias.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-2">
+              <Reveal delay={0.15} className="mt-8 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setCategoriaAtiva(null)}
-                  className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors ${
+                  aria-pressed={categoriaAtiva === null}
+                  className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                     categoriaAtiva === null
                       ? "border-[var(--ink)] bg-[var(--ink)] text-white"
                       : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
@@ -106,7 +116,8 @@ function BlogList() {
                     key={cat}
                     type="button"
                     onClick={() => setCategoriaAtiva(cat)}
-                    className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors ${
+                    aria-pressed={categoriaAtiva === cat}
+                    className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                       categoriaAtiva === cat
                         ? "border-[var(--ink)] bg-[var(--ink)] text-white"
                         : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
@@ -115,99 +126,114 @@ function BlogList() {
                     {cat}
                   </button>
                 ))}
-              </div>
+              </Reveal>
             )}
           </div>
         </section>
 
         {loading ? (
-          <section className="pb-16">
-            <div className="mx-auto max-w-[1120px] px-6">
-              <p className="text-center text-[var(--muted)]">Carregando…</p>
+          <section className="pb-[clamp(48px,6vw,72px)]">
+            <div className={CONTAINER}>
+              <p className="text-[var(--ink-soft)]">Carregando…</p>
             </div>
           </section>
         ) : postsFiltrados.length === 0 ? (
-          <section className="pb-16">
-            <div className="mx-auto max-w-[1120px] px-6">
-              <p className="text-center text-[var(--muted)]">
-                {posts.length === 0
-                  ? "Nenhum post publicado ainda."
-                  : "Nenhum post nessa categoria ainda."}
-              </p>
+          <section className="pb-[clamp(48px,6vw,72px)]">
+            <div className={CONTAINER}>
+              <Reveal>
+                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+                  <p className="font-semibold">
+                    {posts.length === 0
+                      ? "Nenhum post publicado ainda."
+                      : "Nenhum post nessa categoria ainda."}
+                  </p>
+                  <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                    {posts.length === 0
+                      ? "O primeiro texto sai em breve. Enquanto isso, dá pra conhecer a Pólia por dentro."
+                      : "Vale conferir as outras categorias ou voltar pra lista completa."}
+                  </p>
+                </div>
+              </Reveal>
             </div>
           </section>
         ) : (
           <>
             {/* DESTAQUE */}
-            <section className="pb-8 md:pb-10">
-              <div className="mx-auto max-w-[1120px] px-6">
-                <Link
-                  to="/blog/$slug"
-                  params={{ slug: destaque.slug }}
-                  className="grid grid-cols-1 overflow-hidden rounded-xl border border-[var(--line)] bg-white no-underline transition-colors hover:border-[var(--secondary)] md:grid-cols-[1.1fr_0.9fr]"
-                >
-                  <div className="md:h-full md:min-h-[300px] [&>*]:h-full [&>img]:md:h-full">
-                    <CoverBlock post={destaque} index={0} />
-                  </div>
-                  <div className="flex flex-col gap-3 p-6 md:p-8">
-                    {destaque.categoria && (
-                      <span className="w-fit text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--secondary-text)]">
-                        {destaque.categoria}
+            <section className="pb-[clamp(32px,4vw,48px)]">
+              <div className={CONTAINER}>
+                <Reveal>
+                  <Link
+                    to="/blog/$slug"
+                    params={{ slug: destaque.slug }}
+                    className={`${CARTAO} grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]`}
+                  >
+                    <div className="md:h-full md:min-h-[320px] [&>*]:h-full [&>img]:md:h-full">
+                      <CoverBlock post={destaque} index={0} />
+                    </div>
+                    <div className="flex flex-col gap-3 p-[clamp(24px,3vw,40px)]">
+                      {destaque.categoria && <Eyebrow>{destaque.categoria}</Eyebrow>}
+                      <h2 className="max-w-[20ch] text-[clamp(1.6rem,3vw,2.2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                        {destaque.titulo}
+                      </h2>
+                      {destaque.resumo && (
+                        <p className="max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
+                          {destaque.resumo}
+                        </p>
+                      )}
+                      <p className="text-[13px] text-[var(--ink-soft)]">
+                        Por Sil
+                        {destaque.tempo_leitura
+                          ? ` · ${destaque.tempo_leitura} min de leitura`
+                          : ""}
+                      </p>
+                      <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[15px] font-semibold">
+                        Ler o texto
+                        <ArrowRight size={16} aria-hidden="true" />
                       </span>
-                    )}
-                    <h2 className="max-w-[20ch] text-[28px] leading-[1.15] text-[var(--ink)]">
-                      {destaque.titulo}
-                    </h2>
-                    {destaque.resumo && <p className="text-[var(--ink-soft)]">{destaque.resumo}</p>}
-                    <p className="text-[13px] text-[var(--muted)]">
-                      Por Sil
-                      {destaque.tempo_leitura ? ` · ${destaque.tempo_leitura} min de leitura` : ""}
-                    </p>
-                    <span className="mt-auto inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--ink)]">
-                      Ler mais
-                      <ArrowRight size={16} aria-hidden="true" />
-                    </span>
-                  </div>
-                </Link>
+                    </div>
+                  </Link>
+                </Reveal>
               </div>
             </section>
 
             {/* GRADE */}
             {resto.length > 0 && (
-              <section className="pb-16">
-                <div className="mx-auto max-w-[1120px] px-6">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <section className="pb-[clamp(48px,6vw,72px)]">
+                <div className={CONTAINER}>
+                  <Reveal>
+                    <Eyebrow>Mais textos</Eyebrow>
+                  </Reveal>
+                  <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
                     {resto.map((post, i) => (
-                      <Link
-                        key={post.id}
-                        to="/blog/$slug"
-                        params={{ slug: post.slug }}
-                        className="flex flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white no-underline transition-colors hover:border-[var(--secondary)]"
-                      >
-                        <CoverBlock post={post} index={i + 1} />
-                        <div className="flex flex-1 flex-col gap-2 p-6">
-                          {post.categoria && (
-                            <span className="w-fit text-[12px] font-semibold uppercase tracking-[0.08em] text-[var(--secondary-text)]">
-                              {post.categoria}
+                      <RevealItem key={post.id} className="h-full">
+                        <Link
+                          to="/blog/$slug"
+                          params={{ slug: post.slug }}
+                          className={`${CARTAO} flex h-full flex-col`}
+                        >
+                          <CoverBlock post={post} index={i + 1} />
+                          <div className="flex flex-1 flex-col gap-2 p-6">
+                            {post.categoria && <Eyebrow>{post.categoria}</Eyebrow>}
+                            <h3 className="text-[19px] font-bold leading-[1.25] tracking-[-0.01em] text-balance">
+                              {post.titulo}
+                            </h3>
+                            {post.resumo && (
+                              <p className="text-[14px] leading-[1.6] text-[var(--ink-soft)]">
+                                {post.resumo}
+                              </p>
+                            )}
+                            <p className="text-[13px] text-[var(--ink-soft)]">
+                              Por Sil{post.tempo_leitura ? ` · ${post.tempo_leitura} min` : ""}
+                            </p>
+                            <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[14px] font-semibold">
+                              Ler o texto
+                              <ArrowRight size={14} aria-hidden="true" />
                             </span>
-                          )}
-                          <h3 className="text-[20px] text-[var(--ink)]">
-                            {post.titulo}
-                          </h3>
-                          {post.resumo && (
-                            <p className="text-[14px] text-[var(--ink-soft)]">{post.resumo}</p>
-                          )}
-                          <p className="text-[13px] text-[var(--muted)]">
-                            Por Sil{post.tempo_leitura ? ` · ${post.tempo_leitura} min` : ""}
-                          </p>
-                          <span className="mt-auto inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--ink)]">
-                            Ler mais
-                            <ArrowRight size={14} aria-hidden="true" />
-                          </span>
-                        </div>
-                      </Link>
+                          </div>
+                        </Link>
+                      </RevealItem>
                     ))}
-                  </div>
+                  </RevealGroup>
                 </div>
               </section>
             )}
@@ -215,31 +241,34 @@ function BlogList() {
         )}
 
         {/* CAPTURA */}
-        <section className="pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="flex flex-wrap items-center justify-between gap-6 rounded-xl bg-[var(--secondary)] p-8 md:p-12">
-              <div>
-                <h2 className="max-w-[22ch] text-[28px] text-[var(--secondary-ink)] md:text-[32px]">
-                  Gostou de ler? A Pólia é isso na prática.
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface-pink)] p-[clamp(28px,4vw,56px)]">
+                <Eyebrow>Pólia</Eyebrow>
+                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.7rem,3.2vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  A Pólia é isso na prática.
                 </h2>
-                <p className="mt-3 max-w-[46ch] text-[var(--secondary-ink)]">
+                <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
                   Uma marca construída com clareza, decisão por decisão. Dá pra começar agora, sem
                   cartão.
                 </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link to="/" hash="planos" className={BTN_PRIMARIO}>
+                    Criar conta grátis
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                  <Link to="/sobre" className={BTN_CONTORNO}>
+                    Conhecer a Pólia
+                  </Link>
+                </div>
               </div>
-              <Link
-                to="/"
-                hash="planos"
-                className="inline-flex rounded-lg border border-[var(--ink)] px-8 py-4 text-[18px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-[var(--bg)]"
-              >
-                Começar de graça
-              </Link>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
 
-      <SiteFooter />
+      <SiteFooter semMargemTopo />
     </div>
   );
 }

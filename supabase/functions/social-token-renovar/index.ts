@@ -5,8 +5,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 // token de usuário do Instagram (IGAA...) se renova via GET em
 // graph.instagram.com/refresh_access_token com grant_type=ig_refresh_token —
 // não usa App ID/Secret nem o endpoint do Facebook (diferente do fluxo de
-// Página). Guarda o resultado em integracao_instagram (não em secret de
-// função — o valor muda toda semana, tabela é o lugar certo).
+// Página). Guarda o resultado em contas_instagram_credenciais (não em secret
+// de função — o valor muda toda semana, tabela é o lugar certo).
 //
 // Só funciona em token com mais de 24h de vida e ainda não vencido — se
 // vencer antes da renovação semanal rodar, precisa reconectar na mão.
@@ -30,9 +30,9 @@ function autenticado(req: Request): boolean {
   return req.headers.get("x-social-cron-secret") === SOCIAL_CRON_SECRET;
 }
 
-async function avisarFalha(motivo: string) {
+async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
   if (!RESEND_API_KEY) {
-    console.error("[social-token-renovar] Missing RESEND_API_KEY — aviso não enviado.", motivo);
+    console.error("[social-token-renovar] Missing RESEND_API_KEY — aviso não enviado.", nomeConta, motivo);
     return;
   }
   try {
@@ -42,9 +42,9 @@ async function avisarFalha(motivo: string) {
       body: JSON.stringify({
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: [EMAIL_SIL],
-        subject: "A renovação do token do Instagram falhou",
-        text: `A renovação automática do token do @usepolia falhou. Motivo: ${motivo}\n\nRenova na mão no painel da Meta for Developers antes que a conexão vença.`,
-        html: `<p>A renovação automática do token do @usepolia falhou.</p><p>Motivo: ${motivo}</p><p>Renova na mão no painel da Meta for Developers antes que a conexão vença.</p>`,
+        subject: `A renovação do token do Instagram falhou (${nomeConta})`,
+        text: `A renovação automática do token de @${handle} (${nomeConta}) falhou. Motivo: ${motivo}\n\nRenova na mão no painel da Meta for Developers antes que a conexão vença.`,
+        html: `<p>A renovação automática do token de <strong>@${handle}</strong> (${nomeConta}) falhou.</p><p>Motivo: ${motivo}</p><p>Renova na mão no painel da Meta for Developers antes que a conexão vença.</p>`,
       }),
     });
   } catch (err) {
@@ -52,47 +52,79 @@ async function avisarFalha(motivo: string) {
   }
 }
 
+interface ContaComCredencial {
+  conta_id: string;
+  access_token: string;
+  nome: string;
+  instagram_handle: string;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!autenticado(req)) return new Response("Unauthorized", { status: 401 });
 
-  const { data: atual } = await supabaseAdmin
-    .from("integracao_instagram")
-    .select("access_token")
-    .eq("id", 1)
-    .maybeSingle();
+  // Uma linha por conta ativa que já tem token — cada uma renova
+  // independente das outras, uma conta falhando não trava as demais.
+  const { data: contas, error } = await supabaseAdmin
+    .from("contas_instagram_credenciais")
+    .select("conta_id, access_token, contas_sociais!inner(nome, instagram_handle, ativo)")
+    .eq("contas_sociais.ativo", true)
+    .not("access_token", "is", null);
 
-  if (!atual?.access_token) {
-    return new Response(JSON.stringify({ skipped: true, motivo: "Nenhum token configurado ainda" }), { status: 200 });
+  if (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 
-  const params = new URLSearchParams({
-    grant_type: "ig_refresh_token",
-    access_token: atual.access_token,
-  });
+  const linhas = (contas ?? [])
+    // deno-lint-ignore no-explicit-any
+    .map((c: any) => ({
+      conta_id: c.conta_id,
+      access_token: c.access_token,
+      nome: c.contas_sociais?.nome ?? "conta sem nome",
+      instagram_handle: c.contas_sociais?.instagram_handle ?? "",
+    }))
+    .filter((c: ContaComCredencial) => Boolean(c.access_token)) as ContaComCredencial[];
 
-  try {
-    const resp = await fetch(`${GRAPH}/refresh_access_token?${params}`);
-    const json = await resp.json();
-    if (json.error || !json.access_token) {
-      const motivo = json.error?.message ?? "Resposta sem access_token";
-      await avisarFalha(motivo);
-      return new Response(JSON.stringify({ ok: false, motivo }), { status: 200 });
-    }
-
-    const expiraEm = new Date(Date.now() + (json.expires_in ?? 60 * 24 * 60 * 60) * 1000).toISOString();
-    await supabaseAdmin
-      .from("integracao_instagram")
-      .update({ access_token: json.access_token, expira_em: expiraEm, atualizado_em: new Date().toISOString() })
-      .eq("id", 1);
-
-    return new Response(JSON.stringify({ ok: true, expira_em: expiraEm }), {
+  if (linhas.length === 0) {
+    return new Response(JSON.stringify({ skipped: true, motivo: "Nenhuma conta com token configurado ainda" }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
     });
-  } catch (err) {
-    const motivo = String(err);
-    await avisarFalha(motivo);
-    return new Response(JSON.stringify({ ok: false, motivo }), { status: 200 });
   }
+
+  const resultados: Array<{ conta_id: string; ok: boolean; motivo?: string; expira_em?: string }> = [];
+
+  for (const conta of linhas) {
+    const params = new URLSearchParams({
+      grant_type: "ig_refresh_token",
+      access_token: conta.access_token,
+    });
+
+    try {
+      const resp = await fetch(`${GRAPH}/refresh_access_token?${params}`);
+      const json = await resp.json();
+      if (json.error || !json.access_token) {
+        const motivo = json.error?.message ?? "Resposta sem access_token";
+        await avisarFalha(conta.nome, conta.instagram_handle, motivo);
+        resultados.push({ conta_id: conta.conta_id, ok: false, motivo });
+        continue;
+      }
+
+      const expiraEm = new Date(Date.now() + (json.expires_in ?? 60 * 24 * 60 * 60) * 1000).toISOString();
+      await supabaseAdmin
+        .from("contas_instagram_credenciais")
+        .update({ access_token: json.access_token, token_expira_em: expiraEm, atualizado_em: new Date().toISOString() })
+        .eq("conta_id", conta.conta_id);
+
+      resultados.push({ conta_id: conta.conta_id, ok: true, expira_em: expiraEm });
+    } catch (err) {
+      const motivo = String(err);
+      await avisarFalha(conta.nome, conta.instagram_handle, motivo);
+      resultados.push({ conta_id: conta.conta_id, ok: false, motivo });
+    }
+  }
+
+  return new Response(JSON.stringify({ processadas: resultados.length, resultados }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });

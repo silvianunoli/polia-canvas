@@ -8,6 +8,16 @@ import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { FieldError } from "@/components/ui/FieldError";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
+import { HighlightWord } from "@/components/site/HighlightWord";
+import {
+  CONTAINER,
+  SECAO,
+  BTN_PRIMARIO,
+  BTN_CONTORNO,
+  Eyebrow,
+  Pullquote,
+} from "@/components/site/Editorial";
 
 export const Route = createFileRoute("/lista-de-espera")({
   head: () => ({
@@ -31,15 +41,15 @@ export const Route = createFileRoute("/lista-de-espera")({
 const BENEFICIOS = [
   {
     titulo: "Uma marca com valor de verdade",
-    desc: "Você descobre se o seu negócio dá lucro, vê quanto sobra em cada venda e para de cobrar no chute. Depois, deixa claro quem a sua marca atende e por que vale o que ela cobra.",
+    desc: "Dá pra saber se o negócio dá lucro, ver quanto sobra em cada venda e parar de cobrar no chute. Depois fica claro quem a sua marca atende e por que ela vale o preço que cobra.",
   },
   {
     titulo: "Um preço que fecha a conta",
-    desc: "Com a marca clara, você vê quanto custa cada produto, por quanto vender e o que sobra. Chega de chutar.",
+    desc: "Com a marca clara, aparece quanto custa cada produto, por quanto vender e o que sobra. Chega de chutar.",
   },
   {
     titulo: "A semana organizada num lugar",
-    desc: "Um quadro simples pra organizar o que precisa sair, ligado à meta que você definiu. Nada se perde no caminho.",
+    desc: "Um quadro simples pra organizar o que precisa sair, ligado à meta já definida. Nada se perde no caminho.",
   },
   {
     titulo: "A venda que vira caixa sozinha",
@@ -47,19 +57,19 @@ const BENEFICIOS = [
   },
   {
     titulo: "Saber quanto sobra de verdade",
-    desc: "No fim do mês, você vê o que entrou, o que saiu e o que sobrou. Sem susto no extrato.",
+    desc: "No fim do mês, aparece o que entrou, o que saiu e o que sobrou. Sem susto no extrato.",
   },
   {
     titulo: "Saber se vai bater a meta",
-    desc: "Durante o mês, você já vê se está no caminho. Dá tempo de ajustar antes de fechar.",
+    desc: "Durante o mês já aparece se a meta está no caminho. Sobra tempo de ajustar antes de fechar.",
   },
 ];
 
-const PRA_VOCE = [
-  "Você tem um negócio, ou a vontade de começar um, e se perde na hora de organizar.",
-  "Você já vende, mas nunca tem certeza se sobra dinheiro no fim do mês.",
-  "Você cobra no chute e trava quando perguntam como chegou naquele preço.",
-  "Você quer tocar o seu negócio com mais clareza e menos achismo.",
+const PRA_QUEM = [
+  "Tem um negócio, ou a vontade de começar um, e se perde na hora de organizar.",
+  "Já vende, mas nunca tem certeza se sobra dinheiro no fim do mês.",
+  "Cobra no chute e trava quando perguntam como chegou naquele preço.",
+  "Quer tocar o próprio negócio com mais clareza e menos achismo.",
 ];
 
 function validarNome(v: string): string | undefined {
@@ -141,7 +151,7 @@ function ListaEsperaPage() {
         },
       });
       if (resultado.ok) {
-        if (resultado.jaEstava) toastErro("Esse e-mail já está na lista. Você já está dentro.");
+        if (resultado.jaEstava) toastErro("Esse e-mail já está na lista. Já está dentro.");
         track("lista_espera_enviada", { ja_estava: resultado.jaEstava });
         setEnviado(true);
       } else {
@@ -157,36 +167,47 @@ function ListaEsperaPage() {
     setLoading(false);
   }
 
+  // Campo de texto: o contorno vira vermelho no erro e turquesa no foco. Mesma
+  // base pros dois inputs, pra não divergirem.
+  const campoBase =
+    "w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4";
+  const campoOk =
+    "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]";
+  const campoErro = "border-[var(--danger)] focus:border-[var(--danger)]";
+
   return (
-    <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader semLogin />
 
       <main>
         {/* 1. HERO + FORMULÁRIO */}
-        <section className="pb-14 pt-14 md:pb-20 md:pt-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-[0.95fr_1.05fr] md:gap-16">
+        <section className="pb-[clamp(48px,6vw,72px)] pt-[clamp(48px,7vw,96px)]">
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[0.95fr_1.05fr]">
               <div className="md:pt-2">
-                <span className="inline-flex rounded-sm bg-[var(--secondary-light)] px-3 py-1 text-[13px] font-semibold text-[var(--secondary-ink)]">
-                  Chegando em breve
-                </span>
-                <h1 className="font-cabinet mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[54px]">
-                  A Pólia está quase pronta. Quer ser avisada quando ela chegar?
+                <Reveal>
+                  <Eyebrow>Chegando em breve</Eyebrow>
+                </Reveal>
+                <h1 className="mt-4 text-[clamp(2.3rem,5vw,3.5rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                  A Pólia está <HighlightWord delay={0.3}>quase pronta</HighlightWord>. Quer ser
+                  avisada quando ela chegar?
                 </h1>
-                <p className="mt-6 max-w-[54ch] text-[19px] leading-[1.5] text-[var(--ink-soft)] md:text-[21px]">
-                  Estou construindo a Pólia pra te ajudar a deixar a sua marca clara: quem ela
-                  atende, o que entrega e quanto vale. É essa clareza que faz você cobrar o que
-                  merece e enxergar, sem complicação, se o negócio dá lucro. Deixe seu e-mail e eu
-                  te aviso assim que ela ficar pronta, antes de todo mundo.
-                </p>
+                <Reveal delay={0.1}>
+                  <p className="mt-6 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                    Estou construindo a Pólia pra te ajudar a deixar a sua marca clara: quem ela
+                    atende, o que entrega e quanto vale. É essa clareza que dá base pra cobrar o que
+                    a marca merece e pra enxergar, sem complicação, se o negócio dá lucro. Deixe seu
+                    e-mail e eu te aviso assim que ela ficar pronta, antes de todo mundo.
+                  </p>
+                </Reveal>
               </div>
 
               {/* FORMULÁRIO (única ação da página) */}
-              <div>
+              <Reveal delay={0.15} y={28}>
                 {!enviado ? (
                   <form
                     onSubmit={handleSubmit}
-                    className="grid gap-4 rounded-xl border border-[var(--line)] bg-white p-6 shadow-[0_1px_2px_rgba(10,10,10,.04),0_10px_34px_rgba(10,10,10,.05)] md:p-8"
+                    className="grid gap-4 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
                     noValidate
                   >
                     <p className="text-[15px] font-semibold text-[var(--ink)]">
@@ -224,11 +245,7 @@ function ListaEsperaPage() {
                         }}
                         aria-invalid={!!errors.nome || undefined}
                         aria-describedby={errors.nome ? "nome-error" : undefined}
-                        className={`w-full rounded-lg border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
-                          errors.nome
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]"
-                        }`}
+                        className={`${campoBase} ${errors.nome ? campoErro : campoOk}`}
                       />
                       <FieldError id="nome-error">{errors.nome}</FieldError>
                     </div>
@@ -253,11 +270,7 @@ function ListaEsperaPage() {
                         }}
                         aria-invalid={!!errors.email || undefined}
                         aria-describedby={errors.email ? "email-error" : undefined}
-                        className={`w-full rounded-lg border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
-                          errors.email
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]"
-                        }`}
+                        className={`${campoBase} ${errors.email ? campoErro : campoOk}`}
                       />
                       <FieldError id="email-error">{errors.email}</FieldError>
                     </div>
@@ -274,7 +287,7 @@ function ListaEsperaPage() {
                         name="trava"
                         value={trava}
                         onChange={(e) => setTrava(e.target.value)}
-                        className="w-full rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
+                        className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
                       >
                         <option value="">Escolha uma</option>
                         <option>Começo e paro no meio</option>
@@ -326,7 +339,11 @@ function ListaEsperaPage() {
                     </div>
 
                     {aceiteErro && (
-                      <p id="aceite-error" role="alert" className="text-[13px] text-[var(--danger)]">
+                      <p
+                        id="aceite-error"
+                        role="alert"
+                        className="text-[13px] text-[var(--danger)]"
+                      >
                         Pra continuar, falta aceitar os termos.
                       </p>
                     )}
@@ -335,120 +352,142 @@ function ListaEsperaPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:opacity-60"
+                      className={`${BTN_PRIMARIO} w-full disabled:cursor-not-allowed disabled:opacity-60`}
                     >
                       {loading ? "Enviando…" : "Quero ser avisada"}
                     </button>
                     <p className="text-[13px] text-[var(--muted)]">
-                      É só o e-mail. Sem cobrança, sem spam, e você sai da lista quando quiser.
+                      É só o e-mail. Sem cobrança, sem spam, e dá pra sair da lista quando quiser.
                     </p>
                   </form>
                 ) : (
                   <div
-                    className="rounded-xl bg-[var(--surface-pink)] p-8"
+                    className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     role="status"
                     aria-live="polite"
                   >
-                    <h2 className="max-w-[20ch] text-[24px] text-[var(--ink)]">
+                    <h2 className="max-w-[20ch] text-[clamp(1.4rem,2.4vw,1.75rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
                       Pronto. Seu e-mail está na lista.
                     </h2>
-                    <p className="mt-3 max-w-[48ch] text-[var(--ink-soft)]">
+                    <p className="mt-3 max-w-[48ch] leading-[1.65] text-[var(--ink-soft)]">
                       Assim que a Pólia ficar pronta, o aviso chega até você, antes de todo mundo.
                       Pode fechar essa página tranquila. Eu te chamo.
                     </p>
                   </div>
                 )}
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
 
         {/* 2. O PROBLEMA (empatia primeiro) */}
-        <section className="pb-14 md:pb-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <h2 className="max-w-[26ch] text-[22px] leading-[1.4] text-[var(--ink)] md:text-[26px]">
-              Você vende, se esforça, faz acontecer. Mas no fim do mês bate a dúvida: será que
-              sobrou mesmo alguma coisa?
-            </h2>
-            <p className="mt-5 max-w-[62ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-              O preço saiu meio no chute. O dinheiro do negócio se mistura com o seu. E organizar
-              isso tudo parece dar mais trabalho do que ajuda. Não é falta de esforço. É que
-              ninguém junta esses números por você.
-            </p>
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal className="max-w-[62ch]">
+              <Eyebrow>No fim do mês</Eyebrow>
+              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Vende, se esforça, faz acontecer.
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.1} className="mt-[clamp(32px,4vw,48px)]">
+              <Pullquote tom="pessego">
+                No fim do mês bate a dúvida: será que sobrou mesmo alguma coisa?
+              </Pullquote>
+            </Reveal>
+
+            <Reveal className="mt-[clamp(32px,4vw,48px)]">
+              <p className="max-w-[62ch] text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                O preço saiu meio no chute. O dinheiro do negócio se mistura com o seu. E organizar
+                isso tudo parece dar mais trabalho do que ajuda. Não é falta de esforço. É que
+                ninguém junta esses números por você.
+              </p>
+            </Reveal>
           </div>
         </section>
 
         {/* 3. QUEM ESTÁ CONSTRUINDO (a Sil, em 1ª pessoa) */}
-        <section className="pb-14 md:pb-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-8 md:p-12">
-              <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_1.6fr] md:gap-16">
-                <div>
-                  <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                    Quem está construindo
-                  </p>
-                  <p className="font-cabinet mt-3 text-[22px] leading-[1.2] text-[var(--ink)]">
-                    Oi, eu sou a Sil.
-                  </p>
-                </div>
-                <div>
-                  <p className="max-w-[58ch] text-[17px] leading-[1.6] text-[var(--ink)]">
-                    São 14 anos de e-commerce: oito à frente do meu próprio negócio, um tempo dentro
-                    de grandes marcas, como C&amp;A, Allied e Arcelor Mittal, e muita consultoria pra
-                    pequenas empreendedoras. E vi sempre a mesma coisa: dá pra vender bem e mesmo
-                    assim não saber se o negócio dá lucro.
-                  </p>
-                  <p className="mt-4 max-w-[58ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-                    Eu vivi isso na pele. Por isso estou construindo a Pólia, a ferramenta que eu
-                    queria ter tido. Sem planilha perdida, sem fórmula mágica, sem te tratar como se
-                    você não entendesse do seu próprio negócio.
-                  </p>
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_1.6fr] md:gap-16">
+                  <div>
+                    <Eyebrow>Quem está construindo</Eyebrow>
+                    <p className="mt-4 text-[clamp(1.3rem,2vw,1.6rem)] font-bold leading-[1.2] tracking-[-0.02em]">
+                      Oi, eu sou a Sil.
+                    </p>
+                  </div>
+                  <div>
+                    <p className="max-w-[58ch] text-[17px] leading-[1.65] text-[var(--ink)]">
+                      São 14 anos de e-commerce: oito à frente do meu próprio negócio, um tempo
+                      dentro de grandes marcas, como C&amp;A, Allied e Arcelor Mittal, e muita
+                      consultoria pra pequenas empreendedoras. E vi sempre a mesma coisa: dá pra
+                      vender bem e mesmo assim não saber se o negócio dá lucro.
+                    </p>
+                    <p className="mt-4 max-w-[58ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                      Eu vivi isso na pele. Por isso estou construindo a Pólia, a ferramenta que eu
+                      queria ter tido. Sem planilha perdida, sem fórmula mágica, e sem tratar quem
+                      toca o negócio como se não entendesse dele.
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Reveal>
           </div>
         </section>
 
         {/* 4. O QUE A PÓLIA VAI FAZER */}
-        <section className="pb-14 md:pb-20">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="rounded-xl border border-[var(--line)] bg-white p-8 md:p-12">
-              <h2 className="max-w-[28ch] text-[24px] text-[var(--ink)] md:text-[30px]">
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal className="max-w-[56ch]">
+              <Eyebrow>O que vem aí</Eyebrow>
+              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                 O que a Pólia vai fazer por você
               </h2>
-              <p className="mt-3 max-w-[56ch] text-[16px] leading-[1.6] text-[var(--ink-soft)]">
+              <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
                 Primeiro a sua marca fica clara. É essa clareza que vira preço certo, lucro à vista
                 e o negócio inteiro num lugar só, sem planilha perdida.
               </p>
-              <div className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
-                {BENEFICIOS.map((b, i) => (
-                  <div key={b.titulo} className="flex gap-4">
-                    <span className="font-cabinet text-[24px] leading-none text-[var(--secondary-text)]">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <h3 className="text-[18px] text-[var(--ink)]">{b.titulo}</h3>
-                      <p className="mt-2 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-                        {b.desc}
-                      </p>
-                    </div>
+            </Reveal>
+
+            <RevealGroup className="mt-[clamp(40px,5vw,56px)] grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
+              {BENEFICIOS.map((b, i) => (
+                <RevealItem
+                  key={b.titulo}
+                  className="flex gap-4 border-t border-[var(--line)] pt-5"
+                >
+                  <span className="font-cabinet text-[22px] leading-none text-[var(--secondary-text)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3 className="text-[18px] font-bold tracking-[-0.01em]">{b.titulo}</h3>
+                    <p className="mt-2 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                      {b.desc}
+                    </p>
                   </div>
-                ))}
-              </div>
-            </div>
+                </RevealItem>
+              ))}
+            </RevealGroup>
           </div>
         </section>
 
-        {/* 5. PRA VOCÊ QUE */}
-        <section className="pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="rounded-xl border border-[var(--line)] bg-white p-8 md:p-12">
-              <h2 className="text-[24px] text-[var(--ink)] md:text-[30px]">A Pólia é pra você que</h2>
-              <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {PRA_VOCE.map((item) => (
+        {/* 5. PRA QUEM É */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Pra quem é</Eyebrow>
+              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                A Pólia é pra quem
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.1} className="mt-[clamp(32px,4vw,40px)]">
+              <ul className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2">
+                {PRA_QUEM.map((item) => (
                   <li
                     key={item}
-                    className="flex gap-3 text-[16px] leading-[1.6] text-[var(--ink-soft)]"
+                    className="flex gap-3 rounded-2xl border border-[var(--line)] bg-white p-6 text-[16px] leading-[1.6] text-[var(--ink-soft)]"
                   >
                     <span
                       aria-hidden="true"
@@ -458,13 +497,15 @@ function ListaEsperaPage() {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
           </div>
         </section>
       </main>
 
-      <footer className="polia-v3 mt-8 border-t border-[var(--line)] bg-white py-8">
-        <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-between gap-3 px-6 text-[13px] text-[var(--muted)]">
+      <footer className="polia-v3 border-t border-[var(--line)] py-8">
+        <div
+          className={`${CONTAINER} flex flex-wrap items-center justify-between gap-3 text-[13px] text-[var(--muted)]`}
+        >
           <span>© 2026 Pólia · CNPJ: 18.305.925/0001-06</span>
           <span>Desenvolvido por Prismia Soluções Digitais</span>
         </div>
@@ -474,10 +515,10 @@ function ListaEsperaPage() {
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          aria-label="Voltar ao topo"
-          className="fixed bottom-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--ink)] text-white shadow-[0_6px_20px_rgba(10,10,10,.25)] transition-[filter] hover:brightness-125 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+          className={`${BTN_CONTORNO} fixed bottom-6 right-6 z-50 bg-white`}
         >
-          <ArrowUp size={20} aria-hidden="true" />
+          <ArrowUp size={18} aria-hidden="true" />
+          Voltar ao formulário
         </button>
       )}
     </div>

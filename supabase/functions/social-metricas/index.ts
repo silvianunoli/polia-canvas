@@ -12,7 +12,6 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const SOCIAL_CRON_SECRET = Deno.env.get("SOCIAL_CRON_SECRET") ?? "";
-const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
 
 const GRAPH = "https://graph.instagram.com/v23.0";
 const DIAS_JANELA = 28;
@@ -45,20 +44,10 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!autenticado(req)) return new Response("Unauthorized", { status: 401 });
 
-  const { data: cred } = await supabaseAdmin
-    .from("integracao_instagram")
-    .select("access_token")
-    .eq("id", 1)
-    .maybeSingle();
-  const token = cred?.access_token || META_TOKEN_ENV;
-  if (!token) {
-    return new Response(JSON.stringify({ skipped: true, motivo: "META_TOKEN não configurado" }), { status: 200 });
-  }
-
   const desde = new Date(Date.now() - DIAS_JANELA * 24 * 60 * 60 * 1000).toISOString();
   const { data: posts, error } = await supabaseAdmin
     .from("social_posts")
-    .select("id, ig_media_id")
+    .select("id, conta_id, ig_media_id")
     .eq("status", "publicado")
     .not("ig_media_id", "is", null)
     .gte("created_at", desde);
@@ -69,8 +58,22 @@ Deno.serve(async (req) => {
 
   const hoje = new Date().toISOString().slice(0, 10);
   let processados = 0;
+  // Cache por request: uma busca de token por conta, não uma por post.
+  const tokenPorConta = new Map<string, string>();
 
   for (const post of posts ?? []) {
+    let token = tokenPorConta.get(post.conta_id);
+    if (token === undefined) {
+      const { data: cred } = await supabaseAdmin
+        .from("contas_instagram_credenciais")
+        .select("access_token")
+        .eq("conta_id", post.conta_id)
+        .maybeSingle();
+      token = cred?.access_token ?? "";
+      tokenPorConta.set(post.conta_id, token);
+    }
+    if (!token) continue; // conta sem token conectado — pula, não derruba o job inteiro.
+
     // Story publica vários frames com IDs separados por vírgula; métrica vai
     // pro primeiro frame (aproximação — story é efêmero, insight de frame
     // isolado importa menos que o agregado do feed/carrossel/reel).

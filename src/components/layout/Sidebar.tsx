@@ -28,7 +28,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
-import { ehBeta, tierDoPlano, tierMinimoDaRota } from "@/lib/planos";
+import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
@@ -139,10 +139,13 @@ export function Sidebar() {
             {NAV.map((item) => {
               const active = isActive(item.to, pathname);
               const Icon = item.icon;
-              const liberado =
-                ehBeta(meta.plano) ||
-                tierMinimoDaRota(item.to) === "confere" ||
-                tierDoPlano(meta.plano) === "controle";
+              // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
+              // de conteúdo passam pelo guard de tier (são "controle") e só são
+              // barradas por um portão dentro da página. Com a checagem antiga a
+              // usuária do Controle via esses três itens SEM cadeado e só
+              // descobria que eram pagos depois de clicar.
+              const liberado = recursoLiberado(item.to, meta.plano);
+              const tierNecessario = tierPagoDaRota(item.to);
               const content = liberado ? (
                 <Link
                   key={item.to}
@@ -164,7 +167,7 @@ export function Sidebar() {
                 <Link
                   key={item.to}
                   to="/upgrade"
-                  search={{ rota: item.to, tier: "controle" }}
+                  search={{ rota: item.to, tier: tierNecessario }}
                   onClick={onNavigate}
                   data-track="nav_bloqueado_clicado"
                   data-track-props={JSON.stringify({ destino: item.to })}
@@ -187,7 +190,7 @@ export function Sidebar() {
               );
               const tooltipLabel = liberado
                 ? item.label
-                : `${item.label} — desbloqueie com o Controle`;
+                : `${item.label} — desbloqueie com o ${TIERS_PAGOS[tierNecessario].titulo}`;
               return compact ? (
                 <Tooltip key={item.to}>
                   <TooltipTrigger asChild>{content}</TooltipTrigger>

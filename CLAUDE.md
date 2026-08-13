@@ -4,17 +4,19 @@
 > Fonte da verdade visual: `DESIGN.md` + `src/styles.css`. A restrição mora aqui, não na memória.
 
 ## Princípio inegociável
-Mundo visual **Pólia v3** (escopo `.polia-v3`, em 100% das rotas): pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta. Parece editorial territorial, não dashboard de SaaS genérico.
-Toda tela deve passar os adjetivos-âncora: territorial, artesanal, acolhedora.
+Mundo visual **Pólia v3** (escopo `.polia-v3`, em 100% das rotas): pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta. Parece editorial contemporâneo, não dashboard de SaaS genérico.
+Toda tela deve passar os adjetivos-âncora: editorial, artesanal, acolhedora.
 
 ## PROIBIDO (nunca gere)
 - Cor, sombra ou raio fora dos tokens de `src/styles.css`. Nada de hex hardcoded no componente.
 - Recriar um tema alternativo de fundo escuro/noite. O `.cosmic` foi removido do CSS em 2026-07-23; código novo é só Pólia v3.
+- Ressuscitar a paleta v1 (Territorial Diurno: terracota `#C96B3E`, musgo `#2D6A4F`, noite `#1A1A2E`, dourado `#C8A96E`, creme `#FDF8F5`) ou o vocabulário territorial (território, trilha, marco, carimbo, bússola). Morreu em 2026-07-23.
 - Caveat com `opacity < 1` ou abaixo do piso (18px / 20px mobile). Use as classes canônicas.
 - Gradientes e glassmorphism (cards translúcidos com blur).
 - Sombras grandes ou coloridas. Separe com borda 1px (`--border`).
 - Emoji como ícone; ícones 3D/coloridos. Use lucide outline.
-- Ilustração 3D genérica, "blob", foto de banco. A ilustração é territorial (mascote raposa).
+- Ilustração 3D genérica, "blob", foto de banco. A imagem é fotografia real de trabalho e de decisão, na paleta v3 (ver `DESIGN.md` §5).
+- Mascote, de qualquer espécie. A raposa morreu em 2026-08-12 (decisão da fundadora) e os prompts dela foram deletados do repo. A copy de `/sobre` nega ter mascote. Não gere raposa nem substituta.
 - Copy de marketing: "transforme", "revolucione", "✨", exclamações.
 - Centralizar tudo. Alinhe à esquerda por padrão.
 - 3 cards idênticos como única forma de mostrar features.

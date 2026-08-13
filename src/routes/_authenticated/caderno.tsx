@@ -320,7 +320,7 @@ function CadernoPage() {
 
         {cotaAtingida && (
           <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-            No Confere você tem 1 nota. Suba pro Controle pra deixar ilimitado.{" "}
+            No Confere cabe 1 nota. Suba pro Controle pra deixar ilimitado.{" "}
             <Link
               to="/upgrade"
               search={{ rota: "/caderno", tier: "controle" }}

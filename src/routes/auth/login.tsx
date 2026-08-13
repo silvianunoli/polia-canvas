@@ -186,7 +186,9 @@ function LoginPage() {
       ) : (
         search.next && (
           <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-center">
-            <p className="text-[14px] font-semibold text-[var(--ink)]">Isso fica logo depois de entrar.</p>
+            <p className="text-[14px] font-semibold text-[var(--ink)]">
+              Isso fica logo depois de entrar.
+            </p>
           </div>
         )
       )}
@@ -257,11 +259,15 @@ function LoginPage() {
 
         <div className="mt-1">
           <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
-            {lockoutCooldown > 0
-              ? `Tenta de novo em ${lockoutCooldown}s`
-              : loading
-                ? "Entrando..."
-                : "Entrar →"}
+            {lockoutCooldown > 0 ? (
+              `Tenta de novo em ${lockoutCooldown}s`
+            ) : loading ? (
+              "Entrando..."
+            ) : (
+              <>
+                Entrar <span aria-hidden="true">→</span>
+              </>
+            )}
           </AuthButton>
         </div>
       </form>

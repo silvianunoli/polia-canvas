@@ -20,6 +20,15 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
+// Imagem de IA (fundo/ilustração/Aimer): Freepik e Magnific hoje são a mesma
+// API (docs.freepik.com redireciona pra docs.magnific.com) — uma chave só.
+const MAGNIFIC_API_KEY = Deno.env.get("MAGNIFIC_API_KEY") ?? "";
+// AIMER_CHARACTER_ID é o ID numérico do personagem na Magnific (visível na
+// URL do dashboard, ex. .../characters/2102997) — usado em styling.characters.
+// AIMER_CHARACTER_NAME é o nome usado na sintaxe de menção do prompt (@nome);
+// hoje é fixo "aimer" porque foi o nome escolhido ao criar o personagem.
+const AIMER_CHARACTER_ID = Deno.env.get("AIMER_CHARACTER_ID") ?? "";
+const AIMER_CHARACTER_NAME = "aimer";
 const MODELO = "claude-opus-4-8";
 const MAX_TENTATIVAS_REVISORA = 2;
 
@@ -369,19 +378,50 @@ async function chamarClaude(
 
 async function registrarGeracao(
   postId: string | null,
+  contaId: string | null,
   acao: string,
   tokensIn: number,
   tokensOut: number,
   veredito?: string,
+  custoCreditos?: number,
 ) {
   await supabaseAdmin.from("social_geracoes").insert({
     post_id: postId,
+    conta_id: contaId,
     acao,
-    modelo: MODELO,
+    modelo: acao === "imagem" ? "magnific-mystic" : MODELO,
     tokens_in: tokensIn,
     tokens_out: tokensOut,
     veredito_revisora: veredito ?? null,
+    custo_creditos: custoCreditos ?? null,
   });
+}
+
+/**
+ * Toda ação da social-ia opera sobre uma conta (Pólia ou cliente). Chamador
+ * novo manda conta_id explícito; chamador antigo (ou conta inválida/inativa)
+ * cai pra conta ativa mais antiga — hoje só existe a Pólia. Temporário até o
+ * seletor de conta existir na UI (Fase 2 do plano MVP).
+ */
+async function resolverContaId(contaIdInput: unknown): Promise<string> {
+  if (typeof contaIdInput === "string" && contaIdInput) {
+    const { data } = await supabaseAdmin
+      .from("contas_sociais")
+      .select("id")
+      .eq("id", contaIdInput)
+      .eq("ativo", true)
+      .maybeSingle();
+    if (data) return data.id;
+  }
+  const { data: padrao } = await supabaseAdmin
+    .from("contas_sociais")
+    .select("id")
+    .eq("ativo", true)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (!padrao) throw new Error("Nenhuma conta social ativa encontrada.");
+  return padrao.id;
 }
 
 /** Monday (segunda-feira, ISO) da semana que contém `diaIso`. */
@@ -393,21 +433,25 @@ function segundaFeiraDa(diaIso: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-async function handlePauta(input: {
-  semana_inicial: string;
-  backlog?: string[];
-  metricas?: unknown[];
-  contexto?: string;
-}) {
+async function handlePauta(
+  input: {
+    semana_inicial: string;
+    backlog?: string[];
+    metricas?: unknown[];
+    contexto?: string;
+  },
+  contaId: string,
+) {
   const { dados, tokensIn, tokensOut } = await chamarClaude(
     `${GUARDRAILS}\n\n${PROMPT_PAUTA}`,
     input,
     JSON_SCHEMA_PAUTA,
   );
   const parsed = pautaSaidaSchema.parse(dados);
-  await registrarGeracao(null, "pauta", tokensIn, tokensOut);
+  await registrarGeracao(null, contaId, "pauta", tokensIn, tokensOut);
 
   const linhas = parsed.itens.map((item) => ({
+    conta_id: contaId,
     semana: segundaFeiraDa(item.dia),
     dia: item.dia,
     pilar: item.pilar,
@@ -429,6 +473,7 @@ async function produzirComRevisao(
   versaoAtual: unknown | null,
   pedidoDeAjuste: string | null,
   postIdParaLog: string | null,
+  contaId: string,
 ): Promise<{ peca: z.infer<typeof produzirSaidaSchema>; veredito: z.infer<typeof revisoraSaidaSchema> }> {
   const promptFormato = PROMPTS_PRODUZIR[item.formato] ?? PROMPTS_PRODUZIR.carrossel;
   let motivosRevisora: unknown = null;
@@ -444,7 +489,7 @@ async function produzirComRevisao(
     };
     const copy = await chamarClaude(`${GUARDRAILS}\n\n${promptFormato}`, entradaCopy, JSON_SCHEMA_PRODUZIR);
     const peca = produzirSaidaSchema.parse(copy.dados);
-    await registrarGeracao(postIdParaLog, pedidoDeAjuste ? "ajuste" : "copy", copy.tokensIn, copy.tokensOut);
+    await registrarGeracao(postIdParaLog, contaId, pedidoDeAjuste ? "ajuste" : "copy", copy.tokensIn, copy.tokensOut);
 
     const revisao = await chamarClaude(
       `${GUARDRAILS}\n\n${PROMPT_REVISORA}`,
@@ -452,7 +497,7 @@ async function produzirComRevisao(
       JSON_SCHEMA_REVISORA,
     );
     const veredito = revisoraSaidaSchema.parse(revisao.dados);
-    await registrarGeracao(postIdParaLog, "revisao", revisao.tokensIn, revisao.tokensOut, veredito.veredito);
+    await registrarGeracao(postIdParaLog, contaId, "revisao", revisao.tokensIn, revisao.tokensOut, veredito.veredito);
 
     ultimaPeca = peca;
     ultimoVeredito = veredito;
@@ -461,6 +506,163 @@ async function produzirComRevisao(
   }
 
   return { peca: ultimaPeca!, veredito: ultimoVeredito! };
+}
+
+// --- geração de imagem (Magnific Mystic API — mesma API antes anunciada como
+// "Freepik"; docs.freepik.com redireciona pra docs.magnific.com hoje) ---
+
+const ASPECT_RATIO_POR_TIPO: Record<string, string> = {
+  feed: "social_post_4_5",
+  carrossel: "social_post_4_5",
+  reel: "social_story_9_16",
+  story: "social_story_9_16",
+};
+
+/**
+ * Monta o prompt a partir do CAMPO do slide (nunca do texto literal que vai
+ * ficar escrito por cima no template) — R8: imagem de IA nunca leva texto.
+ */
+function montarPromptImagem(slide: z.infer<typeof slideSchema>): string {
+  const tema =
+    slide.destaque || slide.titulo || slide.texto || slide.nota || "mesa de trabalho de empreendedora, bastidor do dia a dia";
+  return (
+    `Fotografia editorial, estilo Pólia: paleta pedra/creme neutro com toques de turquesa e pêssego, luz natural, ` +
+    `sem texto, sem letras, sem números, sem logotipo, sem marca d'água. Cena: ${tema}.`
+  );
+}
+
+interface ResultadoImagemGerada {
+  url: string;
+}
+
+async function chamarMagnificMystic(
+  prompt: string,
+  aspectRatio: string,
+  characterName: string | null,
+): Promise<ResultadoImagemGerada> {
+  // A menção "@nome" sozinha no prompt já referencia o personagem treinado
+  // (sintaxe documentada da Magnific). styling.characters[].id exige o ID
+  // interno exato do personagem (diferente do número da URL do dashboard,
+  // que gerou "Character id X does not match with @nome") — como não temos
+  // como consultar esse ID via API, usamos só a menção por enquanto.
+  const promptFinal = characterName ? `@${characterName} ${prompt}` : prompt;
+  const body: Record<string, unknown> = { prompt: promptFinal, aspect_ratio: aspectRatio };
+
+  const criar = await fetch("https://api.magnific.com/v1/ai/mystic", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-magnific-api-key": MAGNIFIC_API_KEY },
+    body: JSON.stringify(body),
+  });
+  const criadoTexto = await criar.text();
+  console.log("[social-ia/imagem] criar mystic:", criar.status, criadoTexto);
+  if (!criar.ok) throw new Error(`Magnific recusou o pedido (HTTP ${criar.status}): ${criadoTexto}`);
+  const criado = JSON.parse(criadoTexto);
+  const taskId: string | undefined = criado?.data?.task_id;
+  if (!taskId) throw new Error(`Magnific não devolveu task_id. Resposta: ${criadoTexto}`);
+
+  const MAX_TENTATIVAS = 20;
+  const INTERVALO_MS = 3000;
+  for (let tentativa = 0; tentativa < MAX_TENTATIVAS; tentativa++) {
+    await new Promise((resolve) => setTimeout(resolve, INTERVALO_MS));
+    const poll = await fetch(`https://api.magnific.com/v1/ai/mystic/${taskId}`, {
+      headers: { "x-magnific-api-key": MAGNIFIC_API_KEY },
+    });
+    const pollTexto = await poll.text();
+    console.log(`[social-ia/imagem] poll ${tentativa}:`, poll.status, pollTexto);
+    if (!poll.ok) throw new Error(`Falha ao consultar o status da imagem (HTTP ${poll.status}): ${pollTexto}`);
+    const status = JSON.parse(pollTexto);
+    const estado: string | undefined = status?.data?.status;
+    if (estado === "COMPLETED") {
+      const url: string | undefined = status?.data?.generated?.[0];
+      if (!url) throw new Error(`Magnific concluiu mas não devolveu imagem. Resposta: ${pollTexto}`);
+      return { url };
+    }
+    if (estado === "FAILED") throw new Error(`Magnific falhou ao gerar a imagem. Resposta: ${pollTexto}`);
+  }
+  throw new Error("Tempo esgotado esperando a imagem da Magnific.");
+}
+
+/** Baixa a imagem gerada (URL externa da Magnific) e sobe pro nosso bucket, pra ficar sob nosso controle. */
+async function uploadImagemGerada(postId: string, slideIndex: number, urlOrigem: string): Promise<string> {
+  const resposta = await fetch(urlOrigem);
+  if (!resposta.ok) throw new Error("Não deu pra baixar a imagem gerada.");
+  const bytes = new Uint8Array(await resposta.arrayBuffer());
+  const contentType = resposta.headers.get("content-type") ?? "image/jpeg";
+  const extensao = contentType.includes("png") ? "png" : "jpg";
+  const caminho = `${postId}/ia-${slideIndex}-${crypto.randomUUID()}.${extensao}`;
+
+  const { error } = await supabaseAdmin.storage
+    .from("social")
+    .upload(caminho, bytes, { contentType, upsert: true });
+  if (error) throw new Error(`Falha ao guardar a imagem: ${error.message}`);
+
+  const { data } = supabaseAdmin.storage.from("social").getPublicUrl(caminho);
+  return data.publicUrl;
+}
+
+async function handleImagem(
+  userId: string,
+  input: { post_id: string; slide_index: number; personagem?: string },
+) {
+  if (!MAGNIFIC_API_KEY) {
+    return { error: "Sem crédito pra gerar imagem agora. Confere o segredo MAGNIFIC_API_KEY." };
+  }
+  const { post_id, slide_index, personagem } = input;
+  const { data: post, error: erroPost } = await supabaseAdmin
+    .from("social_posts")
+    .select("*")
+    .eq("id", post_id)
+    .maybeSingle();
+  if (erroPost || !post) return { error: "Post não encontrado." };
+
+  const slides = Array.isArray(post.slides) ? post.slides : [];
+  const slideBruto = slides[slide_index];
+  if (!slideBruto) return { error: "Slide não encontrado nesta peça." };
+  const slide = slideSchema.parse(slideBruto);
+
+  let characterId: string | null = null;
+  if (personagem === "aimer") {
+    if (!AIMER_CHARACTER_ID) {
+      return { error: "A Aimer ainda não tem character id configurado (AIMER_CHARACTER_ID)." };
+    }
+    characterId = AIMER_CHARACTER_ID;
+  }
+
+  const prompt = montarPromptImagem(slide);
+  const aspectRatio = ASPECT_RATIO_POR_TIPO[post.tipo] ?? "traditional_3_4";
+
+  let gerada: ResultadoImagemGerada;
+  try {
+    gerada = await chamarMagnificMystic(prompt, aspectRatio, characterId ? AIMER_CHARACTER_NAME : null);
+  } catch (err) {
+    const mensagem = err instanceof Error ? err.message : String(err);
+    return { error: `A imagem não veio. Tenta de novo. (${mensagem})` };
+  }
+
+  const imagemUrl = await uploadImagemGerada(post_id, slide_index, gerada.url);
+
+  const novosSlides = slides.map((s: unknown, i: number) =>
+    i === slide_index ? { ...(s as object), imagem: imagemUrl } : s,
+  );
+  const { error: erroUpdate } = await supabaseAdmin
+    .from("social_posts")
+    .update({ slides: novosSlides })
+    .eq("id", post_id);
+  if (erroUpdate) return { error: "Imagem gerada, mas não salvou na peça. Tenta de novo." };
+
+  await registrarGeracao(post_id, post.conta_id ?? null, "imagem", 0, 0);
+  await supabaseAdmin
+    .from("admin_audit_log")
+    .insert({ admin_id: userId, acao: "gerar_imagem_social", alvo: post_id });
+
+  return { post_id, slide_index, imagem_url: imagemUrl, provider: characterId ? "magnific-aimer" : "magnific" };
+}
+
+function handleConfig() {
+  return {
+    imagem_disponivel: Boolean(MAGNIFIC_API_KEY),
+    aimer_disponivel: Boolean(AIMER_CHARACTER_ID),
+  };
 }
 
 // Chamada direta do painel (browser): precisa responder o preflight de CORS
@@ -489,10 +691,6 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
-  if (!ANTHROPIC_API_KEY) {
-    return jsonResponse({ error: "A chave da IA falhou. Confere o segredo ANTHROPIC_API_KEY." });
-  }
-
   let body: { acao: string; [key: string]: unknown };
   try {
     body = await req.json();
@@ -500,9 +698,28 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Payload inválido." }, 400);
   }
 
+  // "config" e "imagem" não dependem da Anthropic (usam a Magnific) — o gate
+  // de ANTHROPIC_API_KEY só vale pras ações de texto (pauta/produzir/ajustar).
+  if (!ANTHROPIC_API_KEY && body.acao !== "config" && body.acao !== "imagem") {
+    return jsonResponse({ error: "A chave da IA falhou. Confere o segredo ANTHROPIC_API_KEY." });
+  }
+
   try {
+    if (body.acao === "config") {
+      return jsonResponse(handleConfig());
+    }
+
+    if (body.acao === "imagem") {
+      const resultado = await handleImagem(
+        userId,
+        body as unknown as { post_id: string; slide_index: number; personagem?: string },
+      );
+      return jsonResponse(resultado);
+    }
+
     if (body.acao === "pauta") {
-      const resultado = await handlePauta(body as unknown as Parameters<typeof handlePauta>[0]);
+      const contaId = await resolverContaId(body.conta_id);
+      const resultado = await handlePauta(body as unknown as Parameters<typeof handlePauta>[0], contaId);
       return jsonResponse(resultado);
     }
 
@@ -522,12 +739,13 @@ Deno.serve(async (req) => {
         estrutura: pautaItem.estrutura ?? "",
         cta: pautaItem.cta,
       };
-      const { peca, veredito } = await produzirComRevisao(item, null, null, null);
+      const { peca, veredito } = await produzirComRevisao(item, null, null, null, pautaItem.conta_id);
 
       const tipoSocial = pautaItem.formato;
       const postId = crypto.randomUUID();
       const { error: erroInsert } = await supabaseAdmin.from("social_posts").insert({
         id: postId,
+        conta_id: pautaItem.conta_id,
         tipo: tipoSocial,
         pilar: pautaItem.pilar,
         gancho: pautaItem.gancho,
@@ -565,7 +783,7 @@ Deno.serve(async (req) => {
         cta: "",
       };
       const versaoAtual = { caption: post.caption, slides: post.slides };
-      const { peca, veredito } = await produzirComRevisao(item, versaoAtual, pedido_de_ajuste, post_id);
+      const { peca, veredito } = await produzirComRevisao(item, versaoAtual, pedido_de_ajuste, post_id, post.conta_id);
 
       const versoesAtuais = Array.isArray(post.versoes) ? post.versoes : [];
       const novaVersao = {

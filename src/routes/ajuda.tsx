@@ -1,6 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { PlayCircle, User, KanbanSquare, Users, Wallet, CreditCard, Mail, Clock, HelpCircle } from "lucide-react";
+import {
+  PlayCircle,
+  User,
+  KanbanSquare,
+  Users,
+  Wallet,
+  CreditCard,
+  Mail,
+  Clock,
+  HelpCircle,
+} from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { enviarContato } from "@/lib/contato.functions";
@@ -9,6 +19,8 @@ import { useTurnstile, TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { FieldError } from "@/components/ui/FieldError";
+import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
+import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 import {
   Sheet,
   SheetContent,
@@ -55,7 +67,7 @@ const CATEGORIAS = [
       {
         pergunta: "Usando no celular",
         resposta:
-          "A Pólia funciona direto no navegador do celular, sem precisar instalar nada. A tela se ajusta ao tamanho, e o que você começa no computador continua de onde parou no celular.",
+          "A Pólia funciona direto no navegador do celular, sem precisar instalar nada. A tela se ajusta ao tamanho, e o que começa no computador continua de onde parou no celular.",
       },
     ],
   },
@@ -87,7 +99,7 @@ const CATEGORIAS = [
       {
         pergunta: "Criar um quadro no Planner",
         resposta:
-          "No Planner, clique em novo quadro e dê um nome ao projeto. Cada quadro tem colunas que você arruma como quiser, tipo um kanban.",
+          "No Planner, clique em novo quadro e dê um nome ao projeto. Cada quadro tem colunas que dá pra renomear e reordenar, tipo um kanban.",
       },
       {
         pergunta: "Organizar as tarefas da semana",
@@ -97,7 +109,7 @@ const CATEGORIAS = [
       {
         pergunta: "Ligar uma tarefa à meta do mês",
         resposta:
-          "Ao criar o cartão, você pode vincular ele a uma meta já definida no Planejamento. Assim o que você executa no dia a dia aponta pro mesmo número que você decidiu perseguir.",
+          "Ao criar o cartão, dá pra vincular ele a uma meta já definida no Planejamento. Assim o que sai no dia a dia aponta pro mesmo número decidido lá.",
       },
     ],
   },
@@ -149,7 +161,8 @@ const CATEGORIAS = [
     itens: [
       {
         pergunta: "Trocar de e-mail ou senha",
-        resposta: "Em Configurações, na sua conta, tem a opção de trocar e-mail e senha a qualquer momento.",
+        resposta:
+          "Em Configurações, na sua conta, tem a opção de trocar e-mail e senha a qualquer momento.",
       },
       {
         pergunta: "Como cancelar",
@@ -192,11 +205,19 @@ function validarEmail(v: string): string | undefined {
 type Campo = "nome" | "email" | "assunto" | "mensagem";
 
 function normalizar(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
+
+/** Campo do formulário de contato: borda neutra vira borda de perigo no erro. */
+function campoClasse(temErro: boolean): string {
+  return `w-full rounded-xl border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors ${
+    temErro
+      ? "border-[var(--danger)] focus:border-[var(--danger)]"
+      : "border-[var(--line)] focus:border-[var(--secondary)]"
+  }`;
+}
+
+const ROTULO = "mb-2 block text-[13px] font-semibold text-[var(--ink)]";
 
 function AjudaPage() {
   const [faqAtiva, setFaqAtiva] = useState<{ pergunta: string; resposta: string } | null>(null);
@@ -302,85 +323,104 @@ function AjudaPage() {
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
       <main>
         {/* HERO + BUSCA */}
-        <section className="pb-12 pt-16 md:pb-16 md:pt-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-              Ajuda
-            </p>
-            <h1 className="font-cabinet mt-4 text-[40px] leading-[1.05] tracking-[-0.02em] text-[var(--ink)] md:text-[56px]">
-              Como a gente pode ajudar?
-            </h1>
-            <p className="mt-6 max-w-[60ch] text-[20px] leading-[1.5] text-[var(--ink-soft)] md:text-[22px]">
-              Respostas curtas e diretas, sem tutorial de dez minutos pra uma coisa de um clique.
-              Se não achar o que precisa, escreve pra gente aqui embaixo.
-            </p>
-            <form
-              role="search"
-              onSubmit={(e) => {
-                e.preventDefault();
-                document.getElementById("resultados-ajuda")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="mt-8 flex max-w-[620px] flex-col gap-3 sm:flex-row"
-            >
-              <label htmlFor="q" className="sr-only">
-                Buscar na ajuda
-              </label>
-              <input
-                id="q"
-                type="search"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                placeholder="Buscar: preço, cancelar, Planner..."
-                className="w-full flex-1 rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--secondary)]"
-              />
-              <button
-                type="submit"
-                className="whitespace-nowrap rounded-lg bg-[var(--secondary)] px-6 py-3 text-[15px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95"
+        <section className="pb-[clamp(48px,6vw,72px)] pt-[clamp(48px,7vw,96px)]">
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Ajuda</Eyebrow>
+              <h1 className="mt-4 max-w-[16ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                Como a gente pode ajudar?
+              </h1>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mt-6 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                Respostas curtas e diretas, sem tutorial de dez minutos pra uma coisa de um clique.
+                Se não achar o que precisa, escreve pra gente aqui embaixo.
+              </p>
+              <form
+                role="search"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  document
+                    .getElementById("resultados-ajuda")
+                    ?.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="mt-8 flex max-w-[620px] flex-col gap-3 sm:flex-row"
               >
-                Buscar
-              </button>
-            </form>
+                <label htmlFor="q" className="sr-only">
+                  Buscar na ajuda
+                </label>
+                <input
+                  id="q"
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar: preço, cancelar, Planner..."
+                  className="w-full flex-1 rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--secondary)]"
+                />
+                <button type="submit" className={`${BTN_PRIMARIO} whitespace-nowrap`}>
+                  Buscar
+                </button>
+              </form>
+            </Reveal>
           </div>
         </section>
 
         {/* CATEGORIAS */}
-        <section id="resultados-ajuda" className="pb-12 md:pb-16 scroll-mt-6">
-          <div className="mx-auto max-w-[1120px] px-6">
+        <section id="resultados-ajuda" className={`scroll-mt-[88px] bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Por assunto</Eyebrow>
+              <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Respostas separadas por assunto.
+              </h2>
+            </Reveal>
+
             {categoriasFiltradas.length === 0 ? (
-              <p className="text-[15px] text-[var(--ink-soft)]">
-                Nada encontrado pra "{busca.trim()}". Escreve pra gente aqui embaixo que a gente
+              <p className="mt-[clamp(32px,4vw,40px)] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                Nada encontrado pra “{busca.trim()}”. Escreve pra gente aqui embaixo que a gente
                 responde.
               </p>
             ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              {categoriasFiltradas.map((cat) => {
-                const Icon = cat.icon;
-                return (
-                  <div key={cat.titulo} className="rounded-xl border border-[var(--line)] bg-white p-6">
-                    <Icon size={24} className="mb-3 text-[var(--secondary-ink)]" aria-hidden="true" />
-                    <h3 className="text-[18px] text-[var(--ink)]">{cat.titulo}</h3>
-                    <ul className="mt-4 grid list-none gap-0 p-0">
-                      {cat.itens.map((item, i) => (
-                        <li key={item.pergunta} className={i > 0 ? "border-t border-[var(--line)]" : ""}>
-                          <button
-                            type="button"
-                            onClick={() => setFaqAtiva(item)}
-                            className="block w-full py-3 text-left text-[15px] text-[var(--ink)] no-underline hover:underline hover:decoration-[var(--secondary)] hover:decoration-2 hover:underline-offset-[3px]"
+              <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-3">
+                {categoriasFiltradas.map((cat) => {
+                  const Icon = cat.icon;
+                  return (
+                    <RevealItem
+                      key={cat.titulo}
+                      className="rounded-2xl border border-[var(--line)] bg-white p-8"
+                    >
+                      <Icon size={22} className="text-[var(--secondary-text)]" aria-hidden="true" />
+                      <h3 className="mt-4 text-[18px] font-bold tracking-[-0.01em]">
+                        {cat.titulo}
+                      </h3>
+                      <ul className="mt-4 grid list-none gap-0 p-0">
+                        {cat.itens.map((item, i) => (
+                          <li
+                            key={item.pergunta}
+                            className={i > 0 ? "border-t border-[var(--line)]" : ""}
                           >
-                            {item.pergunta}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
+                            <button
+                              type="button"
+                              onClick={() => setFaqAtiva(item)}
+                              className="flex w-full items-center justify-between gap-3 py-3 text-left text-[15px] leading-[1.5] text-[var(--ink)] no-underline transition-colors hover:text-[var(--secondary-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+                            >
+                              {item.pergunta}
+                              <span aria-hidden="true" className="flex-none text-[var(--muted)]">
+                                →
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </RevealItem>
+                  );
+                })}
+              </RevealGroup>
             )}
           </div>
         </section>
@@ -388,19 +428,16 @@ function AjudaPage() {
         <Sheet open={!!faqAtiva} onOpenChange={(open) => !open && setFaqAtiva(null)}>
           <SheetContent className="polia-v3 flex flex-col gap-4 border-l border-[var(--line)] bg-white p-8">
             <SheetHeader>
-              <SheetTitle className="font-cabinet text-[22px] leading-[1.2] text-[var(--ink)]">
+              <SheetTitle className="text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
                 {faqAtiva?.pergunta}
               </SheetTitle>
-              <SheetDescription className="text-[16px] leading-[1.6] text-[var(--ink-soft)]">
+              <SheetDescription className="mt-3 text-[16px] leading-[1.7] text-[var(--ink-soft)]">
                 {faqAtiva?.resposta}
               </SheetDescription>
             </SheetHeader>
             <SheetFooter className="mt-auto pt-6">
               <SheetClose asChild>
-                <button
-                  type="button"
-                  className="w-full rounded-lg border border-[var(--line)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--bg)] sm:w-auto"
-                >
+                <button type="button" className={`${BTN_CONTORNO} w-full sm:w-auto`}>
                   Fechar
                 </button>
               </SheetClose>
@@ -409,33 +446,67 @@ function AjudaPage() {
         </Sheet>
 
         {/* NÃO ACHOU */}
-        <section className="pb-16 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="rounded-xl bg-[var(--secondary)] p-8">
-              <h2 className="max-w-[22ch] text-[24px] text-[var(--secondary-ink)] md:text-[28px]">
-                Não achou o que precisava?
-              </h2>
-              <p className="mt-3 max-w-[54ch] text-[var(--secondary-ink)]">
-                Escreve pra gente no formulário aqui embaixo. Quem responde é gente de verdade,
-                do tamanho de uma pessoa só.
-              </p>
-            </div>
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <div className="rounded-2xl bg-[var(--secondary)] p-8 md:p-12">
+                <h2 className="max-w-[20ch] text-[clamp(1.6rem,3vw,2.4rem)] font-bold leading-[1.15] tracking-[-0.02em] text-[var(--secondary-ink)] text-balance">
+                  Não achou o que precisava?
+                </h2>
+                <p className="mt-4 max-w-[54ch] text-[16px] leading-[1.65] text-[var(--secondary-ink)]">
+                  Escreve pra gente no formulário aqui embaixo. Quem responde é gente de verdade, do
+                  tamanho de uma pessoa só.
+                </p>
+                <div className="mt-8">
+                  <a href="#contato" className={BTN_CONTORNO}>
+                    Ir pro formulário
+                  </a>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* AINDA SEM CONTA: quem chega aqui em geral ainda não assinou, está
+            medindo risco antes de entrar. A página terminava no formulário, sem
+            caminho de volta pra conversão. */}
+        <section className="pb-[clamp(48px,6vw,72px)]">
+          <div className={CONTAINER}>
+            <Reveal>
+              <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
+                <Eyebrow>Ainda sem conta?</Eyebrow>
+                <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
+                  O Confere é grátis, sem cartão, e responde a primeira pergunta de qualquer
+                  negócio: dá lucro? E se um dia a resposta for cancelar, é um clique, sem multa e
+                  sem conversa difícil. Está tudo ali em cima, escrito.
+                </p>
+                <div className="mt-8">
+                  <Link
+                    to="/auth/cadastro"
+                    data-track="cadastro_cta_clicado"
+                    data-track-props='{"contexto":"ajuda_sem_conta"}'
+                    className={BTN_PRIMARIO}
+                  >
+                    Criar conta grátis
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
 
         {/* CONTATO */}
-        <section id="contato" className="pb-16 pt-4 md:pb-24">
-          <div className="mx-auto max-w-[1120px] px-6">
-            <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2 md:gap-16">
+        <section id="contato" className="scroll-mt-[88px] pb-[clamp(72px,9vw,128px)]">
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-2">
               {/* coluna esquerda */}
-              <div>
-                <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-                  Contato
-                </p>
-                <h2 className="font-cabinet mt-4 text-[32px] leading-[1.1] tracking-[-0.02em] text-[var(--ink)] md:text-[44px]">
+              <Reveal>
+                <Eyebrow>Contato</Eyebrow>
+                <h2 className="mt-4 max-w-[14ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                   Fala com a gente.
                 </h2>
-                <p className="mt-6 max-w-[54ch] text-[18px] leading-[1.5] text-[var(--ink-soft)]">
+                <p className="mt-6 max-w-[54ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
                   A Pólia é do tamanho de uma pessoa só, dos dois lados. Quem responde aqui é gente
                   de verdade, não robô. Escreve que a gente lê.
                 </p>
@@ -446,11 +517,11 @@ function AjudaPage() {
                   <div className="flex items-start gap-3">
                     <Mail
                       size={20}
-                      className="mt-0.5 flex-none text-[var(--secondary-ink)]"
+                      className="mt-0.5 flex-none text-[var(--secondary-text)]"
                       aria-hidden="true"
                     />
                     <div>
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      <p className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
                         E-mail direto
                       </p>
                       <p className="mt-2">
@@ -466,11 +537,11 @@ function AjudaPage() {
                   <div className="flex items-start gap-3">
                     <Clock
                       size={20}
-                      className="mt-0.5 flex-none text-[var(--secondary-ink)]"
+                      className="mt-0.5 flex-none text-[var(--secondary-text)]"
                       aria-hidden="true"
                     />
                     <div>
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      <p className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
                         Tempo de resposta
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
@@ -481,162 +552,141 @@ function AjudaPage() {
                   <div className="flex items-start gap-3">
                     <HelpCircle
                       size={20}
-                      className="mt-0.5 flex-none text-[var(--secondary-ink)]"
+                      className="mt-0.5 flex-none text-[var(--secondary-text)]"
                       aria-hidden="true"
                     />
                     <div>
-                      <p className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
+                      <p className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
                         Dúvida rápida?
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        Talvez já esteja respondida ali em cima, nos módulos de ajuda.
+                        Talvez já esteja respondida ali em cima, nas perguntas por assunto.
                       </p>
                     </div>
                   </div>
                 </div>
-              </div>
+              </Reveal>
 
               {/* coluna direita */}
-              <div className="rounded-xl border border-[var(--line)] bg-white p-8">
-                {!enviado ? (
-                  <form onSubmit={handleSubmit} className="grid gap-5" noValidate>
-                    {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
-                    <input
-                      type="text"
-                      name="empresa_site"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      aria-hidden="true"
-                      value={hp}
-                      onChange={(e) => setHp(e.target.value)}
-                      className="absolute left-[-9999px] h-0 w-0 opacity-0"
-                    />
-                    <div>
-                      <label className="mb-2 block text-[13px] font-semibold text-[var(--ink)]">
-                        Seu nome
-                      </label>
+              <Reveal delay={0.1}>
+                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+                  {!enviado ? (
+                    <form onSubmit={handleSubmit} className="grid gap-5" noValidate>
+                      {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
                       <input
-                        ref={refs.nome}
                         type="text"
-                        value={nome}
-                        onChange={(e) => {
-                          setNome(e.target.value);
-                          if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
-                        }}
-                        maxLength={120}
-                        placeholder="Como a gente te chama"
-                        aria-invalid={!!errors.nome || undefined}
-                        aria-describedby={errors.nome ? "nome-error" : undefined}
-                        className={`w-full rounded-lg border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors ${
-                          errors.nome
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)]"
-                        }`}
+                        name="empresa_site"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                        value={hp}
+                        onChange={(e) => setHp(e.target.value)}
+                        className="absolute left-[-9999px] h-0 w-0 opacity-0"
                       />
-                      <FieldError id="nome-error">{errors.nome}</FieldError>
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-[13px] font-semibold text-[var(--ink)]">
-                        Seu e-mail
-                      </label>
-                      <input
-                        ref={refs.email}
-                        type="email"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
-                        }}
-                        maxLength={255}
-                        placeholder="voce@email.com"
-                        aria-invalid={!!errors.email || undefined}
-                        aria-describedby={errors.email ? "email-error" : undefined}
-                        className={`w-full rounded-lg border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors ${
-                          errors.email
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)]"
-                        }`}
-                      />
-                      <FieldError id="email-error">{errors.email}</FieldError>
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-[13px] font-semibold text-[var(--ink)]">
-                        Assunto
-                      </label>
-                      <select
-                        ref={refs.assunto}
-                        value={assunto}
-                        onChange={(e) => {
-                          setAssunto(e.target.value);
-                          if (errors.assunto) setErrors((er) => ({ ...er, assunto: undefined }));
-                        }}
-                        aria-invalid={!!errors.assunto || undefined}
-                        aria-describedby={errors.assunto ? "assunto-error" : undefined}
-                        className={`w-full appearance-none rounded-lg border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors ${
-                          errors.assunto
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)]"
-                        }`}
-                      >
-                        <option value="" disabled>
-                          Escolher assunto
-                        </option>
-                        {ASSUNTOS.map((a) => (
-                          <option key={a} value={a}>
-                            {a}
+                      <div>
+                        <label className={ROTULO}>Seu nome</label>
+                        <input
+                          ref={refs.nome}
+                          type="text"
+                          value={nome}
+                          onChange={(e) => {
+                            setNome(e.target.value);
+                            if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
+                          }}
+                          maxLength={120}
+                          placeholder="Como a gente te chama"
+                          aria-invalid={!!errors.nome || undefined}
+                          aria-describedby={errors.nome ? "nome-error" : undefined}
+                          className={campoClasse(!!errors.nome)}
+                        />
+                        <FieldError id="nome-error">{errors.nome}</FieldError>
+                      </div>
+                      <div>
+                        <label className={ROTULO}>Seu e-mail</label>
+                        <input
+                          ref={refs.email}
+                          type="email"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
+                          }}
+                          maxLength={255}
+                          placeholder="voce@email.com"
+                          aria-invalid={!!errors.email || undefined}
+                          aria-describedby={errors.email ? "email-error" : undefined}
+                          className={campoClasse(!!errors.email)}
+                        />
+                        <FieldError id="email-error">{errors.email}</FieldError>
+                      </div>
+                      <div>
+                        <label className={ROTULO}>Assunto</label>
+                        <select
+                          ref={refs.assunto}
+                          value={assunto}
+                          onChange={(e) => {
+                            setAssunto(e.target.value);
+                            if (errors.assunto) setErrors((er) => ({ ...er, assunto: undefined }));
+                          }}
+                          aria-invalid={!!errors.assunto || undefined}
+                          aria-describedby={errors.assunto ? "assunto-error" : undefined}
+                          className={`appearance-none ${campoClasse(!!errors.assunto)}`}
+                        >
+                          <option value="" disabled>
+                            Escolher assunto
                           </option>
-                        ))}
-                      </select>
-                      <FieldError id="assunto-error">{errors.assunto}</FieldError>
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-[13px] font-semibold text-[var(--ink)]">
-                        Mensagem
-                      </label>
-                      <textarea
-                        ref={refs.mensagem}
-                        value={mensagem}
-                        onChange={(e) => {
-                          setMensagem(e.target.value);
-                          if (errors.mensagem) setErrors((er) => ({ ...er, mensagem: undefined }));
-                        }}
-                        rows={5}
-                        maxLength={2000}
-                        placeholder="Conta pra gente. Uma coisa de cada vez."
-                        aria-invalid={!!errors.mensagem || undefined}
-                        aria-describedby={errors.mensagem ? "mensagem-error" : undefined}
-                        className={`w-full resize-none rounded-lg border bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors ${
-                          errors.mensagem
-                            ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                            : "border-[var(--line)] focus:border-[var(--secondary)]"
-                        }`}
-                      />
-                      <FieldError id="mensagem-error">{errors.mensagem}</FieldError>
-                    </div>
-                    <TurnstileWidget containerRef={turnstile.containerRef} />
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="mt-1 w-full rounded-lg bg-[var(--secondary)] px-8 py-4 text-[18px] font-semibold text-[var(--secondary-ink)] transition-[filter] hover:brightness-95 disabled:opacity-50"
+                          {ASSUNTOS.map((a) => (
+                            <option key={a} value={a}>
+                              {a}
+                            </option>
+                          ))}
+                        </select>
+                        <FieldError id="assunto-error">{errors.assunto}</FieldError>
+                      </div>
+                      <div>
+                        <label className={ROTULO}>Mensagem</label>
+                        <textarea
+                          ref={refs.mensagem}
+                          value={mensagem}
+                          onChange={(e) => {
+                            setMensagem(e.target.value);
+                            if (errors.mensagem)
+                              setErrors((er) => ({ ...er, mensagem: undefined }));
+                          }}
+                          rows={5}
+                          maxLength={2000}
+                          placeholder="Conta pra gente. Uma coisa de cada vez."
+                          aria-invalid={!!errors.mensagem || undefined}
+                          aria-describedby={errors.mensagem ? "mensagem-error" : undefined}
+                          className={`resize-none ${campoClasse(!!errors.mensagem)}`}
+                        />
+                        <FieldError id="mensagem-error">{errors.mensagem}</FieldError>
+                      </div>
+                      <TurnstileWidget containerRef={turnstile.containerRef} />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`${BTN_PRIMARIO} mt-1 w-full disabled:pointer-events-none disabled:opacity-50`}
+                      >
+                        {loading ? "Enviando…" : "Enviar"}
+                      </button>
+                    </form>
+                  ) : (
+                    <div
+                      role="status"
+                      aria-live="polite"
+                      className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     >
-                      {loading ? "Enviando…" : "Enviar"}
-                    </button>
-                  </form>
-                ) : (
-                  <div
-                    role="status"
-                    aria-live="polite"
-                    className="rounded-xl bg-[var(--surface-pink)] p-8"
-                  >
-                    <h2 className="max-w-[20ch] text-[24px] text-[var(--ink)]">
-                      Recebido. A gente te responde.
-                    </h2>
-                    <p className="mt-3 text-[var(--ink-soft)]">
-                      Chegou aqui. A gente responde em até 24 horas, em dias úteis, no seu e-mail.
-                    </p>
-                  </div>
-                )}
-              </div>
+                      <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
+                        Recebido. A gente te responde.
+                      </h2>
+                      <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
+                        Chegou aqui. A gente responde em até 24 horas, em dias úteis, no seu e-mail.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </Reveal>
             </div>
           </div>
         </section>

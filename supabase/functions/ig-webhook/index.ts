@@ -14,7 +14,6 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const WEBHOOK_VERIFY_TOKEN = Deno.env.get("WEBHOOK_VERIFY_TOKEN") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
-const META_TOKEN_ENV = Deno.env.get("META_TOKEN") ?? "";
 const EMAIL_SIL = "oi@usepolia.com.br";
 const GRAPH = "https://graph.instagram.com/v23.0";
 const JANELA_GATILHO_MS = 7 * 24 * 60 * 60 * 1000;
@@ -28,9 +27,20 @@ function semAcentoMinusculo(texto: string): string {
     .toLowerCase();
 }
 
-async function obterToken(): Promise<string> {
-  const { data } = await supabaseAdmin.from("integracao_instagram").select("access_token").eq("id", 1).maybeSingle();
-  return data?.access_token || META_TOKEN_ENV;
+/**
+ * O webhook é único por app (mesma URL pra todas as contas), mas cada evento
+ * chega marcado com a conta do Instagram que o recebeu (entry.id, o
+ * ig_user_id da conta profissional). Resolve pra qual conta/token da Fábrica
+ * de Posts esse evento pertence.
+ */
+async function resolverConta(igUserIdConta: string): Promise<{ contaId: string; token: string } | null> {
+  const { data } = await supabaseAdmin
+    .from("contas_instagram_credenciais")
+    .select("conta_id, access_token")
+    .eq("ig_user_id", igUserIdConta)
+    .maybeSingle();
+  if (!data?.access_token) return null;
+  return { contaId: data.conta_id, token: data.access_token };
 }
 
 async function enviarPrivateReply(commentId: string, mensagem: string, token: string): Promise<{ ok: boolean; erro?: string }> {
@@ -92,12 +102,18 @@ interface MessagingEvento {
 }
 
 interface EntradaWebhook {
+  id?: string; // ig_user_id da conta profissional que recebeu o evento
   time?: number;
   changes?: ChangeComentario[];
   messaging?: MessagingEvento[];
 }
 
-async function processarComentario(change: ChangeComentario, entryTimeMs: number | undefined) {
+async function processarComentario(
+  change: ChangeComentario,
+  entryTimeMs: number | undefined,
+  contaId: string,
+  token: string,
+) {
   const commentId = change.value.id;
   const texto = change.value.text ?? "";
   const igUserId = change.value.from?.id;
@@ -111,7 +127,11 @@ async function processarComentario(change: ChangeComentario, entryTimeMs: number
 
   const textoNormalizado = semAcentoMinusculo(texto);
 
-  const { data: gatilhos } = await supabaseAdmin.from("dm_gatilhos").select("*").eq("ativo", true);
+  const { data: gatilhos } = await supabaseAdmin
+    .from("dm_gatilhos")
+    .select("*")
+    .eq("ativo", true)
+    .eq("conta_id", contaId);
   const gatilho = (gatilhos ?? []).find((g) => {
     const bateuPalavra = textoNormalizado.includes(semAcentoMinusculo(g.palavra));
     const bateuPost = !g.post_ig_id || g.post_ig_id === mediaId;
@@ -139,14 +159,14 @@ async function processarComentario(change: ChangeComentario, entryTimeMs: number
     return;
   }
 
-  const token = await obterToken();
   if (!token) {
     await supabaseAdmin.from("dm_conversas").insert({
+      conta_id: contaId,
       ig_user_id: igUserId,
       comment_id: commentId,
       gatilho_id: gatilho.id,
       estado: "respondido",
-      erro: "META_TOKEN não configurado",
+      erro: "Token do Instagram não configurado pra essa conta.",
     });
     return;
   }
@@ -155,6 +175,7 @@ async function processarComentario(change: ChangeComentario, entryTimeMs: number
   const resultado = await enviarPrivateReply(commentId, mensagem, token);
 
   await supabaseAdmin.from("dm_conversas").insert({
+    conta_id: contaId,
     ig_user_id: igUserId,
     comment_id: commentId,
     gatilho_id: gatilho.id,
@@ -171,13 +192,17 @@ async function processarComentario(change: ChangeComentario, entryTimeMs: number
   }
 }
 
-async function processarMensagem(evento: MessagingEvento) {
+async function processarMensagem(evento: MessagingEvento, contaId: string) {
   const igUserId = evento.sender?.id;
   const texto = semAcentoMinusculo(evento.message?.text ?? "");
   if (!igUserId) return;
 
   if (texto.includes("parar")) {
-    await supabaseAdmin.from("dm_conversas").update({ estado: "optout" }).eq("ig_user_id", igUserId);
+    await supabaseAdmin
+      .from("dm_conversas")
+      .update({ estado: "optout" })
+      .eq("ig_user_id", igUserId)
+      .eq("conta_id", contaId);
     return;
   }
 
@@ -185,6 +210,7 @@ async function processarMensagem(evento: MessagingEvento) {
     .from("dm_conversas")
     .select("*")
     .eq("ig_user_id", igUserId)
+    .eq("conta_id", contaId)
     .eq("estado", "respondido")
     .order("criado_em", { ascending: false })
     .limit(1)
@@ -226,11 +252,21 @@ Deno.serve(async (req) => {
   console.log("[ig-webhook] payload recebido:", JSON.stringify(body));
 
   for (const entry of body.entry ?? []) {
+    if (!entry.id) {
+      console.log("[ig-webhook] entry sem id, não dá pra saber a conta — ignorado.");
+      continue;
+    }
+    const conta = await resolverConta(entry.id);
+    if (!conta) {
+      console.log(`[ig-webhook] nenhuma conta cadastrada com ig_user_id ${entry.id} — ignorado.`);
+      continue;
+    }
+
     const entryTimeMs = entry.time;
     for (const change of entry.changes ?? []) {
       if (change.field === "comments") {
         try {
-          await processarComentario(change, entryTimeMs);
+          await processarComentario(change, entryTimeMs, conta.contaId, conta.token);
         } catch (err) {
           console.error("[ig-webhook] erro processando comentário:", err);
         }
@@ -238,7 +274,7 @@ Deno.serve(async (req) => {
     }
     for (const evento of entry.messaging ?? []) {
       try {
-        await processarMensagem(evento);
+        await processarMensagem(evento, conta.contaId);
       } catch (err) {
         console.error("[ig-webhook] erro processando mensagem:", err);
       }

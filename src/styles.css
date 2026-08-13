@@ -250,7 +250,9 @@
 
 /* Focus ring global — WCAG 2.1 AA */
 *:focus-visible {
-  outline: 2px solid #7CCBCD;
+  /* var(--secondary) resolve aqui porque o :root também define a paleta,
+     fora do escopo .polia-v3. Hex cravado seria o único do arquivo. */
+  outline: 2px solid var(--secondary);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -281,20 +283,5 @@
 @keyframes polia-scroll-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.4); }
-}
-
-/* Animações territoriais — virada terrena */
-@keyframes polia-respiracao {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-@keyframes polia-trilha-desenha {
-  from { stroke-dashoffset: 200; }
-  to { stroke-dashoffset: 0; }
-}
-@keyframes polia-carimbo {
-  0% { opacity: 0; transform: scale(1.4) rotate(-6deg); }
-  60% { opacity: 1; transform: scale(0.95) rotate(-3deg); }
-  100% { opacity: 1; transform: scale(1) rotate(-3deg); }
 }
 

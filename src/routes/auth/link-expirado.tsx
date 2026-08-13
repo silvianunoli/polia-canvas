@@ -24,7 +24,8 @@ const COPY = {
   },
   redefinicao: {
     title: "Esse link de redefinir senha expirou.",
-    subtitle: "Links de redefinição valem por 1 hora. É só pedir um novo que a gente manda na hora.",
+    subtitle:
+      "Links de redefinição valem por 1 hora. É só pedir um novo que a gente manda na hora.",
     primaryLabel: "Pedir um novo link",
     primaryHref: "/auth/esqueci-senha",
   },

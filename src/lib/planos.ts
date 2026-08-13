@@ -19,6 +19,45 @@ export function tierDoPlano(plano: string | null | undefined): Tier {
   return "confere";
 }
 
+/**
+ * Direito às features exclusivas do Projete. Existe porque o tier system só tem
+ * dois níveis (confere/controle) e o Projete mora dentro do "controle" — a
+ * pergunta "tem Projete?" não é respondível por `tierDoPlano`.
+ *
+ * Inclui `beta`, que é acesso total: a checagem `plano === "projete"` estava
+ * copiada em seis arquivos e reprovava conta beta em todos eles.
+ */
+export function temProjete(plano: string | null | undefined): boolean {
+  return ehBeta(plano) || plano === "projete";
+}
+
+// Rotas que abrem só no Projete. Elas passam pelo guard de tier (são "controle")
+// e são barradas por um portão dentro da própria página. Sem esta lista, a barra
+// lateral não tem como saber que são pagas e mostra três itens SEM cadeado que a
+// usuária do Controle não consegue usar.
+const ROTAS_PROJETE = ["/raiox", "/plano-conteudo", "/projecao"];
+
+export function ehRotaProjete(pathname: string): boolean {
+  return ROTAS_PROJETE.some((p) => bateRota(p, pathname));
+}
+
+/** Qual plano pago a rota exige — pra nomear o certo na tela de upgrade. */
+export function tierPagoDaRota(pathname: string): TierPago {
+  return ehRotaProjete(pathname) ? "projete" : "controle";
+}
+
+/**
+ * Direito de USO da tela, não só de entrar nela: soma a trava de rota (tier) com
+ * o portão Projete de dentro da página. É o que a navegação deve consultar pra
+ * decidir se mostra cadeado — `rotaLiberada` sozinha diz que /raiox está livre
+ * pro Controle, o que é verdade pro roteador e mentira pra usuária.
+ */
+export function recursoLiberado(pathname: string, plano: string | null | undefined): boolean {
+  if (!rotaLiberada(pathname, plano)) return false;
+  if (ehRotaProjete(pathname)) return temProjete(plano);
+  return true;
+}
+
 // Tier mínimo por prefixo de rota. Não listado = "controle" por padrão (nega
 // por padrão). Onboarding e Assinar ficam de fora — são isentos por completo,
 // tratados em _authenticated.tsx, não aqui.
@@ -89,11 +128,10 @@ export const TIERS_PAGOS: Record<
     precoAnual: 299,
     features: [
       "Tudo do Confere, mais:",
-      "Produtos, com a margem de cada venda na sua frente",
-      "Clientes, com a entrega que vira caixa sozinha",
-      "Financeiro do mês fechado num lugar",
-      "Painel completo, com quanto falta pra meta",
-      "Planner, Calendário, Caderno e Metas",
+      "Calculadora de preço: mostra quanto sobra em cada venda, antes de cobrar",
+      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês pra comemorar",
+      "Clientes com o status de cada pedido, do orçamento à entrega",
+      "Quadros ilimitados no Planner",
     ],
     destaque: true,
   },
@@ -103,8 +141,10 @@ export const TIERS_PAGOS: Record<
     precoAnual: 479,
     features: [
       "Tudo do Controle, mais:",
+      "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
+      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
+      "Plano de conteúdo do ano: uma ideia de post por dia, ligada ao que a marca vende",
       "Resumo do mês pro contador, em PDF e CSV",
-      "Um plano de conteúdo do ano pras suas redes",
     ],
   },
 };

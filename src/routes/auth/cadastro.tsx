@@ -41,14 +41,12 @@ export const Route = createFileRoute("/auth/cadastro")({
       { title: "Criar conta · Pólia" },
       {
         name: "description",
-        content:
-          "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+        content: "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
       { property: "og:title", content: "Criar conta · Pólia" },
       {
         property: "og:description",
-        content:
-          "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
+        content: "A conta na Pólia, a plataforma guiada para mulheres empreendedoras brasileiras.",
       },
     ],
   }),
@@ -147,7 +145,10 @@ function CadastroPage() {
       }
       // O convite é marcado como usado no servidor (trigger AFTER INSERT em
       // auth.users), não daqui — ver migração 20260709170100.
-      track("cadastro_concluido", { via_convite: !!emailConvite, precisa_verificacao: !data.session });
+      track("cadastro_concluido", {
+        via_convite: !!emailConvite,
+        precisa_verificacao: !data.session,
+      });
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {
@@ -175,7 +176,7 @@ function CadastroPage() {
 
   return (
     <AuthShell>
-      <SerifHeadline size={28}>Tudo começa pelo comecinho.</SerifHeadline>
+      <SerifHeadline size={28}>Vamos começar.</SerifHeadline>
       <SubText>Sua conta em menos de um minuto.</SubText>
 
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
@@ -222,7 +223,13 @@ function CadastroPage() {
 
         <div className="mt-1">
           <AuthButton type="submit" fullWidth loading={loading}>
-            {loading ? "Criando..." : "Criar conta →"}
+            {loading ? (
+              "Criando..."
+            ) : (
+              <>
+                Criar conta <span aria-hidden="true">→</span>
+              </>
+            )}
           </AuthButton>
         </div>
       </form>

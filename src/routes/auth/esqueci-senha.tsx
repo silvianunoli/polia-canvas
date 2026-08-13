@@ -102,7 +102,13 @@ function EsqueciSenhaPage() {
             />
             <div className="mt-1">
               <AuthButton type="submit" fullWidth loading={loading}>
-                {loading ? "Enviando..." : "Enviar link →"}
+                {loading ? (
+                  "Enviando..."
+                ) : (
+                  <>
+                    Enviar link <span aria-hidden="true">→</span>
+                  </>
+                )}
               </AuthButton>
             </div>
           </form>

@@ -16,6 +16,7 @@ import {
   sobraPorVenda,
   ticketMedio,
 } from "@/lib/projecao.functions";
+import { temProjete } from "@/lib/planos";
 import type { ProdutoResumo } from "@/lib/projecao.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 
@@ -43,7 +44,7 @@ function ProjecaoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
-  const ehProjete = meta.plano === "projete";
+  const ehProjete = temProjete(meta.plano);
   const qc = useQueryClient();
 
   const hoje = new Date();

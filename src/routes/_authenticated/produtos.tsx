@@ -8,7 +8,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { track } from "@/lib/analytics";
-import { COTAS_CONFERE } from "@/lib/planos";
+import { COTAS_CONFERE, temProjete } from "@/lib/planos";
 import {
   calcularQuantoSobra,
   calcularSobraPct,
@@ -127,7 +127,7 @@ function ProdutosPage() {
   const qc = useQueryClient();
   const meta = useUserMeta();
   const ehConfere = meta.plano === "confere";
-  const ehProjete = meta.plano === "projete";
+  const ehProjete = temProjete(meta.plano);
 
   // Valor-hora padrão (Fase 2 — modo Encomenda, Projete): persistido em
   // profiles pra reaproveitar entre os modos Serviço/Encomenda e entre

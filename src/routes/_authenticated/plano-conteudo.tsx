@@ -8,6 +8,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
+import { temProjete } from "@/lib/planos";
 
 export const Route = createFileRoute("/_authenticated/plano-conteudo")({
   head: () => ({
@@ -58,7 +59,7 @@ function PlanoConteudoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
-  const ehProjete = meta.plano === "projete";
+  const ehProjete = temProjete(meta.plano);
   const qc = useQueryClient();
 
   const anoAtual = new Date().getFullYear();
