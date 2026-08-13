@@ -70,13 +70,6 @@ const problemas: { forte: string; resto: string }[] = [
   },
 ];
 
-// Números da pesquisa aberta da Pólia (2026). Prova social real: a página não
-// tinha nenhuma, e depoimento de usuária ainda não existe.
-const pesquisa = [
-  { valor: "52%", rotulo: "definem o preço no olho" },
-  { valor: "66%", rotulo: "misturam a conta da casa com a do negócio" },
-];
-
 const movimentos: {
   n: string;
   titulo: string;
@@ -515,26 +508,13 @@ function HomePage() {
                 <Reveal>
                   <Eyebrow>A pesquisa</Eyebrow>
                   <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                    A dúvida é mais comum do que parece.
+                    66% mistura a conta da casa com a conta do negócio.
                   </h2>
                   <p className="mt-5 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                     Na pesquisa aberta da Pólia, com quase duzentas respostas de quem vende, 52%
-                    admitem definir o preço no olho e 66% misturam a conta da casa com a conta do
-                    negócio.
+                    admitem definir o preço no olho.
                   </p>
                 </Reveal>
-                <RevealGroup className="mt-8 grid grid-cols-1 gap-6 border-t border-[var(--line)] pt-6 sm:grid-cols-2">
-                  {pesquisa.map((p) => (
-                    <RevealItem key={p.rotulo}>
-                      <p className="text-[clamp(2rem,4vw,2.8rem)] font-bold leading-none tracking-[-0.02em]">
-                        {p.valor}
-                      </p>
-                      <p className="mt-2 max-w-[24ch] text-[14px] leading-[1.45] text-[var(--ink-soft)]">
-                        {p.rotulo}
-                      </p>
-                    </RevealItem>
-                  ))}
-                </RevealGroup>
               </div>
 
               <Reveal delay={0.1}>

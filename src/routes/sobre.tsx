@@ -98,7 +98,7 @@ const pontos = [
 // deveria dizer o que a marca é.
 const escolheSer = [
   "Uma mentora de bolso, presente na hora de cobrar, comprar e fechar.",
-  "Sem a complicação de sistema de empresa grande, pra quem decide de perto, sozinha ou com quem ajuda.",
+  "Do tamanho de quem toca o negócio, sozinha, com a família ou com poucas mãos ajudando, nunca do tamanho de empresa grande.",
   "Em português claro, do jeito que se fala na mesa da cozinha.",
   "De uso diário, desde antes da primeira venda.",
 ];
@@ -149,9 +149,9 @@ const credo = [
       "A Pólia celebra o preço que finalmente saiu do chute, o quanto sobra que apareceu, a meta do mês batida. Sobriedade é uma forma de respeito.",
   },
   {
-    linha: "Sem complicação de empresa grande.",
+    linha: "Do tamanho de quem decide, não do tamanho da equipe.",
     texto:
-      "Nada de jargão corporativo, processo de aprovação ou hierarquia. A Pólia cabe na rotina de quem decide de perto, sozinha ou com quem ajuda, porque foi feita pra esse tamanho de negócio.",
+      "Uma dona de negócio sozinha entra e sai tão rápido quanto uma que tem a irmã na produção e o marido cuidando do Instagram. A Pólia não pergunta quantas pessoas trabalham ali, pergunta quem manda. Nada de aprovação em cadeia, nada de crachá, nada de reunião pra decidir o óbvio.",
   },
 ];
 
