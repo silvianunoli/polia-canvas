@@ -15,12 +15,12 @@ export const Route = createFileRoute("/blog/")({
       {
         name: "description",
         content:
-          "Textos da Pólia pra quem toca a marca sozinha. Sem hack de faturamento, sem promessa de seis dígitos. Uma coisa de cada vez.",
+          "Textos da Pólia pra quem toca a marca. Sem hack de faturamento, sem promessa de seis dígitos. Uma coisa de cada vez.",
       },
       { property: "og:title", content: "Blog · Pólia" },
       {
         property: "og:description",
-        content: "Textos da Pólia pra quem toca a marca sozinha.",
+        content: "Textos da Pólia pra quem toca a marca.",
       },
     ],
   }),
@@ -87,7 +87,7 @@ function BlogList() {
               <Eyebrow>Blog</Eyebrow>
             </Reveal>
             <h1 className="mt-4 max-w-[16ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-              Pra quem toca a marca sozinha.
+              Pra quem toca a marca.
             </h1>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">

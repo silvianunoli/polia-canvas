@@ -164,7 +164,7 @@ const publicoSim = [
 
 const publicoNao = [
   "O que vai ser vendido ainda não está decidido.",
-  "Já existe equipe e processo rodando. A Pólia é pra quem toca sozinha.",
+  "A empresa já tem equipe de gestão e sistema robusto rodando.",
   "A procura é por ferramenta de anúncio ou automação de marketing: a Pólia cuida da decisão, não da mídia.",
 ];
 
@@ -489,9 +489,9 @@ function SobrePage() {
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
                   <h3 className="text-[19px] font-bold tracking-[-0.01em]">Missão</h3>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                    Dar pra quem toca a marca sozinha a clareza de decidir bem e de saber quanto
-                    sobra: quem a marca atende, quanto ela cobra e o que fica no fim do mês, tudo
-                    num lugar só.
+                    Dar pra quem comanda a marca, com ajuda ou sem, a clareza de decidir bem e de
+                    saber quanto sobra: quem a marca atende, quanto ela cobra e o que fica no fim do
+                    mês, tudo num lugar só.
                   </p>
                 </div>
               </Reveal>
@@ -518,10 +518,11 @@ function SobrePage() {
             <Reveal className="max-w-[70ch]">
               <Eyebrow>Pra quem é</Eyebrow>
               <p className="mt-4 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
-                A Pólia é feita pra empreendedora que toca a própria marca sozinha e já saiu do
-                zero. Tem produto ou serviço rodando, cliente chegando, e agora quer
-                profissionalizar a operação em vez de tocar tudo no improviso. O gargalo não é ideia
-                de marca, é o dia a dia de fazer o negócio girar sem largar dinheiro pelo caminho.
+                A Pólia é feita pra empreendedora que toca a própria marca, sozinha ou com quem
+                ajuda, e já saiu do zero. Tem produto ou serviço rodando, cliente chegando, e agora
+                quer profissionalizar a operação em vez de tocar tudo no improviso. O gargalo não
+                mora na ideia de marca. Mora no dia a dia de fazer o negócio girar sem largar
+                dinheiro pelo caminho.
               </p>
             </Reveal>
 
