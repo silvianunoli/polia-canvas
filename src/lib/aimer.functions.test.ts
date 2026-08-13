@@ -102,9 +102,12 @@ describe("montarContextoProjete", () => {
       metaAlvo: 2000,
       metaAtual: 1000,
     });
-    expect(ctx).toContain("1000.00");
-    expect(ctx).toContain("600.00");
-    expect(ctx).toContain("2000.00");
+    // pt-BR: ponto de milhar, vírgula decimal. O formato americano ("1000.00")
+    // vazava para a tela porque o modelo repete o que recebe no prompt.
+    expect(ctx).toContain("R$ 1.000,00");
+    expect(ctx).toContain("R$ 600,00");
+    expect(ctx).toContain("R$ 2.000,00");
+    expect(ctx).not.toMatch(/\d\.\d{2}(\D|$)/);
   });
 });
 

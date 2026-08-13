@@ -454,8 +454,7 @@ function AjudaPage() {
                   Não achou o que precisava?
                 </h2>
                 <p className="mt-4 max-w-[54ch] text-[16px] leading-[1.65] text-[var(--secondary-ink)]">
-                  Escreve pra gente no formulário aqui embaixo. Quem responde é gente de verdade, do
-                  tamanho de uma pessoa só.
+                  Escreve no formulário aqui embaixo. Quem responde sou eu, a fundadora da Pólia.
                 </p>
                 <div className="mt-8">
                   <a href="#contato" className={BTN_CONTORNO}>
@@ -504,11 +503,10 @@ function AjudaPage() {
               <Reveal>
                 <Eyebrow>Contato</Eyebrow>
                 <h2 className="mt-4 max-w-[14ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Fala com a gente.
+                  Fala comigo.
                 </h2>
                 <p className="mt-6 max-w-[54ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  A Pólia é do tamanho de uma pessoa só, dos dois lados. Quem responde aqui é gente
-                  de verdade, não robô. Escreve que a gente lê.
+                  Escreve que eu leio e respondo, sem departamento no meio do caminho.
                 </p>
 
                 <hr className="my-8 border-t border-[var(--line)]" />
@@ -545,7 +543,7 @@ function AjudaPage() {
                         Tempo de resposta
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        A gente responde em até 24 horas, em dias úteis.
+                        Respondo em até 24 horas, em dias úteis.
                       </p>
                     </div>
                   </div>

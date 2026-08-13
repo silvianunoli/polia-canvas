@@ -5,7 +5,8 @@ import { Plus, MoreHorizontal, Check, ChevronDown, CalendarDays } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 
 function usePrefersReducedMotion() {
@@ -192,39 +193,30 @@ function MetasPage() {
   };
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav navActive="/metas" />
-
-      <div className="mx-auto max-w-[760px] px-6 py-12 md:px-10">
-        {/* ───────── Header ───────── */}
-        <header>
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-            Suas metas
+    <PaginaLogada
+      eyebrow="Suas metas"
+      titulo="Onde a marca quer chegar."
+      subtitulo={`Até ${LIMITE_ATIVAS} metas ativas por vez, pra o foco não se dividir.`}
+      acao={
+        <button
+          onClick={abrirCriar}
+          disabled={limiteAtingido}
+          title={
+            limiteAtingido ? "Conclua ou arquive uma meta antes de adicionar outra." : undefined
+          }
+          className={BTN_ACAO}
+        >
+          <Plus size={16} aria-hidden="true" /> Nova meta
+        </button>
+      }
+    >
+      <div>
+        {limiteAtingido && (
+          <p className="mb-4 text-[12px] text-[var(--muted)]">
+            Já tem {LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar
+            outra.
           </p>
-          <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
-            Onde a marca quer chegar.
-          </h1>
-        </header>
-
-        {/* ───────── + Nova meta ───────── */}
-        <div className="mt-7">
-          <button
-            onClick={abrirCriar}
-            disabled={limiteAtingido}
-            title={
-              limiteAtingido ? "Conclua ou arquive uma meta antes de adicionar outra." : undefined
-            }
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus size={16} aria-hidden="true" /> Nova meta
-          </button>
-          {limiteAtingido && (
-            <p className="mt-2 text-[12px] text-[var(--muted)]">
-              Já tem {LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar
-              outra.
-            </p>
-          )}
-        </div>
+        )}
 
         {erroAcao && <p className="mt-4 text-[13px] text-[var(--danger)]">{erroAcao}</p>}
 
@@ -348,7 +340,7 @@ function MetasPage() {
           Desfazer
         </button>
       </div>
-    </div>
+    </PaginaLogada>
   );
 }
 
@@ -698,9 +690,7 @@ function ModalMeta({
         className="max-h-[90vh] w-full max-w-[440px] overflow-y-auto rounded-2xl bg-white p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="mb-5 text-[24px] text-[var(--ink)]">
-          {edit ? "Editar meta" : "Nova meta"}
-        </h2>
+        <h2 className="mb-5 text-[24px] text-[var(--ink)]">{edit ? "Editar meta" : "Nova meta"}</h2>
 
         {/* Título */}
         <div className="mb-4">
@@ -771,9 +761,7 @@ function ModalMeta({
 
         {/* Atual */}
         <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            Valor atual, hoje
-          </label>
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor atual, hoje</label>
           <input
             type="number"
             inputMode="decimal"

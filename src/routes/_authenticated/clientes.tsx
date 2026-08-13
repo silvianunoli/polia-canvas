@@ -3,7 +3,8 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { gerarCsv, baixarCsv } from "@/lib/csv";
@@ -149,45 +150,33 @@ function ClientesPage() {
       formatarDataCurta(c.created_at),
       c.venda_registrada ? "sim" : "não",
     ]);
-    baixarCsv(`clientes-polia-${new Date().toISOString().slice(0, 10)}.csv`, gerarCsv(cabecalho, linhas));
+    baixarCsv(
+      `clientes-polia-${new Date().toISOString().slice(0, 10)}.csv`,
+      gerarCsv(cabecalho, linhas),
+    );
     track("clientes_exportados", { total: clientes.length });
   };
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={streak} navActive="/clientes" />
-
-      <div className="mx-auto max-w-[880px] px-6 py-12 md:px-10">
-        <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
-              SEUS CLIENTES
-            </p>
-            <h1 className="font-cabinet text-[clamp(28px,5vw,44px)] leading-tight text-[var(--ink)]">
-              Do primeiro contato ao sim.
-            </h1>
-            <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-              suas clientes e seus pedidos, num lugar só.
-            </p>
-          </div>
-          <div className="flex shrink-0 gap-2">
-            {clientes.length > 0 && (
-              <button
-                onClick={exportarCsv}
-                className="rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 font-sans text-[14px] text-[var(--ink)] transition-colors hover:border-[var(--secondary)]"
-              >
-                Exportar CSV
-              </button>
-            )}
-            <button
-              onClick={() => setModalAberto(true)}
-              className="rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
-            >
-              + Adicionar cliente
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Seus clientes"
+      titulo="Do primeiro contato ao sim."
+      subtitulo="Suas clientes e seus pedidos, num lugar só."
+      acao={
+        <div className="flex gap-2">
+          {clientes.length > 0 && (
+            <button onClick={exportarCsv} className={BTN_ACAO_CONTORNO}>
+              Exportar CSV
             </button>
-          </div>
-        </header>
-
+          )}
+          <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+            + Adicionar cliente
+          </button>
+        </div>
+      }
+    >
+      <div>
         {dadosQuery.isLoading ? (
           <p className="py-16 text-center font-fraunces italic text-[15px] text-[var(--muted)]">
             carregando…
@@ -223,7 +212,7 @@ function ClientesPage() {
           }}
         />
       )}
-    </div>
+    </PaginaLogada>
   );
 }
 
@@ -266,7 +255,9 @@ function LinhaCliente({
     setSalvandoStatus(true);
     const { error } = await (
       supabase.from("clientes" as never) as unknown as {
-        update: (p: Record<string, unknown>) => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+        update: (p: Record<string, unknown>) => {
+          eq: (c: string, v: string) => Promise<{ error: unknown }>;
+        };
       }
     )
       .update({ status_pedido: novo, updated_at: new Date().toISOString() })
@@ -364,7 +355,7 @@ function LinhaCliente({
             title="Alterar status do pedido"
             className={`font-sans text-[11px] px-3 py-1 rounded transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-50 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
           >
-            {salvandoStatus ? "Salvando…" : cliente.status_pedido ?? "Sem pedido"}
+            {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem pedido")}
           </button>
           {statusAberto && (
             <div
@@ -436,7 +427,11 @@ function LinhaCliente({
               disabled={registrando}
               className="rounded-md border border-[var(--secondary)] bg-[var(--secondary)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--secondary-ink)] disabled:opacity-50"
             >
-              {registrando ? "Registrando..." : duplicataData ? "Registrar mesmo assim" : "Registrar"}
+              {registrando
+                ? "Registrando..."
+                : duplicataData
+                  ? "Registrar mesmo assim"
+                  : "Registrar"}
             </button>
           </div>
         </div>

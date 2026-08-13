@@ -40,6 +40,16 @@ function fmtBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+/**
+ * Valor inicial de um campo editável, arredondado a 2 casas.
+ * `ticketMedio` e `custoMedio` são médias, e chegavam com a precisão binária
+ * inteira: o campo abria com "898.5714285714286". Os botões de cenário deste
+ * mesmo arquivo já arredondavam assim; faltava no valor de partida.
+ */
+function paraCampo(v: number): string {
+  return String(Math.round(v * 100) / 100);
+}
+
 function ProjecaoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
@@ -292,14 +302,14 @@ function ProjecaoPage() {
                   </strong>
                 </p>
                 <p className="text-[16px] text-[var(--ink)]">
-                  Pra se pagar (R$ {proLaboreDesejado.toFixed(0)} de pró-labore):{" "}
+                  Pra se pagar ({fmtBRL(proLaboreDesejado)} de pró-labore):{" "}
                   <strong>
                     {projecao!.sePagar.vendas} vendas ({fmtBRL(projecao!.sePagar.faturamento)})
                   </strong>
                 </p>
                 {projecao!.meta ? (
                   <p className="text-[16px] text-[var(--ink)]">
-                    Pra bater a meta (R$ {(metaAlvo ?? 0).toFixed(0)}):{" "}
+                    Pra bater a meta ({fmtBRL(metaAlvo ?? 0)}):{" "}
                     <strong>
                       {projecao!.meta.vendas} vendas ({fmtBRL(projecao!.meta.faturamento)})
                     </strong>
@@ -320,7 +330,7 @@ function ProjecaoPage() {
               <div className="mt-6 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-4">
                 <Campo
                   label="Custos fixos do mês (R$)"
-                  valor={custosFixosTxt ?? String(custosFixosBase)}
+                  valor={custosFixosTxt ?? paraCampo(custosFixosBase)}
                   onChange={(v) => {
                     setCustosFixosTxt(v);
                     validarCampo("custosFixos", v);
@@ -338,7 +348,7 @@ function ProjecaoPage() {
                 />
                 <Campo
                   label="Ticket médio (R$)"
-                  valor={ticketTxt ?? String(ticketBase)}
+                  valor={ticketTxt ?? paraCampo(ticketBase)}
                   onChange={(v) => {
                     setTicketTxt(v);
                     validarCampo("ticket", v);
@@ -347,7 +357,7 @@ function ProjecaoPage() {
                 />
                 <Campo
                   label="Custo médio (R$)"
-                  valor={custoTxt ?? String(custoBase)}
+                  valor={custoTxt ?? paraCampo(custoBase)}
                   onChange={(v) => {
                     setCustoTxt(v);
                     validarCampo("custo", v);

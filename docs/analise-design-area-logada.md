@@ -178,6 +178,56 @@ Coberto por `src/lib/planos.test.ts` (novo, 17 casos), incluindo o teste que rep
 
 ---
 
+---
+
+# Parte 2 — as telas com dado real (13/08/2026)
+
+A conta `oi.silvianunoli@gmail.com` foi populada com dois meses de uso diário (Social Media Best,
+gestão de redes). O que segue **só aparece com conteúdo dentro**, e por isso não estava na Parte 1.
+
+## Defeitos de dado (número mal formatado)
+
+| Tela | O que aparece | Causa |
+|---|---|---|
+| **Projeção** | Ticket médio `898.5714285714286` e custo médio `150.71428571428572`, com 13 casas decimais dentro do campo | média calculada e jogada no input sem arredondar |
+| **Projeção** | "Pra bater a meta (**R$ 8000**): 9 vendas (**R$ 8.000,00**)" — os dois formatos na mesma frase | um valor interpolado cru, o outro pelo formatador |
+| **Raio-x** | "R$ 8780.00 de entrada e R$ 2390.00 de saída" | `toFixed(2)` monta o prompt da IA, e a IA copia o formato americano |
+| **Financeiro** | rótulos da régua sobrepostos em 170px | **corrigido em `9fcb5ca9`** |
+
+O caso do Raio-x é o mais instrutivo: o número errado não vem de um componente, vem do **prompt**.
+`montarPromptRaioX` interpola `ctx.entradas.toFixed(2)`, e o modelo repete o que recebeu.
+
+## Vocabulário que escapa pela IA
+
+O texto gerado do Raio-x usou **"margem" três vezes** ("a margem dos serviços", "de maior margem",
+"ajustar a margem de 73 por cento") — palavra que a regra do projeto manda virar "quanto sobra" fora
+da calculadora. E escreveu **"91 por cento"** por extenso em vez de "91%".
+
+A causa é que `VOZ_SISTEMA` do Raio-x tem regras de tom (3ª pessoa, sem hype, sem travessão) mas
+**nenhuma regra de vocabulário nem de formato de número**. O dado que entra já usa "sobra"
+corretamente (`sobraPct`); é o modelo que troca a palavra sozinho.
+
+## Achados de layout que só o volume revelou
+
+| Tela | Achado |
+|---|---|
+| **Planner (quadro)** | A prioridade é comunicada **só por um ponto colorido**, sem rótulo nem texto. Cor como único portador de significado reprova em WCAG 1.4.1. A sexta coluna fica cortada na borda sem nenhuma pista de que há mais. |
+| **Caderno** | Título de nota **corta no meio da palavra sem reticências** ("Anotação da reunião com a Casa Fio"), enquanto o texto de prévia logo abaixo trunca com "…". Duas regras de corte no mesmo cartão. |
+| **Caderno** | O painel direito é a **maior área morta do app** (~700×520px) dizendo "Escolha uma nota à esquerda". Com notas existindo, podia abrir a fixada. |
+| **Metas** | "Já tem **3 metas ativas** aqui" com o botão desabilitado, enquanto a tela lista **5 cartões**. O limite conta só as metas manuais, a lista mostra todas. |
+| **Metas** | Meta sem valor alvo renderiza **"0 de 0" e 0%**. A coluna `progresso` existe na tabela e é ignorada: a barra vem sempre de `valor_atual / valor_alvo`. |
+| **Marca** | Oito seções num cartão único e muito longo, com os rótulos ("Propósito", "Missão") no mesmo peso do corpo. Sem hierarquia nem forma de pular pra uma seção. |
+| **Raio-x / Projeção** | Container de **640px**, mais duas larguras somando às oito da Parte 1. |
+| **Calendário** | A melhor das telas cheias: tarefa concluída riscada em fundo pêssego, pendente em branco com borda, "+2 mais" quando estoura. Continua sendo a única sem eyebrow. |
+
+## Ainda não vistas
+
+`/mercado` e `/aimer` (vistas só vazias), `/upgrade`, `/onboarding`, chamado aberto, módulo do
+Planejamento. `/planejamento/completo` redireciona para `/planejamento`. O Plano de conteúdo foi
+visto no estado "ainda não gerado" — gerar custaria uma chamada de IA na conta da fundadora.
+
+Celular continua sem teste.
+
 ## Ordem de ataque sugerida
 
 1. **Container e cabeçalho de página compartilhados** (Achados 1, 3 e 8). Uma peça resolve largura,

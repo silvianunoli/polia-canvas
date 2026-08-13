@@ -92,8 +92,9 @@ function BlogList() {
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
                 Sem hack de faturamento, sem promessa de seis dígitos. Textos diretos sobre o que
-                trava de verdade quando o time é uma pessoa só: a razão de existir, quem a marca
-                serve, o que vende, quanto vale, como te acharem e onde ela vai.
+                trava de verdade quando quem decide é a dona do negócio, sozinha ou com quem ajuda:
+                a razão de existir, quem a marca serve, o que vende, quanto vale, como te acharem e
+                onde ela vai.
               </p>
             </Reveal>
 

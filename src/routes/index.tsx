@@ -190,7 +190,9 @@ const fazSentido = [
 
 const aindaNao = [
   "A busca é por fórmula pronta de enriquecer rápido: isso a Pólia não promete",
-  "Já existe equipe e sistema de gestão rodando: a Pólia é do tamanho de uma pessoa só",
+  // Não é sobre tamanho de equipe: é sobre já ter um sistema de gestão maduro
+  // rodando, que segue sendo critério de exclusão válido (a Pólia não é ERP).
+  "A empresa já tem equipe de gestão e sistema robusto rodando",
   "O que se procura é uma agência pra fazer no lugar: a Pólia organiza, quem decide é a dona",
 ];
 

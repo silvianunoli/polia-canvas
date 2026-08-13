@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { moedaParaPrompt } from "@/lib/moeda";
 import {
   calcularQuantoSobra,
   calcularSobraPct,
@@ -86,6 +87,9 @@ Regras (obrigatórias):
 - Nunca travessão, nunca hype, nunca exclamação.
 - Sempre fala como sugestão, nunca promessa de resultado ("faça X e vai sobrar Y" é proibido).
 - NUNCA inventa número — use só os números reais dados abaixo. Se o dado for ralo, diga que é ralo.
+- Repita o número EXATAMENTE no formato recebido (R$ 8.780,00), com ponto de milhar e vírgula decimal. Nunca reescreva como 8780.00 nem arredonde.
+- Porcentagem em algarismo com o símbolo: "73%", nunca "73 por cento".
+- Diga "quanto sobra" ou "sobra", NUNCA "margem" — é a palavra da casa e a única que a Ana usa.
 - Sem conselho fiscal, jurídico ou de investimento.
 - Cada sugestão tem que ser concreta e acionável (apontar o que fazer), nunca abstrata.
 - Devolva SOMENTE o JSON pedido, no formato exato, sem comentário fora dele.`;
@@ -107,13 +111,13 @@ export function montarPromptRaioX(ctx: ContextoRaioX): {
 } {
   const partes: string[] = [
     `Mês analisado: ${ctx.mes}`,
-    `Entradas: R$ ${ctx.entradas.toFixed(2)}`,
-    `Saídas: R$ ${ctx.saidas.toFixed(2)}`,
-    `Resultado (quanto sobrou): R$ ${ctx.resultado.toFixed(2)}`,
+    `Entradas: ${moedaParaPrompt(ctx.entradas)}`,
+    `Saídas: ${moedaParaPrompt(ctx.saidas)}`,
+    `Resultado (quanto sobrou): ${moedaParaPrompt(ctx.resultado)}`,
   ];
   if (ctx.metaAlvo != null) {
     partes.push(
-      `Meta do mês: R$ ${ctx.metaAlvo.toFixed(2)} (atingido: R$ ${(ctx.metaAtual ?? 0).toFixed(2)})`,
+      `Meta do mês: ${moedaParaPrompt(ctx.metaAlvo)} (atingido: ${moedaParaPrompt(ctx.metaAtual ?? 0)})`,
     );
   }
   if (ctx.produtos.length > 0) {

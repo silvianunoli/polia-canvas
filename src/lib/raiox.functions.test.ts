@@ -73,9 +73,12 @@ describe("montarPromptRaioX", () => {
       produtos: [{ nome: "Bolo", sobraPct: 30 }],
       dadoRalo: false,
     });
-    expect(prompt).toContain("R$ 1000.00");
-    expect(prompt).toContain("R$ 600.00");
+    // pt-BR: ponto de milhar, vírgula decimal. O formato americano ("1000.00")
+    // vazava para a tela porque o modelo repete o que recebe no prompt.
+    expect(prompt).toContain("R$ 1.000,00");
+    expect(prompt).toContain("R$ 600,00");
     expect(prompt).toContain("Bolo (30%)");
+    expect(prompt).not.toMatch(/\d\.\d{2}(\D|$)/);
   });
 
   it("avisa quando o dado é ralo", () => {

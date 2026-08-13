@@ -8,13 +8,10 @@ import type { ReactNode } from "react";
 export const CONTAINER = "mx-auto w-full max-w-[1200px] px-[clamp(20px,4vw,48px)]";
 export const SECAO = "py-[clamp(72px,9vw,128px)]";
 
-const BTN =
-  "inline-flex items-center justify-center gap-2 rounded-xl px-[26px] py-[13px] text-[15px] font-semibold no-underline transition-transform";
-
-// Os dois botões carregam a mesma borda de tinta: o que muda entre eles é o
-// preenchimento, não o contorno.
-export const BTN_PRIMARIO = `${BTN} border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]`;
-export const BTN_CONTORNO = `${BTN} border-[1.5px] border-[var(--ink)] text-[var(--ink)] hover:-translate-y-px hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]`;
+// A forma do botão mora em `lib/botoes.ts`, compartilhada com a área logada —
+// era aqui que ela vivia, e por isso o app inteiro divergiu dela. Re-exportado
+// pra não quebrar quem já importa de Editorial.
+export { BTN_PRIMARIO, BTN_CONTORNO } from "@/lib/botoes";
 
 /** Rótulo de seção: traço turquesa curto + texto em caixa alta. */
 export function Eyebrow({ children, claro = false }: { children: ReactNode; claro?: boolean }) {
