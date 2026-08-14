@@ -57,8 +57,9 @@ describe("e-mail do diagnóstico", () => {
     const { html } = montar();
     expect(html).toContain("Cabinet Grotesk");
     expect(html).not.toContain("Georgia");
-    expect(html).toContain("#767676");
+    expect(html).toContain("#6B6B6B");
     expect(html).not.toContain("#9E9E9E");
+    expect(html).not.toContain("#767676");
   });
 
   it("põe a conta na caixa pêssego, igual à tela de resultado", () => {

@@ -94,8 +94,9 @@ export async function enviarEmailResend(params: {
 //   #E6E6E6  --line          borda do cartão
 //   #0A0A0A  --ink           título e texto do botão
 //   #2C2C2C  --ink-soft      corpo
-//   #767676  --muted         rodapé. NÃO usar #9E9E9E: reprova em AA e por
-//                            isso saiu do sistema.
+//   #6B6B6B  --muted         rodapé (fica sobre o --bg, fora do cartão).
+//                            NÃO usar #9E9E9E nem o antigo #767676: os dois
+//                            reprovam AA sobre #F2F0ED e saíram do sistema.
 //   #7CCBCD  --secondary     fundo do botão
 //   #F6DAD4  --surface-pink  caixa de destaque, a mesma da tela de resultado
 //
@@ -167,8 +168,8 @@ export function emailPolia({
 
   const linhaDescadastro = descadastroUrl
     ? `
-                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#767676;">
-                  <a href="${descadastroUrl}" style="color:#767676;text-decoration:underline;">Não quero mais receber</a>
+                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                  <a href="${descadastroUrl}" style="color:#6B6B6B;text-decoration:underline;">Não quero mais receber</a>
                 </p>`
     : "";
 
@@ -202,7 +203,7 @@ export function emailPolia({
             </tr>
             <tr>
               <td style="padding-top:24px;text-align:left;">
-                <p style="margin:0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#767676;">
+                <p style="margin:0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
                   Pólia · usepolia.com.br
                 </p>
                 ${linhaDescadastro}
