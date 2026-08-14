@@ -91,7 +91,7 @@ export const enviarConvite = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!convite) throw new Error("Esse e-mail não está na lista de convites.");
     if ((convite as unknown as ConviteRow).usado_em) {
-      throw new Error("Essa pessoa já criou a conta — não precisa reenviar.");
+      throw new Error("Essa pessoa já criou a conta, não precisa reenviar.");
     }
 
     const link = `${SITE_URL}/auth/cadastro?email=${encodeURIComponent(data.email)}`;

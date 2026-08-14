@@ -42,14 +42,14 @@ export const enviarContato = createServerFn({ method: "POST" })
     await enviarEmailResend({
       to: ["oi@usepolia.com.br"],
       replyTo: data.email,
-      subject: `[Contato] ${data.assunto} — ${data.nome}`,
-      text: `${data.mensagem}\n\n—\n${data.nome} <${data.email}>`,
+      subject: `[Contato] ${data.assunto} · ${data.nome}`,
+      text: `${data.mensagem}\n\n--\n${data.nome} <${data.email}>`,
       html: emailPolia({
-        preheader: escapeHtml(`${data.assunto} — ${data.nome}`),
+        preheader: escapeHtml(`${data.assunto} · ${data.nome}`),
         headline: escapeHtml(data.assunto),
         paragrafos: [
           escapeHtml(data.mensagem).replace(/\n/g, "<br />"),
-          `— ${escapeHtml(data.nome)} &lt;${escapeHtml(data.email)}&gt;`,
+          `${escapeHtml(data.nome)} &lt;${escapeHtml(data.email)}&gt;`,
         ],
       }),
       contexto: "[Contato]",

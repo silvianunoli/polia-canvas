@@ -71,13 +71,13 @@
   --line: #E6E6E6;
   --ink: #0A0A0A;
   --ink-soft: #2C2C2C;
-  --muted: #767676;            /* AA: ~4.5:1 sobre branco (era #9E9E9E, ~2.85:1) */
+  --muted: #6B6B6B;            /* AA sobre --bg #F2F0ED, o fundo real das telas */
   --accent: #F3B9A9;          /* pêssego — fundo/borda/gráfico, NUNCA texto */
   --accent-ink: #2C2C2C;
   --secondary: #7CCBCD;       /* turquesa — banner, bordas de ação (fundo) */
   --secondary-light: #BFE9EB;
   --secondary-ink: #0A0A0A;
-  --secondary-text: #2C7E80;  /* turquesa escuro p/ TEXTO de link/CTA (AA ok) */
+  --secondary-text: #24696B;  /* turquesa escuro p/ TEXTO de link/CTA (AA sobre --bg #F2F0ED) */
   --highlight: #FFC629;       /* amarelo — indicador pontual, um por tela */
   --highlight-ink: #0A0A0A;
   --danger: #C0392B;          /* vermelho-tijolo — texto/borda de ação destrutiva e erro (AA em fundo claro) */
@@ -133,7 +133,7 @@
   --secondary: #7CCBCD;
   --secondary-foreground: #0A0A0A;
   --muted: #F9EFEE;
-  --muted-foreground: #767676;
+  --muted-foreground: #6B6B6B;
   --accent: #F3B9A9;
   --accent-foreground: #2C2C2C;
   --destructive: #C0392B;

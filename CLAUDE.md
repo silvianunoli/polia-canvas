@@ -36,7 +36,7 @@ Toda tela deve passar os adjetivos-âncora: editorial, artesanal, acolhedora.
 - Indicativo em 3ª pessoa nas páginas públicas e na área logada: nunca "você" como sujeito da frase. Use imperativo sem pronome ("Confere o @.", "Altere sua senha") ou reestruture a frase. "seu/sua" possessivo e "você" como objeto de preposição não são o alvo da regra.
 
 ## Design tokens
-Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #2C7E80 pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo em `DESIGN.md` (reescrito pra v3 em 2026-07-23).
+Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #24696B pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo em `DESIGN.md` (reescrito pra v3 em 2026-07-23).
 
 ## Referências de qualidade (mire neste nível)
 Notion, Linear, Duolingo, Vercel, Framer — ver DESIGN.md §7. NÃO se inspire em dashboards genéricos de template.
