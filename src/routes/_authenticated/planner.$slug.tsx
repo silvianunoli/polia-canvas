@@ -96,6 +96,13 @@ const PRIORIDADES = [
 ];
 const corPrioridade = (v: string | null) =>
   PRIORIDADES.find((p) => p.v === v)?.cor ?? "var(--line)";
+/**
+ * A prioridade era comunicada SÓ pela cor do ponto — reprova em WCAG 1.4.1 e
+ * some pra quem não distingue vermelho de amarelo. O rótulo em texto acompanha
+ * o ponto no cartão, e entra também no aria-label (que antes dizia só "mudar
+ * prioridade", sem informar qual era a atual).
+ */
+const rotuloPrioridade = (v: string | null) => PRIORIDADES.find((p) => p.v === v)?.label ?? null;
 const proxPrioridade = (v: string | null) => {
   const i = PRIORIDADES.findIndex((p) => p.v === v);
   return PRIORIDADES[(i + 1) % PRIORIDADES.length].v;
@@ -892,15 +899,21 @@ function PlannerBoard() {
                                   e.stopPropagation();
                                   mudarPrioridade(c.id, proxPrioridade(c.prioridade));
                                 }}
-                                title="Mudar prioridade"
-                                aria-label="Mudar prioridade"
-                                className="flex items-center gap-1 rounded-full px-1.5 py-0.5"
+                                title={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Clique pra mudar.`}
+                                aria-label={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Mudar prioridade.`}
+                                className="flex items-center gap-1.5 rounded-full px-1.5 py-0.5 transition-colors hover:bg-[var(--surface)]"
                               >
                                 <span
-                                  className="h-2.5 w-2.5 rounded-full"
+                                  className="h-2.5 w-2.5 shrink-0 rounded-full"
                                   style={{ background: corPrioridade(c.prioridade) }}
                                   aria-hidden="true"
                                 />
+                                <span
+                                  aria-hidden="true"
+                                  className="text-[11px] leading-none text-[var(--muted)]"
+                                >
+                                  {rotuloPrioridade(c.prioridade) ?? "Prioridade"}
+                                </span>
                               </button>
 
                               <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
@@ -1226,9 +1239,7 @@ function PlannerBoard() {
           style={TOKEN_BRIDGE_V3}
         >
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-[var(--ink)]">
-              Concluir esta tarefa?
-            </AlertDialogTitle>
+            <AlertDialogTitle className="text-[var(--ink)]">Concluir esta tarefa?</AlertDialogTitle>
             <AlertDialogDescription className="text-[var(--ink-soft)]">
               {cardConfirmando ? `"${cardConfirmando.titulo}" vai pra coluna Pronto.` : ""}
             </AlertDialogDescription>

@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, FileText, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import {
@@ -274,7 +275,7 @@ function FinanceiroPage() {
     const lista: { chave: string; rotulo: string; detalhe: string; num: number }[] = [];
     for (const [campo, label] of [
       ["financeiro.meta_minima", "mínimo"],
-      ["financeiro.meta_celebracao", "comemorar"],
+      ["financeiro.meta_celebracao", "celebrar"],
     ] as const) {
       const texto = campoValor.get(campo);
       if (!texto) continue;
@@ -361,45 +362,45 @@ function FinanceiroPage() {
   // ── Loading ──
   if (dadosQuery.isLoading) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav initial={initial} streak={0} navActive="/financeiro" />
-      </div>
+      <PaginaLogada largura="larga" eyebrow="Este mês" titulo="O dinheiro do mês.">
+        <p className="text-[14px] text-[var(--muted)]">Carregando o mês…</p>
+      </PaginaLogada>
     );
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={0} navActive="/financeiro" />
-
-      <div className="mx-auto max-w-[1120px] px-6 py-12 md:px-10">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-            Este mês
-            {clientReady && mesAtual > 0
-              ? ` · ${new Date(anoAtual, mesAtual - 1, 1).toLocaleDateString("pt-BR", { month: "long" })}`
-              : ""}
-          </p>
-          {ehProjete ? (
-            <button
-              type="button"
-              onClick={() => setResumoContadorAberto(true)}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-            >
-              <FileText size={14} aria-hidden="true" />
-              Resumo pro contador
-            </button>
-          ) : (
-            <Link
-              to="/upgrade"
-              search={{ rota: "/financeiro", tier: "projete" }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--muted)] no-underline hover:bg-[var(--surface)]"
-            >
-              <Lock size={14} aria-hidden="true" />
-              Resumo pro contador
-            </Link>
-          )}
-        </div>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow={
+        clientReady && mesAtual > 0
+          ? `Este mês · ${new Date(anoAtual, mesAtual - 1, 1).toLocaleDateString("pt-BR", { month: "long" })}`
+          : "Este mês"
+      }
+      titulo="O dinheiro do mês."
+      subtitulo="Tudo o que entrou e saiu, e o que sobrou no fim."
+      acao={
+        ehProjete ? (
+          <button
+            type="button"
+            onClick={() => setResumoContadorAberto(true)}
+            className={BTN_ACAO_CONTORNO}
+          >
+            <FileText size={14} aria-hidden="true" />
+            Resumo pro contador
+          </button>
+        ) : (
+          <Link
+            to="/upgrade"
+            search={{ rota: "/financeiro", tier: "projete" }}
+            className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
+          >
+            <Lock size={14} aria-hidden="true" />
+            Resumo pro contador
+          </Link>
+        )
+      }
+    >
+      <div>
         {/* ───────── 1. Cards de resumo ───────── */}
         <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
@@ -489,7 +490,7 @@ function FinanceiroPage() {
 
           <p className="mt-0 text-[13px] text-[var(--muted)]">
             Essa barra acompanha a "Meta do mês", uma das suas metas em Metas. As marcas de mínimo e
-            comemorar vêm de Quanto vale, no seu Planejamento.
+            celebrar vêm de Quanto vale, no seu Planejamento.
           </p>
         </section>
 
@@ -664,7 +665,7 @@ function FinanceiroPage() {
           onIrParaFinanceiro={() => setResumoContadorAberto(false)}
         />
       )}
-    </div>
+    </PaginaLogada>
   );
 }
 

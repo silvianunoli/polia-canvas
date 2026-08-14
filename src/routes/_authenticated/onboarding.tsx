@@ -275,10 +275,7 @@ function ChoiceCard({
       <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
         {tag}
       </span>
-      <span
-        className="text-[var(--ink)]"
-        style={{ fontSize: 22, lineHeight: "28px" }}
-      >
+      <span className="text-[var(--ink)]" style={{ fontSize: 22, lineHeight: "28px" }}>
         {title}
       </span>
       <span className="text-[var(--ink-soft)]" style={{ fontSize: 12, lineHeight: "17px" }}>

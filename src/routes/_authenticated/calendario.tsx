@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -303,16 +304,13 @@ function CalendarioPage() {
   };
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <section className="mx-auto max-w-[1120px] px-6 py-8 md:px-10">
-        <h1 className="font-cabinet mb-1 text-[clamp(28px,5vw,36px)] leading-tight text-[var(--ink)]">
-          Calendário
-        </h1>
-        <p className="mb-6 text-[14px] text-[var(--ink-soft)]">
-          Suas tarefas do Planner{conectado ? " e os compromissos do seu Google Calendar" : ""}, num
-          só lugar.
-        </p>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Calendário"
+      titulo="O mês inteiro à vista."
+      subtitulo={`Suas tarefas do Planner${conectado ? " e os compromissos do seu Google Calendar" : ""}, num só lugar.`}
+    >
+      <div>
         {/* Navegação de mês */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -652,7 +650,7 @@ function CalendarioPage() {
             )}
           </SheetContent>
         </Sheet>
-      </section>
-    </div>
+      </div>
+    </PaginaLogada>
   );
 }

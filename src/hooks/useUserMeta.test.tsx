@@ -101,6 +101,10 @@ describe("useUserMeta", () => {
       streak: 0,
       avatarUrl: null,
       plano: "confere",
+      // O "confere" acima é chute enquanto o perfil não chega. Quem barra acesso
+      // precisa esperar `carregando` virar false, senão mostra o portão do
+      // Projete pra quem já paga o Projete.
+      carregando: true,
     });
 
     // drena a query pendente, senão ela resolve depois do fim do teste e vaza

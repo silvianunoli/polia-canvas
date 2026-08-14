@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
@@ -194,7 +195,6 @@ function ModuloPage() {
   if (desbloqueada) {
     return (
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav navActive="/planejamento" />
         <div className="mx-auto flex min-h-[70vh] max-w-[520px] flex-col items-center justify-center px-6 py-16 text-center">
           <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
             Módulo {n} concluído
@@ -234,17 +234,17 @@ function ModuloPage() {
   const total = secoes.length;
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav navActive="/planejamento" />
-
-      <div className="mx-auto max-w-[640px] px-6 py-10 md:px-10 md:py-14">
-        <a
-          href="/planejamento"
-          className="mb-6 inline-flex items-center gap-1.5 text-[0.875rem] text-[var(--muted)] hover:text-[var(--ink)]"
-        >
+    <PaginaLogada
+      eyebrow={`Módulo ${n}`}
+      titulo={modulo.nome}
+      subtitulo={modulo.subtitulo}
+      acao={
+        <a href="/planejamento" className={BTN_ACAO_CONTORNO}>
           <ArrowLeft size={15} aria-hidden="true" /> Planejamento
         </a>
-
+      }
+    >
+      <div>
         {/* Barra de progresso do módulo */}
         <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-[var(--line)]">
           <div
@@ -277,7 +277,7 @@ function ModuloPage() {
           />
         )}
       </div>
-    </div>
+    </PaginaLogada>
   );
 }
 

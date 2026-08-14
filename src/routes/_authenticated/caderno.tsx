@@ -4,7 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
@@ -291,33 +292,24 @@ function CadernoPage() {
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav navActive="/caderno" />
-
-      <main className="mx-auto max-w-[1100px] px-4 py-12 sm:px-6">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-              Caderno
-            </p>
-            <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
-              Suas anotações.
-            </h1>
-            <p className="mt-2 italic text-[var(--ink-soft)]">
-              Suas ideias, anotações e rascunhos · num lugar só.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => criar.mutate(undefined)}
-            disabled={criar.isPending || cotaAtingida}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">Nova nota</span>
-          </button>
-        </div>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Caderno"
+      titulo="Suas anotações."
+      subtitulo="Suas ideias, anotações e rascunhos num lugar só."
+      acao={
+        <button
+          type="button"
+          onClick={() => criar.mutate(undefined)}
+          disabled={criar.isPending || cotaAtingida}
+          className={BTN_ACAO}
+        >
+          <Plus size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">Nova nota</span>
+        </button>
+      }
+    >
+      <div>
         {cotaAtingida && (
           <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
             No Confere cabe 1 nota. Suba pro Controle pra deixar ilimitado.{" "}
@@ -537,7 +529,7 @@ function CadernoPage() {
             )}
           </section>
         </div>
-      </main>
+      </div>
 
       {/* Toast de exclusão com desfazer (rede de segurança de 6s) */}
       <div
@@ -556,7 +548,7 @@ function CadernoPage() {
           Desfazer
         </button>
       </div>
-    </div>
+    </PaginaLogada>
   );
 }
 

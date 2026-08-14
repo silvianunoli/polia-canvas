@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FileText, GitFork } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import {
   CAMPO_LABEL,
   MODULOS,
@@ -476,23 +476,49 @@ function PlanejamentoPage() {
   }));
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={streak} navActive="/planejamento" />
-
-      {/* Cabeçalho + toggle de vista */}
-      <div className="mx-auto max-w-[860px] px-6 pt-12 md:px-10 md:pt-16">
-        <header className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <PaginaLogada
+      // Larga nas duas vistas: o Mapa é diagrama, e o Documento é um bento de
+      // cartões, não prosa corrida. A medida do bloco de destaque acompanha o
+      // container (ver `max-w-[64ch]` em BlocoDestaque) — quando ela ficou
+      // travada em 46ch com o container em 1.120px, sobravam ~365px vazios à
+      // direita e o bloco parecia diagramação errada.
+      largura="larga"
+      eyebrow="Planejamento"
+      titulo={businessName || "A base do seu negócio."}
+      acao={
+        <div className="inline-flex shrink-0 rounded-lg border border-[var(--line)] bg-white p-[3px]">
+          {(["documento", "mapa"] as const).map((v) => {
+            const ativo = vista === v;
+            return (
+              <button
+                key={v}
+                type="button"
+                onClick={() => escolherVista(v)}
+                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] transition-colors duration-200 ${
+                  ativo
+                    ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                    : "text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+                }`}
+                style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
+              >
+                {v === "documento" ? (
+                  <FileText size={16} aria-hidden="true" />
+                ) : (
+                  <GitFork size={16} aria-hidden="true" />
+                )}
+                {v === "documento" ? "Documento" : "Mapa"}
+              </button>
+            );
+          })}
+        </div>
+      }
+    >
+      <div>
+        <div className="mb-8">
           <div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-              Planejamento
-            </p>
-            <h1 className="font-cabinet mt-1 text-[clamp(28px,6vw,48px)] leading-[1.1] text-[var(--ink)]">
-              {businessName || "A base do seu negócio."}
-            </h1>
-
             {/* Progresso global: a vista Mapa já mostrava, a Documento obrigava
                 a somar os chips com o olho. */}
-            <div className="mt-3 flex max-w-[280px] items-center gap-3">
+            <div className="flex max-w-[280px] items-center gap-3">
               <div
                 className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--line)]"
                 role="progressbar"
@@ -524,37 +550,9 @@ function PlanejamentoPage() {
               </button>
             )}
           </div>
+        </div>
 
-          <div className="inline-flex shrink-0 rounded-lg border border-[var(--line)] bg-white p-[3px]">
-            {(["documento", "mapa"] as const).map((v) => {
-              const ativo = vista === v;
-              return (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => escolherVista(v)}
-                  className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] transition-colors duration-200 ${
-                    ativo
-                      ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                      : "text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                  }`}
-                  style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
-                >
-                  {v === "documento" ? (
-                    <FileText size={16} aria-hidden="true" />
-                  ) : (
-                    <GitFork size={16} aria-hidden="true" />
-                  )}
-                  {v === "documento" ? "Documento" : "Mapa"}
-                </button>
-              );
-            })}
-          </div>
-        </header>
-      </div>
-
-      {vista === "mapa" ? (
-        <div className="mx-auto max-w-[1100px] px-6 pb-16 md:px-10">
+        {vista === "mapa" ? (
           <FadeIn key="mapa">
             <MapaMental
               nodes={nosMapa}
@@ -568,103 +566,103 @@ function PlanejamentoPage() {
               onAbrirModulo={irParaModulo}
             />
           </FadeIn>
-        </div>
-      ) : (
-        <FadeIn key="documento">
-          {/* Faixa horizontal dos 6 módulos (sticky) */}
-          <div className="sticky top-14 z-10 border-y border-[var(--line)] bg-[var(--bg)] md:top-0">
-            <div className="mx-auto max-w-[860px] px-6 py-3 md:px-10">
-              <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {MODULOS.map((m) => {
-                  const secoes = secoesDoModulo(m.n);
-                  const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
-                  const completo = moduloCompleto(m.n);
-                  const atual = m.n === moduloAtual;
-                  const emAndamento = atual && feitas > 0;
-                  const bloqueado = m.n > moduloAtual;
-                  const clicavel = completo || atual;
-                  const Icone = MODULO_ICONE[m.n];
-                  return (
-                    <button
-                      key={m.n}
-                      type="button"
-                      onClick={() => onClickChip(m.n)}
-                      disabled={!clicavel}
-                      title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
-                      aria-label={
-                        bloqueado
-                          ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
-                          : `Módulo ${m.n}: ${m.nome}`
-                      }
-                      className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
-                        clicavel
-                          ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
-                          : "cursor-not-allowed"
-                      } ${
-                        /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
+        ) : (
+          <FadeIn key="documento">
+            {/* Faixa dos 6 módulos. Fica sticky e sangra pras laterais com
+                margem negativa, pra borda e fundo cobrirem o container inteiro
+                enquanto o conteúdo passa por baixo. */}
+            <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
+              <div className="py-3">
+                <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {MODULOS.map((m) => {
+                    const secoes = secoesDoModulo(m.n);
+                    const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
+                    const completo = moduloCompleto(m.n);
+                    const atual = m.n === moduloAtual;
+                    const emAndamento = atual && feitas > 0;
+                    const bloqueado = m.n > moduloAtual;
+                    const clicavel = completo || atual;
+                    const Icone = MODULO_ICONE[m.n];
+                    return (
+                      <button
+                        key={m.n}
+                        type="button"
+                        onClick={() => onClickChip(m.n)}
+                        disabled={!clicavel}
+                        title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
+                        aria-label={
+                          bloqueado
+                            ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
+                            : `Módulo ${m.n}: ${m.nome}`
+                        }
+                        className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
+                          clicavel
+                            ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
+                            : "cursor-not-allowed"
+                        } ${
+                          /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
                            e overflow num eixo faz o outro virar auto também, o que
                            recortava o anel (ele é desenhado FORA da caixa) e deixava
                            só os cantos à mostra. Borda vive dentro da caixa. */
-                        m.n === activeMod
-                          ? "border border-[var(--secondary)]"
-                          : clicavel
-                            ? "border border-transparent hover:border-[var(--line)]"
-                            : "border border-transparent"
-                      }`}
-                      style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
-                    >
-                      {completo ? (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
-                          <Icone size={13} className="text-white" aria-hidden="true" />
-                        </span>
-                      ) : (
-                        <span
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
-                          style={{
-                            border: emAndamento
-                              ? "2px solid var(--secondary)"
-                              : "1px solid var(--line)",
-                          }}
-                        >
-                          <span
-                            className={`font-cabinet text-[12px] ${
-                              emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
-                            }`}
-                          >
-                            {m.n}
-                          </span>
-                        </span>
-                      )}
-                      <span
-                        className={`text-[0.8125rem] leading-tight ${
                           m.n === activeMod
-                            ? "font-semibold text-[var(--secondary-text)]"
-                            : completo || emAndamento
-                              ? "font-medium text-[var(--ink)]"
-                              : bloqueado
-                                ? "text-[var(--muted)]"
-                                : "text-[var(--ink-soft)]"
+                            ? "border border-[var(--secondary)]"
+                            : clicavel
+                              ? "border border-transparent hover:border-[var(--line)]"
+                              : "border border-transparent"
                         }`}
+                        style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
                       >
-                        {m.nome}
-                      </span>
-                      {/* Só o módulo em andamento mostra status. Concluído já se
+                        {completo ? (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
+                            <Icone size={13} className="text-white" aria-hidden="true" />
+                          </span>
+                        ) : (
+                          <span
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
+                            style={{
+                              border: emAndamento
+                                ? "2px solid var(--secondary)"
+                                : "1px solid var(--line)",
+                            }}
+                          >
+                            <span
+                              className={`font-cabinet text-[12px] ${
+                                emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
+                              }`}
+                            >
+                              {m.n}
+                            </span>
+                          </span>
+                        )}
+                        <span
+                          className={`text-[0.8125rem] leading-tight ${
+                            m.n === activeMod
+                              ? "font-semibold text-[var(--secondary-text)]"
+                              : completo || emAndamento
+                                ? "font-medium text-[var(--ink)]"
+                                : bloqueado
+                                  ? "text-[var(--muted)]"
+                                  : "text-[var(--ink-soft)]"
+                          }`}
+                        >
+                          {m.nome}
+                        </span>
+                        {/* Só o módulo em andamento mostra status. Concluído já se
                           distingue pelo ícone preenchido, e repetir "concluído"
                           em até 5 chips só engorda a faixa. */}
-                      {emAndamento ? (
-                        <span className="text-[11px] text-[var(--secondary-text)]">
-                          seção {feitas} de {secoes.length}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+                        {emAndamento ? (
+                          <span className="text-[11px] text-[var(--secondary-text)]">
+                            seção {feitas} de {secoes.length}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Outputs dos módulos */}
-          <div className="mx-auto max-w-[860px] px-6 pb-16 md:px-10">
+            {/* Outputs dos módulos */}
             <div className="mt-10 space-y-10">
               {/* Só o que já tem conteúdo e o módulo atual entram por extenso. Os
                   futuros iam por extenso também, e pra quem começa a tela virava
@@ -802,10 +800,10 @@ function PlanejamentoPage() {
                 </div>
               </div>
             )}
-          </div>
-        </FadeIn>
-      )}
-    </div>
+          </FadeIn>
+        )}
+      </div>
+    </PaginaLogada>
   );
 }
 
@@ -845,13 +843,16 @@ function BlocoView({
     const v = val(bloco.c);
     if (!v) return null;
     return (
-      /* A medida vai no parágrafo, em `ch`, porque ela precisa acompanhar os
-         26px do texto. Antes era `max-w-[30em]` no wrapper, que herda 16px:
-         dava ~480px e quebrava a frase a cada três palavras, deixando metade
-         da largura vazia. */
+      /* A medida vai no parágrafo, em `ch`, porque precisa acompanhar os 26px do
+         texto — `em` no wrapper herdaria 16px e daria ~480px, quebrando a frase
+         a cada três palavras.
+         64ch e não 46ch: com o container em 1.120px, 46ch parava em ~755px e
+         deixava ~365px vazios à direita, que lia como diagramação errada. 64ch
+         preenche a largura e ainda fica dentro da faixa legível de 45–75
+         caracteres por linha. */
       <div className="mb-8 border-l-[3px] border-[var(--secondary)] pl-6">
         <Rotulo campo={bloco.c} />
-        <p className="mt-1 max-w-[46ch] whitespace-pre-line text-[26px] leading-[1.35] text-[var(--ink)]">
+        <p className="mt-1 max-w-[64ch] whitespace-pre-line text-[26px] leading-[1.35] text-[var(--ink)]">
           {v}
         </p>
       </div>

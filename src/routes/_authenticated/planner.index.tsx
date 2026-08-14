@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO } from "@/lib/botoes";
 import { LayoutGrid, Plus, ArrowRight, Lock } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -154,33 +156,24 @@ function PlannerIndex() {
   });
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav navActive="/planner" />
-
-      <div className="mx-auto max-w-[900px] px-6 py-12 md:px-10">
-        <div className="flex items-start justify-between gap-4">
-          <header>
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-              Planner
-            </p>
-            <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
-              Planner
-            </h1>
-            <p className="mt-1 italic text-[var(--ink-soft)]">
-              organize os seus projetos como quiser, fora do planejamento.
-            </p>
-          </header>
-          <button
-            type="button"
-            onClick={() => setCriando((v) => !v)}
-            disabled={cotaAtingida}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            <Plus size={16} aria-hidden="true" />
-            <span className="hidden sm:inline">Novo quadro</span>
-          </button>
-        </div>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Planner"
+      titulo="Seus quadros de trabalho."
+      subtitulo="Organize os seus projetos como quiser, fora do planejamento."
+      acao={
+        <button
+          type="button"
+          onClick={() => setCriando((v) => !v)}
+          disabled={cotaAtingida}
+          className={BTN_ACAO}
+        >
+          <Plus size={16} aria-hidden="true" />
+          <span className="hidden sm:inline">Novo quadro</span>
+        </button>
+      }
+    >
+      <div>
         {cotaAtingida && (
           <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
             No Confere cabe 1 quadro. Suba pro Controle pra deixar ilimitado.{" "}
@@ -228,16 +221,16 @@ function PlannerIndex() {
             ))}
           </div>
         ) : quadros.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--secondary-light)] text-[var(--secondary-text)]">
-              <LayoutGrid size={24} aria-hidden="true" />
-            </div>
-            <p className="text-[20px] text-[var(--ink)]">Nenhum quadro ainda</p>
-            <p className="mx-auto mt-1.5 max-w-[400px] text-[14px] leading-relaxed text-[var(--muted)]">
-              Quadros são pra projetos que têm vida própria · um lançamento, um evento, uma
-              campanha.
-            </p>
-          </div>
+          <Vazio
+            icone={LayoutGrid}
+            titulo="Nenhum quadro ainda."
+            texto="Quadros são pra projetos que têm vida própria: um lançamento, um evento, uma campanha."
+            acao={
+              <button type="button" onClick={() => setCriando(true)} className={BTN_ACAO}>
+                Criar o primeiro quadro
+              </button>
+            }
+          />
         ) : (
           <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {quadros.map((q) => {
@@ -296,6 +289,6 @@ function PlannerIndex() {
           </div>
         )}
       </div>
-    </div>
+    </PaginaLogada>
   );
 }

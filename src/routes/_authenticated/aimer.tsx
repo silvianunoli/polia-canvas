@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Copy } from "lucide-react";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { perguntarAimer, MENSAGENS_CANONICAS } from "@/lib/aimer.functions";
 import { track } from "@/lib/analytics";
 
@@ -141,30 +142,20 @@ function AimerPage() {
   const ultimaPergunta = [...mensagens].reverse().find((m) => m.autor === "user")?.texto ?? "";
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav />
-
-      <div className="mx-auto flex min-h-[calc(100vh-0px)] max-w-[720px] flex-col px-6 py-12 md:px-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-              Aimer
-            </p>
-            <h1 className="font-cabinet mt-1 text-[clamp(24px,4vw,32px)] text-[var(--ink)]">
-              Converse com a Aimer
-            </h1>
-          </div>
-          {mensagens.length > 0 && (
-            <button
-              type="button"
-              onClick={novaConversa}
-              className="shrink-0 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-            >
-              Nova conversa
-            </button>
-          )}
-        </div>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Aimer"
+      titulo="Converse com a Aimer."
+      subtitulo="Dúvida de como usar a Pólia, ou do negócio. Ela não inventa número."
+      acao={
+        mensagens.length > 0 ? (
+          <button type="button" onClick={novaConversa} className={BTN_ACAO_CONTORNO}>
+            Nova conversa
+          </button>
+        ) : undefined
+      }
+    >
+      <div className="flex flex-col">
         {mensagens.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-[var(--line)] bg-white p-6">
             <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--secondary-light)]">
@@ -193,8 +184,10 @@ function AimerPage() {
                 key={msg.id}
                 className={`flex ${msg.autor === "user" ? "justify-end" : "justify-start"}`}
               >
+                {/* A caixa da conversa é larga, mas a bolha trava em 68ch: linha
+                    de 110 caracteres faz o olho perder onde estava ao voltar. */}
                 <div
-                  className={`max-w-[80%] rounded-2xl p-5 ${
+                  className={`max-w-[min(80%,68ch)] rounded-2xl p-5 ${
                     msg.autor === "user"
                       ? "bg-[var(--ink)] text-white"
                       : msg.erro
@@ -283,13 +276,13 @@ function AimerPage() {
               type="button"
               onClick={() => void enviar()}
               disabled={enviando || !pergunta.trim() || tetoAtingido}
-              className="rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+              className={BTN_ACAO}
             >
               {enviando ? "Enviando…" : "Enviar"}
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </PaginaLogada>
   );
 }

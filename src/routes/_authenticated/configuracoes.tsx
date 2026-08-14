@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Switch } from "@/components/ui/switch";
 import { dadosEmissorRecibo } from "@/lib/recibo.functions";
 import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
@@ -383,19 +383,13 @@ function ConfiguracoesPage() {
   const email = user?.email ?? "";
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)]">
-      <PainelNav initial={initial} streak={streak} />
-
-      <main className="mx-auto max-w-[880px] px-12 py-12">
-        <div className="mb-10">
-          <h1 className="font-cabinet text-[var(--ink)] text-[40px] leading-tight mb-2">
-            Configurações
-          </h1>
-          <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-            seu perfil e seu negócio, do jeito que fizer sentido pra você.
-          </p>
-        </div>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Conta"
+      titulo="Configurações."
+      subtitulo="Seu perfil, seu negócio, integrações e assinatura."
+    >
+      <div>
         {/* SEÇÃO 1 — PERFIL */}
         <Secao titulo="Seu perfil">
           <div className="space-y-5">
@@ -694,7 +688,7 @@ function ConfiguracoesPage() {
                   </span>
                   <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
                     {assinatura.cancelAtPeriodEnd
-                      ? `Cancelada — fica ativa até ${formatarData(assinatura.currentPeriodEnd)}.`
+                      ? `Cancelada. Fica ativa até ${formatarData(assinatura.currentPeriodEnd)}.`
                       : `Próxima cobrança em ${formatarData(assinatura.currentPeriodEnd)}.`}
                   </p>
                 </div>
@@ -857,8 +851,8 @@ function ConfiguracoesPage() {
             </div>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </PaginaLogada>
   );
 }
 

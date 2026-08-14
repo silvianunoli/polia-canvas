@@ -5,7 +5,8 @@ import { Sparkles, Lock, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
 import { temProjete } from "@/lib/planos";
@@ -129,44 +130,46 @@ function PlanoConteudoPage() {
     await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
   };
 
+  // Só barra depois de saber o plano de verdade — ver `carregando` em useUserMeta.
+  if (meta.carregando) {
+    return (
+      <PaginaLogada eyebrow="Plano de conteúdo" titulo="Uma ideia de post pra cada dia do ano.">
+        <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
+      </PaginaLogada>
+    );
+  }
+
   if (!ehProjete) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav />
-        <div className="mx-auto max-w-[520px] px-6 py-16 text-center">
-          <span className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
+      <PaginaLogada eyebrow="Plano de conteúdo" titulo="O plano de conteúdo do ano é do Projete">
+        <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
+          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
             <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
           </span>
-          <h1 className="font-cabinet text-[26px] text-[var(--ink)]">
-            O plano de conteúdo do ano é do Projete
-          </h1>
-          <p className="mt-2 text-[15px] text-[var(--ink-soft)]">
+          <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
             A Aimer monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e
             do seu público.
           </p>
           <Link
             to="/upgrade"
             search={{ rota: "/plano-conteudo", tier: "projete" }}
-            className="mt-6 inline-flex items-center justify-center rounded-xl bg-[var(--secondary)] px-4 py-3 font-medium text-[var(--secondary-ink)] no-underline"
+            className={`${BTN_ACAO} mt-6`}
           >
             Conhecer o Projete
           </Link>
         </div>
-      </div>
+      </PaginaLogada>
     );
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav />
-      <div className="mx-auto max-w-[720px] px-6 py-12 md:px-10">
-        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-          Plano de conteúdo
-        </p>
-        <h1 className="font-cabinet mt-1 text-[clamp(26px,4vw,34px)] text-[var(--ink)]">
-          Uma ideia de post pra cada dia do ano
-        </h1>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Plano de conteúdo"
+      titulo="Uma ideia de post pra cada dia do ano."
+      subtitulo="Montado a partir da sua marca, do seu público e do que você vende."
+    >
+      <div>
         {precisaLembrar && (
           <div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--secondary-light)] px-4 py-3">
             <p className="text-[14px] text-[var(--ink)]">
@@ -302,6 +305,6 @@ function PlanoConteudoPage() {
           </button>
         )}
       </div>
-    </div>
+    </PaginaLogada>
   );
 }

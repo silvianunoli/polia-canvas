@@ -3,7 +3,9 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { Users } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -182,11 +184,16 @@ function ClientesPage() {
             carregando…
           </p>
         ) : clientes.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[var(--line)] py-16 text-center">
-            <p className="font-fraunces italic text-[15px] text-[var(--muted)]">
-              adicione sua primeira cliente aqui.
-            </p>
-          </div>
+          <Vazio
+            icone={Users}
+            titulo="Nenhuma cliente cadastrada ainda."
+            texto="Cada cliente guarda o pedido, o valor e o status da entrega. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
+            acao={
+              <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+                Adicionar a primeira cliente
+              </button>
+            }
+          />
         ) : (
           <div>
             {clientes.map((cliente) => (

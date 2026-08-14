@@ -10,14 +10,48 @@ import type { ReactNode } from "react";
  * declarado o próprio `max-w` sem olhar as vizinhas, e o efeito era o conteúdo
  * saltando de lugar a cada troca de aba.
  *
- * São duas larguras, e só duas, escolhidas pelo tipo de conteúdo:
- * - `larga`   → telas de dado, que ganham com colunas (Painel, Financeiro,
- *               Clientes, Produtos, Calendário, Planner).
- * - `estreita`→ telas de leitura, formulário ou conversa, onde linha comprida
- *               atrapalha (Planejamento, Metas, Caderno, Marca, Aimer, Raio-x).
+ * São duas larguras, e só duas. O critério é este, e não "leitura vs. dado":
+ *
+ *   Tem cartão, grade, lista ou formulário?  → `larga`
+ *   É prosa corrida, do começo ao fim?       → `estreita`
+ *
+ * A primeira versão classificou por "leitura vs. dado" e errou seis telas
+ * (Metas, Planner, Chamados, Plano de conteúdo, Projeção, Configurações): são
+ * listas e formulários, e a 720px ficavam espremidos com metade da tela vazia
+ * ao lado — no Planner cabiam 2 quadros por linha em vez de 3, e no Plano de
+ * conteúdo o próprio h1 quebrava em duas linhas.
+ *
+ * `estreita` fica só onde a medida curta É a função: Marca, Mapa de Mercado,
+ * Raio-x (parágrafo gerado) e o módulo do Planejamento. Nessas, alargar aumenta
+ * a linha para 110+ caracteres e o olho perde onde estava.
+ *
+ * O Documento do Planejamento saiu dessa lista: parece prosa, mas é um bento de
+ * cartões com um bloco de destaque que já trava em 46ch no próprio parágrafo.
+ * Quando o texto tem trava própria, a largura do container não piora leitura.
+ *
+ * Caso misto: a Aimer usa `larga` na caixa e trava a bolha da conversa em 68ch
+ * por dentro — o container acompanha a tela, a linha continua legível.
  *
  * A ação principal fica SEMPRE no topo à direita, alinhada ao título. É o único
  * ponto que não se desloca quando a tela tem ou não subtítulo.
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * EXCEÇÕES DECLARADAS (decisão da fundadora, 13/08/2026). Não são esquecimento:
+ *
+ * - `/painel` — já está em 1.120px com o cabeçalho reescrito nesta mesma
+ *   auditoria (saudação, manchete que muda com o dado, botão da ação principal
+ *   e linha de contexto). Cabe no padrão sem usar o componente, e converter só
+ *   por simetria desfaria trabalho que já foi medido e verificado.
+ *
+ * - `/planner/$slug` (o quadro) — é full-bleed de 1.400px com rolagem
+ *   horizontal. Kanban precisa da largura toda; enfiar num container de 1.120px
+ *   cortaria coluna. A rolagem lateral é a natureza da tela, não um defeito.
+ *
+ * - `/onboarding` — fluxo de tela cheia, fora da barra lateral e do container.
+ *
+ * Qualquer OUTRA tela logada deve usar este componente. Se aparecer um
+ * `mx-auto max-w-[...]` novo numa rota, é regressão.
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 
 export type LarguraPagina = "larga" | "estreita";

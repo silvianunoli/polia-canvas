@@ -11,6 +11,13 @@ export interface UserMeta {
   streak: number;
   avatarUrl: string | null;
   plano: string;
+  /**
+   * `true` enquanto o perfil não chegou do banco. Existe porque `plano` cai no
+   * padrão "confere" durante o carregamento: sem esta flag, as telas do Projete
+   * (Raio-x, Projeção, Plano de conteúdo) mostravam o portão "isso é do Projete"
+   * por um instante PARA QUEM JÁ PAGA o Projete, em toda abertura.
+   */
+  carregando: boolean;
 }
 
 /**
@@ -95,6 +102,7 @@ export function useUserMeta() {
         streak,
         avatarUrl: null,
         plano: (profile?.plano as string | undefined) ?? "confere",
+        carregando: false,
       };
     },
   });
@@ -108,6 +116,9 @@ export function useUserMeta() {
       streak: 0,
       avatarUrl: null,
       plano: "confere",
+      // Enquanto não chegou o perfil, "confere" é um chute — quem consome
+      // precisa saber disso antes de barrar alguém.
+      carregando: true,
     }
   );
 }

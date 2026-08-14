@@ -5,7 +5,8 @@ import { Sparkles, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import {
   custosFixosDoMes,
@@ -195,28 +196,35 @@ function ProjecaoPage() {
     }
   };
 
+  // Só barra depois de saber o plano de verdade — ver `carregando` em useUserMeta.
+  if (meta.carregando) {
+    return (
+      <PaginaLogada eyebrow="Projeção" titulo="Quanto vender pra se pagar.">
+        <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
+      </PaginaLogada>
+    );
+  }
+
   if (!ehProjete) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav />
-        <div className="mx-auto max-w-[520px] px-6 py-16 text-center">
-          <span className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
+      <PaginaLogada eyebrow="Projeção" titulo="Projeção é do Projete">
+        <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
+          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
             <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
           </span>
-          <h1 className="font-cabinet text-[26px] text-[var(--ink)]">Projeção é do Projete</h1>
-          <p className="mt-2 text-[15px] text-[var(--ink-soft)]">
+          <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
             Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo
             a partir do que já está na Pólia.
           </p>
           <Link
             to="/upgrade"
             search={{ rota: "/projecao", tier: "projete" }}
-            className="mt-6 inline-flex items-center justify-center rounded-xl bg-[var(--secondary)] px-4 py-3 font-medium text-[var(--secondary-ink)] no-underline"
+            className={`${BTN_ACAO} mt-6`}
           >
             Conhecer o Projete
           </Link>
         </div>
-      </div>
+      </PaginaLogada>
     );
   }
 
@@ -225,16 +233,13 @@ function ProjecaoPage() {
     !dadosQuery.isLoading && !semProduto && custosFixosBase === 0 && custosFixosTxt == null;
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav />
-      <div className="mx-auto max-w-[640px] px-6 py-12 md:px-10">
-        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-          Projeção
-        </p>
-        <h1 className="font-cabinet mt-1 text-[clamp(26px,4vw,34px)] text-[var(--ink)]">
-          Quanto vender pra se pagar
-        </h1>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Projeção"
+      titulo="Quanto vender pra se pagar."
+      subtitulo="Quantas vendas faltam pra empatar, pra se pagar e pra bater a meta do mês."
+    >
+      <div>
         {dadosQuery.isLoading ? (
           <div className="mt-6 h-64 animate-pulse rounded-xl bg-[var(--surface)]" />
         ) : dadosQuery.isError ? (
@@ -411,7 +416,7 @@ function ProjecaoPage() {
           </>
         )}
       </div>
-    </div>
+    </PaginaLogada>
   );
 }
 

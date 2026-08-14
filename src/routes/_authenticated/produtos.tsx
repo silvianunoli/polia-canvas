@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, Lock, Plus, Trash2, Copy } from "lucide-react";
+import { MoreHorizontal, Lock, Plus, Trash2, Copy, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { COTAS_CONFERE, temProjete } from "@/lib/planos";
 import {
@@ -227,29 +229,22 @@ function ProdutosPage() {
 
   if (produtosQuery.isLoading) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav initial={initial} streak={0} navActive="/produtos" />
-      </div>
+      <PaginaLogada largura="larga" eyebrow="Produtos" titulo="Seus produtos e preços.">
+        <p className="text-[14px] text-[var(--muted)]">Carregando seus produtos…</p>
+      </PaginaLogada>
     );
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={0} navActive="/produtos" />
-
-      <div className="mx-auto max-w-[1120px] px-6 py-12 md:px-10">
-        {/* ───────── Header ───────── */}
-        <header>
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-            Produtos
-          </p>
-          <h1 className="font-cabinet mt-1 text-[clamp(28px,5vw,42px)] leading-[1.08] text-[var(--ink)]">
-            Seus produtos e preços.
-          </h1>
-        </header>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Produtos"
+      titulo="Seus produtos e preços."
+      subtitulo="O que você vende, quanto custa e quanto sobra em cada venda."
+    >
+      <div>
         {/* ───────── Tabs ───────── */}
-        <div className="mt-8 inline-flex gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]">
+        <div className="inline-flex gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]">
           {(
             [
               { id: "produtos", label: "Meus produtos" },
@@ -299,17 +294,18 @@ function ProdutosPage() {
             )}
 
             {produtos.length === 0 ? (
-              <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
-                <p className="mx-auto max-w-[420px] text-[14px] leading-relaxed text-[var(--muted)]">
-                  Nenhum produto ainda. Adicione um aqui, ou deixe o Módulo 3 do planejamento criar
-                  os primeiros com o que for listado lá.
-                </p>
-                <a
-                  href="/planejamento/modulo/3"
-                  className="mt-3 inline-block text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-                >
-                  Configurar pelo Planejamento →
-                </a>
+              <div className="mt-6">
+                <Vazio
+                  icone={Package}
+                  titulo="Nenhum produto ainda."
+                  texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
+                  acao={
+                    <a href="/planejamento/modulo/3" className={BTN_ACAO}>
+                      Configurar pelo Planejamento
+                      <span aria-hidden="true">→</span>
+                    </a>
+                  }
+                />
               </div>
             ) : (
               <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -365,7 +361,7 @@ function ProdutosPage() {
           }}
         />
       )}
-    </div>
+    </PaginaLogada>
   );
 }
 

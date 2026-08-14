@@ -7,6 +7,7 @@ import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
 import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { BTN_ACAO } from "@/lib/botoes";
 
 type TierId = TierPago;
 type CicloId = "mensal" | "anual";
@@ -191,11 +192,17 @@ function PlanoCard({
         realcado ? "border-[var(--secondary)] bg-white" : "border-[var(--line)] bg-white"
       }`}
     >
-      {realcado && (
-        <span className="mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
-          {destaque ? "Melhor valor" : "Escolhido"}
-        </span>
-      )}
+      {/* O selo existe só num dos cartões, e sem reservar a altura ele empurrava
+          título e preço 28px pra baixo: os dois planos ficavam desalinhados
+          justamente na linha que a pessoa compara. `invisible` guarda o espaço. */}
+      <span
+        aria-hidden={!realcado}
+        className={`mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)] ${
+          realcado ? "" : "invisible"
+        }`}
+      >
+        {destaque ? "Melhor valor" : "Escolhido"}
+      </span>
       <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
         {titulo}
       </p>
@@ -208,14 +215,20 @@ function PlanoCard({
           </li>
         ))}
       </ul>
-      <button
-        type="button"
-        onClick={onAssinar}
-        disabled={desabilitado}
-        className="mt-5 w-full rounded-xl bg-[var(--secondary)] px-4 py-3 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-      >
-        {carregando ? "Preparando..." : `Assinar o ${titulo}`}
-      </button>
+      {/* `mt-auto` no wrapper ancora o botão na base do cartão. Com `mt-5` ele
+          parava logo depois da lista, e como o Controle tem mais itens que o
+          Projete, os dois botões ficavam 99px desalinhados — na única tela do
+          app que cobra. */}
+      <div className="mt-auto pt-5">
+        <button
+          type="button"
+          onClick={onAssinar}
+          disabled={desabilitado}
+          className={`${BTN_ACAO} w-full`}
+        >
+          {carregando ? "Preparando..." : `Assinar o ${titulo}`}
+        </button>
+      </div>
     </div>
   );
 }

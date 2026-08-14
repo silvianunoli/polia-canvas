@@ -3,7 +3,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { MessagesSquare } from "lucide-react";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 
@@ -73,44 +76,41 @@ function ChamadosPage() {
   const streak = profile?.streak ?? 0;
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={streak} />
-
-      <div className="mx-auto max-w-[760px] px-6 py-12 md:px-10">
-        <header className="mb-8 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
-              SEUS CHAMADOS
-            </p>
-            <h1 className="font-cabinet text-[clamp(28px,5vw,42px)] leading-tight text-[var(--ink)]">
-              Fala com o suporte.
-            </h1>
-            <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-              pra dúvida rápida, o formulário de{" "}
-              <a href="/ajuda#contato" className="underline hover:no-underline">
-                ajuda
-              </a>{" "}
-              já resolve. chamado é pra acompanhar algo com ida e volta.
-            </p>
-          </div>
-          <button
-            onClick={() => setModalAberto(true)}
-            className="shrink-0 rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90"
-          >
-            + Abrir chamado
-          </button>
-        </header>
-
+    <PaginaLogada
+      largura="larga"
+      eyebrow="Seus chamados"
+      titulo="Fala com o suporte."
+      subtitulo={
+        <>
+          Pra dúvida rápida, o formulário de{" "}
+          <a href="/ajuda#contato" className="text-[var(--secondary-text)] hover:underline">
+            ajuda
+          </a>{" "}
+          já resolve. Chamado é pra acompanhar algo com ida e volta.
+        </>
+      }
+      acao={
+        <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+          + Abrir chamado
+        </button>
+      }
+    >
+      <div>
         {dadosQuery.isLoading ? (
           <p className="py-16 text-center font-fraunces italic text-[15px] text-[var(--muted)]">
             carregando…
           </p>
         ) : tickets.length === 0 ? (
-          <div className="rounded-2xl border-2 border-dashed border-[var(--line)] py-16 text-center">
-            <p className="font-fraunces italic text-[15px] text-[var(--muted)]">
-              nenhum chamado ainda.
-            </p>
-          </div>
+          <Vazio
+            icone={MessagesSquare}
+            titulo="Nenhum chamado ainda."
+            texto="Chamado é pra coisa que precisa de acompanhamento, com ida e volta registrada. Dúvida rápida se resolve na Ajuda."
+            acao={
+              <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+                Abrir o primeiro chamado
+              </button>
+            }
+          />
         ) : (
           <div>
             {tickets.map((t) => (
@@ -150,7 +150,7 @@ function ChamadosPage() {
           }}
         />
       )}
-    </div>
+    </PaginaLogada>
   );
 }
 
@@ -223,7 +223,9 @@ function ModalNovoChamado({
         </div>
 
         <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">O que está acontecendo</label>
+          <label className="mb-1 block text-[12px] text-[var(--muted)]">
+            O que está acontecendo
+          </label>
           <textarea
             value={corpo}
             onChange={(e) => setCorpo(e.target.value)}
@@ -241,7 +243,7 @@ function ModalNovoChamado({
             onChange={(e) => setUrgente(e.target.checked)}
             className="h-4 w-4 rounded border-[var(--line)]"
           />
-          É urgente — travou algo que preciso agora
+          É urgente: travou algo que preciso agora
         </label>
 
         {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}

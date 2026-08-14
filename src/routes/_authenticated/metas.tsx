@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Check, ChevronDown, CalendarDays } from "lucide-react";
+import { Plus, MoreHorizontal, Check, ChevronDown, CalendarDays, Target } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 
@@ -194,6 +195,7 @@ function MetasPage() {
 
   return (
     <PaginaLogada
+      largura="larga"
       eyebrow="Suas metas"
       titulo="Onde a marca quer chegar."
       subtitulo={`Até ${LIMITE_ATIVAS} metas ativas por vez, pra o foco não se dividir.`}
@@ -231,17 +233,17 @@ function MetasPage() {
               Não foi possível carregar suas metas. Recarregue a página.
             </p>
           ) : ativas.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
-              <p className="mx-auto max-w-[380px] text-[14px] leading-relaxed text-[var(--muted)]">
-                Nenhuma meta ainda. Defina até {LIMITE_ATIVAS} para manter o foco no que importa.
-              </p>
-              <a
-                href="/planejamento/modulo/6"
-                className="mt-3 inline-block text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-              >
-                Definir pelo Planejamento →
-              </a>
-            </div>
+            <Vazio
+              icone={Target}
+              titulo="Nenhuma meta ainda."
+              texto={`Defina até ${LIMITE_ATIVAS} para manter o foco no que importa.`}
+              acao={
+                <a href="/planejamento/modulo/6" className={BTN_ACAO}>
+                  Definir pelo Planejamento
+                  <span aria-hidden="true">→</span>
+                </a>
+              }
+            />
           ) : (
             <ul className="space-y-3">
               {ativas.map((m) => (

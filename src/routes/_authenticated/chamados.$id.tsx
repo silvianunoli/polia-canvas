@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
+import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 
@@ -95,49 +96,36 @@ function ChamadoDetalhe() {
 
   if (ticket === undefined) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav initial={initial} streak={streak} />
-      </div>
+      <PaginaLogada eyebrow="Chamado" titulo="Carregando…">
+        <p className="text-[14px] text-[var(--muted)]">Buscando esse chamado.</p>
+      </PaginaLogada>
     );
   }
 
   if (ticket === null) {
     return (
-      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav initial={initial} streak={streak} />
-        <div className="mx-auto max-w-[720px] px-6 py-12 md:px-10">
-          <p className="font-sans text-[15px] text-[var(--ink-soft)]">
-            Não achei esse chamado.{" "}
-            <Link to="/chamados" className="text-[var(--secondary-text)] hover:underline">
-              ← Voltar aos chamados
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
+      <PaginaLogada eyebrow="Chamados" titulo="Não achei esse chamado.">
+        <p className="text-[15px] text-[var(--ink-soft)]">
+          <Link to="/chamados" className="text-[var(--secondary-text)] hover:underline">
+            ← Voltar aos chamados
+          </Link>
+        </p>
+      </PaginaLogada>
     );
   }
 
   return (
-    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav initial={initial} streak={streak} />
-
-      <div className="mx-auto max-w-[720px] px-6 py-12 md:px-10">
-        <Link
-          to="/chamados"
-          className="mb-4 inline-block font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
-        >
+    <PaginaLogada
+      eyebrow="Chamado"
+      titulo={ticket.title}
+      subtitulo={`${ticket.status === "resolvido" ? "Resolvido" : "Em aberto"} · aberto em ${new Date(ticket.created_at).toLocaleDateString("pt-BR")}`}
+      acao={
+        <Link to="/chamados" className={BTN_ACAO_CONTORNO}>
           ← Seus chamados
         </Link>
-
-        <h1 className="font-cabinet text-[clamp(24px,4vw,32px)] text-[var(--ink)]">
-          {ticket.title}
-        </h1>
-        <p className="mt-1 font-sans text-[13px] text-[var(--muted)]">
-          {ticket.status === "resolvido" ? "Resolvido" : "Em aberto"} · aberto em{" "}
-          {new Date(ticket.created_at).toLocaleDateString("pt-BR")}
-        </p>
-
+      }
+    >
+      <div>
         <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-5">
           <p className="whitespace-pre-wrap font-sans text-[14px] text-[var(--ink)]">
             {ticket.body}
@@ -193,11 +181,11 @@ function ChamadoDetalhe() {
           </div>
           {ticket.status === "resolvido" && (
             <p className="mt-3 font-sans text-[12px] text-[var(--muted)]">
-              esse chamado já foi resolvido — escrever aqui reabre ele.
+              esse chamado já foi resolvido. Escrever aqui reabre ele.
             </p>
           )}
         </div>
       </div>
-    </div>
+    </PaginaLogada>
   );
 }
