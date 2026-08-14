@@ -170,6 +170,15 @@ function PlanoConteudoPage() {
       subtitulo="Montado a partir da sua marca, do seu público e do que você vende."
     >
       <div>
+        {/* Aviso de conteúdo gerado por IA, mesmo tratamento da Aimer: fixo
+            abaixo do cabeçalho, todos os estados (carregando, gerado, erro),
+            sem dispensar. Só não existe na tela de upgrade (return acima),
+            que não tem conteúdo de IA. --muted #6B6B6B sobre --bg #F2F0ED
+            dá 4,7:1, passa AA em 14px. */}
+        <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
+          O plano de conteúdo é gerado por inteligência artificial. São sugestões pra ajustar, não
+          um calendário fechado, e a IA pode errar. Vale ler antes de publicar.
+        </p>
         {precisaLembrar && (
           <div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--secondary-light)] px-4 py-3">
             <p className="text-[14px] text-[var(--ink)]">

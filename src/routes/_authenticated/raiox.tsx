@@ -162,6 +162,15 @@ function RaioXPage() {
       subtitulo="A Aimer lê os números do mês fechado e devolve o que puxou o resultado."
     >
       <div>
+        {/* Aviso de conteúdo gerado por IA, mesmo tratamento da Aimer: fixo
+            abaixo do cabeçalho, todos os estados (carregando, gerado, erro),
+            sem dispensar. Só não existe na tela de upgrade (return acima),
+            que não tem conteúdo de IA. --muted #6B6B6B sobre --bg #F2F0ED
+            dá 4,7:1, passa AA em 14px. */}
+        <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
+          O raio-x é gerado por inteligência artificial. Os números vêm dos dados registrados aqui;
+          a leitura é escrita pela IA e pode errar. Vale conferir antes de decidir.
+        </p>
         <select
           value={`${selecionado.mes}-${selecionado.ano}`}
           onChange={(e) => {

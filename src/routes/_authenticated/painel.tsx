@@ -649,23 +649,31 @@ function PainelPage() {
         <Reveal className="mt-6">
           <a
             href={destino("/financeiro", financeiroLiberado)}
+            aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
             className="group block rounded-xl border border-[var(--line)] bg-white p-6 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
           >
-            <div className="flex items-start justify-between gap-3">
-              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                Quanto sobrou · mês
-              </TituloCartao>
-              {!financeiroLiberado && <SeloControle />}
-            </div>
+            <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+              Quanto sobrou · mês
+            </TituloCartao>
             {/* Sem Financeiro não existe lançamento, então "R$ 0" seria uma
-                afirmação falsa (não é que não sobrou: é que não há o que somar). */}
-            <p
-              className={`font-cabinet mt-1 text-[40px] leading-none ${
-                financeiroLiberado && lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
-              }`}
-            >
-              {financeiroLiberado ? fmtBRL(lucroMes) : "—"}
-            </p>
+                afirmação falsa (não é que não sobrou: é que não há o que somar).
+                Trancado, o slot do valor mostra o mesmo tratamento de cadeado
+                da sidebar: é o momento de maior intenção do painel, não um
+                traço. */}
+            {financeiroLiberado ? (
+              <p
+                className={`font-cabinet mt-1 text-[40px] leading-none ${
+                  lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+                }`}
+              >
+                {fmtBRL(lucroMes)}
+              </p>
+            ) : (
+              <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
+                <Lock size={14} aria-hidden="true" />
+                no Controle
+              </p>
+            )}
             <p className="mt-2 text-[13px] text-[var(--muted)]">
               {!financeiroLiberado ? (
                 "entradas e saídas do mês fechadas num lugar só"
@@ -686,17 +694,22 @@ function PainelPage() {
           <Reveal className={SPAN_CLASS[4]}>
             <a
               href={destino("/financeiro", financeiroLiberado)}
+              aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
               className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
             >
-              <div className="flex items-start justify-between gap-3">
-                <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Receita · mês
-                </TituloCartao>
-                {!financeiroLiberado && <SeloControle />}
-              </div>
-              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                {financeiroLiberado ? fmtBRL(receitaMes) : "—"}
-              </p>
+              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Receita · mês
+              </TituloCartao>
+              {financeiroLiberado ? (
+                <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                  {fmtBRL(receitaMes)}
+                </p>
+              ) : (
+                <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
+                  <Lock size={14} aria-hidden="true" />
+                  no Controle
+                </p>
+              )}
               {financeiroLiberado && metaCelebracao > 0 && (
                 <div className="relative mx-0.5 mt-4 h-2 rounded-md border border-[var(--line)] bg-[var(--bg)]">
                   <div
@@ -736,17 +749,22 @@ function PainelPage() {
           <Reveal className={SPAN_CLASS[4]}>
             <a
               href={destino("/financeiro", financeiroLiberado)}
+              aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
               className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
             >
-              <div className="flex items-start justify-between gap-3">
-                <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Pedidos · mês
-                </TituloCartao>
-                {!financeiroLiberado && <SeloControle />}
-              </div>
-              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                {financeiroLiberado ? pedidosMes : "—"}
-              </p>
+              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Pedidos · mês
+              </TituloCartao>
+              {financeiroLiberado ? (
+                <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                  {pedidosMes}
+                </p>
+              ) : (
+                <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
+                  <Lock size={14} aria-hidden="true" />
+                  no Controle
+                </p>
+              )}
               <p className="mt-2 text-[13px] text-[var(--muted)]">
                 {!financeiroLiberado ? (
                   "quantas vendas o mês fechou"
