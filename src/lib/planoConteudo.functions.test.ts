@@ -98,7 +98,7 @@ describe("montarPromptMes", () => {
       contexto: CONTEXTO_BASE,
     });
     expect(prompt).toContain("28 dias");
-    expect(prompt).toContain("exatamente 28 itens");
+    expect(prompt).toContain("Exatamente 28 itens");
     expect(prompt).toContain(CONTEXTO_BASE.missao);
     expect(prompt).toContain(CONTEXTO_BASE.perfilCliente);
     expect(prompt).toContain(CONTEXTO_BASE.produtos);

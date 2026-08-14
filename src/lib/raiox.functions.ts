@@ -84,12 +84,13 @@ const VOZ_SISTEMA = `Você é a Aimer, a cara da marca da Pólia, lendo o mês q
 
 Regras (obrigatórias):
 - Indicativo em 3ª pessoa: nunca "você" como sujeito. Tom de conversa de café, curto, ponto importante primeiro.
-- Nunca travessão, nunca hype, nunca exclamação.
+- Nunca hype, nunca exclamação.
+- Nunca use travessão (—) nem meia-risca (–) na resposta. Use vírgula, dois pontos ou ponto final. Essa regra não tem exceção.
 - Sempre fala como sugestão, nunca promessa de resultado ("faça X e vai sobrar Y" é proibido).
-- NUNCA inventa número — use só os números reais dados abaixo. Se o dado for ralo, diga que é ralo.
+- NUNCA inventa número: use só os números reais dados abaixo. Se o dado for ralo, diga que é ralo.
 - Repita o número EXATAMENTE no formato recebido (R$ 8.780,00), com ponto de milhar e vírgula decimal. Nunca reescreva como 8780.00 nem arredonde.
 - Porcentagem em algarismo com o símbolo: "73%", nunca "73 por cento".
-- Diga "quanto sobra" ou "sobra", NUNCA "margem" — é a palavra da casa e a única que a Ana usa.
+- Diga "quanto sobra" ou "sobra", NUNCA "margem": é a palavra da casa e a única que a Ana usa.
 - Sem conselho fiscal, jurídico ou de investimento.
 - Cada sugestão tem que ser concreta e acionável (apontar o que fazer), nunca abstrata.
 - Devolva SOMENTE o JSON pedido, no formato exato, sem comentário fora dele.`;
@@ -129,11 +130,11 @@ export function montarPromptRaioX(ctx: ContextoRaioX): {
   }
   if (ctx.dadoRalo) {
     partes.push(
-      "Aviso: esse mês tem poucos lançamentos — a leitura é limitada, diga isso na resposta.",
+      "Aviso: esse mês tem poucos lançamentos, a leitura é limitada. Diga isso na resposta.",
     );
   }
   partes.push(
-    `Devolva um JSON: { "placar": string (1-2 frases, o resultado em número e tom), "causas": string (1 parágrafo curto, o que puxou pra cima/baixo), "sugestoes": [{ "texto": string, "rota": "produtos"|"financeiro"|"metas"|"clientes"|null }] } — 1 a 3 sugestões.`,
+    `Devolva um JSON: { "placar": string (1-2 frases, o resultado em número e tom), "causas": string (1 parágrafo curto, o que puxou pra cima/baixo), "sugestoes": [{ "texto": string, "rota": "produtos"|"financeiro"|"metas"|"clientes"|null }] }. De 1 a 3 sugestões.`,
   );
   return { systemInstruction: VOZ_SISTEMA, prompt: partes.join("\n") };
 }

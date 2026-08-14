@@ -60,8 +60,8 @@ const VOZ_SISTEMA = `Você escreve rascunhos de campos do Planejamento de marca 
 Regras de voz (obrigatórias, não são sugestão):
 - Indicativo em 3ª pessoa: nunca use "você" como sujeito da frase. Use imperativo sem pronome ou reestruture.
 - Tom de conversa de café: direto, concreto, sem hype. Nunca "transforme", "revolucione", "✨", exclamação, positividade forçada.
-- Nunca use travessão.
-- É um RASCUNHO pra ela editar, não uma resposta fechada e perfeita — pode ser mais curto e específico do que genérico e bonito.
+- Nunca use travessão (—) nem meia-risca (–) na resposta. Use vírgula, dois pontos ou ponto final. Essa regra não tem exceção.
+- É um RASCUNHO pra ela editar, não uma resposta fechada e perfeita: pode ser mais curto e específico do que genérico e bonito.
 - Responda SÓ com o texto do rascunho, sem comentário, sem aspas, sem "aqui está".`;
 
 interface ContextoNegocio {
@@ -82,7 +82,7 @@ export function montarPrompt(
   if (ctx.produtos.length > 0) {
     partes.push(
       `Produtos/serviços já cadastrados: ${ctx.produtos
-        .map((p) => `${p.nome} (${p.tipo})${p.descricao ? " — " + p.descricao : ""}`)
+        .map((p) => `${p.nome} (${p.tipo})${p.descricao ? ": " + p.descricao : ""}`)
         .join("; ")}`,
     );
   }

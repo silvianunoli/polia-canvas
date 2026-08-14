@@ -1,5 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
+import { sanitizarTextoIA } from "@/lib/sanitizarTextoIA";
+
 // Client Gemini lazy, mesmo padrão de stripeClient() (src/lib/stripe.functions.ts):
 // só instancia na primeira chamada, erro claro se faltar o secret, nunca no client.
 let _client: GoogleGenAI | undefined;
@@ -56,7 +58,10 @@ async function chamarUmaVez({
     },
   });
   return {
-    texto: resposta.text ?? "",
+    // Todo texto de IA passa pelo sanitizador AQUI, no único caminho de volta
+    // do Gemini: nenhuma superfície (Aimer, raio-x, plano de conteúdo,
+    // Planejamento) recebe travessão, nem pra persistir nem pra exibir.
+    texto: sanitizarTextoIA(resposta.text ?? ""),
     tokensIn: resposta.usageMetadata?.promptTokenCount ?? null,
     tokensOut: resposta.usageMetadata?.candidatesTokenCount ?? null,
   };
