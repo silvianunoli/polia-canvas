@@ -104,7 +104,7 @@ const CATEGORIAS = [
       {
         pergunta: "Organizar as tarefas da semana",
         resposta:
-          "Arraste os cartões entre as colunas conforme o andamento. O quadro fica só seu, sem prazo travado nem cobrança se uma tarefa demorar mais que o previsto.",
+          "Arraste os cartões entre as colunas conforme o andamento. Quando o prazo de um cartão muda, o painel já puxa dali o que vence hoje.",
       },
       {
         pergunta: "Ligar uma tarefa à meta do mês",
@@ -558,7 +558,7 @@ function AjudaPage() {
                         Dúvida rápida?
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        Talvez já esteja respondida ali em cima, nas perguntas por assunto.
+                        Começa pelas perguntas por assunto, ali em cima.
                       </p>
                     </div>
                   </div>

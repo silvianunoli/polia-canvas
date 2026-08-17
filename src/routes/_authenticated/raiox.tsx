@@ -108,11 +108,11 @@ function RaioXPage() {
       } else {
         setMotivo(resultado.motivo);
         if (resultado.motivo === "falha_ia") {
-          setErro("Não consegui ler o seu mês agora. Tenta de novo.");
+          setErro("Não conseguimos ler o seu mês agora. Tenta de novo.");
         }
       }
     } catch {
-      setErro("Não consegui ler o seu mês agora. Tenta de novo.");
+      setErro("Não conseguimos ler o seu mês agora. Tenta de novo.");
     } finally {
       setGerando(false);
     }
@@ -263,7 +263,8 @@ function RaioXPage() {
         ) : motivo === "teto_atingido" ? (
           <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
             <p className="text-[14px] text-[var(--ink-soft)]">
-              Você já usou as suas gerações de raio-x desse mês.
+              As gerações de raio-x deste mês acabaram. Dá pra reler os raio-x que já saíram
+              escolhendo outro mês.
             </p>
           </div>
         ) : (

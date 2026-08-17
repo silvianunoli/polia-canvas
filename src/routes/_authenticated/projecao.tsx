@@ -245,7 +245,7 @@ function ProjecaoPage() {
         ) : dadosQuery.isError ? (
           <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
             <p className="text-[14px] text-[var(--ink-soft)]">
-              Não consegui puxar os seus números agora. Tenta de novo.
+              Não conseguimos puxar os seus números agora. Tenta de novo.
             </p>
             <button
               type="button"
@@ -306,12 +306,21 @@ function ProjecaoPage() {
                     {projecao!.empatar.vendas} vendas ({fmtBRL(projecao!.empatar.faturamento)})
                   </strong>
                 </p>
-                <p className="text-[16px] text-[var(--ink)]">
-                  Pra se pagar ({fmtBRL(proLaboreDesejado)} de pró-labore):{" "}
-                  <strong>
-                    {projecao!.sePagar.vendas} vendas ({fmtBRL(projecao!.sePagar.faturamento)})
-                  </strong>
-                </p>
+                {/* Sem pró-labore preenchido a linha repetiria a de empatar: em vez do
+                    número, a tela pede o dado que falta. */}
+                {proLaboreDesejado > 0 ? (
+                  <p className="text-[16px] text-[var(--ink)]">
+                    Pra se pagar ({fmtBRL(proLaboreDesejado)} de pró-labore):{" "}
+                    <strong>
+                      {projecao!.sePagar.vendas} vendas ({fmtBRL(projecao!.sePagar.faturamento)})
+                    </strong>
+                  </p>
+                ) : (
+                  <p className="text-[16px] text-[var(--ink)]">
+                    Pra se pagar: falta dizer quanto você quer tirar por mês. Preenche o pró-labore
+                    aqui embaixo que a conta aparece.
+                  </p>
+                )}
                 {projecao!.meta ? (
                   <p className="text-[16px] text-[var(--ink)]">
                     Pra bater a meta ({fmtBRL(metaAlvo ?? 0)}):{" "}

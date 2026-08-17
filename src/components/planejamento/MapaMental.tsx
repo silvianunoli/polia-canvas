@@ -145,7 +145,7 @@ export function MapaMental({
       </div>
 
       <p className="mt-8 text-center text-[13px] text-[var(--muted)]">
-        Clique num módulo para abrir a seção no documento.
+        Módulo concluído abre no documento. Em aberto, abre pra responder.
       </p>
     </div>
   );
@@ -185,9 +185,7 @@ function NoCard({
         >
           <Icone size={16} className="text-[var(--ink)]" aria-hidden="true" />
         </span>
-        <span className="text-[16px] leading-tight text-[var(--ink)]">
-          {node.nome}
-        </span>
+        <span className="text-[16px] leading-tight text-[var(--ink)]">{node.nome}</span>
       </div>
 
       {node.concluido && node.snippet ? (

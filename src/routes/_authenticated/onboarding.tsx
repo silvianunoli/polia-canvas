@@ -178,8 +178,8 @@ function Step1({ onNext }: { onNext: () => void }) {
         <Body>Vou te guiar do primeiro passo até sua primeira ferramenta pronta.</Body>
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
-      <PrimaryCTA onClick={onNext}>Começar →</PrimaryCTA>
-      <p className="text-center text-[14px] text-[var(--muted)]">Leva 3 minutinhos.</p>
+      <PrimaryCTA onClick={onNext}>Contar do meu negócio →</PrimaryCTA>
+      <p className="text-center text-[14px] text-[var(--muted)]">Leva 3 minutos.</p>
     </div>
   );
 }
@@ -224,7 +224,7 @@ function Step2({
   return (
     <div className="flex flex-col items-center gap-7 pt-12">
       <LogoPlaceholder />
-      <Caveat>Um pouquinho sobre o que essa marca faz.</Caveat>
+      <Caveat>Um pouco sobre o que essa marca faz.</Caveat>
       <Headline size={64}>Como é o que essa marca vende?</Headline>
       <Body>Isso ajusta as próximas perguntas pro seu tipo de negócio.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
@@ -693,7 +693,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
         <LogoPlaceholder />
         <Caveat>Primeiro número no lugar.</Caveat>
         <Headline size={56}>Sobram {fmt(sobrou)} por venda.</Headline>
-        <Body>Isso já é mais do que a maioria sabe sobre o próprio negócio.</Body>
+        <Body>Esse é o número que decide se o preço se paga.</Body>
         <PrimaryCTA onClick={onSuccess}>Continuar →</PrimaryCTA>
       </div>
     );

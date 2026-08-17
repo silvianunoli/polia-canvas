@@ -728,14 +728,14 @@ function PlanejamentoPage() {
                           <p className="text-[0.9rem] text-[var(--ink-soft)]">
                             {proximo
                               ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
-                              : "Este módulo ainda está em branco."}
+                              : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
                           </p>
                           {proximo && (
                             <a
                               href={`/planejamento/modulo/${m.n}`}
                               className={`${BOTAO_PRIMARIO} mt-3`}
                             >
-                              Começar agora
+                              Começar o Módulo {m.n}
                               <span aria-hidden="true">→</span>
                             </a>
                           )}
@@ -788,9 +788,9 @@ function PlanejamentoPage() {
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-2">
                   {[
-                    { rota: "/produtos", nome: "Catálogo" },
-                    { rota: "/financeiro", nome: "Financeiro" },
-                    { rota: "/metas", nome: "Metas" },
+                    { rota: "/produtos", nome: "Abrir o Catálogo" },
+                    { rota: "/financeiro", nome: "Abrir o Financeiro" },
+                    { rota: "/metas", nome: "Abrir as Metas" },
                   ].map((f) => (
                     <a key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
                       {f.nome}
@@ -1004,7 +1004,7 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
         />
       </div>
       <p className="mt-1.5 text-[12px] text-[var(--muted)]">
-        custo R$ {custo.toLocaleString("pt-BR")} · margem {margem}%
+        custo R$ {custo.toLocaleString("pt-BR")} · sobram {margem}%
       </p>
     </div>
   );

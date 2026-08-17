@@ -75,14 +75,16 @@ function AssinarPage() {
       const resultado = await iniciarAssinatura({ data: { plano } });
       if (resultado.error || !resultado.clientSecret) {
         track("assinatura_falhou", { plano, motivo: resultado.error ?? "sem_client_secret" });
-        toastErro(resultado.error ?? "Não consegui iniciar sua assinatura agora. Tenta de novo.");
+        toastErro(
+          resultado.error ?? "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+        );
         return;
       }
       track("assinatura_iniciada", { plano });
       setClientSecret(resultado.clientSecret);
     } catch {
       track("assinatura_falhou", { plano, motivo: "excecao_client" });
-      toastErro("Não consegui iniciar sua assinatura agora. Tenta de novo.");
+      toastErro("Não conseguimos iniciar sua assinatura agora. Tenta de novo.");
     } finally {
       setPlanoIniciando(null);
     }
@@ -98,7 +100,8 @@ function AssinarPage() {
           Escolha seu plano
         </h1>
         <p className="mb-8 text-center font-fraunces italic text-[16px] text-[var(--ink-soft)]">
-          seu negócio já está montado. assine pra abrir o resto do app.
+          o seu negócio já está montado. escolhe o plano que o app abre inteiro assim que o
+          pagamento entra.
         </p>
 
         {/* Ciclo mensal/anual */}

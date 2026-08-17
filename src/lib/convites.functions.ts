@@ -102,14 +102,16 @@ export const enviarConvite = createServerFn({ method: "POST" })
       html: emailPolia({
         preheader: "Seu acesso à Pólia está liberado.",
         headline: "Você foi convidada pra Pólia",
-        paragrafos: ["Alguém liberou seu acesso à Pólia, sem custo. É só aceitar o convite e criar sua conta."],
+        paragrafos: [
+          "Alguém liberou seu acesso à Pólia, sem custo. É só aceitar o convite e criar sua conta.",
+        ],
         ctaLabel: "Aceitar convite",
         ctaUrl: link,
       }),
       contexto: "[Convites]",
     });
     if (!enviado) {
-      throw new Error("Não consegui enviar o convite agora. Tenta de novo.");
+      throw new Error("Não conseguimos enviar o convite agora. Tenta de novo.");
     }
 
     const { error } = await supabaseAdmin

@@ -190,7 +190,7 @@ export function Sidebar() {
               );
               const tooltipLabel = liberado
                 ? item.label
-                : `${item.label} — desbloqueie com o ${TIERS_PAGOS[tierNecessario].titulo}`;
+                : `${item.label}: abre no ${TIERS_PAGOS[tierNecessario].titulo}`;
               return compact ? (
                 <Tooltip key={item.to}>
                   <TooltipTrigger asChild>{content}</TooltipTrigger>

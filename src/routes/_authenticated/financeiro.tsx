@@ -341,7 +341,7 @@ function FinanceiroPage() {
     if (!window.confirm("Excluir este lançamento? Essa ação não pode ser desfeita.")) return;
     const { error } = await supabase.from("lancamentos").delete().eq("id", l.id);
     if (error) {
-      toastErro("Não consegui excluir o lançamento. Tenta de novo.");
+      toastErro("Não conseguimos excluir o lançamento. Tenta de novo.");
       return;
     }
     track("lancamento_excluido", { tipo: l.tipo });
@@ -427,7 +427,7 @@ function FinanceiroPage() {
 
           <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Lucro líquido
+              Sobrou no mês
             </p>
             <p
               className={`font-cabinet mt-1 text-[32px] leading-none ${
@@ -483,7 +483,7 @@ function FinanceiroPage() {
                 className="absolute top-[22px] -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)]"
                 style={{ left: `${Math.min(96, metaPct)}%` }}
               >
-                {fmt(Math.round(entradas))} agora
+                {fmt(Math.round(entradas))} entraram até aqui
               </span>
             </div>
           )}
@@ -602,7 +602,7 @@ function FinanceiroPage() {
               </p>
             ) : lancamentosFiltrados.length === 0 ? (
               <p className="py-12 text-center text-[14px] text-[var(--muted)]">
-                Nenhum lançamento nesse período.
+                Nenhum lançamento nesse período. Troca o filtro ou registra uma entrada.
               </p>
             ) : (
               lancamentosFiltrados.map((l) => (
@@ -858,7 +858,9 @@ function ModalLancamento({
         : await supabase.from("lancamentos").insert({ user_id: userId, ...payload });
     setSalvando(false);
     if (error) {
-      setErro(error.message || "Erro ao salvar.");
+      // O erro do banco vem em inglês técnico: fica no log, não na tela.
+      console.error("lancamento_salvar", error);
+      setErro("Não conseguimos salvar o lançamento agora. Tenta de novo.");
       return;
     }
     track(edit ? "lancamento_editado" : "lancamento_criado", { tipo });
@@ -1075,7 +1077,9 @@ function ModalRegistrarVendaProduto({
     });
     setSalvando(false);
     if (error) {
-      setErro(error.message || "Erro ao salvar.");
+      // Mesmo motivo do modal de lançamento: técnico no log, casa na tela.
+      console.error("venda_produto_registrar", error);
+      setErro("Não conseguimos registrar a venda agora. Tenta de novo.");
       return;
     }
     track("venda_produto_registrada", { produto_id: produto.id });

@@ -6,7 +6,10 @@ interface BlockErrorProps {
 }
 
 /** Cartão discreto pra quando só um bloco/lista falhou — o resto da tela continua útil. */
-export function BlockError({ message = "Não deu pra carregar isto.", onRetry }: BlockErrorProps) {
+export function BlockError({
+  message = "Não conseguimos carregar essa parte. O resto da tela continua funcionando.",
+  onRetry,
+}: BlockErrorProps) {
   return (
     <div className="rounded-xl border border-[var(--line)] bg-white p-6 text-center">
       <p className="text-[14px] text-[var(--ink-soft)]">{message}</p>

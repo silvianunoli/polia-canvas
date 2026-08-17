@@ -3,7 +3,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
-import { CosmicInput, useCapsLockWarning, CapsLockHint } from "@/components/cosmic/CosmicInput";
+import {
+  CosmicInput,
+  useCapsLockWarning,
+  CapsLockHint,
+  senhaCumpreRequisitos,
+} from "@/components/cosmic/CosmicInput";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 
 export const Route = createFileRoute("/auth/redefinir-senha")({
@@ -64,8 +69,10 @@ function RedefinirSenhaPage() {
     e.preventDefault();
     setErro(undefined);
     setConfirmaErro(undefined);
-    if (senha.length < 8) {
-      setErro("Senha de no mínimo 8 caracteres.");
+    // Mesma régua do cadastro (senhaCumpreRequisitos): a regra é dita antes,
+    // não descoberta errando.
+    if (!senhaCumpreRequisitos(senha)) {
+      setErro("A senha precisa de 8 caracteres, com pelo menos 1 número e 1 letra maiúscula.");
       return;
     }
     if (senha !== confirma) {
@@ -76,7 +83,7 @@ function RedefinirSenhaPage() {
     const { error } = await supabase.auth.updateUser({ password: senha });
     if (error) {
       setLoading(false);
-      toastErro("Não consegui salvar agora. Tenta de novo em alguns segundos.");
+      toastErro("Não conseguimos salvar agora. Tenta de novo em alguns segundos.");
       return;
     }
     setSalvo(true);
@@ -96,7 +103,7 @@ function RedefinirSenhaPage() {
             name="senha"
             type="password"
             autoComplete="new-password"
-            placeholder="mínimo 8 caracteres"
+            placeholder="8 caracteres, 1 número, 1 maiúscula"
             value={senha}
             onChange={(e) => {
               setSenha(e.target.value);
@@ -128,7 +135,7 @@ function RedefinirSenhaPage() {
 
         {salvo && (
           <p className="text-center text-[14px] text-[var(--ink-soft)]">
-            Senha trocada. Já pode entrar.
+            Senha trocada. Levando pro seu painel...
           </p>
         )}
 

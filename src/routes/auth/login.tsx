@@ -139,7 +139,7 @@ function LoginPage() {
         navigate({ to: target });
       }
     } catch {
-      toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
+      toastErro("Não conseguimos entrar agora. Tenta de novo, o seu e-mail continua preenchido.");
     } finally {
       setLoading(false);
     }
@@ -153,7 +153,7 @@ function LoginPage() {
     });
     if (error) {
       setGoogleLoading(false);
-      toastErro("Não deu pra entrar por aí. Tenta de novo ou usa o e-mail.");
+      toastErro("O Google não respondeu agora. Tenta de novo ou entra com e-mail e senha.");
     }
   }
 
@@ -163,7 +163,7 @@ function LoginPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email: unverified });
     setResending(false);
     if (error) {
-      toastErro("Não consegui reenviar agora. Tenta em alguns segundos.");
+      toastErro("Não conseguimos reenviar agora. Tenta em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
       setResendCooldown(RESEND_COOLDOWN_SEGUNDOS);

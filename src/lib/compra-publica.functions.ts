@@ -9,9 +9,11 @@ const inputSchema = z.object({
   email: z.string().trim().email().max(255),
   // Checkout público hoje só oferece o Controle (o Projete exige decidir se
   // a Aimer/plano de conteúdo compensam vender sem conta prévia).
-  plano: z.enum(["mensal", "anual"]).transform((p): "controle_mensal" | "controle_anual" =>
-    p === "mensal" ? "controle_mensal" : "controle_anual",
-  ),
+  plano: z
+    .enum(["mensal", "anual"])
+    .transform((p): "controle_mensal" | "controle_anual" =>
+      p === "mensal" ? "controle_mensal" : "controle_anual",
+    ),
 });
 
 // Checkout hospedado do Stripe, sem exigir conta prévia: quem compra aqui
@@ -39,7 +41,11 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
 
       if (!session.url) {
         console.error("[CompraPublica] Sessão criada sem URL de checkout.");
-        return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo.", sessionId: null };
+        return {
+          url: null,
+          error: "Não conseguimos abrir o checkout agora. Tenta de novo.",
+          sessionId: null,
+        };
       }
       return { url: session.url, error: null, sessionId: session.id };
     } catch (err) {
@@ -47,6 +53,10 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
       void dispararAlerta("checkout_erro", "Erro ao criar checkout público (sem conta)", {
         mensagem: err instanceof Error ? err.message : String(err),
       });
-      return { url: null, error: "Não consegui abrir o checkout agora. Tenta de novo.", sessionId: null };
+      return {
+        url: null,
+        error: "Não conseguimos abrir o checkout agora. Tenta de novo.",
+        sessionId: null,
+      };
     }
   });

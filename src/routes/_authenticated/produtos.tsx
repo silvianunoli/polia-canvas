@@ -283,9 +283,10 @@ function ProdutosPage() {
               <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
                 No Confere você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Controle pra
                 deixar ilimitado.{" "}
+                {/* Botão de assinar leva ao checkout, não a outra tela de bloqueio. */}
                 <Link
-                  to="/upgrade"
-                  search={{ rota: "/produtos", tier: "controle" }}
+                  to="/assinar"
+                  search={{ plano: "controle" }}
                   className="font-medium text-[var(--secondary-text)] no-underline"
                 >
                   Assinar o Controle
@@ -501,21 +502,24 @@ function ProdutoCard({
       </p>
 
       {/* Barra de margem */}
+      {/* Sem custo cadastrado a sobra não existe: nem barra, nem número. */}
       {precoVenda > 0 && (
         <>
-          <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
-            <div
-              className="h-full rounded-full bg-[var(--secondary)]"
-              style={{
-                width: shown ? `${sobraPct}%` : "0%",
-                transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
-              }}
-            />
-          </div>
+          {produto.preco_custo != null && (
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
+              <div
+                className="h-full rounded-full bg-[var(--secondary)]"
+                style={{
+                  width: shown ? `${sobraPct}%` : "0%",
+                  transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
+                }}
+              />
+            </div>
+          )}
           <p className="mt-1.5 text-[12px] text-[var(--muted)]">
             {produto.preco_custo != null
               ? `custo ${fmt(custo)} · sobra ${sobraPct}%${temTaxas ? "" : " (sem taxa/imposto)"}`
-              : `custo estimado · sobra ${sobraPct}%`}
+              : "sem custo cadastrado · cadastre o custo pra saber quanto sobra"}
           </p>
         </>
       )}
@@ -894,7 +898,7 @@ function Calculadora({
       .eq("id", produtoRecalcular.id);
     setSalvando(false);
     if (error) {
-      setErro(error.message || "Não consegui atualizar o preço. Tenta de novo.");
+      setErro(error.message || "Não conseguimos atualizar o preço. Tenta de novo.");
       return;
     }
     track("produto_preco_recalculado");
@@ -997,7 +1001,7 @@ function Calculadora({
               onChange={setTaxaVenda}
             />
             <CampoNum label="Impostos sobre a venda (%)" value={impostos} onChange={setImpostos} />
-            <CampoNum label="Lucro desejado (%)" value={margem} onChange={setMargem} />
+            <CampoNum label="Quanto quer que sobre (%)" value={margem} onChange={setMargem} />
           </GrupoCalc>
         </>
       ) : perfil === "servico" ? (
@@ -1023,11 +1027,7 @@ function Calculadora({
               value={impostosS}
               onChange={setImpostosS}
             />
-            <CampoNum
-              label="Margem de segurança / lucro (%)"
-              value={margemSeg}
-              onChange={setMargemSeg}
-            />
+            <CampoNum label="Quanto quer que sobre (%)" value={margemSeg} onChange={setMargemSeg} />
           </GrupoCalc>
         </>
       ) : (
@@ -1225,7 +1225,7 @@ function Calculadora({
             </div>
             {vendasParaMetaBoa !== null && (
               <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
-                Pra bater o mês bom ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
+                Pra bater a Meta do mês ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
                 vendas.
               </p>
             )}

@@ -46,23 +46,25 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   },
   "500": {
     title: "Algo travou do nosso lado.",
-    subtitle: "Não foi nada que fez. A gente já foi avisado. Tenta de novo em instantes.",
+    subtitle: "Não foi nada que você fez. O erro já chegou pra gente e os seus dados estão salvos.",
     pageTitle: "Erro interno",
     icon: AlertTriangle,
-    primaryAction: { label: "Tentar de novo", href: "/painel" },
-    secondaryAction: { label: "Ir pro início", href: "/painel" },
+    // Recarregar de verdade: antes os dois botões iam pro mesmo lugar e o
+    // "tentar de novo" não tentava nada.
+    primaryAction: { label: "Recarregar a página", onClick: () => window.location.reload() },
+    secondaryAction: { label: "Ir pro painel", href: "/painel" },
   },
   "403": {
     title: "Essa parte é de acesso restrito.",
     subtitle: "Se acha que deveria ter, fala com a gente.",
     pageTitle: "Acesso restrito",
     icon: Lock,
-    primaryAction: { label: "Voltar", href: "/painel" },
+    primaryAction: { label: "Ir pro painel", href: "/painel" },
     secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
   },
   manutencao: {
-    title: "A Pólia está em manutenção rápida.",
-    subtitle: "A gente volta já. O que você já construiu está a salvo.",
+    title: "A Pólia está em manutenção agora.",
+    subtitle: "Os seus números estão salvos. Recarrega daqui a alguns minutos que já volta.",
     pageTitle: "Manutenção",
     icon: Wrench,
     primaryAction: { label: "Tentar de novo", href: "/painel" },
@@ -84,7 +86,7 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   },
   "link-expirado": {
     title: "Esse link expirou.",
-    subtitle: "Peça um novo link que a gente manda na hora.",
+    subtitle: "Pede um link novo que a gente manda na hora.",
     pageTitle: "Link expirado",
     icon: Link2Off,
     primaryAction: { label: "Enviar novo link", href: "/auth/esqueci-senha" },

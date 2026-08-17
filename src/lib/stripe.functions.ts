@@ -18,7 +18,11 @@ export function stripeClient(): Stripe {
   return _stripe;
 }
 
-export type PlanoAssinatura = "controle_mensal" | "controle_anual" | "projete_mensal" | "projete_anual";
+export type PlanoAssinatura =
+  | "controle_mensal"
+  | "controle_anual"
+  | "projete_mensal"
+  | "projete_anual";
 
 const ENV_PRICE_POR_PLANO: Record<PlanoAssinatura, string | undefined> = {
   controle_mensal: process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL,
@@ -90,8 +94,16 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
     tier: "projete",
   });
   // Legado: price ids de antes de 26/jul, quando só existia um plano pago.
-  add(process.env.STRIPE_PRICE_ID_MENSAL, { valorCentavos: 2900, intervalo: "month", tier: "controle" });
-  add(process.env.STRIPE_PRICE_ID_ANUAL, { valorCentavos: 29000, intervalo: "year", tier: "controle" });
+  add(process.env.STRIPE_PRICE_ID_MENSAL, {
+    valorCentavos: 2900,
+    intervalo: "month",
+    tier: "controle",
+  });
+  add(process.env.STRIPE_PRICE_ID_ANUAL, {
+    valorCentavos: 29000,
+    intervalo: "year",
+    tier: "controle",
+  });
   return priceId ? (mapa[priceId] ?? null) : null;
 }
 
@@ -138,22 +150,32 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
           stripe_subscription_id: subscription.id,
           price_id: priceId,
           status: subscription.status,
-          current_period_end: new Date(subscription.items.data[0].current_period_end * 1000).toISOString(),
+          current_period_end: new Date(
+            subscription.items.data[0].current_period_end * 1000,
+          ).toISOString(),
           cancel_at_period_end: subscription.cancel_at_period_end,
         } as never,
         { onConflict: "user_id" },
       );
       if (upsertError) {
         console.error("[Stripe] Falha ao salvar assinatura local:", upsertError);
-        return { clientSecret: null, error: "Não consegui iniciar sua assinatura agora. Tenta de novo." };
+        return {
+          clientSecret: null,
+          error: "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+        };
       }
 
       const invoice = subscription.latest_invoice;
       const clientSecret =
-        invoice && typeof invoice !== "string" ? (invoice.confirmation_secret?.client_secret ?? null) : null;
+        invoice && typeof invoice !== "string"
+          ? (invoice.confirmation_secret?.client_secret ?? null)
+          : null;
 
       if (!clientSecret) {
-        return { clientSecret: null, error: "Não consegui preparar o pagamento agora. Tenta de novo." };
+        return {
+          clientSecret: null,
+          error: "Não conseguimos preparar o pagamento agora. Tenta de novo.",
+        };
       }
       return { clientSecret, error: null };
     } catch (err) {
@@ -161,7 +183,10 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       void dispararAlerta("checkout_erro", "Erro ao criar assinatura (checkout)", {
         mensagem: err instanceof Error ? err.message : String(err),
       });
-      return { clientSecret: null, error: "Não consegui iniciar sua assinatura agora. Tenta de novo." };
+      return {
+        clientSecret: null,
+        error: "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+      };
     }
   });
 
@@ -210,6 +235,6 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
       return { ok: true, error: null };
     } catch (err) {
       console.error("[Stripe] Erro ao cancelar assinatura:", err);
-      return { ok: false, error: "Não consegui cancelar sua assinatura agora. Tenta de novo." };
+      return { ok: false, error: "Não conseguimos cancelar sua assinatura agora. Tenta de novo." };
     }
   });

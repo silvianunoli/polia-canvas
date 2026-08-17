@@ -58,7 +58,7 @@ function VerificacaoPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
     if (error) {
-      toastErro("Não consegui reenviar agora. Tenta de novo em alguns segundos.");
+      toastErro("Não conseguimos reenviar agora. Tenta de novo em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
       setCooldown(60);

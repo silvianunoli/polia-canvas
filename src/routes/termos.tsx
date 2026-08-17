@@ -109,7 +109,7 @@ function TermosPage() {
 
               <h2 id="servico">2. O que é a Pólia</h2>
               <p>
-                A Pólia é um ambiente digital que organiza a operação da marca em etapas e tarefas,
+                A Pólia é um ambiente digital que organiza a operação da marca em módulos e tarefas,
                 com registro de clientes, números e progresso. A Pólia é uma ferramenta de apoio: as
                 decisões sobre o negócio são sempre da usuária. Nós não prestamos consultoria
                 contábil, jurídica ou financeira.

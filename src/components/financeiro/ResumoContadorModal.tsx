@@ -86,7 +86,7 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("Não consegui gerar o arquivo agora. Tenta de novo.");
+      setErro("Não conseguimos gerar o arquivo agora. Tenta de novo.");
     }
   };
 
@@ -104,7 +104,7 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("Não consegui gerar o arquivo agora. Tenta de novo.");
+      setErro("Não conseguimos gerar o arquivo agora. Tenta de novo.");
     }
   };
 

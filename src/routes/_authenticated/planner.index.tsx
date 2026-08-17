@@ -151,7 +151,7 @@ function PlannerIndex() {
       if (slug) navigate({ to: "/planner/$slug", params: { slug } });
     },
     onError: () => {
-      toastErro("Não consegui criar o quadro agora. Tenta de novo.");
+      toastErro("Não conseguimos criar o quadro agora. Tenta de novo.");
     },
   });
 

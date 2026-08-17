@@ -39,9 +39,7 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
         return (
           <div key={campo}>
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="text-[1.05rem] text-[var(--ink)]">
-                {CAMPO_LABEL[campo] ?? campo}
-              </h2>
+              <h2 className="text-[1.05rem] text-[var(--ink)]">{CAMPO_LABEL[campo] ?? campo}</h2>
               {secId && moduloN && (
                 <a
                   href={`/planejamento/modulo/${moduloN}?secao=${secId}`}
@@ -67,7 +65,7 @@ export function FerramentaVazia({ moduloN, texto }: { moduloN: number; texto?: s
   return (
     <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--line)] bg-white px-6 py-14 text-center">
       <p className="mx-auto max-w-[440px] text-[14px] leading-relaxed text-[var(--muted)]">
-        {texto ?? `Essa ferramenta é desbloqueada no Módulo ${moduloN}.`}
+        {texto ?? `Essa ferramenta é escrita no Módulo ${moduloN}. É de lá que ela sai pronta.`}
       </p>
       <a
         href={`/planejamento/modulo/${moduloN}`}

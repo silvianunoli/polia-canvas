@@ -165,7 +165,7 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("Não consegui salvar a nota. O texto ainda está na tela."),
+    onError: () => toastErro("Não conseguimos salvar a nota. O texto ainda está na tela."),
     onSuccess: (id) => {
       // Só reflete "salvo" se ainda estivermos na mesma nota (evita closure obsoleta).
       if (idCarregadoRef.current === id) {
@@ -207,7 +207,7 @@ function CadernoPage() {
       if (error) throw error;
       return { id: data?.id as string | undefined, titulo: t };
     },
-    onError: () => toastErro("Não consegui criar a nota. Tenta de novo."),
+    onError: () => toastErro("Não conseguimos criar a nota. Tenta de novo."),
     onSuccess: ({ id, titulo: tituloCriado }) => {
       track("nota_criada");
       invalidar();
@@ -230,7 +230,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("Não consegui fixar a nota. Tenta de novo."),
+    onError: () => toastErro("Não conseguimos fixar a nota. Tenta de novo."),
   });
 
   // Exclusão com soft delete (mantém deleted_at) + toast de 6s com desfazer.
@@ -243,7 +243,7 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("Não consegui excluir a nota. Tenta de novo."),
+    onError: () => toastErro("Não conseguimos excluir a nota. Tenta de novo."),
     onSuccess: (id) => {
       invalidar();
       const nota = notas.find((n) => n.id === id);
@@ -260,7 +260,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("Não consegui restaurar a nota. Tenta de novo."),
+    onError: () => toastErro("Não conseguimos restaurar a nota. Tenta de novo."),
   });
 
   function mostrarToast(msg: string, notaId: string) {
@@ -509,9 +509,15 @@ function CadernoPage() {
                     onClick={handleExcluirClick}
                     className="rounded-lg px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
                   >
-                    {excluirArmado ? "Excluir mesmo? Clique de novo" : "Excluir nota"}
+                    {excluirArmado ? "Confirmar exclusão" : "Excluir nota"}
                   </button>
                 </div>
+                {/* Existe desfazer de alguns segundos: a copy mostra a rede. */}
+                {excluirArmado && (
+                  <p className="mt-1 text-right text-[12px] text-[var(--muted)]">
+                    A nota sai da lista. Dá pra desfazer nos próximos segundos.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="hidden h-full min-h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-[var(--line)] bg-white px-6 text-center lg:flex">
@@ -559,7 +565,8 @@ function ListaVazia({ onCriar }: { onCriar: () => void }) {
         <NotebookPen size={22} aria-hidden="true" className="text-[var(--secondary-text)]" />
       </div>
       <p className="mb-3 text-[14px] leading-relaxed text-[var(--muted)]">
-        Seu caderno está em branco. A primeira página é sua.
+        Nenhuma nota por aqui ainda. O caderno guarda ideia solta, rascunho de legenda e o que não
+        pode escapar.
       </p>
       <button
         type="button"

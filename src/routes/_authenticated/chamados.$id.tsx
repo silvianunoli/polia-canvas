@@ -80,7 +80,7 @@ function ChamadoDetalhe() {
     });
     setEnviando(false);
     if (error) {
-      toastErro("Não consegui enviar sua mensagem. Tenta de novo.");
+      toastErro("Não conseguimos enviar sua mensagem. Tenta de novo.");
       return;
     }
     // Reabre o chamado se já tinha sido marcado como resolvido e a usuária voltou a escrever.

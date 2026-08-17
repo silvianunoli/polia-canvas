@@ -33,7 +33,13 @@ export function AssinaturaCheckout({
   );
 }
 
-function FormularioPagamento({ onClose, onSucesso }: { onClose: () => void; onSucesso: () => void }) {
+function FormularioPagamento({
+  onClose,
+  onSucesso,
+}: {
+  onClose: () => void;
+  onSucesso: () => void;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const [confirmando, setConfirmando] = useState(false);
@@ -49,10 +55,13 @@ function FormularioPagamento({ onClose, onSucesso }: { onClose: () => void; onSu
     });
     setConfirmando(false);
     if (error) {
-      setErro(error.message ?? "Não consegui confirmar o pagamento. Tenta outro cartão.");
+      setErro(error.message ?? "Não conseguimos confirmar o pagamento. Tenta outro cartão.");
       return;
     }
-    if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
+    if (
+      paymentIntent &&
+      (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")
+    ) {
       onSucesso();
       return;
     }
@@ -77,7 +86,7 @@ function FormularioPagamento({ onClose, onSucesso }: { onClose: () => void; onSu
           onClick={() => {
             confirmar().catch(() => {
               setConfirmando(false);
-              toastErro("Não consegui confirmar o pagamento agora. Tenta de novo.");
+              toastErro("Não conseguimos confirmar o pagamento agora. Tenta de novo.");
             });
           }}
           disabled={!stripe || confirmando}

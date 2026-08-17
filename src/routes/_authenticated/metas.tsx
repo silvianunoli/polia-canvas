@@ -139,7 +139,9 @@ function MetasPage() {
       invalidar();
     },
     onError: (e: unknown) => {
-      setErroAcao(e instanceof Error ? e.message : "Não foi possível salvar. Tente de novo.");
+      // O erro do banco vem em inglês técnico: fica no log, não na tela.
+      console.error("meta_salvar", e);
+      setErroAcao("Não conseguimos salvar a meta agora. Tenta de novo.");
     },
   });
 

@@ -271,7 +271,7 @@ function LinhaCliente({
       .eq("id", cliente.id);
     setSalvandoStatus(false);
     if (error) {
-      toastErro("Não consegui atualizar o status. Tenta de novo.");
+      toastErro("Não conseguimos atualizar o status. Tenta de novo.");
       return;
     }
     track("cliente_status_atualizado", { status: novo });
@@ -312,7 +312,7 @@ function LinhaCliente({
       toastErro(
         jaRegistrada
           ? "Essa venda já foi registrada. Atualize a página."
-          : "Não consegui registrar a venda no Financeiro. Tenta de novo.",
+          : "Não conseguimos registrar a venda no Financeiro. Tenta de novo.",
       );
       // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
       if (jaRegistrada) onRegistrado();
@@ -539,7 +539,7 @@ function ModalCliente({
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-            placeholder="Ana"
+            placeholder="Ex: Marina Duarte"
           />
         </div>
 

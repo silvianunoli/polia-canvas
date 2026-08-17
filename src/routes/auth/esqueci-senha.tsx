@@ -43,7 +43,7 @@ function EsqueciSenhaPage() {
       redirectTo: `${window.location.origin}/auth/redefinir-senha`,
     });
     if (error) {
-      toastErro("Não consegui enviar agora. Tenta de novo em alguns segundos.");
+      toastErro("Não conseguimos enviar agora. Tenta de novo em alguns segundos.");
       return false;
     }
     return true;

@@ -139,7 +139,9 @@ function CadastroPage() {
           });
         } else {
           track("cadastro_falhou", { motivo: "erro_signup" });
-          toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
+          toastErro(
+            "Não conseguimos criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
+          );
         }
         return;
       }
@@ -156,7 +158,9 @@ function CadastroPage() {
       }
     } catch {
       track("cadastro_falhou", { motivo: "excecao_client" });
-      toastErro("Tivemos um problema. Tenta de novo em alguns segundos.");
+      toastErro(
+        "Não conseguimos criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
+      );
     } finally {
       setLoading(false);
     }
@@ -170,7 +174,7 @@ function CadastroPage() {
     });
     if (error) {
       setGoogleLoading(false);
-      toastErro("Não deu pra entrar por aí. Tenta de novo ou usa o e-mail.");
+      toastErro("O Google não respondeu agora. Tenta de novo ou cria a conta com e-mail e senha.");
     }
   }
 
@@ -244,7 +248,7 @@ function CadastroPage() {
         </Link>
       </p>
       <p className="mt-2 text-center text-[12px] text-[var(--muted)]">
-        Ao criar a conta, a usuária concorda com os nossos{" "}
+        Ao criar a conta, você concorda com os nossos{" "}
         <Link to="/termos" className="text-[var(--ink-soft)] underline">
           Termos de Uso
         </Link>{" "}

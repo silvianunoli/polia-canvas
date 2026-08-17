@@ -38,6 +38,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
 interface CalendarioSearch {
@@ -105,6 +115,8 @@ function CalendarioPage() {
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
   const [processandoCallback, setProcessandoCallback] = useState(false);
   const [mostrarComposer, setMostrarComposer] = useState(false);
+  // Desconectar apaga os compromissos da grade na hora: confirma antes.
+  const [confirmarDesconectar, setConfirmarDesconectar] = useState(false);
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novoQuadroId, setNovoQuadroId] = useState("");
 
@@ -176,12 +188,12 @@ function CalendarioPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "Não consegui conectar com o Google agora.");
+        toastErro(res.error ?? "Não conseguimos conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("Não consegui iniciar a conexão com o Google."),
+    onError: () => toastErro("Não conseguimos iniciar a conexão com o Google."),
   });
 
   const desconectarMutation = useMutation({
@@ -191,7 +203,7 @@ function CalendarioPage() {
       qc.invalidateQueries({ queryKey: ["google-eventos"] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("Não consegui desconectar agora."),
+    onError: () => toastErro("Não conseguimos desconectar agora."),
   });
 
   const criarTarefaMutation = useMutation({
@@ -221,7 +233,7 @@ function CalendarioPage() {
       setNovoTitulo("");
       toastSucesso("Tarefa criada.");
     },
-    onError: () => toastErro("Não consegui criar a tarefa. Tenta de novo."),
+    onError: () => toastErro("Não conseguimos criar a tarefa. Tenta de novo."),
   });
 
   const abrirComposer = () => {
@@ -240,10 +252,10 @@ function CalendarioPage() {
         if (res.ok) {
           track("evento_google_conectado");
           toastSucesso("Google Calendar conectado.");
-        } else toastErro(res.error ?? "Não consegui confirmar a conexão com o Google.");
+        } else toastErro(res.error ?? "Não conseguimos confirmar a conexão com o Google.");
         qc.invalidateQueries({ queryKey: ["google-status", userId] });
       })
-      .catch(() => toastErro("Não consegui confirmar a conexão com o Google."))
+      .catch(() => toastErro("Não conseguimos confirmar a conexão com o Google."))
       .finally(() => {
         setProcessandoCallback(false);
         navigate({ to: "/calendario", search: {}, replace: true });
@@ -397,7 +409,7 @@ function CalendarioPage() {
             {conectado ? (
               <button
                 type="button"
-                onClick={() => desconectarMutation.mutate()}
+                onClick={() => setConfirmarDesconectar(true)}
                 disabled={desconectarMutation.isPending}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] text-[var(--muted)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
               >
@@ -650,6 +662,34 @@ function CalendarioPage() {
             )}
           </SheetContent>
         </Sheet>
+
+        <AlertDialog open={confirmarDesconectar} onOpenChange={setConfirmarDesconectar}>
+          <AlertDialogContent
+            className="polia-v3 rounded-xl border border-[var(--line)] bg-white"
+            style={TOKEN_BRIDGE_V3}
+          >
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-[var(--ink)]">
+                Desconectar o Google Calendar?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-[var(--ink-soft)]">
+                Os compromissos somem da grade. As tarefas do Planner continuam.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--surface)]">
+                Voltar
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => desconectarMutation.mutate()}
+                disabled={desconectarMutation.isPending}
+                className="rounded-lg bg-[var(--danger)] text-white hover:opacity-90"
+              >
+                {desconectarMutation.isPending ? "Desconectando..." : "Desconectar"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </PaginaLogada>
   );

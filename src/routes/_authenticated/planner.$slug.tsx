@@ -323,7 +323,7 @@ function PlannerBoard() {
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
-      toastErro("Não consegui mover o cartão. Tenta de novo.");
+      toastErro("Não conseguimos mover o cartão. Tenta de novo.");
       invalidar();
       return;
     }
@@ -334,7 +334,7 @@ function PlannerBoard() {
     updateLocal((l) => l.map((c) => (c.id === id ? { ...c, prioridade } : c)));
     const { error } = await supabase.from("tarefas").update({ prioridade }).eq("id", id);
     if (error) {
-      toastErro("Não consegui mudar a prioridade.");
+      toastErro("Não conseguimos mudar a prioridade.");
       invalidar();
     }
   };
@@ -343,7 +343,7 @@ function PlannerBoard() {
     updateLocal((l) => l.filter((c) => c.id !== id));
     const { error } = await supabase.from("tarefas").delete().eq("id", id);
     if (error) {
-      toastErro("Não consegui remover o cartão.");
+      toastErro("Não conseguimos remover o cartão.");
       invalidar();
     }
   };
@@ -381,7 +381,7 @@ function PlannerBoard() {
       },
     );
     if (error) {
-      toastErro("Não consegui renomear a coluna.");
+      toastErro("Não conseguimos renomear a coluna.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadro-colunas", quadroId] });
@@ -524,7 +524,7 @@ function PlannerBoard() {
       } as never)
       .eq("id", id);
     if (error) {
-      toastErro("Não consegui salvar as alterações do cartão.");
+      toastErro("Não conseguimos salvar as alterações do cartão.");
       invalidar();
     }
   };
@@ -568,7 +568,7 @@ function PlannerBoard() {
       prazo: hoje,
     } as never);
     if (error) {
-      toastErro("Não consegui salvar o cartão. Tenta de novo.");
+      toastErro("Não conseguimos salvar o cartão. Tenta de novo.");
       return;
     }
     track("tarefa_criada", { status });
@@ -582,7 +582,7 @@ function PlannerBoard() {
     if (!window.confirm("Apagar este quadro e todos os cartões dele? Não dá pra desfazer.")) return;
     const { error } = await supabase.from("quadros").delete().eq("id", quadroId);
     if (error) {
-      toastErro("Não consegui apagar o quadro. Tenta de novo.");
+      toastErro("Não conseguimos apagar o quadro. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadros", userId] });
@@ -778,7 +778,9 @@ function PlannerBoard() {
                     {lista.length === 0 && composerCol !== col.id ? (
                       <div className="rounded-xl border border-dashed border-[var(--line)] p-5 text-center">
                         <p className="text-[13px] italic text-[var(--muted)]">
-                          {listaTotal.length ? "nada neste período" : "arraste um cartão pra cá"}
+                          {listaTotal.length
+                            ? "Nada neste período. Troca o filtro pra Tudo."
+                            : "arraste um cartão pra cá"}
                         </p>
                       </div>
                     ) : (
@@ -1226,9 +1228,15 @@ function PlannerBoard() {
                 onClick={excluirDoDetalhe}
                 className="rounded-md px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
               >
-                {delArmado ? "Excluir mesmo? Clique de novo" : "Excluir cartão"}
+                {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
               </button>
             </div>
+            {/* Aqui não tem desfazer: a confirmação diz o que some junto. */}
+            {delArmado && (
+              <p className="mt-2 text-right text-[12px] text-[var(--muted)]">
+                Some com prazo, etiquetas e anotações.
+              </p>
+            )}
           </>
         )}
       </aside>

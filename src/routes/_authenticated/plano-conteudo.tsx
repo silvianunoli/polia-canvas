@@ -103,11 +103,11 @@ function PlanoConteudoPage() {
       } else {
         setMotivo(resultado.motivo);
         if (resultado.motivo === "falha_ia") {
-          setErro("Não consegui montar o seu plano agora. Tenta de novo.");
+          setErro("Não conseguimos montar o seu plano agora. Tenta de novo.");
         }
       }
     } catch {
-      setErro("Não consegui montar o seu plano agora. Tenta de novo.");
+      setErro("Não conseguimos montar o seu plano agora. Tenta de novo.");
     } finally {
       setGerando(false);
     }
@@ -276,7 +276,8 @@ function PlanoConteudoPage() {
         ) : motivo === "teto_atingido" ? (
           <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
             <p className="text-[14px] text-[var(--ink-soft)]">
-              Você já usou as suas gerações do plano de conteúdo desse ano.
+              As gerações do plano deste ano acabaram. Se precisar de outro, abre um chamado que a
+              gente resolve.
             </p>
           </div>
         ) : (
@@ -295,7 +296,7 @@ function PlanoConteudoPage() {
               disabled={gerando}
               className="mt-4 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
             >
-              {gerando ? "A Pólia está montando o seu plano..." : "Gerar plano de conteúdo"}
+              {gerando ? "A Aimer está montando o seu plano..." : "Gerar plano de conteúdo"}
             </button>
             {gerando && (
               <p className="mt-2 text-[12px] text-[var(--muted)]">Isso pode levar um minuto.</p>
@@ -310,7 +311,7 @@ function PlanoConteudoPage() {
             disabled={gerando}
             className="mt-6 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:opacity-50"
           >
-            {gerando ? "Gerando outro..." : "Gerar outro plano pro ano"}
+            {gerando ? "Gerando outro..." : "Gerar outro plano"}
           </button>
         )}
       </div>

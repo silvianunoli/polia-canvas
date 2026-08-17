@@ -15,7 +15,10 @@ function credenciais() {
   return { clientId, clientSecret, redirectUri };
 }
 
-export function montarUrlConsentimento(state: string): { url: string | null; error: string | null } {
+export function montarUrlConsentimento(state: string): {
+  url: string | null;
+  error: string | null;
+} {
   const cred = credenciais();
   if (!cred) return { url: null, error: "A integração com o Google ainda não está configurada." };
   const params = new URLSearchParams({
@@ -37,7 +40,8 @@ export async function trocarCodigoPorTokens(
   code: string,
 ): Promise<{ tokens: TokensGoogle | null; error: string | null }> {
   const cred = credenciais();
-  if (!cred) return { tokens: null, error: "A integração com o Google ainda não está configurada." };
+  if (!cred)
+    return { tokens: null, error: "A integração com o Google ainda não está configurada." };
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -52,7 +56,10 @@ export async function trocarCodigoPorTokens(
     });
     if (!res.ok) {
       console.error("Google trocarCodigo error:", res.status, await res.text());
-      return { tokens: null, error: "Não consegui confirmar a conexão com o Google. Tenta de novo." };
+      return {
+        tokens: null,
+        error: "Não conseguimos confirmar a conexão com o Google. Tenta de novo.",
+      };
     }
     return { tokens: (await res.json()) as TokensGoogle, error: null };
   } catch (err) {
@@ -139,7 +146,11 @@ export async function listarEventosGoogle(
     if (res.status === 401) return { eventos: null, error: null, expirado: true };
     if (!res.ok) {
       console.error("Google listarEventos error:", res.status, await res.text());
-      return { eventos: null, error: "Não consegui buscar os eventos do Google agora.", expirado: false };
+      return {
+        eventos: null,
+        error: "Não conseguimos buscar os eventos do Google agora.",
+        expirado: false,
+      };
     }
     const json = (await res.json()) as { items?: GoogleEventItem[] };
     const eventos: EventoGoogle[] = (json.items ?? [])

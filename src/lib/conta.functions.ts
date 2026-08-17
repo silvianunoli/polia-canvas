@@ -30,19 +30,17 @@ export const excluirMinhaConta = createServerFn({ method: "POST" })
         return {
           ok: false,
           error:
-            "Não consegui cancelar sua assinatura agora. Tenta de novo em instantes ou fala com a gente em oi@usepolia.com.br antes de excluir.",
+            "Não conseguimos cancelar sua assinatura agora. Tenta de novo em instantes ou fala com a gente em oi@usepolia.com.br antes de excluir.",
         };
       }
     }
 
     // 2) Apaga todos os dados da usuária numa transação (roda como a própria
     //    usuária via auth.uid() — ver migração 20260709170500).
-    const { error: rpcError } = await context.supabase.rpc(
-      "excluir_dados_do_usuario" as never,
-    );
+    const { error: rpcError } = await context.supabase.rpc("excluir_dados_do_usuario" as never);
     if (rpcError) {
       console.error("[Conta] Falha ao apagar dados da usuária:", rpcError);
-      return { ok: false, error: "Não consegui apagar seus dados agora. Tenta de novo." };
+      return { ok: false, error: "Não conseguimos apagar seus dados agora. Tenta de novo." };
     }
 
     // 3) Remove o usuário do Auth (login, sessões, e-mail). Se falhar aqui, os

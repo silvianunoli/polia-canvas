@@ -43,10 +43,15 @@ export const iniciarConexaoGoogle = createServerFn({ method: "POST" })
     const { error: upsertError } = await supabaseAdmin
       .from("google_calendar_conexoes" as never)
       .upsert(
-        { user_id: context.userId, state_pendente: state, updated_at: new Date().toISOString() } as never,
+        {
+          user_id: context.userId,
+          state_pendente: state,
+          updated_at: new Date().toISOString(),
+        } as never,
         { onConflict: "user_id" },
       );
-    if (upsertError) return { url: null, error: "Não consegui iniciar a conexão. Tenta de novo." };
+    if (upsertError)
+      return { url: null, error: "Não conseguimos iniciar a conexão. Tenta de novo." };
     return montarUrlConsentimento(state);
   });
 
@@ -61,7 +66,8 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
       return { ok: false, error: "Essa conexão expirou ou não é sua. Tenta conectar de novo." };
     }
     const { tokens, error } = await trocarCodigoPorTokens(data.code);
-    if (error || !tokens) return { ok: false, error: error ?? "Não consegui confirmar com o Google." };
+    if (error || !tokens)
+      return { ok: false, error: error ?? "Não conseguimos confirmar com o Google." };
 
     const email = await buscarEmailConectado(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
@@ -79,7 +85,11 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
       .from("google_calendar_conexoes" as never)
       .update(payload as never)
       .eq("user_id", context.userId);
-    if (saveError) return { ok: false, error: "Conectei com o Google mas não consegui salvar. Tenta de novo." };
+    if (saveError)
+      return {
+        ok: false,
+        error: "Conectamos com o Google mas não conseguimos salvar. Tenta de novo.",
+      };
     return { ok: true, error: null };
   });
 
@@ -88,39 +98,55 @@ const eventosInput = z.object({ inicioISO: z.string(), fimISO: z.string() });
 export const listarEventosDoMes = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => eventosInput.parse(input))
-  .handler(async ({ data, context }): Promise<{ eventos: EventoGoogle[]; error: string | null; conectado: boolean }> => {
-    const conexao = await lerConexao(context.userId);
-    if (!conexao?.refresh_token) return { eventos: [], error: null, conectado: false };
+  .handler(
+    async ({
+      data,
+      context,
+    }): Promise<{ eventos: EventoGoogle[]; error: string | null; conectado: boolean }> => {
+      const conexao = await lerConexao(context.userId);
+      if (!conexao?.refresh_token) return { eventos: [], error: null, conectado: false };
 
-    let accessToken = conexao.access_token ?? "";
-    const expirado = !conexao.expires_at || new Date(conexao.expires_at) <= new Date();
-    if (expirado || !accessToken) {
-      const renovado = await renovarAccessToken(conexao.refresh_token);
-      if (!renovado) {
-        return { eventos: [], error: "Sua conexão com o Google expirou. Reconecte.", conectado: false };
+      let accessToken = conexao.access_token ?? "";
+      const expirado = !conexao.expires_at || new Date(conexao.expires_at) <= new Date();
+      if (expirado || !accessToken) {
+        const renovado = await renovarAccessToken(conexao.refresh_token);
+        if (!renovado) {
+          return {
+            eventos: [],
+            error: "Sua conexão com o Google expirou. Reconecte.",
+            conectado: false,
+          };
+        }
+        accessToken = renovado.access_token;
+        await supabaseAdmin
+          .from("google_calendar_conexoes" as never)
+          .update({
+            access_token: accessToken,
+            expires_at: new Date(Date.now() + renovado.expires_in * 1000).toISOString(),
+          } as never)
+          .eq("user_id", context.userId);
       }
-      accessToken = renovado.access_token;
-      await supabaseAdmin
-        .from("google_calendar_conexoes" as never)
-        .update({
-          access_token: accessToken,
-          expires_at: new Date(Date.now() + renovado.expires_in * 1000).toISOString(),
-        } as never)
-        .eq("user_id", context.userId);
-    }
 
-    const resultado = await listarEventosGoogle(accessToken, data.inicioISO, data.fimISO);
-    if (resultado.expirado) {
-      return { eventos: [], error: "Sua conexão com o Google expirou. Reconecte.", conectado: false };
-    }
-    return { eventos: resultado.eventos ?? [], error: resultado.error, conectado: true };
-  });
+      const resultado = await listarEventosGoogle(accessToken, data.inicioISO, data.fimISO);
+      if (resultado.expirado) {
+        return {
+          eventos: [],
+          error: "Sua conexão com o Google expirou. Reconecte.",
+          conectado: false,
+        };
+      }
+      return { eventos: resultado.eventos ?? [], error: resultado.error, conectado: true };
+    },
+  );
 
 export const desconectarGoogle = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const conexao = await lerConexao(context.userId);
     if (conexao?.access_token) await revogarToken(conexao.access_token);
-    await supabaseAdmin.from("google_calendar_conexoes" as never).delete().eq("user_id", context.userId);
+    await supabaseAdmin
+      .from("google_calendar_conexoes" as never)
+      .delete()
+      .eq("user_id", context.userId);
     return { ok: true };
   });

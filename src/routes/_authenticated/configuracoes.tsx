@@ -120,12 +120,12 @@ function ConfiguracoesPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "Não consegui conectar com o Google agora.");
+        toastErro(res.error ?? "Não conseguimos conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("Não consegui iniciar a conexão com o Google."),
+    onError: () => toastErro("Não conseguimos iniciar a conexão com o Google."),
   });
 
   const desconectarGoogleMutation = useMutation({
@@ -134,7 +134,7 @@ function ConfiguracoesPage() {
       queryClient.invalidateQueries({ queryKey: ["google-status", userId] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("Não consegui desconectar agora."),
+    onError: () => toastErro("Não conseguimos desconectar agora."),
   });
 
   const cancelar = async () => {
@@ -142,7 +142,9 @@ function ConfiguracoesPage() {
     try {
       const resultado = await cancelarAssinatura();
       if (!resultado.ok) {
-        toastErro(resultado.error ?? "Não consegui cancelar sua assinatura agora. Tenta de novo.");
+        toastErro(
+          resultado.error ?? "Não conseguimos cancelar sua assinatura agora. Tenta de novo.",
+        );
         return;
       }
       track("assinatura_cancelada");
@@ -150,7 +152,7 @@ function ConfiguracoesPage() {
       setConfirmandoCancelamento(false);
       invalidarAssinatura();
     } catch {
-      toastErro("Não consegui cancelar sua assinatura agora. Tenta de novo.");
+      toastErro("Não conseguimos cancelar sua assinatura agora. Tenta de novo.");
     } finally {
       setCancelando(false);
     }
@@ -166,7 +168,7 @@ function ConfiguracoesPage() {
       }
       const preco = assinatura?.preco;
       if (!preco) {
-        toastErro("Não consegui identificar o valor da sua assinatura. Fala com o suporte.");
+        toastErro("Não conseguimos identificar o valor da sua assinatura. Fala com o suporte.");
         return;
       }
       const anual = preco.intervalo === "year";
@@ -182,7 +184,7 @@ function ConfiguracoesPage() {
       });
       track("recibo_baixado");
     } catch {
-      toastErro("Não consegui gerar o recibo agora. Tenta de novo.");
+      toastErro("Não conseguimos gerar o recibo agora. Tenta de novo.");
     } finally {
       setBaixandoRecibo(false);
     }
@@ -341,7 +343,7 @@ function ConfiguracoesPage() {
         if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
           setEmailErro("Esse e-mail já está em uso por outra conta.");
         } else {
-          setEmailErro("Não consegui trocar o e-mail agora. Tenta de novo.");
+          setEmailErro("Não conseguimos trocar o e-mail agora. Tenta de novo.");
         }
         return;
       }
@@ -370,7 +372,7 @@ function ConfiguracoesPage() {
     // o login. Só desloga se deu certo — senão a usuária pensaria que apagou sem ter.
     const resultado = await excluirMinhaConta();
     if (!resultado.ok) {
-      toastErro(resultado.error ?? "Não consegui excluir a conta agora. Tenta de novo.");
+      toastErro(resultado.error ?? "Não conseguimos excluir a conta agora. Tenta de novo.");
       setExcluindo(false);
       return;
     }
@@ -490,7 +492,7 @@ function ConfiguracoesPage() {
               value={nomeNegocio}
               onChange={(e) => setNomeNegocio(e.target.value)}
               maxLength={80}
-              placeholder="Ex: Ateliê da Aimer · Estúdio Florescer · Doces da Lua"
+              placeholder="Ex: Ateliê Florescer · Estúdio da Lua · Doces da Rê"
               className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
@@ -504,7 +506,7 @@ function ConfiguracoesPage() {
               value={razaoSocial}
               onChange={(e) => setRazaoSocial(e.target.value)}
               maxLength={120}
-              placeholder="Ex: Aimer Confecções e Serviços LTDA"
+              placeholder="Ex: Florescer Confecções e Serviços LTDA"
               className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
@@ -714,7 +716,7 @@ function ConfiguracoesPage() {
               <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
                 {plano === "cancelada"
                   ? "sua assinatura foi cancelada. assine de novo quando quiser."
-                  : "no Confere agora. Passa pro Controle ou Projete pra abrir o negócio inteiro."}
+                  : "No Confere agora. O Controle abre o Financeiro e o Raio-x do mês; o Projete acrescenta a projeção e o plano de conteúdo do ano."}
               </p>
               <a
                 href="/assinar"
@@ -741,27 +743,31 @@ function ConfiguracoesPage() {
                 Cancelar assinatura
               </button>
             )}
+            {/* A frase do cancelamento é longa: empilha em cima dos botões. */}
             {confirmandoCancelamento && (
-              <div className="flex items-center gap-2">
-                <span className="font-sans text-[13px] text-[var(--ink-soft)]">
-                  cancelar mesmo? fica ativa até o fim do período já pago.
+              <div className="flex flex-col items-start gap-2">
+                <span className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
+                  Cancelar mesmo? A assinatura fica ativa até o fim do período já pago. Depois a
+                  conta volta pro Confere: os dados continuam, o acesso às telas pagas para.
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setConfirmandoCancelamento(false)}
-                  disabled={cancelando}
-                  className="rounded-xl border border-[var(--line)] px-3 py-1.5 font-sans text-[13px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:opacity-50"
-                >
-                  Voltar
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelar}
-                  disabled={cancelando}
-                  className="rounded-xl border border-[var(--danger)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white disabled:opacity-50"
-                >
-                  {cancelando ? "Cancelando..." : "Confirmar cancelamento"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmandoCancelamento(false)}
+                    disabled={cancelando}
+                    className="rounded-xl border border-[var(--line)] px-3 py-1.5 font-sans text-[13px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:opacity-50"
+                  >
+                    Voltar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelar}
+                    disabled={cancelando}
+                    className="rounded-xl border border-[var(--danger)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white disabled:opacity-50"
+                  >
+                    {cancelando ? "Cancelando..." : "Confirmar cancelamento"}
+                  </button>
+                </div>
               </div>
             )}
             {plano !== "beta" && (

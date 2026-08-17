@@ -440,7 +440,7 @@ function PainelPage() {
         : `O Módulo ${moduloAtual} continua aberto no Planejamento.`;
     }
     if (receitaMes <= 0) {
-      return "Vamos registrar sua primeira venda?";
+      return "Nenhuma venda registrada este mês. A primeira entrada já mostra quanto sobra.";
     }
     if (metaBoa > 0 && receitaMes >= metaBoa) {
       return "Mês bom batido. Agora é caminho pro mês de celebrar.";
@@ -499,7 +499,7 @@ function PainelPage() {
         { onConflict: "user_id,data" },
       );
     if (error) {
-      toastErro("Não consegui guardar sua intenção. Tenta de novo.");
+      toastErro("Não conseguimos guardar sua intenção. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
@@ -676,7 +676,7 @@ function PainelPage() {
             )}
             <p className="mt-2 text-[13px] text-[var(--muted)]">
               {!financeiroLiberado ? (
-                "entradas e saídas do mês fechadas num lugar só"
+                "o Controle soma entradas e saídas e mostra quanto sobrou"
               ) : (
                 <>
                   {receitaMes > 0
@@ -792,14 +792,19 @@ function PainelPage() {
               <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
                 {clientesCount}
               </p>
+              {/* Trancado, o zero não é falta de cadastro: é a trava do plano.
+                  Então a linha diz o ganho, não um vazio que ela não causou. */}
               <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {clientesCount > 0
-                  ? `${clientesEntregues} entregues · ${clientesEmEspera} em espera`
-                  : "nenhuma cadastrada ainda"}{" "}
-                ·{" "}
-                <span className="text-[var(--ink-soft)]">
-                  {clientesLiberado ? "Clientes" : "abre no Controle"}
-                </span>
+                {!clientesLiberado ? (
+                  "no Controle cada cliente fica com o status do pedido"
+                ) : (
+                  <>
+                    {clientesCount > 0
+                      ? `${clientesEntregues} entregues · ${clientesEmEspera} em espera`
+                      : "nenhuma cadastrada ainda"}{" "}
+                    · <span className="text-[var(--ink-soft)]">Clientes</span>
+                  </>
+                )}
               </p>
             </a>
           </Reveal>
@@ -826,13 +831,13 @@ function PainelPage() {
 
               {totalTarefasPainel === 0 ? (
                 <p className="mt-4 text-[14px] text-[var(--muted)]">
-                  Nada nos seus quadros por perto.
+                  Nenhuma tarefa com prazo nos próximos 7 dias. A próxima nasce no Planner.
                 </p>
               ) : (
                 <div className="mt-3">
                   {gruposTarefas.atrasadas.length > 0 && (
                     <GrupoTarefasPainel
-                      titulo="Ficou pra trás"
+                      titulo="Passou do prazo"
                       corTitulo="text-[var(--danger)]"
                       itens={gruposTarefas.atrasadas}
                       rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}

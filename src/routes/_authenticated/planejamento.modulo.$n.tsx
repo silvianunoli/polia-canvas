@@ -396,11 +396,14 @@ function SecaoForm({
       } else {
         setErroGeracao((s) => ({
           ...s,
-          [i]: "Não consegui gerar o rascunho agora. Tenta de novo.",
+          [i]: "Não conseguimos gerar o rascunho agora. Tenta de novo.",
         }));
       }
     } catch {
-      setErroGeracao((s) => ({ ...s, [i]: "Não consegui gerar o rascunho agora. Tenta de novo." }));
+      setErroGeracao((s) => ({
+        ...s,
+        [i]: "Não conseguimos gerar o rascunho agora. Tenta de novo.",
+      }));
     } finally {
       setGerando((s) => ({ ...s, [i]: false }));
     }

@@ -87,7 +87,7 @@ const movimentos: {
   {
     n: "02",
     titulo: "As respostas viram ferramentas",
-    body: "Cada módulo concluído desbloqueia uma ferramenta que já nasce preenchida com as respostas: a marca, o mapa de mercado, o catálogo, o financeiro, o caderno de divulgação e as metas. Nada de começar do zero duas vezes.",
+    body: "Cada módulo concluído entrega uma ferramenta que já nasce preenchida com as respostas: a marca, o mapa de mercado, o catálogo, o financeiro, o caderno de divulgação e as metas. Nada de começar do zero duas vezes.",
     resultado: "Resultado: ferramentas prontas, sem retrabalho.",
     mock: <MockModulos />,
   },
@@ -927,8 +927,8 @@ function HomePage() {
                 O negócio já existe. <HighlightWord delay={0.3}>Falta o lugar dele.</HighlightWord>
               </h2>
               <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Vinte minutos no primeiro módulo e o painel começa a trabalhar. E a primeira
-                resposta que aparece é a que mais aperta: dá lucro, ou só gira dinheiro?
+                A primeira resposta que o painel devolve é a que mais aperta: dá lucro, ou só gira
+                dinheiro?
               </p>
               <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink)]">
                 O próximo orçamento vai chegar de qualquer jeito. Melhor que ele chegue com a conta

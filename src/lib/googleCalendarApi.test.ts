@@ -88,7 +88,7 @@ describe("chamadas HTTP ao Google (fetch mockado)", () => {
 
       const { tokens, error } = await trocarCodigoPorTokens("code-invalido");
       expect(tokens).toBeNull();
-      expect(error).toBe("Não consegui confirmar a conexão com o Google. Tenta de novo.");
+      expect(error).toBe("Não conseguimos confirmar a conexão com o Google. Tenta de novo.");
     });
 
     it("retorna erro de falha de conexão quando fetch rejeita (rede fora)", async () => {
@@ -252,7 +252,9 @@ describe("chamadas HTTP ao Google (fetch mockado)", () => {
     });
 
     it("marca expirado: true quando o Google responde 401 (access token vencido)", async () => {
-      globalThis.fetch = vi.fn().mockResolvedValue({ ok: false, status: 401 }) as unknown as typeof fetch;
+      globalThis.fetch = vi
+        .fn()
+        .mockResolvedValue({ ok: false, status: 401 }) as unknown as typeof fetch;
 
       const { eventos, error, expirado } = await listarEventosGoogle("at-vencido", "x", "y");
       expect(expirado).toBe(true);
@@ -271,7 +273,7 @@ describe("chamadas HTTP ao Google (fetch mockado)", () => {
       const { eventos, error, expirado } = await listarEventosGoogle("at", "x", "y");
       expect(expirado).toBe(false);
       expect(eventos).toBeNull();
-      expect(error).toBe("Não consegui buscar os eventos do Google agora.");
+      expect(error).toBe("Não conseguimos buscar os eventos do Google agora.");
     });
 
     it("retorna erro de conexão quando fetch lança exceção", async () => {

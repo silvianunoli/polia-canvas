@@ -10,7 +10,7 @@ interface UpgradeSearch {
 
 export const Route = createFileRoute("/_authenticated/upgrade")({
   head: () => ({
-    meta: [{ title: "Desbloqueie esse recurso" }],
+    meta: [{ title: "Esse recurso é do Controle · Pólia" }],
   }),
   validateSearch: (search: Record<string, unknown>): UpgradeSearch => ({
     rota: typeof search.rota === "string" ? search.rota : undefined,
@@ -19,10 +19,22 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
   component: UpgradePage,
 });
 
+// O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
+const GANHO_POR_ROTA: Record<string, string> = {
+  "/financeiro": "Aqui entra tudo que entrou e saiu, e o Controle mostra quanto sobrou no mês.",
+  "/produtos": "O Controle solta o limite: cada produto com o custo, o preço e quanto sobra.",
+  "/raiox": "O Controle lê o seu mês e devolve onde o dinheiro está vazando.",
+  "/projecao": "O Projete mostra quantas vendas fecham o mês e quantas pagam o seu pró-labore.",
+  "/plano-conteudo": "O Projete monta as 365 ideias de post do ano a partir da sua marca.",
+};
+
 function UpgradePage() {
   const search = Route.useSearch();
   const tierId: TierPago = search.tier ?? "controle";
   const tier = TIERS_PAGOS[tierId];
+  const ganho =
+    (search.rota ? GANHO_POR_ROTA[search.rota] : undefined) ??
+    `Assinando o ${tier.titulo}, essa tela abre na sua conta na hora.`;
 
   return (
     <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
@@ -33,12 +45,13 @@ function UpgradePage() {
         <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
           Recurso do plano {tier.titulo}
         </p>
-        <h1 className="mt-2 font-cabinet text-[26px] leading-tight text-[var(--ink)]">
-          Esse recurso é do plano {tier.titulo}
-        </h1>
-        <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-          Desbloqueie assinando o {tier.titulo}.
-        </p>
+        <h1 className="mt-2 font-cabinet text-[22px] leading-snug text-[var(--ink)]">{ganho}</h1>
+        {/* Sem rota conhecida o ganho já é essa frase: não repete embaixo. */}
+        {search.rota && GANHO_POR_ROTA[search.rota] && (
+          <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
+            Assinando o {tier.titulo}, essa tela abre na sua conta na hora.
+          </p>
+        )}
 
         <ul className="mt-6 space-y-1.5 text-left">
           {tier.features.map((f) => (
