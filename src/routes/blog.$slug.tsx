@@ -2,6 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { renderBlogMarkdown } from "@/lib/blogRenderMarkdown";
+import { linkCanonico } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -112,7 +113,7 @@ export const Route = createFileRoute("/blog/$slug")({
 
     return { post, related: (related as RelatedPost[] | null) ?? [] };
   },
-  head: ({ loaderData }) => ({
+  head: ({ loaderData, params }) => ({
     meta: [
       {
         title: loaderData?.post.titulo ? `${loaderData.post.titulo} · Blog · Pólia` : TITULO_PADRAO,
@@ -124,6 +125,7 @@ export const Route = createFileRoute("/blog/$slug")({
         ? [{ property: "og:image", content: loaderData.post.capa_url }]
         : []),
     ],
+    links: [linkCanonico(`/blog/${params.slug}`)],
   }),
   component: BlogPost,
   // A rota lançava notFound() sem nenhum destes três: link quebrado, falha de

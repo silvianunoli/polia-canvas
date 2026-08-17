@@ -10,6 +10,8 @@ import { CosmicInput } from "@/components/cosmic/CosmicInput";
 export const Route = createFileRoute("/auth/esqueci-senha")({
   head: () => ({
     meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Esqueci minha senha · Pólia" },
       {
         name: "description",

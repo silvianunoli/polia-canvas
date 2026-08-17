@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/termos")({
           "Termos de uso da Pólia. Em linguagem clara, sem letra miúda escondendo pegadinha.",
       },
     ],
+    links: [linkCanonico("/termos")],
   }),
   component: TermosPage,
 });

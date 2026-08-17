@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { ArrowUp } from "lucide-react";
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/lista-de-espera")({
           "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Seja avisada antes de todo mundo.",
       },
     ],
+    links: [linkCanonico("/lista-de-espera")],
   }),
   component: ListaEsperaPage,
 });

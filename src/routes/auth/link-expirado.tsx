@@ -9,7 +9,11 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/auth/link-expirado")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
-    meta: [{ title: "Link expirado · Pólia" }],
+    meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Link expirado · Pólia" },
+    ],
   }),
   component: LinkExpiradoPage,
 });

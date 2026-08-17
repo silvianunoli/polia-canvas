@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/privacidade")({
           "Política de Privacidade da Pólia, no padrão LGPD. Os dados são da titular. Nós explicamos o que coletamos, por quê e como ela controla.",
       },
     ],
+    links: [linkCanonico("/privacidade")],
   }),
   component: PrivacidadePage,
 });

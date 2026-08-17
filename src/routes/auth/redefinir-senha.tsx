@@ -14,6 +14,8 @@ import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({
     meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Nova senha · Pólia" },
       { name: "description", content: "Nova senha para a conta Pólia." },
     ],

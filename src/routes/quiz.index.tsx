@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { track } from "@/lib/analytics";
@@ -62,6 +63,7 @@ export const Route = createFileRoute("/quiz/")({
         content: "8 perguntas, 2 minutos, sem julgamento.",
       },
     ],
+    links: [linkCanonico("/quiz")],
   }),
   component: QuizPage,
 });

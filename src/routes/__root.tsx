@@ -23,10 +23,15 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
 import { DOMINIO_GESTAO, caminhoPermitidoNoDominioGestao } from "@/lib/dominio-gestao";
+import { HOST_CANONICO, urlCanonica } from "@/lib/seo";
 
 import appCss from "../styles.css?url";
 
 const MODO_MANUTENCAO = import.meta.env.VITE_MODO_MANUTENCAO === "true";
+
+// URL absoluta e no domínio próprio: o WhatsApp, o LinkedIn e o X não
+// resolvem caminho relativo em og:image.
+const OG_IMAGE = urlCanonica("/marketing/og-compartilhamento.jpg");
 
 // Rotas compartilhadas (404/500/manutenção/offline) têm duas peles: quem está
 // deslogada vê o chrome do site (cabeçalho/rodapé); quem está logada vê a
@@ -82,22 +87,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras.",
       },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { property: "og:url", content: urlCanonica("/") },
+      { property: "og:site_name", content: "Pólia" },
+      { property: "og:locale", content: "pt_BR" },
+      // A imagem tem 1200x630, o formato que pede o card grande. Com
+      // "summary" o compartilhamento saía com uma miniatura quadrada.
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Pólia" },
       {
         name: "twitter:description",
         content: "Pólia, plataforma guiada para mulheres empreendedoras brasileiras.",
       },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/0f5c77a7-73cf-46e8-ba6d-11e724073022/id-preview-06d80276--98e74367-7843-48ef-9220-4aa0d3ef55fb.lovable.app-1779750459502.png",
-      },
+      // A imagem de compartilhamento apontava pra um PNG de preview do Lovable
+      // num bucket r2.dev que não é nosso: link de terceiro, que some sem
+      // aviso e não tem nada da marca. Agora é arquivo próprio, servido do
+      // domínio próprio. Peça interina: quando a definitiva ficar pronta,
+      // basta substituir o arquivo mantendo o nome, sem tocar em código.
+      { property: "og:image", content: OG_IMAGE },
+      { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

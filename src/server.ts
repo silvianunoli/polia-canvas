@@ -5,6 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
 import { DOMINIO_GESTAO } from "./lib/dominio-gestao";
 import { CORPO_ROBOTS } from "./lib/robots";
+import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
 import { supabase } from "./integrations/supabase/client";
 
@@ -140,11 +141,21 @@ export default {
       url.pathname = url.pathname.slice("/admin".length) || "/";
       return Response.redirect(url.toString(), 301);
     }
-    if (url.hostname === "www.usepolia.com.br") {
-      url.hostname = "usepolia.com.br";
+    // /health responde em QUALQUER hostname e vem antes do 301: o monitor
+    // externo de uptime bate no fallback workers.dev, e um redirect quebraria
+    // o check.
+    if (url.pathname === "/health") return respostaHealth();
+
+    // Qualquer hostname que não seja o oficial (www, workers.dev, preview de
+    // deploy) leva 301 pro domínio próprio. O workers_dev segue ligado no
+    // wrangler.jsonc de propósito, como fallback operacional; é este 301 que
+    // impede o mesmo conteúdo de entrar no índice do Google em dois endereços.
+    if (deveRedirecionarParaHostCanonico(url.hostname)) {
+      url.protocol = "https:";
+      url.hostname = HOSTNAME_CANONICO;
+      url.port = "";
       return Response.redirect(url.toString(), 301);
     }
-    if (url.pathname === "/health") return respostaHealth();
     if (url.pathname === "/sitemap.xml") return await respostaSitemap();
     if (url.pathname === "/robots.txt") return respostaRobots();
 

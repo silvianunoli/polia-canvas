@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   PlayCircle,
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/ajuda")({
       { property: "og:title", content: "Ajuda · Pólia" },
       { property: "og:description", content: "Como a gente pode ajudar?" },
     ],
+    links: [linkCanonico("/ajuda")],
   }),
   component: AjudaPage,
 });

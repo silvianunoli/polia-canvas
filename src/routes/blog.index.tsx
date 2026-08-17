@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { linkCanonico } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/blog/")({
         content: "Textos da Pólia pra quem toca a marca.",
       },
     ],
+    links: [linkCanonico("/blog")],
   }),
   component: BlogList,
 });

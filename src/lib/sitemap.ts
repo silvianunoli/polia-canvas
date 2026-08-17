@@ -5,7 +5,10 @@
 // Host fixo de propósito, NUNCA derivado do request: o site também responde no
 // subdomínio *.workers.dev (fallback operacional mantido no wrangler.jsonc), e
 // um sitemap derivado do request apontaria pra lá, criando índice duplicado.
-export const HOST_CANONICO = "https://usepolia.com.br";
+// Fonte única do host: src/lib/seo.ts.
+import { HOST_CANONICO } from "./seo";
+
+export { HOST_CANONICO };
 
 // URLs públicas estáticas, nesta ordem. Ficam de fora, por não serem conteúdo
 // indexável: /central, /auth/*, /pesquisa, /compra-confirmada, /descadastrar e

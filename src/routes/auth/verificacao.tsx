@@ -14,6 +14,8 @@ export const Route = createFileRoute("/auth/verificacao")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Confirmação de e-mail · Pólia" },
       {
         name: "description",

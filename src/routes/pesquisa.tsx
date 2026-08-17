@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
@@ -23,6 +24,7 @@ export const Route = createFileRoute("/pesquisa")({
           "Me conta como está o seu negócio hoje: uma pesquisa rápida e anônima sobre preço, lucro e o que mais aperta.",
       },
     ],
+    links: [linkCanonico("/pesquisa")],
   }),
   loader: async () => await getPesquisaAberta(),
   component: PesquisaPage,

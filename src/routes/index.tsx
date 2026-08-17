@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect, type ReactNode } from "react";
 import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/")({
         content: "Ver quanto sobra em cada venda e cobrar o que o negócio vale, no mesmo lugar.",
       },
     ],
+    links: [linkCanonico("/")],
   }),
   component: HomePage,
 });

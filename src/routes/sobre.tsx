@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { linkCanonico } from "@/lib/seo";
 import { ClipboardList, LineChart, Route as RouteIcon, Check, X } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/sobre")({
         content: "Por que a Pólia existe, no que ela acredita, e pra quem é feita.",
       },
     ],
+    links: [linkCanonico("/sobre")],
   }),
   component: SobrePage,
 });

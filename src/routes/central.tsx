@@ -11,7 +11,11 @@ import { PoliaIcon } from "@/components/brand/PoliaLogo";
 // layout autenticado.
 export const Route = createFileRoute("/central")({
   head: () => ({
-    meta: [{ title: "Central de administração · Pólia" }],
+    meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
+      { title: "Central de administração · Pólia" },
+    ],
   }),
   beforeLoad: async ({ location }) => {
     if (typeof window === "undefined") return;

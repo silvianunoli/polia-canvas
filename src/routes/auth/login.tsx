@@ -31,6 +31,8 @@ export const Route = createFileRoute("/auth/login")({
   validateSearch: (s) => searchSchema.parse(s),
   head: () => ({
     meta: [
+      // Não é conteúdo de busca: fica fora do índice.
+      { name: "robots", content: "noindex, nofollow" },
       { title: "Entrar · Pólia" },
       { name: "description", content: "A conta Pólia continua de onde parou." },
       { property: "og:title", content: "Entrar · Pólia" },
