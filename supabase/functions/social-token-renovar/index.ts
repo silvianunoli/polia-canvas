@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { emailPolia, escapeHtml } from "../_shared/email-polia.ts";
 
 // Renovação semanal do token de longa duração do Instagram (@usepolia), via
 // pg_cron (segunda-feira). Fluxo "Instagram API with Instagram Login": o
@@ -32,7 +33,11 @@ function autenticado(req: Request): boolean {
 
 async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
   if (!RESEND_API_KEY) {
-    console.error("[social-token-renovar] Missing RESEND_API_KEY — aviso não enviado.", nomeConta, motivo);
+    console.error(
+      "[social-token-renovar] Missing RESEND_API_KEY — aviso não enviado.",
+      nomeConta,
+      motivo,
+    );
     return;
   }
   try {
@@ -44,7 +49,17 @@ async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
         to: [EMAIL_SIL],
         subject: `A renovação do token do Instagram falhou (${nomeConta})`,
         text: `A renovação automática do token de @${handle} (${nomeConta}) falhou. Motivo: ${motivo}\n\nRenova na mão no painel da Meta for Developers antes que a conexão vença.`,
-        html: `<p>A renovação automática do token de <strong>@${handle}</strong> (${nomeConta}) falhou.</p><p>Motivo: ${motivo}</p><p>Renova na mão no painel da Meta for Developers antes que a conexão vença.</p>`,
+        // O `motivo` carrega a mensagem de erro devolvida pela Meta, que é
+        // texto externo — escapa antes de entrar no HTML.
+        html: emailPolia({
+          preheader: `O token de @${handle} não renovou.`,
+          headline: "A renovação do token falhou",
+          paragrafos: [
+            `A renovação automática do token de <strong>@${escapeHtml(handle)}</strong> (${escapeHtml(nomeConta)}) falhou.`,
+            `Motivo: ${escapeHtml(motivo)}`,
+            "Renova na mão no painel da Meta for Developers antes que a conexão vença.",
+          ],
+        }),
       }),
     });
   } catch (err) {
@@ -86,12 +101,16 @@ Deno.serve(async (req) => {
     .filter((c: ContaComCredencial) => Boolean(c.access_token)) as ContaComCredencial[];
 
   if (linhas.length === 0) {
-    return new Response(JSON.stringify({ skipped: true, motivo: "Nenhuma conta com token configurado ainda" }), {
-      status: 200,
-    });
+    return new Response(
+      JSON.stringify({ skipped: true, motivo: "Nenhuma conta com token configurado ainda" }),
+      {
+        status: 200,
+      },
+    );
   }
 
-  const resultados: Array<{ conta_id: string; ok: boolean; motivo?: string; expira_em?: string }> = [];
+  const resultados: Array<{ conta_id: string; ok: boolean; motivo?: string; expira_em?: string }> =
+    [];
 
   for (const conta of linhas) {
     const params = new URLSearchParams({
@@ -109,10 +128,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const expiraEm = new Date(Date.now() + (json.expires_in ?? 60 * 24 * 60 * 60) * 1000).toISOString();
+      const expiraEm = new Date(
+        Date.now() + (json.expires_in ?? 60 * 24 * 60 * 60) * 1000,
+      ).toISOString();
       await supabaseAdmin
         .from("contas_instagram_credenciais")
-        .update({ access_token: json.access_token, token_expira_em: expiraEm, atualizado_em: new Date().toISOString() })
+        .update({
+          access_token: json.access_token,
+          token_expira_em: expiraEm,
+          atualizado_em: new Date().toISOString(),
+        })
         .eq("conta_id", conta.conta_id);
 
       resultados.push({ conta_id: conta.conta_id, ok: true, expira_em: expiraEm });

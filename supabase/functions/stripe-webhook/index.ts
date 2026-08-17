@@ -1,5 +1,6 @@
 import Stripe from "npm:stripe@22.3.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { emailPolia } from "../_shared/email-polia.ts";
 
 // Stripe manda o corpo assinado (sem JWT de usuária) — esta função fica com
 // verify_jwt = false e valida a autenticidade pela assinatura HMAC do próprio
@@ -83,7 +84,8 @@ async function registrarEventoAnalytics(
 async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription) {
   const item = subscription.items.data[0];
   const priceId = item?.price.id ?? null;
-  const customerId = typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
+  const customerId =
+    typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
 
   const patch = {
     stripe_subscription_id: subscription.id,
@@ -122,7 +124,10 @@ async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription)
   }
 
   if (priceId && PRICE_TO_PLANO[priceId]) {
-    await supabaseAdmin.from("profiles").update({ plano: PRICE_TO_PLANO[priceId] }).eq("id", userId);
+    await supabaseAdmin
+      .from("profiles")
+      .update({ plano: PRICE_TO_PLANO[priceId] })
+      .eq("id", userId);
   }
 }
 
@@ -139,46 +144,13 @@ async function buscarUserIdPorEmail(email: string): Promise<string | null> {
   return (data as { id: string } | null)?.id ?? null;
 }
 
-// Mirror de src/lib/email-template.ts — Deno Edge Function é runtime separado
-// do Worker, não dá pra importar de src/lib direto. Manter os dois em sync.
-function emailPolia(opts: { preheader: string; headline: string; paragrafos: string[]; ctaLabel: string; ctaUrl: string }): string {
-  const corpo = opts.paragrafos
-    .map(
-      (p) =>
-        `<p style="margin:0 0 16px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#2C2C2C;">${p}</p>`,
-    )
-    .join("\n");
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-  <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>${opts.headline}</title></head>
-  <body style="margin:0;padding:0;background-color:#F2F0ED;">
-    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${opts.preheader}</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2F0ED;">
-      <tr><td align="center" style="padding:40px 16px;">
-        <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
-          <tr><td style="padding-bottom:24px;text-align:left;">
-            <span style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#0A0A0A;">Pólia</span>
-          </td></tr>
-          <tr><td style="background-color:#ffffff;border:1px solid #E6E6E6;border-radius:12px;padding:32px;">
-            <h1 style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.3;color:#0A0A0A;">${opts.headline}</h1>
-            ${corpo}
-            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
-              <tr><td style="border-radius:8px;background-color:#7CCBCD;">
-                <a href="${opts.ctaUrl}" style="display:inline-block;padding:14px 32px;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:600;color:#0A0A0A;text-decoration:none;border-radius:8px;">${opts.ctaLabel}</a>
-              </td></tr>
-            </table>
-          </td></tr>
-          <tr><td style="padding-top:24px;text-align:left;">
-            <p style="margin:0;font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#9E9E9E;">Pólia · usepolia.com.br</p>
-          </td></tr>
-        </table>
-      </td></tr>
-    </table>
-  </body>
-</html>`;
-}
-
-async function enviarViaResend(subject: string, text: string, html: string, to: string, contexto: string) {
+async function enviarViaResend(
+  subject: string,
+  text: string,
+  html: string,
+  to: string,
+  contexto: string,
+) {
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
     console.error(`[stripe-webhook] Missing RESEND_API_KEY — ${contexto} não enviado.`);
@@ -272,7 +244,11 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
   );
 }
 
-async function enviarEmailRenovacao(email: string, valorFormatado: string, dataCobranca: string | null) {
+async function enviarEmailRenovacao(
+  email: string,
+  valorFormatado: string,
+  dataCobranca: string | null,
+) {
   const paragrafo = dataCobranca
     ? `Em ${dataCobranca} vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia.`
     : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia.`;
@@ -335,12 +311,22 @@ Deno.serve(async (req) => {
 
   let event: Stripe.Event;
   try {
-    event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret, undefined, cryptoProvider);
+    event = await stripe.webhooks.constructEventAsync(
+      body,
+      signature,
+      webhookSecret,
+      undefined,
+      cryptoProvider,
+    );
   } catch (err) {
     console.error("[stripe-webhook] Assinatura inválida:", err);
-    void dispararAlerta("stripe_webhook_assinatura_invalida", "Assinatura inválida no webhook do Stripe", {
-      mensagem: err instanceof Error ? err.message : String(err),
-    });
+    void dispararAlerta(
+      "stripe_webhook_assinatura_invalida",
+      "Assinatura inválida no webhook do Stripe",
+      {
+        mensagem: err instanceof Error ? err.message : String(err),
+      },
+    );
     return new Response("Assinatura inválida.", { status: 400 });
   }
 
@@ -367,17 +353,25 @@ Deno.serve(async (req) => {
         const customerId =
           typeof session.customer === "string" ? session.customer : session.customer?.id;
         const subscriptionId =
-          typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+          typeof session.subscription === "string"
+            ? session.subscription
+            : session.subscription?.id;
 
         if (!email || !customerId || !subscriptionId) {
-          console.error("[stripe-webhook] checkout.session.completed sem e-mail/customer/subscription.");
-          await registrarEventoAnalytics("checkout_falhou", session.id, { motivo: "dados_ausentes" });
+          console.error(
+            "[stripe-webhook] checkout.session.completed sem e-mail/customer/subscription.",
+          );
+          await registrarEventoAnalytics("checkout_falhou", session.id, {
+            motivo: "dados_ausentes",
+          });
           break;
         }
 
         const userId = await resolverContaDaCompra(email, customerId);
         if (!userId) {
-          await registrarEventoAnalytics("checkout_falhou", session.id, { motivo: "erro_criar_conta" });
+          await registrarEventoAnalytics("checkout_falhou", session.id, {
+            motivo: "erro_criar_conta",
+          });
           break;
         }
 
@@ -421,7 +415,9 @@ Deno.serve(async (req) => {
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
         const subRef =
-          invoice.parent?.type === "subscription_details" ? invoice.parent.subscription_details?.subscription : null;
+          invoice.parent?.type === "subscription_details"
+            ? invoice.parent.subscription_details?.subscription
+            : null;
         const subscriptionId = typeof subRef === "string" ? subRef : subRef?.id;
         if (subscriptionId) {
           const { data } = await supabaseAdmin
@@ -440,7 +436,8 @@ Deno.serve(async (req) => {
       }
       case "invoice.upcoming": {
         const invoice = event.data.object as Stripe.Invoice;
-        const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        const customerId =
+          typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
         if (!customerId) break;
         const { data } = await supabaseAdmin
           .from("assinaturas")
@@ -466,10 +463,14 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error(`[stripe-webhook] Erro ao processar ${event.type}:`, err);
-    void dispararAlerta("stripe_webhook_erro_processamento", "Erro ao processar evento do webhook do Stripe", {
-      evento: event.type,
-      mensagem: err instanceof Error ? err.message : String(err),
-    });
+    void dispararAlerta(
+      "stripe_webhook_erro_processamento",
+      "Erro ao processar evento do webhook do Stripe",
+      {
+        evento: event.type,
+        mensagem: err instanceof Error ? err.message : String(err),
+      },
+    );
     return new Response("Erro ao processar evento.", { status: 500 });
   }
 

@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { GoogleGenAI } from "npm:@google/genai";
 import { z } from "npm:zod@3.23.8";
+import { emailPolia } from "../_shared/email-polia.ts";
 
 // Lote mensal do Raio-x do mês (Fase 3, Projete) — chamado só por pg_cron via
 // pg_net (`disparar_raiox_mensal()`, migração 20260727191000), autenticado por
@@ -67,11 +68,24 @@ function produtosPorSobra(produtos: Produto[]) {
       const n = (s?: string) => (s ? parseFloat(s.replace(",", ".")) || 0 : 0);
       const v = p.calculadora_breakdown?.valores ?? {};
       const perfil = p.calculadora_breakdown?.perfil;
-      const taxaVendaPct = perfil === "produto" ? n(v.taxaVenda) : perfil === "encomenda" ? n(v.taxaVendaE) : n(v.taxaVendaS);
-      const impostosPct = perfil === "produto" ? n(v.impostos) : perfil === "encomenda" ? n(v.impostosE) : n(v.impostosS);
+      const taxaVendaPct =
+        perfil === "produto"
+          ? n(v.taxaVenda)
+          : perfil === "encomenda"
+            ? n(v.taxaVendaE)
+            : n(v.taxaVendaS);
+      const impostosPct =
+        perfil === "produto"
+          ? n(v.impostos)
+          : perfil === "encomenda"
+            ? n(v.impostosE)
+            : n(v.impostosS);
       const custo = p.preco_custo ?? 0;
       const taxas = p.preco_venda * ((taxaVendaPct + impostosPct) / 100);
-      const sobraPct = Math.max(0, Math.round(((p.preco_venda - custo - taxas) / p.preco_venda) * 100));
+      const sobraPct = Math.max(
+        0,
+        Math.round(((p.preco_venda - custo - taxas) / p.preco_venda) * 100),
+      );
       return { nome: p.nome, sobraPct };
     })
     .sort((a, b) => b.sobraPct - a.sobraPct);
@@ -91,7 +105,9 @@ Regras (obrigatórias):
 const respostaIaSchema = z.object({
   placar: z.string(),
   causas: z.string(),
-  sugestoes: z.array(z.object({ texto: z.string(), rota: z.string().nullable().optional() })).max(3),
+  sugestoes: z
+    .array(z.object({ texto: z.string(), rota: z.string().nullable().optional() }))
+    .max(3),
 });
 
 const ROTAS_VALIDAS = new Set(["produtos", "financeiro", "metas", "clientes"]);
@@ -106,6 +122,7 @@ function geminiClient(): GoogleGenAI {
 
 async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
   if (!RESEND_API_KEY) return;
+  const url = "https://usepolia.com.br/raiox";
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -114,7 +131,18 @@ async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: paraEmail,
         subject: `Seu raio-x de ${mesLabel} está pronto`,
-        text: `A leitura do seu mês já está pronta. Acesse: https://usepolia.com.br/raiox`,
+        text: `A leitura do seu mês já está pronta.\n\n${url}`,
+        // Este e-mail saía só como texto puro, com a URL solta no corpo — sem
+        // marca e sem botão, no aviso do recurso mais caro do produto.
+        html: emailPolia({
+          preheader: `A leitura de ${mesLabel} já está pronta.`,
+          headline: "Seu raio-x está pronto",
+          paragrafos: [
+            `A Pólia leu os números de ${mesLabel} e já deixou a leitura do mês na sua conta.`,
+          ],
+          ctaLabel: "Ver o raio-x",
+          ctaUrl: url,
+        }),
       }),
     });
   } catch {
@@ -167,21 +195,22 @@ Deno.serve(async (req: Request) => {
       continue;
     }
 
-    const [{ data: lancamentos }, { data: meta }, { data: produtos }, { data: authUser }] = await Promise.all([
-      supabaseAdmin.from("lancamentos").select("tipo, valor, data").eq("user_id", userId),
-      supabaseAdmin
-        .from("metas")
-        .select("valor_alvo, valor_atual")
-        .eq("user_id", userId)
-        .eq("titulo", "Meta do mês")
-        .maybeSingle(),
-      supabaseAdmin
-        .from("produtos")
-        .select("nome, preco_venda, preco_custo, calculadora_breakdown")
-        .eq("user_id", userId)
-        .eq("arquivado", false),
-      supabaseAdmin.auth.admin.getUserById(userId),
-    ]);
+    const [{ data: lancamentos }, { data: meta }, { data: produtos }, { data: authUser }] =
+      await Promise.all([
+        supabaseAdmin.from("lancamentos").select("tipo, valor, data").eq("user_id", userId),
+        supabaseAdmin
+          .from("metas")
+          .select("valor_alvo, valor_atual")
+          .eq("user_id", userId)
+          .eq("titulo", "Meta do mês")
+          .maybeSingle(),
+        supabaseAdmin
+          .from("produtos")
+          .select("nome, preco_venda, preco_custo, calculadora_breakdown")
+          .eq("user_id", userId)
+          .eq("arquivado", false),
+        supabaseAdmin.auth.admin.getUserById(userId),
+      ]);
 
     const { entradas, saidas, resultado, total } = resultadoDoMes(
       (lancamentos ?? []) as Lancamento[],
@@ -228,7 +257,9 @@ Deno.serve(async (req: Request) => {
       );
     }
     if (dadoRalo) {
-      partesPrompt.push("Aviso: esse mês tem poucos lançamentos — a leitura é limitada, diga isso na resposta.");
+      partesPrompt.push(
+        "Aviso: esse mês tem poucos lançamentos — a leitura é limitada, diga isso na resposta.",
+      );
     }
     partesPrompt.push(
       `Devolva um JSON: { "placar": string, "causas": string, "sugestoes": [{ "texto": string, "rota": "produtos"|"financeiro"|"metas"|"clientes"|null }] } — 1 a 3 sugestões.`,

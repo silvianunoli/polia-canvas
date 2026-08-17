@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { emailPolia, escapeHtml } from "../_shared/email-polia.ts";
 
 // Bot de DM por gatilho (Feature C, handoff Seção 6). Recebe webhooks do
 // Instagram: comentário com palavra-gatilho -> private reply automática;
@@ -21,10 +22,7 @@ const JANELA_GATILHO_MS = 7 * 24 * 60 * 60 * 1000;
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 function semAcentoMinusculo(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase();
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
 /**
@@ -33,7 +31,9 @@ function semAcentoMinusculo(texto: string): string {
  * ig_user_id da conta profissional). Resolve pra qual conta/token da Fábrica
  * de Posts esse evento pertence.
  */
-async function resolverConta(igUserIdConta: string): Promise<{ contaId: string; token: string } | null> {
+async function resolverConta(
+  igUserIdConta: string,
+): Promise<{ contaId: string; token: string } | null> {
   const { data } = await supabaseAdmin
     .from("contas_instagram_credenciais")
     .select("conta_id, access_token")
@@ -43,7 +43,11 @@ async function resolverConta(igUserIdConta: string): Promise<{ contaId: string; 
   return { contaId: data.conta_id, token: data.access_token };
 }
 
-async function enviarPrivateReply(commentId: string, mensagem: string, token: string): Promise<{ ok: boolean; erro?: string }> {
+async function enviarPrivateReply(
+  commentId: string,
+  mensagem: string,
+  token: string,
+): Promise<{ ok: boolean; erro?: string }> {
   const resp = await fetch(`${GRAPH}/${commentId}/private_replies`, {
     method: "POST",
     body: new URLSearchParams({ message: mensagem, access_token: token }),
@@ -53,7 +57,11 @@ async function enviarPrivateReply(commentId: string, mensagem: string, token: st
   return { ok: true };
 }
 
-async function responderComentarioPublico(commentId: string, mensagem: string, token: string): Promise<void> {
+async function responderComentarioPublico(
+  commentId: string,
+  mensagem: string,
+  token: string,
+): Promise<void> {
   try {
     await fetch(`${GRAPH}/${commentId}/replies`, {
       method: "POST",
@@ -78,7 +86,16 @@ async function avisarSilJanelaAberta(igUserId: string): Promise<void> {
         to: [EMAIL_SIL],
         subject: "Alguém respondeu a DM do @usepolia",
         text: `A conta ${igUserId} respondeu a private reply e abriu a janela de 24h. Entra no Instagram pra continuar a conversa na mão.`,
-        html: `<p>A conta <strong>${igUserId}</strong> respondeu a private reply e abriu a janela de 24h.</p><p>Entra no Instagram pra continuar a conversa na mão.</p>`,
+        // escapeHtml porque o igUserId vem do payload do webhook da Meta, que é
+        // entrada externa: sem escapar, dá pra injetar HTML no e-mail.
+        html: emailPolia({
+          preheader: "A janela de 24h abriu.",
+          headline: "Alguém respondeu a DM",
+          paragrafos: [
+            `A conta <strong>${escapeHtml(igUserId)}</strong> respondeu a private reply e abriu a janela de 24h.`,
+            "Entra no Instagram pra continuar a conversa na mão.",
+          ],
+        }),
       }),
     });
   } catch (err) {
@@ -188,7 +205,9 @@ async function processarComentario(
   if (resultado.ok) {
     await responderComentarioPublico(commentId, "te mandei no direct!", token);
   } else {
-    console.error(`[ig-webhook] falha ao enviar private reply pro comentário ${commentId}: ${resultado.erro}`);
+    console.error(
+      `[ig-webhook] falha ao enviar private reply pro comentário ${commentId}: ${resultado.erro}`,
+    );
   }
 }
 
