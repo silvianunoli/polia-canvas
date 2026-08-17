@@ -112,7 +112,6 @@ const recusa = [
   "Meta no vermelho jogada como cobrança",
   "Hype de promessa grande com número redondo",
   "Tutorial bobo, mascote, professora de cima",
-  "Jargão e feature de sistema grande",
 ];
 
 // Só o que o credo abaixo NÃO desenvolve: as outras quatro linhas repetiam,
@@ -120,6 +119,7 @@ const recusa = [
 const escolhe = [
   "Clareza sobre quanto a marca vale",
   "O Planejamento decidido uma vez, valendo o mês inteiro",
+  "Aberta na hora de cobrar, comprar ou fechar",
 ];
 
 const credo = [
@@ -195,14 +195,30 @@ function SobrePage() {
             </div>
             <Reveal delay={0.15} y={28}>
               <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--surface)]">
-                <img
-                  src="/marketing/sobre-hero.png"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-full w-full object-cover"
-                  width={2224}
-                  height={1664}
-                />
+                {/* Elemento de LCP da página: carrega cedo e com prioridade,
+                    nunca lazy. O PNG de 809KB fica só como fallback do WebP. */}
+                {/* block + tamanho no <picture>: ele é inline por padrão, e sem
+                    isso o h-full/w-full do <img> passaria a medir contra ele em
+                    vez do container, mudando o enquadramento. */}
+                <picture className="block h-full w-full">
+                  <source
+                    srcSet="/marketing/sobre-hero-1024.webp"
+                    type="image/webp"
+                    media="(min-width: 641px)"
+                  />
+                  <source srcSet="/marketing/sobre-hero-640.webp" type="image/webp" />
+                  <img
+                    src="/marketing/sobre-hero.png"
+                    alt=""
+                    aria-hidden="true"
+                    className="h-full w-full object-cover"
+                    width={2224}
+                    height={1664}
+                    decoding="async"
+                    loading="eager"
+                    fetchPriority="high"
+                  />
+                </picture>
               </div>
             </Reveal>
           </div>
@@ -359,6 +375,8 @@ function SobrePage() {
                   alt="Sil, fundadora da Pólia"
                   width={64}
                   height={64}
+                  decoding="async"
+                  loading="lazy"
                   className="h-16 w-16 rounded-full object-cover"
                 />
                 <div>
@@ -394,14 +412,25 @@ function SobrePage() {
 
             <Reveal delay={0.1} y={28} className="mt-[clamp(40px,5vw,48px)]">
               <div className="overflow-hidden rounded-2xl border border-[var(--line)]">
-                <img
-                  src="/marketing/sobre-manifesto.jpg"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-[200px] w-full object-cover md:h-[300px]"
-                  width={2224}
-                  height={1664}
-                />
+                {/* Abaixo da dobra: lazy. O JPG de 1MB fica só como fallback. */}
+                <picture className="block w-full">
+                  <source
+                    srcSet="/marketing/sobre-manifesto-1024.webp"
+                    type="image/webp"
+                    media="(min-width: 641px)"
+                  />
+                  <source srcSet="/marketing/sobre-manifesto-640.webp" type="image/webp" />
+                  <img
+                    src="/marketing/sobre-manifesto.jpg"
+                    alt=""
+                    aria-hidden="true"
+                    className="h-[200px] w-full object-cover md:h-[300px]"
+                    width={2224}
+                    height={1664}
+                    decoding="async"
+                    loading="lazy"
+                  />
+                </picture>
               </div>
             </Reveal>
 

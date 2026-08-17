@@ -23,7 +23,8 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
 import { DOMINIO_GESTAO, caminhoPermitidoNoDominioGestao } from "@/lib/dominio-gestao";
-import { HOST_CANONICO, urlCanonica } from "@/lib/seo";
+import { urlCanonica } from "@/lib/seo";
+import { jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "@/lib/jsonld";
 
 import appCss from "../styles.css?url";
 
@@ -123,6 +124,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
     ],
+    // Quem é a marca e qual é o site oficial dela, em todas as rotas.
+    scripts: [tagJsonLd(jsonLdOrganization()), tagJsonLd(jsonLdWebSite())],
   }),
   shellComponent: RootShell,
   component: RootComponent,

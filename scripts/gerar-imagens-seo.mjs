@@ -38,7 +38,9 @@ async function tamanho(caminho) {
  * wordmark ou texto por cima: aplicação de logo não entra neste handoff.
  */
 async function gerarOgImage() {
-  const origem = resolve(MARKETING, "fechamento.jpg");
+  // fechamento.jpg é órfã (nenhuma tela usa), então mora em _nao-usadas/. Ela
+  // segue no repositório justamente por ser a origem desta peça.
+  const origem = resolve(MARKETING, "_nao-usadas/fechamento.jpg");
   const destino = resolve(MARKETING, "og-compartilhamento.jpg");
 
   const antes = await tamanho(origem);

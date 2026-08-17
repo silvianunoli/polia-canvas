@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { linkCanonico } from "@/lib/seo";
+import { jsonLdFaq, tagJsonLd } from "@/lib/jsonld";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect, type ReactNode } from "react";
 import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
@@ -36,6 +37,9 @@ export const Route = createFileRoute("/")({
       },
     ],
     links: [linkCanonico("/")],
+    // Gerado do array `perguntas` logo abaixo, nunca copiado à mão: FAQ
+    // estruturado que não bate com o texto visível vale menos que nenhum.
+    scripts: [tagJsonLd(jsonLdFaq(perguntas))],
   }),
   component: HomePage,
 });
@@ -356,6 +360,8 @@ function FotoFundadora() {
       alt="Sil, fundadora da Pólia"
       width={112}
       height={112}
+      decoding="async"
+      loading="lazy"
       onError={() => setFalhou(true)}
       className="mb-5 h-28 w-28 rounded-full object-cover"
     />
