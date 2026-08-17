@@ -5,7 +5,6 @@ import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
-import { gatePublico } from "@/lib/site-gate";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
@@ -21,7 +20,6 @@ import {
 } from "@/components/site/ProdutoMock";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       { title: "Pólia · Descubra se o seu negócio dá lucro" },

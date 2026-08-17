@@ -19,8 +19,7 @@ import {
 import { calcularResultado, type RespostasQuiz } from "@/lib/quiz/pontuacao";
 
 // Quiz "Você está pagando pra trabalhar?" — isca do pré-lançamento (PRD-quiz.md).
-// Rota pública sem gatePublico de propósito: é o destino do link da bio, quem
-// chega aqui nunca tem sessão.
+// Rota pública: é o destino do link da bio, quem chega aqui nunca tem sessão.
 //
 // Estado só em memória: abandonar no meio não grava nada e recarregar começa do
 // zero (no-go do v1). A única escrita é o lead, no gate de e-mail.

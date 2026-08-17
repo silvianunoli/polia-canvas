@@ -30,10 +30,8 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
-import { gatePublico } from "@/lib/site-gate";
 
 export const Route = createFileRoute("/ajuda")({
-  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       { title: "Ajuda · Pólia" },

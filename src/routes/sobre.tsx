@@ -12,10 +12,8 @@ import {
   Eyebrow,
   Pullquote,
 } from "@/components/site/Editorial";
-import { gatePublico } from "@/lib/site-gate";
 
 export const Route = createFileRoute("/sobre")({
-  beforeLoad: gatePublico,
   head: () => ({
     meta: [
       { title: "A marca · Pólia" },
