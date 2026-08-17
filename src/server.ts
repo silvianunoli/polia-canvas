@@ -4,6 +4,9 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
 import { DOMINIO_GESTAO } from "./lib/dominio-gestao";
+import { CORPO_ROBOTS } from "./lib/robots";
+import { montarSitemap, type PostSitemap } from "./lib/sitemap";
+import { supabase } from "./integrations/supabase/client";
 
 // Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
 // responde antes de qualquer roteamento do TanStack Start, pra não depender
@@ -12,6 +15,45 @@ function respostaHealth(): Response {
   return new Response(JSON.stringify({ status: "ok", timestamp: new Date().toISOString() }), {
     status: 200,
     headers: { "content-type": "application/json" },
+  });
+}
+
+// Sitemap e robots.txt respondem antes do roteamento do TanStack Start, no
+// mesmo padrão do /health: são texto puro, não precisam de SSR nem de React de
+// pé, e um erro de renderização não pode derrubar a descoberta do site.
+async function respostaSitemap(): Promise<Response> {
+  let posts: PostSitemap[] = [];
+  try {
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("slug, publicado_em")
+      .eq("publicado", true)
+      .order("publicado_em", { ascending: false });
+    if (error) throw error;
+    posts = (data as PostSitemap[] | null) ?? [];
+  } catch (erro) {
+    // Sitemap parcial (só as estáticas) é melhor que 500: um sitemap que
+    // responde erro o Google descarta inteiro, junto com as URLs que já
+    // estavam certas.
+    console.error("[sitemap] falha ao buscar blog_posts:", erro);
+  }
+
+  return new Response(montarSitemap(posts), {
+    status: 200,
+    headers: {
+      "content-type": "application/xml; charset=utf-8",
+      "cache-control": "public, max-age=3600",
+    },
+  });
+}
+
+function respostaRobots(): Response {
+  return new Response(CORPO_ROBOTS, {
+    status: 200,
+    headers: {
+      "content-type": "text/plain; charset=utf-8",
+      "cache-control": "public, max-age=3600",
+    },
   });
 }
 
@@ -103,6 +145,8 @@ export default {
       return Response.redirect(url.toString(), 301);
     }
     if (url.pathname === "/health") return respostaHealth();
+    if (url.pathname === "/sitemap.xml") return await respostaSitemap();
+    if (url.pathname === "/robots.txt") return respostaRobots();
 
     try {
       const handler = await getServerEntry();

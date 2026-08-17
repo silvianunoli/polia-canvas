@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -9,6 +9,24 @@ import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/compone
 import type { Tables } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/blog/")({
+  // A busca mora no loader (e não num useEffect) pra que o HTML servido já
+  // saia com os links dos posts: sem isso o Google recebia uma listagem vazia
+  // e nunca chegava em /blog/$slug. O post individual já fazia assim.
+  loader: async () => {
+    const { data, error } = await supabase
+      .from("blog_posts")
+      .select("id, slug, titulo, resumo, categoria, publicado_em, capa_url, tempo_leitura")
+      .eq("publicado", true)
+      .order("publicado_em", { ascending: false });
+    if (error) {
+      console.error("blog_posts_listar", error);
+      // Devolve a falha como dado em vez de lançar: a tela de erro do /blog
+      // mora dentro da própria página (cabeçalho, hero e cartão de aviso), e
+      // um errorComponent trocaria esse layout.
+      return { posts: [] as Post[], erro: true };
+    }
+    return { posts: (data as Post[]) ?? [], erro: false };
+  },
   head: () => ({
     meta: [
       { title: "Preço, lucro e marca · Blog da Pólia" },
@@ -48,29 +66,10 @@ function CoverBlock({ post, index }: { post: Post; index: number }) {
 }
 
 function BlogList() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-  // Sem isso, falha de rede caía no mesmo estado vazio e ficava indistinguível
-  // de um blog realmente sem post.
-  const [erro, setErro] = useState(false);
+  // Sem o "erro", falha de rede caía no mesmo estado vazio e ficava
+  // indistinguível de um blog realmente sem post.
+  const { posts, erro } = Route.useLoaderData();
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const { data, error } = await supabase
-        .from("blog_posts")
-        .select("id, slug, titulo, resumo, categoria, publicado_em, capa_url, tempo_leitura")
-        .eq("publicado", true)
-        .order("publicado_em", { ascending: false });
-      if (error) {
-        console.error("blog_posts_listar", error);
-        setErro(true);
-      } else {
-        setPosts((data as Post[]) ?? []);
-      }
-      setLoading(false);
-    })();
-  }, []);
 
   const categorias = useMemo(
     () => [...new Set(posts.map((p) => p.categoria).filter((c): c is string => !!c))],
@@ -140,13 +139,9 @@ function BlogList() {
           </div>
         </section>
 
-        {loading ? (
-          <section className="pb-[clamp(48px,6vw,72px)]">
-            <div className={CONTAINER}>
-              <p className="text-[var(--ink-soft)]">Buscando os textos. Leva uns segundos.</p>
-            </div>
-          </section>
-        ) : erro ? (
+        {/* O estado de carregamento saiu junto com o useEffect: com o loader,
+            a primeira renderização já chega com os posts resolvidos. */}
+        {erro ? (
           <section className="pb-[clamp(48px,6vw,72px)]">
             <div className={CONTAINER}>
               <Reveal>
