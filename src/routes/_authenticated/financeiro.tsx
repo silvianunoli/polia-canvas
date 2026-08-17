@@ -436,9 +436,7 @@ function FinanceiroPage() {
             >
               {fmt(lucro)}
             </p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">
-              {margemPct}% do que entrou virou lucro
-            </p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% de tudo que entrou</p>
           </div>
         </section>
 

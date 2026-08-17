@@ -27,13 +27,13 @@ export const Route = createFileRoute("/lista-de-espera")({
       {
         name: "description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Deixe seu e-mail e seja avisada antes de todo mundo quando ela abrir.",
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Abre em outubro: entre na lista.",
       },
       { property: "og:title", content: "Entrar na lista · Pólia" },
       {
         property: "og:description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Seja avisada antes de todo mundo.",
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Abre em outubro: entre na lista.",
       },
     ],
     links: [linkCanonico("/lista-de-espera")],
@@ -89,9 +89,7 @@ function validarEmail(v: string): string | undefined {
 function ListaEsperaPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
-  const [trava, setTrava] = useState("");
   const [aceite, setAceite] = useState(false);
-  const [novidades, setNovidades] = useState(false);
   const [aceiteErro, setAceiteErro] = useState(false);
   const [errors, setErrors] = useState<{ nome?: string; email?: string }>({});
   const [loading, setLoading] = useState(false);
@@ -148,8 +146,9 @@ function ListaEsperaPage() {
         data: {
           nome: nome.trim(),
           email: email.trim(),
-          tipo_negocio: trava || null,
-          novidades,
+          tipo_negocio: null,
+          // O aceite agora cobre o aviso de abertura, que é a razão da lista.
+          novidades: true,
           turnstileToken: turnstile.token,
         },
       });
@@ -189,11 +188,13 @@ function ListaEsperaPage() {
             <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[0.95fr_1.05fr]">
               <div className="md:pt-2">
                 <Reveal>
-                  <Eyebrow>Chegando em breve</Eyebrow>
+                  <Eyebrow>Abre em outubro</Eyebrow>
                 </Reveal>
+                {/* Data concreta em vez de "em breve": a página deixa de falar de
+                    produto incompleto e passa a falar de porta com hora pra abrir. */}
                 <h1 className="mt-4 text-[clamp(2.3rem,5vw,3.5rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                  A Pólia está <HighlightWord delay={0.3}>quase pronta</HighlightWord>. Quer ser
-                  avisada quando ela chegar?
+                  A Pólia mostra <HighlightWord delay={0.3}>quanto sobra</HighlightWord> em cada
+                  venda. Abre em outubro.
                 </h1>
                 <Reveal delay={0.1}>
                   <p className="mt-6 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
@@ -214,7 +215,7 @@ function ListaEsperaPage() {
                     noValidate
                   >
                     <p className="text-[15px] font-semibold text-[var(--ink)]">
-                      Deixe seu e-mail. Eu te aviso quando a Pólia chegar.
+                      Deixe seu e-mail. Quem está na lista entra primeiro.
                     </p>
                     {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
                     <input
@@ -277,30 +278,10 @@ function ListaEsperaPage() {
                       />
                       <FieldError id="email-error">{errors.email}</FieldError>
                     </div>
-                    <div>
-                      <label
-                        htmlFor="trava"
-                        className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-                      >
-                        O que mais trava o seu negócio hoje?{" "}
-                        <span className="text-[var(--muted)]">(opcional)</span>
-                      </label>
-                      <select
-                        id="trava"
-                        name="trava"
-                        value={trava}
-                        onChange={(e) => setTrava(e.target.value)}
-                        className="w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
-                      >
-                        <option value="">Escolha uma</option>
-                        <option>Começo e paro no meio</option>
-                        <option>Não sei o que fazer primeiro</option>
-                        <option>Preço e números me travam</option>
-                        <option>Falta tempo no dia</option>
-                        <option>Outra coisa</option>
-                      </select>
-                    </div>
-
+                    {/* O select "o que mais trava" saiu: eram cinco opções pra ler
+                        antes do botão, três delas de produtividade genérica, e nada
+                        voltava pra quem respondia. O consentimento de novidades saiu
+                        junto e foi consolidado no aceite abaixo. */}
                     <div className="mt-1 grid gap-3">
                       <label className="flex cursor-pointer items-start gap-3 text-[14px] text-[var(--ink-soft)]">
                         <input
@@ -328,16 +309,7 @@ function ListaEsperaPage() {
                         >
                           Política de Privacidade
                         </Link>
-                        .
-                      </label>
-                      <label className="flex cursor-pointer items-start gap-3 text-[14px] text-[var(--ink-soft)]">
-                        <input
-                          type="checkbox"
-                          checked={novidades}
-                          onChange={(e) => setNovidades(e.target.checked)}
-                          className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
-                        />
-                        Quero receber novidades da Pólia por e-mail.
+                        , e quero ser avisada quando a Pólia abrir.
                       </label>
                     </div>
 
@@ -357,7 +329,7 @@ function ListaEsperaPage() {
                       disabled={loading}
                       className={`${BTN_PRIMARIO} w-full disabled:cursor-not-allowed disabled:opacity-60`}
                     >
-                      {loading ? "Enviando…" : "Quero ser avisada"}
+                      {loading ? "Enviando…" : "Entrar na lista"}
                     </button>
                     <p className="text-[13px] text-[var(--muted)]">
                       Sem cobrança e sem spam, e dá pra sair da lista quando quiser.
@@ -373,8 +345,8 @@ function ListaEsperaPage() {
                       Pronto. Seu e-mail está na lista.
                     </h2>
                     <p className="mt-3 max-w-[48ch] leading-[1.65] text-[var(--ink-soft)]">
-                      Assim que a Pólia ficar pronta, o aviso chega até você, antes de todo mundo.
-                      Pode fechar essa página tranquila. Eu te chamo.
+                      Em outubro, o convite chega antes de todo mundo. Pode fechar essa página
+                      tranquila.
                     </p>
                   </div>
                 )}
@@ -416,7 +388,7 @@ function ListaEsperaPage() {
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-[1fr_1.6fr] md:gap-16">
                   <div>
-                    <Eyebrow>Quem está construindo</Eyebrow>
+                    <Eyebrow>Quem fez</Eyebrow>
                     <p className="mt-4 text-[clamp(1.3rem,2vw,1.6rem)] font-bold leading-[1.2] tracking-[-0.02em]">
                       Oi, eu sou a Sil.
                     </p>
@@ -429,9 +401,9 @@ function ListaEsperaPage() {
                       vender bem e mesmo assim não saber se o negócio dá lucro.
                     </p>
                     <p className="mt-4 max-w-[58ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                      Eu vivi isso na pele. Por isso estou construindo a Pólia, a ferramenta que eu
-                      queria ter tido. Sem planilha perdida, sem fórmula mágica, e sem tratar quem
-                      toca o negócio como se não entendesse dele.
+                      Eu vivi isso na pele. Por isso fiz a Pólia, a ferramenta que eu queria ter
+                      tido. Sem planilha perdida, sem fórmula mágica, e sem tratar quem toca o
+                      negócio como se não entendesse dele.
                     </p>
                   </div>
                 </div>

@@ -4,10 +4,12 @@
 > Fonte da verdade visual: `DESIGN.md` + `src/styles.css`. A restrição mora aqui, não na memória.
 
 ## Princípio inegociável
+
 Mundo visual **Pólia v3** (escopo `.polia-v3`, em 100% das rotas): pedra/creme neutro, turquesa, pêssego, amarelo pontual, tinta. Parece editorial contemporâneo, não dashboard de SaaS genérico.
-Toda tela deve passar os adjetivos-âncora: editorial, artesanal, acolhedora.
+Toda tela deve passar os adjetivos-âncora: motivadora, presente, direta, anima-sem-açúcar. Se humilha, infantiliza ou vira hype de coach, está errada. Se é morna e sem direção, também.
 
 ## PROIBIDO (nunca gere)
+
 - Cor, sombra ou raio fora dos tokens de `src/styles.css`. Nada de hex hardcoded no componente.
 - Recriar um tema alternativo de fundo escuro/noite. O `.cosmic` foi removido do CSS em 2026-07-23; código novo é só Pólia v3.
 - Ressuscitar a paleta v1 (Territorial Diurno: terracota `#C96B3E`, musgo `#2D6A4F`, noite `#1A1A2E`, dourado `#C8A96E`, creme `#FDF8F5`) ou o vocabulário territorial (território, trilha, marco, carimbo, bússola). Morreu em 2026-07-23.
@@ -22,6 +24,7 @@ Toda tela deve passar os adjetivos-âncora: editorial, artesanal, acolhedora.
 - 3 cards idênticos como única forma de mostrar features.
 
 ## OBRIGATÓRIO
+
 - Use SOMENTE os design tokens de `src/styles.css` (escopo `.polia-v3`). Cor nova entra como token primeiro.
 - Espaçamento só na escala 4/8/12/16/24/32/48/64/96/128.
 - Para cada componente interativo, implemente os estados: normal, hover, foco, carregando, vazio, erro, desabilitado.
@@ -30,31 +33,39 @@ Toda tela deve passar os adjetivos-âncora: editorial, artesanal, acolhedora.
 - Copy concreta e sem hype, no tom de conversa de café: duas profissionais adultas, de igual para igual. Voz honesta com dinheiro, acolhedora sem infantilizar. Nunca travessão.
 
 ## Vocabulário e persona (fonte: `BRAND.md`)
+
 - Eixo: número-primeiro. Saber se o negócio dá lucro vem na frente; a marca é o porquê de cobrar mais. Copy e feature abrem pelo dinheiro (dá lucro, quanto sobra, parar de cobrar no chute), a marca aprofunda depois, nunca na largada.
 - Persona citada no produto é sempre **Ana**. **Aimer** é só a cara da marca (chatbot de suporte e influenciadora), nunca o nome da cliente.
 - Palavras e frases proibidas (varrer e reescrever, nunca deixar entrar em copy nova): "marca-primeiro" como eixo ativo (só como registro histórico), "fatura mais" como norte, "Quero faturar", "Começo"/"Alcance"/"Voo" (nomes de plano mortos; os atuais são Confere/Controle/Projete), "margem" fora da calculadora interna (na copy de marketing vira "quanto sobra"), "Dani", "marca clara é marca que fatura", "do seu jeito", "no seu tempo", "no seu ritmo" (vendem ausência; a marca lidera pela ajuda, nunca pelo "faça sozinha"), "planilha por fora" (vira "planilha perdida"), "infoproduto" (vira "produto digital" com exemplo), "turma", "etapa", "trilha", "jornada" (vocabulário morto; o produto chama de "módulo"), "marco/marcos" como jargão de território (mundo territorial morreu; se for referência numérica do Planejamento, chama de "referência", nunca "módulo" nem "meta" a menos que seja literalmente isso). A proibição vale para TEXTO VISÍVEL ao usuário; identificador de código pode ficar (ex.: `etapaInfo`, `jornada_cliente`, o token CSS `--marco`, a coluna `etapa_atual`).
 - Trava de pessoa gramatical (2026-08-17, substitui a regra de 3ª pessoa de 2026-07-08): **o "você" observa, a Pólia promete.** Liberado: "você" como sujeito para descrever cena e fato que a usuária reconhece (ex.: "Você fecha o preço no chute e passa o resto do dia torcendo."). Proibido: "você" como sujeito de capacidade, merecimento ou futuro prometido (ex.: "você consegue", "você merece", "você vai longe", "acredita no seu potencial"). Promessa de resultado tem a Pólia, o módulo ou o número como sujeito (ex.: "a Pólia mostra quanto sobra"). Em CTA, "você" como sujeito segue proibido; "Quero..." resolve. Blog assinado mantém o ensaio pessoal em 2ª pessoa (sem mudança).
+- **Quem fala em mensagem de sistema (2026-08-17).** Todo aviso, erro e confirmação do produto fala pela empresa no plural: "Não conseguimos salvar", nunca "Não consegui". O par coloquial é "a gente", que carrega a parte que tranquiliza ("Não conseguimos salvar. Tenta de novo, a gente guarda tudo."). A primeira pessoa do singular é reservada à Sil falando como pessoa, e só existe em `/sobre`, `/lista-de-espera` e no bloco de contato da `/ajuda`. Não varrer esses três lugares para o plural.
 - Camada de humor (2026-08-17): voz próxima e cotidiana, divertida por observação (o riso vem do reconhecimento da cena, nunca do prejuízo dela) e espontânea (ritmo de fala, pode abrir com "E", "Aí", "Olha"), feminina sem estereótipo (fora "poderosa", "girlboss", empoderamento de caneca). Teste de toda peça: "isso sou eu". Dose por superfície: produto = leve. O microcopy pode sorrir, mas estado de erro, cobrança e tela de dinheiro sensível não fazem piada, nunca.
 
 ## Tipografia
+
 Títulos (h1-h6) em **Cabinet Grotesk** (`letter-spacing:-0.02em`, classe `.font-cabinet`; restrita a texto grande e curto). Corpo e UI em **Inter**. **Fraunces só como itálico de acento pontual** (pull-quote, saudação "Bom dia, [nome]."; nunca título, nunca logo). **Caveat** manuscrito pontual (piso 18px, opacity 1). Label em caixa alta = DM Sans 700.
 
 ## Design tokens
+
 Fonte única: `src/styles.css`, escopo `.polia-v3` (`@theme inline` + `.polia-v3`). Não duplicar valores. Principais: ação = `--secondary` (turquesa #7CCBCD; texto de link/CTA usa `--secondary-text` #24696B pra manter AA); fundo = `--bg` (#F2F0ED) e `--surface`; texto = `--ink` (tinta #0A0A0A) / `--ink-soft` / `--muted`; destaque = `--accent` (pêssego #F3B9A9, só fundo/borda/gráfico, nunca texto) e `--highlight` (amarelo #FFC629, indicador pontual, um por tela). Detalhe completo em `DESIGN.md` (reescrito pra v3 em 2026-07-23).
 
 ## Referências de qualidade (mire neste nível)
+
 Notion, Linear, Duolingo, Vercel, Framer — ver DESIGN.md §7. NÃO se inspire em dashboards genéricos de template.
 
 ## Antes de gerar qualquer tela
+
 1. Confirme qual é a UMA ação principal.
 2. Descreva o fluxo em 1 frase.
 3. Mostre wireframe em cinza (sem cor) para validar a estrutura.
 4. Só então aplique os tokens.
 
 ## Depois de gerar
+
 Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs/`; liste o que faltou. Rode os agentes `revisor-anti-ia` e `revisor-de-usabilidade`.
 
 ## Segurança (inegociável)
+
 - Nunca segredo hardcoded nem versionado (chave, token, senha, connection string). `.env` fica fora do git (já no `.gitignore`); use variável de ambiente / `.dev.vars` (Cloudflare) / secrets do Supabase. Não logue dado sensível.
 - Supabase: a **service role key** só no servidor (`client.server.ts`), nunca no client. RLS ligado em toda tabela com dado de usuário. Edge functions validam o JWT e os papéis.
 - Toda entrada é não confiável: valide (allowlist) e sanitize. Sem concatenar SQL. Escape de output (XSS).
@@ -67,6 +78,7 @@ Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs
 - Alerta crítico de incidente de produção (webhook Stripe, taxa de erro, health-check externo) vai pro Telegram via edge function `alertas-criticos`, com dedup de 10 min por tipo. Detalhe completo, gatilhos e setup em `docs/observabilidade-alertas.md`.
 
 ## Arquitetura (regras)
+
 - SOLID: responsabilidade única; aberto/fechado (polimorfismo, não if por tipo); Liskov; interfaces pequenas; inversão de dependência (injeção, não instanciar concreto na regra).
 - A lógica de domínio vive em `src/lib/*.functions.ts` e NÃO depende de UI nem de detalhe de transporte. Acesso a dados isolado em `src/integrations/supabase`. A regra não conhece o componente React.
 - Baixo acoplamento, alta coesão. Nomes claros, funções curtas, erros tratados (sem exceção silenciosa).
@@ -75,6 +87,7 @@ Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs
 - Depois de codar, rode o agente `revisor-de-arquitetura`.
 
 ## App pronta pra nuvem (12 fatores) — deploy Cloudflare Workers
+
 - Config no ambiente: credenciais, URLs e chaves vêm de variável de ambiente / secret, NUNCA do código.
 - Dependências declaradas no manifesto (`package.json`/`bun.lock`); nada depende do que está instalado na máquina.
 - Processo stateless: estado vai para backing service (Supabase), não para a memória do worker.
@@ -82,6 +95,7 @@ Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs
 - Startup rápido, shutdown limpo. Menor privilégio em toda permissão (chaves, RLS, CORS).
 
 ## Pilotagem (como dirigir a IA)
+
 - Plano antes de implementar (arquivos, componentes, justificativa) e APROVE antes de codar.
 - Uma fase por vez; nunca "construa tudo". Diário de bordo em `docs/script.md` antes de mexer no código.
 - Comentário como contexto pra IA. Regras curtas e por tema.

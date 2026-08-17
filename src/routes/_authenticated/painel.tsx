@@ -680,7 +680,7 @@ function PainelPage() {
               ) : (
                 <>
                   {receitaMes > 0
-                    ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% do que entrou virou lucro`
+                    ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
                     : "registre entradas e saídas pra ver"}{" "}
                   · <span className="text-[var(--ink-soft)]">Financeiro</span>
                 </>
