@@ -11,13 +11,13 @@ import type { Tables } from "@/integrations/supabase/types";
 export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
-      { title: "Blog · Pólia" },
+      { title: "Preço, lucro e marca · Blog da Pólia" },
       {
         name: "description",
         content:
           "Textos da Pólia pra quem toca a marca. Sem hack de faturamento, sem promessa de seis dígitos. Uma coisa de cada vez.",
       },
-      { property: "og:title", content: "Blog · Pólia" },
+      { property: "og:title", content: "Preço, lucro e marca · Blog da Pólia" },
       {
         property: "og:description",
         content: "Textos da Pólia pra quem toca a marca.",
@@ -50,16 +50,24 @@ function CoverBlock({ post, index }: { post: Post; index: number }) {
 function BlogList() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  // Sem isso, falha de rede caía no mesmo estado vazio e ficava indistinguível
+  // de um blog realmente sem post.
+  const [erro, setErro] = useState(false);
   const [categoriaAtiva, setCategoriaAtiva] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("blog_posts")
         .select("id, slug, titulo, resumo, categoria, publicado_em, capa_url, tempo_leitura")
         .eq("publicado", true)
         .order("publicado_em", { ascending: false });
-      setPosts((data as Post[]) ?? []);
+      if (error) {
+        console.error("blog_posts_listar", error);
+        setErro(true);
+      } else {
+        setPosts((data as Post[]) ?? []);
+      }
       setLoading(false);
     })();
   }, []);
@@ -93,8 +101,8 @@ function BlogList() {
               <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
                 Sem hack de faturamento, sem promessa de seis dígitos. Textos diretos sobre o que
                 trava de verdade quando quem decide é a dona do negócio, sozinha ou com quem ajuda:
-                a razão de existir, quem a marca serve, o que vende, quanto vale, como te acharem e
-                onde ela vai.
+                a razão de existir, quem a marca serve, o que vende, quanto vale, como ela é achada
+                e onde ela vai.
               </p>
             </Reveal>
 
@@ -135,7 +143,20 @@ function BlogList() {
         {loading ? (
           <section className="pb-[clamp(48px,6vw,72px)]">
             <div className={CONTAINER}>
-              <p className="text-[var(--ink-soft)]">Carregando…</p>
+              <p className="text-[var(--ink-soft)]">Buscando os textos. Leva uns segundos.</p>
+            </div>
+          </section>
+        ) : erro ? (
+          <section className="pb-[clamp(48px,6vw,72px)]">
+            <div className={CONTAINER}>
+              <Reveal>
+                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+                  <p className="font-semibold">Não deu pra carregar os textos agora.</p>
+                  <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                    Recarregar a página costuma resolver.
+                  </p>
+                </div>
+              </Reveal>
             </div>
           </section>
         ) : postsFiltrados.length === 0 ? (
@@ -143,16 +164,41 @@ function BlogList() {
             <div className={CONTAINER}>
               <Reveal>
                 <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <p className="font-semibold">
-                    {posts.length === 0
-                      ? "Nenhum post publicado ainda."
-                      : "Nenhum post nessa categoria ainda."}
-                  </p>
-                  <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-                    {posts.length === 0
-                      ? "O primeiro texto sai em breve. Enquanto isso, dá pra conhecer a Pólia por dentro."
-                      : "Vale conferir as outras categorias ou voltar pra lista completa."}
-                  </p>
+                  {/* O estado vazio é o que a visitante encontra enquanto o blog
+                      não tem post: precisa de saída dentro do próprio cartão. */}
+                  {posts.length === 0 ? (
+                    <>
+                      <p className="font-semibold">
+                        O blog está sendo escrito. Ainda não tem texto publicado.
+                      </p>
+                      <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                        O que a Pólia faz já dá pra ver funcionando: quanto sobra em cada venda e se
+                        o mês fechou no azul.
+                      </p>
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        <Link to="/" hash="planos" className={BTN_PRIMARIO}>
+                          Criar conta grátis
+                          <span aria-hidden="true">→</span>
+                        </Link>
+                        <Link to="/sobre" className={BTN_CONTORNO}>
+                          Conhecer a Pólia
+                        </Link>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold">Essa categoria ainda não tem texto.</p>
+                      <div className="mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setCategoriaAtiva(null)}
+                          className={BTN_CONTORNO}
+                        >
+                          Ver todos os posts
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </Reveal>
             </div>
@@ -248,7 +294,7 @@ function BlogList() {
               <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface-pink)] p-[clamp(28px,4vw,56px)]">
                 <Eyebrow>Pólia</Eyebrow>
                 <h2 className="mt-4 max-w-[22ch] text-[clamp(1.7rem,3.2vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  A Pólia é isso na prática.
+                  Ver quanto sobra em cada venda leva menos tempo que ler um texto.
                 </h2>
                 <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
                   Uma marca construída com clareza, decisão por decisão. Dá pra começar agora, sem

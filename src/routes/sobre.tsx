@@ -37,7 +37,9 @@ export const Route = createFileRoute("/sobre")({
 const numeros = [
   { valor: "14", rotulo: "anos de e-commerce" },
   { valor: "8", rotulo: "anos de negócio próprio" },
-  { valor: "4", rotulo: "grandes marcas na bagagem" },
+  // Três, não quatro: só C&A, Allied e ArcelorMittal são nomeadas na linha do
+  // tempo, e o emprego atual fica fora da copy pública.
+  { valor: "3", rotulo: "grandes marcas na bagagem" },
 ];
 
 // A saída do e-commerce nunca entra como fracasso, o emprego atual fica fora da
@@ -108,18 +110,16 @@ const escolheSer = [
 // preocupada com o sumiço, que é exatamente o oposto do que ela defende.
 const recusa = [
   "Meta no vermelho jogada como cobrança",
-  "Hype: “transforme”, “fature 6 dígitos”",
+  "Hype de promessa grande com número redondo",
   "Tutorial bobo, mascote, professora de cima",
   "Jargão e feature de sistema grande",
 ];
 
+// Só o que o credo abaixo NÃO desenvolve: as outras quatro linhas repetiam,
+// em versão curta, os princípios 03 a 06 que vêm logo em seguida.
 const escolhe = [
   "Clareza sobre quanto a marca vale",
-  "O Planejamento intacto na volta",
-  "Dona da marca, nunca devedora dela",
-  "O concreto: o preço que saiu do chute",
-  "Respeitar a sua inteligência, do seu lado",
-  "Do tamanho de quem manda no negócio",
+  "O Planejamento decidido uma vez, valendo o mês inteiro",
 ];
 
 const credo = [
@@ -131,7 +131,7 @@ const credo = [
   {
     linha: "A gente puxa pela oportunidade, nunca pela culpa.",
     texto:
-      "Depois de uns dias fora, o Planejamento está lá do jeito que ficou, esperando sem cara feia. O “sumiu, não desista” dos outros aplicativos é cobrança disfarçada de incentivo, e a Pólia não usa. Dá pra voltar quando der e continuar de onde parou.",
+      "Depois de uns dias fora, o Planejamento está lá do jeito que ficou, esperando sem cara feia. Cobrança disfarçada de incentivo é coisa de outro aplicativo. Aqui é abrir e continuar de onde parou.",
   },
   {
     linha: "Dona da marca, nunca devedora dela.",
@@ -184,13 +184,12 @@ function SobrePage() {
                 <Eyebrow>A marca</Eyebrow>
               </Reveal>
               <h1 className="mt-4 text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                Por que a Pólia existe.
+                Meu negócio vendia bem. Eu só não sabia quanto sobrava.
               </h1>
               <Reveal delay={0.1}>
                 <p className="mt-6 max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                  Meu negócio vendia bem. Eu só não sabia quanto sobrava. Esta página conta o que
-                  essa frase virou: a história, aquilo em que a Pólia acredita e pra quem ela é
-                  feita.
+                  Oito anos vendendo e nenhum mês em que eu soubesse o que tinha sobrado. Não faltou
+                  cliente. Faltou método, e é ele que virou a Pólia.
                 </p>
               </Reveal>
             </div>
@@ -223,7 +222,7 @@ function SobrePage() {
             </Reveal>
 
             <Reveal delay={0.1} className="mt-[clamp(40px,5vw,56px)]">
-              <Pullquote>Meu negócio vendia bem. Eu só não sabia quanto sobrava.</Pullquote>
+              <Pullquote>Cada fase vendia. O fundo é que nunca fechava.</Pullquote>
             </Reveal>
 
             <div className="mx-auto mt-[clamp(40px,5vw,56px)] max-w-[68ch]">
@@ -349,9 +348,9 @@ function SobrePage() {
                 percebo primeiro.
               </p>
               <p className="mt-6 text-[18px] leading-[1.7] text-[var(--ink-soft)]">
-                Quem toca a marca sozinha, eu sei como é. Passei dez anos aprendendo na marra o
+                Quem toca a marca sozinha, eu sei como é. Passei oito anos aprendendo na marra o
                 método que devia ter existido desde o começo. A Pólia existe pra ninguém mais
-                precisar desses dez anos.
+                precisar desses oito anos.
               </p>
 
               <div className="mt-8 flex items-center gap-4">
@@ -369,8 +368,10 @@ function SobrePage() {
               </div>
 
               <div className="mt-8">
-                <Link to="/" hash="como-funciona" className={BTN_CONTORNO}>
-                  Ver como a Pólia funciona
+                {/* Âncora na própria página: o botão antigo levava a leitora
+                    embora antes do manifesto, do "pra quem é" e do CTA final. */}
+                <Link to="/sobre" hash="manifesto" className={BTN_CONTORNO}>
+                  Continuar: no que a Pólia acredita
                 </Link>
               </div>
             </Reveal>
@@ -499,9 +500,9 @@ function SobrePage() {
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
                   <h3 className="text-[19px] font-bold tracking-[-0.01em]">Visão</h3>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                    Que nenhuma empreendedora precise largar um negócio que dá certo por falta de
-                    método. Que decidir o preço, ver o caixa e tocar a rotina seja simples pra quem
-                    toca o negócio.
+                    Que nenhuma empreendedora descubra tarde demais quanto estava sobrando. Que
+                    decidir o preço, ver o caixa e tocar a rotina seja simples pra quem toca o
+                    negócio.
                   </p>
                 </div>
               </Reveal>
@@ -596,9 +597,6 @@ function SobrePage() {
                 >
                   Criar conta grátis
                   <span aria-hidden="true">→</span>
-                </Link>
-                <Link to="/" hash="planos" className={BTN_CONTORNO}>
-                  Conhecer os planos
                 </Link>
               </div>
               <p className="mt-4 text-[14px] text-[var(--ink-soft)]">

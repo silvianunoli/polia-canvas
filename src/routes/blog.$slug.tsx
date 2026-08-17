@@ -52,6 +52,44 @@ const PROSA = [
 const CARTAO =
   "overflow-hidden rounded-2xl border border-[var(--line)] bg-white no-underline transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
 
+// Sem resumo cadastrado a description caía em "Pólia blog." e o og:description
+// em string vazia: o link circulava no WhatsApp sem nada que fizesse clicar.
+const DESCRICAO_PADRAO = "Texto da Sil sobre preço, lucro e marca pra quem toca o próprio negócio.";
+const TITULO_PADRAO = "Blog da Pólia: preço, lucro e marca";
+
+/** Tela curta de aviso do blog, com as saídas que o estado de erro não tinha. */
+function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; acao?: ReactNode }) {
+  return (
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      <SiteHeader />
+      <main className={SECAO}>
+        <div className={CONTAINER}>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+            <p className="font-semibold">{titulo}</p>
+            <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+              {corpo}
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {acao ?? (
+                <>
+                  <Link to="/" hash="planos" className={BTN_PRIMARIO}>
+                    Criar conta grátis
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                  <Link to="/sobre" className={BTN_CONTORNO}>
+                    Conhecer a Pólia
+                  </Link>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+      <SiteFooter semMargemTopo />
+    </div>
+  );
+}
+
 export const Route = createFileRoute("/blog/$slug")({
   loader: async ({ params }) => {
     const { data: post } = await supabase
@@ -76,16 +114,48 @@ export const Route = createFileRoute("/blog/$slug")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.post.titulo ?? "Post"} · Blog · Pólia` },
-      { name: "description", content: loaderData?.post.resumo ?? "Pólia blog." },
-      { property: "og:title", content: loaderData?.post.titulo ?? "Pólia" },
-      { property: "og:description", content: loaderData?.post.resumo ?? "" },
+      {
+        title: loaderData?.post.titulo ? `${loaderData.post.titulo} · Blog · Pólia` : TITULO_PADRAO,
+      },
+      { name: "description", content: loaderData?.post.resumo || DESCRICAO_PADRAO },
+      { property: "og:title", content: loaderData?.post.titulo ?? TITULO_PADRAO },
+      { property: "og:description", content: loaderData?.post.resumo || DESCRICAO_PADRAO },
       ...(loaderData?.post.capa_url
         ? [{ property: "og:image", content: loaderData.post.capa_url }]
         : []),
     ],
   }),
   component: BlogPost,
+  // A rota lançava notFound() sem nenhum destes três: link quebrado, falha de
+  // rede e a espera do loader caíam todos numa tela em branco.
+  notFoundComponent: () => (
+    <BlogAviso
+      titulo="Esse texto não está aqui."
+      corpo="Ou o link veio quebrado, ou o texto saiu do ar. Acontece."
+    />
+  ),
+  errorComponent: () => (
+    <BlogAviso
+      titulo="Não deu pra carregar esse texto agora."
+      corpo="Pode ser a conexão. Recarregar a página costuma resolver."
+      acao={
+        <button type="button" onClick={() => window.location.reload()} className={BTN_PRIMARIO}>
+          Tentar de novo
+        </button>
+      }
+    />
+  ),
+  pendingComponent: () => (
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      <SiteHeader />
+      <main className={SECAO}>
+        <div className={CONTAINER}>
+          <p className="text-[var(--ink-soft)]">Abrindo o texto…</p>
+        </div>
+      </main>
+      <SiteFooter semMargemTopo />
+    </div>
+  ),
 });
 
 function RelatedCover({ post, index }: { post: RelatedPost; index: number }) {
@@ -204,7 +274,11 @@ function BlogPost() {
               </p>
             </Assinatura>
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/" hash="planos" className={BTN_PRIMARIO}>
+                Ver quanto sobra em cada venda
+                <span aria-hidden="true">→</span>
+              </Link>
               <Link to="/blog" className={BTN_CONTORNO}>
                 <ArrowLeft size={16} aria-hidden="true" />
                 Voltar pro blog

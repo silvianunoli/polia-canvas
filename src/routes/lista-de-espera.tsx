@@ -26,12 +26,13 @@ export const Route = createFileRoute("/lista-de-espera")({
       {
         name: "description",
         content:
-          "A Pólia está chegando. Deixe seu e-mail e seja avisada antes de todo mundo quando ela ficar pronta.",
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Deixe seu e-mail e seja avisada antes de todo mundo quando ela abrir.",
       },
       { property: "og:title", content: "Entrar na lista · Pólia" },
       {
         property: "og:description",
-        content: "A Pólia está chegando. Seja avisada antes de todo mundo.",
+        content:
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Seja avisada antes de todo mundo.",
       },
     ],
   }),
@@ -40,12 +41,12 @@ export const Route = createFileRoute("/lista-de-espera")({
 
 const BENEFICIOS = [
   {
-    titulo: "Uma marca com valor de verdade",
+    titulo: "Saber se o negócio dá lucro",
     desc: "Dá pra saber se o negócio dá lucro, ver quanto sobra em cada venda e parar de cobrar no chute. Depois fica claro quem a sua marca atende e por que ela vale o preço que cobra.",
   },
   {
     titulo: "Um preço que fecha a conta",
-    desc: "Com a marca clara, aparece quanto custa cada produto, por quanto vender e o que sobra. Chega de chutar.",
+    desc: "Aparece quanto custa cada produto, por quanto vender e o que sobra em cada venda. Chega de chutar.",
   },
   {
     titulo: "A semana organizada num lugar",
@@ -194,10 +195,10 @@ function ListaEsperaPage() {
                 </h1>
                 <Reveal delay={0.1}>
                   <p className="mt-6 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    Estou construindo a Pólia pra te ajudar a deixar a sua marca clara: quem ela
-                    atende, o que entrega e quanto vale. É essa clareza que dá base pra cobrar o que
-                    a marca merece e pra enxergar, sem complicação, se o negócio dá lucro. Deixe seu
-                    e-mail e eu te aviso assim que ela ficar pronta, antes de todo mundo.
+                    A Pólia junta o que hoje está espalhado entre a calculadora do celular, o
+                    caderninho e a memória: quanto custa cada produto, por quanto vender e o que
+                    sobra no fim do mês. Depois ajuda a construir a marca que sustenta esse preço.
+                    Deixe seu e-mail e eu te aviso assim que abrir, antes de todo mundo.
                   </p>
                 </Reveal>
               </div>
@@ -357,7 +358,7 @@ function ListaEsperaPage() {
                       {loading ? "Enviando…" : "Quero ser avisada"}
                     </button>
                     <p className="text-[13px] text-[var(--muted)]">
-                      É só o e-mail. Sem cobrança, sem spam, e dá pra sair da lista quando quiser.
+                      Sem cobrança e sem spam, e dá pra sair da lista quando quiser.
                     </p>
                   </form>
                 ) : (
@@ -446,8 +447,8 @@ function ListaEsperaPage() {
                 O que a Pólia vai fazer por você
               </h2>
               <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                Primeiro a sua marca fica clara. É essa clareza que vira preço certo, lucro à vista
-                e o negócio inteiro num lugar só, sem planilha perdida.
+                Primeiro o número aparece: quanto custa, por quanto vender e o que sobra. Com isso
+                na mão, a marca entra pra sustentar o preço que o negócio cobra.
               </p>
             </Reveal>
 
