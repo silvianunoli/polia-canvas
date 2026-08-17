@@ -587,18 +587,20 @@ function SobrePage() {
                 Vinte minutos no primeiro módulo e o painel começa a trabalhar.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
+                {/* Pré-lançamento: cadastro fechado, então o CTA leva pra lista.
+                    Volta pra /auth/cadastro quando os planos abrirem. */}
                 <Link
-                  to="/auth/cadastro"
+                  to="/lista-de-espera"
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"sobre_cta_final"}'
                   className={BTN_PRIMARIO}
                 >
-                  Criar conta grátis
+                  Entrar na lista
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>
               <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
-                Sem cartão no Confere. Cancelamento em um clique.
+                Os planos abrem em breve, e quem está na lista entra primeiro.
               </p>
             </Reveal>
           </div>

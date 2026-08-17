@@ -72,8 +72,8 @@ function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; aca
             <div className="mt-6 flex flex-wrap gap-3">
               {acao ?? (
                 <>
-                  <Link to="/" hash="planos" className={BTN_PRIMARIO}>
-                    Criar conta grátis
+                  <Link to="/lista-de-espera" className={BTN_PRIMARIO}>
+                    Entrar na lista
                     <span aria-hidden="true">→</span>
                   </Link>
                   <Link to="/sobre" className={BTN_CONTORNO}>
@@ -333,12 +333,12 @@ function BlogPost() {
                   Do texto pra prática.
                 </h2>
                 <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                  O preço, a meta e o que sobra no fim do mês num lugar só. Dá pra começar agora,
-                  sem cartão.
+                  O preço, a meta e o que sobra no fim do mês num lugar só. Os planos abrem em
+                  breve, e quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/" hash="planos" className={BTN_PRIMARIO}>
-                    Criar conta grátis
+                  <Link to="/lista-de-espera" className={BTN_PRIMARIO}>
+                    Entrar na lista
                     <span aria-hidden="true">→</span>
                   </Link>
                   <Link to="/sobre" className={BTN_CONTORNO}>

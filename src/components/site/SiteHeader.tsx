@@ -60,14 +60,15 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
               >
                 Entrar
               </Link>
+              {/* Pré-lançamento: cadastro fechado, então o CTA do topo leva pra
+                  lista. Volta pra /" hash planos quando os planos abrirem. */}
               <Link
-                to="/"
-                hash="planos"
+                to="/lista-de-espera"
                 data-track="cadastro_cta_clicado"
                 data-track-props='{"contexto":"header"}'
                 className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
               >
-                Criar conta grátis
+                Entrar na lista
               </Link>
               <button
                 type="button"

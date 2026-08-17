@@ -176,8 +176,8 @@ function BlogList() {
                         o mês fechou no azul.
                       </p>
                       <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to="/" hash="planos" className={BTN_PRIMARIO}>
-                          Criar conta grátis
+                        <Link to="/lista-de-espera" className={BTN_PRIMARIO}>
+                          Entrar na lista
                           <span aria-hidden="true">→</span>
                         </Link>
                         <Link to="/sobre" className={BTN_CONTORNO}>
@@ -297,12 +297,12 @@ function BlogList() {
                   Ver quanto sobra em cada venda leva menos tempo que ler um texto.
                 </h2>
                 <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                  Uma marca construída com clareza, decisão por decisão. Dá pra começar agora, sem
-                  cartão.
+                  Uma marca construída com clareza, decisão por decisão. Os planos abrem em breve, e
+                  quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/" hash="planos" className={BTN_PRIMARIO}>
-                    Criar conta grátis
+                  <Link to="/lista-de-espera" className={BTN_PRIMARIO}>
+                    Entrar na lista
                     <span aria-hidden="true">→</span>
                   </Link>
                   <Link to="/sobre" className={BTN_CONTORNO}>

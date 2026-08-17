@@ -214,8 +214,11 @@ const planos: {
       "Até 3 metas acompanhadas sozinhas, sem planilha",
       "Um quadro no Planner pra organizar a semana",
     ],
-    botao: "Criar conta grátis",
-    href: "/auth/cadastro",
+    // Pré-lançamento: cadastro e checkout estão fechados, então os três botões
+    // levam pra lista de espera. Em outubro voltam pra /auth/cadastro e
+    // /assinar?plano=... (destinos originais no histórico do git).
+    botao: "Entrar na lista",
+    href: "/lista-de-espera",
     destaque: false,
   },
   {
@@ -231,8 +234,8 @@ const planos: {
       "Quadros ilimitados no Planner",
     ],
     apoio: "Basta um desconto dado no chute pra uma encomenda levar embora mais que R$ 29,90.",
-    botao: "Assinar o Controle",
-    href: "/assinar?plano=controle",
+    botao: "Entrar na lista",
+    href: "/lista-de-espera",
     destaque: true,
   },
   {
@@ -252,8 +255,8 @@ const planos: {
       "Resumo do mês pro contador, em PDF e CSV",
       "Recursos novos chegam aqui primeiro",
     ],
-    botao: "Assinar o Projete",
-    href: "/assinar?plano=projete",
+    botao: "Entrar na lista",
+    href: "/lista-de-espera",
     destaque: false,
   },
 ];
@@ -889,13 +892,15 @@ function HomePage() {
             </RevealGroup>
 
             <Reveal>
-              <p className="mx-auto mt-6 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink-soft)]">
-                Sem cartão no Confere. Cancelamento em um clique, sem multa e sem conversa difícil.
-                E ao cancelar, a conta volta pro Confere: nada do que foi escrito se perde.
+              {/* Enquanto os planos não abrem, a linha de apoio responde à
+                  objeção certa (quando dá pra entrar), não à de cancelamento. */}
+              <p className="mx-auto mt-6 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink)]">
+                Os planos abrem em breve, e quem está na lista entra primeiro. O preço já está aqui
+                pra não ter surpresa depois.
               </p>
-              <p className="mx-auto mt-3 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink)]">
+              <p className="mx-auto mt-3 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink-soft)]">
                 Na dúvida, o caminho é simples: o Confere responde se dá lucro. O Controle faz o mês
-                inteiro rodar.
+                inteiro rodar. Sem cartão no Confere, e cancelar leva um clique.
               </p>
             </Reveal>
           </div>
@@ -934,12 +939,12 @@ function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
-                  to="/auth/cadastro"
+                  to="/lista-de-espera"
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"cta_final"}'
                   className={BTN_PRIMARIO}
                 >
-                  Criar conta grátis
+                  Entrar na lista
                   <span aria-hidden="true">→</span>
                 </Link>
                 <a href="#planos" className={BTN_CONTORNO}>
@@ -947,7 +952,7 @@ function HomePage() {
                 </a>
               </div>
               <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
-                Sem cartão. Se não fizer sentido, cancelar leva um clique.
+                Quem está na lista é avisada primeiro, antes de abrir pro resto.
               </p>
             </Reveal>
           </div>

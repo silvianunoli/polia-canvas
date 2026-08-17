@@ -474,17 +474,17 @@ function AjudaPage() {
                 <Eyebrow>Ainda sem conta?</Eyebrow>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
                   O Confere é grátis, sem cartão, e responde a primeira pergunta de qualquer
-                  negócio: dá lucro? E se um dia a resposta for cancelar, é um clique, sem multa e
-                  sem conversa difícil. Está tudo ali em cima, escrito.
+                  negócio: dá lucro? Os planos abrem em breve, e quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8">
+                  {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
                   <Link
-                    to="/auth/cadastro"
+                    to="/lista-de-espera"
                     data-track="cadastro_cta_clicado"
                     data-track-props='{"contexto":"ajuda_sem_conta"}'
                     className={BTN_PRIMARIO}
                   >
-                    Criar conta grátis
+                    Entrar na lista
                     <span aria-hidden="true">→</span>
                   </Link>
                 </div>
