@@ -11,7 +11,7 @@ import { HOST_CANONICO } from "./seo";
 export { HOST_CANONICO };
 
 // URLs públicas estáticas, nesta ordem. Ficam de fora, por não serem conteúdo
-// indexável: /central, /auth/*, /pesquisa, /compra-confirmada, /descadastrar e
+// indexável: /auth/*, /pesquisa, /compra-confirmada, /descadastrar e
 // tudo que exige login.
 export const CAMINHOS_ESTATICOS = [
   "/",

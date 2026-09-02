@@ -5,7 +5,6 @@
 export const DOMINIO_GESTAO = "silvianunoli.com.br";
 export const PREFIXOS_PERMITIDOS_NO_DOMINIO_GESTAO = [
   "/admin",
-  "/central",
   "/auth",
   "/_serverFn",
   "/assets",
