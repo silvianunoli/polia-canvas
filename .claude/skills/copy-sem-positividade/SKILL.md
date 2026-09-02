@@ -12,7 +12,7 @@ Escreve copy de produto que **respeita a inteligência do usuário**: direta, es
 ## O tom (regra inegociável)
 
 - **Frases curtas. Verbo no comando.** "Comece pela validação", não "Que tal a gente começar?".
-- **Especificidade no lugar de adjetivo.** "11 etapas, uma por vez" diz mais que "jornada completa e transformadora".
+- **Especificidade no lugar de adjetivo.** "6 módulos, um por vez" diz mais que "método completo e transformador".
 - **PROIBIDO:** exclamação, emoji, e palavras de hype como "transforme", "revolucione", "desbloqueie", "potencialize", "sua jornada rumo ao sucesso". Sem positividade forçada, sem tom de coach.
 - **Corte o que não muda o sentido.** Teste: dá para remover a palavra e a frase continua dizendo a mesma coisa? Então remova.
 - **Para mensagens de erro:** seca, não culpa o usuário, e sempre diz **como sair** (a ação de recuperação).
@@ -50,7 +50,7 @@ Se algum item falhar, ajuste antes de entregar. Cada palavra de hype que sobra �
 
 **Reescrita de landing**
 Original: "Transforme seu negócio com a Pólia! ✨ Desbloqueie todo o seu potencial e comece sua jornada rumo ao sucesso!"
-Versão: "Comece do zero. Uma etapa por vez. Onze passos na ordem certa, sempre com o próximo claro."
+Versão: "Comece do zero. Um módulo por vez. Seis, na ordem certa, sempre com o próximo claro."
 
 **Mensagem de erro**
 Ruim: "Erro."
