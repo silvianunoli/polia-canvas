@@ -87,6 +87,7 @@ export function emailPolia({
   destaque,
   ctaLabel,
   ctaUrl,
+  ajudaUrl,
   descadastroUrl,
 }: {
   preheader: string;
@@ -96,6 +97,12 @@ export function emailPolia({
   destaque?: { rotulo: string; texto: string };
   ctaLabel?: string;
   ctaUrl?: string;
+  /** Saída de suporte no rodapé. Existe pros e-mails de cobrança (pagamento
+   *  recusado, cancelamento): são os momentos de maior dúvida e o CTA sozinho
+   *  só resolve o roteiro feliz — se a Stripe recusou por motivo que não é o
+   *  cartão, não havia pra onde ir a partir do e-mail. Fica de fora dos outros
+   *  disparos de propósito: rodapé de e-mail transacional não é menu. */
+  ajudaUrl?: string;
   /** Link de saída de um clique. Só pros e-mails de lista: os transacionais
    *  (conta criada, recibo, senha) não levam descadastro, porque ninguém pode
    *  optar por não receber o recibo da própria compra. */
@@ -138,6 +145,15 @@ export function emailPolia({
                 </table>`
       : "";
 
+  // Mesma régua visual do descadastro (12px, #6B6B6B, sublinhado): é rodapé,
+  // não segundo CTA. O botão turquesa continua sendo a única ação em destaque.
+  const linhaAjuda = ajudaUrl
+    ? `
+                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                  Alguma dúvida? <a href="${ajudaUrl}" style="color:#6B6B6B;text-decoration:underline;">Fala com a gente</a>
+                </p>`
+    : "";
+
   const linhaDescadastro = descadastroUrl
     ? `
                 <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
@@ -178,6 +194,7 @@ export function emailPolia({
                 <p style="margin:0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
                   Pólia · usepolia.com.br
                 </p>
+                ${linhaAjuda}
                 ${linhaDescadastro}
               </td>
             </tr>

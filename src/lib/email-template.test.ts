@@ -55,6 +55,26 @@ describe("emailPolia", () => {
     expect(comExtras).toContain("#F6DAD4");
     expect(comExtras).toContain("Não quero mais receber");
   });
+
+  // A saída de suporte é opcional de propósito: só os e-mails de cobrança a
+  // ligam. Se ela vazar pro rodapé de todo disparo, o rodapé vira menu.
+  it("só mostra o link de ajuda quando pedido, e no mesmo cinza do rodapé", () => {
+    expect(html).not.toContain("Fala com a gente");
+
+    const comAjuda = emailPolia({
+      preheader: "p",
+      headline: "h",
+      paragrafos: ["p"],
+      ajudaUrl: "https://usepolia.com.br/ajuda",
+    });
+    expect(comAjuda).toContain("Alguma dúvida?");
+    expect(comAjuda).toContain('href="https://usepolia.com.br/ajuda"');
+    // Rodapé, não segundo CTA: mesma régua do descadastro (12px, #6B6B6B).
+    expect(comAjuda).toMatch(
+      /font-size:12px;line-height:1\.5;color:#6B6B6B;">\s*Alguma dúvida\? <a href="https:\/\/usepolia\.com\.br\/ajuda" style="color:#6B6B6B;text-decoration:underline;">/,
+    );
+    expect(comAjuda).not.toContain("#7CCBCD");
+  });
 });
 
 describe("escapeHtml", () => {

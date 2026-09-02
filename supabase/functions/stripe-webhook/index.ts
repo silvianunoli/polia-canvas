@@ -187,10 +187,10 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
   await enviarViaResend(
-    "Sua compra foi confirmada — crie sua senha",
+    "Sua compra foi confirmada. Cria sua senha",
     `Sua compra na Pólia foi confirmada.\n\nCria sua senha e entra pela primeira vez:\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
     emailPolia({
-      preheader: "Sua compra foi confirmada — crie sua senha.",
+      preheader: "Sua compra foi confirmada. Cria sua senha.",
       headline: "Sua compra foi confirmada",
       paragrafos: [
         "Cria sua senha e entra pela primeira vez na Pólia.",
@@ -207,7 +207,7 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
 async function enviarEmailPagamentoRecusado(email: string) {
   await enviarViaResend(
     "Não conseguimos cobrar seu cartão",
-    `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter o acesso sem interrupção:\n${SITE_URL}/configuracoes`,
+    `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter o acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "A cobrança da sua assinatura não passou.",
       headline: "Problema no pagamento",
@@ -216,6 +216,7 @@ async function enviarEmailPagamentoRecusado(email: string) {
       ],
       ctaLabel: "Atualizar pagamento",
       ctaUrl: `${SITE_URL}/configuracoes`,
+      ajudaUrl: `${SITE_URL}/ajuda`,
     }),
     email,
     "e-mail de pagamento recusado",
@@ -228,16 +229,17 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
     : "Seu acesso à Pólia continua até o fim do período já pago.";
   await enviarViaResend(
     "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser — seus dados continuam guardados.\n\n${SITE_URL}/precos`,
+    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.\n\n${SITE_URL}/precos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "Sua assinatura na Pólia foi cancelada.",
       headline: "Assinatura cancelada",
       paragrafos: [
         paragrafo1,
-        "Mudou de ideia? É só assinar de novo quando quiser — seus dados continuam guardados.",
+        "Mudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.",
       ],
       ctaLabel: "Assinar de novo",
       ctaUrl: `${SITE_URL}/precos`,
+      ajudaUrl: `${SITE_URL}/ajuda`,
     }),
     email,
     "e-mail de cancelamento",
