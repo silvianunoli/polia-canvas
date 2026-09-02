@@ -28,12 +28,12 @@ export const garantirBoasVindas = createServerFn({ method: "POST" })
     const enviado = await enviarEmailResend({
       to: [email],
       subject: "Bem-vinda à Pólia",
-      text: `Sua conta está pronta.\n\nA Pólia é sua: um passo por vez, e a Pólia puxa o próximo. Comece pelo que o seu negócio mais precisa agora.\n\n${SITE_URL}/painel`,
+      text: `Sua conta está pronta.\n\nO primeiro passo leva 3 minutos: a Pólia pergunta o preço e o custo de um produto seu e mostra quanto sobra em cada venda.\n\n${SITE_URL}/painel`,
       html: emailPolia({
         preheader: "Sua conta na Pólia está pronta.",
         headline: "Sua conta está pronta",
         paragrafos: [
-          "A Pólia é sua: um passo por vez, e a Pólia puxa o próximo. Comece pelo que o seu negócio mais precisa agora.",
+          "O primeiro passo leva 3 minutos: a Pólia pergunta o preço e o custo de um produto seu e mostra quanto sobra em cada venda.",
         ],
         ctaLabel: "Entrar na Pólia",
         ctaUrl: `${SITE_URL}/painel`,
