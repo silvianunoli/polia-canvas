@@ -770,7 +770,13 @@ function ConfiguracoesPage() {
                 </div>
               </div>
             )}
-            {plano !== "beta" && (
+            {/* Só quem tem cobrança pra comprovar. O botão saía pra toda conta
+                não-beta, inclusive Confere que nunca pagou, e o clique morria no
+                erro "não conseguimos identificar o valor" (um chamado de suporte
+                pra um não-problema). `assinatura.preco` é exatamente a
+                pré-condição que `baixarRecibo` exige, e continua verdadeira pra
+                quem cancelou depois de ter pago. */}
+            {!assinaturaQuery.isLoading && plano !== "beta" && assinatura?.preco && (
               <button
                 type="button"
                 onClick={baixarRecibo}
