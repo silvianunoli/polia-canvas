@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { BTN_CONTORNO } from "@/components/site/Editorial";
 
 export const Route = createFileRoute("/compra-confirmada")({
   head: () => ({
@@ -15,11 +16,11 @@ export const Route = createFileRoute("/compra-confirmada")({
 
 function CompraConfirmadaPage() {
   return (
-    <div className="polia-v3 min-h-screen bg-white text-[var(--ink)]">
+    <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
       <main className="mx-auto max-w-[560px] px-6 py-24 text-center">
-        <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--surface-pink)]">
-          <Mail size={26} aria-hidden="true" />
+        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-pink)]">
+          <Mail size={28} aria-hidden="true" />
         </div>
         <h1 className="font-cabinet text-[32px] leading-tight text-[var(--ink)] md:text-[40px]">
           Compra confirmada.
@@ -35,10 +36,7 @@ function CompraConfirmadaPage() {
           </a>
           .
         </p>
-        <Link
-          to="/"
-          className="mt-8 inline-flex rounded-lg border border-[var(--line)] px-6 py-3 text-[15px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--bg)]"
-        >
+        <Link to="/" className={`${BTN_CONTORNO} mt-8`}>
           Voltar ao início
         </Link>
       </main>
