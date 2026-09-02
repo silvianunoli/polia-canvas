@@ -289,7 +289,7 @@ export const SECOES: Secao[] = [
   {
     id: "5.4",
     modulo: 5,
-    titulo: "A jornada da sua cliente",
+    titulo: "O caminho da sua cliente",
     subtitulo: "Da descoberta à compra, e depois.",
     perguntas: [
       { label: "Da primeira vez que ela te encontra até comprar, o que acontece? Descreva passo a passo.", campo: "caderno.jornada_cliente" },
@@ -419,7 +419,7 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
     rota: "/caderno",
     desbloqueioSub: "Seu guia de presença: canais, voz e bio.",
     abrirLabel: "Abrir meu caderno",
-    tags: "canais, voz, bio, jornada",
+    tags: "canais, voz, bio, caminho da cliente",
   },
   6: {
     nome: "Metas",
