@@ -57,6 +57,29 @@ const FONTE_TITULO =
   "'Cabinet Grotesk','Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
 const FONTE_CORPO = "'Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
 
+// Logo do cabeçalho. É PNG hospedado de propósito, e a tentação de trocar por
+// SVG inline (que é o que o site e o polia-office usam) precisa ser resistida:
+// Gmail, Outlook e Yahoo removem a tag <svg> do HTML do e-mail. Inline o SVG
+// aqui e a marca some pra maior parte de quem recebe, sem nem deixar texto no
+// lugar — fica um buraco. O PNG é rasterizado do MESMO arquivo oficial
+// (public/marketing/logo.svg, o wordmark com a trilha de 3 pontos), então não
+// há segunda versão do logo pra sair de sincronia. Pra regerar depois de mexer
+// no logo (3x do tamanho de exibição, achatado sobre o --bg do cabeçalho):
+//
+//   node -e "const s=require('sharp'),f=require('fs');s(f.readFileSync('public/marketing/logo.svg'),{density:600}).resize({width:384,height:148,fit:'fill'}).flatten({background:'#F2F0ED'}).png({compressionLevel:9,palette:true}).toFile('public/marketing/logo-email.png')"
+//
+// O `alt` não é detalhe de acessibilidade só: imagem remota vem bloqueada por
+// padrão em boa parte dos clientes, e o alt estilizado faz o cabeçalho cair
+// exatamente no wordmark de texto que existia aqui antes. Nenhum cenário fica
+// pior do que estava.
+//
+// A URL é absoluta porque e-mail não tem origem. Ela só existe depois que o
+// APP for deployado (o Worker é quem serve /marketing/*): deployar as edge
+// functions antes do app deixa a imagem em 404 até o app subir.
+const LOGO_URL = "https://usepolia.com.br/marketing/logo-email.png";
+const LOGO_LARGURA = 128;
+const LOGO_ALTURA = 49;
+
 export function emailPolia({
   preheader,
   headline,
@@ -137,7 +160,7 @@ export function emailPolia({
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
             <tr>
               <td style="padding-bottom:24px;text-align:left;">
-                <span style="font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#0A0A0A;">Pólia</span>
+                <img src="${LOGO_URL}" width="${LOGO_LARGURA}" height="${LOGO_ALTURA}" alt="Pólia" style="display:block;border:0;outline:none;text-decoration:none;width:${LOGO_LARGURA}px;height:${LOGO_ALTURA}px;font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#0A0A0A;" />
               </td>
             </tr>
             <tr>
