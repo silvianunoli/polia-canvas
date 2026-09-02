@@ -7,6 +7,8 @@
 //
 // Continua valendo importar tudo de `@/lib/email-template`: os reexports abaixo
 // mantêm o ponto de entrada único pro app.
+import { sanitizarMensagemErro } from "@/lib/error-sanitize";
+
 export { emailPolia, escapeHtml } from "../../supabase/functions/_shared/email-polia.ts";
 
 export function resendApiKey(): string {
@@ -28,7 +30,9 @@ async function registrarFalhaDeEmail(contexto: string, detalhe: string) {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("erros_app").insert({
       origem: "server",
-      mensagem: `${contexto} Falha ao enviar e-mail: ${detalhe}`.slice(0, 2000),
+      // O `detalhe` vem do corpo de resposta do Resend, que às vezes devolve o
+      // destinatário dentro da mensagem de erro: sanitiza antes de gravar.
+      mensagem: sanitizarMensagemErro(`${contexto} Falha ao enviar e-mail: ${detalhe}`),
     });
   } catch {
     // O log do erro nunca pode virar um erro.
