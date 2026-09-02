@@ -100,7 +100,7 @@ function AssinarPage() {
           Escolha seu plano
         </h1>
         <p className="mb-8 text-center font-fraunces italic text-[16px] text-[var(--ink-soft)]">
-          o seu negócio já está montado. escolhe o plano que o app abre inteiro assim que o
+          o seu negócio já está montado. escolhe o plano, que ele abre na sua conta assim que o
           pagamento entra.
         </p>
 

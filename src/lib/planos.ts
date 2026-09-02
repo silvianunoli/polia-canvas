@@ -103,11 +103,12 @@ export const COTAS_CONFERE = {
   caderno: 1,
 } as const;
 
-// Fase 3 (não implementado ainda): 1 geração de IA por mês no Confere.
-// Registrado aqui só como constante de documentação — o contador real
-// (tabela + trigger server-side) entra junto com a feature de IA, que
-// precisa de PRD próprio. Construir o contador agora seria código morto.
-export const IA_GERACAO_CONFERE_POR_MES = 1;
+// A cota de geração por IA NÃO mora aqui. Fonte única: CONFIG_POR_PLANO em
+// src/lib/planejamentoIa.functions.ts (Confere 1/mês, Controle 30, Projete 60),
+// contada na tabela `ia_geracoes` no servidor. A constante de documentação que
+// existia neste ponto dizia que a feature não estava implementada, o que deixou
+// de ser verdade em 14/08/2026, e duplicava o teto do plano gratuito em dois
+// lugares que podiam divergir em silêncio.
 
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
 // (src/routes/_authenticated/assinar.tsx) e na tela de upgrade

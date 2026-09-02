@@ -8,9 +8,18 @@ interface UpgradeSearch {
   tier?: TierPago;
 }
 
+// Sem `?tier`, a tela vende o Controle. Fica aqui em cima porque o título da aba
+// e o corpo da página precisam cair no MESMO padrão: eram dois lugares decidindo
+// o plano, e o título estava fixo no Controle mesmo com `?tier=projete`.
+const TIER_PADRAO: TierPago = "controle";
+
 export const Route = createFileRoute("/_authenticated/upgrade")({
-  head: () => ({
-    meta: [{ title: "Esse recurso é do Controle · Pólia" }],
+  head: ({ match }) => ({
+    meta: [
+      {
+        title: `Esse recurso é do ${TIERS_PAGOS[match.search.tier ?? TIER_PADRAO].titulo} · Pólia`,
+      },
+    ],
   }),
   validateSearch: (search: Record<string, unknown>): UpgradeSearch => ({
     rota: typeof search.rota === "string" ? search.rota : undefined,
@@ -23,14 +32,17 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
 const GANHO_POR_ROTA: Record<string, string> = {
   "/financeiro": "Aqui entra tudo que entrou e saiu, e o Controle mostra quanto sobrou no mês.",
   "/produtos": "O Controle solta o limite: cada produto com o custo, o preço e quanto sobra.",
-  "/raiox": "O Controle lê o seu mês e devolve onde o dinheiro está vazando.",
+  // Raio-x é Projete, não Controle (ROTAS_PROJETE + o portão `temProjete` dentro
+  // da página). Nomear o Controle aqui vendia por R$ 29,90 uma tela que só abre
+  // no Projete, e ainda contradizia o selo "Recurso do plano Projete" logo acima.
+  "/raiox": "O Projete lê o seu mês e devolve onde o dinheiro está vazando.",
   "/projecao": "O Projete mostra quantas vendas fecham o mês e quantas pagam o seu pró-labore.",
   "/plano-conteudo": "O Projete monta as 365 ideias de post do ano a partir da sua marca.",
 };
 
 function UpgradePage() {
   const search = Route.useSearch();
-  const tierId: TierPago = search.tier ?? "controle";
+  const tierId: TierPago = search.tier ?? TIER_PADRAO;
   const tier = TIERS_PAGOS[tierId];
   const ganho =
     (search.rota ? GANHO_POR_ROTA[search.rota] : undefined) ??
