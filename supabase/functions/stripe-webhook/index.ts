@@ -135,7 +135,7 @@ async function buscarUserIdPorEmail(email: string): Promise<string | null> {
   const { data, error } = await supabaseAuthSchema
     .from("users")
     .select("id")
-    .ilike("email", email)
+    .eq("email", email.trim().toLowerCase())
     .maybeSingle();
   if (error) {
     console.error("[stripe-webhook] Erro ao buscar usuária por e-mail:", error);
