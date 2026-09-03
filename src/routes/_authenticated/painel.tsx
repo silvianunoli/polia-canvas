@@ -10,6 +10,8 @@ import { Vazio } from "@/components/layout/Vazio";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 import { hojeISO, ehMesAtual } from "@/lib/data.functions";
 import { rotaLiberada } from "@/lib/planos";
+import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
+import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -117,6 +119,37 @@ function TituloCartao({ children, className = "" }: { children: ReactNode; class
   return <h2 className={`font-sans ${className}`}>{children}</h2>;
 }
 
+/**
+ * Cartão de número do mês. Vira link só pra quem tem a tela /financeiro; sem
+ * ela, o cartão é um cartão e pronto.
+ *
+ * Existe desde 03/09/2026 (COPY-04). Antes, os três cartões de dinheiro
+ * apontavam pro /upgrade quando o plano era Confere, porque o número era um
+ * cadeado. Agora o número é real em todo plano (o registro de entrada e saída
+ * abriu), e mandar quem acabou de ver o próprio dinheiro pra uma tela de venda
+ * seria um pedágio, não uma navegação.
+ */
+function CartaoFinanceiro({
+  href,
+  padding = "p-5",
+  children,
+}: {
+  href?: string;
+  padding?: string;
+  children: ReactNode;
+}) {
+  const base = `block rounded-xl border border-[var(--line)] bg-white ${padding}`;
+  if (!href) return <div className={base}>{children}</div>;
+  return (
+    <a
+      href={href}
+      className={`group ${base} no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]`}
+    >
+      {children}
+    </a>
+  );
+}
+
 interface SecaoRow {
   secao: string;
   concluido: boolean;
@@ -125,11 +158,10 @@ interface CampoRow {
   campo: string;
   valor: string | null;
 }
-interface LancRow {
-  tipo: string;
-  valor: number;
-  data: string;
-}
+// Os números do mês precisam só de tipo/valor/data, mas o cartão "Entrou e saiu
+// este mês" (COPY-04) lista e corrige lançamento, então lê a linha inteira —
+// mesmo formato do modal compartilhado.
+type LancRow = Lancamento;
 interface ClienteRow {
   status_pedido: string | null;
 }
@@ -268,7 +300,10 @@ function PainelPage() {
           .from("planejamento_campos" as never)
           .select("campo, valor")
           .eq("user_id", userId!)
-          .in("campo", ["financeiro.meta_celebracao"]),
+          // meta_minima entrou em 03/09/2026 (COPY-04): é o "mínimo pra fechar
+          // as contas" que a landing promete no painel diário, e ele é
+          // respondido no módulo 4 do Planejamento, que o Confere tem.
+          .in("campo", ["financeiro.meta_minima", "financeiro.meta_celebracao"]),
         // Meta do mês: fonte única (mesma que Financeiro e a calculadora de Produtos lêem).
         supabase
           .from("metas")
@@ -276,7 +311,10 @@ function PainelPage() {
           .eq("user_id", userId!)
           .eq("titulo", "Meta do mês")
           .maybeSingle(),
-        supabase.from("lancamentos").select("tipo, valor, data").eq("user_id", userId!),
+        supabase
+          .from("lancamentos")
+          .select("id, tipo, valor, data, descricao, categoria, created_at")
+          .eq("user_id", userId!),
         supabase
           .from("clientes" as never)
           .select("status_pedido")
@@ -341,6 +379,12 @@ function PainelPage() {
   const metaBoa = dados?.metaMesAlvo ?? 0;
   const metaCelebracao = useMemo(() => {
     const v = campoValor.get("financeiro.meta_celebracao");
+    return v ? numeroDe(v) : 0;
+  }, [campoValor]);
+  // O mínimo pra fechar as contas do mês. Mesma fonte que a régua do Financeiro
+  // (planejamento_campos), que é do Planejamento e não do plano pago.
+  const metaMinima = useMemo(() => {
+    const v = campoValor.get("financeiro.meta_minima");
     return v ? numeroDe(v) : 0;
   }, [campoValor]);
 
@@ -417,17 +461,26 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
-    // No Confere o Financeiro é fechado, então receita é sempre 0 e a manchete
-    // caía fixa em "registre sua primeira venda" — mandando fazer exatamente o
-    // que o plano não deixa, e contradizendo o cartão vizinho de clientes
-    // entregues. A manchete do plano gratuito ancora no que ele entrega.
-    if (!financeiroLiberado) {
-      return jornadaFinalizada
-        ? "Planejamento fechado. Falta ver quanto sobra."
-        : `O Módulo ${moduloAtual} continua aberto no Planejamento.`;
-    }
+    // A manchete do Confere era um desvio pro Planejamento, porque sem
+    // Financeiro a receita era sempre 0 e "registre sua primeira venda" mandava
+    // fazer o que o plano não deixava. Desde 03/09/2026 (COPY-04) todo plano
+    // registra entrada e saída pelo cartão "Entrou e saiu este mês", então a
+    // manchete volta a ser a mesma pra todo mundo: o número do mês, que é o que
+    // a landing promete no card do grátis.
     if (receitaMes <= 0) {
       return "Nenhuma venda registrada este mês. A primeira entrada já mostra quanto sobra.";
+    }
+    // "Quanto falta pra fechar as contas do mês" é literalmente o que a landing
+    // promete no painel diário, e o número vem do módulo 4 do Planejamento
+    // (financeiro.meta_minima). Vem antes da Meta do mês porque pagar as contas
+    // é a primeira pergunta: mês bom só faz sentido depois dela.
+    if (metaMinima > 0 && receitaMes < metaMinima) {
+      return (
+        <>
+          Faltam <span className="whitespace-nowrap">{fmtBRL(metaMinima - receitaMes)}</span> pra
+          fechar as contas do mês.
+        </>
+      );
     }
     if (metaBoa > 0 && receitaMes >= metaBoa) {
       return "Mês bom batido. Agora é caminho pro mês de celebrar.";
@@ -445,23 +498,31 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [receitaMes, metaBoa, financeiroLiberado, jornadaFinalizada, moduloAtual]);
+  }, [receitaMes, metaBoa, metaMinima]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
   // calculados aqui.
-  const acaoPrincipal = useMemo(() => {
+  //
+  // Sem o Financeiro (Confere), a ação não é mais um desvio pro Planejamento
+  // nem um link pro /upgrade: é o registro em si, no modal do próprio Painel
+  // (COPY-04). O que o Controle abre segue dito no rodapé do cartão de
+  // registro, não no botão principal.
+  const acaoPrincipal = useMemo((): { texto: string; href?: string; abreRegistro?: boolean } => {
     if (!financeiroLiberado) {
-      return jornadaFinalizada
-        ? { texto: "Conhecer o Controle", href: upgradeHref("/financeiro") }
-        : {
-            texto: `Continuar o Módulo ${moduloAtual}`,
-            href: `/planejamento/modulo/${moduloAtual}`,
-          };
+      return {
+        texto: receitaMes <= 0 ? "Registrar uma entrada" : "Registrar entrada ou saída",
+        abreRegistro: true,
+      };
     }
     if (receitaMes <= 0) return { texto: "Registrar uma entrada", href: "/financeiro" };
     return { texto: "Abrir o Financeiro", href: "/financeiro" };
-  }, [financeiroLiberado, jornadaFinalizada, moduloAtual, receitaMes]);
+  }, [financeiroLiberado, receitaMes]);
+
+  // Modal de registro disparado pelo botão da manchete. Fica separado do estado
+  // interno do cartão "Entrou e saiu este mês" de propósito: os dois usam o
+  // mesmo componente e a mesma invalidação, e nenhum precisa conhecer o outro.
+  const [registroAberto, setRegistroAberto] = useState(false);
 
   // ── Semana de trabalho (tarefas concluídas por dia) ──
   const [saudacao, setSaudacao] = useState("Olá");
@@ -537,10 +598,21 @@ function PainelPage() {
             {headline}
           </h1>
 
-          <a href={acaoPrincipal.href} className={`${BOTAO_PRIMARIO} mt-5`}>
-            {acaoPrincipal.texto}
-            <span aria-hidden="true">→</span>
-          </a>
+          {acaoPrincipal.href ? (
+            <a href={acaoPrincipal.href} className={`${BOTAO_PRIMARIO} mt-5`}>
+              {acaoPrincipal.texto}
+              <span aria-hidden="true">→</span>
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setRegistroAberto(true)}
+              className={`${BOTAO_PRIMARIO} mt-5`}
+            >
+              {acaoPrincipal.texto}
+              <span aria-hidden="true">→</span>
+            </button>
+          )}
 
           {/* Intenção do dia */}
           <div className="mt-6 max-w-[560px]">
@@ -632,72 +704,48 @@ function PainelPage() {
           </div>
         </Reveal>
 
-        {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela */}
+        {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
+            Desde 03/09/2026 (COPY-04) o número é real em TODO plano: o cadeado
+            saiu daqui porque o registro de entrada e saída deixou de ser pago.
+            O que continua no Controle é a tela /financeiro, e só quem a tem é
+            que ganha o cartão clicável. */}
         <Reveal className="mt-6">
-          <a
-            href={destino("/financeiro", financeiroLiberado)}
-            aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
-            className="group block rounded-xl border border-[var(--line)] bg-white p-6 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-          >
+          <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
             <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Quanto sobrou · mês
             </TituloCartao>
-            {/* Sem Financeiro não existe lançamento, então "R$ 0" seria uma
-                afirmação falsa (não é que não sobrou: é que não há o que somar).
-                Trancado, o slot do valor mostra o mesmo tratamento de cadeado
-                da sidebar: é o momento de maior intenção do painel, não um
-                traço. */}
-            {financeiroLiberado ? (
-              <p
-                className={`font-cabinet mt-1 text-[40px] leading-none ${
-                  lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
-                }`}
-              >
-                {fmtBRL(lucroMes)}
-              </p>
-            ) : (
-              <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
-                <Lock size={14} aria-hidden="true" />
-                no Controle
-              </p>
-            )}
+            <p
+              className={`font-cabinet mt-1 text-[40px] leading-none ${
+                lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+              }`}
+            >
+              {fmtBRL(lucroMes)}
+            </p>
             <p className="mt-2 text-[13px] text-[var(--muted)]">
-              {!financeiroLiberado ? (
-                "o Controle soma entradas e saídas e mostra quanto sobrou"
-              ) : (
+              {receitaMes > 0
+                ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
+                : "registre entradas e saídas pra ver"}
+              {financeiroLiberado && (
                 <>
-                  {receitaMes > 0
-                    ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
-                    : "registre entradas e saídas pra ver"}{" "}
+                  {" "}
                   · <span className="text-[var(--ink-soft)]">Financeiro</span>
                 </>
               )}
             </p>
-          </a>
+          </CartaoFinanceiro>
         </Reveal>
 
         {/* Bento de dados */}
         <div className="mt-6 grid grid-cols-12 gap-4">
           <Reveal className={SPAN_CLASS[4]}>
-            <a
-              href={destino("/financeiro", financeiroLiberado)}
-              aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
-              className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-            >
+            <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
               <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Receita · mês
               </TituloCartao>
-              {financeiroLiberado ? (
-                <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                  {fmtBRL(receitaMes)}
-                </p>
-              ) : (
-                <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
-                  <Lock size={14} aria-hidden="true" />
-                  no Controle
-                </p>
-              )}
-              {financeiroLiberado && metaCelebracao > 0 && (
+              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                {fmtBRL(receitaMes)}
+              </p>
+              {metaCelebracao > 0 && (
                 <div className="relative mx-0.5 mt-4 h-2 rounded-md border border-[var(--line)] bg-[var(--bg)]">
                   <div
                     className="absolute inset-y-0 left-0 rounded-md bg-[var(--secondary)]"
@@ -717,52 +765,39 @@ function PainelPage() {
                 </div>
               )}
               <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {!financeiroLiberado ? (
-                  "quanto entrou, e quanto falta pra meta"
-                ) : (
+                {metaBoa > 0
+                  ? `${Math.min(100, Math.round((receitaMes / metaBoa) * 100))}% da Meta do mês (${fmtBRL(metaBoa)})`
+                  : receitaMes > 0
+                    ? "entradas esse mês"
+                    : "ainda sem entradas"}
+                {financeiroLiberado && (
                   <>
-                    {metaBoa > 0
-                      ? `${Math.min(100, Math.round((receitaMes / metaBoa) * 100))}% da Meta do mês (${fmtBRL(metaBoa)})`
-                      : receitaMes > 0
-                        ? "entradas esse mês"
-                        : "ainda sem entradas"}{" "}
+                    {" "}
                     · <span className="text-[var(--ink-soft)]">Financeiro</span>
                   </>
                 )}
               </p>
-            </a>
+            </CartaoFinanceiro>
           </Reveal>
 
           <Reveal className={SPAN_CLASS[4]}>
-            <a
-              href={destino("/financeiro", financeiroLiberado)}
-              aria-label={financeiroLiberado ? undefined : "Ver o plano Controle"}
-              className="group block rounded-xl border border-[var(--line)] bg-white p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-            >
+            <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
               <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Pedidos · mês
               </TituloCartao>
-              {financeiroLiberado ? (
-                <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                  {pedidosMes}
-                </p>
-              ) : (
-                <p className="mt-3 flex items-center gap-1.5 text-[15px] leading-none text-[var(--muted)]">
-                  <Lock size={14} aria-hidden="true" />
-                  no Controle
-                </p>
-              )}
+              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                {pedidosMes}
+              </p>
               <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {!financeiroLiberado ? (
-                  "quantas vendas o mês fechou"
-                ) : (
+                {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"}
+                {financeiroLiberado && (
                   <>
-                    {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"} ·{" "}
-                    <span className="text-[var(--ink-soft)]">ver entradas</span>
+                    {" "}
+                    · <span className="text-[var(--ink-soft)]">ver entradas</span>
                   </>
                 )}
               </p>
-            </a>
+            </CartaoFinanceiro>
           </Reveal>
 
           <Reveal className={SPAN_CLASS[4]}>
@@ -795,6 +830,20 @@ function PainelPage() {
               </p>
             </a>
           </Reveal>
+
+          {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os
+              três cartões acima pra quem não tem a tela /financeiro. Quem tem o
+              Controle não vê este cartão — os cartões acima já levam pro
+              Financeiro, que faz isso e muito mais. */}
+          {!financeiroLiberado && userId && (
+            <Reveal className={SPAN_CLASS[12]}>
+              <RegistroDoMes
+                userId={userId}
+                lancamentos={dados?.lancamentos ?? []}
+                onMudou={() => qc.invalidateQueries({ queryKey: ["painel-dados", userId] })}
+              />
+            </Reveal>
+          )}
 
           {/* Tarefas de hoje */}
           <Reveal className={SPAN_CLASS[6]}>
@@ -979,6 +1028,25 @@ function PainelPage() {
           </Reveal>
         </div>
       </div>
+
+      {/* Registro aberto pelo botão da manchete. Mesmo componente do cartão
+          "Entrou e saiu este mês" e mesma invalidação: o que for salvo aqui
+          recalcula os três cartões de dinheiro na mesma hora. */}
+      {registroAberto && userId && (
+        <ModalLancamento
+          userId={userId}
+          tipoInicial="entrada"
+          dataPadrao={hojeISO()}
+          prefill={null}
+          lancamentoEdit={null}
+          historico={dados?.lancamentos ?? []}
+          onClose={() => setRegistroAberto(false)}
+          onSaved={() => {
+            setRegistroAberto(false);
+            qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
+          }}
+        />
+      )}
     </div>
   );
 }
