@@ -11,6 +11,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
+import { BTN_PRIMARIO, BTN_CONTORNO } from "@/lib/botoes";
 
 export type ErrorCode =
   | "404"
@@ -110,10 +111,7 @@ function ActionButton({
   action: ErrorAction;
   variant: "primary" | "secondary";
 }) {
-  const className =
-    variant === "primary"
-      ? "rounded-lg bg-[var(--secondary)] px-8 py-4 text-[16px] font-semibold text-[var(--secondary-ink)] no-underline transition-[filter] hover:brightness-95"
-      : "rounded-lg border border-[var(--ink)] px-8 py-4 text-[16px] font-semibold text-[var(--ink)] no-underline transition-colors hover:bg-[var(--ink)] hover:text-white";
+  const className = variant === "primary" ? BTN_PRIMARIO : BTN_CONTORNO;
 
   if ("href" in action) {
     return (
