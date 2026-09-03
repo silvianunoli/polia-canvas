@@ -8,7 +8,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Switch } from "@/components/ui/switch";
 import { track } from "@/lib/analytics";
-import { statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
+import { statusAssinatura, cancelarAssinatura, abrirPortalCobranca } from "@/lib/stripe.functions";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import {
   statusConexaoGoogle,
@@ -132,6 +132,21 @@ function ConfiguracoesPage() {
       toastSucesso("Google Calendar desconectado.");
     },
     onError: () => toastErro("Não conseguimos desconectar agora."),
+  });
+
+  // Portal da Stripe: sessão curta criada no servidor, a gente só redireciona.
+  // Nenhum dado de cartão passa pela Pólia.
+  const portalCobrancaMutation = useMutation({
+    mutationFn: () => abrirPortalCobranca(),
+    onSuccess: (res) => {
+      if (res.error || !res.url) {
+        toastErro(res.error ?? "Não conseguimos abrir a página de pagamento agora. Tenta de novo.");
+        return;
+      }
+      track("portal_cobranca_aberto");
+      window.location.href = res.url;
+    },
+    onError: () => toastErro("Não conseguimos abrir a página de pagamento agora. Tenta de novo."),
   });
 
   const cancelar = async () => {
@@ -699,6 +714,19 @@ function ConfiguracoesPage() {
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
+            {/* PAY-06: até aqui não existia jeito nenhum de trocar cartão, e os
+                e-mails de cobrança recusada mandavam pra esta tela. Só aparece
+                pra quem já tem customer na Stripe. */}
+            {!assinaturaQuery.isLoading && assinatura?.temCobranca && !confirmandoCancelamento && (
+              <button
+                type="button"
+                onClick={() => portalCobrancaMutation.mutate()}
+                disabled={portalCobrancaMutation.isPending}
+                className="rounded-xl border border-[var(--secondary)] px-4 py-2 font-sans text-[13px] text-[var(--secondary-text)] transition-colors hover:bg-[var(--secondary-light)] disabled:opacity-50"
+              >
+                {portalCobrancaMutation.isPending ? "Abrindo..." : "Atualizar pagamento"}
+              </button>
+            )}
             {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && !confirmandoCancelamento && (
               <button
                 type="button"
@@ -746,6 +774,13 @@ function ConfiguracoesPage() {
               </p>
             )}
           </div>
+
+          {!assinaturaQuery.isLoading && assinatura?.temCobranca && !confirmandoCancelamento && (
+            <p className="mt-3 max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
+              Trocar o cartão e ver as faturas acontece na página segura da Stripe, com volta pra cá
+              no fim.
+            </p>
+          )}
         </Secao>
 
         {/* SEÇÃO 7 — AJUDA */}

@@ -109,6 +109,10 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
 
 const STATUS_ATIVOS = new Set(["active", "past_due", "trialing"]);
 
+// Mesma constante local das outras server functions (compra-publica, convites,
+// boas-vindas): o domínio do produto é fixo e não muda por ambiente.
+const SITE_URL = "https://usepolia.com.br";
+
 const iniciarAssinaturaInput = z.object({
   plano: z.enum(["controle_mensal", "controle_anual", "projete_mensal", "projete_anual"]),
 });
@@ -201,6 +205,7 @@ export const statusAssinatura = createServerFn({ method: "GET" })
         currentPeriodEnd: null,
         cancelAtPeriodEnd: false,
         preco: null,
+        temCobranca: false,
       };
     }
     return {
@@ -209,7 +214,54 @@ export const statusAssinatura = createServerFn({ method: "GET" })
       currentPeriodEnd: assinatura.current_period_end,
       cancelAtPeriodEnd: assinatura.cancel_at_period_end,
       preco: infoDoPreco(assinatura.price_id),
+      // Existe customer na Stripe: já passou por cobrança alguma vez, então o
+      // Portal de cobrança tem o que mostrar (cartão, faturas, dados). Quem
+      // nunca pagou (Confere, beta) não tem customer e não vê o botão.
+      temCobranca: !!assinatura.stripe_customer_id,
     };
+  });
+
+// Portal de cobrança hospedado pela Stripe: trocar cartão, ver faturas e
+// atualizar dados de cobrança. A gente não constrói nenhuma tela de cartão —
+// a sessão é curta e a URL só vale pro customer dela.
+//
+// PRÉ-REQUISITO DE CONTA (não é código): a Stripe exige uma Portal
+// Configuration ativa em Settings > Billing > Customer portal. Sem isso a API
+// responde "No configuration provided and your test mode default
+// configuration has not been created" e a usuária só vê o erro genérico.
+export const abrirPortalCobranca = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const assinatura = await lerAssinatura(context.userId);
+    if (!assinatura?.stripe_customer_id) {
+      return { url: null, error: "Não encontramos uma cobrança sua pra gerenciar." };
+    }
+
+    try {
+      const stripe = stripeClient();
+      const session = await stripe.billingPortal.sessions.create({
+        customer: assinatura.stripe_customer_id,
+        return_url: `${SITE_URL}/configuracoes`,
+        locale: "pt-BR",
+      });
+      if (!session.url) {
+        console.error("[Stripe] Sessão do portal criada sem URL.");
+        return {
+          url: null,
+          error: "Não conseguimos abrir a página de pagamento agora. Tenta de novo.",
+        };
+      }
+      return { url: session.url, error: null };
+    } catch (err) {
+      console.error("[Stripe] Erro ao abrir portal de cobrança:", err);
+      void dispararAlerta("portal_cobranca_erro", "Erro ao abrir o portal de cobrança", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
+      return {
+        url: null,
+        error: "Não conseguimos abrir a página de pagamento agora. Tenta de novo.",
+      };
+    }
   });
 
 export const cancelarAssinatura = createServerFn({ method: "POST" })
