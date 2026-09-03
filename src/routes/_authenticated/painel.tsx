@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, BarChart3, Check, Lock } from "lucide-react";
 import { toastErro } from "@/lib/toast";
@@ -20,20 +20,6 @@ export const Route = createFileRoute("/_authenticated/painel")({
       },
     ],
   }),
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile && profile.onboarding_completed === false) {
-      throw redirect({ to: "/onboarding" });
-    }
-  },
   component: PainelPage,
 });
 

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { createFileRoute, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, Lock, Plus, Trash2, Copy, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,20 +46,6 @@ export const Route = createFileRoute("/_authenticated/produtos")({
       },
     ],
   }),
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile && profile.onboarding_completed === false) {
-      throw redirect({ to: "/painel" });
-    }
-  },
   component: ProdutosPage,
 });
 

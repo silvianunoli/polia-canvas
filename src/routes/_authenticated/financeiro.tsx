@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, FileText, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,20 +56,6 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
     const valor = Number.isFinite(valorNum) && valorNum > 0 ? valorNum : undefined;
     const desc = typeof search.desc === "string" && search.desc ? search.desc : undefined;
     return { registrar, valor, desc };
-  },
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile && profile.onboarding_completed === false) {
-      throw redirect({ to: "/painel" });
-    }
   },
   component: FinanceiroPage,
 });

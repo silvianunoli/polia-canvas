@@ -29,17 +29,6 @@ export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
     if (!Number.isInteger(n) || n < 1 || n > TOTAL_MODULOS) {
       throw redirect({ to: "/planejamento" });
     }
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id;
-    if (!userId) return;
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile && profile.onboarding_completed === false) {
-      throw redirect({ to: "/onboarding" });
-    }
   },
   component: ModuloPage,
 });
