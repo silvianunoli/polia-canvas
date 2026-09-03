@@ -813,7 +813,7 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 8 — ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
-          <h2 className="text-[20px] leading-tight text-[var(--danger)]">Excluir conta</h2>
+          <h2 className="text-[22px] leading-tight text-[var(--danger)]">Excluir conta</h2>
           <p className="mt-2 font-sans text-[14px] text-[var(--ink-soft)]">
             Excluir a conta apaga planejamento, financeiro, clientes e notas. Não tem volta.
           </p>
@@ -922,7 +922,7 @@ function Campo({
   return (
     <div>
       <p className="flex items-center justify-between mb-2">
-        <span className="font-semibold text-[9px] tracking-[1.5px] uppercase text-[var(--muted)] font-bold">
+        <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           {label}
         </span>
         {saved !== undefined && (

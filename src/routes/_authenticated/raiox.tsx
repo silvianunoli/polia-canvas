@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Lock } from "lucide-react";
+import { Sparkles, Lock, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarRaioX } from "@/lib/raiox.functions";
 import { track } from "@/lib/analytics";
@@ -232,59 +233,66 @@ function RaioXPage() {
             </button>
           </div>
         ) : motivo === "mes_nao_fechado" ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              O mês ainda está correndo. Posso ler o que tem até aqui, ou escolha o mês passado, que
-              está fechado.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setForcarMesAtual(true);
-                void gerar(true);
-              }}
-              className="mt-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-            >
-              Ler o que tem até aqui
-            </button>
+          <div className="mt-6">
+            <Vazio
+              icone={CalendarClock}
+              titulo="O mês ainda está correndo."
+              texto="A gente pode ler o que tem até aqui, ou escolha o mês passado, que está fechado."
+              acao={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForcarMesAtual(true);
+                    void gerar(true);
+                  }}
+                  className={BTN_ACAO}
+                >
+                  Ler o que tem até aqui
+                </button>
+              }
+            />
           </div>
         ) : motivo === "dado_insuficiente" ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Esse mês tem pouco registrado pra eu ler direito. Lance o que entrou e saiu.
-            </p>
-            <Link
-              to="/financeiro"
-              className="mt-3 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
-            >
-              Ir pro Financeiro
-            </Link>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="Esse mês tem pouco registrado pra dar leitura."
+              texto="Lance o que entrou e saiu."
+              acao={
+                <Link to="/financeiro" className={BTN_ACAO}>
+                  Ir pro Financeiro
+                </Link>
+              }
+            />
           </div>
         ) : motivo === "teto_atingido" ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              As gerações de raio-x deste mês acabaram. Dá pra reler os raio-x que já saíram
-              escolhendo outro mês.
-            </p>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="As gerações de raio-x deste mês acabaram."
+              texto="Dá pra reler os raio-x que já saíram escolhendo outro mês."
+            />
           </div>
         ) : (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--secondary-light)]">
-              <Sparkles size={18} className="text-[var(--secondary-text)]" aria-hidden="true" />
-            </span>
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Quando o seu mês tiver receitas e despesas registradas, a Pólia lê pra você o que
-              aconteceu.
-            </p>
-            {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-            <button
-              type="button"
-              onClick={() => void gerar(ehMesCorrente)}
-              disabled={gerando}
-              className={`${BTN_ACAO} mt-4`}
-            >
-              {gerando ? "A Pólia está lendo o seu mês..." : "Gerar raio-x"}
-            </button>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="Nenhum raio-x deste mês ainda."
+              texto="Quando o seu mês tiver receitas e despesas registradas, a Pólia lê pra você o que aconteceu."
+              acao={
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void gerar(ehMesCorrente)}
+                    disabled={gerando}
+                    className={BTN_ACAO}
+                  >
+                    {gerando ? "A Pólia está lendo o seu mês..." : "Gerar raio-x"}
+                  </button>
+                  {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+                </>
+              }
+            />
           </div>
         )}
       </div>

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, FileText, Lock } from "lucide-react";
+import { MoreHorizontal, FileText, Lock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import {
@@ -427,7 +428,7 @@ function FinanceiroPage() {
         </section>
 
         {/* ───────── 2. Meta do mês (régua) ───────── */}
-        <section className="mt-5 rounded-xl bg-[var(--surface)] p-6 md:p-8">
+        <section className="mt-6 rounded-xl bg-[var(--surface)] p-6 md:p-8">
           <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
             Onde o mês está agora
           </p>
@@ -501,8 +502,8 @@ function FinanceiroPage() {
         </section>
 
         {/* ───────── 4. Histórico ───────── */}
-        <section className="mt-10">
-          <p className="text-[18px] text-[var(--ink)]">Histórico</p>
+        <section className="mt-12">
+          <h2 className="text-[20px] leading-tight text-[var(--ink)]">Histórico</h2>
 
           {/* Filtros */}
           <div className="mt-4 flex flex-col gap-3">
@@ -581,13 +582,27 @@ function FinanceiroPage() {
           {/* Lista */}
           <div className="mt-6">
             {lancamentos.length === 0 ? (
-              <p className="py-12 text-center text-[14px] text-[var(--muted)]">
-                Nenhum lançamento ainda. Registre sua primeira entrada ou saída acima.
-              </p>
+              <Vazio
+                icone={Wallet}
+                titulo="Nenhum lançamento ainda."
+                texto="Cada entrada e saída registrada aqui vira o número de quanto sobra no fim do mês."
+                acao={
+                  <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
+                    Quero registrar a primeira
+                  </button>
+                }
+              />
             ) : lancamentosFiltrados.length === 0 ? (
-              <p className="py-12 text-center text-[14px] text-[var(--muted)]">
-                Nenhum lançamento nesse período. Troca o filtro ou registra uma entrada.
-              </p>
+              <Vazio
+                icone={Wallet}
+                titulo="Nenhum lançamento nesse período."
+                texto="Troca o filtro logo acima pra ver outro período, ou registra uma entrada agora."
+                acao={
+                  <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
+                    Quero registrar uma entrada
+                  </button>
+                }
+              />
             ) : (
               lancamentosFiltrados.map((l) => (
                 <LinhaLancamento
@@ -672,10 +687,10 @@ function LinhaLancamento({
         <p className="text-[15px] text-[var(--ink-soft)]">
           {l.descricao || (entrada ? "Entrada" : "Saída")}
         </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12.5px] text-[var(--muted)]">
+        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-[var(--muted)]">
           <span>{fmtData(l.data)}</span>
           {l.categoria && (
-            <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11.5px] text-[var(--ink-soft)]">
+            <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
               {l.categoria}
             </span>
           )}
@@ -978,7 +993,7 @@ function ModalLancamento({
         {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
 
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[12.5px] text-[var(--muted)]">{faltaMsg}</span>
+          <span className="text-[13px] text-[var(--muted)]">{faltaMsg}</span>
           <span className="flex gap-3">
             <button
               onClick={onClose}

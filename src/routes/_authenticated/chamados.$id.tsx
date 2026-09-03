@@ -2,7 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { MessageCircle } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -132,34 +134,47 @@ function ChamadoDetalhe() {
           </p>
         </div>
 
-        <div className="mt-6 space-y-4">
-          {mensagens.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex ${msg.author_role === "user" ? "justify-end" : "justify-start"}`}
-            >
+        {/* Chamado recém-aberto não tinha resposta nenhuma e o espaço entre o
+            corpo e a caixa de texto ficava mudo. Sem botão de propósito: a
+            ação é o textarea logo abaixo. */}
+        {mensagens.length === 0 ? (
+          <div className="mt-6">
+            <Vazio
+              icone={MessageCircle}
+              titulo="Ainda sem resposta por aqui."
+              texto="A gente responde em até um dia útil. Se lembrar de mais alguma coisa, escreve abaixo que entra no mesmo chamado."
+            />
+          </div>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {mensagens.map((msg) => (
               <div
-                className={`max-w-[80%] rounded-2xl p-5 ${
-                  msg.author_role === "user"
-                    ? "bg-[var(--ink)] text-white"
-                    : "border border-[var(--line)] bg-white text-[var(--ink)]"
-                }`}
+                key={msg.id}
+                className={`flex ${msg.author_role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <p className="mb-2 whitespace-pre-wrap font-sans text-[14px] leading-relaxed">
-                  {msg.body}
-                </p>
-                <p
-                  className={`font-sans text-[11px] ${
-                    msg.author_role === "user" ? "text-white/55" : "text-[var(--muted)]"
+                <div
+                  className={`max-w-[80%] rounded-2xl p-5 ${
+                    msg.author_role === "user"
+                      ? "bg-[var(--ink)] text-white"
+                      : "border border-[var(--line)] bg-white text-[var(--ink)]"
                   }`}
                 >
-                  {msg.author_role === "user" ? "Você" : "Suporte"} ·{" "}
-                  {new Date(msg.created_at).toLocaleString("pt-BR")}
-                </p>
+                  <p className="mb-2 whitespace-pre-wrap font-sans text-[14px] leading-relaxed">
+                    {msg.body}
+                  </p>
+                  <p
+                    className={`font-sans text-[11px] ${
+                      msg.author_role === "user" ? "text-white/55" : "text-[var(--muted)]"
+                    }`}
+                  >
+                    {msg.author_role === "user" ? "Você" : "Suporte"} ·{" "}
+                    {new Date(msg.created_at).toLocaleString("pt-BR")}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
         <div className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-5">
           <textarea

@@ -4,7 +4,17 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { ChevronLeft, ChevronRight, ExternalLink, Link2, Unlink, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Link2,
+  Unlink,
+  Plus,
+  CalendarDays,
+} from "lucide-react";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { BlockError } from "@/components/ui/BlockError";
@@ -315,6 +325,24 @@ function CalendarioPage() {
     return [...t, ...g].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
   };
 
+  // Mês sem nenhum item desenhava 35 células em branco e mais nada: nem aviso de
+  // carregamento, nem uma saída. A grade fica (ela é a própria navegação), mas
+  // ganha embaixo o estado vazio canônico.
+  const totalNaGrade = useMemo(() => {
+    let n = 0;
+    for (const lista of tarefasPorDia.values()) n += lista.length;
+    for (const lista of eventosPorDia.values()) n += lista.length;
+    return n;
+  }, [tarefasPorDia, eventosPorDia]);
+  const carregandoGrade =
+    tarefasQuery.isLoading || (conectado && mostrarGoogle && eventosGoogleQuery.isLoading);
+  const googleAtivo = conectado && mostrarGoogle;
+  const textoVazioDoMes = !mostrarPlanner
+    ? "O filtro do Planner está desligado. Liga ele aí em cima que as tarefas voltam pra grade."
+    : googleAtivo
+      ? "O calendário junta as tarefas do Planner e os compromissos do Google Calendar. As duas fontes estão vazias por aqui."
+      : "O calendário mostra as tarefas do Planner que têm prazo. Nenhuma delas cai neste mês.";
+
   return (
     <PaginaLogada
       largura="larga"
@@ -524,6 +552,26 @@ function CalendarioPage() {
           })}
         </div>
 
+        {carregandoGrade ? (
+          <div className="mt-4 h-28 animate-pulse rounded-xl bg-[var(--surface)]" />
+        ) : totalNaGrade === 0 ? (
+          <div className="mt-4">
+            <Vazio
+              icone={CalendarDays}
+              titulo={mostrarPlanner ? "Nada marcado neste mês." : "Nada aparecendo neste mês."}
+              texto={textoVazioDoMes}
+              acao={
+                mostrarPlanner ? (
+                  <a href="/planner" className={BTN_ACAO}>
+                    Quero criar uma tarefa
+                    <span aria-hidden="true">→</span>
+                  </a>
+                ) : undefined
+              }
+            />
+          </div>
+        ) : null}
+
         {/* Detalhe do dia selecionado — sidesheet, não exige scroll da página */}
         <Sheet open={!!diaSelecionado} onOpenChange={(open) => !open && setDiaSelecionado(null)}>
           <SheetContent
@@ -614,9 +662,15 @@ function CalendarioPage() {
                 )}
 
                 {itensDoDia(diaSelecionado).length === 0 ? (
-                  <p className="text-[14px] italic text-[var(--muted)]">
-                    nada marcado pra esse dia.
-                  </p>
+                  <Vazio
+                    denso
+                    titulo="Nada marcado nesse dia."
+                    texto={
+                      conectado
+                        ? "Nenhuma tarefa do Planner com prazo aqui, e nenhum compromisso no Google Calendar."
+                        : "Nenhuma tarefa do Planner com prazo aqui."
+                    }
+                  />
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {itensDoDia(diaSelecionado).map((item) => (

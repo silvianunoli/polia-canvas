@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -351,18 +352,46 @@ function CadernoPage() {
                 ))}
               </div>
             ) : notas.length === 0 ? (
-              <ListaVazia onCriar={() => criar.mutate(undefined)} />
+              <Vazio
+                denso
+                icone={NotebookPen}
+                titulo="Nenhuma nota por aqui ainda."
+                texto="O caderno guarda ideia solta, rascunho de legenda e o que não pode escapar."
+                acao={
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => criar.mutate(undefined)}
+                      className={BTN_ACAO}
+                    >
+                      <Plus size={16} aria-hidden="true" />
+                      Criar a primeira nota
+                    </button>
+                    <p className="mt-3 text-[12px] text-[var(--muted)]">
+                      ou monte seu guia de presença pelo{" "}
+                      <a
+                        href="/planejamento/modulo/5"
+                        className="font-medium text-[var(--secondary-text)] hover:underline"
+                      >
+                        Planejamento →
+                      </a>
+                    </p>
+                  </>
+                }
+              />
             ) : notasVisiveis.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-[var(--line)] bg-white px-4 py-8 text-center text-[13px] text-[var(--muted)]">
-                Nada com esse termo.{" "}
-                <button
-                  type="button"
-                  onClick={criarDeBusca}
-                  className="font-medium text-[var(--secondary-text)] hover:underline"
-                >
-                  Criar nota &quot;{busca.trim()}&quot;
-                </button>
-              </p>
+              <Vazio
+                denso
+                icone={Search}
+                titulo="Nada com esse termo."
+                texto="Nenhuma nota tem essa palavra no título nem no corpo."
+                acao={
+                  <button type="button" onClick={criarDeBusca} className={BTN_ACAO}>
+                    <Plus size={16} aria-hidden="true" />
+                    Criar nota &quot;{busca.trim()}&quot;
+                  </button>
+                }
+              />
             ) : (
               <ul className="space-y-3">
                 {notasVisiveis.map((n) => {
@@ -555,35 +584,5 @@ function CadernoPage() {
         </button>
       </div>
     </PaginaLogada>
-  );
-}
-
-function ListaVazia({ onCriar }: { onCriar: () => void }) {
-  return (
-    <div className="rounded-xl border border-dashed border-[var(--line)] bg-white px-6 py-12 text-center">
-      <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--surface)]">
-        <NotebookPen size={22} aria-hidden="true" className="text-[var(--secondary-text)]" />
-      </div>
-      <p className="mb-3 text-[14px] leading-relaxed text-[var(--muted)]">
-        Nenhuma nota por aqui ainda. O caderno guarda ideia solta, rascunho de legenda e o que não
-        pode escapar.
-      </p>
-      <button
-        type="button"
-        onClick={onCriar}
-        className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-      >
-        + criar a primeira nota
-      </button>
-      <p className="mt-3 text-[12px] text-[var(--muted)]">
-        ou monte seu guia de presença pelo{" "}
-        <a
-          href="/planejamento/modulo/5"
-          className="font-medium text-[var(--secondary-text)] hover:underline"
-        >
-          Planejamento →
-        </a>
-      </p>
-    </div>
   );
 }

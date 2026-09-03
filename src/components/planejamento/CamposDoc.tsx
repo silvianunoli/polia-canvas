@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
+import { FileText, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_ACAO } from "@/lib/botoes";
 import { CAMPO_LABEL, SECOES } from "@/lib/planejamento";
 
 // Lê os campos materializados do planejamento (KV planejamento_campos).
@@ -39,7 +41,13 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
         return (
           <div key={campo}>
             <div className="flex items-baseline justify-between gap-4">
-              <h2 className="text-[1.05rem] text-[var(--ink)]">{CAMPO_LABEL[campo] ?? campo}</h2>
+              {/* Rótulo de campo usa a label de caixa alta do sistema (DM Sans
+                  700), o mesmo padrão do Rotulo de /planejamento e do Campo de
+                  /configuracoes. Continua <h2> pelo sumário da página, com
+                  font-accent porque Cabinet Grotesk é só de texto grande. */}
+              <h2 className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                {CAMPO_LABEL[campo] ?? campo}
+              </h2>
               {secId && moduloN && (
                 <a
                   href={`/planejamento/modulo/${moduloN}?secao=${secId}`}
@@ -50,7 +58,7 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
                 </a>
               )}
             </div>
-            <p className="mt-1 whitespace-pre-line text-[1rem] leading-relaxed text-[var(--ink-soft)]">
+            <p className="mt-2 whitespace-pre-line text-[16px] leading-relaxed text-[var(--ink-soft)]">
               {mapa.get(campo)}
             </p>
           </div>
@@ -60,19 +68,31 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
   );
 }
 
-// Estado "ferramenta ainda não desbloqueada" — nunca bloqueia acesso, só orienta.
-export function FerramentaVazia({ moduloN, texto }: { moduloN: number; texto?: string }) {
+/**
+ * Estado "ferramenta ainda não desbloqueada" — nunca bloqueia acesso, só orienta.
+ * Casca fina do `Vazio` canônico: era o quinto desenho de estado vazio do produto
+ * (centralizado, sem título, sem ícone, com a saída como link solto).
+ */
+export function FerramentaVazia({
+  moduloN,
+  titulo,
+  texto,
+}: {
+  moduloN: number;
+  titulo?: string;
+  texto?: string;
+}) {
   return (
-    <div className="rounded-[var(--radius-md)] border border-dashed border-[var(--line)] bg-white px-6 py-14 text-center">
-      <p className="mx-auto max-w-[440px] text-[14px] leading-relaxed text-[var(--muted)]">
-        {texto ?? `Essa ferramenta é escrita no Módulo ${moduloN}. É de lá que ela sai pronta.`}
-      </p>
-      <a
-        href={`/planejamento/modulo/${moduloN}`}
-        className="mt-4 inline-block text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-      >
-        Ir pro Módulo {moduloN} →
-      </a>
-    </div>
+    <Vazio
+      icone={FileText}
+      titulo={titulo ?? `Essa ferramenta é escrita no Módulo ${moduloN}.`}
+      texto={texto ?? "É de lá que ela sai pronta."}
+      acao={
+        <a href={`/planejamento/modulo/${moduloN}`} className={BTN_ACAO}>
+          Ir pro Módulo {moduloN}
+          <span aria-hidden="true">→</span>
+        </a>
+      }
+    />
   );
 }

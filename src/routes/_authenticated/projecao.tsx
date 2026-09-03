@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Lock } from "lucide-react";
+import { Sparkles, Lock, AlertTriangle, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import {
@@ -243,46 +244,47 @@ function ProjecaoPage() {
         {dadosQuery.isLoading ? (
           <div className="mt-6 h-64 animate-pulse rounded-xl bg-[var(--surface)]" />
         ) : dadosQuery.isError ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Não conseguimos puxar os seus números agora. Tenta de novo.
-            </p>
-            <button
-              type="button"
-              onClick={() => void dadosQuery.refetch()}
-              className="mt-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-            >
-              Tentar de novo
-            </button>
+          <div className="mt-6">
+            <Vazio
+              icone={AlertTriangle}
+              titulo="Não conseguimos puxar os seus números agora."
+              texto="Pode ter sido a conexão. Nada do que já está salvo se perdeu."
+              acao={
+                <button
+                  type="button"
+                  onClick={() => void dadosQuery.refetch()}
+                  className={BTN_ACAO}
+                >
+                  Tentar de novo
+                </button>
+              }
+            />
           </div>
         ) : semProduto ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--secondary-light)]">
-              <Sparkles size={18} className="text-[var(--secondary-text)]" aria-hidden="true" />
-            </span>
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Pra projetar, a Pólia precisa saber quanto sobra numa venda e quanto custa o seu mês.
-              Comece precificando 1 produto.
-            </p>
-            <Link
-              to="/produtos"
-              className="mt-4 inline-block rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] no-underline hover:opacity-90"
-            >
-              Ir pros Produtos
-            </Link>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="Ainda não dá pra projetar."
+              texto="Pra projetar, a Pólia precisa saber quanto sobra numa venda e quanto custa o seu mês. Comece precificando 1 produto."
+              acao={
+                <Link to="/produtos" className={BTN_ACAO}>
+                  Ir pros Produtos
+                </Link>
+              }
+            />
           </div>
         ) : sobra <= 0 ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Do jeito que está, cada venda não deixa nada, então não existe número de vendas que se
-              pague. Reveja o preço ou o custo.
-            </p>
-            <Link
-              to="/produtos"
-              className="mt-3 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
-            >
-              Ir pra calculadora
-            </Link>
+          <div className="mt-6">
+            <Vazio
+              icone={TrendingDown}
+              titulo="Nenhuma venda está deixando sobra."
+              texto="Do jeito que está, cada venda não deixa nada, então não existe número de vendas que se pague. Reveja o preço ou o custo."
+              acao={
+                <Link to="/produtos" className={BTN_ACAO}>
+                  Ir pra calculadora
+                </Link>
+              }
+            />
           </div>
         ) : (
           <>

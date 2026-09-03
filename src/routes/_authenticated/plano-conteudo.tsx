@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
@@ -261,46 +262,51 @@ function PlanoConteudoPage() {
             </ul>
           </>
         ) : motivo === "planejamento_incompleto" ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              Preciso saber mais sobre a sua marca antes de montar o plano. Responda o básico no
-              Planejamento e volte aqui.
-            </p>
-            <Link
-              to="/planejamento"
-              className="mt-3 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
-            >
-              Ir pro Planejamento
-            </Link>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="Ainda falta saber da sua marca."
+              texto="A gente precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
+              acao={
+                <Link to="/planejamento" className={BTN_ACAO}>
+                  Ir pro Planejamento
+                </Link>
+              }
+            />
           </div>
         ) : motivo === "teto_atingido" ? (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              As gerações do plano deste ano acabaram. Se precisar de outro, abre um chamado que a
-              gente resolve.
-            </p>
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo="As gerações do plano deste ano acabaram."
+              texto="Se precisar de outro, abre um chamado que a gente resolve."
+            />
           </div>
         ) : (
-          <div className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white p-6 text-center">
-            <span className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--secondary-light)]">
-              <Sparkles size={18} className="text-[var(--secondary-text)]" aria-hidden="true" />
-            </span>
-            <p className="text-[14px] text-[var(--ink-soft)]">
-              A Aimer monta 365 ideias de post pra {anoAtual}, uma por dia, a partir da sua marca,
-              do seu público e do que você vende.
-            </p>
-            {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-            <button
-              type="button"
-              onClick={() => void gerar()}
-              disabled={gerando}
-              className="mt-4 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-            >
-              {gerando ? "A Aimer está montando o seu plano..." : "Gerar plano de conteúdo"}
-            </button>
-            {gerando && (
-              <p className="mt-2 text-[12px] text-[var(--muted)]">Isso pode levar um minuto.</p>
-            )}
+          <div className="mt-6">
+            <Vazio
+              icone={Sparkles}
+              titulo={`Nenhum plano de conteúdo pra ${anoAtual} ainda.`}
+              texto={`A Aimer monta 365 ideias de post pra ${anoAtual}, uma por dia, a partir da sua marca, do seu público e do que você vende.`}
+              acao={
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void gerar()}
+                    disabled={gerando}
+                    className={BTN_ACAO}
+                  >
+                    {gerando ? "A Aimer está montando o seu plano..." : "Gerar plano de conteúdo"}
+                  </button>
+                  {gerando && (
+                    <p className="mt-2 text-[12px] text-[var(--muted)]">
+                      Isso pode levar um minuto.
+                    </p>
+                  )}
+                  {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+                </>
+              }
+            />
           </div>
         )}
 

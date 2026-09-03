@@ -68,6 +68,7 @@ function MercadoPage() {
         ) : (
           <FerramentaVazia
             moduloN={2}
+            titulo="Seu mapa de mercado ainda não está escrito."
             texto="Seu mapa de mercado é construído no Módulo 2 do Planejamento: quem é a sua cliente, dores, sonhos e concorrência. Comece por lá."
           />
         )}

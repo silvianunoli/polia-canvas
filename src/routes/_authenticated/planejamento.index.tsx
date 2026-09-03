@@ -674,9 +674,14 @@ function PlanejamentoPage() {
                             <Icone size={20} className="text-[var(--ink)]" aria-hidden="true" />
                           </span>
                           <div>
+                            {/* O nome do módulo é o rótulo do bloco: sobe pra
+                                <h2> em --ink e o "MÓDULO N" fica como eyebrow. */}
                             <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                              Módulo {m.n} · {m.nome}
+                              Módulo {m.n}
                             </p>
+                            <h2 className="mt-1 text-[20px] leading-tight text-[var(--ink)]">
+                              {m.nome}
+                            </h2>
                             {temAlgo && (
                               <a href={ferramenta.rota} className={`${BOTAO_SECUNDARIO} mt-2`}>
                                 {ferramenta.nome}

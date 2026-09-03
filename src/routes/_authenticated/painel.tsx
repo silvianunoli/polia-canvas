@@ -6,6 +6,7 @@ import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { Vazio } from "@/components/layout/Vazio";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 import { hojeISO, ehMesAtual } from "@/lib/data.functions";
 import { rotaLiberada } from "@/lib/planos";
@@ -816,9 +817,16 @@ function PainelPage() {
               </div>
 
               {totalTarefasPainel === 0 ? (
-                <p className="mt-4 text-[14px] text-[var(--muted)]">
-                  Nenhuma tarefa com prazo nos próximos 7 dias. A próxima nasce no Planner.
-                </p>
+                /* `semBorda`: já estamos dentro de um cartão, caixa tracejada
+                   aqui viraria caixa dentro de caixa. A saída fica no link
+                   "Abrir no Planner" logo abaixo, que vale pros dois estados. */
+                <div className="mt-4">
+                  <Vazio
+                    semBorda
+                    titulo="Nenhuma tarefa com prazo nos próximos 7 dias."
+                    texto="A próxima nasce no Planner."
+                  />
+                </div>
               ) : (
                 <div className="mt-3">
                   {gruposTarefas.atrasadas.length > 0 && (
@@ -890,16 +898,19 @@ function PainelPage() {
                    quatro zeros e barras de 2px. Um gráfico que não desenha nada
                    é pior que uma frase que explica o que falta. */
                 <div className="mt-5">
-                  <p className="text-[14px] text-[var(--muted)]">
-                    Nenhuma tarefa concluída nesta semana ainda. O gráfico aparece assim que a
-                    primeira fechar.
-                  </p>
-                  <a
-                    href={quadroPendentesLink}
-                    className="mt-2 inline-block text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
-                  >
-                    Abrir o Planner <span aria-hidden="true">→</span>
-                  </a>
+                  <Vazio
+                    semBorda
+                    titulo="Nenhuma tarefa concluída nesta semana ainda."
+                    texto="O gráfico aparece assim que a primeira fechar."
+                    acao={
+                      <a
+                        href={quadroPendentesLink}
+                        className="text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
+                      >
+                        Abrir o Planner <span aria-hidden="true">→</span>
+                      </a>
+                    }
+                  />
                 </div>
               ) : (
                 <div className="mt-5 flex h-[150px] items-end gap-2">

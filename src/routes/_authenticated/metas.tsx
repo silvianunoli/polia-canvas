@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, MoreHorizontal, Check, ChevronDown, CalendarDays, Target } from "lucide-react";
+import {
+  Plus,
+  MoreHorizontal,
+  Check,
+  ChevronDown,
+  CalendarDays,
+  Target,
+  AlertTriangle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -227,13 +235,26 @@ function MetasPage() {
         {/* ───────── Lista de metas ativas ───────── */}
         <section className="mt-8">
           {metasQuery.isLoading ? (
-            <p className="py-12 text-center text-[14px] text-[var(--muted)]">
-              Carregando suas metas…
-            </p>
+            <div className="space-y-3">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="h-[88px] animate-pulse rounded-xl bg-[var(--surface)]" />
+              ))}
+            </div>
           ) : metasQuery.isError ? (
-            <p className="py-12 text-center text-[14px] text-[var(--danger)]">
-              Não foi possível carregar suas metas. Recarregue a página.
-            </p>
+            <Vazio
+              icone={AlertTriangle}
+              titulo="Não conseguimos carregar as suas metas."
+              texto="Pode ter sido a conexão. Tenta de novo, nada do que já está salvo se perdeu."
+              acao={
+                <button
+                  type="button"
+                  onClick={() => void metasQuery.refetch()}
+                  className={BTN_ACAO}
+                >
+                  Tentar de novo
+                </button>
+              }
+            />
           ) : ativas.length === 0 ? (
             <Vazio
               icone={Target}

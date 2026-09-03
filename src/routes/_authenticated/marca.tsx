@@ -72,6 +72,7 @@ function MarcaPage() {
         ) : (
           <FerramentaVazia
             moduloN={1}
+            titulo="Sua marca ainda não está escrita."
             texto="Sua marca é construída no Módulo 1 do Planejamento: propósito, missão, valores e voz. Comece por lá."
           />
         )}

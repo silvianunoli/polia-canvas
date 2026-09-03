@@ -4,6 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
+import { Vazio } from "@/components/layout/Vazio";
+import { BTN_MIUDO } from "@/lib/botoes";
 import {
   ArrowLeft,
   ArrowRight,
@@ -776,13 +778,44 @@ function PlannerBoard() {
 
                   <div className="group/col flex flex-col gap-2.5">
                     {lista.length === 0 && composerCol !== col.id ? (
-                      <div className="rounded-xl border border-dashed border-[var(--line)] p-5 text-center">
-                        <p className="text-[13px] italic text-[var(--muted)]">
-                          {listaTotal.length
-                            ? "Nada neste período. Troca o filtro pra Tudo."
-                            : "arraste um cartão pra cá"}
-                        </p>
-                      </div>
+                      /* "arraste um cartão pra cá" não existe no celular: não há
+                         drag. O estado vazio precisa de um botão que faça a
+                         mesma coisa que o + do cabeçalho da coluna. */
+                      listaTotal.length ? (
+                        <Vazio
+                          denso
+                          titulo="Nada neste período."
+                          texto="Tem cartão nesta coluna, mas fora do período filtrado."
+                          acao={
+                            <button
+                              type="button"
+                              onClick={() => setFiltro("all")}
+                              className={BTN_MIUDO}
+                            >
+                              Ver tudo
+                            </button>
+                          }
+                        />
+                      ) : (
+                        <Vazio
+                          denso
+                          titulo="Coluna vazia."
+                          texto="O primeiro cartão pode nascer aqui mesmo."
+                          acao={
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setComposerCol(col.id);
+                                setNovoTitulo("");
+                              }}
+                              className={BTN_MIUDO}
+                            >
+                              <Plus size={14} aria-hidden="true" />
+                              Novo cartão
+                            </button>
+                          }
+                        />
+                      )
                     ) : (
                       lista.map((c) => {
                         const late = vencido(c);

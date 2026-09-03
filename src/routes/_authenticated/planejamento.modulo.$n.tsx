@@ -436,10 +436,13 @@ function SecaoForm({
           {status === "saving" ? "Salvando…" : status === "saved" ? "Salvo" : ""}
         </span>
       </div>
-      <h1 className="font-cabinet mt-1 text-[1.75rem] leading-[1.1] text-[var(--ink)]">
+      {/* <h2>, não <h1>: o <h1> da tela é o do PaginaLogada (o nome do módulo).
+          O subtítulo é Inter reto — Inter itálico não existe no sistema e
+          Fraunces é reservada a acento pontual, não a linha de apoio de form. */}
+      <h2 className="font-cabinet mt-1 text-[22px] leading-[1.15] text-[var(--ink)]">
         {secao.titulo}
-      </h1>
-      <p className="mt-1 text-[0.9rem] italic text-[var(--ink-soft)]">{secao.subtitulo}</p>
+      </h2>
+      <p className="mt-1 text-[14px] text-[var(--ink-soft)]">{secao.subtitulo}</p>
 
       <div className="mt-8 space-y-6">
         {secao.perguntas.map((p, i) => (
