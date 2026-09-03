@@ -73,9 +73,13 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/raiox", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Resumo/Encomenda
   { prefixo: "/plano-conteudo", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/projecao", tier: "controle" }, // Projete-only por dentro, mesmo padrão do Raio-x
+  // Metas é do Confere desde 03/09/2026 (decisão COPY-03): o card do plano
+  // grátis promete "até 3 metas acompanhadas" e a rota redirecionava pro
+  // upgrade — a usuária tinha zero metas, não três. O teto de 3 ativas por vez
+  // vale pra todo plano e mora em LIMITE_ATIVAS (routes/_authenticated/metas.tsx).
+  { prefixo: "/metas", tier: "confere" },
   { prefixo: "/clientes", tier: "controle" },
   { prefixo: "/financeiro", tier: "controle" },
-  { prefixo: "/metas", tier: "controle" },
   { prefixo: "/calendario", tier: "controle" },
   { prefixo: "/mercado", tier: "controle" },
 ];
@@ -102,6 +106,15 @@ export const COTAS_CONFERE = {
   planner: 1,
   caderno: 1,
 } as const;
+
+// O teto de 3 metas ativas NÃO entra aqui de propósito. Ele não é cota de
+// plano: é regra de foco, vale igual pro Confere, pro Controle e pro Projete
+// ("Até 3 metas ativas por vez, pra o foco não se dividir." está na própria
+// tela). Fonte única: LIMITE_ATIVAS em routes/_authenticated/metas.tsx.
+// Também não ganhou trigger no banco como produtos/quadros/notas
+// (20260727130000): a trigger materializar_planejamento cria "Meta do mês" e
+// "Meta pessoal" a partir do Planejamento, que é módulo do Confere — uma cota
+// no banco faria o salvar do Planejamento explodir pra quem já tem 3 metas.
 
 // A cota de geração por IA NÃO mora aqui. Fonte única: CONFIG_POR_PLANO em
 // src/lib/planejamentoIa.functions.ts (Confere 1/mês, Controle 30, Projete 60),

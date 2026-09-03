@@ -55,6 +55,11 @@ interface Meta {
   created_at: string;
 }
 
+// Teto de metas ativas ao mesmo tempo. Vale pra TODO plano: é regra de foco,
+// não cota de assinatura, por isso não mora em COTAS_CONFERE (ver a nota lá em
+// src/lib/planos.ts). É também o "até 3 metas acompanhadas" que o card do
+// Confere promete na landing (src/routes/index.tsx) — a rota abriu pro plano
+// grátis em 03/09/2026 (COPY-03), este número é o que sustenta a promessa.
 const LIMITE_ATIVAS = 3;
 
 /* ───────── helpers ───────── */

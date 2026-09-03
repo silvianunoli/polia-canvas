@@ -49,6 +49,23 @@ describe("rotaLiberada", () => {
     expect(rotaLiberada("/financeiro", "confere")).toBe(false);
     expect(rotaLiberada("/clientes", "cancelada")).toBe(false);
   });
+
+  // COPY-03 (03/09/2026): o card do Confere promete "até 3 metas acompanhadas".
+  // Enquanto /metas exigia Controle, a promessa entregava zero.
+  it("abre /metas no confere, que é o que a landing promete", () => {
+    expect(rotaLiberada("/metas", "confere")).toBe(true);
+    expect(recursoLiberado("/metas", "confere")).toBe(true);
+    expect(tierMinimoDaRota("/metas")).toBe("confere");
+  });
+
+  // COPY-04 (03/09/2026): o registro de entrada/saída abriu pro Confere por um
+  // modal no Painel, mas a TELA /financeiro (histórico, filtros, os três
+  // números do mês, resumo pro contador) segue sendo do Controle.
+  it("mantém a tela /financeiro fechada no confere mesmo com o registro aberto", () => {
+    expect(rotaLiberada("/financeiro", "confere")).toBe(false);
+    expect(recursoLiberado("/financeiro", "confere")).toBe(false);
+    expect(tierMinimoDaRota("/financeiro")).toBe("controle");
+  });
 });
 
 describe("temProjete", () => {
