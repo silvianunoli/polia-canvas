@@ -7,8 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Switch } from "@/components/ui/switch";
-import { dadosEmissorRecibo } from "@/lib/recibo.functions";
-import { gerarReciboPdf } from "@/lib/gerarReciboPdf";
 import { track } from "@/lib/analytics";
 import { statusAssinatura, cancelarAssinatura } from "@/lib/stripe.functions";
 import { excluirMinhaConta } from "@/lib/conta.functions";
@@ -89,7 +87,6 @@ function ConfiguracoesPage() {
   const [notifNovidades, setNotifNovidades] = useState(true);
   const [notifDicas, setNotifDicas] = useState(true);
   const plano = profileQuery.data?.plano ?? "beta";
-  const [baixandoRecibo, setBaixandoRecibo] = useState(false);
   const queryClient = useQueryClient();
 
   const assinaturaQuery = useQuery({
@@ -155,38 +152,6 @@ function ConfiguracoesPage() {
       toastErro("Não conseguimos cancelar sua assinatura agora. Tenta de novo.");
     } finally {
       setCancelando(false);
-    }
-  };
-
-  const baixarRecibo = async () => {
-    setBaixandoRecibo(true);
-    try {
-      const emissor = await dadosEmissorRecibo();
-      if (!emissor.nome || !emissor.cpf) {
-        toastErro("O recibo ainda não está configurado. Fala com o suporte.");
-        return;
-      }
-      const preco = assinatura?.preco;
-      if (!preco) {
-        toastErro("Não conseguimos identificar o valor da sua assinatura. Fala com o suporte.");
-        return;
-      }
-      const anual = preco.intervalo === "year";
-      gerarReciboPdf({
-        emissorNome: emissor.nome,
-        emissorCpf: emissor.cpf,
-        emissorEndereco: emissor.endereco,
-        pagadorNome: profileQuery.data?.full_name || "Assinante Pólia",
-        pagadorEmail: user?.email ?? "",
-        descricao: `Assinatura Pólia, plano ${NOME_PLANO[preco.tier] ?? preco.tier} (${anual ? "anual" : "mensal"})`,
-        valor: preco.valorCentavos / 100,
-        dataEmissao: new Date(),
-      });
-      track("recibo_baixado");
-    } catch {
-      toastErro("Não conseguimos gerar o recibo agora. Tenta de novo.");
-    } finally {
-      setBaixandoRecibo(false);
     }
   };
 
@@ -770,21 +735,15 @@ function ConfiguracoesPage() {
                 </div>
               </div>
             )}
-            {/* Só quem tem cobrança pra comprovar. O botão saía pra toda conta
-                não-beta, inclusive Confere que nunca pagou, e o clique morria no
-                erro "não conseguimos identificar o valor" (um chamado de suporte
-                pra um não-problema). `assinatura.preco` é exatamente a
-                pré-condição que `baixarRecibo` exige, e continua verdadeira pra
-                quem cancelou depois de ter pago. */}
+            {/* Recibo em PDF saiu (CFG-02): a emissão virou nota fiscal de
+                verdade, mandada direto pro e-mail cadastrado, então não tem
+                mais nada pra baixar aqui dentro — só o aviso. Mesma
+                pré-condição de antes (plano pago, com cobrança de verdade). */}
             {!assinaturaQuery.isLoading && plano !== "beta" && assinatura?.preco && (
-              <button
-                type="button"
-                onClick={baixarRecibo}
-                disabled={baixandoRecibo}
-                className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {baixandoRecibo ? "Gerando recibo..." : "Baixar recibo"}
-              </button>
+              <p className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
+                A nota fiscal da sua assinatura é emitida automaticamente e chega no e-mail
+                cadastrado aqui na Pólia.
+              </p>
             )}
           </div>
         </Secao>
