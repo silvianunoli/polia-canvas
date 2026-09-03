@@ -1,11 +1,17 @@
 // Modelo do Planejamento — 6 módulos que formam o documento vivo do negócio
-// (handoff 2026-07-03, substitui a jornada-wizard). Cada módulo tem 4-5 seções,
-// cada seção tem 2-4 perguntas. Cada pergunta tem um `campo` (saves_to) — as
+// (handoff 2026-07-03, substitui a jornada-wizard). Cada módulo tem 4-6 seções,
+// cada seção tem 1-4 perguntas. Cada pergunta tem um `campo` (saves_to) — as
 // respostas de um mesmo campo são combinadas e materializadas na ferramenta
 // (trigger `materializar_planejamento` na tabela planejamento_respostas).
 //
 // Seções com 2 campos: as perguntas foram divididas entre eles de forma sensata
 // (ver comentário na seção). Ao concluir um módulo, sua ferramenta é desbloqueada.
+//
+// ATENÇÃO: o `id` da seção é CHAVE PERSISTIDA: vira `planejamento_respostas.secao` e
+// `planejamento_secoes.secao` (primary key junto com user_id). Renumerar um id
+// existente reatribui a resposta já salva de uma pergunta para outra. Seção nova
+// entra com id que não colide (foi assim que "1.0" nasceu), nunca empurrando os
+// vizinhos. A ORDEM de exibição vem da ordem deste array, não do valor do id.
 
 export const TOTAL_MODULOS = 6;
 
@@ -29,7 +35,7 @@ export interface Modulo {
 }
 
 export const MODULOS: Modulo[] = [
-  { n: 1, nome: "Razão de existir", subtitulo: "A base de tudo. Por que você existe, para quem, e o que te diferencia." },
+  { n: 1, nome: "Razão de existir", subtitulo: "Começa pela conta do mês. Depois, por que o negócio existe, para quem, e o que o diferencia." },
   { n: 2, nome: "Quem você serve", subtitulo: "A pessoa que compra de você. Quem ela é de verdade." },
   { n: 3, nome: "O que você vende", subtitulo: "Produto, proposta de valor, e o que faz do seu o único." },
   { n: 4, nome: "Quanto vale", subtitulo: "Precificar é respeitar o seu trabalho. E entender o seu negócio." },
@@ -43,6 +49,38 @@ export function moduloInfo(n: number): Modulo {
 
 export const SECOES: Secao[] = [
   // ───────── MÓDULO 1 — Razão de existir ─────────
+  // Abertura pelo número (decisão EST-01, 2026-09-03). Até aqui o Planejamento
+  // pedia 39 perguntas de marca, cliente e produto antes da 1ª de dinheiro, o
+  // contrário do eixo do produto ("saber se o negócio dá lucro vem na frente").
+  //
+  // As duas perguntas desta seção vieram de 4.1 e 4.2 (módulo Quanto vale) e
+  // foram REMOVIDAS de lá, não duplicadas. São as únicas do módulo financeiro
+  // que não dependem de nada respondido antes: as outras pedem o preço do
+  // produto (que só é listado em 3.1) ou o preço do concorrente (que só é
+  // mapeado em 2.4), então o módulo inteiro não podia ser promovido a primeiro.
+  //
+  // Efeito colateral desejado: `financeiro.meta_mensal` materializa em
+  // financeiro_mensal.meta pelo trigger, então a meta do mês já aparece no
+  // Painel e no /financeiro depois da 1ª pergunta respondida.
+  {
+    id: "1.0",
+    modulo: 1,
+    titulo: "A conta do mês",
+    subtitulo:
+      "O Planejamento abre pelo número: o que você quer tirar daqui e o que o negócio custa todo mês.",
+    // 2 campos: meta_mensal (o que ela quer receber) + custo_fixo (o que sai).
+    perguntas: [
+      {
+        label: "Quanto você quer receber por mês com esse negócio?",
+        campo: "financeiro.meta_mensal",
+      },
+      {
+        label:
+          "Quais são os seus custos fixos todo mês? (plataformas, ferramentas, espaço, contador, outros). Some tudo.",
+        campo: "financeiro.custo_fixo",
+      },
+    ],
+  },
   {
     id: "1.1",
     modulo: 1,
@@ -206,22 +244,24 @@ export const SECOES: Secao[] = [
   {
     id: "4.1",
     modulo: 4,
-    titulo: "O que você gasta",
-    subtitulo: "Custo é a base de tudo. Sem ele, qualquer preço é chute.",
-    // 2 campos: custo_fixo (mês) + custo_unitario (por item).
+    titulo: "O que sai por venda",
+    // O custo fixo saiu daqui pra abertura do módulo 1 (seção 1.0). Sobrou o
+    // custo variável, que precisa saber o que ela vende (módulo 3) pra fazer
+    // sentido, e por isso ficou.
+    subtitulo:
+      "O custo fixo já entrou lá na abertura. Aqui é o que sai a cada produto ou atendimento.",
     perguntas: [
-      { label: "Quais são os seus custos fixos todo mês? (plataformas, ferramentas, espaço, contador, outros). Some tudo.", campo: "financeiro.custo_fixo" },
       { label: "Quanto você gasta por produto ou atendimento? (material, tempo, embalagem, frete, etc.)", campo: "financeiro.custo_unitario" },
     ],
   },
   {
     id: "4.2",
     modulo: 4,
-    titulo: "O que você quer ganhar",
-    subtitulo: "O preço que você merece cobrar.",
-    // 2 campos: meta_mensal (quanto quer/mês) + preco_ideal (preço + receio).
+    titulo: "O preço que você cobra",
+    // "Quanto você quer receber por mês" saiu daqui pra seção 1.0. Sobrou o
+    // preço, que depende do produto listado em 3.1.
+    subtitulo: "Um número, e o que faz ele parecer alto demais.",
     perguntas: [
-      { label: "Quanto você quer receber por mês com esse negócio?", campo: "financeiro.meta_mensal" },
       { label: "Qual o preço que você acha que o seu produto ou serviço merece? Por quê?", campo: "financeiro.preco_ideal" },
       { label: "Tem algum receio de cobrar esse valor? O que te faz hesitar?", campo: "financeiro.preco_ideal" },
     ],

@@ -748,11 +748,18 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
 }
 
 /* ---------------- STEP 6 ---------------- */
+// Abre pela conta do mês (EST-01): o módulo 1 do Planejamento começa na seção
+// 1.0, financeira. Se esta tela prometesse só marca, a 1ª pergunta desmentiria
+// a promessa dois cliques depois.
 const ETAPA1_DESC: Record<BusinessType, string> = {
-  produto_fisico: "Quem está por trás da marca, o que ela produz e de onde vem o que vende.",
-  produto_digital: "Quem está por trás da marca, o que ela ensina e qual problema resolve.",
-  servico: "Quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
-  hibrido: "Quem está por trás da marca e como as duas frentes do negócio se complementam.",
+  produto_fisico:
+    "Começa pela conta do mês. Depois, quem está por trás da marca, o que ela produz e de onde vem o que vende.",
+  produto_digital:
+    "Começa pela conta do mês. Depois, quem está por trás da marca, o que ela ensina e qual problema resolve.",
+  servico:
+    "Começa pela conta do mês. Depois, quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
+  hibrido:
+    "Começa pela conta do mês. Depois, quem está por trás da marca e como as duas frentes do negócio se complementam.",
 };
 
 function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {

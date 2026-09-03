@@ -57,7 +57,7 @@ const CATEGORIAS = [
       {
         pergunta: "Por onde começar no Planejamento",
         resposta:
-          "Pelo módulo 1. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, o preço, a meta e o rumo do negócio já estão decididos.",
+          "Pelo módulo 1, que abre pela conta do mês: quanto você quer receber e quanto o negócio custa. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, o preço, a meta e o rumo do negócio já estão decididos.",
       },
       {
         pergunta: "O que fazer no primeiro dia",

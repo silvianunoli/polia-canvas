@@ -90,4 +90,54 @@ describe("integridade dos dados estáticos (regressão contra edição manual)",
       expect(CAMPOS_FERRAMENTA).toHaveProperty(rota);
     }
   });
+
+  it("nenhum id de seção se repete (id é chave persistida em planejamento_secoes)", () => {
+    const ids = SECOES.map((s) => s.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("o prefixo do id da seção bate com o número do módulo (CamposDoc deriva o módulo daí)", () => {
+    const fora = SECOES.filter((s) => Number(s.id.split(".")[0]) !== s.modulo).map((s) => s.id);
+    expect(fora).toEqual([]);
+  });
+
+  it("nenhum campo é perguntado em dois módulos diferentes (a resposta é combinada por campo)", () => {
+    const modulosPorCampo = new Map<string, Set<number>>();
+    for (const s of SECOES) {
+      for (const p of s.perguntas) {
+        const set = modulosPorCampo.get(p.campo) ?? new Set<number>();
+        set.add(s.modulo);
+        modulosPorCampo.set(p.campo, set);
+      }
+    }
+    const espalhados = [...modulosPorCampo.entries()]
+      .filter(([, mods]) => mods.size > 1)
+      .map(([campo]) => campo);
+    expect(espalhados).toEqual([]);
+  });
+});
+
+// EST-01 (2026-09-03): o eixo do produto é número-primeiro. Antes desta trava o
+// Planejamento pedia 39 perguntas de marca, cliente e produto até a 1ª de
+// dinheiro. Se alguém reordenar SECOES e empurrar a conta pra trás de novo,
+// estes testes falham antes do deploy.
+describe("abertura pelo dinheiro (EST-01)", () => {
+  const FINANCEIRO = /^financeiro\./;
+
+  it("a primeira seção do Planejamento é a do módulo 1 e é sobre dinheiro", () => {
+    const primeira = SECOES[0];
+    expect(primeira.modulo).toBe(1);
+    expect(secoesDoModulo(1)[0].id).toBe(primeira.id);
+    expect(primeira.perguntas.every((p) => FINANCEIRO.test(p.campo))).toBe(true);
+  });
+
+  it("a primeiríssima pergunta é um campo financeiro, não de marca nem de discurso", () => {
+    expect(SECOES[0].perguntas[0].campo).toMatch(FINANCEIRO);
+  });
+
+  it("nenhuma pergunta de discurso vem antes da 1ª de dinheiro", () => {
+    const todas = SECOES.flatMap((s) => s.perguntas);
+    const primeiraDeDinheiro = todas.findIndex((p) => FINANCEIRO.test(p.campo));
+    expect(primeiraDeDinheiro).toBe(0);
+  });
 });
