@@ -58,6 +58,38 @@ function respostaRobots(): Response {
   });
 }
 
+// Toda rota de src/routes/_authenticated/*.tsx, pelo nome do arquivo (rota
+// "pathless", sem prefixo de URL). O guard de acesso dessas rotas é
+// client-only (ver a nota de segurança em _authenticated.tsx) -- o servidor
+// devolve 200 com a casca da tela mesmo sem sessão (o dado em si só chega via
+// RLS, autenticado), então sem isso o Google poderia indexar a tela logada.
+const PREFIXOS_AUTENTICADOS = [
+  "/aimer",
+  "/assinar",
+  "/caderno",
+  "/calendario",
+  "/chamados",
+  "/clientes",
+  "/configuracoes",
+  "/financeiro",
+  "/marca",
+  "/mercado",
+  "/metas",
+  "/onboarding",
+  "/painel",
+  "/planejamento",
+  "/planner",
+  "/plano-conteudo",
+  "/produtos",
+  "/projecao",
+  "/raiox",
+  "/upgrade",
+];
+
+function ehRotaAutenticada(pathname: string): boolean {
+  return PREFIXOS_AUTENTICADOS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
@@ -162,7 +194,13 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalizada = await normalizeCatastrophicSsrResponse(response);
+      if (ehRotaAutenticada(url.pathname)) {
+        const comNoindex = new Response(normalizada.body, normalizada);
+        comNoindex.headers.set("X-Robots-Tag", "noindex, nofollow");
+        return comNoindex;
+      }
+      return normalizada;
     } catch (error) {
       console.error(error);
       void dispararAlerta("erro_servidor_critico", "Erro crítico no servidor (fetch handler)", {
