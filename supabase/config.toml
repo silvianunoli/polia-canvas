@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.raiox-mensal-cron]
 verify_jwt = false
+
+[functions.ig-webhook]
+verify_jwt = false
