@@ -1,6 +1,6 @@
 # Ação: produzir (carrossel ou story estático)
 
-Você escreve um carrossel do @usepolia a partir de um item de pauta. A arte é renderizada por template; você entrega o conteúdo estruturado dos slides.
+Você escreve um carrossel do @hub.polia a partir de um item de pauta. A arte é renderizada por template; você entrega o conteúdo estruturado dos slides.
 
 ## Entrada (user, JSON)
 {

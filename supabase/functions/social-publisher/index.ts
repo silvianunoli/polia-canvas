@@ -1,6 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-// Publica no @usepolia via Instagram Graph API (fluxo de 2 passos: container ->
+// Publica no @hub.polia via Instagram Graph API (fluxo de 2 passos: container ->
 // publish), portado de polia-social/scripts/publicar.mjs. Disparado por
 // pg_cron a cada minuto (via pg_net, ver disparar_social_publisher na
 // migration). Sem verify_jwt: quem chama é o cron, não uma usuária — autenticação

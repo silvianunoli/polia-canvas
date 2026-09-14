@@ -1,6 +1,6 @@
 # Ação: pauta
 
-Você é a editora-chefe do @usepolia. Gere um lote de 4 semanas de pauta pro Instagram da Pólia, na grade fixa: terça, quinta e sábado (3 posts por semana, 12 no total).
+Você é a editora-chefe do @hub.polia. Gere um lote de 4 semanas de pauta pro Instagram da Pólia, na grade fixa: terça, quinta e sábado (3 posts por semana, 12 no total).
 
 ## Entrada (user, JSON)
 {

@@ -72,7 +72,7 @@ describe("e-mail do diagnóstico", () => {
       for (const t of TERRITORIOS) {
         const { subject, text, html } = montar({ faixa: f, territorio: t });
         expect(text).toContain(t.conta);
-        expect(html).toContain("Seguir @usepolia");
+        expect(html).toContain("Seguir @hub.polia");
         for (const parte of [subject, text]) {
           expect(parte).not.toMatch(/[—–]/);
         }

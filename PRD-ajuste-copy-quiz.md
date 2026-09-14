@@ -86,7 +86,7 @@ A conta pra fazer hoje: some suas contas fixas do mês (aluguel, ferramentas, o 
 
 **Fechamento fixo** (igual pros 6 territórios)
 Seus próximos passos chegam no seu e-mail.
-Seguir @usepolia →
+Seguir @hub.polia →
 
 > ✅ Implementado em 12/08/2026. "Seus próximos passos chegam no seu e-mail" voltou porque o e-mail passou a sair de verdade. Ver Seção 6.
 
@@ -131,7 +131,7 @@ Os dois prometem que algo chega por e-mail. Hoje nada chega: o disparo é no-go 
 
 ### Como ficou
 
-O e-mail é montado em `src/lib/quiz/email.ts` (função pura, testada) e sai em `src/lib/quiz.functions.ts` logo depois do upsert, pelo Resend, com a casca de marca de `src/lib/email-template.ts`. Leva a faixa, o território fraco, a explicação e a conta pra fazer hoje, mais o botão de seguir o @usepolia. Como o consentimento promete "você sai quando quiser" e não existe rota de descadastro, o corpo traz `oi@usepolia.com.br` como saída, e o `reply_to` aponta pra lá.
+O e-mail é montado em `src/lib/quiz/email.ts` (função pura, testada) e sai em `src/lib/quiz.functions.ts` logo depois do upsert, pelo Resend, com a casca de marca de `src/lib/email-template.ts`. Leva a faixa, o território fraco, a explicação e a conta pra fazer hoje, mais o botão de seguir o @hub.polia. Como o consentimento promete "você sai quando quiser" e não existe rota de descadastro, o corpo traz `oi@usepolia.com.br` como saída, e o `reply_to` aponta pra lá.
 
 O envio é best-effort: o lead já está gravado quando ele acontece, então uma falha do Resend fica no log e não derruba a tela de resultado. O contrário seria trocar um problema pequeno (e-mail que não chegou) por um grande (responder 8 perguntas e não ver o resultado).
 

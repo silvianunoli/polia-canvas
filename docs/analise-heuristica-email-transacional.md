@@ -6,7 +6,7 @@ Avaliação da casca única de e-mail (`supabase/functions/_shared/email-polia.t
 
 **Ação principal inferida por variante** — não é uma ação só, então tratei cada família separadamente onde o comportamento diverge:
 - E-mails de conta/cobrança (conta pronta, compra confirmada, pagamento recusado, cancelamento, renovação): clicar no único CTA para resolver o estado da conta (entrar, criar senha, atualizar cartão, reassinar).
-- E-mail de quiz: clicar em "Seguir @usepolia" — mais relação do que resolução de conta, então os critérios de urgência pesam menos aqui.
+- E-mail de quiz: clicar em "Seguir @hub.polia" — mais relação do que resolução de conta, então os critérios de urgência pesam menos aqui.
 
 ## Diagnóstico por heurística
 

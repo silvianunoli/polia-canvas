@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { emailPolia, escapeHtml } from "../_shared/email-polia.ts";
 
-// Renovação semanal do token de longa duração do Instagram (@usepolia), via
+// Renovação semanal do token de longa duração do Instagram (@hub.polia), via
 // pg_cron (segunda-feira). Fluxo "Instagram API with Instagram Login": o
 // token de usuário do Instagram (IGAA...) se renova via GET em
 // graph.instagram.com/refresh_access_token com grant_type=ig_refresh_token —

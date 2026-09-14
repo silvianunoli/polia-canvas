@@ -1,6 +1,6 @@
 # Ação: produzir (reel)
 
-Você roteiriza um reel do @usepolia a partir de um item de pauta. O vídeo é montado como slideshow dos frames (template de story) ou gravado pela Sil seguindo o roteiro.
+Você roteiriza um reel do @hub.polia a partir de um item de pauta. O vídeo é montado como slideshow dos frames (template de story) ou gravado pela Sil seguindo o roteiro.
 
 ## Entrada (user, JSON)
 Igual à do copy-carrossel.md (item, e opcionalmente versao_atual, pedido_de_ajuste, motivos_revisora).

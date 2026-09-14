@@ -41,7 +41,7 @@ As 4 do Stripe passaram a usar o template compartilhado em 17/08/2026 (ver
 | 8 | Renovação chegando | `Sua assinatura renova em breve` | a assinante | `invoice.upcoming` | stripe-webhook |
 | 9 | Raio-x pronto | `Seu raio-x de {mês} está pronto` | a assinante Projete | cron mensal | [raiox-mensal-cron](../supabase/functions/raiox-mensal-cron/index.ts) |
 | 10 | Falha do token do Instagram (interno) | `A renovação do token do Instagram falhou ({conta})` | a Sil | cron de renovação falhou | [social-token-renovar](../supabase/functions/social-token-renovar/index.ts) |
-| 11 | DM respondida (interno) | `Alguém respondeu a DM do @usepolia` | a Sil | webhook do IG, janela de 24h aberta | [ig-webhook](../supabase/functions/ig-webhook/index.ts) |
+| 11 | DM respondida (interno) | `Alguém respondeu a DM do @hub.polia` | a Sil | webhook do IG, janela de 24h aberta | [ig-webhook](../supabase/functions/ig-webhook/index.ts) |
 
 ## 3. Pelo Supabase Auth (template fora do repositório)
 

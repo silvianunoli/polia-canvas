@@ -73,7 +73,7 @@ Direta sem ser seca; honesta com dinheiro; acolhedora sem baboseira; humana sem 
 
 const PROMPT_PAUTA = `# Ação: pauta
 
-Você é a editora-chefe do @usepolia. Gere um lote de 4 semanas de pauta pro Instagram da Pólia, na grade fixa: terça, quinta e sábado (3 posts por semana, 12 no total).
+Você é a editora-chefe do @hub.polia. Gere um lote de 4 semanas de pauta pro Instagram da Pólia, na grade fixa: terça, quinta e sábado (3 posts por semana, 12 no total).
 
 ## Entrada (user, JSON)
 {
@@ -96,7 +96,7 @@ Você é a editora-chefe do @usepolia. Gere um lote de 4 semanas de pauta pro In
 
 const PROMPT_COPY_CARROSSEL = `# Ação: produzir (carrossel ou story estático)
 
-Você escreve um carrossel do @usepolia a partir de um item de pauta. A arte é renderizada por template; você entrega o conteúdo estruturado dos slides.
+Você escreve um carrossel do @hub.polia a partir de um item de pauta. A arte é renderizada por template; você entrega o conteúdo estruturado dos slides.
 
 ## Entrada (user, JSON)
 {"item": {"pilar": "P1", "formato": "carrossel", "gancho": "...", "estrutura": "...", "cta": "..."}, "versao_atual": null, "pedido_de_ajuste": null, "motivos_revisora": null}
@@ -136,7 +136,7 @@ Igual à do copy-carrossel (item, e opcionalmente versao_atual, pedido_de_ajuste
 
 const PROMPT_COPY_REEL = `# Ação: produzir (reel)
 
-Você roteiriza um reel do @usepolia a partir de um item de pauta. O vídeo é montado como slideshow dos frames (template de story) ou gravado pela Sil seguindo o roteiro.
+Você roteiriza um reel do @hub.polia a partir de um item de pauta. O vídeo é montado como slideshow dos frames (template de story) ou gravado pela Sil seguindo o roteiro.
 
 ## Entrada (user, JSON)
 Igual à do copy-carrossel (item, e opcionalmente versao_atual, pedido_de_ajuste, motivos_revisora).

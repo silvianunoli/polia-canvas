@@ -4,7 +4,7 @@ Isca digital do pré-lançamento da Pólia. Página pública com 8 perguntas, re
 
 ## 1. Shaping
 
-**Problema:** o link da bio do @usepolia precisa de uma isca que converta visitante fria em e-mail. A lista de espera pura converte pouco no frio; quiz converte na faixa de 20 a 40% contra ~1% de e-book (pesquisa do artefato polia-estrategia-instagram, 30/07). Sem essa página, o post 5 da fase "Do zero" não pode sair e o pré-lançamento não acumula nada.
+**Problema:** o link da bio do @hub.polia precisa de uma isca que converta visitante fria em e-mail. A lista de espera pura converte pouco no frio; quiz converte na faixa de 20 a 40% contra ~1% de e-book (pesquisa do artefato polia-estrategia-instagram, 30/07). Sem essa página, o post 5 da fase "Do zero" não pode sair e o pré-lançamento não acumula nada.
 
 **Persona:** Ana. Empreende (comida, roupa, artesanato, beleza, serviço), decide no chute e remói depois. Chega pelo Instagram, no celular, com atenção curta.
 
@@ -34,7 +34,7 @@ Isca digital do pré-lançamento da Pólia. Página pública com 8 perguntas, re
 1. Ana toca o link da bio → abre `/quiz` (tela de abertura): título "Você está pagando pra trabalhar?", subtítulo "8 perguntas, 2 minutos, sem julgamento", botão "Quero descobrir".
 2. Toca "Quero descobrir" → pergunta 1 de 8, com barra de progresso ("1 de 8"). Uma pergunta por tela, 3 alternativas, avança ao tocar.
 3. Responde as 8 → tela de faixa: mostra na hora a faixa dela (ex.: "Seu resultado: No escuro nos pontos que doem") + a frase "Seu diagnóstico completo mostra onde está o chute e a primeira conta pra sair dele." + campo de e-mail + checkbox de consentimento + botão "Quero meu diagnóstico".
-4. Preenche e-mail válido, marca o consentimento, toca o botão → sistema grava o lead no Supabase → tela de resultado completo: faixa + território mais fraco (com o nome do módulo, ex.: "Quanto vale") + explicação curta + UMA conta pra fazer hoje + ~~"seus próximos passos chegam no seu e-mail"~~ "O e-mail fica guardado pra avisar quando a Pólia abrir." + botão "Seguir @usepolia →".
+4. Preenche e-mail válido, marca o consentimento, toca o botão → sistema grava o lead no Supabase → tela de resultado completo: faixa + território mais fraco (com o nome do módulo, ex.: "Quanto vale") + explicação curta + UMA conta pra fazer hoje + ~~"seus próximos passos chegam no seu e-mail"~~ "O e-mail fica guardado pra avisar quando a Pólia abrir." + botão "Seguir @hub.polia →".
 
 > **Correção de 11/08/2026.** O texto original prometia que os próximos passos chegariam por e-mail, o que contradiz o no-go da Seção 1 (o v1 não dispara e-mail nenhum). Promessa trocada por uma que a Pólia cumpre hoje. Se o disparo passar a existir, dá pra voltar a prometer entrega.
 

@@ -13,7 +13,7 @@
 import { escapeHtml, emailPolia } from "@/lib/email-template";
 import type { Faixa, Territorio } from "./perguntas";
 
-const INSTAGRAM_URL = "https://www.instagram.com/usepolia/";
+const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
 
 export interface EmailDiagnostico {
   subject: string;
@@ -46,7 +46,7 @@ export function montarEmailDiagnostico({
     "",
     `${contaLabel} ${territorio.conta}`,
     "",
-    `Seguir @usepolia: ${INSTAGRAM_URL}`,
+    `Seguir @hub.polia: ${INSTAGRAM_URL}`,
     "",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
@@ -62,7 +62,7 @@ export function montarEmailDiagnostico({
     // Mesma caixa pêssego da tela de resultado: quem abre o e-mail reconhece
     // o que acabou de ver.
     destaque: { rotulo: escapeHtml(contaLabel), texto: escapeHtml(territorio.conta) },
-    ctaLabel: "Seguir @usepolia",
+    ctaLabel: "Seguir @hub.polia",
     ctaUrl: INSTAGRAM_URL,
     descadastroUrl,
   });

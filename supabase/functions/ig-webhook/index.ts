@@ -84,7 +84,7 @@ async function avisarSilJanelaAberta(igUserId: string): Promise<void> {
       body: JSON.stringify({
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: [EMAIL_SIL],
-        subject: "Alguém respondeu a DM do @usepolia",
+        subject: "Alguém respondeu a DM do @hub.polia",
         text: `A conta ${igUserId} respondeu a private reply e abriu a janela de 24h. Entra no Instagram pra continuar a conversa na mão.`,
         // escapeHtml porque o igUserId vem do payload do webhook da Meta, que é
         // entrada externa: sem escapar, dá pra injetar HTML no e-mail.
