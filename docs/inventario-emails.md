@@ -21,10 +21,12 @@ Todos usam o template central [`src/lib/email-template.ts`](../src/lib/email-tem
 | 2 | Convite | `Você foi convidada pra Pólia` | a convidada | admin cria convite em `/admin/convites` | [convites.functions.ts](../src/lib/convites.functions.ts) |
 | 3 | Diagnóstico do quiz | `Seu diagnóstico: {faixa}` | o lead | fim do `/quiz`, após o gate de e-mail | [quiz.functions.ts](../src/lib/quiz.functions.ts) + [quiz/email.ts](../src/lib/quiz/email.ts) |
 | 4 | Contato (interno) | `[Contato] {assunto} · {nome}` | `oi@usepolia.com.br` | envio do formulário `/contato` | [contato.functions.ts](../src/lib/contato.functions.ts) |
+| 4b | Entrega do manual (14/09/2026) | `Seu Manual da Pequena Marca que Quer Ser Grande chegou` | o lead | envio do e-mail em `/manual`; leva o link de download com token | [manual.functions.ts](../src/lib/manual.functions.ts) + [manual/email.ts](../src/lib/manual/email.ts) |
 
-O nº 3 é o **único** com `List-Unsubscribe`, link de descadastro no rodapé e
-`reply-to: oi@usepolia.com.br` — correto, é o único que não é transacional puro.
-O nº 4 também tem `reply-to`, apontando pra quem escreveu.
+Os nº 3 e 4b são os **únicos** com `List-Unsubscribe`, link de descadastro no rodapé e
+`reply-to: oi@usepolia.com.br` — correto, são os únicos que não são transacionais puros.
+Os dois usam o mesmo `/descadastrar`, que procura o token em `quiz_leads` e depois em
+`manual_leads`. O nº 4 também tem `reply-to`, apontando pra quem escreveu.
 
 ## 2. Pelo Resend, nas edge functions do Supabase
 

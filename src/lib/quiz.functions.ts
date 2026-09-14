@@ -43,6 +43,10 @@ export type ResultadoGravacao =
 // é validado como uuid antes de encostar no banco, e a resposta NUNCA devolve
 // o e-mail da linha: quem tem o token pode sair da lista, não ler quem é.
 //
+// Atende as DUAS iscas (quiz_leads e manual_leads): o link do rodapé é o mesmo
+// /descadastrar nos dois e-mails, e os tokens são uuid aleatórios, então um
+// token pertence a uma tabela só. Procura na primeira; não achou, na segunda.
+//
 // Sem Turnstile aqui de propósito: exigir prova de humanidade pra alguém sair
 // de uma lista é o padrão escuro que a LGPD existe pra evitar. Sair tem que
 // ser mais fácil que entrar.
@@ -52,19 +56,32 @@ const tokenSchema = z.object({ token: z.string().uuid() });
 export type ResultadoDescadastro = { ok: boolean };
 
 async function marcarDescadastro(token: string, saindo: boolean): Promise<ResultadoDescadastro> {
-  const { data, error } = await supabaseAdmin
+  const descadastrado_em = saindo ? new Date().toISOString() : null;
+
+  const quiz = await supabaseAdmin
     .from("quiz_leads")
-    .update({ descadastrado_em: saindo ? new Date().toISOString() : null })
+    .update({ descadastrado_em })
     .eq("descadastro_token", token)
     .select("id");
-
-  if (error) {
-    console.error("[Quiz] Falha ao atualizar o descadastro:", error);
+  if (quiz.error) {
+    console.error("[Quiz] Falha ao atualizar o descadastro:", quiz.error);
     return { ok: false };
   }
-  // Token que não existe cai aqui. A tela trata igual a falha, sem dizer qual
-  // dos dois foi: confirmar que um token é inválido já é informação.
-  return { ok: (data?.length ?? 0) > 0 };
+  if ((quiz.data?.length ?? 0) > 0) return { ok: true };
+
+  const manual = await supabaseAdmin
+    .from("manual_leads")
+    .update({ descadastrado_em })
+    .eq("descadastro_token", token)
+    .select("id");
+  if (manual.error) {
+    console.error("[Manual] Falha ao atualizar o descadastro:", manual.error);
+    return { ok: false };
+  }
+  // Token que não existe em lista nenhuma cai aqui. A tela trata igual a
+  // falha, sem dizer qual dos dois foi: confirmar que um token é inválido já
+  // é informação.
+  return { ok: (manual.data?.length ?? 0) > 0 };
 }
 
 export const descadastrarLeadQuiz = createServerFn({ method: "POST" })

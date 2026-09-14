@@ -7,6 +7,7 @@ import { DOMINIO_GESTAO } from "./lib/dominio-gestao";
 import { CORPO_ROBOTS } from "./lib/robots";
 import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
+import { ehCaminhoDeDownload } from "./lib/manual/download";
 import { supabase } from "./integrations/supabase/client";
 
 // Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
@@ -190,6 +191,16 @@ export default {
     }
     if (url.pathname === "/sitemap.xml") return await respostaSitemap();
     if (url.pathname === "/robots.txt") return respostaRobots();
+
+    // Download do PDF do manual (/manual/baixar?t=...): o arquivo mora num
+    // bucket privado do Storage e só sai com um token que existe em
+    // manual_leads. Responde antes do TanStack porque é arquivo, não tela.
+    // O import é dinâmico porque o módulo puxa o supabaseAdmin, que lê o
+    // service role do ambiente: só carrega quando a rota é pedida.
+    if (ehCaminhoDeDownload(url.pathname)) {
+      const { responderDownloadManual } = await import("./lib/manual/download.server");
+      return await responderDownloadManual(url);
+    }
 
     try {
       const handler = await getServerEntry();

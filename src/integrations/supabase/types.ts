@@ -1709,6 +1709,51 @@ export type Database = {
         }
         Relationships: []
       }
+      manual_leads: {
+        Row: {
+          baixado_em: string | null
+          consent_texto: string | null
+          consentimento: boolean
+          created_at: string
+          descadastrado_em: string | null
+          descadastro_token: string
+          download_token: string
+          downloads: number
+          email: string
+          id: string
+          origem: string
+          updated_at: string | null
+        }
+        Insert: {
+          baixado_em?: string | null
+          consent_texto?: string | null
+          consentimento: boolean
+          created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
+          download_token?: string
+          downloads?: number
+          email: string
+          id?: string
+          origem?: string
+          updated_at?: string | null
+        }
+        Update: {
+          baixado_em?: string | null
+          consent_texto?: string | null
+          consentimento?: boolean
+          created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
+          download_token?: string
+          downloads?: number
+          email?: string
+          id?: string
+          origem?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       quiz_leads: {
         Row: {
           consent_texto: string | null

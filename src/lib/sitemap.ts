@@ -19,6 +19,7 @@ export const CAMINHOS_ESTATICOS = [
   "/ajuda",
   "/blog",
   "/quiz",
+  "/manual",
   "/lista-de-espera",
   "/termos",
   "/privacidade",

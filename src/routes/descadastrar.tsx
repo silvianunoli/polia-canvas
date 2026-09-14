@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { descadastrarLeadQuiz, reinscreverLeadQuiz } from "@/lib/quiz.functions";
 
-// Saída de um clique do e-mail do quiz. O consentimento promete "você sai
-// quando quiser", e essa promessa mora aqui.
+// Saída de um clique dos e-mails de lista (quiz e manual). O consentimento
+// promete "você sai quando quiser", e essa promessa mora aqui.
 //
 // O descadastro acontece no load, sem botão de confirmar: quem clicou em "Não
 // quero mais receber" já disse o que queria, e pedir confirmação depois disso é
@@ -86,7 +86,7 @@ function DescadastrarPage() {
                 Pronto, sem mais e-mails
               </h1>
               <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
-                Esse endereço saiu da lista da Pólia. O diagnóstico que já chegou continua na sua
+                Esse endereço saiu da lista da Pólia. O que já chegou por e-mail continua na sua
                 caixa.
               </p>
               <p className="mt-6 text-[15px] leading-[1.5] text-[var(--muted)]">
