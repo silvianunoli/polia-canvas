@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { montarEmailManual } from "./email";
+import { CTA_EMAIL_MANUAL, TAGLINE_MANUAL, montarEmailManual } from "./email";
 import { NOME_MANUAL_CURTO } from "./conteudo";
 
 const DOWNLOAD = "https://usepolia.com.br/manual/baixar?t=3f2504e0-4f89-4d3a-9a0c-0305e82c3301";
@@ -10,17 +10,21 @@ function montar() {
 }
 
 describe("e-mail de entrega do manual", () => {
-  it("leva o nome do manual no assunto", () => {
-    expect(montar().subject).toBe(`Seu ${NOME_MANUAL_CURTO} chegou`);
+  it("leva o nome do manual no assunto e a chegada como título", () => {
+    const { subject, html } = montar();
+    expect(subject).toBe(`Seu ${NOME_MANUAL_CURTO} chegou`);
+    expect(html).toContain(`Seu ${NOME_MANUAL_CURTO} chegou.`);
   });
 
   // A tela promete que o PDF chega por e-mail. O link de download nas duas
-  // versões é o cumprimento dessa frase.
-  it("leva o link de download nas duas versões", () => {
+  // versões é o cumprimento dessa frase, e o rótulo do botão é decisão da
+  // fundadora (14/09/2026): "Baixar meu manual", nunca "Baixar o manual".
+  it("leva o link de download nas duas versões, no botão pedido", () => {
     const { text, html } = montar();
     expect(text).toContain(DOWNLOAD);
     expect(html).toContain(`href="${DOWNLOAD}"`);
-    expect(html).toContain("Baixar o manual");
+    expect(html).toContain(CTA_EMAIL_MANUAL);
+    expect(CTA_EMAIL_MANUAL).toBe("Baixar meu manual");
   });
 
   // O consentimento diz "você sai quando quiser". Sem o link do rodapé, o
@@ -30,30 +34,45 @@ describe("e-mail de entrega do manual", () => {
     expect(text).toContain(DESCADASTRO);
     expect(html).toContain(`href="${DESCADASTRO}"`);
     expect(html).toContain("Não quero mais receber");
+    expect(html).toContain("usepolia.com.br");
   });
 
-  it("assina só Pólia", () => {
-    const { text, html } = montar();
-    expect(text).toMatch(/\nPólia\n/);
+  it("segue a narrativa pedida: citação antes do botão, assinatura depois", () => {
+    const { html } = montar();
+    const citacao = html.indexOf("Começam com intenção.");
+    const botao = html.indexOf(`href="${DOWNLOAD}"`);
+    const assinatura = html.indexOf(TAGLINE_MANUAL);
+    expect(citacao).toBeGreaterThan(0);
+    expect(botao).toBeGreaterThan(citacao);
+    expect(assinatura).toBeGreaterThan(botao);
     expect(html).not.toContain("Equipe Pólia");
   });
 
-  // Forma da marca: sem travessão, sem exclamação, sem emoji, sem hype.
+  // Forma da marca: sem travessão, sem exclamação, sem símbolo, sem hype, e
+  // "você" nunca como sujeito de capacidade ou futuro prometido.
   it("respeita a forma da marca no assunto e no texto", () => {
     const { subject, text } = montar();
     for (const parte of [subject, text]) {
-      expect(parte).not.toMatch(/[—–]/);
+      expect(parte).not.toMatch(/[—–✦]/);
       expect(parte).not.toContain("!");
-      expect(parte).not.toMatch(/[☀-➿\u{1F300}-\u{1FAFF}]/u);
       expect(parte.toLowerCase()).not.toMatch(/transform|revolucion/);
+      expect(parte).not.toMatch(
+        /você (não )?(precisa|pode|consegue|merece|vai (longe|conseguir))/i,
+      );
     }
   });
 
-  it("usa a tipografia e o cinza do design system", () => {
+  // Decisão visual de 14/09/2026: o amarelo é o único destaque desta peça e o
+  // turquesa fica de fora. Cinza do rodapé continua o que passa AA.
+  it("usa o layout editorial: amarelo no botão, sem turquesa, tokens só", () => {
     const { html } = montar();
+    expect(html).toContain("#FFC629");
+    expect(html).not.toContain("#7CCBCD");
     expect(html).toContain("Cabinet Grotesk");
-    expect(html).not.toContain("Georgia");
-    expect(html).toContain("#6B6B6B");
-    expect(html).not.toContain("#767676");
+    expect(html).not.toMatch(/Georgia|Times New Roman|Fraunces|(?<!sans-)serif/);
+    const hexes = [...new Set((html.match(/#[0-9A-Fa-f]{6}/g) ?? []).map((h) => h.toUpperCase()))];
+    expect(hexes.sort()).toEqual(
+      ["#0A0A0A", "#2C2C2C", "#6B6B6B", "#E6E6E6", "#F2F0ED", "#FFC629", "#FFFFFF"].sort(),
+    );
   });
 });

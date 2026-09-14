@@ -9,7 +9,11 @@
 // mantêm o ponto de entrada único pro app.
 import { sanitizarMensagemErro } from "@/lib/error-sanitize";
 
-export { emailPolia, escapeHtml } from "../../supabase/functions/_shared/email-polia.ts";
+export {
+  emailPolia,
+  emailPoliaEditorial,
+  escapeHtml,
+} from "../../supabase/functions/_shared/email-polia.ts";
 
 export function resendApiKey(): string {
   const key = process.env.RESEND_API_KEY;

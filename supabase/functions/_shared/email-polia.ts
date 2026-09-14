@@ -205,3 +205,160 @@ export function emailPolia({
   </body>
 </html>`;
 }
+
+// ── Variante editorial ──────────────────────────────────────────────────────
+// Layout dos e-mails de MATERIAL (hoje, a entrega do manual de /manual). Nasceu
+// em 14/09/2026 a pedido da fundadora: o e-mail de entrega precisava parecer
+// uma página do próprio manual, não um aviso de sistema. Difere da casca
+// transacional acima em três coisas, e só nelas: rótulo em caixa alta antes
+// do título, uma citação editorial antes do botão, e o botão em AMARELO
+// (--highlight #FFC629, texto tinta), porque nesta peça o amarelo é o único
+// destaque e o turquesa fica de fora. Continua sendo a mesma marca: mesmos
+// tokens, mesma logo, mesmo rodapé, mesmo cinza AA.
+//
+// É uma segunda FUNÇÃO, não uma segunda cópia: fonte, logo e escape são os
+// mesmos deste arquivo. Se um dia virar a casca de todos, a de cima morre.
+//
+//   #FFC629  --highlight     fundo do botão. Um por peça, e é este.
+//   #0A0A0A  --ink           título, citação, texto do botão, filete do rótulo
+//
+// Cantos quase retos (4px no botão, 0 no cartão) e filetes de 1px no lugar de
+// sombra e raio grande: é o que faz a peça ler como página impressa. As duas
+// metas de color-scheme pedem ao Apple Mail e ao Outlook pra não inverter as
+// cores no modo escuro; o Gmail ignora e pode escurecer o fundo mesmo assim.
+const FONTE_ROTULO = "'DM Sans','Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif";
+
+export function emailPoliaEditorial({
+  preheader,
+  rotulo,
+  headline,
+  paragrafos,
+  citacao,
+  ctaLabel,
+  ctaUrl,
+  fechamento,
+  assinatura,
+  descadastroUrl,
+}: {
+  preheader: string;
+  /** Rótulo em caixa alta acima do título, ex.: "Pólia · Material gratuito". */
+  rotulo: string;
+  headline: string;
+  /** Já escapados. */
+  paragrafos: string[];
+  /** Frase curta em destaque antes do botão, uma linha por item. Já escapadas. */
+  citacao?: string[];
+  ctaLabel: string;
+  ctaUrl: string;
+  /** Linhas de despedida, já escapadas. */
+  fechamento?: string[];
+  /** Quem assina e a frase que fecha. Já escapadas. */
+  assinatura: { nome: string; tagline?: string };
+  descadastroUrl?: string;
+}): string {
+  const p = (texto: string, extra = "") =>
+    `<p style="margin:0 0 18px;font-family:${FONTE_CORPO};font-size:16px;line-height:1.65;color:#2C2C2C;${extra}">${texto}</p>`;
+
+  const corpo = paragrafos.map((t) => p(t)).join("\n");
+
+  const blocoCitacao =
+    citacao && citacao.length
+      ? `
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0 36px;">
+                  <tr>
+                    <td style="border-left:2px solid #0A0A0A;padding:4px 0 4px 20px;">
+                      ${citacao
+                        .map(
+                          (linha) =>
+                            `<p style="margin:0;font-family:${FONTE_TITULO};font-size:22px;font-weight:700;line-height:1.25;letter-spacing:-0.02em;color:#0A0A0A;">${linha}</p>`,
+                        )
+                        .join("\n")}
+                    </td>
+                  </tr>
+                </table>`
+      : "";
+
+  const linhasFechamento = (fechamento ?? []).map((t) => p(t, "margin-bottom:6px;")).join("\n");
+
+  const linhaDescadastro = descadastroUrl
+    ? `
+                <p style="margin:10px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                  <a href="${descadastroUrl}" style="color:#6B6B6B;text-decoration:underline;">Não quero mais receber</a>
+                </p>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>${headline}</title>
+    <style>
+      @media only screen and (max-width: 600px) {
+        .polia-cartao { padding: 36px 24px !important; }
+        .polia-h1 { font-size: 27px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;background-color:#F2F0ED;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2F0ED;">
+      <tr>
+        <td align="center" style="padding:40px 16px 48px;">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+            <tr>
+              <td style="padding:0 0 28px;text-align:left;">
+                <img src="${LOGO_URL}" width="${LOGO_LARGURA}" height="${LOGO_ALTURA}" alt="Pólia" style="display:block;border:0;outline:none;text-decoration:none;width:${LOGO_LARGURA}px;height:${LOGO_ALTURA}px;font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#0A0A0A;" />
+              </td>
+            </tr>
+            <tr>
+              <td class="polia-cartao" style="background-color:#FFFFFF;border:1px solid #E6E6E6;padding:48px 44px 44px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                  <tr>
+                    <td style="width:20px;padding-right:10px;vertical-align:middle;"><div style="width:20px;height:2px;background-color:#0A0A0A;font-size:0;line-height:0;">&nbsp;</div></td>
+                    <td style="vertical-align:middle;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#2C2C2C;">${rotulo}</td>
+                  </tr>
+                </table>
+                <h1 class="polia-h1" style="margin:0 0 28px;font-family:${FONTE_TITULO};font-size:32px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0A0A0A;">
+                  ${headline}
+                </h1>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                  <tr><td style="height:1px;background-color:#E6E6E6;font-size:0;line-height:0;">&nbsp;</td></tr>
+                </table>
+                ${corpo}
+                ${blocoCitacao}
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 40px;">
+                  <tr>
+                    <td style="background-color:#FFC629;border-radius:4px;text-align:center;">
+                      <a href="${ctaUrl}" style="display:block;padding:18px 32px;font-family:${FONTE_ROTULO};font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0A0A0A;text-decoration:none;border-radius:4px;">
+                        ${ctaLabel}
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+                ${linhasFechamento}
+                <p style="margin:18px 0 6px;font-family:${FONTE_TITULO};font-size:16px;font-weight:700;line-height:1.4;letter-spacing:-0.02em;color:#0A0A0A;">${assinatura.nome}</p>
+                ${
+                  assinatura.tagline
+                    ? `<p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#6B6B6B;">${assinatura.tagline}</p>`
+                    : ""
+                }
+              </td>
+            </tr>
+            <tr>
+              <td style="padding-top:24px;text-align:left;">
+                <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6B6B6B;">
+                  Pólia · usepolia.com.br
+                </p>
+                ${linhaDescadastro}
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
