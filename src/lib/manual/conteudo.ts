@@ -16,7 +16,7 @@ export const NOME_MANUAL = `O ${NOME_MANUAL_CURTO}`;
 export const CONSENT_TEXTO_MANUAL =
   "Quero receber o manual e os e-mails da Pólia. Sem spam, e você sai quando quiser.";
 
-export const INSTAGRAM_URL = "https://www.instagram.com/usepolia/";
+export const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
 
 /** Nome com que o PDF cai na pasta de downloads da pessoa. */
 export const NOME_ARQUIVO_PDF = "manual-da-pequena-marca-que-quer-ser-grande.pdf";

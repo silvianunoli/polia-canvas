@@ -214,7 +214,7 @@ function Casca({ children }: { children: React.ReactNode }) {
               rel="noopener noreferrer"
               className="text-[var(--ink)] no-underline hover:underline"
             >
-              @usepolia
+              @hub.polia
             </a>
             <Link to="/privacidade" className="text-[var(--ink)] no-underline hover:underline">
               Privacidade
@@ -335,7 +335,7 @@ function CartaoPedido({
             rel="noopener noreferrer"
             className={`${BTN_CONTORNO} mt-4 ${CTA_LARGO}`}
           >
-            Seguir @usepolia
+            Seguir @hub.polia
             <span aria-hidden="true">→</span>
           </a>
         </div>
