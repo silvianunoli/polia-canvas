@@ -286,6 +286,22 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
     });
     if (error || !data.user) {
       console.error("[stripe-webhook] Falha ao criar conta pra compra:", error);
+      // Sem isso, uma falha aqui é uma venda perdida em silêncio: o Stripe já
+      // cobrou (o evento não trata isso como erro pro Stripe, pra não reentregar
+      // e cobrar de novo), mas ninguém fica sabendo que a conta nunca foi
+      // criada. PAY-02 (achado 14/08, nunca testado ao vivo): o Auth Hook
+      // "Before User Created" (hook_checar_convite_cadastro) pode estar
+      // barrando esta chamada do mesmo jeito que barraria um signup direto —
+      // não foi confirmado porque testar exigiria criar uma conta real.
+      void dispararAlerta(
+        "stripe_webhook_falha_criar_conta",
+        "Compra paga, mas a conta não foi criada",
+        {
+          email,
+          customerId,
+          mensagem: error?.message ?? "generateLink não devolveu usuário",
+        },
+      );
       return null;
     }
     userId = data.user.id;
