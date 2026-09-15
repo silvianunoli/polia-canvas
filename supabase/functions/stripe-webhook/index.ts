@@ -229,7 +229,7 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
     : "Seu acesso à Pólia continua até o fim do período já pago.";
   await enviarViaResend(
     "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.\n\n${SITE_URL}/precos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
+    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "Sua assinatura na Pólia foi cancelada.",
       headline: "Assinatura cancelada",
@@ -238,7 +238,7 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
         "Mudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.",
       ],
       ctaLabel: "Assinar de novo",
-      ctaUrl: `${SITE_URL}/precos`,
+      ctaUrl: `${SITE_URL}/#planos`,
       ajudaUrl: `${SITE_URL}/ajuda`,
     }),
     email,
