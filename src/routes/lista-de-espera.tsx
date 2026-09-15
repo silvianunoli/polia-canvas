@@ -639,7 +639,15 @@ function ListaEsperaPage() {
           className={`${CONTAINER} flex flex-wrap items-center justify-between gap-3 text-[13px] text-[var(--muted)]`}
         >
           <span>© 2026 Pólia · CNPJ: 18.305.925/0001-06</span>
-          <span>Desenvolvido por Prismia Soluções Digitais</span>
+          <span>
+            Desenvolvido por{" "}
+            <a
+              href="https://servicos.usepolia.com.br/"
+              className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+            >
+              Hub Pólia Soluções Digitais
+            </a>
+          </span>
         </div>
       </footer>
 

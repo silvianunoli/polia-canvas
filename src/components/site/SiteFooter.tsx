@@ -38,7 +38,15 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
         </div>
         <div className="mt-[clamp(48px,6vw,64px)] flex flex-wrap justify-between gap-4 border-t border-white/15 pt-6 text-[12px]">
           <span>usepolia.com.br · feita no Brasil · CNPJ 18.305.925/0001-06</span>
-          <span>Desenvolvido por Prismia Soluções Digitais</span>
+          <span>
+            Desenvolvido por{" "}
+            <a
+              href="https://servicos.usepolia.com.br/"
+              className="underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] hover:text-[var(--bg)]"
+            >
+              Hub Pólia Soluções Digitais
+            </a>
+          </span>
         </div>
       </div>
     </footer>

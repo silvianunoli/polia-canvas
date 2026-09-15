@@ -17,13 +17,13 @@ import {
 export const Route = createFileRoute("/sobre")({
   head: () => ({
     meta: [
-      { title: "A marca · Pólia" },
+      { title: "A história · Pólia" },
       {
         name: "description",
         content:
-          "Meu negócio vendia bem. Eu só não sabia quanto sobrava. A história, aquilo em que a Pólia acredita e pra quem ela é feita.",
+          "Meu negócio vendia bem. Eu só não sabia quanto sobrava. A história da Pólia, aquilo em que ela acredita e pra quem ela é feita.",
       },
-      { property: "og:title", content: "A marca · Pólia" },
+      { property: "og:title", content: "A história · Pólia" },
       {
         property: "og:description",
         content: "Por que a Pólia existe, no que ela acredita, e pra quem é feita.",
@@ -33,6 +33,13 @@ export const Route = createFileRoute("/sobre")({
   }),
   component: SobrePage,
 });
+
+// Copy V4 (14/09/2026). A história da Sil explica por que a Pólia existe sem
+// fazer a página parecer "a ferramenta pessoal da Sil": eu vivi o problema,
+// entendi o que faltava e transformei o método em produto pra outras
+// empreendedoras. Três frases-âncora: "Eu vendia bem e não sabia quanto sobrava",
+// "Não faltou esforço. Faltou método." e "A decisão continua sendo de quem toca
+// o negócio."
 
 const numeros = [
   { valor: "14", rotulo: "anos de e-commerce" },
@@ -59,113 +66,140 @@ const marcos = [
   {
     ano: "2020",
     texto:
-      "Encerrei o e-commerce com cliente chegando e as contas sem fechar. O que faltou ali tem nome, método, e virou a razão de existir da Pólia.",
+      "Encerrei o e-commerce com cliente chegando e as contas sem fechar. O que faltou ali tem nome: método. E acabou virando a razão de existir da Pólia.",
   },
   {
     ano: "2020 a 2022",
     texto:
-      "Consultoria pra quem estava montando loja virtual e definindo a estratégia da própria marca.",
+      "Consultoria para quem estava montando loja virtual e definindo a estratégia da própria marca.",
   },
   {
-    ano: "Nos anos seguintes",
+    ano: "Depois",
     texto:
-      "Dentro de grandes empresas, como C&A, Allied e ArcelorMittal, vi de perto o método que marca grande usa pra decidir. A ficha caiu: era isso que faltava do outro lado do balcão.",
+      "Dentro de grandes empresas, como C&A, Allied e ArcelorMittal, vi de perto o método que marcas grandes usam para decidir. A ficha caiu: era isso que faltava do outro lado do balcão.",
   },
   {
     ano: "Hoje",
-    texto: "A Pólia, construída em público, rodando primeiro na minha própria marca.",
+    texto: "A Pólia está sendo construída em público e testada primeiro na minha própria marca.",
   },
+];
+
+const entendi = [
+  "Eu sabia vender.",
+  "Sabia construir marca.",
+  "Sabia trabalhar.",
+  "Mas preço, caixa, metas e rotina ficavam espalhados.",
 ];
 
 const pontos = [
   {
     icon: ClipboardList,
     titulo: "Tudo começa no Planejamento",
-    desc: "A marca decide quem atende, o que entrega e quanto vale. Essa decisão vira o preço, a meta e o rumo do negócio.",
+    desc: "A marca decide quem atende, o que entrega e quanto vale. Essa decisão vira preço, meta e rumo para o negócio.",
   },
   {
     icon: LineChart,
     titulo: "Os números aparecem na hora",
-    desc: "Preço, quanto sobra, caixa e quanto falta pra meta num Painel que se entende de relance. Sem planilha, sem susto no fim do mês.",
+    desc: "Preço, quanto sobra, caixa e quanto falta para a meta aparecem em um painel que dá para entender de relance. Sem planilha perdida. Sem esperar o fim do mês para descobrir o que aconteceu.",
   },
   {
     icon: RouteIcon,
     titulo: "A execução não se perde",
-    desc: "O Planner organiza o que a semana pede, ligado à mesma meta definida no Planejamento. Decidir bem não adianta se a entrega se perde no caminho.",
+    desc: "O Planner organiza o que a semana pede, ligado às metas definidas no Planejamento. Porque decidir bem também significa conseguir colocar a decisão em prática.",
   },
 ];
 
 // Era "O que a Pólia não é", uma lista que atacava coach e curso. Numa página
 // cujo único trabalho é gerar confiança, atacar o vizinho gasta o espaço que
-// deveria dizer o que a marca é.
+// deveria dizer o que a marca é. "Mentora de bolso" saiu em 14/09: aproximava
+// a Pólia de uma categoria que ela não quer ocupar.
 const escolheSer = [
-  "Uma mentora de bolso, presente na hora de cobrar, comprar e fechar.",
-  "Do tamanho de quem toca o negócio, sozinha, com a família ou com poucas mãos ajudando, nunca do tamanho de empresa grande.",
-  "Em português claro, do jeito que se fala na mesa da cozinha.",
-  "De uso diário, desde antes da primeira venda.",
+  {
+    titulo: "Do tamanho de quem toca o negócio.",
+    desc: "Sozinha, com a família ou com poucas mãos ajudando. A Pólia não foi feita para exigir a estrutura de uma empresa grande.",
+  },
+  {
+    titulo: "Clara o suficiente para usar todos os dias.",
+    desc: "Em português claro, sem fazer da gestão um idioma que só especialista entende.",
+  },
+  {
+    titulo: "Conectada ao que realmente importa.",
+    desc: "Planejamento, preço, vendas, caixa, metas e rotina não precisam morar em lugares diferentes.",
+  },
+  {
+    titulo: "Feita para ajudar a decidir.",
+    desc: "A Pólia organiza os números e mostra o cenário. A decisão continua sendo de quem toca o negócio.",
+  },
 ];
 
-// A ausência ("sumiu", "uns dias fora") é nomeada UMA vez na página inteira, no
-// princípio 02 do manifesto. Repetir cria a impressão de que a Pólia está
-// preocupada com o sumiço, que é exatamente o oposto do que ela defende.
+const primeiraUsuaria = [
+  "Se uma tela não ajuda a entender o dinheiro da minha marca, eu percebo primeiro.",
+  "Se uma conta não faz sentido, eu encontro.",
+  "Se uma ferramenta complica mais do que resolve, ela não está pronta.",
+];
+
 const recusa = [
-  "Meta no vermelho jogada como cobrança",
-  "Hype de promessa grande com número redondo",
-  "Tutorial bobo, mascote, professora de cima",
+  "Meta usada como cobrança",
+  "Promessa de dinheiro fácil",
+  "Hype com número mágico",
+  "Linguagem infantilizada",
+  "Falar com a empreendedora como se ela não entendesse do próprio negócio",
+  "Dificuldade financeira virando motivação vazia",
 ];
 
-// Só o que o credo abaixo NÃO desenvolve: as outras quatro linhas repetiam,
-// em versão curta, os princípios 03 a 06 que vêm logo em seguida.
 const escolhe = [
   "Clareza sobre quanto a marca vale",
-  "O Planejamento decidido uma vez, valendo o mês inteiro",
-  "Aberta na hora de cobrar, comprar ou fechar",
+  "Números que ajudam a decidir",
+  "Planejamento conectado à rotina",
+  "Informação disponível na hora de cobrar, comprar ou fechar",
+  "Progresso real",
 ];
 
 const credo = [
   {
     linha: "Clareza vale mais que esforço.",
     texto:
-      "Decidir o que importa, quem a marca atende, quanto ela cobra, o que sobra no fim do mês, rende mais que uma lista inteira de tarefas feitas no braço.",
+      "Decidir o que importa, quem a marca atende, quanto ela cobra e o que sobra no fim do mês pode fazer mais diferença do que uma lista inteira de tarefas feitas no braço.",
   },
   {
     linha: "A gente puxa pela oportunidade, nunca pela culpa.",
     texto:
-      "Depois de uns dias fora, o Planejamento está lá do jeito que ficou, esperando sem cara feia. Cobrança disfarçada de incentivo é coisa de outro aplicativo. Aqui é abrir e continuar de onde parou.",
+      "Se você ficou alguns dias sem abrir a Pólia, ela não precisa fazer cara feia. Você abre e continua de onde parou.",
   },
   {
     linha: "Dona da marca, nunca devedora dela.",
     texto:
-      "A marca é sua, e dívida não é. A Pólia trata assim: abre, decide uma coisa e fecha com a sensação de quem manda no negócio.",
+      "A marca é sua. A Pólia existe para ajudar você a entendê-la e decidir sobre ela, não para fazer do negócio mais uma fonte de cobrança.",
   },
   {
     linha: "A gente respeita a sua inteligência.",
     texto:
-      "Sem tutorial bobo, sem explicar o óbvio, sem mascote fazendo graça. Quem toca a marca sabe o que faz. A Pólia foi feita por quem já viveu isso e senta do lado, nunca fala de cima.",
+      "Sem tutorial bobo. Sem explicar o óbvio. Sem falar de cima. Quem toca a marca já sabe muita coisa. A Pólia existe para organizar o que está espalhado e tornar os números mais claros.",
   },
   {
-    linha: "Comemora o concreto, não a promessa vazia.",
+    linha: "A gente comemora o concreto, não a promessa vazia.",
     texto:
-      "A Pólia celebra o preço que finalmente saiu do chute, o quanto sobra que apareceu, a meta do mês batida. Sobriedade é uma forma de respeito.",
+      "O preço que finalmente saiu do chute. O quanto sobra que apareceu. A meta que foi alcançada. Progresso real merece mais atenção que promessa grande.",
   },
   {
     linha: "Do tamanho de quem decide, não do tamanho da equipe.",
     texto:
-      "Uma dona de negócio sozinha entra e sai tão rápido quanto uma que tem a irmã na produção e o marido cuidando do Instagram. A Pólia não pergunta quantas pessoas trabalham ali, pergunta quem manda. Nada de aprovação em cadeia, nada de crachá, nada de reunião pra decidir o óbvio.",
+      "Uma pessoa sozinha pode precisar da mesma clareza que uma pequena equipe. A Pólia não mede a importância do negócio pelo tamanho da estrutura.",
   },
 ];
 
 const publicoSim = [
   "O negócio já vende, mas o preço ainda sai no chute.",
-  "Entrega, financeiro, atendimento e conteúdo passam todos pelas mesmas mãos.",
-  "A conta da marca e a conta pessoal ainda se misturam.",
-  "Falta método pra operação do dia a dia, não marca bonita no papel.",
+  "Você quer saber quanto realmente sobra.",
+  "Preço, financeiro, atendimento e rotina passam pelas mesmas mãos.",
+  "Você quer organizar o negócio sem precisar montar uma estrutura de empresa grande.",
+  "Você quer entender os números sem virar especialista em planilhas.",
 ];
 
 const publicoNao = [
-  "O que vai ser vendido ainda não está decidido.",
-  "A empresa já tem equipe de gestão e sistema robusto rodando.",
-  "A procura é por ferramenta de anúncio ou automação de marketing: a Pólia cuida da decisão, não da mídia.",
+  "Você ainda não sabe o que quer vender.",
+  "Sua empresa já tem uma estrutura robusta de gestão funcionando.",
+  "Você procura uma ferramenta de anúncios ou automação de marketing.",
 ];
 
 function SobrePage() {
@@ -181,15 +215,16 @@ function SobrePage() {
           >
             <div>
               <Reveal>
-                <Eyebrow>A marca</Eyebrow>
+                <Eyebrow>A história da Pólia</Eyebrow>
               </Reveal>
               <h1 className="mt-4 text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
                 Meu negócio vendia bem. Eu só não sabia quanto sobrava.
               </h1>
               <Reveal delay={0.1}>
                 <p className="mt-6 max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                  Oito anos vendendo e nenhum mês em que eu soubesse o que tinha sobrado. Não faltou
-                  cliente. Faltou método, e é ele que virou a Pólia.
+                  Foram oito anos vendendo, mudando de negócio e tentando fazer a conta fechar. O
+                  que faltou não foi cliente. Faltou método. E foi desse problema que nasceu a
+                  Pólia.
                 </p>
               </Reveal>
             </div>
@@ -244,16 +279,21 @@ function SobrePage() {
             <div className="mx-auto mt-[clamp(40px,5vw,56px)] max-w-[68ch]">
               <Reveal>
                 <p className="text-[18px] leading-[1.7] text-[var(--ink-soft)]">
-                  Comecei em 2012 vendendo cosmético artesanal, e o negócio foi mudando de cara
-                  comigo: virou papelaria de casamento, com lacinho feito à mão e a plotter de
-                  recorte ligada o dia todo, e depois virou planner e caderno artesanal, os mesmos
-                  nomes que hoje batizam duas áreas da Pólia. Cada fase vendia. Os números da frente
-                  iam bem. O que ninguém via era o fundo: as finanças no susto, cada mês um remendo,
-                  a conta da casa misturada com a conta do negócio. Eu vendia bem e não sabia quanto
-                  sobrava.
+                  Comecei em 2012 vendendo cosmético artesanal. Depois, o negócio virou papelaria de
+                  casamento, com lacinho feito à mão e a plotter de recorte ligada o dia todo. Mais
+                  tarde, virou planner e caderno artesanal, os mesmos nomes que hoje batizam duas
+                  áreas da Pólia.
                 </p>
                 <p className="mt-6 text-[18px] leading-[1.7] text-[var(--ink-soft)]">
-                  Demorei pra entender que aquilo não era defeito meu. Era falta de método, e
+                  Cada fase vendia. Os números da frente iam bem. O que ninguém via era o fundo: as
+                  finanças no susto, cada mês um remendo, a conta da casa misturada com a conta do
+                  negócio.{" "}
+                  <b className="font-semibold text-[var(--ink)]">
+                    Eu vendia bem e não sabia quanto sobrava.
+                  </b>
+                </p>
+                <p className="mt-6 text-[18px] leading-[1.7] text-[var(--ink-soft)]">
+                  Demorei para entender que aquilo não era defeito meu. Era falta de método. E
                   ninguém tinha me dado um.
                 </p>
               </Reveal>
@@ -274,6 +314,9 @@ function SobrePage() {
               <div className="mt-[clamp(40px,5vw,56px)]">
                 <Reveal>
                   <Eyebrow>O caminho até aqui</Eyebrow>
+                  <h3 className="mt-4 text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                    De vender no improviso a construir um método.
+                  </h3>
                 </Reveal>
                 <ul className="mt-6 list-none">
                   {marcos.map((m, i) => (
@@ -296,15 +339,47 @@ function SobrePage() {
             </div>
 
             <Reveal className="mt-[clamp(48px,6vw,72px)]">
-              <Pullquote tom="pessego">
-                Não faltou cliente. Faltou clareza sobre o meu próprio negócio.
-              </Pullquote>
+              <Pullquote tom="pessego">Não faltou esforço. Faltou método.</Pullquote>
             </Reveal>
           </div>
         </section>
 
-        {/* O QUE VIROU A PÓLIA */}
+        {/* O QUE EU ENTENDI */}
         <section className={`bg-[var(--surface)] ${SECAO}`}>
+          <div
+            className={`${CONTAINER} grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[1.1fr_0.9fr]`}
+          >
+            <Reveal>
+              <Eyebrow>O que eu entendi</Eyebrow>
+              <h2 className="mt-4 max-w-[18ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Não faltava esforço. Faltava conseguir enxergar o negócio inteiro.
+              </h2>
+            </Reveal>
+            <div>
+              <RevealGroup className="flex flex-col gap-1">
+                {entendi.map((linha) => (
+                  <RevealItem key={linha}>
+                    <p className="text-[18px] font-semibold leading-[1.6] text-[var(--ink)]">
+                      {linha}
+                    </p>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
+              <Reveal delay={0.1}>
+                <p className="mt-6 max-w-[48ch] text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                  E quando os números não estão juntos, cada decisão vira uma aposta.
+                </p>
+                <p className="mt-6 max-w-[48ch] border-l-2 border-[var(--secondary)] pl-5 text-[17px] leading-[1.7] text-[var(--ink)]">
+                  Foi daí que veio a ideia da Pólia: juntar o que precisa estar junto para que quem
+                  toca o negócio consiga decidir melhor.
+                </p>
+              </Reveal>
+            </div>
+          </div>
+        </section>
+
+        {/* O QUE VIROU A PÓLIA */}
+        <section className={SECAO}>
           <div className={CONTAINER}>
             <Reveal className="max-w-[60ch]">
               <Eyebrow>O que virou</Eyebrow>
@@ -312,8 +387,16 @@ function SobrePage() {
                 Foi isso que virou a Pólia.
               </h2>
               <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                A Pólia é o que eu não tive: um lugar onde as decisões da marca, o preço, o caixa e
-                a rotina moram juntos, sem planilha perdida.
+                A Pólia é o lugar onde planejamento, preço, caixa, metas e rotina trabalham juntos.
+              </p>
+              <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
+                Primeiro, a marca deixa claro quem atende, o que entrega e quanto vale. Depois, essa
+                decisão vira número: quanto custa, quanto cobrar, quanto sobra e quanto precisa
+                entrar. E esses números acompanham a rotina do negócio.
+              </p>
+              <p className="mt-6 text-[clamp(1.2rem,1.9vw,1.5rem)] font-bold leading-[1.3] tracking-[-0.02em] text-[var(--ink)]">
+                <span className="block">O número dá chão para a decisão.</span>
+                <span className="block">A marca dá sentido para o que está sendo construído.</span>
               </p>
             </Reveal>
 
@@ -338,35 +421,57 @@ function SobrePage() {
             <Reveal className="mx-auto mt-[clamp(40px,5vw,48px)] max-w-[68ch]">
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
                 <Eyebrow>O que a Pólia escolhe ser</Eyebrow>
-                <ul className="mt-4 list-none">
-                  {escolheSer.map((item) => (
-                    <li key={item} className="relative mt-3 pl-6 text-[var(--ink-soft)]">
-                      <span
-                        aria-hidden="true"
-                        className="absolute left-0 top-[10px] h-[10px] w-[10px] rounded-[2px] bg-[var(--accent)]"
-                      />
-                      {item}
+                <ol className="mt-2 list-none">
+                  {escolheSer.map((item, i) => (
+                    <li
+                      key={item.titulo}
+                      className={`flex gap-4 py-5 ${i > 0 ? "border-t border-[var(--line)]" : ""}`}
+                    >
+                      <span className="font-accent pt-[3px] text-[12px] font-bold tracking-[0.1em] text-[var(--secondary-text)]">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <p className="text-[17px] font-bold tracking-[-0.01em]">{item.titulo}</p>
+                        <p className="mt-1.5 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                          {item.desc}
+                        </p>
+                      </div>
                     </li>
                   ))}
-                </ul>
+                </ol>
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* ASSINATURA */}
-        <section className={SECAO}>
+        {/* A PRIMEIRA USUÁRIA */}
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
           <div className={`${CONTAINER} max-w-[68ch]`}>
             <Reveal>
-              <p className="text-[18px] leading-[1.7] text-[var(--ink-soft)]">
-                Eu construo a Pólia usando ela na minha própria marca. Sou a primeira usuária do meu
-                produto, e isso me obriga a ser honesta: se uma tela mente sobre o seu dinheiro, eu
-                percebo primeiro.
-              </p>
+              <Eyebrow>A primeira usuária</Eyebrow>
+              <h2 className="mt-4 max-w-[18ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Eu construo a Pólia usando a Pólia.
+              </h2>
               <p className="mt-6 text-[18px] leading-[1.7] text-[var(--ink-soft)]">
-                Quem toca a marca sozinha, eu sei como é. Passei oito anos aprendendo na marra o
-                método que devia ter existido desde o começo. A Pólia existe pra ninguém mais
-                precisar desses oito anos.
+                Sou a primeira usuária do meu próprio produto. Isso me obriga a ser honesta.
+              </p>
+              <ul className="mt-5 flex list-none flex-col gap-2">
+                {primeiraUsuaria.map((linha) => (
+                  <li key={linha} className="flex items-start gap-3 text-[17px] leading-[1.6]">
+                    <span
+                      aria-hidden="true"
+                      className="mt-[11px] h-[6px] w-[6px] flex-none rounded-full bg-[var(--secondary)]"
+                    />
+                    {linha}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-[18px] leading-[1.7] text-[var(--ink-soft)]">
+                A Pólia não está sendo construída a partir de uma ideia abstrata de como uma
+                empreendedora deveria trabalhar.{" "}
+                <b className="font-semibold text-[var(--ink)]">
+                  Está sendo construída dentro de um negócio de verdade.
+                </b>
               </p>
 
               <div className="mt-8 flex items-center gap-4">
@@ -397,16 +502,17 @@ function SobrePage() {
         </section>
 
         {/* MANIFESTO */}
-        <section id="manifesto" className={`bg-[var(--surface)] ${SECAO}`}>
+        <section id="manifesto" className={SECAO}>
           <div className={CONTAINER}>
             <Reveal className="max-w-[62ch]">
-              <Eyebrow>Manifesto</Eyebrow>
+              <Eyebrow>No que a Pólia acredita</Eyebrow>
               <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                 A gente acredita em clareza, não em cobrança.
               </h2>
               <p className="mt-5 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                Ferramenta também educa quem usa, pelo jeito que trata. A Pólia foi desenhada a
-                partir de escolhas conscientes, e aqui vai o que ela defende.
+                Ferramenta também educa quem usa pelo jeito que trata. Por isso, cada escolha da
+                Pólia parte de uma pergunta simples: isso ajuda alguém a entender melhor o próprio
+                negócio ou só faz essa pessoa se sentir mais pressionada?
               </p>
             </Reveal>
 
@@ -433,6 +539,23 @@ function SobrePage() {
                 </picture>
               </div>
             </Reveal>
+
+            <div className="mx-auto mt-[clamp(48px,6vw,72px)] max-w-[68ch]">
+              {credo.map((item, i) => (
+                <Reveal
+                  key={item.linha}
+                  className={`py-[clamp(32px,4vw,48px)] ${i > 0 ? "border-t border-[var(--line)]" : ""}`}
+                >
+                  <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <p className="mt-3 max-w-[20ch] text-[clamp(1.6rem,3vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                    {item.linha}
+                  </p>
+                  <p className="mt-4 leading-[1.7] text-[var(--ink-soft)]">{item.texto}</p>
+                </Reveal>
+              ))}
+            </div>
 
             <div className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-2">
               <Reveal>
@@ -477,38 +600,21 @@ function SobrePage() {
               </Reveal>
             </div>
 
-            <div className="mx-auto mt-[clamp(48px,6vw,72px)] max-w-[68ch]">
-              {credo.map((item, i) => (
-                <Reveal
-                  key={item.linha}
-                  className={`py-[clamp(32px,4vw,48px)] ${i > 0 ? "border-t border-[var(--line)]" : ""}`}
-                >
-                  <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <p className="mt-3 max-w-[20ch] text-[clamp(1.6rem,3vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                    {item.linha}
-                  </p>
-                  <p className="mt-4 leading-[1.7] text-[var(--ink-soft)]">{item.texto}</p>
-                </Reveal>
-              ))}
-            </div>
-
             <Reveal className="mt-[clamp(32px,4vw,48px)]">
               <div className="rounded-2xl bg-[var(--secondary)] p-8 text-center md:p-12">
                 <p className="font-fraunces mx-auto max-w-[24ch] text-[clamp(1.4rem,2.6vw,2rem)] italic leading-[1.35] text-[var(--secondary-ink)]">
                   “Quando a marca fica clara, o dinheiro para de escapar.”
                 </p>
                 <p className="mt-4 text-[14px] text-[var(--secondary-ink)] opacity-75">
-                  O que toda tela da Pólia foi feita pra provar.
+                  É o que cada tela da Pólia precisa ajudar a provar.
                 </p>
               </div>
             </Reveal>
           </div>
         </section>
 
-        {/* MISSÃO, VISÃO E VALORES */}
-        <section id="missao" className={SECAO}>
+        {/* MISSÃO E VISÃO */}
+        <section id="missao" className={`bg-[var(--surface)] ${SECAO}`}>
           <div className={CONTAINER}>
             <Reveal>
               <Eyebrow>No que a gente se apoia</Eyebrow>
@@ -519,9 +625,9 @@ function SobrePage() {
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
                   <h3 className="text-[19px] font-bold tracking-[-0.01em]">Missão</h3>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                    Dar pra quem comanda a marca, com ajuda ou sem, a clareza de decidir bem e de
-                    saber quanto sobra: quem a marca atende, quanto ela cobra e o que fica no fim do
-                    mês, tudo num lugar só.
+                    Dar a quem comanda uma marca, com ajuda ou sem, clareza para decidir bem e saber
+                    quanto sobra. Quem a marca atende. Quanto cobra. Quanto sobra. E o que precisa
+                    acontecer para o negócio continuar de pé. Tudo em um lugar só.
                   </p>
                 </div>
               </Reveal>
@@ -530,8 +636,8 @@ function SobrePage() {
                   <h3 className="text-[19px] font-bold tracking-[-0.01em]">Visão</h3>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                     Que nenhuma empreendedora descubra tarde demais quanto estava sobrando. Que
-                    decidir o preço, ver o caixa e tocar a rotina seja simples pra quem toca o
-                    negócio.
+                    decidir o preço, acompanhar o caixa e tocar a rotina seja simples para quem está
+                    fazendo o negócio acontecer.
                   </p>
                 </div>
               </Reveal>
@@ -543,17 +649,21 @@ function SobrePage() {
         </section>
 
         {/* PRA QUEM É */}
-        <section id="publico" className={`bg-[var(--surface)] ${SECAO}`}>
+        <section id="publico" className={SECAO}>
           <div className={CONTAINER}>
             <Reveal className="max-w-[70ch]">
               <Eyebrow>Pra quem é</Eyebrow>
-              <p className="mt-4 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
-                A Pólia é feita pra empreendedora que toca a própria marca, sozinha ou com quem
-                ajuda, e já saiu do zero. Tem produto ou serviço rodando, cliente chegando, e agora
-                quer profissionalizar a operação em vez de tocar tudo no improviso. O gargalo não
-                mora na ideia de marca. Mora no dia a dia de fazer o negócio girar sem largar
-                dinheiro pelo caminho.
+              <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                A Pólia é para quem quer tocar o próprio negócio com mais clareza.
+              </h2>
+              <p className="mt-5 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                Pode estar começando. Pode já estar vendendo. Pode tocar tudo sozinha ou ter algumas
+                pessoas ajudando. O que importa não é o tamanho do negócio. É chegar naquele momento
+                em que você percebe:
               </p>
+              <blockquote className="mt-5 font-fraunces text-[clamp(1.4rem,2.4vw,2rem)] italic leading-[1.3] text-[var(--ink)]">
+                “Eu não quero mais decidir tudo no improviso.”
+              </blockquote>
             </Reveal>
 
             <div className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -580,7 +690,7 @@ function SobrePage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <div className="h-full rounded-2xl border border-[var(--line)] p-8">
-                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Provavelmente não</h3>
+                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">Talvez ainda não</h3>
                   <ul className="mt-5 flex list-none flex-col gap-4">
                     {publicoNao.map((item) => (
                       <li
@@ -597,6 +707,9 @@ function SobrePage() {
                       </li>
                     ))}
                   </ul>
+                  <p className="mt-6 text-[15px] font-semibold leading-[1.6] text-[var(--ink)]">
+                    A Pólia cuida da clareza para decidir. Não da mídia.
+                  </p>
                 </div>
               </Reveal>
             </div>
@@ -610,12 +723,16 @@ function SobrePage() {
         <section className="py-[clamp(80px,10vw,140px)] text-center">
           <div className={CONTAINER}>
             <Reveal className="flex flex-col items-center">
-              <Eyebrow>Pólia</Eyebrow>
+              <Eyebrow>A Pólia está chegando</Eyebrow>
               <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.2rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
-                O método que faltou pra mim já existe.
+                O método que faltou pra mim está virando produto.
               </h2>
               <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Vinte minutos no primeiro módulo e o painel começa a trabalhar.
+                Estou construindo a Pólia em público e testando cada parte primeiro na minha própria
+                marca. Em outubro, ela chega às primeiras empreendedoras.
+              </p>
+              <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink)]">
+                Entre na lista para ser uma das primeiras a usar.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 {/* Pré-lançamento: cadastro fechado, então o CTA leva pra lista.
@@ -626,12 +743,21 @@ function SobrePage() {
                   data-track-props='{"contexto":"sobre_cta_final"}'
                   className={BTN_PRIMARIO}
                 >
-                  Entrar na lista
+                  Quero entrar na lista
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>
-              <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
-                Os planos abrem em breve, e quem está na lista entra primeiro.
+              <p className="mt-4 text-[14px] text-[var(--ink-soft)]">É grátis. Sem cobrança.</p>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* ASSINATURA FINAL */}
+        <section className="pb-[clamp(72px,9vw,128px)]">
+          <div className={`${CONTAINER} border-t border-[var(--line)] pt-[clamp(48px,6vw,80px)]`}>
+            <Reveal>
+              <p className="max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Clareza sobre o negócio gera lucro.
               </p>
             </Reveal>
           </div>
