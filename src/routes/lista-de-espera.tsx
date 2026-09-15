@@ -27,13 +27,13 @@ export const Route = createFileRoute("/lista-de-espera")({
       {
         name: "description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Abre em outubro: entre na lista.",
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
       },
       { property: "og:title", content: "Entrar na lista · Pólia" },
       {
         property: "og:description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Abre em outubro: entre na lista.",
+          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
       },
     ],
     links: [linkCanonico("/lista-de-espera")],
@@ -41,38 +41,59 @@ export const Route = createFileRoute("/lista-de-espera")({
   component: ListaEsperaPage,
 });
 
+// Copy reescrita em 14/09/2026 pra quem nunca ouviu falar da Pólia. A página
+// responde nesta ordem: o que é, que problema resolve, por que importa, o que
+// faz, por que entrar agora e o que acontece depois. "Outubro" só aparece
+// depois de dizer o que é a Pólia, e sempre colado ao lançamento dela.
+
 const BENEFICIOS = [
   {
     titulo: "Saber se o negócio dá lucro",
-    desc: "Dá pra saber se o negócio dá lucro, ver quanto sobra em cada venda e parar de cobrar no chute. Depois fica claro quem a sua marca atende e por que ela vale o preço que cobra.",
+    desc: "Veja quanto sobra em cada venda e pare de depender do chute para descobrir se a conta fecha.",
   },
   {
     titulo: "Um preço que fecha a conta",
-    desc: "Aparece quanto custa cada produto, por quanto vender e o que sobra em cada venda. Chega de chutar.",
+    desc: "Saiba quanto custa cada produto, por quanto vender e o que sobra em cada venda.",
   },
   {
     titulo: "A semana organizada num lugar",
-    desc: "Um quadro simples pra organizar o que precisa sair, ligado à meta já definida. Nada se perde no caminho.",
+    desc: "Um quadro simples para organizar o que precisa sair, ligado às metas que você já definiu.",
   },
   {
-    titulo: "A venda que vira caixa sozinha",
-    desc: "Marcou que entregou pro cliente, o dinheiro entra no caixa na hora. Sem lançar de novo, sem planilha perdida.",
+    titulo: "A venda que vira caixa",
+    desc: "Registre a venda e acompanhe o dinheiro entrando no caixa, sem lançar a mesma informação de novo.",
   },
   {
     titulo: "Saber quanto sobra de verdade",
-    desc: "No fim do mês, aparece o que entrou, o que saiu e o que sobrou. Sem susto no extrato.",
+    desc: "No fim do mês, veja o que entrou, o que saiu e o que realmente sobrou.",
   },
   {
     titulo: "Saber se vai bater a meta",
-    desc: "Durante o mês já aparece se a meta está no caminho. Sobra tempo de ajustar antes de fechar.",
+    desc: "Acompanhe durante o mês se a meta está no caminho e ajuste antes de chegar ao fim.",
   },
 ];
 
+// A grade é de duas colunas, então são quatro cartões: os dois últimos pontos
+// da copy (clareza sem achismo, sem virar especialista em planilha) viraram um.
 const PRA_QUEM = [
-  "Tem um negócio, ou a vontade de começar um, e se perde na hora de organizar.",
-  "Já vende, mas nunca tem certeza se sobra dinheiro no fim do mês.",
-  "Cobra no chute e trava quando perguntam como chegou naquele preço.",
-  "Quer tocar o próprio negócio com mais clareza e menos achismo.",
+  "Tem um negócio, ou está começando um, e quer entender melhor como a conta funciona.",
+  "Já vende, mas chega ao fim do mês sem certeza de quanto realmente sobrou.",
+  "Define preço olhando para a concorrência ou tentando descobrir quanto o cliente aceita pagar.",
+  "Quer tocar o próprio negócio com mais clareza e menos achismo, sem precisar virar especialista em planilhas.",
+];
+
+const CENAS = [
+  "Você vende.",
+  "Corre atrás de cliente.",
+  "Compra material.",
+  "Paga conta.",
+  "Dá desconto quando precisa fechar.",
+];
+
+const QUANDO_SABE = [
+  "Você não precisa adivinhar se o preço está bom.",
+  "Não precisa esperar o fim do mês para descobrir se sobrou.",
+  "Não precisa olhar para o caixa e tentar entender sozinha o que aconteceu.",
 ];
 
 function validarNome(v: string): string | undefined {
@@ -110,6 +131,14 @@ function ListaEsperaPage() {
     onScroll();
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Os botões espalhados pela página apontam todos pro mesmo formulário do topo.
+  // Existe um formulário só de propósito: o Turnstile renderiza num container
+  // único e o estado de envio é um, então duplicar o form duplicaria os dois.
+  function irParaFormulario() {
+    document.getElementById("lista")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!enviado) window.setTimeout(() => nomeRef.current?.focus({ preventScroll: true }), 500);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -188,21 +217,35 @@ function ListaEsperaPage() {
             <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[0.95fr_1.05fr]">
               <div className="md:pt-2">
                 <Reveal>
-                  <Eyebrow>Abre em outubro</Eyebrow>
+                  <Eyebrow>Uma nova ferramenta para quem empreende</Eyebrow>
                 </Reveal>
-                {/* Data concreta em vez de "em breve": a página deixa de falar de
-                    produto incompleto e passa a falar de porta com hora pra abrir. */}
+                {/* Quem chega aqui pode nunca ter ouvido falar da Pólia: a
+                    pergunta abre, a Pólia se apresenta, e só então entra a data. */}
                 <h1 className="mt-4 text-[clamp(2.3rem,5vw,3.5rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                  A Pólia mostra <HighlightWord delay={0.3}>quanto sobra</HighlightWord> em cada
-                  venda. Abre em outubro.
+                  Você sabe quanto realmente <HighlightWord delay={0.3}>sobra</HighlightWord> em
+                  cada venda?
                 </h1>
                 <Reveal delay={0.1}>
-                  <p className="mt-6 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    A Pólia junta o que hoje está espalhado entre a calculadora do celular, o
-                    caderninho e a memória: quanto custa cada produto, por quanto vender e o que
-                    sobra no fim do mês. Depois ajuda a construir a marca que sustenta esse preço.
-                    Deixe seu e-mail e eu te aviso assim que abrir, antes de todo mundo.
+                  <p className="mt-5 text-[clamp(1.3rem,2.2vw,1.75rem)] font-bold leading-[1.2] tracking-[-0.02em]">
+                    A Pólia foi criada para mostrar.
                   </p>
+                  <p className="mt-5 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                    Uma plataforma para pequenas empreendedoras entenderem seus números, organizarem
+                    o negócio e tomarem decisões com mais clareza, sem planilha e sem achismo.
+                  </p>
+                  <p className="mt-4 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink)]">
+                    A Pólia será lançada em outubro. Entre na lista para ser uma das primeiras a
+                    usar.
+                  </p>
+                  <div className="mt-7">
+                    <button type="button" onClick={irParaFormulario} className={BTN_PRIMARIO}>
+                      Quero ser uma das primeiras
+                      <span aria-hidden="true">→</span>
+                    </button>
+                    <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
+                      É grátis. Sem cobrança.
+                    </p>
+                  </div>
                 </Reveal>
               </div>
 
@@ -210,12 +253,13 @@ function ListaEsperaPage() {
               <Reveal delay={0.15} y={28}>
                 {!enviado ? (
                   <form
+                    id="lista"
                     onSubmit={handleSubmit}
-                    className="grid gap-4 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
+                    className="grid scroll-mt-[88px] gap-4 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
                     noValidate
                   >
                     <p className="text-[15px] font-semibold text-[var(--ink)]">
-                      Deixe seu e-mail. Quem está na lista entra primeiro.
+                      Entre na lista para ser uma das primeiras a usar a Pólia.
                     </p>
                     {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
                     <input
@@ -295,21 +339,23 @@ function ListaEsperaPage() {
                           aria-describedby={aceiteErro ? "aceite-error" : undefined}
                           className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
                         />
-                        Li e aceito os{" "}
-                        <Link
-                          to="/termos"
-                          className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
-                        >
-                          Termos de uso
-                        </Link>{" "}
-                        e a{" "}
-                        <Link
-                          to="/privacidade"
-                          className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
-                        >
-                          Política de Privacidade
-                        </Link>
-                        , e quero ser avisada quando a Pólia abrir.
+                        <span>
+                          Li e aceito os{" "}
+                          <Link
+                            to="/termos"
+                            className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                          >
+                            Termos de uso
+                          </Link>{" "}
+                          e a{" "}
+                          <Link
+                            to="/privacidade"
+                            className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                          >
+                            Política de Privacidade
+                          </Link>
+                          , e quero ser avisada quando a Pólia abrir.
+                        </span>
                       </label>
                     </div>
 
@@ -329,15 +375,16 @@ function ListaEsperaPage() {
                       disabled={loading}
                       className={`${BTN_PRIMARIO} w-full disabled:cursor-not-allowed disabled:opacity-60`}
                     >
-                      {loading ? "Enviando…" : "Entrar na lista"}
+                      {loading ? "Enviando…" : "Quero ser uma das primeiras"}
                     </button>
                     <p className="text-[13px] text-[var(--muted)]">
-                      Sem cobrança e sem spam, e dá pra sair da lista quando quiser.
+                      Sem cobrança e sem spam. Você pode sair da lista quando quiser.
                     </p>
                   </form>
                 ) : (
                   <div
-                    className="rounded-2xl bg-[var(--surface-pink)] p-8"
+                    id="lista"
+                    className="scroll-mt-[88px] rounded-2xl bg-[var(--surface-pink)] p-8"
                     role="status"
                     aria-live="polite"
                   >
@@ -345,8 +392,8 @@ function ListaEsperaPage() {
                       Pronto. Seu e-mail está na lista.
                     </h2>
                     <p className="mt-3 max-w-[48ch] leading-[1.65] text-[var(--ink-soft)]">
-                      Em outubro, o convite chega antes de todo mundo. Pode fechar essa página
-                      tranquila.
+                      Quando a Pólia abrir, em outubro, o convite chega antes de todo mundo. Pode
+                      fechar essa página tranquila.
                     </p>
                   </div>
                 )}
@@ -361,7 +408,7 @@ function ListaEsperaPage() {
             <Reveal className="max-w-[62ch]">
               <Eyebrow>No fim do mês</Eyebrow>
               <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Vende, se esforça, faz acontecer.
+                Você fez tudo certo. Mas a conta fechou?
               </h2>
             </Reveal>
 
@@ -371,11 +418,23 @@ function ListaEsperaPage() {
               </Pullquote>
             </Reveal>
 
-            <Reveal className="mt-[clamp(32px,4vw,48px)]">
-              <p className="max-w-[62ch] text-[17px] leading-[1.7] text-[var(--ink-soft)]">
-                O preço saiu meio no chute. O dinheiro do negócio se mistura com o seu. E organizar
-                isso tudo parece dar mais trabalho do que ajuda. Não é falta de esforço. É que
-                ninguém junta esses números por você.
+            <Reveal className="mt-[clamp(32px,4vw,48px)] max-w-[62ch]">
+              <ul className="flex list-none flex-col gap-1 text-[17px] font-semibold leading-[1.6] text-[var(--ink)]">
+                {CENAS.map((c) => (
+                  <li key={c}>{c}</li>
+                ))}
+              </ul>
+              <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                E no meio disso tudo, tenta descobrir se aquele preço que você colocou fazia
+                sentido. O dinheiro entra, sai, mistura. E quando o mês termina, fica aquela
+                sensação:
+              </p>
+              <blockquote className="mt-6 font-fraunces text-[clamp(1.4rem,2.4vw,2rem)] italic leading-[1.3] text-[var(--ink)]">
+                “Eu trabalhei tanto. Mas quanto realmente sobrou?”
+              </blockquote>
+              <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                <b className="font-semibold text-[var(--ink)]">Não é falta de esforço.</b> É falta
+                de conseguir enxergar a conta inteira.
               </p>
             </Reveal>
           </div>
@@ -396,14 +455,17 @@ function ListaEsperaPage() {
                   <div>
                     <p className="max-w-[58ch] text-[17px] leading-[1.65] text-[var(--ink)]">
                       São 14 anos de e-commerce: oito à frente do meu próprio negócio, um tempo
-                      dentro de grandes marcas, como C&amp;A, Allied e Arcelor Mittal, e muita
-                      consultoria pra pequenas empreendedoras. E vi sempre a mesma coisa: dá pra
-                      vender bem e mesmo assim não saber se o negócio dá lucro.
+                      dentro de grandes marcas, como C&amp;A, Allied e ArcelorMittal, e muita
+                      consultoria para pequenas empreendedoras.
+                    </p>
+                    <p className="mt-4 max-w-[58ch] text-[17px] leading-[1.65] text-[var(--ink)]">
+                      E eu vi a mesma coisa acontecer muitas vezes: dá para vender bem e, mesmo
+                      assim, não saber se o negócio dá lucro.
                     </p>
                     <p className="mt-4 max-w-[58ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                      Eu vivi isso na pele. Por isso fiz a Pólia, a ferramenta que eu queria ter
-                      tido. Sem planilha perdida, sem fórmula mágica, e sem tratar quem toca o
-                      negócio como se não entendesse dele.
+                      Eu vivi isso na pele. Por isso fiz a Pólia: a ferramenta que eu queria ter
+                      tido no meu próprio negócio, sem planilha perdida, sem fórmula mágica e sem
+                      tratar quem toca o negócio como se não entendesse dele.
                     </p>
                   </div>
                 </div>
@@ -412,17 +474,17 @@ function ListaEsperaPage() {
           </div>
         </section>
 
-        {/* 4. O QUE A PÓLIA VAI FAZER */}
+        {/* 4. O QUE A PÓLIA FAZ */}
         <section className={`bg-[var(--surface)] ${SECAO}`}>
           <div className={CONTAINER}>
             <Reveal className="max-w-[56ch]">
               <Eyebrow>O que vem aí</Eyebrow>
               <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                O que a Pólia vai fazer por você
+                O que dá pra enxergar com a Pólia
               </h2>
               <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                Primeiro o número aparece: quanto custa, por quanto vender e o que sobra. Com isso
-                na mão, a marca entra pra sustentar o preço que o negócio cobra.
+                Primeiro o número aparece: quanto custa, por quanto vender e o que sobra. Depois,
+                essa clareza começa a organizar o resto do negócio.
               </p>
             </Reveal>
 
@@ -452,8 +514,8 @@ function ListaEsperaPage() {
           <div className={CONTAINER}>
             <Reveal>
               <Eyebrow>Pra quem é</Eyebrow>
-              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                A Pólia é pra quem
+              <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                A Pólia é pra quem quer parar de decidir no chute.
               </h2>
             </Reveal>
 
@@ -472,6 +534,101 @@ function ListaEsperaPage() {
                   </li>
                 ))}
               </ul>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* 6. QUANDO VOCÊ SABE: o "acho" vira "eu sei". Mesma seção escura da
+            Home, pra ser o ponto de peso da página sem inventar componente novo. */}
+        <section className="bg-[var(--ink)] py-[clamp(80px,10vw,140px)] text-[var(--bg)]">
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[1fr_1fr]">
+              <Reveal>
+                <Eyebrow claro>Quando você sabe</Eyebrow>
+                <h2 className="mt-4 max-w-[14ch] text-[clamp(2.3rem,5vw,3.8rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                  O “acho” começa a virar{" "}
+                  <em className="font-fraunces font-normal italic text-[var(--secondary-light)]">
+                    “eu sei”
+                  </em>
+                  .
+                </h2>
+              </Reveal>
+              <div>
+                <RevealGroup className="flex flex-col gap-3">
+                  {QUANDO_SABE.map((linha) => (
+                    <RevealItem key={linha}>
+                      <p className="max-w-[44ch] text-[17px] leading-[1.6] text-[var(--bg)]/70">
+                        {linha}
+                      </p>
+                    </RevealItem>
+                  ))}
+                </RevealGroup>
+                <Reveal delay={0.1}>
+                  <p className="mt-8 border-t border-white/[0.18] pt-8 text-[clamp(1.4rem,2.4vw,2rem)] font-bold leading-[1.2] tracking-[-0.02em]">
+                    <span className="block">Você olha para os números.</span>
+                    <span className="block">Entende o cenário.</span>
+                    <span className="block">E decide.</span>
+                  </p>
+                  <p className="mt-8 text-[17px] font-semibold leading-[1.6] text-[var(--secondary-light)]">
+                    É para isso que a Pólia existe.
+                  </p>
+                </Reveal>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 7. SEGUNDO CTA: leva de volta ao formulário do topo */}
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
+          <div className={CONTAINER}>
+            <Reveal className="max-w-[62ch]">
+              <h2 className="text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Quer ser uma das primeiras?
+              </h2>
+              <p className="mt-5 text-[17px] leading-[1.7] text-[var(--ink)]">
+                A Pólia será lançada em outubro.
+              </p>
+              <p className="mt-2 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                Quem estiver na lista será avisada primeiro e poderá acompanhar a chegada da
+                plataforma desde o começo.
+              </p>
+              <div className="mt-7">
+                <button type="button" onClick={irParaFormulario} className={BTN_PRIMARIO}>
+                  Quero entrar na lista
+                  <span aria-hidden="true">→</span>
+                </button>
+                <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
+                  Sem cobrança. Sem spam. Só avisamos quando houver novidade e quando a Pólia abrir.
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* 8. FECHAMENTO */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal className="max-w-[62ch]">
+              <Eyebrow>Em outubro</Eyebrow>
+              <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Seu negócio já está acontecendo.
+              </h2>
+              <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                Você já vende. Já compra. Já decide.
+              </p>
+              <p className="mt-2 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                Agora falta conseguir enxergar tudo isso com mais clareza.
+              </p>
+              <p className="mt-6 text-[clamp(1.4rem,2.4vw,2rem)] font-bold leading-[1.2] tracking-[-0.02em]">
+                <HighlightWord delay={0.2}>A Pólia está quase pronta</HighlightWord> e será lançada
+                em outubro.
+              </p>
+              <div className="mt-7">
+                <button type="button" onClick={irParaFormulario} className={BTN_PRIMARIO}>
+                  Quero entrar na lista
+                  <span aria-hidden="true">→</span>
+                </button>
+              </div>
             </Reveal>
           </div>
         </section>
