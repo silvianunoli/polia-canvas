@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Veja quanto sobra em cada venda, quanto precisa entrar no mês e tome decisões com mais clareza, sem planilha e sem achismo. A Pólia organiza os números e as decisões do negócio em um só lugar.",
+          "Números para decidir melhor: veja quanto sobra, quanto precisa entrar no mês e o que merece atenção no seu negócio. Sem planilha e sem achismo.",
       },
       { property: "og:title", content: "Pólia · Descubra se o seu negócio dá lucro" },
       {

@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { linkCanonico } from "@/lib/seo";
+import { linkCanonico, urlCanonica, HOST_CANONICO } from "@/lib/seo";
+import { jsonLdBreadcrumb, tagJsonLd } from "@/lib/jsonld";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -44,6 +45,14 @@ export const Route = createFileRoute("/blog/")({
       },
     ],
     links: [linkCanonico("/blog")],
+    scripts: [
+      tagJsonLd(
+        jsonLdBreadcrumb([
+          { nome: "Início", url: HOST_CANONICO },
+          { nome: "Blog", url: urlCanonica("/blog") },
+        ]),
+      ),
+    ],
   }),
   component: BlogList,
 });

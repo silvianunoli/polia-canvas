@@ -111,9 +111,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      // Mesmo tratamento do Google Fonts: adianta a conexão TLS pro domínio que
+      // serve o CSS da Cabinet Grotesk. Cobre só `api.fontshare.com` (o único
+      // host da Fontshare que este arquivo conhece) — se o @font-face que essa
+      // folha devolve apontar pra outro subdomínio da Fontshare pro arquivo da
+      // fonte em si, esse preconnect não alcança; confirmar isso pede inspecionar
+      // a resposta real do endpoint, que este ambiente não tem como fazer.
+      { rel: "preconnect", href: "https://api.fontshare.com" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400..600&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@700&family=Caveat:wght@400;600&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@1,9..144,400..600&family=Inter:wght@400;500;600;700&family=DM+Sans:wght@700&display=swap",
       },
       {
         rel: "stylesheet",

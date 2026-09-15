@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { linkCanonico } from "@/lib/seo";
+import { linkCanonico, urlCanonica } from "@/lib/seo";
+import { jsonLdAboutPage, jsonLdPersonSil, tagJsonLd } from "@/lib/jsonld";
 import { ClipboardList, LineChart, Route as RouteIcon, Check, X } from "lucide-react";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -14,15 +15,15 @@ import {
   Pullquote,
 } from "@/components/site/Editorial";
 
+const TITULO_SOBRE = "A história da Pólia · Por que ela existe";
+const DESCRICAO_SOBRE =
+  "Meu negócio vendia bem. Eu só não sabia quanto sobrava. A história da Pólia, aquilo em que ela acredita e pra quem ela é feita.";
+
 export const Route = createFileRoute("/sobre")({
   head: () => ({
     meta: [
-      { title: "A história · Pólia" },
-      {
-        name: "description",
-        content:
-          "Meu negócio vendia bem. Eu só não sabia quanto sobrava. A história da Pólia, aquilo em que ela acredita e pra quem ela é feita.",
-      },
+      { title: TITULO_SOBRE },
+      { name: "description", content: DESCRICAO_SOBRE },
       { property: "og:title", content: "A história · Pólia" },
       {
         property: "og:description",
@@ -30,6 +31,19 @@ export const Route = createFileRoute("/sobre")({
       },
     ],
     links: [linkCanonico("/sobre")],
+    // AboutPage (a página conta a história da empresa) + Person da Sil (a
+    // fundadora, citada e fotografada na própria página) — só campos já
+    // públicos aqui e em `/lista-de-espera`/assinatura dos posts.
+    scripts: [
+      tagJsonLd(
+        jsonLdAboutPage({
+          nome: TITULO_SOBRE,
+          url: urlCanonica("/sobre"),
+          descricao: DESCRICAO_SOBRE,
+        }),
+      ),
+      tagJsonLd(jsonLdPersonSil()),
+    ],
   }),
   component: SobrePage,
 });
@@ -623,7 +637,7 @@ function SobrePage() {
             <div className="mt-[clamp(32px,4vw,40px)] grid grid-cols-1 gap-4 md:grid-cols-2">
               <Reveal>
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <h3 className="text-[19px] font-bold tracking-[-0.01em]">Missão</h3>
+                  <h2 className="text-[19px] font-bold tracking-[-0.01em]">Missão</h2>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                     Dar a quem comanda uma marca, com ajuda ou sem, clareza para decidir bem e saber
                     quanto sobra. Quem a marca atende. Quanto cobra. Quanto sobra. E o que precisa
@@ -633,7 +647,7 @@ function SobrePage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <h3 className="text-[19px] font-bold tracking-[-0.01em]">Visão</h3>
+                  <h2 className="text-[19px] font-bold tracking-[-0.01em]">Visão</h2>
                   <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                     Que nenhuma empreendedora descubra tarde demais quanto estava sobrando. Que
                     decidir o preço, acompanhar o caixa e tocar a rotina seja simples para quem está

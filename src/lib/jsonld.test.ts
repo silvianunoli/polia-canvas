@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { jsonLdFaq, jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "./jsonld";
+import {
+  jsonLdAboutPage,
+  jsonLdBlogPosting,
+  jsonLdBreadcrumb,
+  jsonLdFaq,
+  jsonLdOrganization,
+  jsonLdPersonSil,
+  jsonLdWebSite,
+  tagJsonLd,
+} from "./jsonld";
 
 const PERGUNTAS = [
   { pergunta: "A Pólia é um curso?", resposta: "É uma ferramenta de uso diário." },
@@ -45,6 +54,117 @@ describe("jsonLdOrganization e jsonLdWebSite", () => {
         expect(bloco).not.toHaveProperty(campo);
       }
     }
+  });
+});
+
+describe("jsonLdPersonSil", () => {
+  it("é a Sil, fundadora, ligada à Organization e à própria página /sobre", () => {
+    const pessoa = jsonLdPersonSil() as {
+      "@type": string;
+      name: string;
+      jobTitle: string;
+      url: string;
+      worksFor: { "@type": string; name: string };
+    };
+    expect(pessoa["@type"]).toBe("Person");
+    expect(pessoa.name).toBe("Sil");
+    expect(pessoa.jobTitle).toBe("Fundadora");
+    expect(pessoa.url).toBe("https://usepolia.com.br/sobre");
+    expect(pessoa.worksFor["@type"]).toBe("Organization");
+    expect(pessoa.worksFor.name).toBe("Pólia");
+  });
+
+  it("não inventa rede social nem credencial", () => {
+    const proibidos = ["sameAs", "alumniOf", "award", "telephone", "email"];
+    for (const campo of proibidos) {
+      expect(jsonLdPersonSil()).not.toHaveProperty(campo);
+    }
+  });
+});
+
+describe("jsonLdAboutPage", () => {
+  it("usa o nome/url/descrição recebidos e aponta pra Organization como mainEntity", () => {
+    const pagina = jsonLdAboutPage({
+      nome: "Nome de teste",
+      url: "https://usepolia.com.br/sobre",
+      descricao: "Descrição de teste.",
+    }) as {
+      "@type": string;
+      name: string;
+      url: string;
+      description: string;
+      mainEntity: { name: string };
+    };
+    expect(pagina["@type"]).toBe("AboutPage");
+    expect(pagina.name).toBe("Nome de teste");
+    expect(pagina.url).toBe("https://usepolia.com.br/sobre");
+    expect(pagina.description).toBe("Descrição de teste.");
+    expect(pagina.mainEntity.name).toBe("Pólia");
+  });
+});
+
+describe("jsonLdBlogPosting", () => {
+  const base = {
+    titulo: "Faturamento não é o mesmo que dinheiro que sobra",
+    descricao: "Entenda a diferença entre o que entra e o que sobra.",
+    urlCanonica: "https://usepolia.com.br/blog/faturamento-nao-e-o-mesmo-que-dinheiro-que-sobra",
+    imagem: null as string | null,
+    publicadoEm: null as string | null,
+    atualizadoEm: "2026-09-08T02:25:06.571Z",
+  };
+
+  it("sempre inclui author, publisher, dateModified, url e mainEntityOfPage", () => {
+    const post = jsonLdBlogPosting(base) as {
+      "@type": string;
+      headline: string;
+      author: { name: string };
+      publisher: { name: string };
+      dateModified: string;
+      url: string;
+      mainEntityOfPage: { "@id": string };
+    };
+    expect(post["@type"]).toBe("BlogPosting");
+    expect(post.headline).toBe(base.titulo);
+    expect(post.author.name).toBe("Sil");
+    expect(post.publisher.name).toBe("Pólia");
+    expect(post.dateModified).toBe(base.atualizadoEm);
+    expect(post.url).toBe(base.urlCanonica);
+    expect(post.mainEntityOfPage["@id"]).toBe(base.urlCanonica);
+  });
+
+  it("omite datePublished e image quando o post não tem esses dados", () => {
+    const post = jsonLdBlogPosting(base);
+    expect(post).not.toHaveProperty("datePublished");
+    expect(post).not.toHaveProperty("image");
+  });
+
+  it("inclui datePublished e image só quando existem de verdade", () => {
+    const post = jsonLdBlogPosting({
+      ...base,
+      publicadoEm: "2026-09-20T10:00:00.000Z",
+      imagem: "https://usepolia.com.br/marketing/capa.jpg",
+    }) as { datePublished: string; image: string };
+    expect(post.datePublished).toBe("2026-09-20T10:00:00.000Z");
+    expect(post.image).toBe("https://usepolia.com.br/marketing/capa.jpg");
+  });
+});
+
+describe("jsonLdBreadcrumb", () => {
+  it("numera a posição em ordem, a partir de 1", () => {
+    const trilha = jsonLdBreadcrumb([
+      { nome: "Início", url: "https://usepolia.com.br/" },
+      { nome: "Blog", url: "https://usepolia.com.br/blog" },
+      { nome: "Um post", url: "https://usepolia.com.br/blog/um-post" },
+    ]) as {
+      "@type": string;
+      itemListElement: Array<{ position: number; name: string; item: string }>;
+    };
+
+    expect(trilha["@type"]).toBe("BreadcrumbList");
+    expect(trilha.itemListElement).toHaveLength(3);
+    expect(trilha.itemListElement.map((i) => i.position)).toEqual([1, 2, 3]);
+    expect(trilha.itemListElement[2].name).toBe("Um post");
+    expect(trilha.itemListElement[2].item).toBe("https://usepolia.com.br/blog/um-post");
   });
 });
 

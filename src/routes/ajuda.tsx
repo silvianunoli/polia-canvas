@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { linkCanonico } from "@/lib/seo";
+import { jsonLdFaq, tagJsonLd } from "@/lib/jsonld";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   PlayCircle,
@@ -35,7 +36,7 @@ import {
 export const Route = createFileRoute("/ajuda")({
   head: () => ({
     meta: [
-      { title: "Ajuda · Pólia" },
+      { title: "Central de ajuda · Pólia" },
       {
         name: "description",
         content:
@@ -45,6 +46,17 @@ export const Route = createFileRoute("/ajuda")({
       { property: "og:description", content: "Travou em alguma coisa? A gente explica." },
     ],
     links: [linkCanonico("/ajuda")],
+    // Gerado a partir do mesmo array `CATEGORIAS` que renderiza a UI logo
+    // abaixo — nunca copiado à mão, pelo mesmo motivo do FAQ da home.
+    scripts: [
+      tagJsonLd(
+        jsonLdFaq(
+          CATEGORIAS.flatMap((categoria) =>
+            categoria.itens.map(({ pergunta, resposta }) => ({ pergunta, resposta })),
+          ),
+        ),
+      ),
+    ],
   }),
   component: AjudaPage,
 });
@@ -695,10 +707,10 @@ function AjudaPage() {
                       className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     >
                       <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                        Recebemos. A gente te responde.
+                        Recebemos a mensagem!
                       </h2>
                       <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                        Chegou aqui. A gente responde em até 24 horas úteis, no seu e-mail.
+                        Você vai receber o retorno em até 24 horas úteis, direto no seu e-mail.
                       </p>
                     </div>
                   )}

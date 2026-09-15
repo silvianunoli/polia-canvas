@@ -66,7 +66,7 @@ export const Route = createFileRoute("/manual")({
       {
         name: "description",
         content:
-          "Guia gratuito em 17 seções, com exercícios e um plano de 7 dias, pra quem toca a própria marca e quer que ela pareça do tamanho do negócio. O PDF chega na hora, depois do e-mail.",
+          "Guia gratuito em 17 seções, com exercícios e um plano de 7 dias pra deixar sua marca do tamanho do negócio. O PDF chega na hora, depois do e-mail.",
       },
       {
         property: "og:title",

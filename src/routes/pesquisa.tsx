@@ -23,6 +23,10 @@ export const Route = createFileRoute("/pesquisa")({
         content:
           "Me conta como está o seu negócio hoje: uma pesquisa rápida e anônima sobre preço, lucro e o que mais aperta.",
       },
+      // Formulário de pesquisa, não conteúdo editorial: fica fora do índice, mas
+      // "follow" porque a página não tem nenhum link que precise ser isolado do
+      // resto do site (mesmo padrão de decisão do /pesquisa não entrar no sitemap).
+      { name: "robots", content: "noindex, follow" },
     ],
     links: [linkCanonico("/pesquisa")],
   }),

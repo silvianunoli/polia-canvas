@@ -2,7 +2,8 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { renderBlogMarkdown } from "@/lib/blogRenderMarkdown";
-import { linkCanonico } from "@/lib/seo";
+import { linkCanonico, urlCanonica, HOST_CANONICO } from "@/lib/seo";
+import { jsonLdBlogPosting, jsonLdBreadcrumb, tagJsonLd } from "@/lib/jsonld";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -21,6 +22,7 @@ type PostRow = Pick<
   | "capa_url"
   | "publicado_em"
   | "tempo_leitura"
+  | "updated_at"
 >;
 
 type RelatedPost = Pick<
@@ -97,7 +99,7 @@ export const Route = createFileRoute("/blog/$slug")({
     const { data: post } = await supabase
       .from("blog_posts")
       .select(
-        "id, slug, titulo, resumo, categoria, conteudo_md, capa_url, publicado_em, tempo_leitura",
+        "id, slug, titulo, resumo, categoria, conteudo_md, capa_url, publicado_em, tempo_leitura, updated_at",
       )
       .eq("slug", params.slug)
       .eq("publicado", true)
@@ -114,20 +116,44 @@ export const Route = createFileRoute("/blog/$slug")({
 
     return { post, related: (related as RelatedPost[] | null) ?? [] };
   },
-  head: ({ loaderData, params }) => ({
-    meta: [
-      {
-        title: loaderData?.post.titulo ? `${loaderData.post.titulo} · Blog · Pólia` : TITULO_PADRAO,
-      },
-      { name: "description", content: loaderData?.post.resumo || DESCRICAO_PADRAO },
-      { property: "og:title", content: loaderData?.post.titulo ?? TITULO_PADRAO },
-      { property: "og:description", content: loaderData?.post.resumo || DESCRICAO_PADRAO },
-      ...(loaderData?.post.capa_url
-        ? [{ property: "og:image", content: loaderData.post.capa_url }]
-        : []),
-    ],
-    links: [linkCanonico(`/blog/${params.slug}`)],
-  }),
+  head: ({ loaderData, params }) => {
+    const post = loaderData?.post;
+    const urlPost = urlCanonica(`/blog/${params.slug}`);
+
+    return {
+      meta: [
+        { title: post?.titulo ? `${post.titulo} · Blog · Pólia` : TITULO_PADRAO },
+        { name: "description", content: post?.resumo || DESCRICAO_PADRAO },
+        { property: "og:title", content: post?.titulo ?? TITULO_PADRAO },
+        { property: "og:description", content: post?.resumo || DESCRICAO_PADRAO },
+        ...(post?.capa_url ? [{ property: "og:image", content: post.capa_url }] : []),
+      ],
+      links: [linkCanonico(`/blog/${params.slug}`)],
+      // Só emite BlogPosting/BreadcrumbList quando o post existe de verdade
+      // (loader resolvido): página de erro/pendente não descreve artigo nenhum.
+      scripts: post
+        ? [
+            tagJsonLd(
+              jsonLdBlogPosting({
+                titulo: post.titulo,
+                descricao: post.resumo || DESCRICAO_PADRAO,
+                urlCanonica: urlPost,
+                imagem: post.capa_url,
+                publicadoEm: post.publicado_em,
+                atualizadoEm: post.updated_at,
+              }),
+            ),
+            tagJsonLd(
+              jsonLdBreadcrumb([
+                { nome: "Início", url: HOST_CANONICO },
+                { nome: "Blog", url: urlCanonica("/blog") },
+                { nome: post.titulo, url: urlPost },
+              ]),
+            ),
+          ]
+        : [],
+    };
+  },
   component: BlogPost,
   // A rota lançava notFound() sem nenhum destes três: link quebrado, falha de
   // rede e a espera do loader caíam todos numa tela em branco.
