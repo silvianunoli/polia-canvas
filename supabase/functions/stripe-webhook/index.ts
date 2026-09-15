@@ -279,6 +279,25 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
   let userId = existente;
 
   if (!userId) {
+    // PAY-02 (achado 14/08, confirmado ao vivo em 15/09 via "Invite user" no
+    // Dashboard): o Auth Hook "Before User Created" (hook_checar_convite_cadastro)
+    // bloqueia QUALQUER criação de conta sem linha correspondente em
+    // convites_cadastro com usado_em null — inclusive esta, criada pelo admin
+    // API, não só o signup público. Sem isso, todo mundo que comprar sem
+    // convite prévio (o caminho inteiro da compra pública) cai bloqueado.
+    // Quem pagou já "ganhou" o convite: insere a linha antes de gerar o link
+    // (23505 = e-mail já tinha convite de outra origem, ignora e segue —
+    // o gatilho que marca usado_em roda de qualquer jeito na criação da conta).
+    const { error: erroConvite } = await supabaseAdmin
+      .from("convites_cadastro")
+      .insert({ email });
+    if (erroConvite && erroConvite.code !== "23505") {
+      console.error(
+        "[stripe-webhook] Falha ao liberar convite implícito da compra:",
+        erroConvite,
+      );
+    }
+
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
@@ -289,10 +308,7 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
       // Sem isso, uma falha aqui é uma venda perdida em silêncio: o Stripe já
       // cobrou (o evento não trata isso como erro pro Stripe, pra não reentregar
       // e cobrar de novo), mas ninguém fica sabendo que a conta nunca foi
-      // criada. PAY-02 (achado 14/08, nunca testado ao vivo): o Auth Hook
-      // "Before User Created" (hook_checar_convite_cadastro) pode estar
-      // barrando esta chamada do mesmo jeito que barraria um signup direto —
-      // não foi confirmado porque testar exigiria criar uma conta real.
+      // criada.
       void dispararAlerta(
         "stripe_webhook_falha_criar_conta",
         "Compra paga, mas a conta não foi criada",
