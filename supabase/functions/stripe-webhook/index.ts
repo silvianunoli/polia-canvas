@@ -256,13 +256,14 @@ async function enviarEmailRenovacao(
     : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia.`;
   await enviarViaResend(
     "Sua assinatura renova em breve",
-    `${paragrafo}\n\n${SITE_URL}/configuracoes`,
+    `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "Sua assinatura na Pólia renova em breve.",
       headline: "Renovação chegando",
       paragrafos: [paragrafo],
       ctaLabel: "Ver minha assinatura",
       ctaUrl: `${SITE_URL}/configuracoes`,
+      ajudaUrl: `${SITE_URL}/ajuda`,
     }),
     email,
     "e-mail de renovação",

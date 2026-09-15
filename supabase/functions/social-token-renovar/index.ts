@@ -31,7 +31,12 @@ function autenticado(req: Request): boolean {
   return req.headers.get("x-social-cron-secret") === SOCIAL_CRON_SECRET;
 }
 
-async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
+async function avisarFalha(
+  nomeConta: string,
+  handle: string,
+  motivo: string,
+  tokenExpiraEm: string | null,
+) {
   if (!RESEND_API_KEY) {
     console.error(
       "[social-token-renovar] Missing RESEND_API_KEY — aviso não enviado.",
@@ -40,6 +45,13 @@ async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
     );
     return;
   }
+  // Sem isso o aviso diz "renova antes que vença" sem dizer QUANDO — quem lê
+  // não sabe se tem um dia ou um mês pra agir. `token_expira_em` é o valor
+  // gravado na renovação bem-sucedida anterior (a que acabou de falhar não
+  // gera um novo prazo).
+  const prazo = tokenExpiraEm
+    ? `Vence em ${new Date(tokenExpiraEm).toLocaleDateString("pt-BR")}.`
+    : "Não há registro de quando esse token vence — confere direto no painel da Meta.";
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -48,7 +60,7 @@ async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: [EMAIL_SIL],
         subject: `A renovação do token do Instagram falhou (${nomeConta})`,
-        text: `A renovação automática do token de @${handle} (${nomeConta}) falhou. Motivo: ${motivo}\n\nRenova na mão no painel da Meta for Developers antes que a conexão vença.`,
+        text: `A renovação automática do token de @${handle} (${nomeConta}) falhou. Motivo: ${motivo}\n\n${prazo}\n\nRenova na mão no painel da Meta for Developers antes que a conexão vença.`,
         // O `motivo` carrega a mensagem de erro devolvida pela Meta, que é
         // texto externo — escapa antes de entrar no HTML.
         html: emailPolia({
@@ -57,6 +69,7 @@ async function avisarFalha(nomeConta: string, handle: string, motivo: string) {
           paragrafos: [
             `A renovação automática do token de <strong>@${escapeHtml(handle)}</strong> (${escapeHtml(nomeConta)}) falhou.`,
             `Motivo: ${escapeHtml(motivo)}`,
+            escapeHtml(prazo),
             "Renova na mão no painel da Meta for Developers antes que a conexão vença.",
           ],
         }),
@@ -72,6 +85,7 @@ interface ContaComCredencial {
   access_token: string;
   nome: string;
   instagram_handle: string;
+  token_expira_em: string | null;
 }
 
 Deno.serve(async (req) => {
@@ -82,7 +96,9 @@ Deno.serve(async (req) => {
   // independente das outras, uma conta falhando não trava as demais.
   const { data: contas, error } = await supabaseAdmin
     .from("contas_instagram_credenciais")
-    .select("conta_id, access_token, contas_sociais!inner(nome, instagram_handle, ativo)")
+    .select(
+      "conta_id, access_token, token_expira_em, contas_sociais!inner(nome, instagram_handle, ativo)",
+    )
     .eq("contas_sociais.ativo", true)
     .not("access_token", "is", null);
 
@@ -95,6 +111,7 @@ Deno.serve(async (req) => {
     .map((c: any) => ({
       conta_id: c.conta_id,
       access_token: c.access_token,
+      token_expira_em: c.token_expira_em ?? null,
       nome: c.contas_sociais?.nome ?? "conta sem nome",
       instagram_handle: c.contas_sociais?.instagram_handle ?? "",
     }))
@@ -123,7 +140,7 @@ Deno.serve(async (req) => {
       const json = await resp.json();
       if (json.error || !json.access_token) {
         const motivo = json.error?.message ?? "Resposta sem access_token";
-        await avisarFalha(conta.nome, conta.instagram_handle, motivo);
+        await avisarFalha(conta.nome, conta.instagram_handle, motivo, conta.token_expira_em);
         resultados.push({ conta_id: conta.conta_id, ok: false, motivo });
         continue;
       }
@@ -143,7 +160,7 @@ Deno.serve(async (req) => {
       resultados.push({ conta_id: conta.conta_id, ok: true, expira_em: expiraEm });
     } catch (err) {
       const motivo = String(err);
-      await avisarFalha(conta.nome, conta.instagram_handle, motivo);
+      await avisarFalha(conta.nome, conta.instagram_handle, motivo, conta.token_expira_em);
       resultados.push({ conta_id: conta.conta_id, ok: false, motivo });
     }
   }
