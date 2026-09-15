@@ -42,7 +42,7 @@ export const Route = createFileRoute("/ajuda")({
           "Central de ajuda da Pólia. Respostas curtas e diretas, e um canal pra falar com a gente.",
       },
       { property: "og:title", content: "Ajuda · Pólia" },
-      { property: "og:description", content: "Como a gente pode ajudar?" },
+      { property: "og:description", content: "Travou em alguma coisa? A gente explica." },
     ],
     links: [linkCanonico("/ajuda")],
   }),
@@ -52,20 +52,20 @@ export const Route = createFileRoute("/ajuda")({
 const CATEGORIAS = [
   {
     icon: PlayCircle,
-    titulo: "Primeiros passos",
+    titulo: "Começando na Pólia",
     itens: [
       {
         pergunta: "Por onde começar no Planejamento",
         resposta:
-          "Pelo módulo 1, que abre pela conta do mês: quanto você quer receber e quanto o negócio custa. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, o preço, a meta e o rumo do negócio já estão decididos.",
+          "Pelo módulo 1, que abre pela conta do mês: quanto você quer receber e quanto o negócio custa. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, as principais decisões do negócio já estão organizadas.",
       },
       {
         pergunta: "O que fazer no primeiro dia",
         resposta:
-          "Comece o Planejamento. É a base de tudo: enquanto ele não está pronto, Produtos, Financeiro e Painel ficam sem o preço e a meta que dependem dele.",
+          "Comece pelo Planejamento. É a base de tudo: enquanto ele não está pronto, Produtos, Financeiro e Painel ficam sem o preço e a meta que dependem dele.",
       },
       {
-        pergunta: "Usando no celular",
+        pergunta: "Usando a Pólia no celular",
         resposta:
           "A Pólia funciona direto no navegador do celular, sem precisar instalar nada. A tela se ajusta ao tamanho, e o que começa no computador continua de onde parou no celular.",
       },
@@ -73,7 +73,7 @@ const CATEGORIAS = [
   },
   {
     icon: User,
-    titulo: "Identidade",
+    titulo: "Sua marca",
     itens: [
       {
         pergunta: "Definir quem é a minha marca",
@@ -136,7 +136,7 @@ const CATEGORIAS = [
   },
   {
     icon: Wallet,
-    titulo: "Números",
+    titulo: "Dinheiro e resultados",
     itens: [
       {
         pergunta: "Registrar uma venda",
@@ -157,7 +157,7 @@ const CATEGORIAS = [
   },
   {
     icon: CreditCard,
-    titulo: "Conta e plano",
+    titulo: "Conta e assinatura",
     itens: [
       {
         pergunta: "Trocar de e-mail ou senha",
@@ -332,14 +332,15 @@ function AjudaPage() {
           <div className={CONTAINER}>
             <Reveal>
               <Eyebrow>Ajuda</Eyebrow>
-              <h1 className="mt-4 max-w-[16ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                Como a gente pode ajudar?
+              <h1 className="mt-4 max-w-[20ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                Travou em alguma coisa? A gente explica.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Respostas curtas e diretas, sem tutorial de dez minutos pra uma coisa de um clique.
-                Se não achar o que precisa, escreve pra gente aqui embaixo.
+                Respostas curtas e diretas pra entender a Pólia e seguir com o negócio, sem
+                tutorial de dez minutos pra descobrir onde clicar. Não encontrou o que precisava?
+                Fala com a gente.
               </p>
               <form
                 role="search"
@@ -359,7 +360,7 @@ function AjudaPage() {
                   type="search"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Buscar: preço, cancelar, Planner..."
+                  placeholder="Busque por preço, venda, Planner, conta..."
                   className="w-full flex-1 rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--secondary)]"
                 />
                 <button type="submit" className={`${BTN_PRIMARIO} whitespace-nowrap`}>
@@ -445,16 +446,33 @@ function AjudaPage() {
           </SheetContent>
         </Sheet>
 
+        {/* CONTEXTO */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <Reveal>
+              <Eyebrow>Precisa de contexto?</Eyebrow>
+              <h2 className="mt-4 max-w-[22ch] text-[clamp(1.7rem,3.2vw,2.5rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                A Pólia não quer complicar o que já é complicado.
+              </h2>
+              <p className="mt-6 max-w-[60ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                Se uma resposta precisa de dez passos e três termos que você nunca ouviu falar,
+                alguma coisa está errada. A gente explica cada coisa do jeito mais direto possível,
+                porque entender o negócio também faz parte de cuidar dele.
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
         {/* NÃO ACHOU */}
         <section className={SECAO}>
           <div className={CONTAINER}>
             <Reveal>
               <div className="rounded-2xl bg-[var(--secondary)] p-8 md:p-12">
                 <h2 className="max-w-[20ch] text-[clamp(1.6rem,3vw,2.4rem)] font-bold leading-[1.15] tracking-[-0.02em] text-[var(--secondary-ink)] text-balance">
-                  Não achou o que precisava?
+                  Não encontrou? Fala com a gente.
                 </h2>
                 <p className="mt-4 max-w-[54ch] text-[16px] leading-[1.65] text-[var(--secondary-ink)]">
-                  Escreve no formulário aqui embaixo. Quem responde sou eu, a fundadora da Pólia.
+                  Escreve no formulário aqui embaixo. Eu leio e respondo cada mensagem.
                 </p>
                 <div className="mt-8">
                   <a href="#contato" className={BTN_CONTORNO}>
@@ -473,10 +491,14 @@ function AjudaPage() {
           <div className={CONTAINER}>
             <Reveal>
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
-                <Eyebrow>Ainda sem conta?</Eyebrow>
+                <Eyebrow>Ainda não tem conta?</Eyebrow>
+                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.2] tracking-[-0.02em] text-balance">
+                  Comece pela pergunta mais importante.
+                </h2>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  O plano Grátis não pede cartão, e responde a primeira pergunta de qualquer
-                  negócio: dá lucro? Os planos abrem em breve, e quem está na lista entra primeiro.
+                  A Pólia começa mostrando o que realmente importa: quanto custa, quanto entra e
+                  quanto sobra. No plano Grátis, você pode descobrir se o seu negócio dá lucro, sem
+                  cartão de crédito.
                 </p>
                 <div className="mt-8">
                   {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
@@ -506,7 +528,7 @@ function AjudaPage() {
                   Fala comigo.
                 </h2>
                 <p className="mt-6 max-w-[54ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  Escreve que eu leio e respondo, sem departamento no meio do caminho.
+                  Escreve que eu leio e respondo. Sem departamento no meio do caminho.
                 </p>
 
                 <hr className="my-8 border-t border-[var(--line)]" />
@@ -653,7 +675,7 @@ function AjudaPage() {
                           }}
                           rows={5}
                           maxLength={2000}
-                          placeholder="Conta pra gente. Uma coisa de cada vez."
+                          placeholder="Conta pra mim. Uma coisa de cada vez."
                           aria-invalid={!!errors.mensagem || undefined}
                           aria-describedby={errors.mensagem ? "mensagem-error" : undefined}
                           className={`resize-none ${campoClasse(!!errors.mensagem)}`}
@@ -676,10 +698,10 @@ function AjudaPage() {
                       className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     >
                       <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                        Recebido. A gente te responde.
+                        Recebi. Eu te respondo.
                       </h2>
                       <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                        Chegou aqui. A gente responde em até 24 horas, em dias úteis, no seu e-mail.
+                        Chegou aqui. Eu respondo em até 24 horas, em dias úteis, no seu e-mail.
                       </p>
                     </div>
                   )}
