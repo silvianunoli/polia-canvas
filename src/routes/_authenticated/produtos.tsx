@@ -117,7 +117,7 @@ function ProdutosPage() {
   const ehConfere = meta.plano === "confere";
   const ehProjete = temProjete(meta.plano);
 
-  // Valor-hora padrão (Fase 2 — modo Encomenda, Projete): persistido em
+  // Valor-hora padrão (Fase 2 — modo Encomenda, Pro): persistido em
   // profiles pra reaproveitar entre os modos Serviço/Encomenda e entre
   // sessões (antes só existia dentro do calculadora_breakdown de um produto
   // tipo serviço já salvo).
@@ -162,7 +162,7 @@ function ProdutosPage() {
 
   const produtos = useMemo(() => produtosQuery.data ?? [], [produtosQuery.data]);
 
-  // Cota do Confere: 5 produtos ativos. Os mais antigos por created_at ficam
+  // Cota do plano Grátis: 5 produtos ativos. Os mais antigos por created_at ficam
   // dentro da cota; o excedente (de um downgrade, por ex.) vira somente
   // leitura — mesma regra imposta pela trigger do banco (20260727130000).
   const idsExcedentes = useMemo(() => {
@@ -267,15 +267,15 @@ function ProdutosPage() {
 
             {cotaAtingida && (
               <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-                No Confere você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Controle pra
-                deixar ilimitado.{" "}
+                No plano Grátis você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Premium
+                pra deixar ilimitado.{" "}
                 {/* Botão de assinar leva ao checkout, não a outra tela de bloqueio. */}
                 <Link
                   to="/assinar"
                   search={{ plano: "controle" }}
                   className="font-medium text-[var(--secondary-text)] no-underline"
                 >
-                  Assinar o Controle
+                  Assinar o Premium
                 </Link>
               </div>
             )}
@@ -474,7 +474,7 @@ function ProdutoCard({
       {/* Tipo */}
       <p className="text-[12px] text-[var(--muted)]">
         {somenteLeitura
-          ? "somente leitura · acima da cota do Confere"
+          ? "somente leitura · acima da cota do plano Grátis"
           : (TIPO_LABEL[produto.tipo] ?? produto.tipo)}
       </p>
 
@@ -608,7 +608,7 @@ function Calculadora({
   const [impostosS, setImpostosS] = useState(() => v("impostosS"));
   const [margemSeg, setMargemSeg] = useState(() => v("margemSeg"));
 
-  // ── Perfil Encomenda (Projete) ──
+  // ── Perfil Encomenda (Pro) ──
   // valorHora/horas são os MESMOS estados do perfil Serviço acima (de propósito:
   // trocar de aba não perde o que já foi digitado, e "puxar o valor-hora do
   // modo serviço" já acontece de graça por ser o mesmo estado).

@@ -130,7 +130,7 @@ function RaioXPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Raio-x do mês" titulo="O raio-x do mês é do Projete">
+      <PaginaLogada eyebrow="Raio-x do mês" titulo="O raio-x do mês é do Pro">
         <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
           <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
             <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
@@ -144,7 +144,7 @@ function RaioXPage() {
             search={{ rota: "/raiox", tier: "projete" }}
             className={`${BTN_ACAO} mt-6`}
           >
-            Conhecer o Projete
+            Conhecer o Pro
           </Link>
         </div>
       </PaginaLogada>

@@ -111,7 +111,7 @@ function PlannerIndex() {
     [contagemQuery.data],
   );
 
-  // Cota do Confere: 1 quadro. O(s) mais antigo(s) por created_at ficam
+  // Cota do plano Grátis: 1 quadro. O(s) mais antigo(s) por created_at ficam
   // dentro da cota; o excedente (de um downgrade, por ex.) fica marcado como
   // somente-leitura — mesma regra que a trigger do banco aplica na tabela
   // quadros (migração 20260727130000).
@@ -176,13 +176,13 @@ function PlannerIndex() {
       <div>
         {cotaAtingida && (
           <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-            No Confere cabe 1 quadro. Suba pro Controle pra deixar ilimitado.{" "}
+            No plano Grátis cabe 1 quadro. Suba pro Premium pra deixar ilimitado.{" "}
             <Link
               to="/upgrade"
               search={{ rota: "/planner", tier: "controle" }}
               className="font-medium text-[var(--secondary-text)] no-underline"
             >
-              Assinar o Controle
+              Assinar o Premium
             </Link>
           </div>
         )}
@@ -258,7 +258,7 @@ function PlannerIndex() {
                         </p>
                         <p className="text-[13px] text-[var(--muted)]">
                           {idsExcedentes.has(q.id)
-                            ? "somente leitura · acima da cota do Confere"
+                            ? "somente leitura · acima da cota do plano Grátis"
                             : (() => {
                                 const n = contagem.get(q.id) ?? 0;
                                 return n === 0 ? "vazio" : `${n} ${n === 1 ? "cartão" : "cartões"}`;

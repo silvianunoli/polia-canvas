@@ -15,8 +15,8 @@ interface ConfigPlano {
   limite: number;
 }
 
-// Confere e Controle no Flash (diferença chave vs. Planejamento, onde só o
-// Confere é Flash); só Projete no Pro, junto com o modo data-aware.
+// Grátis e Premium no Flash (diferença chave vs. Planejamento, onde só o
+// Grátis é Flash); só Pro no Pro, junto com o modo data-aware.
 const CONFIG_POR_PLANO: Record<string, ConfigPlano> = {
   confere: { modelo: MODELO_FLASH, limite: 5 },
   controle: { modelo: MODELO_FLASH, limite: 30 },
@@ -284,7 +284,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 
 export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
-  tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Controle libera bem mais.",
+  tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Premium libera bem mais.",
   falhaIa: "Não conseguimos responder agora. Tenta de novo.",
   manutencao: "A Aimer está em manutenção rápida. Volta já já.",
 } as const;

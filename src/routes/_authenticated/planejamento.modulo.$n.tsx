@@ -458,14 +458,14 @@ function SecaoForm({
 
             {cotaAtingida[i] ? (
               <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                Você já usou a sua geração de IA do mês. No Controle dá pra re-gerar quantas vezes
+                Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas vezes
                 precisar.{" "}
                 <Link
                   to="/upgrade"
                   search={{ rota: "/planejamento", tier: "controle" }}
                   className="font-medium text-[var(--secondary-text)] no-underline"
                 >
-                  Conhecer o Controle
+                  Conhecer o Premium
                 </Link>
               </p>
             ) : contextoInsuf[i] ? (

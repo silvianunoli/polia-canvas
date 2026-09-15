@@ -142,7 +142,7 @@ export function Sidebar() {
               // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
               // de conteúdo passam pelo guard de tier (são "controle") e só são
               // barradas por um portão dentro da página. Com a checagem antiga a
-              // usuária do Controle via esses três itens SEM cadeado e só
+              // usuária do Premium via esses três itens SEM cadeado e só
               // descobria que eram pagos depois de clicar.
               const liberado = recursoLiberado(item.to, meta.plano);
               const tierNecessario = tierPagoDaRota(item.to);

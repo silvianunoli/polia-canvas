@@ -82,7 +82,7 @@
 - A marca **SEMPRE**: usa verbo no comando ("Começar o módulo 2"); é específica ("Parou no módulo 3. Leva 10 minutos para terminar."); frase curta; tranquiliza com fato ("a gente guarda tudo"); assina só "Pólia".
 - A marca **NUNCA**: "arrasou", "potencialize", "incrível novidade", "transforme", "revolucione", "Sentimos sua falta", exclamação gratuita, ":)", "Equipe Pólia", **travessão em qualquer lugar**.
 - Frase de exemplo, no tom certo: _"Pronto. Seu negócio tem nome agora. Esse é um passo que não se volta atrás."_
-- **Léxico proibido:** a lista completa de palavras mortas e substituições mora no `CLAUDE.md` (seção "Vocabulário e persona") e no manual da marca. Resumo do que mais escapa: "margem" vira "quanto sobra"; "marco/etapa/trilha/jornada" viram "módulo" (unidade do Planejamento); "turma" vira "plano"; "infoproduto" vira "produto digital" com exemplo; "planilha por fora" vira "planilha perdida"; "do seu jeito/no seu tempo/no seu ritmo" saem de cena; "Começo/Alcance/Voo" viraram Confere/Controle/Projete.
+- **Léxico proibido:** a lista completa de palavras mortas e substituições mora no `CLAUDE.md` (seção "Vocabulário e persona") e no manual da marca. Resumo do que mais escapa: "margem" vira "quanto sobra"; "marco/etapa/trilha/jornada" viram "módulo" (unidade do Planejamento); "turma" vira "plano"; "infoproduto" vira "produto digital" com exemplo; "planilha por fora" vira "planilha perdida"; "do seu jeito/no seu tempo/no seu ritmo" saem de cena; "Começo/Alcance/Voo" e depois "Confere/Controle/Projete" viraram Grátis/Premium/Pro (14/09/2026).
 
 ## 7. Consistência
 
@@ -98,7 +98,7 @@
 
 ## 8. Planos (contexto de copy)
 
-Confere (R$0) / Controle (R$29,90 ou R$299 no ano) / Projete (R$47,90 ou R$479 no ano). Progressão: confere, controla, projeta. Chatbot Aimer em todos.
+Grátis (R$0) / Premium (R$29,90 ou R$299 no ano) / Pro (R$47,90 ou R$479 no ano). Nomes visíveis desde 14/09/2026; chave interna confere/controle/projete. Chatbot Aimer em todos.
 **Não escreva "preço validado" em nenhum lugar:** R$29,90 está no ponto ótimo do Van Westendorp de campo, o que o torna coerente com a percepção, não provado. A única prova é conversão real, e ninguém pagou ainda.
 
 ---

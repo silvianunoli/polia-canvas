@@ -145,7 +145,7 @@ function AssinarPage() {
         </div>
 
         <p className="mt-6 text-center font-sans text-[12px] text-[var(--muted)]">
-          cancela quando quiser, direto em Configurações. Volta pro Confere, sem apagar o
+          cancela quando quiser, direto em Configurações. Volta pro plano Grátis, sem apagar o
           Planejamento.
         </p>
       </div>
@@ -219,8 +219,8 @@ function PlanoCard({
         ))}
       </ul>
       {/* `mt-auto` no wrapper ancora o botão na base do cartão. Com `mt-5` ele
-          parava logo depois da lista, e como o Controle tem mais itens que o
-          Projete, os dois botões ficavam 99px desalinhados — na única tela do
+          parava logo depois da lista, e como o Premium tem mais itens que o
+          Pro, os dois botões ficavam 99px desalinhados — na única tela do
           app que cobra. */}
       <div className="mt-auto pt-5">
         <button

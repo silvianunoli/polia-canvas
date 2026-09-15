@@ -208,7 +208,7 @@ function ProjecaoPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Projeção" titulo="Projeção é do Projete">
+      <PaginaLogada eyebrow="Projeção" titulo="Projeção é do Pro">
         <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
           <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
             <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
@@ -222,7 +222,7 @@ function ProjecaoPage() {
             search={{ rota: "/projecao", tier: "projete" }}
             className={`${BTN_ACAO} mt-6`}
           >
-            Conhecer o Projete
+            Conhecer o Pro
           </Link>
         </div>
       </PaginaLogada>

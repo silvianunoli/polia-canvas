@@ -98,14 +98,14 @@ function upgradeHref(rota: string) {
 /**
  * Selo de bloqueio, na mesma linguagem do cadeado da barra lateral. Existe
  * porque o painel mostrava métrica de página fechada sem nenhum aviso: a
- * usuária do Confere clicava em "Quanto sobrou" e caía no /upgrade sem saber
+ * usuária do plano Grátis clicava em "Quanto sobrou" e caía no /upgrade sem saber
  * por quê.
  */
 function SeloControle() {
   return (
     <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--line)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
       <Lock size={10} aria-hidden="true" />
-      no Controle
+      no Premium
     </span>
   );
 }
@@ -124,7 +124,7 @@ function TituloCartao({ children, className = "" }: { children: ReactNode; class
  * ela, o cartão é um cartão e pronto.
  *
  * Existe desde 03/09/2026 (COPY-04). Antes, os três cartões de dinheiro
- * apontavam pro /upgrade quando o plano era Confere, porque o número era um
+ * apontavam pro /upgrade quando o plano era Grátis, porque o número era um
  * cadeado. Agora o número é real em todo plano (o registro de entrada e saída
  * abriu), e mandar quem acabou de ver o próprio dinheiro pra uma tela de venda
  * seria um pedágio, não uma navegação.
@@ -266,7 +266,7 @@ function PainelPage() {
   const entrou = useEntrada();
   const barOn = reduce || entrou;
 
-  // O painel exibia métrica de rota que o Confere não abre (Financeiro,
+  // O painel exibia métrica de rota que o plano Grátis não abre (Financeiro,
   // Clientes, Calendário) com link direto e sem cadeado: mostrava o número,
   // mandava registrar e barrava na porta. Agora cada bloco fechado diz que é
   // fechado e leva pro /upgrade, igual à barra lateral.
@@ -302,7 +302,7 @@ function PainelPage() {
           .eq("user_id", userId!)
           // meta_minima entrou em 03/09/2026 (COPY-04): é o "mínimo pra fechar
           // as contas" que a landing promete no painel diário, e ele é
-          // respondido no módulo 4 do Planejamento, que o Confere tem.
+          // respondido no módulo 4 do Planejamento, que o plano Grátis tem.
           .in("campo", ["financeiro.meta_minima", "financeiro.meta_celebracao"]),
         // Meta do mês: fonte única (mesma que Financeiro e a calculadora de Produtos lêem).
         supabase
@@ -461,7 +461,7 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
-    // A manchete do Confere era um desvio pro Planejamento, porque sem
+    // A manchete do plano Grátis era um desvio pro Planejamento, porque sem
     // Financeiro a receita era sempre 0 e "registre sua primeira venda" mandava
     // fazer o que o plano não deixava. Desde 03/09/2026 (COPY-04) todo plano
     // registra entrada e saída pelo cartão "Entrou e saiu este mês", então a
@@ -504,9 +504,9 @@ function PainelPage() {
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
   // calculados aqui.
   //
-  // Sem o Financeiro (Confere), a ação não é mais um desvio pro Planejamento
+  // Sem o Financeiro (Grátis), a ação não é mais um desvio pro Planejamento
   // nem um link pro /upgrade: é o registro em si, no modal do próprio Painel
-  // (COPY-04). O que o Controle abre segue dito no rodapé do cartão de
+  // (COPY-04). O que o Premium abre segue dito no rodapé do cartão de
   // registro, não no botão principal.
   const acaoPrincipal = useMemo((): { texto: string; href?: string; abreRegistro?: boolean } => {
     if (!financeiroLiberado) {
@@ -707,7 +707,7 @@ function PainelPage() {
         {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
             Desde 03/09/2026 (COPY-04) o número é real em TODO plano: o cadeado
             saiu daqui porque o registro de entrada e saída deixou de ser pago.
-            O que continua no Controle é a tela /financeiro, e só quem a tem é
+            O que continua no Premium é a tela /financeiro, e só quem a tem é
             que ganha o cartão clicável. */}
         <Reveal className="mt-6">
           <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
@@ -818,7 +818,7 @@ function PainelPage() {
                   Então a linha diz o ganho, não um vazio que ela não causou. */}
               <p className="mt-2 text-[13px] text-[var(--muted)]">
                 {!clientesLiberado ? (
-                  "no Controle cada cliente fica com o status do pedido"
+                  "no Premium cada cliente fica com o status do pedido"
                 ) : (
                   <>
                     {clientesCount > 0
@@ -833,7 +833,7 @@ function PainelPage() {
 
           {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os
               três cartões acima pra quem não tem a tela /financeiro. Quem tem o
-              Controle não vê este cartão — os cartões acima já levam pro
+              Premium não vê este cartão — os cartões acima já levam pro
               Financeiro, que faz isso e muito mais. */}
           {!financeiroLiberado && userId && (
             <Reveal className={SPAN_CLASS[12]}>

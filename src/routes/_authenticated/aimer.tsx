@@ -161,8 +161,8 @@ function AimerPage() {
             normal, lido por leitor de tela. --muted #6B6B6B sobre --bg
             #F2F0ED dá 4,6:1, passa AA em texto de 14px. */}
         <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
-          A Aimer é gerada por inteligência artificial. Os números vêm dos dados registrados aqui;
-          o texto é escrito pela IA e pode errar. Vale conferir antes de decidir.
+          A Aimer é gerada por inteligência artificial. Os números vêm dos dados registrados aqui; o
+          texto é escrito pela IA e pode errar. Vale conferir antes de decidir.
         </p>
         {mensagens.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-[var(--line)] bg-white p-6">
@@ -244,7 +244,7 @@ function AimerPage() {
                         search={{ rota: "/aimer", tier: "controle" }}
                         className="mt-2 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
                       >
-                        Conhecer o Controle
+                        Conhecer o Premium
                       </Link>
                     )}
                 </div>

@@ -142,7 +142,7 @@ function PlanoConteudoPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Plano de conteúdo" titulo="O plano de conteúdo do ano é do Projete">
+      <PaginaLogada eyebrow="Plano de conteúdo" titulo="O plano de conteúdo do ano é do Pro">
         <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
           <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
             <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
@@ -156,7 +156,7 @@ function PlanoConteudoPage() {
             search={{ rota: "/plano-conteudo", tier: "projete" }}
             className={`${BTN_ACAO} mt-6`}
           >
-            Conhecer o Projete
+            Conhecer o Pro
           </Link>
         </div>
       </PaginaLogada>

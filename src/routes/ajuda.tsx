@@ -167,7 +167,7 @@ const CATEGORIAS = [
       {
         pergunta: "Como cancelar",
         resposta:
-          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Confere, sem apagar o Planejamento.",
+          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Grátis, sem apagar o Planejamento.",
       },
       {
         pergunta: "Como funciona a cobrança",
@@ -475,7 +475,7 @@ function AjudaPage() {
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
                 <Eyebrow>Ainda sem conta?</Eyebrow>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  O Confere é grátis, sem cartão, e responde a primeira pergunta de qualquer
+                  O plano Grátis não pede cartão, e responde a primeira pergunta de qualquer
                   negócio: dá lucro? Os planos abrem em breve, e quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8">

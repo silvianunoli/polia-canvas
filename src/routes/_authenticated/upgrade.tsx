@@ -8,9 +8,9 @@ interface UpgradeSearch {
   tier?: TierPago;
 }
 
-// Sem `?tier`, a tela vende o Controle. Fica aqui em cima porque o título da aba
+// Sem `?tier`, a tela vende o Premium. Fica aqui em cima porque o título da aba
 // e o corpo da página precisam cair no MESMO padrão: eram dois lugares decidindo
-// o plano, e o título estava fixo no Controle mesmo com `?tier=projete`.
+// o plano, e o título estava fixo no Premium mesmo com `?tier=projete`.
 const TIER_PADRAO: TierPago = "controle";
 
 export const Route = createFileRoute("/_authenticated/upgrade")({
@@ -30,14 +30,14 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
 
 // O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
 const GANHO_POR_ROTA: Record<string, string> = {
-  "/financeiro": "Aqui entra tudo que entrou e saiu, e o Controle mostra quanto sobrou no mês.",
-  "/produtos": "O Controle solta o limite: cada produto com o custo, o preço e quanto sobra.",
-  // Raio-x é Projete, não Controle (ROTAS_PROJETE + o portão `temProjete` dentro
-  // da página). Nomear o Controle aqui vendia por R$ 29,90 uma tela que só abre
-  // no Projete, e ainda contradizia o selo "Recurso do plano Projete" logo acima.
-  "/raiox": "O Projete lê o seu mês e devolve onde o dinheiro está vazando.",
-  "/projecao": "O Projete mostra quantas vendas fecham o mês e quantas pagam o seu pró-labore.",
-  "/plano-conteudo": "O Projete monta as 365 ideias de post do ano a partir da sua marca.",
+  "/financeiro": "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto sobrou no mês.",
+  "/produtos": "O Premium solta o limite: cada produto com o custo, o preço e quanto sobra.",
+  // Raio-x é Pro, não Premium (ROTAS_PROJETE + o portão `temProjete` dentro
+  // da página). Nomear o Premium aqui vendia por R$ 29,90 uma tela que só abre
+  // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
+  "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
+  "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu pró-labore.",
+  "/plano-conteudo": "O Pro monta as 365 ideias de post do ano a partir da sua marca.",
 };
 
 function UpgradePage() {

@@ -28,7 +28,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Veja quanto sobra em cada venda, sem planilha e sem achismo. Vinte minutos no primeiro módulo e o painel passa a dizer, todo dia, quanto já entrou e quanto falta pra fechar as contas do mês.",
+          "Veja quanto sobra em cada venda, quanto precisa entrar no mês e tome decisões com mais clareza, sem planilha e sem achismo. A Pólia organiza os números e as decisões do negócio em um só lugar.",
       },
       { property: "og:title", content: "Pólia · Descubra se o seu negócio dá lucro" },
       {
@@ -46,6 +46,10 @@ export const Route = createFileRoute("/")({
 
 /* ───────────────────────────── conteúdo ───────────────────────────── */
 
+// Copy V4 (14/09/2026): a Home conta uma história só, nesta ordem. Eu descubro se
+// dá lucro, entendo quanto sobra, passo a cobrar com clareza, decido melhor e
+// construo uma marca que sustenta essas decisões. O número abre, a marca aprofunda.
+
 const credenciais = [
   "Feita no Brasil",
   "Para quem vende produto ou serviço",
@@ -53,53 +57,55 @@ const credenciais = [
   "Plano grátis de verdade",
 ];
 
-const problemas: { forte: string; resto: string }[] = [
-  {
-    forte: "O preço foi definido no chute",
-    resto: ", olhando o da concorrente e tirando dois reais.",
-  },
-  {
-    forte: "A meta vive só na cabeça",
-    resto: ", e o que vive só na cabeça não fecha mês nenhum.",
-  },
-  { forte: "As tarefas moram em três aplicativos", resto: " que não se conversam." },
-  {
-    forte: "E o aperto tem hora marcada",
-    resto:
-      ": na hora de passar o orçamento, dar o desconto, fechar a compra de material. A decisão sai no escuro, e depois vem a pior parte, que é ficar remoendo se cobrou certo.",
-  },
-  {
-    forte: "Isso não se resolve com mais esforço.",
-    resto: " Se resolve com um lugar onde o negócio inteiro caiba.",
-  },
+/** Cenas do problema, curtas de propósito: o riso vem do reconhecimento. */
+const cenas = [
+  "O preço foi definido olhando o da concorrente.",
+  "O desconto foi dado no susto.",
+  "A compra aconteceu sem saber se cabia.",
+  "A meta ficou na cabeça.",
+  "As tarefas estão espalhadas por vários lugares.",
 ];
+
+/** O que a Pólia conecta, na ordem em que o negócio usa. */
+const cadeia = ["planejamento", "preço", "vendas", "financeiro", "metas", "rotina"];
 
 const movimentos: {
   n: string;
   titulo: string;
   body: string;
+  /** Lista curta que entra entre o corpo e o fecho, um item por linha. */
+  itens?: string[];
+  depois?: string;
   resultado: string;
   mock: ReactNode;
 }[] = [
   {
     n: "01",
     titulo: "O negócio sai da cabeça",
-    body: "O Planejamento faz as perguntas certas, em português claro, sobre seis assuntos: a razão de existir, quem a marca serve, o que vende, quanto vale, como te acharem e onde a marca vai. As respostas formam um documento vivo, que dá pra pausar e retomar em qualquer ponto sem perder nada.",
-    resultado: "Resultado: o negócio inteiro, escrito, num lugar só.",
+    body: "O Planejamento faz as perguntas certas, em português claro, sobre o que importa para o negócio: razão de existir, cliente, oferta, preço, divulgação e rumo. As respostas formam um documento vivo, e dá pra pausar, voltar e editar quando quiser.",
+    resultado: "Resultado: o negócio inteiro, organizado em um só lugar.",
     mock: <MockPergunta />,
   },
   {
     n: "02",
     titulo: "As respostas viram ferramentas",
-    body: "Cada módulo concluído entrega uma ferramenta que já nasce preenchida com as respostas: a marca, o mapa de mercado, o catálogo, o financeiro, o caderno de divulgação e as metas. Nada de começar do zero duas vezes.",
-    resultado: "Resultado: ferramentas prontas, sem retrabalho.",
+    body: "O que você responde não fica perdido em um formulário. Cada módulo alimenta as ferramentas que você vai usar no dia a dia:",
+    itens: ["Marca", "Mercado", "Catálogo", "Financeiro", "Caderno", "Metas"],
+    resultado: "Resultado: você não precisa preencher a mesma informação duas vezes.",
     mock: <MockModulos />,
   },
   {
     n: "03",
     titulo: "A rotina acontece no painel",
-    body: "Todo dia, o painel abre dizendo quanto falta pro mês bom, quais tarefas têm prazo hoje e como a semana está indo. Sem relatório pra montar, sem planilha pra alimentar: o painel se calcula sozinho com o que o negócio registra.",
-    resultado: "Resultado: clareza diária, em uma tela.",
+    body: "O painel traduz o que está acontecendo no negócio em informação pronta pra usar.",
+    itens: [
+      "Quanto já entrou.",
+      "Quanto falta para o mês.",
+      "Quais tarefas vencem hoje.",
+      "Como as metas estão avançando.",
+    ],
+    depois: "Sem relatório para montar. Sem planilha para alimentar.",
+    resultado: "Resultado: clareza para decidir o que fazer agora.",
     mock: <MockFrasePainel />,
   },
 ];
@@ -127,32 +133,50 @@ const anotacoes = [
 const recursos: {
   eyebrow: string;
   titulo: string;
+  /** Título no tamanho de seção: só pro bloco que a copy pede em destaque. */
+  grande?: boolean;
   body: string;
+  /** Três linhas grandes, empilhadas. A última ganha o grifo. */
+  trio?: string[];
+  itens?: string[];
+  depois?: string;
   resultado: string;
-  /** Âncora de preço: liga o número do exemplo ao valor da assinatura. */
-  ancora?: string;
+  fecho?: string;
+  cta?: { texto: string; href: string; contexto: string };
   mock: ReactNode;
 }[] = [
   {
     eyebrow: "Preço",
-    titulo: "Quanto sobra de verdade",
-    body: "A calculadora de preço pega o custo, as taxas e o tempo de produção e mostra, em reais, quanto fica no bolso a cada venda. Sem termo técnico: a pergunta é quanto sobra, e a resposta também.",
+    titulo: "Quanto sobra de verdade?",
+    grande: true,
+    body: "Preço não é só quanto o cliente paga. É quanto fica depois dos custos, das taxas e do que foi necessário para fazer aquela venda acontecer. A Pólia coloca essa conta em reais.",
+    trio: ["Quanto custa.", "Quanto você cobra.", "Quanto sobra."],
+    depois: "Sem precisar entender termos técnicos para descobrir.",
     resultado: "De preço no chute a preço com razão.",
-    ancora:
-      "Na conta do exemplo, cada caixa deixa R$ 18,90 limpos. Duas vendas com o preço certo pagam o mês de Controle inteiro.",
+    fecho:
+      "A cada venda, a Pólia mostra quanto realmente sobra. E quando você sabe quanto sobra, cobrar deixa de ser uma aposta.",
+    // Pré-lançamento: a calculadora abre no plano Grátis, então o botão leva aos
+    // planos. Em outubro volta pra /auth/cadastro.
+    cta: { texto: "Quero calcular meu preço", href: "#planos", contexto: "preco" },
     mock: <MockCalculadora />,
   },
   {
     eyebrow: "Metas",
-    titulo: "Três metas, não trinta",
-    body: "A Pólia limita as metas ativas a três, de propósito. Cada uma mostra o caminho no formato que importa: R$ 2.570 de R$ 3.000, 7 de 10 clientes. O progresso atualiza sozinho conforme as vendas entram.",
-    resultado: "Meta que vive na tela, não na cabeça.",
+    titulo: "Três metas. Não trinta.",
+    body: "Você não precisa acompanhar tudo ao mesmo tempo. A Pólia limita as metas ativas para manter o foco no que realmente importa agora.",
+    itens: [
+      "Quanto já entrou.",
+      "Quanto falta.",
+      "Quantos clientes faltam.",
+      "O que já foi concluído.",
+    ],
+    resultado: "Meta que dá pra enxergar é meta que dá pra acompanhar.",
     mock: <MockMetas />,
   },
   {
     eyebrow: "Rotina",
-    titulo: "Tarefas por prazo, não por pilha",
-    body: "O Planner organiza o trabalho em quadros simples, e o painel puxa dali o que tem prazo: o que atrasou, o que é de hoje, o que vem nos próximos sete dias. Concluir no painel conclui no quadro, é o mesmo dado.",
+    titulo: "Tarefas por prazo, não por pilha.",
+    body: "O Planner organiza o trabalho sem fazer da sua rotina mais uma coisa para administrar. O painel mostra o que atrasou, o que é de hoje e o que vem pela frente. E quando você conclui uma tarefa, a informação é atualizada onde precisa estar.",
     resultado: "Um dia de trabalho que cabe numa tela.",
     mock: <MockPlanner />,
   },
@@ -169,8 +193,15 @@ const ferramentas = [
   "Financeiro",
 ];
 
+/** As perguntas que a Pólia responde antes de qualquer conversa sobre marca. */
+const perguntasDoNumero = [
+  "Dá lucro?",
+  "Quanto sobra?",
+  "Quanto precisa entrar?",
+  "Quanto vale o que eu vendo?",
+];
+
 const credenciaisSil = [
-  "14 anos de e-commerce, 8 deles tocando o próprio negócio",
   "Passagens por C&A, Allied e ArcelorMittal",
   "Consultoria para pequenas empreendedoras: o problema que a Pólia resolve foi visto de perto, muitas vezes",
 ];
@@ -179,29 +210,34 @@ const credenciaisSil = [
 // existir depoimento de usuária de verdade. Está no histórico do git se voltar.
 
 const fazSentido = [
-  "O negócio já vende, mas o mês fecha sem clareza de quanto sobrou",
-  "O produto é físico, digital ou serviço, sozinha ou com ajuda",
-  "A vontade de começar existe, e falta um caminho que não seja curso",
-  "O preço atual foi definido olhando o da concorrente",
+  "Você já vende, mas termina o mês sem saber exatamente quanto sobrou.",
+  "Seu preço foi definido olhando o mercado ou tentando adivinhar o que o cliente aceita.",
+  "Você vende produto, serviço ou os dois.",
+  "Você trabalha sozinha ou com ajuda.",
+  "Você está começando e quer construir uma base antes da primeira venda.",
+  "Você quer tomar decisões com mais clareza, sem precisar virar especialista em planilhas.",
 ];
 
 const aindaNao = [
-  "A busca é por fórmula pronta de enriquecer rápido: isso a Pólia não promete",
+  "Você procura uma fórmula para enriquecer rápido.",
   // Não é sobre tamanho de equipe: é sobre já ter um sistema de gestão maduro
   // rodando, que segue sendo critério de exclusão válido (a Pólia não é ERP).
-  "A empresa já tem equipe de gestão e sistema robusto rodando",
-  "O que se procura é uma agência pra fazer no lugar: a Pólia organiza, quem decide é a dona",
+  "Sua empresa já tem uma estrutura robusta de gestão funcionando.",
+  "Você procura uma agência ou alguém para decidir e executar tudo no seu lugar.",
 ];
 
-// Cada plano abre com a frase-verbo do nome: "Projete" solto lê como desenhar,
-// e é a frase ao lado que devolve o sentido de projeção. Os bullets são frase de
-// resultado, não nome de recurso, porque muita visitante rola direto até aqui
-// sem ler nada acima e o card precisa vender sozinho.
+// Nomes visíveis desde 14/09/2026: Grátis, Premium e Pro. As chaves internas
+// (confere/controle/projete) seguem no banco e no Stripe. Os bullets nomeiam só
+// o que o código realmente entrega em cada plano (src/lib/planos.ts): Raio-x,
+// projeção e plano de conteúdo trancam no Pro; mapa de mercado é do
+// Premium e o Caderno abre no plano Grátis.
 const planos: {
   nome: string;
   frase: string;
   preco: string;
   ciclo: string;
+  /** Linha que abre a lista nos planos pagos ("Tudo do Grátis, mais:"). */
+  abre?: string;
   features: string[];
   apoio?: string;
   botao: string;
@@ -209,16 +245,16 @@ const planos: {
   destaque: boolean;
 }[] = [
   {
-    nome: "Confere",
-    frase: "Confere se o seu negócio dá lucro.",
+    nome: "Grátis",
+    frase: "Descubra se o seu negócio dá lucro.",
     preco: "R$ 0",
-    ciclo: "· pra sempre",
+    ciclo: "· para sempre",
     features: [
-      "Os 6 módulos do Planejamento: a razão de existir, o público, o preço e o rumo do negócio, respondidos do zero",
-      "Painel diário: quanto já entrou e quanto falta pra fechar as contas do mês",
-      "Calculadora de preço em até 5 produtos: quanto sobra em cada venda, antes de cobrar",
-      "Até 3 metas acompanhadas sozinhas, sem planilha",
-      "Um quadro no Planner pra organizar a semana",
+      "Os 6 módulos do Planejamento",
+      "Painel diário",
+      "Calculadora de preço para até 5 produtos",
+      "Até 3 metas acompanhadas",
+      "Um quadro no Planner",
     ],
     // Pré-lançamento: cadastro e checkout estão fechados, então os três botões
     // levam pra lista de espera. Em outubro voltam pra /auth/cadastro e
@@ -228,38 +264,34 @@ const planos: {
     destaque: false,
   },
   {
-    nome: "Controle",
+    nome: "Premium",
     frase: "Controle o negócio inteiro, mês a mês.",
     preco: "R$ 29,90",
     ciclo: "/mês",
+    abre: "Tudo do Grátis, mais:",
     features: [
-      "Tudo do Confere",
-      "Calculadora de preço sem limite de produtos: quanto sobra em cada venda, antes de cobrar",
-      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
-      "Clientes com o status de cada pedido, do orçamento à entrega",
+      "Calculadora de preço sem limite de produtos",
+      "Financeiro com os números que ajudam a decidir o mês",
+      "Clientes e pedidos, do orçamento à entrega",
       "Quadros ilimitados no Planner",
     ],
-    apoio: "Basta um desconto dado no chute pra uma encomenda levar embora mais que R$ 29,90.",
+    apoio: "Um desconto dado no chute pode custar mais do que a assinatura.",
     botao: "Entrar na lista",
     href: "/lista-de-espera",
     destaque: true,
   },
   {
-    nome: "Projete",
-    frase: "A Pólia lê os números e diz o que fazer.",
+    nome: "Pro",
+    frase: "Enxergue o que aconteceu e o que vem pela frente.",
     preco: "R$ 47,90",
     ciclo: "/mês",
-    // Os bullets nomeiam o que o código realmente tranca no Projete
-    // (ROTAS_PROJETE + o Resumo pro contador em src/lib/planos.ts). Mapa de
-    // mercado é do Controle e o Caderno abre no Confere: os dois estavam
-    // listados aqui e prometiam exclusividade que não existe.
+    abre: "Tudo do Premium, mais:",
     features: [
-      "Tudo do Controle",
-      "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
-      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Plano de conteúdo do ano: uma ideia de post por dia, ligada ao que a marca vende",
-      "Resumo do mês pro contador, em PDF e CSV",
-      "Recursos novos chegam aqui primeiro",
+      "Raio-x do mês",
+      "Projeções de vendas",
+      "Plano de conteúdo conectado ao negócio",
+      "Resumo do mês para o contador",
+      "Acesso antecipado a novos recursos",
     ],
     botao: "Entrar na lista",
     href: "/lista-de-espera",
@@ -271,37 +303,32 @@ const perguntas = [
   {
     pergunta: "A Pólia é um curso?",
     resposta:
-      "É uma ferramenta de uso diário. O Planejamento organiza as decisões do negócio, o painel acompanha a rotina, e o aprendizado acontece no caminho, respondendo perguntas sobre o próprio negócio.",
+      "Não. É uma ferramenta de uso diário. O Planejamento organiza as decisões do negócio, as ferramentas colocam essas decisões para funcionar e o painel acompanha o que acontece depois. O aprendizado acontece no caminho, enquanto o próprio negócio vai ficando organizado.",
   },
   {
-    pergunta: "O dia já é cheio. Cabe mais uma ferramenta?",
+    pergunta: "Preciso entender de números ou planilhas?",
     resposta:
-      "A Pólia foi desenhada pra rotina de quem cuida da casa e do negócio no mesmo dia. Nenhuma tela exige sessão longa: registrar uma venda leva menos tempo que anotar a venda no caderninho, e o painel faz o resto sozinho.",
+      "Não. A Pólia pergunta em português claro quanto custa, quanto você cobra e quanto precisa entrar no mês. As contas são feitas pela ferramenta. Quem sabe responder sobre o próprio negócio já tem o que precisa para começar.",
   },
   {
-    pergunta: "O negócio ainda não vende. Faz sentido entrar agora?",
+    pergunta: "Meu negócio ainda não vende. A Pólia faz sentido?",
     resposta:
-      "Faz. O Planejamento foi desenhado pra funcionar antes da primeira venda: definir o que a marca é, pra quem ela existe e quanto vai cobrar são exatamente as decisões de quem está começando. O Confere é grátis, então dá pra construir essa base sem gastar nada.",
+      "Sim. Antes da primeira venda já existem decisões importantes: o que você vai vender, para quem, quanto vai cobrar e quanto precisa entrar. O plano Grátis não custa nada, então dá pra começar a construir essa base sem pagar.",
   },
   {
-    pergunta: "Precisa entender de números ou de planilha?",
+    pergunta: "Funciona para serviços?",
     resposta:
-      "Não. A Pólia pergunta em português claro, quanto custa fazer, quanto cobra, quanto precisa entrar no mês, e faz as contas sozinha. Nenhuma tela usa termo técnico sem explicar. Quem sabe responder sobre o próprio produto já sabe o suficiente.",
+      "Sim. A Pólia funciona para produtos, serviços e negócios híbridos. As perguntas e os cálculos se adaptam ao tipo de negócio.",
   },
   {
-    pergunta: "Funciona pra serviço, ou só pra produto?",
+    pergunta: "Quanto tempo preciso dedicar?",
     resposta:
-      "Funciona pros dois, e pros híbridos também. O Planejamento adapta as perguntas ao tipo de negócio: quem vende brigadeiro, quem vende consultoria e quem vende arquivo digital respondem perguntas diferentes, e a calculadora de preço tem um modo próprio pra serviço cobrado por hora.",
+      "Você não precisa parar o negócio inteiro para usar a Pólia. Cada módulo do Planejamento leva cerca de vinte minutos e pode ser pausado a qualquer momento. Depois, o painel e as ferramentas continuam trabalhando com o que você registrou.",
   },
   {
-    pergunta: "Quanto tempo leva pra ver o negócio organizado?",
+    pergunta: "E se eu cancelar um plano pago?",
     resposta:
-      "Cada módulo do Planejamento leva em torno de vinte minutos. Dá pra pausar em qualquer pergunta e retomar depois, tudo salva sozinho. Muita gente conclui o primeiro módulo no mesmo dia em que cria a conta, e o painel já começa a trabalhar com o que foi respondido.",
-  },
-  {
-    pergunta: "E se a assinatura for cancelada, o que acontece com os dados?",
-    resposta:
-      "O Planejamento e os registros continuam da dona do negócio. Ao cancelar um plano pago, a conta volta pro Confere, que é grátis e não expira, e nada do que foi escrito se perde.",
+      "Sua conta volta para o plano Grátis, sem custo. O que você construiu no Planejamento e os registros do negócio continuam com você.",
   },
 ];
 
@@ -333,6 +360,23 @@ function FaixaFerramentas() {
         ))}
       </motion.div>
     </div>
+  );
+}
+
+/** Lista curta com ponto turquesa, usada dentro dos blocos de recurso. */
+function ListaCurta({ itens }: { itens: string[] }) {
+  return (
+    <ul className="mt-5 flex list-none flex-col gap-2">
+      {itens.map((item) => (
+        <li key={item} className="flex items-start gap-3 text-[16px] font-medium leading-[1.5]">
+          <span
+            aria-hidden="true"
+            className="mt-[9px] h-[6px] w-[6px] flex-none rounded-full bg-[var(--secondary)]"
+          />
+          {item}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -425,7 +469,7 @@ function HomePage() {
               data-track-props='{"contexto":"flutuante"}'
               className={BTN_PRIMARIO}
             >
-              Quero ver se dá lucro
+              Quero descobrir se dá lucro
               <span aria-hidden="true">→</span>
             </a>
           </motion.div>
@@ -442,7 +486,7 @@ function HomePage() {
             <div className="grid grid-cols-1 items-end gap-x-[clamp(32px,5vw,72px)] gap-y-10 md:grid-cols-[1.15fr_0.85fr]">
               <div>
                 <Reveal>
-                  <Eyebrow>Pólia · para quem toca o próprio negócio</Eyebrow>
+                  <Eyebrow>Gestão para quem vende</Eyebrow>
                 </Reveal>
                 <h1 className="mb-6 mt-4 text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
                   Descubra se o seu negócio dá{" "}
@@ -452,9 +496,12 @@ function HomePage() {
                 </h1>
                 <Reveal delay={0.1}>
                   <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    Veja quanto sobra em cada venda, sem planilha e sem achismo. Vinte minutos no
-                    primeiro módulo e o painel passa a dizer, todo dia, quanto já entrou e quanto
-                    falta pra fechar as contas do mês.
+                    Veja quanto sobra em cada venda, quanto precisa entrar no mês e tome decisões
+                    com mais clareza, sem planilha e sem achismo.
+                  </p>
+                  <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                    A Pólia organiza os números e as decisões do seu negócio em um só lugar, para
+                    você saber o que está acontecendo antes de decidir o próximo passo.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <a
@@ -463,15 +510,17 @@ function HomePage() {
                       data-track-props='{"contexto":"hero"}'
                       className={BTN_PRIMARIO}
                     >
-                      Quero ver se dá lucro
+                      Quero descobrir se dá lucro
                       <span aria-hidden="true">→</span>
                     </a>
                     <a href="#produto" className={BTN_CONTORNO}>
                       Ver o produto
                     </a>
                   </div>
+                  {/* Pré-lançamento: o botão leva à lista, então a linha diz que o
+                      Grátis é grátis, sem prometer "comece agora". */}
                   <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                    O Confere é grátis de verdade. Sem cartão, sem prazo.
+                    O plano Grátis não pede cartão de crédito.
                   </p>
                 </Reveal>
               </div>
@@ -553,24 +602,95 @@ function HomePage() {
                 <Eyebrow>O problema</Eyebrow>
               </Reveal>
               <h2 className="mt-4 text-[clamp(2rem,4.4vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
-                Tem negócio que vende bem e ainda assim termina o mês{" "}
+                Você vende. Mas sabe quanto realmente{" "}
                 {/* O marcador é inline-block e não quebra, então a pontuação precisa
-                    viajar junto com ele, senão o ponto final cai sozinho na linha. */}
+                    viajar junto com ele, senão a interrogação cai sozinha na linha. */}
                 <span className="whitespace-nowrap">
-                  <HighlightWord delay={0.3}>sem saber quanto sobrou</HighlightWord>.
+                  <HighlightWord delay={0.3}>sobra</HighlightWord>?
                 </span>
               </h2>
             </div>
             <RevealGroup className="flex flex-col gap-6 border-l border-[var(--line)] pl-8">
-              {problemas.map((p) => (
-                <RevealItem key={p.forte}>
-                  <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                    <b className="font-semibold text-[var(--ink)]">{p.forte}</b>
-                    {p.resto}
-                  </p>
-                </RevealItem>
-              ))}
+              <RevealItem>
+                <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  Tem negócio que vende bem e ainda assim termina o mês sem saber quanto sobrou.
+                </p>
+              </RevealItem>
+              <RevealItem>
+                <ul className="flex list-none flex-col gap-2">
+                  {cenas.map((c) => (
+                    <li
+                      key={c}
+                      className="text-[16px] font-semibold leading-[1.5] text-[var(--ink)]"
+                    >
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+              </RevealItem>
+              <RevealItem>
+                <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  E aí chega a hora de passar um orçamento, fechar uma venda ou decidir se dá para
+                  comprar mais. Você decide. E depois fica pensando:
+                </p>
+              </RevealItem>
+              <RevealItem>
+                <blockquote className="font-fraunces text-[clamp(1.4rem,2.4vw,2rem)] italic leading-[1.3] text-[var(--ink)]">
+                  “Será que eu cobrei certo?”
+                </blockquote>
+              </RevealItem>
+              <RevealItem>
+                <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  <b className="font-semibold text-[var(--ink)]">
+                    O problema não é falta de esforço.
+                  </b>{" "}
+                  É tomar decisões importantes sem conseguir enxergar o negócio inteiro.
+                </p>
+              </RevealItem>
             </RevealGroup>
+          </div>
+        </section>
+
+        {/* A SOLUÇÃO */}
+        <section className="pb-[clamp(72px,9vw,128px)]">
+          <div className={`${CONTAINER} border-t border-[var(--line)] pt-[clamp(56px,7vw,96px)]`}>
+            <Reveal>
+              <Eyebrow>A solução</Eyebrow>
+              <h2 className="mt-4 max-w-[18ch] text-[clamp(2rem,4.4vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+                Um lugar onde o negócio inteiro cabe.
+              </h2>
+              <p className="mt-6 text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                A Pólia conecta o que normalmente fica separado:
+              </p>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <ol className="mt-6 flex list-none flex-wrap items-center gap-x-4 gap-y-3">
+                {cadeia.map((c, i) => (
+                  <li
+                    key={c}
+                    className="flex items-center gap-4 text-[clamp(1.35rem,2.8vw,2.2rem)] font-bold leading-none tracking-[-0.02em]"
+                  >
+                    {c}
+                    {i < cadeia.length - 1 && (
+                      <span aria-hidden="true" className="text-[var(--secondary-text)]">
+                        →
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </Reveal>
+            <Reveal delay={0.15}>
+              <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-[1fr_1fr] md:gap-[clamp(32px,5vw,64px)]">
+                <p className="max-w-[46ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  Você organiza as decisões uma vez. As respostas viram ferramentas conectadas, e a
+                  Pólia usa o que o negócio registra para mostrar o que está acontecendo.
+                </p>
+                <p className="max-w-[46ch] text-[16px] leading-[1.65] text-[var(--ink)]">
+                  Assim, você não precisa começar do zero toda vez que precisa tomar uma decisão.
+                </p>
+              </div>
+            </Reveal>
           </div>
         </section>
 
@@ -580,7 +700,7 @@ function HomePage() {
             <Reveal>
               <Eyebrow>Como funciona</Eyebrow>
               <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Três movimentos. Do papel em branco à rotina que roda.
+                Do papel em branco à rotina que roda.
               </h2>
             </Reveal>
 
@@ -603,6 +723,12 @@ function HomePage() {
                     <p className="max-w-[46ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                       {m.body}
                     </p>
+                    {m.itens && <ListaCurta itens={m.itens} />}
+                    {m.depois && (
+                      <p className="mt-5 max-w-[46ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                        {m.depois}
+                      </p>
+                    )}
                     <p className="mt-4 text-[14px] font-semibold text-[var(--secondary-text)]">
                       {m.resultado}
                     </p>
@@ -622,11 +748,17 @@ function HomePage() {
             <Reveal className="mb-[clamp(40px,5vw,48px)] max-w-[720px]">
               <Eyebrow>O produto</Eyebrow>
               <h2 className="mb-4 mt-3 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Um documento vivo, não um formulário
+                Um documento vivo, não um formulário.
               </h2>
               <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                O Planejamento cresce junto com o negócio. Cada resposta fica guardada, editável e
-                conectada com a ferramenta que usa aquela informação.
+                O Planejamento cresce junto com o negócio. Cada resposta fica guardada, pode ser
+                editada e se conecta com a ferramenta que precisa daquela informação.
+              </p>
+              <p className="mt-4 max-w-[56ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                Você não constrói uma estratégia para esquecer depois.
+              </p>
+              <p className="mt-2 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] font-semibold leading-[1.5] text-[var(--ink)]">
+                O Planejamento vira uma base que continua trabalhando.
               </p>
             </Reveal>
 
@@ -673,7 +805,7 @@ function HomePage() {
           </div>
         </section>
 
-        {/* RECURSOS */}
+        {/* RECURSOS: preço, metas e rotina */}
         <section className="pb-[clamp(72px,9vw,128px)]">
           <div className={CONTAINER}>
             {recursos.map((r, i) => (
@@ -685,19 +817,54 @@ function HomePage() {
               >
                 <Reveal className={i % 2 === 1 ? "md:order-2" : ""}>
                   <Eyebrow>{r.eyebrow}</Eyebrow>
-                  <h3 className="mb-4 mt-3 text-[clamp(1.5rem,2.6vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.015em]">
+                  <h3
+                    className={`mb-4 mt-3 font-bold tracking-[-0.02em] text-balance ${
+                      r.grande
+                        ? "text-[clamp(2rem,4.4vw,3.4rem)] leading-[1.08]"
+                        : "text-[clamp(1.5rem,2.6vw,2.1rem)] leading-[1.15]"
+                    }`}
+                  >
                     {r.titulo}
                   </h3>
                   <p className="max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                     {r.body}
                   </p>
+                  {r.trio && (
+                    <p className="mt-6 text-[clamp(1.5rem,2.8vw,2.2rem)] font-bold leading-[1.2] tracking-[-0.02em]">
+                      {r.trio.map((linha, j) => (
+                        <span key={linha} className="block">
+                          {j === (r.trio?.length ?? 0) - 1 ? (
+                            <HighlightWord delay={0.2}>{linha}</HighlightWord>
+                          ) : (
+                            linha
+                          )}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                  {r.itens && <ListaCurta itens={r.itens} />}
+                  {r.depois && (
+                    <p className="mt-4 max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                      {r.depois}
+                    </p>
+                  )}
                   <p className="mt-4 text-[14px] font-semibold text-[var(--secondary-text)]">
                     {r.resultado}
                   </p>
-                  {r.ancora && (
+                  {r.fecho && (
                     <p className="mt-4 max-w-[44ch] border-l-2 border-[var(--secondary)] pl-4 text-[15px] leading-[1.6] text-[var(--ink)]">
-                      {r.ancora}
+                      {r.fecho}
                     </p>
+                  )}
+                  {r.cta && (
+                    <a
+                      href={r.cta.href}
+                      data-track="cadastro_cta_clicado"
+                      data-track-props={`{"contexto":"${r.cta.contexto}"}`}
+                      className={`${BTN_CONTORNO} mt-6`}
+                    >
+                      {r.cta.texto}
+                    </a>
                   )}
                 </Reveal>
                 <Reveal delay={0.1} y={28} className={i % 2 === 1 ? "md:order-1" : ""}>
@@ -708,79 +875,101 @@ function HomePage() {
           </div>
         </section>
 
-        {/* O PRINCÍPIO */}
+        {/* NÚMERO + MARCA */}
         <section className="bg-[var(--ink)] py-[clamp(80px,10vw,140px)] text-[var(--bg)]">
           <div className={CONTAINER}>
             <Reveal>
-              <Eyebrow claro>O princípio</Eyebrow>
+              <Eyebrow claro>Número e marca</Eyebrow>
               <h2 className="mb-6 mt-4 max-w-[20ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                Preço, meta e rotina são{" "}
+                Preço, meta e rotina também são{" "}
                 <em className="font-fraunces font-normal italic text-[var(--secondary-light)]">
                   decisões de marca
                 </em>
                 .
               </h2>
               <p className="max-w-[52ch] text-[16px] leading-[1.7] text-[var(--bg)]/70">
-                Quando a marca sabe quem serve e quanto vale o que entrega, o preço para de ser
-                chute, a meta para de ser desejo e a rotina para de ser correria. A Pólia existe pra
-                essa conta fechar.
+                Quando você sabe quem a sua marca serve, o que ela entrega e quanto precisa receber
+                por isso, o preço deixa de ser chute. A meta deixa de ser desejo. E a rotina deixa
+                de ser uma lista infinita de coisas para fazer.
+              </p>
+            </Reveal>
+
+            <RevealGroup className="mt-[clamp(48px,6vw,80px)] grid grid-cols-1 gap-8 border-t border-white/[0.18] pt-8 md:grid-cols-2 md:gap-[clamp(32px,5vw,64px)]">
+              <RevealItem>
+                <p className="max-w-[16ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  O número dá chão para a decisão.
+                </p>
+              </RevealItem>
+              <RevealItem>
+                <p className="max-w-[18ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  A marca dá sentido para o que você está{" "}
+                  <span className="text-[var(--secondary-light)]">construindo</span>.
+                </p>
+              </RevealItem>
+            </RevealGroup>
+
+            <Reveal delay={0.1}>
+              <p className="mt-10 max-w-[52ch] text-[16px] leading-[1.7] text-[var(--bg)]/85">
+                A Pólia existe para ajudar essas duas coisas a trabalharem juntas.
               </p>
             </Reveal>
           </div>
           <FaixaFerramentas />
         </section>
 
-        {/* QUEM FEZ */}
-        <section className={`bg-[var(--surface)] ${SECAO}`}>
-          <div className={CONTAINER}>
-            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[0.85fr_1.15fr]">
-              <Reveal>
-                <Eyebrow>Quem fez</Eyebrow>
-                <h2 className="mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Feita por quem passou 14 anos dentro do e-commerce
-                </h2>
-                <blockquote className="mt-8 max-w-[28ch] font-fraunces text-[clamp(1.35rem,2.3vw,1.9rem)] italic leading-[1.4]">
-                  “Passei anos vendo marca grande decidir com clareza e marca pequena decidir no
-                  escuro. A Pólia é o painel que eu queria ter tido no meu próprio negócio, e que eu
-                  queria ter entregado a cada cliente das consultorias.”
-                  <footer className="mt-4 font-sans text-[14px] not-italic text-[var(--ink-soft)]">
-                    Sil, fundadora da Pólia
-                  </footer>
-                </blockquote>
-              </Reveal>
+        {/* O DIFERENCIAL */}
+        <section className={SECAO}>
+          <div
+            className={`${CONTAINER} grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[1fr_1fr]`}
+          >
+            <Reveal>
+              <Eyebrow>O diferencial</Eyebrow>
+              <h2 className="mt-4 max-w-[12ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                O número abre. A marca aprofunda.
+              </h2>
+              <p className="mt-6 max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                A Pólia não começa dizendo para você postar mais, vender mais ou faturar mais.
+                Primeiro, ela ajuda você a entender:
+              </p>
+            </Reveal>
 
+            <div>
+              <RevealGroup className="flex flex-col">
+                {perguntasDoNumero.map((q, i) => (
+                  <RevealItem
+                    key={q}
+                    className={`flex items-baseline gap-5 py-5 ${
+                      i > 0 ? "border-t border-[var(--line)]" : ""
+                    }`}
+                  >
+                    <span className="font-accent text-[13px] font-bold tracking-[0.1em] text-[var(--secondary-text)]">
+                      0{i + 1}
+                    </span>
+                    <p className="text-[clamp(1.4rem,2.6vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.02em]">
+                      {q}
+                    </p>
+                  </RevealItem>
+                ))}
+              </RevealGroup>
               <Reveal delay={0.1}>
-                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <FotoFundadora />
-                  <b className="text-[16px] font-semibold">Sil</b>
-                  <p className="text-[14px] text-[var(--ink-soft)]">fundadora</p>
-                  <ul className="mt-6 flex list-none flex-col gap-3">
-                    {credenciaisSil.map((c) => (
-                      <li
-                        key={c}
-                        className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="mt-[7px] h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
-                        />
-                        {c}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <p className="mt-8 max-w-[44ch] border-t border-[var(--line)] pt-6 text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  Depois, essa clareza sustenta as outras decisões do negócio.
+                </p>
+                <p className="mt-3 max-w-[44ch] text-[16px] font-semibold leading-[1.6] text-[var(--ink)]">
+                  Porque uma marca forte também precisa saber sustentar o preço que cobra.
+                </p>
               </Reveal>
             </div>
           </div>
         </section>
 
         {/* PARA QUEM É */}
-        <section className={SECAO}>
+        <section className={`bg-[var(--surface)] ${SECAO}`}>
           <div className={CONTAINER}>
             <Reveal>
               <Eyebrow>Para quem é</Eyebrow>
               <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Feita pra quem vende. Ou pra quem vai começar.
+                Para quem vende. E para quem está começando.
               </h2>
             </Reveal>
 
@@ -788,7 +977,7 @@ function HomePage() {
               <Reveal>
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
                   <h3 className="mb-6 text-[20px] font-bold tracking-[-0.01em]">
-                    Faz sentido quando
+                    A Pólia faz sentido se
                   </h3>
                   <ul className="flex list-none flex-col gap-4">
                     {fazSentido.map((item) => (
@@ -811,7 +1000,7 @@ function HomePage() {
               <Reveal delay={0.1}>
                 <div className="h-full rounded-2xl border border-[var(--line)] p-8">
                   <h3 className="mb-6 text-[20px] font-bold tracking-[-0.01em]">
-                    Ainda não, quando
+                    Talvez não seja para você se
                   </h3>
                   <ul className="flex list-none flex-col gap-4">
                     {aindaNao.map((item) => (
@@ -826,6 +1015,70 @@ function HomePage() {
                           ·
                         </span>
                         {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.1}>
+              <div className="mt-[clamp(40px,5vw,64px)] max-w-[720px]">
+                <p className="text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  A Pólia organiza os números e mostra o cenário.
+                </p>
+                <p className="mt-2 text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em]">
+                  <HighlightWord delay={0.2}>A decisão continua sendo sua.</HighlightWord>
+                </p>
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* QUEM FEZ */}
+        <section className={SECAO}>
+          <div className={CONTAINER}>
+            <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[1.15fr_0.85fr]">
+              <Reveal>
+                <Eyebrow>Quem fez</Eyebrow>
+                <h2 className="mt-4 max-w-[18ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  Feita por quem conhece o outro lado da conta.
+                </h2>
+                <p className="mt-6 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  A Pólia nasceu depois de anos vendo pequenas empreendedoras tomarem decisões
+                  importantes sem ter clareza sobre os próprios números.
+                </p>
+                <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                  Sil, fundadora da Pólia, passou 14 anos dentro do e-commerce, sendo 8 deles
+                  tocando o próprio negócio. Ela viu de perto a diferença entre ter informação para
+                  decidir e simplesmente torcer para a conta fechar.
+                </p>
+                <blockquote className="mt-8 max-w-[30ch] font-fraunces text-[clamp(1.35rem,2.3vw,1.9rem)] italic leading-[1.4]">
+                  “Passei anos vendo marca grande decidir com clareza e marca pequena decidir no
+                  escuro. A Pólia é o painel que eu queria ter tido no meu próprio negócio, e que eu
+                  queria ter entregado a cada cliente das consultorias.”
+                  <footer className="mt-4 font-sans text-[14px] not-italic text-[var(--ink-soft)]">
+                    Sil, fundadora da Pólia
+                  </footer>
+                </blockquote>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
+                  <FotoFundadora />
+                  <b className="text-[16px] font-semibold">Sil</b>
+                  <p className="text-[14px] text-[var(--ink-soft)]">Fundadora da Pólia</p>
+                  <ul className="mt-6 flex list-none flex-col gap-3">
+                    {credenciaisSil.map((c) => (
+                      <li
+                        key={c}
+                        className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="mt-[7px] h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
+                        />
+                        {c}
                       </li>
                     ))}
                   </ul>
@@ -870,20 +1123,27 @@ function HomePage() {
                       {p.ciclo}
                     </small>
                   </p>
-                  <ul className="flex flex-1 list-none flex-col gap-3">
-                    {p.features.map((f) => (
-                      <li
-                        key={f}
-                        className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
-                        />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="flex flex-1 flex-col gap-3">
+                    {p.abre && (
+                      <p className="text-[14px] font-semibold leading-[1.6] text-[var(--ink)]">
+                        {p.abre}
+                      </p>
+                    )}
+                    <ul className="flex list-none flex-col gap-3">
+                      {p.features.map((f) => (
+                        <li
+                          key={f}
+                          className="flex gap-2.5 text-[14px] leading-[1.6] text-[var(--ink-soft)]"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-[var(--secondary)]"
+                          />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                   {p.apoio && (
                     <p className="text-[13px] leading-[1.5] text-[var(--ink-soft)]">{p.apoio}</p>
                   )}
@@ -903,12 +1163,46 @@ function HomePage() {
               {/* Enquanto os planos não abrem, a linha de apoio responde à
                   objeção certa (quando dá pra entrar), não à de cancelamento. */}
               <p className="mx-auto mt-6 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink)]">
-                Os planos abrem em breve, e quem está na lista entra primeiro. O preço já está aqui
-                pra não ter surpresa depois.
+                Os planos abrem em breve. Quem está na lista entra primeiro.
               </p>
-              <p className="mx-auto mt-3 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink-soft)]">
-                Na dúvida, o caminho é simples: o Confere responde se dá lucro. O Controle faz o mês
-                inteiro rodar. Sem cartão no Confere, e cancelar leva um clique.
+            </Reveal>
+          </div>
+        </section>
+
+        {/* CTA DE FECHAMENTO */}
+        <section className="py-[clamp(80px,10vw,140px)] text-center">
+          <div className={CONTAINER}>
+            <Reveal className="flex flex-col items-center">
+              <Eyebrow>Pólia</Eyebrow>
+              <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                O próximo orçamento vai chegar de qualquer jeito.
+              </h2>
+              <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                A questão é como você vai chegar nele. Com mais uma conta feita no chute? Ou sabendo
+                quanto precisa cobrar?
+              </p>
+              <p className="mt-6 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
+                A Pólia existe para colocar o negócio no lugar certo:
+              </p>
+              <p className="mt-2 max-w-[24ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                na sua frente, com os{" "}
+                <span className="whitespace-nowrap">
+                  <HighlightWord delay={0.3}>números à vista</HighlightWord>.
+                </span>
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link
+                  to="/lista-de-espera"
+                  data-track="cadastro_cta_clicado"
+                  data-track-props='{"contexto":"cta_final"}'
+                  className={BTN_PRIMARIO}
+                >
+                  Quero descobrir se dá lucro
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+              <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
+                Sem cartão. Sem prazo. Sem precisar saber de planilha.
               </p>
             </Reveal>
           </div>
@@ -920,7 +1214,7 @@ function HomePage() {
             <Reveal>
               <Eyebrow>Perguntas</Eyebrow>
               <h2 className="mb-[clamp(40px,5vw,48px)] mt-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Antes de criar a conta, respostas diretas
+                Antes de criar sua conta, respostas diretas.
               </h2>
             </Reveal>
             {perguntas.map((p) => (
@@ -929,38 +1223,12 @@ function HomePage() {
           </div>
         </section>
 
-        {/* CTA FINAL */}
-        <section className="py-[clamp(80px,10vw,140px)] text-center">
-          <div className={CONTAINER}>
-            <Reveal className="flex flex-col items-center">
-              <Eyebrow>Pólia</Eyebrow>
-              <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                O negócio já existe. <HighlightWord delay={0.3}>Falta o lugar dele.</HighlightWord>
-              </h2>
-              <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                A primeira resposta que o painel devolve é a que mais aperta: dá lucro, ou só gira
-                dinheiro?
-              </p>
-              <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink)]">
-                O próximo orçamento vai chegar de qualquer jeito. Melhor que ele chegue com a conta
-                pronta.
-              </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                <Link
-                  to="/lista-de-espera"
-                  data-track="cadastro_cta_clicado"
-                  data-track-props='{"contexto":"cta_final"}'
-                  className={BTN_PRIMARIO}
-                >
-                  Entrar na lista
-                  <span aria-hidden="true">→</span>
-                </Link>
-                <a href="#planos" className={BTN_CONTORNO}>
-                  Conhecer os planos
-                </a>
-              </div>
-              <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
-                Quem está na lista é avisada primeiro, antes de abrir pro resto.
+        {/* ASSINATURA FINAL */}
+        <section className="pb-[clamp(72px,9vw,128px)]">
+          <div className={`${CONTAINER} border-t border-[var(--line)] pt-[clamp(48px,6vw,80px)]`}>
+            <Reveal>
+              <p className="max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Clareza sobre o negócio gera lucro.
               </p>
             </Reveal>
           </div>

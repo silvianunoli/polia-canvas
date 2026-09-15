@@ -89,7 +89,7 @@ function CadernoPage() {
   const selecionada = notas.find((n) => n.id === selectedId) ?? null;
   const reduceMotion = usePrefersReducedMotion();
 
-  // Cota do Confere: 1 nota ativa. As mais antigas por created_at ficam
+  // Cota do plano Grátis: 1 nota ativa. As mais antigas por created_at ficam
   // dentro da cota; o excedente (de um downgrade, por ex.) vira somente
   // leitura — mesma regra imposta pela trigger do banco (20260727130000).
   const idsExcedentes = useMemo(() => {
@@ -313,13 +313,13 @@ function CadernoPage() {
       <div>
         {cotaAtingida && (
           <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-            No Confere cabe 1 nota. Suba pro Controle pra deixar ilimitado.{" "}
+            No plano Grátis cabe 1 nota. Suba pro Premium pra deixar ilimitado.{" "}
             <Link
               to="/upgrade"
               search={{ rota: "/caderno", tier: "controle" }}
               className="font-medium text-[var(--secondary-text)] no-underline"
             >
-              Assinar o Controle
+              Assinar o Premium
             </Link>
           </div>
         )}
@@ -443,7 +443,7 @@ function CadernoPage() {
                             </p>
                             <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">
                               {idsExcedentes.has(n.id)
-                                ? "somente leitura · acima da cota do Confere"
+                                ? "somente leitura · acima da cota do plano Grátis"
                                 : preview
                                   ? destacar(preview, termo)
                                   : "nota vazia"}
@@ -504,13 +504,13 @@ function CadernoPage() {
                 {notaExcedente && (
                   <div className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
                     <Lock size={14} className="shrink-0" aria-hidden="true" />
-                    Somente leitura · essa nota está acima da cota do Confere.{" "}
+                    Somente leitura · essa nota está acima da cota do plano Grátis.{" "}
                     <Link
                       to="/upgrade"
                       search={{ rota: "/caderno", tier: "controle" }}
                       className="font-medium text-[var(--secondary-text)] no-underline"
                     >
-                      Assinar o Controle
+                      Assinar o Premium
                     </Link>
                   </div>
                 )}

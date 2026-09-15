@@ -18,9 +18,9 @@ import {
 
 const NOME_PLANO: Record<string, string> = {
   beta: "Plano de lançamento",
-  confere: "Confere",
-  controle: "Controle",
-  projete: "Projete",
+  confere: "Grátis",
+  controle: "Premium",
+  projete: "Pro",
   cancelada: "Assinatura cancelada",
 };
 
@@ -76,7 +76,7 @@ function ConfiguracoesPage() {
   const businessNameAtual = profileQuery.data?.business_name ?? "";
 
   // Razão social + CNPJ: só usados no cabeçalho do Resumo pro contador
-  // (Projete), mas coletados aqui sem gate de plano — dado útil de já ter
+  // (Pro), mas coletados aqui sem gate de plano — dado útil de já ter
   // preenchido se ela upgradar depois.
   const [razaoSocial, setRazaoSocial] = useState("");
   const [cnpj, setCnpj] = useState("");
@@ -490,7 +490,7 @@ function ConfiguracoesPage() {
               className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
-              usada no cabeçalho do Resumo pro contador (Projete)
+              usada no cabeçalho do Resumo pro contador (Pro)
             </p>
           </Campo>
 
@@ -696,7 +696,7 @@ function ConfiguracoesPage() {
               <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
                 {plano === "cancelada"
                   ? "sua assinatura foi cancelada. assine de novo quando quiser."
-                  : "No Confere agora. O Controle abre o Financeiro e o Raio-x do mês; o Projete acrescenta a projeção e o plano de conteúdo do ano."}
+                  : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
               </p>
               <a
                 href="/assinar"
@@ -741,7 +741,7 @@ function ConfiguracoesPage() {
               <div className="flex flex-col items-start gap-2">
                 <span className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
                   Cancelar mesmo? A assinatura fica ativa até o fim do período já pago. Depois a
-                  conta volta pro Confere: os dados continuam, o acesso às telas pagas para.
+                  conta volta pro plano Grátis: os dados continuam, o acesso às telas pagas para.
                 </span>
                 <div className="flex items-center gap-2">
                   <button

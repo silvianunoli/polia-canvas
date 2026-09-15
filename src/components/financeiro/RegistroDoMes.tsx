@@ -11,18 +11,18 @@ import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalL
 /**
  * Registro mínimo de entradas e saídas, pra viver DENTRO do Painel.
  *
- * Existe por causa da decisão COPY-04 (03/09/2026). O card do plano Confere
+ * Existe por causa da decisão COPY-04 (03/09/2026). O card do plano Grátis
  * promete "painel diário: quanto já entrou e quanto falta pra fechar as contas
- * do mês", mas a tela /financeiro é do Controle: sem nenhum lançamento
+ * do mês", mas a tela /financeiro é do Premium: sem nenhum lançamento
  * possível, o painel do plano grátis mostrava R$ 0 pra sempre e a promessa era
  * falsa. A decisão foi cumprir a promessa em vez de rebaixá-la.
  *
  * O corte: a AÇÃO de registrar (e corrigir) entrada e saída do mês corrente
- * abre pra todo plano. A TELA /financeiro continua no Controle e é ela que tem
+ * abre pra todo plano. A TELA /financeiro continua no Premium e é ela que tem
  * o histórico de todos os meses, os filtros de período, a régua dos três
  * números do mês, o registro de venda ligado a produto e o resumo pro contador.
  *
- * Este cartão só aparece pra quem NÃO tem o Financeiro: quem tem o Controle vê
+ * Este cartão só aparece pra quem NÃO tem o Financeiro: quem tem o Premium vê
  * o cartão de métrica linkando pra tela completa, que faz tudo isso e mais.
  */
 
@@ -157,16 +157,16 @@ export function RegistroDoMes({
         </p>
       )}
 
-      {/* O que ainda é do Controle, dito sem rodeio: o registro abriu, a tela
+      {/* O que ainda é do Premium, dito sem rodeio: o registro abriu, a tela
           de gestão do dinheiro não. */}
       <p className="mt-4 border-t border-[var(--line)] pt-3 text-[12px] leading-relaxed text-[var(--muted)]">
-        O Controle abre o Financeiro inteiro: todos os meses, filtro por período, a régua do mínimo
+        O Premium abre o Financeiro inteiro: todos os meses, filtro por período, a régua do mínimo
         pra fechar as contas e o resumo pro contador.{" "}
         <a
           href="/upgrade?rota=%2Ffinanceiro&tier=controle"
           className="text-[var(--secondary-text)] underline-offset-2 hover:underline"
         >
-          Conhecer o Controle
+          Conhecer o Premium
         </a>
       </p>
 

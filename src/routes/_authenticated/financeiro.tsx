@@ -17,7 +17,7 @@ import {
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
 import { temProjete } from "@/lib/planos";
 import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
-// O modal de lançamento saiu daqui em 03/09/2026 (COPY-04): o Painel do Confere
+// O modal de lançamento saiu daqui em 03/09/2026 (COPY-04): o Painel do plano Grátis
 // também registra entrada/saída por ele, sem abrir esta tela.
 import {
   ModalLancamento,
@@ -177,7 +177,7 @@ function FinanceiroPage() {
     [dadosQuery.data?.lancamentos],
   );
 
-  // Resumo pro contador (Projete): plano checado direto, não por tierDoPlano
+  // Resumo pro contador (Pro): plano checado direto, não por tierDoPlano
   // (que funde controle/projete no mesmo tier de rota da Fase 1).
   const perfilResumoQuery = useQuery({
     queryKey: ["financeiro-perfil", userId],
@@ -632,7 +632,7 @@ function FinanceiroPage() {
         />
       )}
 
-      {/* ───────── 7. Modal: resumo pro contador (Projete) ───────── */}
+      {/* ───────── 7. Modal: resumo pro contador (Pro) ───────── */}
       {resumoContadorAberto && ehProjete && (
         <ResumoContadorModal
           lancamentos={lancamentos}

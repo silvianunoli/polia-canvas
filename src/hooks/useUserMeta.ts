@@ -13,9 +13,9 @@ export interface UserMeta {
   plano: string;
   /**
    * `true` enquanto o perfil não chegou do banco. Existe porque `plano` cai no
-   * padrão "confere" durante o carregamento: sem esta flag, as telas do Projete
-   * (Raio-x, Projeção, Plano de conteúdo) mostravam o portão "isso é do Projete"
-   * por um instante PARA QUEM JÁ PAGA o Projete, em toda abertura.
+   * padrão "confere" durante o carregamento: sem esta flag, as telas do Pro
+   * (Raio-x, Projeção, Plano de conteúdo) mostravam o portão "isso é do Pro"
+   * por um instante PARA QUEM JÁ PAGA o Pro, em toda abertura.
    */
   carregando: boolean;
 }

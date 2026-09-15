@@ -216,7 +216,7 @@ export const statusAssinatura = createServerFn({ method: "GET" })
       preco: infoDoPreco(assinatura.price_id),
       // Existe customer na Stripe: já passou por cobrança alguma vez, então o
       // Portal de cobrança tem o que mostrar (cartão, faturas, dados). Quem
-      // nunca pagou (Confere, beta) não tem customer e não vê o botão.
+      // nunca pagou (Grátis, beta) não tem customer e não vê o botão.
       temCobranca: !!assinatura.stripe_customer_id,
     };
   });

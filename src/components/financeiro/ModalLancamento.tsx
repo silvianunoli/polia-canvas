@@ -4,12 +4,12 @@ import { track } from "@/lib/analytics";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
- * 03/09/2026 (COPY-04) porque o Painel do plano Confere também precisa dele: o
+ * 03/09/2026 (COPY-04) porque o Painel do plano Grátis também precisa dele: o
  * card do grátis promete "quanto já entrou e quanto falta pra fechar as contas
  * do mês", e sem poder registrar um lançamento esse painel mostrava R$ 0 pra
  * sempre. A AÇÃO de registrar é de todo plano; a TELA /financeiro (histórico
  * completo, filtros, período, os três números do mês, resumo pro contador)
- * continua sendo do Controle.
+ * continua sendo do Premium.
  */
 
 export type RegistrarTipo = "entrada" | "saida";

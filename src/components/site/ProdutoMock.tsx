@@ -137,7 +137,7 @@ export function MockPainel({ className }: { className?: string }) {
   return (
     <Janela
       url="app.usepolia.com.br/painel"
-      label="Painel da Pólia: a frase faltam R$ 430 pro mês bom no topo e, abaixo, a receita do mês, os pedidos, os clientes, as tarefas do dia e o gráfico da semana."
+      label="Painel da Pólia: a frase falta R$ 430 para bater a meta do mês no topo e, abaixo, a receita do mês, os pedidos, os clientes, as tarefas do dia e o gráfico da semana."
       className={className}
     >
       <div className="flex flex-col gap-5 md:flex-row">
@@ -167,7 +167,7 @@ export function MockPainel({ className }: { className?: string }) {
             Boa tarde, Marina.
           </p>
           <p className="mt-1 text-[20px] leading-[1.15] tracking-[-0.01em] text-[var(--ink)] md:text-[24px]">
-            Faltam R$ 430 pro mês bom.
+            Falta R$ 430 para bater a meta do mês.
           </p>
           <p className="mt-0.5 text-[11.5px] text-[var(--muted)]">E hoje tem 3 tarefas.</p>
 
@@ -267,11 +267,11 @@ export function MockPainel({ className }: { className?: string }) {
 export function MockFrasePainel({ className }: { className?: string }) {
   return (
     <Cartela
-      label="Painel da Pólia mostrando a frase faltam R$ 430 pro mês bom, com o aviso de três tarefas para hoje."
+      label="Painel da Pólia mostrando a frase falta R$ 430 para bater a meta do mês, com o aviso de três tarefas para hoje."
       className={className}
     >
       <p className="text-[19px] leading-[1.2] tracking-[-0.01em] text-[var(--ink)]">
-        Faltam R$ 430 pro mês bom.
+        Falta R$ 430 para bater a meta do mês.
       </p>
       <p className="mt-1 text-[12px] text-[var(--muted)]">E hoje tem 3 tarefas.</p>
       <div className="mt-3.5 flex flex-wrap gap-2">

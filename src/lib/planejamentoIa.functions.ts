@@ -8,7 +8,7 @@ import { secaoPorId, secoesDoModulo } from "@/lib/planejamento";
 const FEATURE = "planejamento";
 
 // Modelo/versão a confirmar na hora do deploy (a linha do Gemini muda rápido —
-// ver fundação da Fase 3). Confere na linha barata; Controle/Projete na melhor.
+// ver fundação da Fase 3). Grátis na linha barata; Premium/Pro na melhor.
 const MODELO_FLASH = "gemini-flash-latest";
 const MODELO_PRO = "gemini-pro-latest";
 
@@ -17,8 +17,8 @@ interface ConfigPlano {
   limite: number;
 }
 
-// Tetos confirmados: Confere 1/mês, Controle 30/mês, Projete 60/mês. Beta
-// (contas legado) recebe o mesmo teto generoso do Projete — nunca ilimitado
+// Tetos confirmados: Grátis 1/mês, Premium 30/mês, Pro 60/mês. Beta
+// (contas legado) recebe o mesmo teto generoso do Pro — nunca ilimitado
 // de verdade, mesmo pra conta interna, pra sempre passar pelo contador.
 const CONFIG_POR_PLANO: Record<string, ConfigPlano> = {
   confere: { modelo: MODELO_FLASH, limite: 1 },

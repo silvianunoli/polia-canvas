@@ -7,7 +7,7 @@ const SITE_URL = "https://usepolia.com.br";
 
 const inputSchema = z.object({
   email: z.string().trim().email().max(255),
-  // Checkout público hoje só oferece o Controle (o Projete exige decidir se
+  // Checkout público hoje só oferece o Premium (o Pro exige decidir se
   // a Aimer/plano de conteúdo compensam vender sem conta prévia).
   plano: z
     .enum(["mensal", "anual"])

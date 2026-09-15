@@ -134,8 +134,7 @@ function TermosPage() {
                   .
                 </li>
                 <li>
-                  Antes de assinar, dá pra testar a Pólia à vontade no plano Confere, gratuito e sem
-                  prazo.
+                  Antes de assinar, dá pra testar a Pólia à vontade no plano Grátis, sem prazo.
                 </li>
                 <li>
                   A cobrança é recorrente e renova automaticamente. Ao cancelar, a cobrança para a
