@@ -57,7 +57,19 @@
   /* Tipografia: font-sans, font-accent, font-handwritten */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-accent: "DM Sans", "Inter", sans-serif;
-  --font-handwritten: "Caveat", cursive;
+  --font-handwritten: "Anzylna", cursive;
+}
+
+/* Anzylna: fonte manuscrita paga (Cititype/MyFonts), licenciada e self-hosted
+   — não está no Google Fonts nem no Fontshare. Arquivo em public/fonts/,
+   servido como /fonts/Anzylna-Regular.ttf. Peso único (Regular); a fundição
+   não publica outro peso. Migrada de Caveat em 2026-09-15 (DESIGN.md §3). */
+@font-face {
+  font-family: "Anzylna";
+  src: url("/fonts/Anzylna-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* ── Paleta Pólia v3 (pedra/turquesa/pêssego/amarelo/tinta) ──────────────────
@@ -209,43 +221,47 @@
   background-color: var(--muted, var(--muted-foreground));
 }
 
-/* Caveat: piso de legibilidade. A altura-x da Caveat é menor que Inter, então
-   travamos um piso maior e impedimos opacity em texto handwritten global. */
-.font-caveat,
+/* Anzylna (era Caveat até 2026-09-15): piso de legibilidade. A altura-x da
+   Anzylna é menor que Inter, então travamos um piso maior e impedimos
+   opacity em texto handwritten global. Piso de tamanho e opacity herdados
+   da regra antiga da Caveat — ainda não têm confirmação visual própria
+   pra Anzylna (DESIGN.md §3), não inventar valor novo aqui sem decisão. */
+.font-anzylna,
 .font-handwritten,
-[class*="font-caveat"],
+[class*="font-anzylna"],
 [class*="font-handwritten"] {
-  font-family: "Caveat", cursive;
-  font-size: max(18px, var(--caveat-size, 18px));
+  font-family: "Anzylna", cursive;
+  font-size: max(18px, var(--anzylna-size, 18px));
   opacity: 1 !important;
 }
 @media (max-width: 768px) {
-  .font-caveat,
+  .font-anzylna,
   .font-handwritten,
-  [class*="font-caveat"],
+  [class*="font-anzylna"],
   [class*="font-handwritten"] {
-    font-size: max(20px, var(--caveat-size, 20px));
+    font-size: max(20px, var(--anzylna-size, 20px));
   }
 }
 
 
-/* Caveat tokens — três tamanhos canônicos, opacity travada em 1.
-   Use SEMPRE uma destas três classes em texto Caveat decorativo. */
-.caveat-decorativo {
-  font-family: "Caveat", cursive;
+/* Anzylna tokens (eram .caveat-decorativo/.caveat-informacional até 2026-09-15)
+   — três tamanhos canônicos, opacity travada em 1.
+   Use SEMPRE uma destas classes em texto manuscrito decorativo. */
+.anzylna-decorativo {
+  font-family: "Anzylna", cursive;
   font-size: 18px;
   line-height: 1.4;
   opacity: 1 !important;
 }
-.caveat-informacional {
-  font-family: "Caveat", cursive;
+.anzylna-informacional {
+  font-family: "Anzylna", cursive;
   font-size: 20px;
   line-height: 1.4;
   opacity: 1 !important;
 }
 @media (max-width: 768px) {
-  .caveat-decorativo { font-size: 20px; }
-  .caveat-informacional { font-size: 22px; }
+  .anzylna-decorativo { font-size: 20px; }
+  .anzylna-informacional { font-size: 22px; }
 }
 
 /* Focus ring global — WCAG 2.1 AA */
