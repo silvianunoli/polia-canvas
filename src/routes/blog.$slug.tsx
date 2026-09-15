@@ -55,8 +55,9 @@ const CARTAO =
 
 // Sem resumo cadastrado a description caía em "Pólia blog." e o og:description
 // em string vazia: o link circulava no WhatsApp sem nada que fizesse clicar.
-const DESCRICAO_PADRAO = "Texto da Sil sobre preço, lucro e marca pra quem toca o próprio negócio.";
-const TITULO_PADRAO = "Blog da Pólia: preço, lucro e marca";
+const DESCRICAO_PADRAO =
+  "Texto de quem toca o próprio negócio sobre as decisões que dá pra tomar com mais clareza.";
+const TITULO_PADRAO = "Blog da Pólia · Pra quem toca a marca";
 
 /** Tela curta de aviso do blog, com as saídas que o estado de erro não tinha. */
 function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; acao?: ReactNode }) {
@@ -269,23 +270,11 @@ function BlogPost() {
             <hr className="my-[clamp(40px,5vw,56px)] h-px border-0 bg-[var(--line)]" />
 
             <Assinatura>
-              <p className="font-semibold">Escrito por Sil</p>
+              <p className="font-semibold">Por Sil</p>
               <p className="max-w-[52ch] text-[14px] leading-[1.6] text-[var(--ink-soft)]">
-                Escrito por quem toca a própria marca sozinha, sem hack de faturamento e sem
-                promessa vazia.
+                Por quem toca o próprio negócio e pensa nessas decisões todo dia.
               </p>
             </Assinatura>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/" hash="planos" className={BTN_PRIMARIO}>
-                Ver quanto sobra em cada venda
-                <span aria-hidden="true">→</span>
-              </Link>
-              <Link to="/blog" className={BTN_CONTORNO}>
-                <ArrowLeft size={16} aria-hidden="true" />
-                Voltar pro blog
-              </Link>
-            </div>
           </div>
         </article>
 
@@ -335,16 +324,14 @@ function BlogPost() {
                   Do texto pra prática.
                 </h2>
                 <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                  O preço, a meta e o que sobra no fim do mês num lugar só. Os planos abrem em
-                  breve, e quem está na lista entra primeiro.
+                  Pensar sobre isso é um passo. Ver o número da sua própria venda é o seguinte: a
+                  Pólia mostra quanto sobra e ajuda a decidir sem chute. Os planos abrem em breve,
+                  e quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link to="/lista-de-espera" className={BTN_PRIMARIO}>
-                    Entrar na lista
+                    Quero ver se dá lucro.
                     <span aria-hidden="true">→</span>
-                  </Link>
-                  <Link to="/sobre" className={BTN_CONTORNO}>
-                    Conhecer a Pólia
                   </Link>
                 </div>
               </div>

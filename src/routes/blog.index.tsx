@@ -30,16 +30,17 @@ export const Route = createFileRoute("/blog/")({
   },
   head: () => ({
     meta: [
-      { title: "Preço, lucro e marca · Blog da Pólia" },
+      { title: "Blog da Pólia · Pra quem toca a marca" },
       {
         name: "description",
         content:
-          "Textos da Pólia pra quem toca a marca. Sem hack de faturamento, sem promessa de seis dígitos. Uma coisa de cada vez.",
+          "Textos pra quem toca o próprio negócio decidir com mais clareza: preço, desconto, compra, venda e o que sobra no fim do mês.",
       },
-      { property: "og:title", content: "Preço, lucro e marca · Blog da Pólia" },
+      { property: "og:title", content: "Blog da Pólia · Pra quem toca a marca" },
       {
         property: "og:description",
-        content: "Textos da Pólia pra quem toca a marca.",
+        content:
+          "Textos sobre as decisões que quem toca o próprio negócio precisa tomar, sem hack e sem promessa de faturamento.",
       },
     ],
     links: [linkCanonico("/blog")],
@@ -100,10 +101,9 @@ function BlogList() {
             </h1>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Sem hack de faturamento, sem promessa de seis dígitos. Textos diretos sobre o que
-                trava de verdade quando quem decide é a dona do negócio, sozinha ou com quem ajuda:
-                a razão de existir, quem a marca serve, o que vende, quanto vale, como ela é achada
-                e onde ela vai.
+                Sem hack de faturamento, sem promessa de seis dígitos. Textos sobre as decisões que
+                parecem pequenas até chegar a hora de tomar: preço, desconto, compra, venda, o
+                dinheiro que entra e o que sobra.
               </p>
             </Reveal>
 
