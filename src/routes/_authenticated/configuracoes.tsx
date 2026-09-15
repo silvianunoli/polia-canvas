@@ -350,7 +350,17 @@ function ConfiguracoesPage() {
     setExcluindo(true);
     // Apaga de verdade: cancela o Stripe, apaga todos os dados no banco e remove
     // o login. Só desloga se deu certo — senão a usuária pensaria que apagou sem ter.
-    const resultado = await excluirMinhaConta();
+    // Sem o try, uma exceção da server function (env var faltando, rede caindo)
+    // deixava o botão travado em "excluindo" para sempre, sem dizer nada.
+    let resultado: Awaited<ReturnType<typeof excluirMinhaConta>>;
+    try {
+      resultado = await excluirMinhaConta();
+    } catch (err) {
+      console.error("[Configurações] Falha ao chamar a exclusão de conta:", err);
+      toastErro("Não conseguimos excluir a conta agora. Confere a internet e tenta de novo.");
+      setExcluindo(false);
+      return;
+    }
     if (!resultado.ok) {
       toastErro(resultado.error ?? "Não conseguimos excluir a conta agora. Tenta de novo.");
       setExcluindo(false);
