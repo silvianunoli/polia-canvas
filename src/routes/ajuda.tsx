@@ -524,11 +524,11 @@ function AjudaPage() {
               {/* coluna esquerda */}
               <Reveal>
                 <Eyebrow>Contato</Eyebrow>
-                <h2 className="mt-4 max-w-[14ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Fala comigo.
+                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  Não encontrou o que precisava? Escreve pra gente.
                 </h2>
                 <p className="mt-6 max-w-[54ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  Escreve que eu leio e respondo. Sem departamento no meio do caminho.
+                  Escreve que a gente lê e responde.
                 </p>
 
                 <hr className="my-8 border-t border-[var(--line)]" />
@@ -565,7 +565,7 @@ function AjudaPage() {
                         Tempo de resposta
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        Respondo em até 24 horas, em dias úteis.
+                        Respondemos em até 24 horas úteis.
                       </p>
                     </div>
                   </div>
@@ -580,7 +580,7 @@ function AjudaPage() {
                         Dúvida rápida?
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        Começa pelas perguntas por assunto, ali em cima.
+                        Comece pela busca, sua resposta pode estar ali, sem precisar aguardar.
                       </p>
                     </div>
                   </div>
@@ -698,10 +698,10 @@ function AjudaPage() {
                       className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     >
                       <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                        Recebi. Eu te respondo.
+                        Recebemos. A gente te responde.
                       </h2>
                       <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                        Chegou aqui. Eu respondo em até 24 horas, em dias úteis, no seu e-mail.
+                        Chegou aqui. A gente responde em até 24 horas úteis, no seu e-mail.
                       </p>
                     </div>
                   )}
