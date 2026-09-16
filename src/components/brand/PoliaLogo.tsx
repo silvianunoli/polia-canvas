@@ -1,56 +1,28 @@
-import type { SVGProps } from "react";
+import type { ImgHTMLAttributes, SVGProps } from "react";
 
 type LogoProps = Omit<SVGProps<SVGSVGElement>, "viewBox" | "role">;
+type WordmarkProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> & {
+  /** "light" (padrão) é pra fundo claro (`--bg`); "dark" é pra fundo escuro
+   *  (`--ink`), como o rodapé — arquivo com as cores invertidas. */
+  variant?: "light" | "dark";
+};
 
 /**
- * Wordmark completa (símbolo + trilha de 3 pontos + palavra Pólia).
- * O traço principal herda a cor do texto via `currentColor` — quem usa
- * define a cor com `text-[var(--ink)]` (fundo claro) ou `text-[var(--bg)]`
- * (fundo escuro). Os 3 pontos da trilha usam sempre os tokens de acento
- * (--secondary/--accent/--highlight), fixos independente do fundo.
- * Precisa estar dentro do escopo `.polia-v3` pra esses tokens resolverem.
+ * Wordmark completa com o selo "ONE" (16/09/2026). Usa os arquivos de verdade
+ * (`public/logotipo-wordmark-ligth-one.svg` / `-dark-one.svg`, o mesmo lockup
+ * dos e-mails transacionais) em vez de redesenhar o selo em paths à mão — cada
+ * arquivo já traz cor e fundo fixos pro contexto certo, então não segue mais
+ * `currentColor`: escolha a variante certa em vez de `text-[var(--ink)]`/
+ * `text-[var(--bg)]`, que não têm mais efeito aqui.
  */
-export function PoliaWordmark({ className, ...props }: LogoProps) {
+export function PoliaWordmark({ className, variant = "light", ...props }: WordmarkProps) {
   return (
-    <svg
-      viewBox="0 -70 569 220"
-      role="img"
-      aria-label="Pólia"
-      fill="currentColor"
+    <img
+      src={variant === "dark" ? "/logotipo-wordmark-dark-one.svg" : "/logotipo-wordmark-ligth-one.svg"}
+      alt="Pólia One"
       className={className}
       {...props}
-    >
-      <g>
-        <rect x="0" y="0" width="26" height="140" rx="13" />
-        <circle cx="58" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="26" />
-      </g>
-      <g transform="translate(122,0)">
-        <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="26" />
-        <rect
-          x="51"
-          y="-37"
-          width="10"
-          height="28"
-          rx="5"
-          fill="var(--highlight)"
-          transform="rotate(24 56 -23)"
-        />
-      </g>
-      <g transform="translate(236,0)">
-        <rect x="0" y="-40" width="26" height="140" rx="13" />
-      </g>
-      <g transform="translate(276,0)">
-        <rect x="0" y="0" width="26" height="100" rx="13" />
-        <circle cx="13" cy="-25" r="15" />
-      </g>
-      <g transform="translate(316,0)">
-        <circle cx="50" cy="50" r="37" fill="none" stroke="currentColor" strokeWidth="26" />
-        <rect x="76" y="0" width="26" height="100" rx="13" />
-      </g>
-      <circle cx="450" cy="104" r="8" fill="var(--secondary)" />
-      <circle cx="490" cy="109" r="10" fill="var(--accent)" />
-      <circle cx="540" cy="114" r="14" fill="var(--highlight)" />
-    </svg>
+    />
   );
 }
 
