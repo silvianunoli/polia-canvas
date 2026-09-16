@@ -210,11 +210,9 @@ async function enviarEmailPagamentoRecusado(email: string) {
     `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "A cobrança da sua assinatura não passou.",
-      headline: "A cobrança não passou",
-      paragrafos: [
-        "A cobrança da sua assinatura na Pólia não passou.",
-        "Atualiza a forma de pagamento pra manter seu acesso sem interrupção.",
-      ],
+      headline: "Pagamento recusado",
+      alerta: "A cobrança da sua assinatura na Pólia não passou.",
+      paragrafos: ["Atualiza a forma de pagamento pra manter seu acesso sem interrupção."],
       ctaLabel: "Atualizar pagamento",
       ctaUrl: `${SITE_URL}/configuracoes`,
       ajudaUrl: `${SITE_URL}/ajuda`,
