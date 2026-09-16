@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FAIXAS, TERRITORIOS } from "./perguntas";
+import { FAIXAS, TERRITORIOS, type Territorio } from "./perguntas";
 import { montarEmailDiagnostico } from "./email";
 
 const faixa = FAIXAS[0];
@@ -7,7 +7,7 @@ const territorio = TERRITORIOS[0];
 const DESCADASTRO = "https://usepolia.com.br/descadastrar?t=11111111-2222-3333-4444-555555555555";
 
 function montar(
-  args: { faixa?: (typeof FAIXAS)[number]; territorio?: (typeof TERRITORIOS)[number] } = {},
+  args: { faixa?: (typeof FAIXAS)[number]; territorio?: Territorio } = {},
 ) {
   return montarEmailDiagnostico({
     faixa: args.faixa ?? faixa,
@@ -17,14 +17,20 @@ function montar(
 }
 
 describe("e-mail do diagnóstico", () => {
-  it("leva no assunto a faixa da pessoa", () => {
-    expect(montar().subject).toContain(faixa.nome);
+  // Título e assunto pararam de variar por faixa na revisão de 16/09/2026
+  // (segunda passada): uma frase calma serve pras 24 combinações sem precisar
+  // de título chamativo pra cada uma. `faixa` segue recebida (decide o
+  // território fraco em quiz.functions.ts) mas não entra mais na copy.
+  it("leva assunto fixo, igual em toda faixa", () => {
+    expect(montar({ faixa: FAIXAS[0] }).subject).toBe("Seu diagnóstico está quase pronto");
+    expect(montar({ faixa: FAIXAS[1] }).subject).toBe("Seu diagnóstico está quase pronto");
   });
 
-  it("entrega faixa, abertura fixa, território e a conta", () => {
+  it("entrega abertura fixa, território e a conta", () => {
     const { text } = montar();
-    expect(text).toContain(faixa.nome);
-    expect(text).toContain("A maior parte das decisões já tem conta feita.");
+    expect(text).toContain(
+      "Você já resolveu boa parte das decisões importantes do negócio com números.",
+    );
     expect(text).toContain(territorio.nome);
     expect(text).toContain(territorio.explicacao);
     expect(text).toContain(territorio.conta);
@@ -41,13 +47,16 @@ describe("e-mail do diagnóstico", () => {
   });
 
   it("escapa o HTML do corpo", () => {
-    // A explicação de "Razão de existir" tem aspas: viram entidade no HTML e
-    // ficam literais no texto puro.
-    const razao = TERRITORIOS.find((t) => t.id === "razao")!;
-    const { html, text } = montar({ territorio: razao });
-    expect(html).toContain("&quot;depende&quot;");
-    expect(html).not.toContain('"depende"');
-    expect(text).toContain('"depende"');
+    // Território sintético só pra testar o escape -- não depende de aspas
+    // estarem presentes na copy real de nenhum território.
+    const comAspas = {
+      ...territorio,
+      explicacao: 'Ela ouve "não sei" e trava.',
+    } as unknown as Territorio;
+    const { html, text } = montar({ territorio: comAspas });
+    expect(html).toContain("&quot;não sei&quot;");
+    expect(html).not.toContain('"não sei"');
+    expect(text).toContain('"não sei"');
   });
 
   // Cor solta no e-mail é o jeito mais fácil de ele descolar do site, já que

@@ -56,25 +56,21 @@ describe("emailPolia", () => {
     expect(comExtras).toContain("Não quero mais receber");
   });
 
-  // A saída de suporte é opcional de propósito: só os e-mails de cobrança a
-  // ligam. Se ela vazar pro rodapé de todo disparo, o rodapé vira menu.
-  it("só mostra o link de ajuda quando pedido, e no mesmo cinza do rodapé", () => {
-    expect(html).not.toContain("Fala com a gente");
-
-    const comAjuda = emailPolia({
-      preheader: "p",
-      headline: "h",
-      paragrafos: ["p"],
-      ajudaUrl: "https://usepolia.com.br/ajuda",
-    });
-    expect(comAjuda).toContain("Alguma dúvida?");
-    expect(comAjuda).toContain('href="https://usepolia.com.br/ajuda"');
-    // Rodapé, não segundo CTA: mesma régua do descadastro (11px, #6B6B6B,
-    // layout de 16/09/2026 igual ao da variante editorial).
-    expect(comAjuda).toMatch(
+  // "Fale com a gente" e a assinatura viraram universais na revisão de
+  // 16/09/2026 (segunda passada, pedido da Sil): todo e-mail assina "Pólia
+  // One" e leva a mesma saída de ajuda -- antes só cobrança levava, e o
+  // rodapé mostrava só o domínio. O destino real é WhatsApp; até o número ser
+  // contratado, aponta pro /ajuda (ver AJUDA_URL em email-polia.ts).
+  it("assina Pólia One e leva 'fale com a gente' em todo e-mail, sem precisar pedir", () => {
+    expect(html).toContain("Pólia One");
+    expect(html).toContain("Pequenas marcas. Grandes sonhos.");
+    expect(html).toContain("Alguma dúvida?");
+    expect(html).toContain('href="https://usepolia.com.br/ajuda"');
+    // Rodapé, não segundo CTA: mesma régua discreta do descadastro (11px,
+    // #6B6B6B), nunca a cor do botão.
+    expect(html).toMatch(
       /font-size:11px;font-weight:700;letter-spacing:0\.06em;color:#6B6B6B;">\s*Alguma dúvida\? <a href="https:\/\/usepolia\.com\.br\/ajuda" style="color:#6B6B6B;text-decoration:underline;">/,
     );
-    expect(comAjuda).not.toContain("#7CCBCD");
   });
 });
 

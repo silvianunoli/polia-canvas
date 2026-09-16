@@ -60,7 +60,6 @@ const COR_MUTED = "#6B6B6B"; // --muted (valor real do CSS -- o #767676 do
 const COR_SECUNDARIA = "#7CCBCD"; // --secondary, fundo do botão padrão
 const COR_DESTAQUE = "#F6DAD4"; // --surface-pink, caixa de destaque do quiz
 const COR_AMARELO = "#FFC629"; // --highlight, botão só do editorial
-const COR_ALERTA = "#C0392B"; // --danger, vermelho-tijolo (não vermelho puro)
 const COR_ALERTA_FUNDO = "#FBEAE7"; // --danger-soft
 
 // Fonte: nenhum cliente de e-mail carrega fonte web de forma confiável, então
@@ -115,6 +114,12 @@ const LOGO_URL = "https://usepolia.com.br/marketing/logo-email.png";
 const LOGO_LARGURA = 112;
 const LOGO_ALTURA = 40;
 
+// Fala com a gente, no rodapé de todo e-mail (16/09/2026). O destino real é
+// WhatsApp, mas o número ainda não existe -- contratar é pendência da Sil.
+// Até lá, aponta pro /ajuda, que já existe e resolve a mesma dúvida. Trocar
+// pra wa.me/<numero> assim que o número for contratado.
+const AJUDA_URL = "https://usepolia.com.br/ajuda";
+
 // ── Blocos compartilhados ────────────────────────────────────────────────
 // Cada um monta um pedaço de HTML reaproveitado pelas duas variantes lá
 // embaixo. Existem pra que nenhuma decisão visual (cor de botão, raio,
@@ -163,32 +168,27 @@ function blocoBotao({
 // lateral em vez de fundo cheio. Hoje só o pagamento recusado usa isso: é o
 // único e-mail dos 12 que precisa comunicar "isso merece sua atenção" sem
 // soar susto.
+// Sem filete lateral de propósito (pedido da Sil, 16/09/2026): o fundo
+// --danger-soft sozinho já diferencia a caixa sem parecer alarme.
 function blocoAlerta(textoHtml: string): string {
   return `
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
                   <tr>
-                    <td style="background-color:${COR_ALERTA_FUNDO};border-left:3px solid ${COR_ALERTA};border-radius:8px;padding:16px 20px;">
+                    <td style="background-color:${COR_ALERTA_FUNDO};border-radius:8px;padding:16px 20px;">
                       <p style="margin:0;font-family:${FONTE_CORPO};font-size:14px;line-height:1.5;color:${COR_INK_SOFT};">${textoHtml}</p>
                     </td>
                   </tr>
                 </table>`;
 }
 
-function blocoRodape({
-  ajudaUrl,
-  descadastroUrl,
-}: {
-  ajudaUrl?: string;
-  descadastroUrl?: string;
-}): string {
-  // Mesma régua visual (11px, caixa alta, --muted): é rodapé, não segundo
-  // CTA. O botão continua sendo a única ação em destaque.
-  const linhaAjuda = ajudaUrl
-    ? `
-                <p style="margin:8px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:${COR_MUTED};">
-                  Alguma dúvida? <a href="${ajudaUrl}" style="color:${COR_MUTED};text-decoration:underline;">Fala com a gente</a>
-                </p>`
-    : "";
+// Assinatura + "fale com a gente" em todo e-mail dos 12 (16/09/2026, pedido da
+// Sil) -- antes só cobrança tinha saída de ajuda, e o rodapé mostrava só o
+// domínio. "one.usepolia.com.br" saiu: "Pólia One" já identifica a marca sem
+// precisar do domínio cru, e fica mais perto de assinatura de gente do que de
+// rodapé de sistema. Descadastro continua condicional -- só os e-mails de
+// lista (quiz, manual) levam, pelo mesmo motivo de sempre: ninguém opta por
+// não receber o recibo da própria compra.
+function blocoRodape({ descadastroUrl }: { descadastroUrl?: string }): string {
   const linhaDescadastro = descadastroUrl
     ? `
                 <p style="margin:8px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:${COR_MUTED};">
@@ -199,9 +199,14 @@ function blocoRodape({
             <tr>
               <td style="padding-top:24px;text-align:left;">
                 <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${COR_MUTED};">
-                  one.usepolia.com.br
+                  Pólia One
                 </p>
-                ${linhaAjuda}
+                <p style="margin:4px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${COR_MUTED};">
+                  Pequenas marcas. Grandes sonhos.
+                </p>
+                <p style="margin:8px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:${COR_MUTED};">
+                  Alguma dúvida? <a href="${AJUDA_URL}" style="color:${COR_MUTED};text-decoration:underline;">Fale com a gente</a>
+                </p>
                 ${linhaDescadastro}
               </td>
             </tr>`;
@@ -238,16 +243,10 @@ function aberturaPagina({ preheader, headline }: { preheader: string; headline: 
               <td class="polia-cartao" style="background-color:${COR_CARTAO};border:1px solid ${COR_BORDA};border-radius:${RAIO_CARTAO}px;padding:32px;">`;
 }
 
-function fechamentoPagina({
-  ajudaUrl,
-  descadastroUrl,
-}: {
-  ajudaUrl?: string;
-  descadastroUrl?: string;
-}): string {
+function fechamentoPagina({ descadastroUrl }: { descadastroUrl?: string }): string {
   return `
               </td>
-            </tr>${blocoRodape({ ajudaUrl, descadastroUrl })}
+            </tr>${blocoRodape({ descadastroUrl })}
           </table>
         </td>
       </tr>
@@ -266,7 +265,6 @@ export function emailPolia({
   alerta,
   ctaLabel,
   ctaUrl,
-  ajudaUrl,
   descadastroUrl,
 }: {
   preheader: string;
@@ -278,17 +276,11 @@ export function emailPolia({
   paragrafos: string[];
   /** Caixa pêssego, igual à da tela de resultado do quiz. Passe já escapado. */
   destaque?: { rotulo: string; texto: string };
-  /** Caixa de atenção com --danger/--danger-soft (ver blocoAlerta). Só o
-   *  pagamento recusado usa isso hoje. Passe já escapado. */
+  /** Caixa de atenção com --danger-soft (ver blocoAlerta). Só o pagamento
+   *  recusado usa isso hoje. Passe já escapado. */
   alerta?: string;
   ctaLabel?: string;
   ctaUrl?: string;
-  /** Saída de suporte no rodapé. Existe pros e-mails de cobrança (pagamento
-   *  recusado, cancelamento): são os momentos de maior dúvida e o CTA sozinho
-   *  só resolve o roteiro feliz — se a Stripe recusou por motivo que não é o
-   *  cartão, não havia pra onde ir a partir do e-mail. Fica de fora dos outros
-   *  disparos de propósito: rodapé de e-mail transacional não é menu. */
-  ajudaUrl?: string;
   /** Link de saída de um clique. Só pros e-mails de lista: os transacionais
    *  (conta criada, recibo, senha) não levam descadastro, porque ninguém pode
    *  optar por não receber o recibo da própria compra. */
@@ -345,7 +337,7 @@ export function emailPolia({
                 ${caixaAlerta}
                 ${caixaDestaque}
                 ${botao}` +
-    fechamentoPagina({ ajudaUrl, descadastroUrl })
+    fechamentoPagina({ descadastroUrl })
   );
 }
 

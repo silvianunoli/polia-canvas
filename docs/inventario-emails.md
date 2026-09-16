@@ -22,13 +22,14 @@ cada um. Pra qualquer sessão futura que mexer em copy de e-mail:
    sem humor — regra do Manual da Marca.
 8. Variável dinâmica (`{{data}}`, `{{valor}}`, `{{mês}}`, `{{faixa}}`, `{{território}}`)
    preserva a variável existente no código, não vira texto fixo.
-9. No diagnóstico do quiz (24 combinações de faixa × território), não inventar
-   conteúdo pras combinações que não estão definidas na fonte (só o PDF de uma
-   combinação existe hoje) — só a abertura fixa e a estrutura são copy nova, o
-   conteúdo por território continua vindo de `src/lib/quiz/perguntas.ts`.
-10. Sistema de rodapé (já implementado em `email-polia.ts`, não mexer): transacional
-    puro = só `Pólia · usepolia.com.br`; cobrança = + "Alguma dúvida? Fala com a
-    gente" (`ajudaUrl`); captação = + "Não quero mais receber" (`descadastroUrl`).
+9. No diagnóstico do quiz, os 6 territórios (24 combinações de faixa × território)
+   têm copy fechada em `src/lib/quiz/perguntas.ts` (`TERRITORIOS`) — título e
+   abertura do e-mail são fixos (não variam mais por faixa, ver §3ª passada),
+   o conteúdo por território continua vindo de lá.
+10. Sistema de rodapé (já implementado em `email-polia.ts`, não mexer): todo
+    e-mail assina "Pólia One" / "Pequenas marcas. Grandes sonhos." / "Alguma
+    dúvida? Fale com a gente" (`AJUDA_URL`, universal desde a 3ª passada);
+    captação (quiz, manual) soma "Não quero mais receber" (`descadastroUrl`).
 
 Aplicado em 16/09/2026 nos 9 e-mails que moram em código (ver tabelas abaixo pro
 arquivo exato de cada um). Os 3 do Supabase Auth (confirmação de cadastro,
@@ -43,8 +44,33 @@ preheader de cancelamento/renovação estático quando o dado exato já existia,
 de redefinir senha destoando do modo imperativo dos outros 2 e-mails de auth, texto
 puro do raio-x sem o mês, e a saudação "Bom dia, Ana." no e-mail do manual (Ana é a
 persona interna do produto, não o nome de quem baixa o manual de verdade). Os 6
-foram corrigidos — ver commit desta data. Essa é agora a copy final; qualquer sessão
-futura segue as regras acima em cima DESTA versão.
+foram corrigidos.
+
+**Terceira passada, mesmo dia (16/09/2026):** a Sil mandou os textos finais de
+praticamente todos os 12 direto, mais 3 mudanças estruturais:
+
+- **Renomeação "Pólia" → "Pólia One"** em toda copy de e-mail (assunto, preheader,
+  título, corpo, rodapé). Não é rename do produto inteiro, só da voz nos e-mails —
+  o app e o resto do site continuam dizendo "Pólia".
+- **Rodapé universal**: saiu o "one.usepolia.com.br" cru, entrou assinatura de
+  verdade ("Pólia One" / "Pequenas marcas. Grandes sonhos.") + "Alguma dúvida?
+  Fale com a gente" em TODO e-mail (antes só cobrança tinha saída de ajuda).
+  **Pendência da Sil**: o link de "Fale com a gente" devia apontar pro WhatsApp,
+  mas o número ainda não foi contratado — por ora aponta pro `/ajuda`
+  (`AJUDA_URL` em `email-polia.ts`). Trocar pra `wa.me/<número>` assim que a Sil
+  contratar o número.
+- **Caixa de alerta do pagamento recusado**: perdeu o filete vermelho lateral
+  (`border-left`) — só o fundo `--danger-soft` diferencia a caixa agora.
+- **Diagnóstico do quiz**: título parou de variar por faixa (`faixa.nome` saiu,
+  virou fixo "Seu diagnóstico está quase pronto"); rótulos internos trocaram
+  ("Onde você está mais no chute:" → "No seu caso, esse é o ponto que apareceu
+  no diagnóstico:"; "A conta pra fazer hoje:" → "O que fazer agora"); o
+  território "razao" ganhou texto novo, e os outros 5 territórios só tiveram a
+  primeira letra da `conta` maiusculizada pra continuarem lendo como frase
+  própria debaixo do novo rótulo solto (sem dois-pontos).
+
+Essa é agora a copy final; qualquer sessão futura segue as regras acima em cima
+DESTA versão.
 
 **14 e-mails no total:** 11 pelo Resend (4 no app, 7 nas edge functions) e 3 pelo
 Supabase Auth (template no dashboard, não no repositório).
@@ -60,9 +86,9 @@ Todos usam o template central [`src/lib/email-template.ts`](../src/lib/email-tem
 
 | # | E-mail | Assunto | Vai para | Gatilho | Arquivo |
 |---|---|---|---|---|---|
-| 1 | Boas-vindas | `Bem-vinda à Pólia` | a usuária | primeiro load do `/onboarding` (só marca como enviado se o Resend confirmar) | [boas-vindas.functions.ts](../src/lib/boas-vindas.functions.ts) |
-| 2 | Convite | `Você foi convidada pra Pólia` | a convidada | admin cria convite em `/admin/convites` | [convites.functions.ts](../src/lib/convites.functions.ts) |
-| 3 | Diagnóstico do quiz | `Seu diagnóstico: {faixa}` | o lead | fim do `/quiz`, após o gate de e-mail | [quiz.functions.ts](../src/lib/quiz.functions.ts) + [quiz/email.ts](../src/lib/quiz/email.ts) |
+| 1 | Boas-vindas | `Bem-vinda à Pólia One` | a usuária | primeiro load do `/onboarding` (só marca como enviado se o Resend confirmar) | [boas-vindas.functions.ts](../src/lib/boas-vindas.functions.ts) |
+| 2 | Convite | `Você foi convidada pra Pólia One` | a convidada | admin cria convite em `/admin/convites` | [convites.functions.ts](../src/lib/convites.functions.ts) |
+| 3 | Diagnóstico do quiz | `Seu diagnóstico está quase pronto` (fixo, não varia mais por faixa) | o lead | fim do `/quiz`, após o gate de e-mail | [quiz.functions.ts](../src/lib/quiz.functions.ts) + [quiz/email.ts](../src/lib/quiz/email.ts) |
 | 4 | Contato (interno) | `[Contato] {assunto} · {nome}` | `oi@usepolia.com.br` | envio do formulário `/contato` | [contato.functions.ts](../src/lib/contato.functions.ts) |
 | 4b | Entrega do manual (14/09/2026) | `Seu Manual da Pequena Marca que Quer Ser Grande chegou` | o lead | envio do e-mail em `/manual`; leva o link de download com token. Usa a variante **editorial** da casca (`emailPoliaEditorial`: rótulo em caixa alta, citação antes do botão, botão amarelo `#FFC629`, sem turquesa), pedida pela fundadora em 14/09 pra parecer página do manual | [manual.functions.ts](../src/lib/manual.functions.ts) + [manual/email.ts](../src/lib/manual/email.ts) |
 

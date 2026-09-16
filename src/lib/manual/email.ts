@@ -57,23 +57,23 @@ export function montarEmailManual({
     `${CTA_EMAIL_MANUAL}: ${downloadUrl}`,
     "",
     fechamento,
+    "Pólia One",
     "",
-    "Pólia",
+    "Pólia One",
     TAGLINE_MANUAL,
-    "",
-    "Pólia · usepolia.com.br",
+    "Alguma dúvida? Fale com a gente: https://usepolia.com.br/ajuda",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
 
   const html = emailPoliaEditorial({
     preheader: escapeHtml(preheader),
-    rotulo: "Pólia · Material gratuito",
+    rotulo: "Pólia One · Material gratuito",
     headline: escapeHtml(headline),
     paragrafos: paragrafos.map(escapeHtml),
     ctaLabel: CTA_EMAIL_MANUAL,
     ctaUrl: downloadUrl,
     fechamento: [escapeHtml(fechamento)],
-    assinatura: { nome: "Pólia", tagline: TAGLINE_MANUAL },
+    assinatura: { nome: "Pólia One" },
     descadastroUrl,
   });
 

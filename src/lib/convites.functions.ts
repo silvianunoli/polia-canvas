@@ -97,14 +97,14 @@ export const enviarConvite = createServerFn({ method: "POST" })
     const link = `${SITE_URL}/auth/cadastro?email=${encodeURIComponent(data.email)}`;
     const enviado = await enviarEmailResend({
       to: [data.email],
-      subject: "Você foi convidada pra Pólia",
-      text: `Seu acesso à Pólia foi liberado.\n\nAceita o convite e cria sua conta pra começar:\n${link}`,
+      subject: "Você foi convidada pra Pólia One",
+      text: `Seu acesso à Pólia One foi liberado.\n\nAceite o convite e crie sua conta pra começar:\n${link}`,
       html: emailPolia({
         preheader: "Seu acesso foi liberado. É só criar sua conta.",
-        headline: "Você foi convidada pra Pólia",
+        headline: "Você foi convidada pra Pólia One",
         paragrafos: [
-          "Seu acesso à Pólia foi liberado.",
-          "Aceita o convite e cria sua conta pra começar.",
+          "Seu acesso à Pólia One foi liberado.",
+          "Aceite o convite e crie sua conta pra começar.",
         ],
         ctaLabel: "Aceitar convite",
         ctaUrl: link,

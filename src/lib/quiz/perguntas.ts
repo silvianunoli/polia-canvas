@@ -9,16 +9,18 @@
  *  desempate do território fraco: empatou, vale o primeiro daqui. */
 // `explicacao` e `conta` são os textos fechados no PRD-ajuste-copy-quiz.md §2.4
 // (antes eram "[A DEFINIR]" no PRD original, e o que estava no ar era rascunho
-// meu). A `conta` começa em minúscula de propósito: na tela ela vem logo depois
-// do rótulo "A conta pra fazer hoje:", na mesma frase.
+// meu). `conta` é frase própria, maiúscula, desde a revisão de copy de
+// 16/09/2026 (segunda passada): antes vinha em minúscula porque continuava o
+// rótulo "A conta pra fazer hoje:" na mesma frase; o rótulo virou heading
+// solto ("O que fazer agora"), então cada `conta` precisa começar sozinha.
 export const TERRITORIOS = [
   {
     id: "razao",
     nome: "Razão de existir",
     explicacao:
-      'Alguém te pergunta o que você faz, e a resposta sai enrolada, cheia de "depende" e de exemplo. A pessoa some antes de você terminar de explicar.',
+      "Hoje, quando alguém pergunta o que você faz, sua resposta ainda pode ficar difícil de explicar. E quando uma pessoa não entende rapidamente o valor do que você oferece, fica mais difícil ela continuar a conversa.",
     conta:
-      "conte quantas vezes isso aconteceu esse mês, alguém perguntando o que você faz e sumindo depois. Esse número é o quanto a frase que falta já te custou.",
+      "Pense em quantas vezes isso aconteceu neste mês. Esse número ajuda a entender quanto custa, na prática, não ter essa resposta bem definida.",
   },
   {
     id: "quem",
@@ -26,7 +28,7 @@ export const TERRITORIOS = [
     explicacao:
       "Você corre atrás de cliente novo todo mês, com o mesmo esforço, o mesmo desconto, a mesma pressa, e não sabe se as antigas ainda compram de você.",
     conta:
-      "pegue suas últimas 10 vendas e conte quantas dessas clientes voltaram a comprar. Esse número, não o que você imagina, mostra quantas ficam de verdade.",
+      "Pegue suas últimas 10 vendas e conte quantas dessas clientes voltaram a comprar. Esse número, não o que você imagina, mostra quantas ficam de verdade.",
   },
   {
     id: "vende",
@@ -34,7 +36,7 @@ export const TERRITORIOS = [
     explicacao:
       "Você fecha vendas o mês inteiro, mas na hora de pagar as contas não sabe dizer qual produto pagou o quê.",
     conta:
-      "escolha os 3 produtos ou serviços que mais saem e calcule quanto cada um deixa depois do custo. O que mais sai nem sempre é o que mais paga.",
+      "Escolha os 3 produtos ou serviços que mais saem e calcule quanto cada um deixa depois do custo. O que mais sai nem sempre é o que mais paga.",
   },
   {
     id: "vale",
@@ -42,7 +44,7 @@ export const TERRITORIOS = [
     explicacao:
       "Uma cliente pede desconto, você concede na hora pra não perder a venda, e só percebe o tamanho do prejuízo quando fecha a conta do mês.",
     conta:
-      "pegue seu produto mais vendido e calcule quanto ele deixa depois de todos os custos. Esse número é o teto real do seu desconto, não o que parece justo na hora.",
+      "Pegue seu produto mais vendido e calcule quanto ele deixa depois de todos os custos. Esse número é o teto real do seu desconto, não o que parece justo na hora.",
   },
   {
     id: "acharem",
@@ -50,7 +52,7 @@ export const TERRITORIOS = [
     explicacao:
       "Você posta em toda rede que existe, sem saber de verdade por onde as clientes novas estão chegando até você.",
     conta:
-      "puxe suas últimas 5 vendas novas e escreva por onde cada cliente te achou. O canal que mais se repete é onde vale insistir essa semana.",
+      "Puxe suas últimas 5 vendas novas e escreva por onde cada cliente te achou. O canal que mais se repete é onde vale insistir essa semana.",
   },
   {
     id: "onde",
@@ -58,7 +60,7 @@ export const TERRITORIOS = [
     explicacao:
       "Toda venda parece uma vitória, mas você não sabe dizer se o mês está fechando no azul ou só parecendo fechar.",
     conta:
-      "some suas contas fixas do mês (aluguel, ferramentas, o que for) e divida pelo que você cobra em média. Esse é o tanto que precisa vender só pra empatar.",
+      "Some suas contas fixas do mês (aluguel, ferramentas, o que for) e divida pelo que você cobra em média. Esse é o tanto que precisa vender só pra empatar.",
   },
 ] as const;
 

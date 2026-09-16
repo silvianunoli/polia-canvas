@@ -176,11 +176,14 @@ describe("conteúdo do questionário", () => {
     });
   });
 
-  it("toda conta de território encaixa depois do rótulo, em minúscula", () => {
+  // Maiúscula desde a revisão de 16/09/2026 (2ª passada): o rótulo virou
+  // heading solto ("O que fazer agora"), não mais "A conta pra fazer hoje:"
+  // seguido da frase -- cada `conta` precisa começar sozinha.
+  it("toda conta de território é frase própria, em maiúscula", () => {
     for (const t of TERRITORIOS) {
       expect(t.conta.length).toBeGreaterThan(0);
       expect(t.explicacao.length).toBeGreaterThan(0);
-      expect(t.conta[0]).toBe(t.conta[0].toLowerCase());
+      expect(t.conta[0]).toBe(t.conta[0].toUpperCase());
     }
   });
 
