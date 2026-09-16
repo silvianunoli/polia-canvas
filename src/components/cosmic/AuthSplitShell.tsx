@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
 interface AuthSplitShellProps {
@@ -45,33 +44,42 @@ export function AuthSplitShell({ headline, subtext, rodape, children }: AuthSpli
   );
 }
 
-const ABAS = [
-  { to: "/auth/login", label: "Entrar" },
-  { to: "/auth/cadastro", label: "Criar conta" },
-  { to: "/auth/esqueci-senha", label: "Recuperar acesso" },
-] as const;
+export type ModoAuth = "entrar" | "recuperar";
 
-/** Navegação entre as 3 rotas de auth — não é um switcher client-side. */
-export function AuthTabs({ ativo }: { ativo: (typeof ABAS)[number]["to"] }) {
+function classeAba(ativa: boolean) {
+  return `flex-1 rounded-lg px-2 py-2 text-center text-[13.5px] font-semibold transition-colors ${
+    ativa
+      ? "border-[1.5px] border-[var(--ink)] bg-white text-[var(--ink)]"
+      : "text-[var(--muted)] hover:text-[var(--ink-soft)]"
+  }`;
+}
+
+/** Entrar/Recuperar trocam o formulário no lugar (mesma tela, mesma URL). */
+export function AuthTabs({
+  modo,
+  onModoChange,
+}: {
+  modo: ModoAuth;
+  onModoChange: (modo: ModoAuth) => void;
+}) {
   return (
     <nav className="mb-6 flex gap-1 rounded-xl bg-[var(--line)] p-1" aria-label="Sessões de acesso">
-      {ABAS.map((aba) => {
-        const ativa = aba.to === ativo;
-        return (
-          <Link
-            key={aba.to}
-            to={aba.to}
-            aria-current={ativa ? "page" : undefined}
-            className={`flex-1 rounded-lg px-2 py-2 text-center text-[13.5px] font-semibold transition-colors ${
-              ativa
-                ? "border-[1.5px] border-[var(--ink)] bg-white text-[var(--ink)]"
-                : "text-[var(--muted)] hover:text-[var(--ink-soft)]"
-            }`}
-          >
-            {aba.label}
-          </Link>
-        );
-      })}
+      <button
+        type="button"
+        onClick={() => onModoChange("entrar")}
+        aria-current={modo === "entrar" ? "page" : undefined}
+        className={classeAba(modo === "entrar")}
+      >
+        Entrar
+      </button>
+      <button
+        type="button"
+        onClick={() => onModoChange("recuperar")}
+        aria-current={modo === "recuperar" ? "page" : undefined}
+        className={classeAba(modo === "recuperar")}
+      >
+        Recuperar acesso
+      </button>
     </nav>
   );
 }

@@ -1,14 +1,15 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Mail } from "lucide-react";
+import { Mail, Check } from "lucide-react";
 import { z } from "zod";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthButton, Divider } from "@/components/cosmic/AuthShell";
-import { AuthSplitShell, AuthTabs } from "@/components/cosmic/AuthSplitShell";
+import { AuthSplitShell, AuthTabs, type ModoAuth } from "@/components/cosmic/AuthSplitShell";
 import { CosmicInput, useCapsLockWarning, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
+import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
 import { ERROR_COPY } from "@/components/layout/ErrorPage";
 
 const searchSchema = z.object({
@@ -72,6 +73,13 @@ function LoginPage() {
   const [lockoutCooldown, setLockoutCooldown] = useState(0);
   const caps = useCapsLockWarning();
   const emailRef = useRef<HTMLInputElement>(null);
+  const [modo, setModo] = useState<ModoAuth>("entrar");
+  const recuperar = useRecuperarSenha();
+
+  function selecionarModo(novo: ModoAuth) {
+    recuperar.reset();
+    setModo(novo);
+  }
 
   useEffect(() => {
     if (search.email) setValues((s) => ({ ...s, email: search.email! }));
@@ -179,107 +187,190 @@ function LoginPage() {
       subtext="A Pólia conecta preço, lucro, meta e planejamento num só painel, pra decisão ter chão."
       rodape={["Números", "Planejamento", "Decisão"]}
     >
-      <AuthTabs ativo="/auth/login" />
+      <AuthTabs modo={modo} onModoChange={selecionarModo} />
 
-      <h2 className="text-[clamp(22px,3vw,28px)] font-bold leading-[1.1] tracking-[-0.02em] text-[var(--ink)]">
-        Que bom ter você de volta.
-      </h2>
-      <p className="mt-1.5 text-[14px] text-[var(--muted)]">
-        Entra com o e-mail e a senha da sua conta Pólia.
-      </p>
-
-      {search.motivo === "sessao-expirada" ? (
-        <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
-          <p className="text-[14px] font-semibold text-[var(--ink)]">
-            {ERROR_COPY["sessao-expirada"].title}
+      {modo === "entrar" ? (
+        <>
+          <h2 className="text-[clamp(22px,3vw,28px)] font-bold leading-[1.1] tracking-[-0.02em] text-[var(--ink)]">
+            Que bom ter você de volta.
+          </h2>
+          <p className="mt-1.5 text-[14px] text-[var(--muted)]">
+            Entra com o e-mail e a senha da sua conta Pólia.
           </p>
-          <p className="mt-1 text-[13px] text-[var(--ink-soft)]">
-            {ERROR_COPY["sessao-expirada"].subtitle}
-          </p>
-        </div>
-      ) : (
-        search.next && (
-          <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
-            <p className="text-[14px] font-semibold text-[var(--ink)]">
-              Isso fica logo depois de entrar.
-            </p>
-          </div>
-        )
-      )}
 
-      <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
-        <CosmicInput
-          ref={emailRef}
-          label="Seu e-mail"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="voce@seunegocio.com.br"
-          icon={<Mail size={18} />}
-          value={values.email}
-          onChange={(e) => set("email", e.target.value)}
-          error={errors.email}
-          reserveErrorSpace
-          disabled={loading}
-        />
-        <div>
-          <CosmicInput
-            label="Sua senha"
-            name="senha"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            value={values.senha}
-            onChange={(e) => set("senha", e.target.value)}
-            onKeyUp={caps.onKeyUp}
-            error={errors.senha}
-            reserveErrorSpace
-            disabled={loading}
-          />
-          <CapsLockHint ligado={caps.ligado} />
-        </div>
+          {search.motivo === "sessao-expirada" ? (
+            <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+              <p className="text-[14px] font-semibold text-[var(--ink)]">
+                {ERROR_COPY["sessao-expirada"].title}
+              </p>
+              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">
+                {ERROR_COPY["sessao-expirada"].subtitle}
+              </p>
+            </div>
+          ) : (
+            search.next && (
+              <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+                <p className="text-[14px] font-semibold text-[var(--ink)]">
+                  Isso fica logo depois de entrar.
+                </p>
+              </div>
+            )
+          )}
 
-        {loginErro && (
-          <p className="text-[13px] text-[var(--danger)]" role="alert">
-            {loginErro}
-          </p>
-        )}
+          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
+            <CosmicInput
+              ref={emailRef}
+              label="Seu e-mail"
+              name="email"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@seunegocio.com.br"
+              icon={<Mail size={18} />}
+              value={values.email}
+              onChange={(e) => set("email", e.target.value)}
+              error={errors.email}
+              reserveErrorSpace
+              disabled={loading}
+            />
+            <div>
+              <CosmicInput
+                label="Sua senha"
+                name="senha"
+                type="password"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={values.senha}
+                onChange={(e) => set("senha", e.target.value)}
+                onKeyUp={caps.onKeyUp}
+                error={errors.senha}
+                reserveErrorSpace
+                disabled={loading}
+              />
+              <CapsLockHint ligado={caps.ligado} />
+            </div>
 
-        {unverified && (
-          <p className="text-[14px] text-[var(--ink-soft)]">
-            Confirma seu e-mail pra entrar.{" "}
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending || resendCooldown > 0}
-              className="text-[var(--secondary-text)] underline underline-offset-2 disabled:opacity-60"
-            >
-              {resending
-                ? "Enviando..."
-                : resendCooldown > 0
-                  ? `Pode pedir outro em ${resendCooldown}s`
-                  : "Reenviar o link"}
-            </button>
-          </p>
-        )}
-
-        <div className="mt-1">
-          <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
-            {lockoutCooldown > 0 ? (
-              `Tenta de novo em ${lockoutCooldown}s`
-            ) : loading ? (
-              "Entrando..."
-            ) : (
-              <>
-                Entrar <span aria-hidden="true">→</span>
-              </>
+            {loginErro && (
+              <p className="text-[13px] text-[var(--danger)]" role="alert">
+                {loginErro}
+              </p>
             )}
-          </AuthButton>
-        </div>
-      </form>
 
-      <Divider />
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} label="Entrar com Google" />
+            {unverified && (
+              <p className="text-[14px] text-[var(--ink-soft)]">
+                Confirma seu e-mail pra entrar.{" "}
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending || resendCooldown > 0}
+                  className="text-[var(--secondary-text)] underline underline-offset-2 disabled:opacity-60"
+                >
+                  {resending
+                    ? "Enviando..."
+                    : resendCooldown > 0
+                      ? `Pode pedir outro em ${resendCooldown}s`
+                      : "Reenviar o link"}
+                </button>
+              </p>
+            )}
+
+            <div className="mt-1">
+              <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
+                {lockoutCooldown > 0 ? (
+                  `Tenta de novo em ${lockoutCooldown}s`
+                ) : loading ? (
+                  "Entrando..."
+                ) : (
+                  <>
+                    Entrar <span aria-hidden="true">→</span>
+                  </>
+                )}
+              </AuthButton>
+            </div>
+          </form>
+
+          <Divider />
+          <GoogleButton onClick={handleGoogle} loading={googleLoading} label="Entrar com Google" />
+
+          <p className="mt-4 text-[14px] text-[var(--muted)]">
+            Primeira vez aqui?{" "}
+            <Link
+              to="/auth/cadastro"
+              className="text-[var(--ink-soft)] underline underline-offset-2"
+            >
+              Criar conta
+            </Link>
+          </p>
+        </>
+      ) : !recuperar.sent ? (
+        <>
+          <h2 className="text-[clamp(22px,3vw,28px)] font-bold leading-[1.1] tracking-[-0.02em] text-[var(--ink)]">
+            Vamos recuperar.
+          </h2>
+          <p className="mt-1.5 text-[14px] text-[var(--muted)]">
+            É só informar o e-mail da conta que a gente manda o link.
+          </p>
+
+          <form onSubmit={recuperar.handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
+            <CosmicInput
+              label="Seu e-mail"
+              name="email-recuperar"
+              type="email"
+              autoComplete="email"
+              placeholder="voce@seunegocio.com.br"
+              icon={<Mail size={18} />}
+              value={recuperar.email}
+              onChange={(e) => {
+                recuperar.setEmail(e.target.value);
+                if (recuperar.error) recuperar.setError(undefined);
+              }}
+              error={recuperar.error}
+              reserveErrorSpace
+              disabled={recuperar.loading}
+            />
+            <div className="mt-1">
+              <AuthButton type="submit" fullWidth loading={recuperar.loading}>
+                {recuperar.loading ? (
+                  "Enviando..."
+                ) : (
+                  <>
+                    Enviar link <span aria-hidden="true">→</span>
+                  </>
+                )}
+              </AuthButton>
+            </div>
+          </form>
+        </>
+      ) : (
+        <div className="flex flex-col items-start">
+          <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
+            <Check size={22} aria-hidden="true" />
+          </div>
+          <h2 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
+            Se esse e-mail tiver conta,
+            <br />a gente manda o link.
+          </h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+            Confira a caixa de entrada (e o spam). O link vale por 1 hora.
+          </p>
+          <button
+            type="button"
+            onClick={recuperar.handleResend}
+            disabled={recuperar.cooldown > 0 || recuperar.loading}
+            className="mt-5 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+          >
+            {recuperar.cooldown > 0
+              ? `Pode pedir outro em ${recuperar.cooldown}s`
+              : "Não chegou? Pedir de novo"}
+          </button>
+          <button
+            type="button"
+            onClick={() => selecionarModo("entrar")}
+            className="mt-6 text-[14px] text-[var(--muted)]"
+          >
+            Voltar pra entrada
+          </button>
+        </div>
+      )}
     </AuthSplitShell>
   );
 }
