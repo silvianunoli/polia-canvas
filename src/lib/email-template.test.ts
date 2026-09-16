@@ -56,13 +56,16 @@ describe("emailPolia", () => {
     expect(comExtras).toContain("Não quero mais receber");
   });
 
-  // "Fale com a gente" e a assinatura viraram universais na revisão de
-  // 16/09/2026 (segunda passada, pedido da Sil): todo e-mail assina "Pólia
-  // One" e leva a mesma saída de ajuda -- antes só cobrança levava, e o
-  // rodapé mostrava só o domínio. O destino real é WhatsApp; até o número ser
-  // contratado, aponta pro /ajuda (ver AJUDA_URL em email-polia.ts).
-  it("assina Pólia One e leva 'fale com a gente' em todo e-mail, sem precisar pedir", () => {
-    expect(html).toContain("Pólia One");
+  // "Fale com a gente" e a tagline viraram universais na revisão de
+  // 16/09/2026 (segunda passada, pedido da Sil) -- antes só cobrança levava
+  // saída de ajuda. O domínio (terceira passada, mesmo dia) voltou a ser
+  // "one.usepolia.com.br", mas sem caixa alta -- domínio em capslock lê como
+  // grito/spam, nome de marca não; a tagline continua em caixa alta. O
+  // destino real do link é WhatsApp; até o número ser contratado, aponta pro
+  // /ajuda (ver AJUDA_URL em email-polia.ts).
+  it("assina o domínio em minúscula e leva 'fale com a gente' em todo e-mail, sem precisar pedir", () => {
+    expect(html).toContain("one.usepolia.com.br");
+    expect(html).not.toMatch(/text-transform:uppercase;color:#6B6B6B;">\s*one\.usepolia\.com\.br/);
     expect(html).toContain("Pequenas marcas. Grandes sonhos.");
     expect(html).toContain("Alguma dúvida?");
     expect(html).toContain('href="https://usepolia.com.br/ajuda"');

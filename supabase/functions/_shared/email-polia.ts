@@ -182,12 +182,12 @@ function blocoAlerta(textoHtml: string): string {
 }
 
 // Assinatura + "fale com a gente" em todo e-mail dos 12 (16/09/2026, pedido da
-// Sil) -- antes só cobrança tinha saída de ajuda, e o rodapé mostrava só o
-// domínio. "one.usepolia.com.br" saiu: "Pólia One" já identifica a marca sem
-// precisar do domínio cru, e fica mais perto de assinatura de gente do que de
-// rodapé de sistema. Descadastro continua condicional -- só os e-mails de
-// lista (quiz, manual) levam, pelo mesmo motivo de sempre: ninguém opta por
-// não receber o recibo da própria compra.
+// Sil). O domínio voltou a ser "one.usepolia.com.br" -- mas SEM caixa alta
+// (pedido explícito: domínio em capslock lê como grito/spam; nome de marca
+// não). A tagline mantém a caixa alta, é rótulo, não endereço. Descadastro
+// continua condicional -- só os e-mails de lista (quiz, manual) levam, pelo
+// mesmo motivo de sempre: ninguém opta por não receber o recibo da própria
+// compra.
 function blocoRodape({ descadastroUrl }: { descadastroUrl?: string }): string {
   const linhaDescadastro = descadastroUrl
     ? `
@@ -198,8 +198,8 @@ function blocoRodape({ descadastroUrl }: { descadastroUrl?: string }): string {
   return `
             <tr>
               <td style="padding-top:24px;text-align:left;">
-                <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${COR_MUTED};">
-                  Pólia One
+                <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:${COR_MUTED};">
+                  one.usepolia.com.br
                 </p>
                 <p style="margin:4px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:${COR_MUTED};">
                   Pequenas marcas. Grandes sonhos.
