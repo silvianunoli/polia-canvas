@@ -11,15 +11,7 @@ export const HOST_CANONICO = "https://one.usepolia.com.br";
 export const HOSTNAME_CANONICO = "one.usepolia.com.br";
 
 /** Hostnames que servem o site de verdade e não devem ser redirecionados. */
-const HOSTS_OFICIAIS = new Set([
-  HOSTNAME_CANONICO,
-  // usepolia.com.br e www temporários aqui: migração de canonical em
-  // andamento (16/09/2026), decisão da Sil. Saem daqui junto com a rota
-  // deles no wrangler.jsonc assim que a Fase 3 (verificação em produção)
-  // fechar — ver plano de migração one.usepolia.com.br.
-  "usepolia.com.br",
-  "www.usepolia.com.br",
-]);
+const HOSTS_OFICIAIS = new Set([HOSTNAME_CANONICO]);
 
 /** Desenvolvimento local: nome reservado ou IP literal (LAN inclusive). */
 const HOSTS_LOCAIS = new Set(["localhost", "0.0.0.0"]);

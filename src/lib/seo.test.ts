@@ -35,13 +35,13 @@ describe("linkCanonico", () => {
 });
 
 describe("deveRedirecionarParaHostCanonico", () => {
-  it("deixa passar o canonical novo e, na janela de transição, o apex e o www antigos", () => {
+  it("deixa passar só o canonical", () => {
     expect(deveRedirecionarParaHostCanonico("one.usepolia.com.br")).toBe(false);
-    expect(deveRedirecionarParaHostCanonico("usepolia.com.br")).toBe(false);
-    expect(deveRedirecionarParaHostCanonico("www.usepolia.com.br")).toBe(false);
   });
 
-  it("redireciona o fallback workers.dev", () => {
+  it("redireciona o domínio antigo (livre desde 16/09/2026) e o fallback workers.dev", () => {
+    expect(deveRedirecionarParaHostCanonico("usepolia.com.br")).toBe(true);
+    expect(deveRedirecionarParaHostCanonico("www.usepolia.com.br")).toBe(true);
     expect(deveRedirecionarParaHostCanonico("tanstack-start-app.workers.dev")).toBe(true);
     expect(deveRedirecionarParaHostCanonico("tanstack-start-app.sil.workers.dev")).toBe(true);
   });

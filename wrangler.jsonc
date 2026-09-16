@@ -20,17 +20,12 @@
     "enabled": true
   },
   "routes": [
-    { "pattern": "usepolia.com.br", "custom_domain": true },
-    // www não tinha DNS nenhum (não resolvia). Custom domain do Worker
-    // provisiona o registro sozinho; o handler em src/server.ts redireciona
-    // 301 pro domínio sem www.
-    { "pattern": "www.usepolia.com.br", "custom_domain": true },
-    // one.usepolia.com.br adicionado em 16/09/2026 (decisão da Sil): serve o
-    // mesmo Worker, em paralelo com usepolia.com.br/www — nenhum dos dois sai.
+    // Migração de canonical concluída em 16/09/2026 (decisão da Sil):
+    // usepolia.com.br e www.usepolia.com.br saíram do Worker do produto de
+    // propósito, ficando livres pra outra coisa (site institucional, lista de
+    // espera etc.). Nenhum redirect fica pra trás — ver plano de migração
+    // one.usepolia.com.br. custom_domain provisiona/limpa o DNS sozinho.
     { "pattern": "one.usepolia.com.br", "custom_domain": true }
-    // silvianunoli.com.br (área de gestão) foi extraído pro Worker "polia-admin"
-    // (projeto polia-admin/), deploy e domínio próprios — ver src/server.ts pro
-    // redirect que ainda manda /admin de usepolia.com.br pra lá.
   ],
   // Mantém o subdomínio *.workers.dev ativo como fallback além do domínio
   // próprio (Wrangler desativa ele por padrão assim que "routes" aparece).
