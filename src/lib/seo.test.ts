@@ -35,9 +35,10 @@ describe("linkCanonico", () => {
 });
 
 describe("deveRedirecionarParaHostCanonico", () => {
-  it("deixa passar o domínio próprio e o de gestão", () => {
+  it("deixa passar o domínio próprio, o de gestão e o one.usepolia.com.br", () => {
     expect(deveRedirecionarParaHostCanonico("usepolia.com.br")).toBe(false);
     expect(deveRedirecionarParaHostCanonico("silvianunoli.com.br")).toBe(false);
+    expect(deveRedirecionarParaHostCanonico("one.usepolia.com.br")).toBe(false);
   });
 
   it("redireciona www e o fallback workers.dev", () => {

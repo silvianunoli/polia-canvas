@@ -13,7 +13,15 @@ export const HOST_CANONICO = "https://usepolia.com.br";
 export const HOSTNAME_CANONICO = "usepolia.com.br";
 
 /** Hostnames que servem o site de verdade e não devem ser redirecionados. */
-const HOSTS_OFICIAIS = new Set([HOSTNAME_CANONICO, DOMINIO_GESTAO]);
+const HOSTS_OFICIAIS = new Set([
+  HOSTNAME_CANONICO,
+  DOMINIO_GESTAO,
+  // Adicionado em 16/09/2026 (decisão da Sil): serve o produto de verdade,
+  // não é alias. O <link rel="canonical"> continua apontando pra
+  // HOSTNAME_CANONICO (urlCanonica usa HOST_CANONICO fixo), então o Google
+  // não indexa os dois como conteúdo duplicado.
+  "one.usepolia.com.br",
+]);
 
 /** Desenvolvimento local: nome reservado ou IP literal (LAN inclusive). */
 const HOSTS_LOCAIS = new Set(["localhost", "0.0.0.0"]);
