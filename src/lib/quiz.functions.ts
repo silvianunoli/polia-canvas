@@ -7,6 +7,7 @@ import { CONSENT_TEXTO } from "@/lib/quiz/perguntas";
 import { montarEmailDiagnostico } from "@/lib/quiz/email";
 import { calcularResultado, respostasCompletas, sanitizarRespostas } from "@/lib/quiz/pontuacao";
 import type { Json } from "@/integrations/supabase/types";
+import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 // Gravação do lead do quiz público (/quiz). Mesmo padrão de
 // lista-espera.functions.ts: a RLS de quiz_leads é deny-all, então a escrita
@@ -16,7 +17,6 @@ import type { Json } from "@/integrations/supabase/types";
 // respostas. O que o navegador mandou nesses campos não é lido: o cliente
 // calcula só pra mostrar na tela.
 
-const SITE_URL = "https://usepolia.com.br";
 
 const inputSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),

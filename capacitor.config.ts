@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Pólia',
   webDir: 'dist/client',
   server: {
-    url: 'https://usepolia.com.br',
+    url: 'https://one.usepolia.com.br',
     androidScheme: 'https'
   }
 };

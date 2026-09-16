@@ -7,17 +7,18 @@
 // conteúdo entra no índice do Google em endereços diferentes e um compete com
 // o outro.
 
-export const HOST_CANONICO = "https://usepolia.com.br";
-export const HOSTNAME_CANONICO = "usepolia.com.br";
+export const HOST_CANONICO = "https://one.usepolia.com.br";
+export const HOSTNAME_CANONICO = "one.usepolia.com.br";
 
 /** Hostnames que servem o site de verdade e não devem ser redirecionados. */
 const HOSTS_OFICIAIS = new Set([
   HOSTNAME_CANONICO,
-  // Adicionado em 16/09/2026 (decisão da Sil): serve o produto de verdade,
-  // não é alias. O <link rel="canonical"> continua apontando pra
-  // HOSTNAME_CANONICO (urlCanonica usa HOST_CANONICO fixo), então o Google
-  // não indexa os dois como conteúdo duplicado.
-  "one.usepolia.com.br",
+  // usepolia.com.br e www temporários aqui: migração de canonical em
+  // andamento (16/09/2026), decisão da Sil. Saem daqui junto com a rota
+  // deles no wrangler.jsonc assim que a Fase 3 (verificação em produção)
+  // fechar — ver plano de migração one.usepolia.com.br.
+  "usepolia.com.br",
+  "www.usepolia.com.br",
 ]);
 
 /** Desenvolvimento local: nome reservado ou IP literal (LAN inclusive). */

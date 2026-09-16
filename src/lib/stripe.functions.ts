@@ -4,6 +4,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispararAlerta } from "@/lib/alertas.server";
+import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 let _stripe: Stripe | undefined;
 
@@ -109,9 +110,6 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
 
 const STATUS_ATIVOS = new Set(["active", "past_due", "trialing"]);
 
-// Mesma constante local das outras server functions (compra-publica, convites,
-// boas-vindas): o domínio do produto é fixo e não muda por ambiente.
-const SITE_URL = "https://usepolia.com.br";
 
 const iniciarAssinaturaInput = z.object({
   plano: z.enum(["controle_mensal", "controle_anual", "projete_mensal", "projete_anual"]),

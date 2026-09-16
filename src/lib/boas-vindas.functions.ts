@@ -2,8 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { emailPolia, enviarEmailResend } from "@/lib/email-template";
-
-const SITE_URL = "https://usepolia.com.br";
+import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 // Chamada 1x no primeiro load do /onboarding — cobre os dois jeitos de criar
 // conta (cadastro normal e compra pública) porque os dois redirecionam pra

@@ -2,8 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { stripeClient, precoParaPlano } from "@/lib/stripe.functions";
 import { dispararAlerta } from "@/lib/alertas.server";
-
-const SITE_URL = "https://usepolia.com.br";
+import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 const inputSchema = z.object({
   email: z.string().trim().email().max(255),

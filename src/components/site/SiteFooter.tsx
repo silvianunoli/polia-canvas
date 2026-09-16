@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { HOSTNAME_CANONICO } from "@/lib/seo";
 
 /**
  * Rodapé de todas as páginas públicas. `semMargemTopo` é pra quando a seção
@@ -37,7 +38,7 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
           </nav>
         </div>
         <div className="mt-[clamp(48px,6vw,64px)] flex flex-wrap justify-between gap-4 border-t border-white/15 pt-6 text-[12px]">
-          <span>usepolia.com.br · feita no Brasil · CNPJ 18.305.925/0001-06</span>
+          <span>{HOSTNAME_CANONICO} · feita no Brasil · CNPJ 18.305.925/0001-06</span>
           <span>
             Desenvolvido por{" "}
             <a

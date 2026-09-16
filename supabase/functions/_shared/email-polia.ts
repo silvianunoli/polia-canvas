@@ -110,7 +110,7 @@ const RAIO_BOTAO = 16;
 // A URL é absoluta porque e-mail não tem origem. Ela só existe depois que o
 // APP for deployado (o Worker é quem serve /marketing/*): deployar as edge
 // functions antes do app deixa a imagem em 404 até o app subir.
-const LOGO_URL = "https://usepolia.com.br/marketing/logo-email.png";
+const LOGO_URL = "https://one.usepolia.com.br/marketing/logo-email.png";
 const LOGO_LARGURA = 112;
 const LOGO_ALTURA = 40;
 
@@ -118,7 +118,7 @@ const LOGO_ALTURA = 40;
 // WhatsApp, mas o número ainda não existe -- contratar é pendência da Sil.
 // Até lá, aponta pro /ajuda, que já existe e resolve a mesma dúvida. Trocar
 // pra wa.me/<numero> assim que o número for contratado.
-const AJUDA_URL = "https://usepolia.com.br/ajuda";
+const AJUDA_URL = "https://one.usepolia.com.br/ajuda";
 
 // ── Blocos compartilhados ────────────────────────────────────────────────
 // Cada um monta um pedaço de HTML reaproveitado pelas duas variantes lá

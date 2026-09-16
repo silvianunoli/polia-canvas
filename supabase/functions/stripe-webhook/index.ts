@@ -13,7 +13,12 @@ const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-const SITE_URL = "https://usepolia.com.br";
+const SITE_URL = "https://one.usepolia.com.br";
+// Link de alerta interno (Telegram, ver dispararAlerta abaixo): vai direto pro
+// domínio do admin, não pro produto. office.usepolia.com.br é o admin de
+// verdade desde 01/09/2026 (polia-admin/wrangler.jsonc); não tem relação com
+// SITE_URL nem com o antigo prefixo /admin, que não existe mais em lugar nenhum.
+const ADMIN_URL = "https://office.usepolia.com.br";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -53,7 +58,7 @@ async function dispararAlerta(tipo: string, titulo: string, detalhes?: Record<st
     await fetch(`${SUPABASE_URL}/functions/v1/alertas-criticos`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-alertas-secret": ALERTAS_SECRET },
-      body: JSON.stringify({ tipo, titulo, detalhes, link: `${SITE_URL}/admin/qualidade` }),
+      body: JSON.stringify({ tipo, titulo, detalhes, link: `${ADMIN_URL}/qualidade` }),
     });
   } catch (err) {
     console.error("[stripe-webhook] Falha ao chamar alertas-criticos:", err);

@@ -68,11 +68,11 @@ describe("emailPolia", () => {
     expect(html).not.toMatch(/text-transform:uppercase;color:#6B6B6B;">\s*one\.usepolia\.com\.br/);
     expect(html).toContain("Pequenas marcas. Grandes sonhos.");
     expect(html).toContain("Alguma dúvida?");
-    expect(html).toContain('href="https://usepolia.com.br/ajuda"');
+    expect(html).toContain('href="https://one.usepolia.com.br/ajuda"');
     // Rodapé, não segundo CTA: mesma régua discreta do descadastro (11px,
     // #6B6B6B), nunca a cor do botão.
     expect(html).toMatch(
-      /font-size:11px;font-weight:700;letter-spacing:0\.06em;color:#6B6B6B;">\s*Alguma dúvida\? <a href="https:\/\/usepolia\.com\.br\/ajuda" style="color:#6B6B6B;text-decoration:underline;">/,
+      /font-size:11px;font-weight:700;letter-spacing:0\.06em;color:#6B6B6B;">\s*Alguma dúvida\? <a href="https:\/\/one\.usepolia\.com\.br\/ajuda" style="color:#6B6B6B;text-decoration:underline;">/,
     );
   });
 });

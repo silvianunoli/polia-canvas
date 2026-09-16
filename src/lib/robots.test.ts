@@ -17,7 +17,7 @@ const AGENTES_BLOQUEADOS = [
 
 describe("CORPO_ROBOTS", () => {
   it("aponta pro sitemap no domínio próprio", () => {
-    expect(CORPO_ROBOTS).toContain("Sitemap: https://usepolia.com.br/sitemap.xml");
+    expect(CORPO_ROBOTS).toContain("Sitemap: https://one.usepolia.com.br/sitemap.xml");
     expect(CORPO_ROBOTS).not.toContain("workers.dev");
   });
 

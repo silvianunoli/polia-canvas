@@ -35,7 +35,7 @@ describe("caminhos", () => {
 
   it("a URL do e-mail aponta pro domínio próprio, nunca pro workers.dev", () => {
     const url = urlDownloadManual(TOKEN);
-    expect(url).toBe(`https://usepolia.com.br/manual/baixar?t=${TOKEN}`);
+    expect(url).toBe(`https://one.usepolia.com.br/manual/baixar?t=${TOKEN}`);
     expect(url).not.toContain("workers.dev");
   });
 });

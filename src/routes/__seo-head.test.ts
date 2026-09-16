@@ -30,7 +30,7 @@ describe("/pesquisa", () => {
     expect(h.meta).toContainEqual({ name: "robots", content: "noindex, follow" });
     expect(h.links).toContainEqual({
       rel: "canonical",
-      href: "https://usepolia.com.br/pesquisa",
+      href: "https://one.usepolia.com.br/pesquisa",
     });
   });
 });
@@ -46,7 +46,7 @@ describe("/blog", () => {
     };
     expect(dado["@type"]).toBe("BreadcrumbList");
     expect(dado.itemListElement.map((i) => i.name)).toEqual(["Início", "Blog"]);
-    expect(dado.itemListElement[1].item).toBe("https://usepolia.com.br/blog");
+    expect(dado.itemListElement[1].item).toBe("https://one.usepolia.com.br/blog");
   });
 });
 
@@ -122,7 +122,7 @@ describe("/sobre", () => {
 
     const sobre = JSON.parse(h.scripts![0].children) as { "@type": string; url: string };
     expect(sobre["@type"]).toBe("AboutPage");
-    expect(sobre.url).toBe("https://usepolia.com.br/sobre");
+    expect(sobre.url).toBe("https://one.usepolia.com.br/sobre");
 
     const pessoa = JSON.parse(h.scripts![1].children) as {
       "@type": string;

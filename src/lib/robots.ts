@@ -10,7 +10,9 @@
 // vencer depois do deploy, a linha Sitemap precisa entrar pelo painel dela,
 // não por código. Não contorne a Cloudflare aqui.
 
-const SITEMAP = "https://usepolia.com.br/sitemap.xml";
+import { HOST_CANONICO } from "./seo";
+
+const SITEMAP = `${HOST_CANONICO}/sitemap.xml`;
 
 export const CORPO_ROBOTS = `# As a condition of accessing this website, you agree to abide by the following
 # content signals:

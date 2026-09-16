@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { logAcaoAdminServer } from "@/lib/audit-log.server";
 import { emailPolia, enviarEmailResend } from "@/lib/email-template";
+import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 const emailInput = z.object({ email: z.string().trim().toLowerCase().email().max(255) });
 
@@ -76,7 +77,6 @@ export const criarConvite = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-const SITE_URL = "https://usepolia.com.br";
 
 export const enviarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

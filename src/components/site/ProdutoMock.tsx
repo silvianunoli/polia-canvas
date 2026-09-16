@@ -136,7 +136,7 @@ const semana = [
 export function MockPainel({ className }: { className?: string }) {
   return (
     <Janela
-      url="app.usepolia.com.br/painel"
+      url="one.usepolia.com.br/painel"
       label="Painel da Pólia: a frase falta R$ 430 para bater a meta do mês no topo e, abaixo, a receita do mês, os pedidos, os clientes, as tarefas do dia e o gráfico da semana."
       className={className}
     >
@@ -300,7 +300,7 @@ const modulosDoc = [
 export function MockPlanejamento({ className }: { className?: string }) {
   return (
     <Janela
-      url="app.usepolia.com.br/planejamento"
+      url="one.usepolia.com.br/planejamento"
       label="Tela do Planejamento da Pólia: a faixa dos seis módulos no topo e, abaixo, o documento do negócio com missão, tom da marca, o cliente que a marca serve e os três valores de mês bom, mês mínimo e mês de celebrar."
       className={className}
     >
@@ -440,7 +440,7 @@ export function MockModulos({ className }: { className?: string }) {
 export function MockCalculadora({ className }: { className?: string }) {
   return (
     <Janela
-      url="app.usepolia.com.br/produtos"
+      url="one.usepolia.com.br/produtos"
       label="Calculadora de preço da Pólia: a caixa com 12 aquarelas mini, com material, taxa da maquininha e envio somados, o preço de venda de R$ 49 e o destaque de que sobram R$ 18,90 por caixa."
       className={className}
     >
@@ -567,7 +567,7 @@ const colunas: {
 export function MockPlanner({ className }: { className?: string }) {
   return (
     <Janela
-      url="app.usepolia.com.br/planner"
+      url="one.usepolia.com.br/planner"
       label="Quadro do Planner da Pólia com três colunas, Hoje, Em progresso e Concluído, e os cartões de tarefa com categoria e prazo."
       className={className}
     >
