@@ -82,6 +82,7 @@ const LOGO_ALTURA = 49;
 
 export function emailPolia({
   preheader,
+  rotulo,
   headline,
   paragrafos,
   destaque,
@@ -91,6 +92,10 @@ export function emailPolia({
   descadastroUrl,
 }: {
   preheader: string;
+  /** Rótulo opcional em caixa alta acima do título, com o filete de 4px na
+   *  frente (mesmo tratamento da variante editorial). A maioria dos e-mails
+   *  não passa isso -- some sozinho quando omitido. */
+  rotulo?: string;
   headline: string;
   paragrafos: string[];
   /** Caixa pêssego, igual à da tela de resultado do quiz. Passe já escapado. */
@@ -111,7 +116,7 @@ export function emailPolia({
   const corpoParagrafos = paragrafos
     .map(
       (p) =>
-        `<p style="margin:0 0 16px;font-family:${FONTE_CORPO};font-size:15px;line-height:1.6;color:#2C2C2C;">${p}</p>`,
+        `<p style="margin:0 0 18px;font-family:${FONTE_CORPO};font-size:16px;line-height:1.65;color:#2C2C2C;">${p}</p>`,
     )
     .join("\n");
 
@@ -131,13 +136,23 @@ export function emailPolia({
                 </table>`
     : "";
 
+  const blocoRotulo = rotulo
+    ? `
+                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;">
+                  <tr>
+                    <td style="width:20px;padding-right:10px;vertical-align:middle;"><div style="width:20px;height:2px;background-color:#0A0A0A;font-size:0;line-height:0;">&nbsp;</div></td>
+                    <td style="vertical-align:middle;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#2C2C2C;">${rotulo}</td>
+                  </tr>
+                </table>`
+    : "";
+
   const botao =
     ctaLabel && ctaUrl
       ? `
-                <table role="presentation" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:8px 0 4px;">
                   <tr>
-                    <td style="border-radius:8px;background-color:#7CCBCD;">
-                      <a href="${ctaUrl}" style="display:inline-block;padding:14px 32px;font-family:${FONTE_CORPO};font-size:15px;font-weight:600;color:#0A0A0A;text-decoration:none;border-radius:8px;">
+                    <td style="background-color:#7CCBCD;border-radius:4px;text-align:center;">
+                      <a href="${ctaUrl}" style="display:block;padding:18px 32px;font-family:${FONTE_ROTULO};font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0A0A0A;text-decoration:none;border-radius:4px;">
                         ${ctaLabel}
                       </a>
                     </td>
@@ -145,18 +160,18 @@ export function emailPolia({
                 </table>`
       : "";
 
-  // Mesma régua visual do descadastro (12px, #6B6B6B, sublinhado): é rodapé,
-  // não segundo CTA. O botão turquesa continua sendo a única ação em destaque.
+  // Mesma régua visual do rodapé (11px, caixa alta, #6B6B6B): é rodapé, não
+  // segundo CTA. O botão turquesa continua sendo a única ação em destaque.
   const linhaAjuda = ajudaUrl
     ? `
-                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                <p style="margin:8px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:#6B6B6B;">
                   Alguma dúvida? <a href="${ajudaUrl}" style="color:#6B6B6B;text-decoration:underline;">Fala com a gente</a>
                 </p>`
     : "";
 
   const linhaDescadastro = descadastroUrl
     ? `
-                <p style="margin:8px 0 0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                <p style="margin:8px 0 0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.06em;color:#6B6B6B;">
                   <a href="${descadastroUrl}" style="color:#6B6B6B;text-decoration:underline;">Não quero mais receber</a>
                 </p>`
     : "";
@@ -166,24 +181,36 @@ export function emailPolia({
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="supported-color-schemes" content="light" />
     <title>${headline}</title>
+    <style>
+      @media only screen and (max-width: 600px) {
+        .polia-cartao { padding: 36px 24px !important; }
+        .polia-h1 { font-size: 27px !important; }
+      }
+    </style>
   </head>
   <body style="margin:0;padding:0;background-color:#F2F0ED;">
     <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${preheader}</div>
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F2F0ED;">
       <tr>
-        <td align="center" style="padding:40px 16px;">
-          <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="max-width:480px;width:100%;">
+        <td align="center" style="padding:40px 16px 48px;">
+          <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
             <tr>
-              <td style="padding-bottom:24px;text-align:left;">
+              <td style="padding:0 0 28px;text-align:left;">
                 <img src="${LOGO_URL}" width="${LOGO_LARGURA}" height="${LOGO_ALTURA}" alt="Pólia" style="display:block;border:0;outline:none;text-decoration:none;width:${LOGO_LARGURA}px;height:${LOGO_ALTURA}px;font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#0A0A0A;" />
               </td>
             </tr>
             <tr>
-              <td style="background-color:#ffffff;border:1px solid #E6E6E6;border-radius:12px;padding:32px;">
-                <h1 style="margin:0 0 16px;font-family:${FONTE_TITULO};font-size:26px;font-weight:700;line-height:1.2;letter-spacing:-0.02em;color:#0A0A0A;">
+              <td class="polia-cartao" style="background-color:#FFFFFF;border:1px solid #E6E6E6;padding:48px 44px 44px;">
+                ${blocoRotulo}
+                <h1 class="polia-h1" style="margin:0 0 28px;font-family:${FONTE_TITULO};font-size:32px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;color:#0A0A0A;">
                   ${headline}
                 </h1>
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+                  <tr><td style="height:1px;background-color:#E6E6E6;font-size:0;line-height:0;">&nbsp;</td></tr>
+                </table>
                 ${corpoParagrafos}
                 ${caixaDestaque}
                 ${botao}
@@ -191,7 +218,7 @@ export function emailPolia({
             </tr>
             <tr>
               <td style="padding-top:24px;text-align:left;">
-                <p style="margin:0;font-family:${FONTE_CORPO};font-size:12px;line-height:1.5;color:#6B6B6B;">
+                <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6B6B6B;">
                   Pólia · usepolia.com.br
                 </p>
                 ${linhaAjuda}
