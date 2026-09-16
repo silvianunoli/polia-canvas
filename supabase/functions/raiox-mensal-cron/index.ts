@@ -122,7 +122,7 @@ function geminiClient(): GoogleGenAI {
 
 async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
   if (!RESEND_API_KEY) return;
-  const url = "https://usepolia.com.br/raiox";
+  const url = "https://one.usepolia.com.br/raiox";
   try {
     await fetch("https://api.resend.com/emails", {
       method: "POST",
