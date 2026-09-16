@@ -61,12 +61,15 @@ const FONTE_CORPO = "'Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif
 // SVG inline (que é o que o site e o polia-office usam) precisa ser resistida:
 // Gmail, Outlook e Yahoo removem a tag <svg> do HTML do e-mail. Inline o SVG
 // aqui e a marca some pra maior parte de quem recebe, sem nem deixar texto no
-// lugar — fica um buraco. O PNG é rasterizado do MESMO arquivo oficial
-// (public/marketing/logo.svg, o wordmark com a trilha de 3 pontos), então não
-// há segunda versão do logo pra sair de sincronia. Pra regerar depois de mexer
-// no logo (3x do tamanho de exibição, achatado sobre o --bg do cabeçalho):
+// lugar — fica um buraco. O PNG é rasterizado do arquivo-fonte oficial
+// (public/logotipo-wordmark-ligth-one.svg, o wordmark "pólia" + selo "ONE",
+// trocado em 16/09/2026 -- era public/marketing/logo.svg antes), então não há
+// segunda versão do logo pra sair de sincronia. Pra regerar depois de mexer no
+// logo (3x do tamanho de exibição, fundo branco do SVG removido antes de
+// achatar sobre o --bg do cabeçalho -- sem isso sobra uma caixa branca atrás
+// do selo, já que o fundo do arquivo-fonte não é transparente):
 //
-//   node -e "const s=require('sharp'),f=require('fs');s(f.readFileSync('public/marketing/logo.svg'),{density:600}).resize({width:384,height:148,fit:'fill'}).flatten({background:'#F2F0ED'}).png({compressionLevel:9,palette:true}).toFile('public/marketing/logo-email.png')"
+//   node -e "const s=require('sharp'),f=require('fs');let v=f.readFileSync('public/logotipo-wordmark-ligth-one.svg','utf8').replace(/<rect width=\"616\" height=\"220\" fill=\"white\"\/>/,'');s(Buffer.from(v),{density:600}).resize({width:420,height:150,fit:'fill'}).flatten({background:'#F2F0ED'}).png({compressionLevel:9,palette:true}).toFile('public/marketing/logo-email.png')"
 //
 // O `alt` não é detalhe de acessibilidade só: imagem remota vem bloqueada por
 // padrão em boa parte dos clientes, e o alt estilizado faz o cabeçalho cair
@@ -77,8 +80,8 @@ const FONTE_CORPO = "'Inter',-apple-system,'Segoe UI',Helvetica,Arial,sans-serif
 // APP for deployado (o Worker é quem serve /marketing/*): deployar as edge
 // functions antes do app deixa a imagem em 404 até o app subir.
 const LOGO_URL = "https://usepolia.com.br/marketing/logo-email.png";
-const LOGO_LARGURA = 128;
-const LOGO_ALTURA = 49;
+const LOGO_LARGURA = 140;
+const LOGO_ALTURA = 50;
 
 export function emailPolia({
   preheader,
