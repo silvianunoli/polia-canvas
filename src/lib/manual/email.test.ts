@@ -37,14 +37,19 @@ describe("e-mail de entrega do manual", () => {
     expect(html).toContain("usepolia.com.br");
   });
 
-  it("segue a narrativa pedida: citação antes do botão, assinatura depois", () => {
+  // Copy final de 16/09/2026 (revisão dos 12 transacionais): a citação de
+  // campanha ("Grandes marcas não começam grandes...") saiu -- soava a
+  // tagline, não a entrega do material. Corpo abre com a saudação, segue
+  // pro botão, fecha com a assinatura.
+  it("segue a narrativa pedida: saudação antes do botão, assinatura depois", () => {
     const { html } = montar();
-    const citacao = html.indexOf("Começam com intenção.");
+    const saudacao = html.indexOf("Bom dia, Ana.");
     const botao = html.indexOf(`href="${DOWNLOAD}"`);
     const assinatura = html.indexOf(TAGLINE_MANUAL);
-    expect(citacao).toBeGreaterThan(0);
-    expect(botao).toBeGreaterThan(citacao);
+    expect(saudacao).toBeGreaterThan(0);
+    expect(botao).toBeGreaterThan(saudacao);
     expect(assinatura).toBeGreaterThan(botao);
+    expect(html).not.toContain("Começam com intenção.");
     expect(html).not.toContain("Equipe Pólia");
   });
 

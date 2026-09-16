@@ -33,13 +33,19 @@ export function montarEmailDiagnostico({
    *  sem cumprimento. */
   descadastroUrl: string;
 }): EmailDiagnostico {
+  // Abertura fixa (16/09/2026, revisão de copy final dos 12 transacionais):
+  // igual em todo diagnóstico, não varia por faixa/território -- é o
+  // território logo abaixo que carrega a especificidade da combinação.
+  const aberturaL1 = "A maior parte das decisões já tem conta feita.";
+  const aberturaL2 = "Agora falta fechar os pontos que ainda deixam o negócio no chute.";
   const ondeLabel = "Onde você está mais no chute:";
   const contaLabel = "A conta pra fazer hoje:";
 
   const text = [
     faixa.nome,
     "",
-    faixa.resumo,
+    aberturaL1,
+    aberturaL2,
     "",
     `${ondeLabel} ${territorio.nome}`,
     territorio.explicacao,
@@ -52,10 +58,11 @@ export function montarEmailDiagnostico({
   ].join("\n");
 
   const html = emailPolia({
-    preheader: `${faixa.nome}. ${territorio.nome} é onde as contas ainda não estão à mão.`,
+    preheader: `Uma coisa já ficou clara. Agora falta fechar ${territorio.nome}.`,
     headline: escapeHtml(faixa.nome),
     paragrafos: [
-      escapeHtml(faixa.resumo),
+      escapeHtml(aberturaL1),
+      escapeHtml(aberturaL2),
       `<strong>${escapeHtml(ondeLabel)}</strong> ${escapeHtml(territorio.nome)}`,
       escapeHtml(territorio.explicacao),
     ],

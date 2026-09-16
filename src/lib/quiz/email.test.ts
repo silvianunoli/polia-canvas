@@ -21,10 +21,10 @@ describe("e-mail do diagnóstico", () => {
     expect(montar().subject).toContain(faixa.nome);
   });
 
-  it("entrega o mesmo conteúdo da tela: faixa, território e a conta", () => {
+  it("entrega faixa, abertura fixa, território e a conta", () => {
     const { text } = montar();
     expect(text).toContain(faixa.nome);
-    expect(text).toContain(faixa.resumo);
+    expect(text).toContain("A maior parte das decisões já tem conta feita.");
     expect(text).toContain(territorio.nome);
     expect(text).toContain(territorio.explicacao);
     expect(text).toContain(territorio.conta);

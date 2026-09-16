@@ -8,10 +8,11 @@
 // Layout: a variante EDITORIAL da casca (emailPoliaEditorial), não a
 // transacional. Decisão da fundadora em 14/09/2026: esta peça tem que parecer
 // uma página do próprio manual, com o amarelo como único destaque e o turquesa
-// fora. A copy também é dela, com quatro ajustes de forma que a régua da marca
-// não deixa passar (sem travessão, sem exclamação, sem símbolo no assunto, e
-// "você" nunca como sujeito de promessa). Registro tipográfico em "para", não
-// "pra": ela pediu o tom mais editorial aqui, diferente do site.
+// fora. Copy final revisada em 16/09/2026 (revisão dos 12 transacionais):
+// "pra" em vez de "para" -- alinhado ao resto da marca, não é mais um
+// registro editorial à parte -- citação/tagline de campanha ("Grandes marcas
+// não começam grandes...") saiu, o e-mail entrega o material e cria ponte
+// pra Pólia sem soar a peça de propaganda.
 //
 // Puro de propósito: monta o texto e devolve. Quem envia é
 // src/lib/manual.functions.ts, do lado do servidor. Assim dá pra testar o corpo
@@ -40,21 +41,20 @@ export function montarEmailManual({
   descadastroUrl: string;
 }): EmailManual {
   const headline = `Seu ${NOME_MANUAL_CURTO} chegou.`;
-  const preheader = "Seu primeiro passo para começar a construir uma marca maior.";
+  const preheader = "17 seções práticas pra colocar sua marca no lugar.";
   const paragrafos = [
-    "Olá. Preparamos este material para ajudar você a olhar para o seu negócio de uma maneira diferente: não apenas como algo que você vende, mas como uma marca que está construindo.",
-    "Dentro dele, você vai encontrar 17 seções práticas, exercícios para preencher e um plano de 7 dias para colocar suas ideias em movimento.",
-    "Porque uma marca grande não precisa esperar a empresa crescer para começar.",
+    "Bom dia, Ana.",
+    "O manual chegou.",
+    "São 17 seções práticas, exercícios pra preencher e um plano de 7 dias pra tirar as ideias da cabeça e colocar no negócio.",
+    "Começa pela marca, mas não fica só nela.",
+    "A ideia é deixar mais claro o que você vende, pra quem, por que vale e o que precisa acontecer depois.",
   ];
-  const citacao = ["Grandes marcas não começam grandes.", "Começam com intenção."];
   const fechamento = "Boa leitura, e boa construção.";
 
   const text = [
     headline,
     "",
     ...paragrafos.flatMap((t) => [t, ""]),
-    citacao.join("\n"),
-    "",
     `${CTA_EMAIL_MANUAL}: ${downloadUrl}`,
     "",
     fechamento,
@@ -71,7 +71,6 @@ export function montarEmailManual({
     rotulo: "Pólia · Material gratuito",
     headline: escapeHtml(headline),
     paragrafos: paragrafos.map(escapeHtml),
-    citacao: citacao.map(escapeHtml),
     ctaLabel: CTA_EMAIL_MANUAL,
     ctaUrl: downloadUrl,
     fechamento: [escapeHtml(fechamento)],

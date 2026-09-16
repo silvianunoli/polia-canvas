@@ -188,12 +188,12 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
   await enviarViaResend(
     "Sua compra foi confirmada. Cria sua senha",
-    `Sua compra na Pólia foi confirmada.\n\nCria sua senha e entra pela primeira vez:\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
+    `Agora falta criar sua senha pra entrar na Pólia pela primeira vez.\n\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
     emailPolia({
-      preheader: "Sua compra foi confirmada. Cria sua senha.",
+      preheader: "Agora falta criar sua senha pra entrar na Pólia.",
       headline: "Sua compra foi confirmada",
       paragrafos: [
-        "Cria sua senha e entra pela primeira vez na Pólia.",
+        "Agora falta criar sua senha pra entrar na Pólia pela primeira vez.",
         "Esse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.",
       ],
       ctaLabel: "Criar minha senha",
@@ -207,12 +207,13 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
 async function enviarEmailPagamentoRecusado(email: string) {
   await enviarViaResend(
     "Não conseguimos cobrar seu cartão",
-    `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter o acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
+    `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "A cobrança da sua assinatura não passou.",
-      headline: "Problema no pagamento",
+      headline: "A cobrança não passou",
       paragrafos: [
-        "A cobrança da sua assinatura na Pólia não passou. Atualiza a forma de pagamento pra manter o acesso sem interrupção.",
+        "A cobrança da sua assinatura na Pólia não passou.",
+        "Atualiza a forma de pagamento pra manter seu acesso sem interrupção.",
       ],
       ctaLabel: "Atualizar pagamento",
       ctaUrl: `${SITE_URL}/configuracoes`,
@@ -229,14 +230,11 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
     : "Seu acesso à Pólia continua até o fim do período já pago.";
   await enviarViaResend(
     "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nMudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
+    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
-      preheader: "Sua assinatura na Pólia foi cancelada.",
+      preheader: "Seu acesso continua até o fim do período já pago.",
       headline: "Assinatura cancelada",
-      paragrafos: [
-        paragrafo1,
-        "Mudou de ideia? É só assinar de novo quando quiser. Seus dados continuam guardados.",
-      ],
+      paragrafos: [paragrafo1, "Se quiser voltar depois, seus dados continuam guardados."],
       ctaLabel: "Assinar de novo",
       ctaUrl: `${SITE_URL}/#planos`,
       ajudaUrl: `${SITE_URL}/ajuda`,
@@ -258,7 +256,7 @@ async function enviarEmailRenovacao(
     "Sua assinatura renova em breve",
     `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
-      preheader: "Sua assinatura na Pólia renova em breve.",
+      preheader: "Confira a próxima cobrança e o valor da sua assinatura.",
       headline: "Renovação chegando",
       paragrafos: [paragrafo],
       ctaLabel: "Ver minha assinatura",

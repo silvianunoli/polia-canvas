@@ -3,6 +3,39 @@
 Varredura de 17/08/2026. Todo ponto do código que dispara e-mail, onde ele mora,
 quem recebe e por qual template.
 
+## Regra de copy dos e-mails (revisão final de 16/09/2026)
+
+A Sil revisou a copy final dos 12 e-mails transacionais/captação (os 3 do Supabase
+Auth ficam fora — template no dashboard, fora do repo) e decidiu o texto exato de
+cada um. Pra qualquer sessão futura que mexer em copy de e-mail:
+
+1. Implementar os textos definidos exatamente como estão nos arquivos-fonte abaixo.
+   Não criar variações de linguagem, sinônimos ou "melhorias" de copy.
+2. Manter a estrutura atual dos templates (`emailPolia`/`emailPoliaEditorial` em
+   `supabase/functions/_shared/email-polia.ts`).
+3. Nunca travessão em nenhum texto.
+4. Assinar só "Pólia", nunca "Equipe Pólia".
+5. Sem emoji, sem exclamação gratuita, sem frase motivacional.
+6. Manter os termos proprietários exatamente como escritos: "quanto sobra" nunca
+   vira "margem"; nunca usar "jornada", "etapa", "trilha", "turma" ou "do seu jeito".
+7. Em e-mails de cobrança e dinheiro (pagamento recusado, cancelamento, renovação),
+   sem humor — regra do Manual da Marca.
+8. Variável dinâmica (`{{data}}`, `{{valor}}`, `{{mês}}`, `{{faixa}}`, `{{território}}`)
+   preserva a variável existente no código, não vira texto fixo.
+9. No diagnóstico do quiz (24 combinações de faixa × território), não inventar
+   conteúdo pras combinações que não estão definidas na fonte (só o PDF de uma
+   combinação existe hoje) — só a abertura fixa e a estrutura são copy nova, o
+   conteúdo por território continua vindo de `src/lib/quiz/perguntas.ts`.
+10. Sistema de rodapé (já implementado em `email-polia.ts`, não mexer): transacional
+    puro = só `Pólia · usepolia.com.br`; cobrança = + "Alguma dúvida? Fala com a
+    gente" (`ajudaUrl`); captação = + "Não quero mais receber" (`descadastroUrl`).
+
+Aplicado em 16/09/2026 nos 9 e-mails que moram em código (ver tabelas abaixo pro
+arquivo exato de cada um). Os 3 do Supabase Auth (confirmação de cadastro,
+redefinição de senha, troca de e-mail) têm a copy final decidida mas precisam ser
+colados manualmente no dashboard do Supabase (Authentication → Email Templates) —
+Claude Code não tem acesso de escrita a esse config.
+
 **14 e-mails no total:** 11 pelo Resend (4 no app, 7 nas edge functions) e 3 pelo
 Supabase Auth (template no dashboard, não no repositório).
 
