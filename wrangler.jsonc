@@ -24,7 +24,10 @@
     // www não tinha DNS nenhum (não resolvia). Custom domain do Worker
     // provisiona o registro sozinho; o handler em src/server.ts redireciona
     // 301 pro domínio sem www.
-    { "pattern": "www.usepolia.com.br", "custom_domain": true }
+    { "pattern": "www.usepolia.com.br", "custom_domain": true },
+    // one.usepolia.com.br adicionado em 16/09/2026 (decisão da Sil): serve o
+    // mesmo Worker, em paralelo com usepolia.com.br/www — nenhum dos dois sai.
+    { "pattern": "one.usepolia.com.br", "custom_domain": true }
     // silvianunoli.com.br (área de gestão) foi extraído pro Worker "polia-admin"
     // (projeto polia-admin/), deploy e domínio próprios — ver src/server.ts pro
     // redirect que ainda manda /admin de usepolia.com.br pra lá.
