@@ -229,7 +229,6 @@ function LoginPage() {
               value={values.email}
               onChange={(e) => set("email", e.target.value)}
               error={errors.email}
-              reserveErrorSpace
               disabled={loading}
             />
             <div>
@@ -243,7 +242,6 @@ function LoginPage() {
                 onChange={(e) => set("senha", e.target.value)}
                 onKeyUp={caps.onKeyUp}
                 error={errors.senha}
-                reserveErrorSpace
                 disabled={loading}
               />
               <CapsLockHint ligado={caps.ligado} />
@@ -308,7 +306,11 @@ function LoginPage() {
             É só informar o e-mail da conta que a gente manda o link.
           </p>
 
-          <form onSubmit={recuperar.handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
+          <form
+            onSubmit={recuperar.handleSubmit}
+            className="mt-5 flex flex-col gap-[15px]"
+            noValidate
+          >
             <CosmicInput
               label="Seu e-mail"
               name="email-recuperar"
@@ -322,20 +324,17 @@ function LoginPage() {
                 if (recuperar.error) recuperar.setError(undefined);
               }}
               error={recuperar.error}
-              reserveErrorSpace
               disabled={recuperar.loading}
             />
-            <div className="mt-1">
-              <AuthButton type="submit" fullWidth loading={recuperar.loading}>
-                {recuperar.loading ? (
-                  "Enviando..."
-                ) : (
-                  <>
-                    Enviar link <span aria-hidden="true">→</span>
-                  </>
-                )}
-              </AuthButton>
-            </div>
+            <AuthButton type="submit" fullWidth loading={recuperar.loading}>
+              {recuperar.loading ? (
+                "Enviando..."
+              ) : (
+                <>
+                  Enviar link <span aria-hidden="true">→</span>
+                </>
+              )}
+            </AuthButton>
           </form>
         </>
       ) : (
