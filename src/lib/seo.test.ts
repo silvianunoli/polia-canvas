@@ -35,9 +35,8 @@ describe("linkCanonico", () => {
 });
 
 describe("deveRedirecionarParaHostCanonico", () => {
-  it("deixa passar o domínio próprio, o de gestão e o one.usepolia.com.br", () => {
+  it("deixa passar o domínio próprio e o one.usepolia.com.br", () => {
     expect(deveRedirecionarParaHostCanonico("usepolia.com.br")).toBe(false);
-    expect(deveRedirecionarParaHostCanonico("silvianunoli.com.br")).toBe(false);
     expect(deveRedirecionarParaHostCanonico("one.usepolia.com.br")).toBe(false);
   });
 

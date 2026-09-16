@@ -7,15 +7,12 @@
 // conteúdo entra no índice do Google em endereços diferentes e um compete com
 // o outro.
 
-import { DOMINIO_GESTAO } from "./dominio-gestao";
-
 export const HOST_CANONICO = "https://usepolia.com.br";
 export const HOSTNAME_CANONICO = "usepolia.com.br";
 
 /** Hostnames que servem o site de verdade e não devem ser redirecionados. */
 const HOSTS_OFICIAIS = new Set([
   HOSTNAME_CANONICO,
-  DOMINIO_GESTAO,
   // Adicionado em 16/09/2026 (decisão da Sil): serve o produto de verdade,
   // não é alias. O <link rel="canonical"> continua apontando pra
   // HOSTNAME_CANONICO (urlCanonica usa HOST_CANONICO fixo), então o Google
@@ -43,8 +40,8 @@ export function linkCanonico(caminho: string): { rel: string; href: string } {
 
 /**
  * Se o pedido chegou por um hostname que não é o oficial (www, workers.dev,
- * preview), ele vira 301 pro domínio próprio. O domínio de gestão e o
- * desenvolvimento local ficam de fora.
+ * preview), ele vira 301 pro domínio próprio. O desenvolvimento local fica
+ * de fora.
  */
 export function deveRedirecionarParaHostCanonico(hostname: string): boolean {
   if (HOSTS_OFICIAIS.has(hostname)) return false;

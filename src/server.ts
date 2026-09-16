@@ -3,7 +3,6 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
-import { DOMINIO_GESTAO } from "./lib/dominio-gestao";
 import { CORPO_ROBOTS } from "./lib/robots";
 import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
@@ -161,19 +160,6 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     const url = new URL(request.url);
-    // Área de gestão (/admin) mora em deploy e domínio à parte do produto
-    // desde 27/07/2026 (projeto polia-admin/, Worker "polia-admin") — separa
-    // a ferramenta interna do domínio voltado pra Aimer. O app novo não tem
-    // mais o prefixo /admin nas rotas (ex.: /admin/crm virou /crm), então o
-    // redirect precisa tirar esse prefixo, não só trocar o hostname.
-    if (
-      (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) &&
-      (url.hostname === "usepolia.com.br" || url.hostname === "www.usepolia.com.br")
-    ) {
-      url.hostname = DOMINIO_GESTAO;
-      url.pathname = url.pathname.slice("/admin".length) || "/";
-      return Response.redirect(url.toString(), 301);
-    }
     // /health responde em QUALQUER hostname e vem antes do 301: o monitor
     // externo de uptime bate no fallback workers.dev, e um redirect quebraria
     // o check.
