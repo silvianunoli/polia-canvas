@@ -217,7 +217,7 @@ function LoginPage() {
             )
           )}
 
-          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
+          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-[15px]" noValidate>
             <CosmicInput
               ref={emailRef}
               label="Seu e-mail"
@@ -273,25 +273,23 @@ function LoginPage() {
               </p>
             )}
 
-            <div className="mt-1">
-              <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
-                {lockoutCooldown > 0 ? (
-                  `Tenta de novo em ${lockoutCooldown}s`
-                ) : loading ? (
-                  "Entrando..."
-                ) : (
-                  <>
-                    Entrar <span aria-hidden="true">→</span>
-                  </>
-                )}
-              </AuthButton>
-            </div>
+            <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
+              {lockoutCooldown > 0 ? (
+                `Tenta de novo em ${lockoutCooldown}s`
+              ) : loading ? (
+                "Entrando..."
+              ) : (
+                <>
+                  Entrar <span aria-hidden="true">→</span>
+                </>
+              )}
+            </AuthButton>
           </form>
 
           <Divider />
           <GoogleButton onClick={handleGoogle} loading={googleLoading} label="Entrar com Google" />
 
-          <p className="mt-4 text-[14px] text-[var(--muted)]">
+          <p className="mt-4 text-center text-[14px] text-[var(--muted)]">
             Primeira vez aqui?{" "}
             <Link
               to="/auth/cadastro"
