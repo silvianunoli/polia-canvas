@@ -36,6 +36,16 @@ redefinição de senha, troca de e-mail) têm a copy final decidida mas precisam
 colados manualmente no dashboard do Supabase (Authentication → Email Templates) —
 Claude Code não tem acesso de escrita a esse config.
 
+**Segunda passada, mesmo dia (16/09/2026):** auditoria transversal dos 12 contra o
+roteiro de copy da Sil encontrou 6 furos que a primeira revisão deixou passar —
+assunto de pagamento recusado e de ativação ainda com a formulação antiga/composta,
+preheader de cancelamento/renovação estático quando o dado exato já existia, título
+de redefinir senha destoando do modo imperativo dos outros 2 e-mails de auth, texto
+puro do raio-x sem o mês, e a saudação "Bom dia, Ana." no e-mail do manual (Ana é a
+persona interna do produto, não o nome de quem baixa o manual de verdade). Os 6
+foram corrigidos — ver commit desta data. Essa é agora a copy final; qualquer sessão
+futura segue as regras acima em cima DESTA versão.
+
 **14 e-mails no total:** 11 pelo Resend (4 no app, 7 nas edge functions) e 3 pelo
 Supabase Auth (template no dashboard, não no repositório).
 
@@ -68,8 +78,8 @@ As 4 do Stripe passaram a usar o template compartilhado em 17/08/2026 (ver
 
 | # | E-mail | Assunto | Vai para | Gatilho | Arquivo |
 |---|---|---|---|---|---|
-| 5 | Compra confirmada / ativação | `Sua compra foi confirmada — crie sua senha` | quem comprou | `checkout.session.completed` | [stripe-webhook](../supabase/functions/stripe-webhook/index.ts) |
-| 6 | Pagamento recusado | `Não conseguimos cobrar seu cartão` | a assinante | `invoice.payment_failed` | stripe-webhook |
+| 5 | Compra confirmada / ativação | `Sua compra foi confirmada` | quem comprou | `checkout.session.completed` | [stripe-webhook](../supabase/functions/stripe-webhook/index.ts) |
+| 6 | Pagamento recusado | `Pagamento recusado` | a assinante | `invoice.payment_failed` | stripe-webhook |
 | 7 | Cancelamento | `Sua assinatura foi cancelada` | a assinante | `customer.subscription.deleted` | stripe-webhook |
 | 8 | Renovação chegando | `Sua assinatura renova em breve` | a assinante | `invoice.upcoming` | stripe-webhook |
 | 9 | Raio-x pronto | `Seu raio-x de {mês} está pronto` | a assinante Projete | cron mensal | [raiox-mensal-cron](../supabase/functions/raiox-mensal-cron/index.ts) |

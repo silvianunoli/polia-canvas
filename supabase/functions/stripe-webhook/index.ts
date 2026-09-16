@@ -187,7 +187,7 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
   await enviarViaResend(
-    "Sua compra foi confirmada. Cria sua senha",
+    "Sua compra foi confirmada",
     `Agora falta criar sua senha pra entrar na Pólia pela primeira vez.\n\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignora este e-mail.`,
     emailPolia({
       preheader: "Agora falta criar sua senha pra entrar na Pólia.",
@@ -206,7 +206,7 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
 
 async function enviarEmailPagamentoRecusado(email: string) {
   await enviarViaResend(
-    "Não conseguimos cobrar seu cartão",
+    "Pagamento recusado",
     `A cobrança da sua assinatura na Pólia não passou.\n\nAtualiza a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "A cobrança da sua assinatura não passou.",
@@ -230,7 +230,7 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
     "Sua assinatura foi cancelada",
     `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
-      preheader: "Seu acesso continua até o fim do período já pago.",
+      preheader: paragrafo1,
       headline: "Assinatura cancelada",
       paragrafos: [paragrafo1, "Se quiser voltar depois, seus dados continuam guardados."],
       ctaLabel: "Assinar de novo",
@@ -254,7 +254,7 @@ async function enviarEmailRenovacao(
     "Sua assinatura renova em breve",
     `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fala com a gente: ${SITE_URL}/ajuda`,
     emailPolia({
-      preheader: "Confira a próxima cobrança e o valor da sua assinatura.",
+      preheader: paragrafo,
       headline: "Renovação chegando",
       paragrafos: [paragrafo],
       ctaLabel: "Ver minha assinatura",

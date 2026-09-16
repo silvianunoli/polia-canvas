@@ -43,7 +43,6 @@ export function montarEmailManual({
   const headline = `Seu ${NOME_MANUAL_CURTO} chegou.`;
   const preheader = "17 seções práticas pra colocar sua marca no lugar.";
   const paragrafos = [
-    "Bom dia, Ana.",
     "O manual chegou.",
     "São 17 seções práticas, exercícios pra preencher e um plano de 7 dias pra tirar as ideias da cabeça e colocar no negócio.",
     "Começa pela marca, mas não fica só nela.",

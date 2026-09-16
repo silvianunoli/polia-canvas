@@ -131,7 +131,7 @@ async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: paraEmail,
         subject: `Seu raio-x de ${mesLabel} está pronto`,
-        text: `A Pólia já leu os números do mês.\n\n${url}`,
+        text: `A Pólia já leu os números de ${mesLabel}.\n\n${url}`,
         // Este e-mail saía só como texto puro, com a URL solta no corpo — sem
         // marca e sem botão, no aviso do recurso mais caro do produto.
         html: emailPolia({

@@ -37,18 +37,22 @@ describe("e-mail de entrega do manual", () => {
     expect(html).toContain("usepolia.com.br");
   });
 
-  // Copy final de 16/09/2026 (revisão dos 12 transacionais): a citação de
-  // campanha ("Grandes marcas não começam grandes...") saiu -- soava a
-  // tagline, não a entrega do material. Corpo abre com a saudação, segue
-  // pro botão, fecha com a assinatura.
-  it("segue a narrativa pedida: saudação antes do botão, assinatura depois", () => {
+  // Copy final de 16/09/2026, revisada de novo no mesmo dia (auditoria dos 12
+  // transacionais): a citação de campanha ("Grandes marcas não começam
+  // grandes...") já tinha saído por soar tagline, não entrega do material.
+  // A saudação "Bom dia, Ana." saiu na segunda revisão -- Ana é a persona
+  // interna do produto, não o nome de quem baixou o manual de verdade, e o
+  // e-mail vai pra qualquer lead. Corpo abre direto pelo fato, segue pro
+  // botão, fecha com a assinatura.
+  it("segue a narrativa pedida: fato do manual antes do botão, assinatura depois", () => {
     const { html } = montar();
-    const saudacao = html.indexOf("Bom dia, Ana.");
+    const fato = html.indexOf("O manual chegou.");
     const botao = html.indexOf(`href="${DOWNLOAD}"`);
     const assinatura = html.indexOf(TAGLINE_MANUAL);
-    expect(saudacao).toBeGreaterThan(0);
-    expect(botao).toBeGreaterThan(saudacao);
+    expect(fato).toBeGreaterThan(0);
+    expect(botao).toBeGreaterThan(fato);
     expect(assinatura).toBeGreaterThan(botao);
+    expect(html).not.toContain("Bom dia, Ana.");
     expect(html).not.toContain("Começam com intenção.");
     expect(html).not.toContain("Equipe Pólia");
   });
