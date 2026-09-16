@@ -1,10 +1,11 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Mail } from "lucide-react";
 import { z } from "zod";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { AuthShell, AuthButton, Divider, SerifHeadline } from "@/components/cosmic/AuthShell";
+import { AuthButton, Divider } from "@/components/cosmic/AuthShell";
+import { AuthSplitShell, AuthTabs } from "@/components/cosmic/AuthSplitShell";
 import { CosmicInput, useCapsLockWarning, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
@@ -173,11 +174,22 @@ function LoginPage() {
   }
 
   return (
-    <AuthShell>
-      <SerifHeadline size={30}>Boas-vindas de volta.</SerifHeadline>
+    <AuthSplitShell
+      headline="Seu negócio, com os números no lugar."
+      subtext="A Pólia conecta preço, lucro, meta e planejamento num só painel, pra decisão ter chão."
+      rodape={["Números", "Planejamento", "Decisão"]}
+    >
+      <AuthTabs ativo="/auth/login" />
+
+      <h2 className="text-[clamp(22px,3vw,28px)] font-bold leading-[1.1] tracking-[-0.02em] text-[var(--ink)]">
+        Que bom ter você de volta.
+      </h2>
+      <p className="mt-1.5 text-[14px] text-[var(--muted)]">
+        Entra com o e-mail e a senha da sua conta Pólia.
+      </p>
 
       {search.motivo === "sessao-expirada" ? (
-        <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-center">
+        <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
           <p className="text-[14px] font-semibold text-[var(--ink)]">
             {ERROR_COPY["sessao-expirada"].title}
           </p>
@@ -187,7 +199,7 @@ function LoginPage() {
         </div>
       ) : (
         search.next && (
-          <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4 text-center">
+          <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
             <p className="text-[14px] font-semibold text-[var(--ink)]">
               Isso fica logo depois de entrar.
             </p>
@@ -225,24 +237,16 @@ function LoginPage() {
             disabled={loading}
           />
           <CapsLockHint ligado={caps.ligado} />
-          <div className="-mt-1 text-right">
-            <Link
-              to="/auth/esqueci-senha"
-              className="text-[13px] text-[var(--muted)] hover:text-[var(--ink-soft)]"
-            >
-              Esqueci minha senha
-            </Link>
-          </div>
         </div>
 
         {loginErro && (
-          <p className="text-center text-[13px] text-[var(--danger)]" role="alert">
+          <p className="text-[13px] text-[var(--danger)]" role="alert">
             {loginErro}
           </p>
         )}
 
         {unverified && (
-          <p className="text-center text-[14px] text-[var(--ink-soft)]">
+          <p className="text-[14px] text-[var(--ink-soft)]">
             Confirma seu e-mail pra entrar.{" "}
             <button
               type="button"
@@ -275,14 +279,7 @@ function LoginPage() {
       </form>
 
       <Divider />
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} />
-
-      <p className="mt-4 text-center text-[14px] text-[var(--muted)]">
-        Primeira vez aqui?{" "}
-        <Link to="/auth/cadastro" className="text-[var(--ink-soft)] underline underline-offset-2">
-          Criar conta
-        </Link>
-      </p>
-    </AuthShell>
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} label="Entrar com Google" />
+    </AuthSplitShell>
   );
 }
