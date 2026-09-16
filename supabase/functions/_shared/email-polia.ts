@@ -222,7 +222,7 @@ export function emailPolia({
             <tr>
               <td style="padding-top:24px;text-align:left;">
                 <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6B6B6B;">
-                  Pólia · usepolia.com.br
+                  one.usepolia.com.br
                 </p>
                 ${linhaAjuda}
                 ${linhaDescadastro}
@@ -380,7 +380,7 @@ export function emailPoliaEditorial({
             <tr>
               <td style="padding-top:24px;text-align:left;">
                 <p style="margin:0;font-family:${FONTE_ROTULO};font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#6B6B6B;">
-                  Pólia · usepolia.com.br
+                  one.usepolia.com.br
                 </p>
                 ${linhaDescadastro}
               </td>
