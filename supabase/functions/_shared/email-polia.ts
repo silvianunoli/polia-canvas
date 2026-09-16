@@ -112,8 +112,8 @@ const RAIO_BOTAO = 16;
 // APP for deployado (o Worker é quem serve /marketing/*): deployar as edge
 // functions antes do app deixa a imagem em 404 até o app subir.
 const LOGO_URL = "https://usepolia.com.br/marketing/logo-email.png";
-const LOGO_LARGURA = 140;
-const LOGO_ALTURA = 50;
+const LOGO_LARGURA = 112;
+const LOGO_ALTURA = 40;
 
 // ── Blocos compartilhados ────────────────────────────────────────────────
 // Cada um monta um pedaço de HTML reaproveitado pelas duas variantes lá
@@ -125,8 +125,8 @@ const LOGO_ALTURA = 50;
 function blocoLogo(): string {
   return `
             <tr>
-              <td style="padding:0 0 28px;text-align:left;">
-                <img src="${LOGO_URL}" width="${LOGO_LARGURA}" height="${LOGO_ALTURA}" alt="Pólia" style="display:block;border:0;outline:none;text-decoration:none;width:${LOGO_LARGURA}px;height:${LOGO_ALTURA}px;font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:${COR_INK};" />
+              <td style="padding:0 0 28px;text-align:center;">
+                <img src="${LOGO_URL}" width="${LOGO_LARGURA}" height="${LOGO_ALTURA}" alt="Pólia" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;width:${LOGO_LARGURA}px;height:${LOGO_ALTURA}px;font-family:${FONTE_TITULO};font-size:20px;font-weight:700;letter-spacing:-0.02em;color:${COR_INK};" />
               </td>
             </tr>`;
 }
