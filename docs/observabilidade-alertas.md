@@ -27,6 +27,7 @@ Quatro chamadores, todos batendo no mesmo endpoint HTTP:
 | Webhook do Stripe | Deno | `supabase/functions/stripe-webhook/index.ts` (função local `dispararAlerta`, mesmo segredo) |
 | Checagem periódica de taxa de erro | Postgres (pg_cron + pg_net) | função `public.checar_taxa_erro_e_alertar()`, agendada a cada 5 min |
 | Checagem periódica de uptime externo | Postgres (pg_cron + extensão `http` + `pg_net`) | função `public.checar_uptimerobot_e_alertar()`, agendada a cada 5 min |
+| Monitor do Founder Dashboard | Deno | `supabase/functions/founder-monitor/index.ts`, disparado por `public.disparar_founder_monitor()` (pg_cron, a cada 10 min) ou pelo botão "Verificar agora" em `office.usepolia.com.br/founder`; só repassa pro Telegram alerta novo de severidade crítica, com `tipo` prefixado `founder:` |
 
 O `health_down` não usa webhook do UptimeRobot: o plano grátis deles bloqueou tanto Webhook quanto Telegram nativo (só em planos pagos). Em vez disso, é **polling invertido** — a cada 5 min o `pg_cron` pergunta pra API de leitura do UptimeRobot (`getMonitors`, com a `uptimerobot_api_key` guardada no Vault) se o monitor `usepolia.com.br/health` está no ar (status `8`/`9` = seems down/down). Continua funcionando pro caso que importa (Cloudflare inteira fora do ar), porque quem sonda de fora é o UptimeRobot — o Postgres só lê o resultado dele.
 
@@ -41,7 +42,13 @@ O `health_down` não usa webhook do UptimeRobot: o plano grátis deles bloqueou 
 | `checkout_erro` | `stripe.functions.ts` (`iniciarAssinatura`) e `compra-publica.functions.ts` (`iniciarCompraPublica`) | Falha ao criar sessão/assinatura de checkout |
 | `erro_servidor_critico` | `src/server.ts` (catch do fetch handler + resposta catastrófica do SSR) e `error-capture.ts` (erro/unhandledrejection global) | Erro não tratado no Worker — cobre falha de conexão com Supabase e qualquer exceção que escape dos try/catch específicos |
 
-Threshold do `erro_taxa_alta` (15 erros / 10 min) está hardcoded em `checar_taxa_erro_e_alertar()` — mudar exige uma migration nova.
+| `founder:servico_indisponivel` | `founder-monitor` | Um dos 7 serviços (API, banco, auth, Stripe, Resend, IA, storage) ficou crítico em duas verificações seguidas |
+| `founder:pico_erros_app` | `founder-monitor` | `erros_app` em 24h acima de 5× a média dos últimos 7 dias (com 3× vira alerta de atenção, só no dashboard) |
+| `founder:jobs_falhos` | `founder-monitor` | 5 ou mais execuções de pg_cron falharam em 24h |
+
+Threshold do `erro_taxa_alta` (15 erros / 10 min) está hardcoded em `checar_taxa_erro_e_alertar()` — mudar exige uma migration nova. Desde 17/09/2026 o `founder-monitor` cobre o mesmo sinal com baseline (`pico_erros_app`); o cron `checar-taxa-erro-alertas` ficou agendado só até a Sil confirmar o desligamento (`select cron.unschedule('checar-taxa-erro-alertas')`), pra não mandar o mesmo incidente duas vezes.
+
+Os alertas do Founder Dashboard (todas as severidades, com auto-resolução) ficam em `founder_alertas` e aparecem em `office.usepolia.com.br/founder/alertas`; o Telegram só recebe os críticos novos.
 
 ## Regra de dedup
 

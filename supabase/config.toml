@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.ig-webhook]
 verify_jwt = false
+
+[functions.founder-monitor]
+verify_jwt = false
