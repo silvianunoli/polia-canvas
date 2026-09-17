@@ -11,13 +11,45 @@ import { AsyncLocalStorage } from "node:async_hooks";
 
 type WaitUntil = (tarefa: Promise<unknown>) => void;
 
-const contexto = new AsyncLocalStorage<{ waitUntil: WaitUntil }>();
+export interface ContextoDeExecucao {
+  waitUntil: WaitUntil;
+}
+
+const contexto = new AsyncLocalStorage<ContextoDeExecucao>();
 const pendentes = new Set<Promise<unknown>>();
 
-export function comContextoDeExecucao<T>(ctx: unknown, fn: () => T | Promise<T>): Promise<T> {
-  const waitUntil = (ctx as { waitUntil?: WaitUntil } | null | undefined)?.waitUntil;
-  if (typeof waitUntil !== "function") return Promise.resolve(fn());
-  return Promise.resolve(contexto.run({ waitUntil: (tarefa) => waitUntil.call(ctx, tarefa) }, fn));
+// O Nitro (preset cloudflare-module) não repassa o ExecutionContext como 3º
+// argumento pro nosso fetch: ele chama `mod.fetch(req)` e pendura o contexto
+// na própria Request (`req.waitUntil`, `req.runtime.cloudflare.context`).
+// Procura nos três lugares, do mais direto ao mais interno.
+export function resolverContextoDeExecucao(
+  request: Request,
+  ctx: unknown,
+): ContextoDeExecucao | null {
+  const direto = (ctx as { waitUntil?: unknown } | null | undefined)?.waitUntil;
+  if (typeof direto === "function") {
+    return { waitUntil: (t) => (direto as WaitUntil).call(ctx, t) };
+  }
+  const req = request as Request & {
+    waitUntil?: unknown;
+    runtime?: { cloudflare?: { context?: { waitUntil?: unknown } } };
+  };
+  if (typeof req.waitUntil === "function") {
+    return { waitUntil: (t) => (req.waitUntil as WaitUntil)(t) };
+  }
+  const interno = req.runtime?.cloudflare?.context;
+  if (interno && typeof interno.waitUntil === "function") {
+    return { waitUntil: (t) => (interno.waitUntil as WaitUntil).call(interno, t) };
+  }
+  return null;
+}
+
+export function comContextoDeExecucao<T>(
+  execucao: ContextoDeExecucao | null,
+  fn: () => T | Promise<T>,
+): Promise<T> {
+  if (!execucao) return Promise.resolve(fn());
+  return Promise.resolve(contexto.run(execucao, fn));
 }
 
 // Aceita thenable (o builder do supabase-js não é Promise de verdade). Fora
@@ -38,10 +70,9 @@ export function emSegundoPlano(tarefa: PromiseLike<unknown>): void {
 // fila global vai pro waitUntil da requisição atual. Tarefa de outra
 // requisição concorrente pode cair aqui também — inofensivo, só mantém o
 // isolate vivo até ela terminar.
-export function drenarSegundoPlano(ctx: unknown): void {
-  const waitUntil = (ctx as { waitUntil?: WaitUntil } | null | undefined)?.waitUntil;
-  if (pendentes.size === 0 || typeof waitUntil !== "function") return;
+export function drenarSegundoPlano(execucao: ContextoDeExecucao | null): void {
+  if (!execucao || pendentes.size === 0) return;
   const tarefas = [...pendentes];
   pendentes.clear();
-  waitUntil.call(ctx, Promise.allSettled(tarefas));
+  execucao.waitUntil(Promise.allSettled(tarefas));
 }

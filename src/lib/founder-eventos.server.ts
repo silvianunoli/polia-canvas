@@ -80,24 +80,6 @@ export function registrarChamadaApi(input: {
   );
 }
 
-// Diagnóstico temporário (?founder-debug=1): grava uma linha e devolve o
-// resultado, pra enxergar em produção por que a telemetria não chega ao banco.
-export async function testarGravacaoApi(): Promise<string> {
-  try {
-    const { error } = await supabaseAdmin.from("founder_api_chamadas").insert({
-      fn: "__debug",
-      tipo: "ssr",
-      ok: true,
-      status: 200,
-      latencia_ms: 0,
-    });
-    const env = `url=${process.env.SUPABASE_URL ? "sim" : "nao"} key=${process.env.SUPABASE_SERVICE_ROLE_KEY ? "sim" : "nao"}`;
-    return error ? `erro: ${error.code ?? ""} ${error.message} (${env})` : `ok (${env})`;
-  } catch (e) {
-    return `excecao: ${e instanceof Error ? e.message : String(e)}`;
-  }
-}
-
 // Só pra atribuir a chamada à conta na telemetria: lê o `sub` do JWT sem
 // validar assinatura. Autorização de verdade continua no requireSupabaseAuth.
 export function subDoBearer(authorization: string | null): string | null {

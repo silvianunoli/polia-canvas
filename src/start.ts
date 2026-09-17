@@ -59,12 +59,6 @@ const medirRequest = createMiddleware().server(async ({ next, request }) => {
     status,
     latenciaMs: Date.now() - t0,
   });
-  if (url.searchParams.get("founder-debug") === "1") {
-    const diagnostico = await telemetria.testarGravacaoApi();
-    const response = new Response(resultado.response.body, resultado.response);
-    response.headers.set("x-founder-debug", diagnostico.slice(0, 300));
-    return { ...resultado, response };
-  }
   return resultado;
 });
 

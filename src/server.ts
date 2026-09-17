@@ -7,7 +7,11 @@ import { CORPO_ROBOTS } from "./lib/robots";
 import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
 import { ehCaminhoDeDownload } from "./lib/manual/download";
-import { comContextoDeExecucao, drenarSegundoPlano } from "./lib/segundo-plano.server";
+import {
+  comContextoDeExecucao,
+  drenarSegundoPlano,
+  resolverContextoDeExecucao,
+} from "./lib/segundo-plano.server";
 import { supabase } from "./integrations/supabase/client";
 
 // Health-check público pra monitor de uptime externo (UptimeRobot etc.) —
@@ -193,8 +197,11 @@ export default {
       const handler = await getServerEntry();
       // Dentro deste contexto, a telemetria do Founder Dashboard consegue
       // registrar tarefas no ctx.waitUntil (ver segundo-plano.server.ts).
-      const response = await comContextoDeExecucao(ctx, () => handler.fetch(request, env, ctx));
-      drenarSegundoPlano(ctx);
+      const execucao = resolverContextoDeExecucao(request, ctx);
+      const response = await comContextoDeExecucao(execucao, () =>
+        handler.fetch(request, env, ctx),
+      );
+      drenarSegundoPlano(execucao);
       const normalizada = await normalizeCatastrophicSsrResponse(response);
       if (ehRotaAutenticada(url.pathname)) {
         const comNoindex = new Response(normalizada.body, normalizada);
