@@ -861,6 +861,99 @@ export type Database = {
         };
         Relationships: [];
       };
+      founder_flags: {
+        Row: {
+          ambiente: string;
+          atualizado_em: string;
+          atualizado_por: string | null;
+          beta_user_ids: string[];
+          descricao: string | null;
+          estado: string;
+          key: string;
+          nome: string;
+          rollout_pct: number;
+        };
+        Insert: {
+          ambiente?: string;
+          atualizado_em?: string;
+          atualizado_por?: string | null;
+          beta_user_ids?: string[];
+          descricao?: string | null;
+          estado?: string;
+          key: string;
+          nome: string;
+          rollout_pct?: number;
+        };
+        Update: {
+          ambiente?: string;
+          atualizado_em?: string;
+          atualizado_por?: string | null;
+          beta_user_ids?: string[];
+          descricao?: string | null;
+          estado?: string;
+          key?: string;
+          nome?: string;
+          rollout_pct?: number;
+        };
+        Relationships: [];
+      };
+      founder_flags_historico: {
+        Row: {
+          alterado_em: string;
+          alterado_por: string | null;
+          ambiente: string;
+          estado_anterior: Json | null;
+          estado_novo: Json;
+          flag_key: string;
+          id: string;
+          motivo: string | null;
+        };
+        Insert: {
+          alterado_em?: string;
+          alterado_por?: string | null;
+          ambiente: string;
+          estado_anterior?: Json | null;
+          estado_novo: Json;
+          flag_key: string;
+          id?: string;
+          motivo?: string | null;
+        };
+        Update: {
+          alterado_em?: string;
+          alterado_por?: string | null;
+          ambiente?: string;
+          estado_anterior?: Json | null;
+          estado_novo?: Json;
+          flag_key?: string;
+          id?: string;
+          motivo?: string | null;
+        };
+        Relationships: [];
+      };
+      founder_funil_config: {
+        Row: {
+          ativo: boolean;
+          atualizado_em: string;
+          id: string;
+          nome: string;
+          passos: Json;
+        };
+        Insert: {
+          ativo?: boolean;
+          atualizado_em?: string;
+          id?: string;
+          nome: string;
+          passos: Json;
+        };
+        Update: {
+          ativo?: boolean;
+          atualizado_em?: string;
+          id?: string;
+          nome?: string;
+          passos?: Json;
+        };
+        Relationships: [];
+      };
       founder_metricas_diarias: {
         Row: {
           api_erros: number;
@@ -2337,7 +2430,49 @@ export type Database = {
         Returns: undefined;
       };
       excluir_dados_do_usuario: { Args: never; Returns: undefined };
+      founder_heatmap: {
+        Args: { p_fim: string; p_ini: string };
+        Returns: {
+          dow: number;
+          eventos: number;
+          hora: number;
+          usuarias: number;
+        }[];
+      };
       founder_jobs_falhos: { Args: { p_horas?: number }; Returns: number };
+      founder_retencao_coortes: {
+        Args: { p_semanas?: number };
+        Returns: {
+          ate_d7: number;
+          coorte: string;
+          d1: number;
+          d30: number;
+          d7: number;
+          tamanho: number;
+        }[];
+      };
+      founder_sessoes_calc: {
+        Args: { p_fim: string; p_ini: string };
+        Returns: {
+          duracao_s: number;
+          eventos_ativos: number;
+          fim: string;
+          inicio: string;
+          sessao_id: string;
+          telas: number;
+          user_id: string;
+        }[];
+      };
+      founder_tempo_por_feature: {
+        Args: { p_fim: string; p_ini: string };
+        Returns: {
+          acessos: number;
+          concluidos: number;
+          feature: string;
+          tempo_s: number;
+          usuarias: number;
+        }[];
+      };
       hook_checar_convite_cadastro: { Args: { event: Json }; Returns: Json };
       incrementar_ia_uso: {
         Args: {

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { flagAtiva } from "@/lib/flags";
 
 export type CsatTriggerType = "entregavel_concluido" | "chamado_resolvido" | "pulso_periodico";
 export type CsatScore = 1 | 2 | 3;
@@ -45,12 +46,10 @@ export function marcarCsatMostrado(contextRef: string) {
 
 export async function csatFlagAtiva(): Promise<boolean> {
   try {
-    const { data } = await supabase
-      .from("feature_flags")
-      .select("enabled")
-      .eq("key", "csat_modal_ativo")
-      .maybeSingle();
-    return data?.enabled ?? false;
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    return await flagAtiva("csat_modal_ativo", session?.user.id ?? null, false);
   } catch {
     return false;
   }

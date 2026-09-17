@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { flagAtivaServidor } from "@/lib/flags.server";
 import { secaoPorId, secoesDoModulo } from "@/lib/planejamento";
 
 const FEATURE = "planejamento";
@@ -125,18 +126,14 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
       return { ok: false, motivo: "pergunta_invalida" };
     }
 
-    const [{ data: profile }, { data: flag }, { data: produtos }, { data: camposModulo }] =
+    const [{ data: profile }, iaLigada, { data: produtos }, { data: camposModulo }] =
       await Promise.all([
         supabaseAdmin
           .from("profiles")
           .select("plano, business_type, business_name")
           .eq("id", context.userId)
           .maybeSingle(),
-        supabaseAdmin
-          .from("feature_flags" as never)
-          .select("enabled")
-          .eq("key", "ia_planejamento_ativo")
-          .maybeSingle(),
+        flagAtivaServidor("ia_planejamento_ativo", context.userId, true),
         supabaseAdmin
           .from("produtos")
           .select("nome, tipo, descricao")
@@ -154,7 +151,7 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
           ),
       ]);
 
-    if ((flag as { enabled: boolean } | null)?.enabled === false) {
+    if (!iaLigada) {
       return { ok: false, motivo: "manutencao" };
     }
 

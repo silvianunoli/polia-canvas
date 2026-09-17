@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { flagAtivaServidor } from "@/lib/flags.server";
 import { temProjete } from "@/lib/planos";
 import { moedaParaPrompt } from "@/lib/moeda";
 
@@ -181,16 +182,12 @@ export const perguntarAimer = createServerFn({ method: "POST" })
       return { ok: false, motivo: "fora_de_escopo" };
     }
 
-    const [{ data: profile }, { data: flag }] = await Promise.all([
+    const [{ data: profile }, iaLigada] = await Promise.all([
       supabaseAdmin.from("profiles").select("plano").eq("id", context.userId).maybeSingle(),
-      supabaseAdmin
-        .from("feature_flags" as never)
-        .select("enabled")
-        .eq("key", "ia_aimer_ativo")
-        .maybeSingle(),
+      flagAtivaServidor("ia_aimer_ativo", context.userId, true),
     ]);
 
-    if ((flag as { enabled: boolean } | null)?.enabled === false) {
+    if (!iaLigada) {
       return { ok: false, motivo: "manutencao" };
     }
 

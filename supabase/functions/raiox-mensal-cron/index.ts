@@ -164,14 +164,32 @@ Deno.serve(async (req: Request) => {
   const ano = mesFechado.getUTCFullYear();
   const mesLabel = periodoMensal(mesFechado);
 
+  // Flag nova (founder_flags, ambiente prod): off desliga o lote inteiro;
+  // on/beta com rollout parcial respeita o mesmo bucket por usuária de
+  // src/lib/flags-regra.ts (sha256 de "userId:key").
   const { data: flag } = await supabaseAdmin
-    .from("feature_flags")
-    .select("enabled")
+    .from("founder_flags")
+    .select("estado, rollout_pct, beta_user_ids")
     .eq("key", "ia_raiox_ativo")
+    .eq("ambiente", "prod")
     .maybeSingle();
-  if (flag?.enabled === false) {
+  if (flag?.estado === "off") {
     return new Response(JSON.stringify({ ok: false, motivo: "manutencao" }), { status: 200 });
   }
+  const flagLiberaPara = async (userId: string): Promise<boolean> => {
+    if (!flag) return true;
+    if (flag.estado === "beta" && (flag.beta_user_ids as string[]).includes(userId)) return true;
+    if (flag.rollout_pct >= 100 && flag.estado === "on") return true;
+    if (flag.rollout_pct <= 0) return false;
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(`${userId}:ia_raiox_ativo`),
+    );
+    const hex = Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return parseInt(hex.slice(0, 8), 16) % 100 < flag.rollout_pct;
+  };
 
   const { data: usuarias } = await supabaseAdmin
     .from("profiles")
@@ -184,6 +202,10 @@ Deno.serve(async (req: Request) => {
 
   for (const u of usuarias ?? []) {
     const userId = u.id as string;
+    if (!(await flagLiberaPara(userId))) {
+      pulados++;
+      continue;
+    }
 
     const { data: existente } = await supabaseAdmin
       .from("ia_raiox")

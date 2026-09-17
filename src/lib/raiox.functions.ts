@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { flagAtivaServidor } from "@/lib/flags.server";
 import { moedaParaPrompt } from "@/lib/moeda";
 import {
   calcularQuantoSobra,
@@ -241,12 +242,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       return { ok: false, motivo: "mes_nao_fechado" };
     }
 
-    const { data: flag } = await supabaseAdmin
-      .from("feature_flags" as never)
-      .select("enabled")
-      .eq("key", "ia_raiox_ativo")
-      .maybeSingle();
-    if ((flag as { enabled: boolean } | null)?.enabled === false) {
+    if (!(await flagAtivaServidor("ia_raiox_ativo", context.userId, true))) {
       return { ok: false, motivo: "manutencao" };
     }
 

@@ -34,4 +34,11 @@ Também corrigida a FK `founder_alertas.resolvido_por` (agora `on delete set nul
 - Migration `20260917185343_founder_analytics_funcoes.sql`: `founder_funil_config` (passos do funil editáveis, seed "Padrão") e funções SECURITY DEFINER `founder_sessoes_calc`, `founder_tempo_por_feature`, `founder_heatmap`, `founder_retencao_coortes` (execute só pro service role).
 - No admin: `src/lib/founder-analytics.functions.ts` + 9 páginas em `/founder/analytics/*` (visão geral, usuárias, perfil `$id`, sessões, retenção, comportamento, funcionalidades, jornadas, segmentos). Em vez de view materializada, as sessões são calculadas na hora pela função SQL (volume pré-lançamento é pequeno); materializar quando `founder_eventos` passar de algumas centenas de milhares de linhas.
 
-Próximo: bloco 4, feature flags novas (`founder_flags` + histórico, migrar as 4 flags antigas e os 6 leitores do app, UI em /founder/features/flags).
+## 2026-09-17 — Founder Dashboard, bloco 4 (feature flags)
+
+- Migration `20260917190737_founder_flags_schema.sql`: `founder_flags` (pk key+ambiente, estado on/off/beta, rollout_pct, beta_user_ids, atualizado_por), `founder_flags_historico` preenchida por trigger, seed das 5 flags de `feature_flags` em prod e preview com o mesmo estado.
+- `src/lib/flags-regra.ts` (regra pura + bucket sha256 de `userId:key`, testada), `src/lib/flags.ts` (client, cache 60 s, ambiente pelo hostname) e `src/lib/flags.server.ts` (Worker, sem cache).
+- Leitores migrados: `csat.ts` (padrão false), `aimer.functions.ts`, `planejamentoIa.functions.ts`, `planoConteudo.functions.ts`, `raiox.functions.ts` (padrão true, kill-switch) e o cron `raiox-mensal-cron` (off desliga o lote; rollout/beta filtram por usuária).
+- `feature_flags` fica intocada até a Sil confirmar que tudo está lendo da nova (a tela antiga `/flags` do admin ainda escreve nela e não tem mais efeito).
+
+Próximo: bloco 5, produto (ativação, funil de onboarding, coortes, tempo até 1º valor, feedback, experimentos).

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
+import { flagAtivaServidor } from "@/lib/flags.server";
 
 const FEATURE = "plano_conteudo";
 const MODELO = "gemini-pro-latest";
@@ -179,12 +180,7 @@ export const gerarPlanoConteudo = createServerFn({ method: "POST" })
       return { ok: false, motivo: "plano_insuficiente" };
     }
 
-    const { data: flag } = await supabaseAdmin
-      .from("feature_flags" as never)
-      .select("enabled")
-      .eq("key", "ia_plano_conteudo_ativo")
-      .maybeSingle();
-    if ((flag as { enabled: boolean } | null)?.enabled === false) {
+    if (!(await flagAtivaServidor("ia_plano_conteudo_ativo", context.userId, true))) {
       return { ok: false, motivo: "manutencao" };
     }
 
