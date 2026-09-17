@@ -9,6 +9,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import {
   custosFixosDoMes,
   custoMedio,
@@ -191,6 +192,10 @@ function ProjecaoPage() {
           .eq("id", metaMes.id);
       }
       track("projecao_confirmada", { proLaboreDesejado, metaAlvo });
+      void registrar("feature_completed", {
+        feature: "projecao",
+        propriedades: { acao: "confirmada" },
+      });
       await qc.invalidateQueries({ queryKey: ["projecao", userId] });
     } finally {
       setSalvando(false);

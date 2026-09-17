@@ -23,6 +23,7 @@ import {
   Megaphone,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { registrarEAguardar } from "@/lib/founder-eventos";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +58,7 @@ function isActive(itemTo: string, pathname: string) {
 }
 
 async function signOut() {
+  await registrarEAguardar("logout", { feature: "conta" });
   await supabase.auth.signOut();
   window.location.href = "/auth/login";
 }

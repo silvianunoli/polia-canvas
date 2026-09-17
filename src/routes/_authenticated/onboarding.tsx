@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
@@ -72,7 +73,14 @@ function OnboardingPage() {
       <div className="w-full px-5 pb-20 pt-10">
         {step > 1 && <StepIndicator step={step} />}
         <div className="mx-auto w-full max-w-[900px]">
-          {step === 1 && <Step1 onNext={() => setStep(2)} />}
+          {step === 1 && (
+            <Step1
+              onNext={() => {
+                void registrar("onboarding_started", { feature: "onboarding" });
+                setStep(2);
+              }}
+            />
+          )}
           {step === 2 && (
             <Step2
               value={state.business_type}
@@ -476,6 +484,13 @@ function Step4({
       );
       if (upErr) throw upErr;
       track("onboarding_concluido", { tipo_negocio: state.business_type });
+      void registrar("onboarding_completed", {
+        feature: "onboarding",
+        propriedades: { tipo_negocio: state.business_type },
+      });
+      if (state.business_name.trim()) {
+        void registrar("business_created", { feature: "onboarding" });
+      }
       onSuccess();
     } catch (e) {
       track("onboarding_falhou", { motivo: (e as Error).message || "erro_desconhecido" });
@@ -676,6 +691,10 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
       });
       if (insErr) throw insErr;
       track("onboarding_primeiro_produto", { com_custo: custoNum !== null });
+      void registrar("create_product", {
+        feature: "onboarding",
+        propriedades: { origem: "onboarding", com_custo: custoNum !== null },
+      });
       // Ativação de verdade pro GA: primeira vez que a usuária vê "quanto
       // sobra" na própria venda, não um clique genérico de onboarding.
       gtagEvent("ativacao_viu_quanto_sobra", { com_custo: custoNum !== null });

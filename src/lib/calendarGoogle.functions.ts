@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { registrarEventoSistema } from "@/lib/founder-eventos.server";
 import {
   montarUrlConsentimento,
   trocarCodigoPorTokens,
@@ -111,6 +112,12 @@ export const listarEventosDoMes = createServerFn({ method: "POST" })
       if (expirado || !accessToken) {
         const renovado = await renovarAccessToken(conexao.refresh_token);
         if (!renovado) {
+          void registrarEventoSistema({
+            tipo: "integration_failure",
+            origem: "calendarGoogle.functions",
+            servico: "google_calendar",
+            detalhes: { motivo: "refresh_token_recusado" },
+          });
           return {
             eventos: [],
             error: "Sua conexão com o Google expirou. Reconecte.",

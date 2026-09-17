@@ -86,11 +86,70 @@ async function registrarEventoAnalytics(
   }
 }
 
-async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription) {
+// Eventos de assinatura pro Founder Dashboard (founder_eventos, origem webhook).
+// sessao_id é derivado do id do evento Stripe (uuid v5-like): determinístico,
+// então a reentrega do mesmo evento não gera sessão nova.
+async function sessaoDoEventoStripe(stripeEventId: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-1", new TextEncoder().encode(stripeEventId));
+  const h = Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-5${h.slice(13, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`;
+}
+
+async function registrarFounderEvento(
+  evento: "subscription_started" | "subscription_cancelled" | "payment_failed",
+  userId: string,
+  stripeEventId: string,
+  propriedades: Record<string, unknown> = {},
+) {
+  try {
+    await supabaseAdmin.from("founder_eventos").insert({
+      user_id: userId,
+      sessao_id: await sessaoDoEventoStripe(stripeEventId),
+      evento,
+      feature: "assinatura",
+      pagina: "server:stripe-webhook",
+      ambiente: "prod",
+      origem: "webhook",
+      propriedades,
+    });
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao gravar founder_eventos:", err);
+  }
+}
+
+async function registrarFalhaWebhook(tipoEvento: string, mensagem: string) {
+  try {
+    await supabaseAdmin.from("founder_eventos_sistema").insert({
+      tipo: "webhook_failure",
+      origem: "stripe-webhook",
+      servico: "stripe",
+      detalhes: { evento: tipoEvento, mensagem: mensagem.slice(0, 300) },
+    });
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao gravar founder_eventos_sistema:", err);
+  }
+}
+
+const STATUS_ATIVOS_FOUNDER = ["active", "trialing"];
+
+async function upsertAssinaturaDaSubscription(
+  subscription: Stripe.Subscription,
+  stripeEventId: string,
+) {
   const item = subscription.items.data[0];
   const priceId = item?.price.id ?? null;
   const customerId =
     typeof subscription.customer === "string" ? subscription.customer : subscription.customer.id;
+
+  // Status anterior, pra saber se esta atualização é o começo da assinatura.
+  const { data: antes } = await supabaseAdmin
+    .from("assinaturas")
+    .select("status")
+    .eq("stripe_subscription_id", subscription.id)
+    .maybeSingle();
+  const statusAnterior = (antes as { status?: string } | null)?.status ?? null;
 
   const patch = {
     stripe_subscription_id: subscription.id,
@@ -133,6 +192,16 @@ async function upsertAssinaturaDaSubscription(subscription: Stripe.Subscription)
       .from("profiles")
       .update({ plano: PRICE_TO_PLANO[priceId] })
       .eq("id", userId);
+  }
+
+  if (
+    STATUS_ATIVOS_FOUNDER.includes(subscription.status) &&
+    !(statusAnterior && STATUS_ATIVOS_FOUNDER.includes(statusAnterior))
+  ) {
+    await registrarFounderEvento("subscription_started", userId, stripeEventId, {
+      status: subscription.status,
+      price_id: priceId,
+    });
   }
 }
 
@@ -408,7 +477,7 @@ Deno.serve(async (req) => {
         // subscription e reaproveita o upsert já existente, agora que o
         // Customer já tem o user_id certo nos metadados.
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        await upsertAssinaturaDaSubscription(subscription);
+        await upsertAssinaturaDaSubscription(subscription, event.id);
         await registrarEventoAnalytics("checkout_concluido", session.id, {
           plano: session.metadata?.plano ?? null,
         });
@@ -416,7 +485,7 @@ Deno.serve(async (req) => {
       }
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        await upsertAssinaturaDaSubscription(event.data.object as Stripe.Subscription);
+        await upsertAssinaturaDaSubscription(event.data.object as Stripe.Subscription, event.id);
         break;
       }
       case "customer.subscription.deleted": {
@@ -430,6 +499,9 @@ Deno.serve(async (req) => {
         const currentPeriodEnd = data?.[0]?.current_period_end as string | undefined;
         if (userId) {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);
+          await registrarFounderEvento("subscription_cancelled", userId, event.id, {
+            current_period_end: currentPeriodEnd ?? null,
+          });
           const email = await buscarEmailPorUserId(userId);
           if (email) {
             const dataFim = currentPeriodEnd
@@ -456,6 +528,9 @@ Deno.serve(async (req) => {
             .select("user_id");
           const userId = data?.[0]?.user_id as string | undefined;
           if (userId) {
+            await registrarFounderEvento("payment_failed", userId, event.id, {
+              invoice: invoice.id,
+            });
             const email = await buscarEmailPorUserId(userId);
             if (email) await enviarEmailPagamentoRecusado(email);
           }
@@ -491,6 +566,7 @@ Deno.serve(async (req) => {
     }
   } catch (err) {
     console.error(`[stripe-webhook] Erro ao processar ${event.type}:`, err);
+    void registrarFalhaWebhook(event.type, err instanceof Error ? err.message : String(err));
     void dispararAlerta(
       "stripe_webhook_erro_processamento",
       "Erro ao processar evento do webhook do Stripe",

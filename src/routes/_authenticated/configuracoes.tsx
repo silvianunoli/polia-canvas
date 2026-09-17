@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { createFileRoute, redirect } from "@tanstack/react-router";
+import { registrar, registrarEAguardar } from "@/lib/founder-eventos";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,10 @@ function ConfiguracoesPage() {
   const [nomeSalvo, setNomeSalvo] = useState(false);
   const [nomeNegocioSalvo, setNomeNegocioSalvo] = useState(false);
   const businessNameAtual = profileQuery.data?.business_name ?? "";
+  // Lido dentro do efeito de salvar sem entrar nas dependências dele: o efeito
+  // é o debounce do campo, não pode re-rodar quando o perfil recarrega.
+  const businessNameAtualRef = useRef(businessNameAtual);
+  businessNameAtualRef.current = businessNameAtual;
 
   // Razão social + CNPJ: só usados no cabeçalho do Resumo pro contador
   // (Pro), mas coletados aqui sem gate de plano — dado útil de já ter
@@ -224,7 +229,9 @@ function ConfiguracoesPage() {
     if (!userId || !carregouInicial.current) return;
     if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
     nomeNegocioTimer.current = setTimeout(async () => {
+      const criouNegocio = !businessNameAtualRef.current.trim() && nomeNegocio.trim().length > 0;
       await supabase.from("profiles").update({ business_name: nomeNegocio }).eq("id", userId);
+      if (criouNegocio) void registrar("business_created", { feature: "configuracoes" });
       setNomeNegocioSalvo(true);
       setTimeout(() => setNomeNegocioSalvo(false), 1600);
     }, 600);
@@ -366,6 +373,7 @@ function ConfiguracoesPage() {
       setExcluindo(false);
       return;
     }
+    await registrarEAguardar("logout", { feature: "conta", propriedades: { motivo: "exclusao" } });
     await supabase.auth.signOut();
     window.location.href = "/auth/login";
   };

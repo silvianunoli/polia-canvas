@@ -10,6 +10,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
 
 export const Route = createFileRoute("/_authenticated/plano-conteudo")({
@@ -100,6 +101,10 @@ function PlanoConteudoPage() {
       const resultado = await gerarPlanoConteudo({ data: { ano: anoAtual } });
       if (resultado.ok) {
         track("plano_conteudo_gerado", { ano: anoAtual });
+        void registrar("feature_completed", {
+          feature: "plano_conteudo",
+          propriedades: { acao: "gerado" },
+        });
         await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
       } else {
         setMotivo(resultado.motivo);

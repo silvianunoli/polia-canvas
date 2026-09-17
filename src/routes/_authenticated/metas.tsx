@@ -17,6 +17,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -160,6 +161,10 @@ function MetasPage() {
 
   const concluir = (m: Meta) => {
     track("meta_concluida");
+    void registrar("feature_completed", {
+      feature: "metas",
+      propriedades: { acao: "meta_concluida" },
+    });
     atualizar.mutate({
       id: m.id,
       patch: {
@@ -699,6 +704,7 @@ function ModalMeta({
         setErro(error.message || "Erro ao salvar.");
         return;
       }
+      void registrar("edit_goal", { feature: "metas", propriedades: { formato } });
     } else {
       const { error } = await supabase.from("metas").insert({ user_id: userId, ...base });
       setSalvando(false);
@@ -707,6 +713,7 @@ function ModalMeta({
         return;
       }
       track("meta_criada", { formato });
+      void registrar("create_goal", { feature: "metas", propriedades: { formato } });
     }
     onSaved();
   };

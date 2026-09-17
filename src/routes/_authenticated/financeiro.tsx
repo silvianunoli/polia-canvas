@@ -9,6 +9,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import {
   calcularQuantoSobra,
   taxasDoBreakdown,
@@ -803,6 +804,7 @@ function ModalRegistrarVendaProduto({
       return;
     }
     track("venda_produto_registrada", { produto_id: produto.id });
+    void registrar("feature_completed", { feature: "financeiro", propriedades: { acao: "venda" } });
     onSaved(
       sobrou !== null
         ? `Venda de "${produto.nome}" registrada. Dessa venda sobraram ${fmt(Math.round(sobrou))}.`

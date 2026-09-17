@@ -9,6 +9,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { registrar as registrarFounder } from "@/lib/founder-eventos";
 import { gerarCsv, baixarCsv } from "@/lib/csv";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
@@ -305,6 +306,10 @@ function LinhaCliente({
       return;
     }
     track("venda_registrada");
+    void registrarFounder("feature_completed", {
+      feature: "clientes",
+      propriedades: { acao: "venda" },
+    });
     setPopAberto(false);
     onRegistrado();
     toastSucesso("Venda registrada no Financeiro.");
@@ -500,6 +505,10 @@ function ModalCliente({
       return;
     }
     track("cliente_criado");
+    void registrarFounder("feature_completed", {
+      feature: "clientes",
+      propriedades: { acao: "cliente" },
+    });
     onSaved();
   };
 

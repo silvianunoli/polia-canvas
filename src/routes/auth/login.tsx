@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import { Mail, Check } from "lucide-react";
 import { z } from "zod";
 import { toastErro, toastSucesso } from "@/lib/toast";
@@ -147,6 +148,7 @@ function LoginPage() {
       }
       setTentativas(0);
       if (data.user) {
+        void registrar("login", { feature: "conta", propriedades: { metodo: "email" } });
         const target = destinoSeguro(search.next) ?? (await resolvePostLoginPath(data.user.id));
         navigate({ to: target });
       }
@@ -159,6 +161,7 @@ function LoginPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
+    marcarLoginPendente("google");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/painel` },

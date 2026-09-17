@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 import { sanitizarTextoIA } from "@/lib/sanitizarTextoIA";
+import { registrarEventoSistema } from "@/lib/founder-eventos.server";
 
 // Client Gemini lazy, mesmo padrão de stripeClient() (src/lib/stripe.functions.ts):
 // só instancia na primeira chamada, erro claro se faltar o secret, nunca no client.
@@ -70,6 +71,32 @@ async function chamarUmaVez({
 // 1 retry automático, só em falha transitória (rede/5xx/timeout) — nunca em
 // rejeição de conteúdo. Quem chama decide o que fazer com uma falha final.
 export async function gerarTexto(input: GerarTextoInput): Promise<GerarTextoResultado> {
+  // Único caminho de ida ao Gemini: é aqui que o Founder Dashboard mede
+  // latência e falha de IA (founder_eventos_sistema), sem tocar em cada feature.
+  const t0 = Date.now();
+  try {
+    const resultado = await chamarComRetry(input);
+    void registrarEventoSistema({
+      tipo: "ia_call",
+      origem: "gemini",
+      servico: input.modelo,
+      detalhes: { tokens_in: resultado.tokensIn, tokens_out: resultado.tokensOut },
+      latenciaMs: Date.now() - t0,
+    });
+    return resultado;
+  } catch (erro) {
+    void registrarEventoSistema({
+      tipo: "ia_failure",
+      origem: "gemini",
+      servico: input.modelo,
+      detalhes: { mensagem: erro instanceof Error ? erro.message.slice(0, 200) : String(erro) },
+      latenciaMs: Date.now() - t0,
+    });
+    throw erro;
+  }
+}
+
+async function chamarComRetry(input: GerarTextoInput): Promise<GerarTextoResultado> {
   try {
     return await chamarUmaVez(input);
   } catch (erro) {

@@ -10,6 +10,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { COTAS_CONFERE, temProjete } from "@/lib/planos";
 import {
   calcularQuantoSobra,
@@ -1509,6 +1510,7 @@ function ModalProduto({
         setErro(error.message || "Erro ao salvar.");
         return;
       }
+      void registrar("edit_product", { feature: "produtos", propriedades: { tipo } });
     } else {
       const { error } = await supabase.from("produtos").insert({
         user_id: userId,
@@ -1527,6 +1529,7 @@ function ModalProduto({
         return;
       }
       track("produto_criado", { tipo });
+      void registrar("create_product", { feature: "produtos", propriedades: { tipo } });
     }
     onSaved();
   };

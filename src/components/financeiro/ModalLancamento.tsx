@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -145,6 +146,12 @@ export function ModalLancamento({
       return;
     }
     track(edit ? "lancamento_editado" : "lancamento_criado", { tipo });
+    if (!edit) {
+      void registrar("feature_completed", {
+        feature: "financeiro",
+        propriedades: { acao: "lancamento", tipo },
+      });
+    }
     onSaved();
   };
 

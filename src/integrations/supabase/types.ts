@@ -11,7 +11,7 @@ export type Database = {
       admin_audit_log: {
         Row: {
           acao: string;
-          admin_id: string;
+          admin_id: string | null;
           alvo: string | null;
           criado_em: string;
           detalhes: Json;
@@ -19,7 +19,7 @@ export type Database = {
         };
         Insert: {
           acao: string;
-          admin_id: string;
+          admin_id?: string | null;
           alvo?: string | null;
           criado_em?: string;
           detalhes?: Json;
@@ -27,7 +27,7 @@ export type Database = {
         };
         Update: {
           acao?: string;
-          admin_id?: string;
+          admin_id?: string | null;
           alvo?: string | null;
           criado_em?: string;
           detalhes?: Json;
@@ -298,35 +298,103 @@ export type Database = {
           },
         ];
       };
-      conquistas: {
+      comunidade_artigos: {
         Row: {
+          agendado_para: string | null;
+          autor_id: string | null;
+          capa_url: string | null;
+          categoria: string | null;
+          conteudo_md: string | null;
           created_at: string;
-          descricao: string | null;
           id: string;
-          tipo: string | null;
+          publicado: boolean;
+          publicado_em: string | null;
+          resumo: string | null;
+          slug: string;
+          tempo_leitura: number | null;
           titulo: string;
-          user_id: string;
-          xp: number;
+          updated_at: string;
         };
         Insert: {
+          agendado_para?: string | null;
+          autor_id?: string | null;
+          capa_url?: string | null;
+          categoria?: string | null;
+          conteudo_md?: string | null;
           created_at?: string;
-          descricao?: string | null;
           id?: string;
-          tipo?: string | null;
+          publicado?: boolean;
+          publicado_em?: string | null;
+          resumo?: string | null;
+          slug: string;
+          tempo_leitura?: number | null;
           titulo: string;
-          user_id: string;
-          xp?: number;
+          updated_at?: string;
         };
         Update: {
+          agendado_para?: string | null;
+          autor_id?: string | null;
+          capa_url?: string | null;
+          categoria?: string | null;
+          conteudo_md?: string | null;
           created_at?: string;
-          descricao?: string | null;
           id?: string;
-          tipo?: string | null;
+          publicado?: boolean;
+          publicado_em?: string | null;
+          resumo?: string | null;
+          slug?: string;
+          tempo_leitura?: number | null;
           titulo?: string;
-          user_id?: string;
-          xp?: number;
+          updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_artigos_autor_id_fkey";
+            columns: ["autor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      comunidade_comentarios: {
+        Row: {
+          artigo_id: string;
+          autor_id: string;
+          corpo: string;
+          created_at: string;
+          id: string;
+        };
+        Insert: {
+          artigo_id: string;
+          autor_id: string;
+          corpo: string;
+          created_at?: string;
+          id?: string;
+        };
+        Update: {
+          artigo_id?: string;
+          autor_id?: string;
+          corpo?: string;
+          created_at?: string;
+          id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_comentarios_artigo_id_fkey";
+            columns: ["artigo_id"];
+            isOneToOne: false;
+            referencedRelation: "comunidade_artigos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "comunidade_comentarios_autor_id_fkey";
+            columns: ["autor_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
       };
       contatos: {
         Row: {
@@ -373,80 +441,6 @@ export type Database = {
           email?: string;
           enviado_em?: string | null;
           usado_em?: string | null;
-        };
-        Relationships: [];
-      };
-      dm_conversas: {
-        Row: {
-          comment_id: string | null;
-          criado_em: string;
-          erro: string | null;
-          estado: string;
-          gatilho_id: string | null;
-          id: string;
-          ig_user_id: string;
-          log: Json;
-          ultima_msg_em: string | null;
-        };
-        Insert: {
-          comment_id?: string | null;
-          criado_em?: string;
-          erro?: string | null;
-          estado?: string;
-          gatilho_id?: string | null;
-          id?: string;
-          ig_user_id: string;
-          log?: Json;
-          ultima_msg_em?: string | null;
-        };
-        Update: {
-          comment_id?: string | null;
-          criado_em?: string;
-          erro?: string | null;
-          estado?: string;
-          gatilho_id?: string | null;
-          id?: string;
-          ig_user_id?: string;
-          log?: Json;
-          ultima_msg_em?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "dm_conversas_gatilho_id_fkey";
-            columns: ["gatilho_id"];
-            isOneToOne: false;
-            referencedRelation: "dm_gatilhos";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      dm_gatilhos: {
-        Row: {
-          ativo: boolean;
-          created_at: string;
-          id: string;
-          max_por_dia: number;
-          palavra: string;
-          post_ig_id: string | null;
-          resposta: string;
-        };
-        Insert: {
-          ativo?: boolean;
-          created_at?: string;
-          id?: string;
-          max_por_dia?: number;
-          palavra: string;
-          post_ig_id?: string | null;
-          resposta: string;
-        };
-        Update: {
-          ativo?: boolean;
-          created_at?: string;
-          id?: string;
-          max_por_dia?: number;
-          palavra?: string;
-          post_ig_id?: string | null;
-          resposta?: string;
         };
         Relationships: [];
       };
@@ -556,72 +550,6 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
-      };
-      etapa1_entregavel: {
-        Row: {
-          bio_curta: string | null;
-          created_at: string;
-          gerado_em: string;
-          id: string;
-          publico_alvo: string | null;
-          transformacao: string | null;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          bio_curta?: string | null;
-          created_at?: string;
-          gerado_em?: string;
-          id?: string;
-          publico_alvo?: string | null;
-          transformacao?: string | null;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          bio_curta?: string | null;
-          created_at?: string;
-          gerado_em?: string;
-          id?: string;
-          publico_alvo?: string | null;
-          transformacao?: string | null;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      etapa1_respostas: {
-        Row: {
-          completed_at: string | null;
-          created_at: string;
-          id: string;
-          pergunta_1: string | null;
-          pergunta_2: string | null;
-          pergunta_3: string | null;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          completed_at?: string | null;
-          created_at?: string;
-          id?: string;
-          pergunta_1?: string | null;
-          pergunta_2?: string | null;
-          pergunta_3?: string | null;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          completed_at?: string | null;
-          created_at?: string;
-          id?: string;
-          pergunta_1?: string | null;
-          pergunta_2?: string | null;
-          pergunta_3?: string | null;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
       };
       eventos_analytics: {
         Row: {
@@ -745,6 +673,290 @@ export type Database = {
           receita?: number;
           updated_at?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      founder_alertas: {
+        Row: {
+          chave_dedup: string | null;
+          criado_em: string;
+          detalhes: Json;
+          id: string;
+          link: string | null;
+          mensagem: string | null;
+          origem: string;
+          resolvido_em: string | null;
+          resolvido_por: string | null;
+          severidade: string;
+          status: string;
+          tipo: string;
+          titulo: string;
+        };
+        Insert: {
+          chave_dedup?: string | null;
+          criado_em?: string;
+          detalhes?: Json;
+          id?: string;
+          link?: string | null;
+          mensagem?: string | null;
+          origem?: string;
+          resolvido_em?: string | null;
+          resolvido_por?: string | null;
+          severidade: string;
+          status?: string;
+          tipo: string;
+          titulo: string;
+        };
+        Update: {
+          chave_dedup?: string | null;
+          criado_em?: string;
+          detalhes?: Json;
+          id?: string;
+          link?: string | null;
+          mensagem?: string | null;
+          origem?: string;
+          resolvido_em?: string | null;
+          resolvido_por?: string | null;
+          severidade?: string;
+          status?: string;
+          tipo?: string;
+          titulo?: string;
+        };
+        Relationships: [];
+      };
+      founder_api_chamadas: {
+        Row: {
+          criado_em: string;
+          fn: string;
+          id: number;
+          latencia_ms: number;
+          metodo: string | null;
+          ok: boolean;
+          status: number | null;
+          tipo: string;
+          user_id: string | null;
+        };
+        Insert: {
+          criado_em?: string;
+          fn: string;
+          id?: never;
+          latencia_ms: number;
+          metodo?: string | null;
+          ok: boolean;
+          status?: number | null;
+          tipo: string;
+          user_id?: string | null;
+        };
+        Update: {
+          criado_em?: string;
+          fn?: string;
+          id?: never;
+          latencia_ms?: number;
+          metodo?: string | null;
+          ok?: boolean;
+          status?: number | null;
+          tipo?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      founder_eventos: {
+        Row: {
+          ambiente: string;
+          criado_em: string;
+          evento: string;
+          feature: string | null;
+          id: string;
+          origem: string;
+          pagina: string | null;
+          propriedades: Json;
+          sessao_id: string;
+          user_id: string | null;
+        };
+        Insert: {
+          ambiente?: string;
+          criado_em?: string;
+          evento: string;
+          feature?: string | null;
+          id?: string;
+          origem?: string;
+          pagina?: string | null;
+          propriedades?: Json;
+          sessao_id: string;
+          user_id?: string | null;
+        };
+        Update: {
+          ambiente?: string;
+          criado_em?: string;
+          evento?: string;
+          feature?: string | null;
+          id?: string;
+          origem?: string;
+          pagina?: string | null;
+          propriedades?: Json;
+          sessao_id?: string;
+          user_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "founder_eventos_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      founder_eventos_sistema: {
+        Row: {
+          criado_em: string;
+          detalhes: Json;
+          id: string;
+          latencia_ms: number | null;
+          origem: string;
+          servico: string | null;
+          tipo: string;
+        };
+        Insert: {
+          criado_em?: string;
+          detalhes?: Json;
+          id?: string;
+          latencia_ms?: number | null;
+          origem: string;
+          servico?: string | null;
+          tipo: string;
+        };
+        Update: {
+          criado_em?: string;
+          detalhes?: Json;
+          id?: string;
+          latencia_ms?: number | null;
+          origem?: string;
+          servico?: string | null;
+          tipo?: string;
+        };
+        Relationships: [];
+      };
+      founder_features: {
+        Row: {
+          ativa: boolean;
+          grupo: string;
+          key: string;
+          nome: string;
+          rota_prefixo: string;
+        };
+        Insert: {
+          ativa?: boolean;
+          grupo: string;
+          key: string;
+          nome: string;
+          rota_prefixo: string;
+        };
+        Update: {
+          ativa?: boolean;
+          grupo?: string;
+          key?: string;
+          nome?: string;
+          rota_prefixo?: string;
+        };
+        Relationships: [];
+      };
+      founder_metricas_diarias: {
+        Row: {
+          api_erros: number;
+          api_p95_ms: number | null;
+          api_requests: number;
+          assinantes: number;
+          calculado_em: string;
+          churn_pct: number | null;
+          dau: number;
+          dia: string;
+          erros_dia: number;
+          ia_chamadas: number;
+          ia_falhas: number;
+          jobs_falhos: number;
+          mau: number;
+          mrr_centavos: number;
+          novas_contas: number;
+          pagamentos_falhos: number;
+          receita_centavos: number;
+          sessoes: number;
+          usuarias_ativas: number;
+          usuarias_total: number;
+          wau: number;
+        };
+        Insert: {
+          api_erros?: number;
+          api_p95_ms?: number | null;
+          api_requests?: number;
+          assinantes: number;
+          calculado_em?: string;
+          churn_pct?: number | null;
+          dau?: number;
+          dia: string;
+          erros_dia: number;
+          ia_chamadas?: number;
+          ia_falhas?: number;
+          jobs_falhos?: number;
+          mau?: number;
+          mrr_centavos: number;
+          novas_contas: number;
+          pagamentos_falhos?: number;
+          receita_centavos?: number;
+          sessoes?: number;
+          usuarias_ativas: number;
+          usuarias_total: number;
+          wau?: number;
+        };
+        Update: {
+          api_erros?: number;
+          api_p95_ms?: number | null;
+          api_requests?: number;
+          assinantes?: number;
+          calculado_em?: string;
+          churn_pct?: number | null;
+          dau?: number;
+          dia?: string;
+          erros_dia?: number;
+          ia_chamadas?: number;
+          ia_falhas?: number;
+          jobs_falhos?: number;
+          mau?: number;
+          mrr_centavos?: number;
+          novas_contas?: number;
+          pagamentos_falhos?: number;
+          receita_centavos?: number;
+          sessoes?: number;
+          usuarias_ativas?: number;
+          usuarias_total?: number;
+          wau?: number;
+        };
+        Relationships: [];
+      };
+      founder_service_checks: {
+        Row: {
+          checado_em: string;
+          detalhe: string | null;
+          id: string;
+          latencia_ms: number | null;
+          service: string;
+          status: string;
+        };
+        Insert: {
+          checado_em?: string;
+          detalhe?: string | null;
+          id?: string;
+          latencia_ms?: number | null;
+          service: string;
+          status: string;
+        };
+        Update: {
+          checado_em?: string;
+          detalhe?: string | null;
+          id?: string;
+          latencia_ms?: number | null;
+          service?: string;
+          status?: string;
         };
         Relationships: [];
       };
@@ -922,30 +1134,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      integracao_instagram: {
-        Row: {
-          access_token: string | null;
-          atualizado_em: string;
-          expira_em: string | null;
-          id: number;
-          ig_user_id: string | null;
-        };
-        Insert: {
-          access_token?: string | null;
-          atualizado_em?: string;
-          expira_em?: string | null;
-          id?: number;
-          ig_user_id?: string | null;
-        };
-        Update: {
-          access_token?: string | null;
-          atualizado_em?: string;
-          expira_em?: string | null;
-          id?: number;
-          ig_user_id?: string | null;
-        };
-        Relationships: [];
-      };
       intencoes_dia: {
         Row: {
           created_at: string;
@@ -1030,6 +1218,51 @@ export type Database = {
           nome?: string;
           novidades?: boolean;
           tipo_negocio?: string | null;
+        };
+        Relationships: [];
+      };
+      manual_leads: {
+        Row: {
+          baixado_em: string | null;
+          consent_texto: string | null;
+          consentimento: boolean;
+          created_at: string;
+          descadastrado_em: string | null;
+          descadastro_token: string;
+          download_token: string;
+          downloads: number;
+          email: string;
+          id: string;
+          origem: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          baixado_em?: string | null;
+          consent_texto?: string | null;
+          consentimento: boolean;
+          created_at?: string;
+          descadastrado_em?: string | null;
+          descadastro_token?: string;
+          download_token?: string;
+          downloads?: number;
+          email: string;
+          id?: string;
+          origem?: string;
+          updated_at?: string | null;
+        };
+        Update: {
+          baixado_em?: string | null;
+          consent_texto?: string | null;
+          consentimento?: boolean;
+          created_at?: string;
+          descadastrado_em?: string | null;
+          descadastro_token?: string;
+          download_token?: string;
+          downloads?: number;
+          email?: string;
+          id?: string;
+          origem?: string;
+          updated_at?: string | null;
         };
         Relationships: [];
       };
@@ -1120,6 +1353,150 @@ export type Database = {
           titulo?: string;
           updated_at?: string;
           user_id?: string;
+        };
+        Relationships: [];
+      };
+      office_concluidos_locais: {
+        Row: {
+          marcado_em: string;
+          tarefa_id: string;
+        };
+        Insert: {
+          marcado_em?: string;
+          tarefa_id: string;
+        };
+        Update: {
+          marcado_em?: string;
+          tarefa_id?: string;
+        };
+        Relationships: [];
+      };
+      office_conteudo_catalogo: {
+        Row: {
+          atualizado_em: string;
+          canal: string;
+          criado_em: string;
+          data_planejada: string | null;
+          etapa: string;
+          formato: string | null;
+          id: string;
+          nota: string | null;
+          titulo: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          canal?: string;
+          criado_em?: string;
+          data_planejada?: string | null;
+          etapa?: string;
+          formato?: string | null;
+          id?: string;
+          nota?: string | null;
+          titulo: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          canal?: string;
+          criado_em?: string;
+          data_planejada?: string | null;
+          etapa?: string;
+          formato?: string | null;
+          id?: string;
+          nota?: string | null;
+          titulo?: string;
+        };
+        Relationships: [];
+      };
+      office_conteudo_colunas: {
+        Row: {
+          atualizado_em: string;
+          etapa: string;
+          nome: string;
+        };
+        Insert: {
+          atualizado_em?: string;
+          etapa: string;
+          nome: string;
+        };
+        Update: {
+          atualizado_em?: string;
+          etapa?: string;
+          nome?: string;
+        };
+        Relationships: [];
+      };
+      office_tarefas_catalogo: {
+        Row: {
+          area: string;
+          atualizado_em: string;
+          concluido_em: string | null;
+          id: string;
+          nota: string | null;
+          pessoa: string;
+          prioridade: string;
+          sprint: string | null;
+          status: string;
+          titulo: string;
+        };
+        Insert: {
+          area: string;
+          atualizado_em?: string;
+          concluido_em?: string | null;
+          id: string;
+          nota?: string | null;
+          pessoa: string;
+          prioridade?: string;
+          sprint?: string | null;
+          status?: string;
+          titulo: string;
+        };
+        Update: {
+          area?: string;
+          atualizado_em?: string;
+          concluido_em?: string | null;
+          id?: string;
+          nota?: string | null;
+          pessoa?: string;
+          prioridade?: string;
+          sprint?: string | null;
+          status?: string;
+          titulo?: string;
+        };
+        Relationships: [];
+      };
+      office_tarefas_locais: {
+        Row: {
+          area: string;
+          criado_em: string;
+          id: string;
+          nota: string | null;
+          pessoa: string;
+          prioridade: string;
+          sprint: string | null;
+          status: string;
+          titulo: string;
+        };
+        Insert: {
+          area: string;
+          criado_em?: string;
+          id?: string;
+          nota?: string | null;
+          pessoa: string;
+          prioridade?: string;
+          sprint?: string | null;
+          status?: string;
+          titulo: string;
+        };
+        Update: {
+          area?: string;
+          criado_em?: string;
+          id?: string;
+          nota?: string | null;
+          pessoa?: string;
+          prioridade?: string;
+          sprint?: string | null;
+          status?: string;
+          titulo?: string;
         };
         Relationships: [];
       };
@@ -1703,51 +2080,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      manual_leads: {
-        Row: {
-          baixado_em: string | null;
-          consent_texto: string | null;
-          consentimento: boolean;
-          created_at: string;
-          descadastrado_em: string | null;
-          descadastro_token: string;
-          download_token: string;
-          downloads: number;
-          email: string;
-          id: string;
-          origem: string;
-          updated_at: string | null;
-        };
-        Insert: {
-          baixado_em?: string | null;
-          consent_texto?: string | null;
-          consentimento: boolean;
-          created_at?: string;
-          descadastrado_em?: string | null;
-          descadastro_token?: string;
-          download_token?: string;
-          downloads?: number;
-          email: string;
-          id?: string;
-          origem?: string;
-          updated_at?: string | null;
-        };
-        Update: {
-          baixado_em?: string | null;
-          consent_texto?: string | null;
-          consentimento?: boolean;
-          created_at?: string;
-          descadastrado_em?: string | null;
-          descadastro_token?: string;
-          download_token?: string;
-          downloads?: number;
-          email?: string;
-          id?: string;
-          origem?: string;
-          updated_at?: string | null;
-        };
-        Relationships: [];
-      };
       quiz_leads: {
         Row: {
           consent_texto: string | null;
@@ -1795,248 +2127,6 @@ export type Database = {
           updated_at?: string | null;
         };
         Relationships: [];
-      };
-      social_geracoes: {
-        Row: {
-          acao: string | null;
-          criado_em: string;
-          id: string;
-          modelo: string | null;
-          post_id: string | null;
-          tokens_in: number | null;
-          tokens_out: number | null;
-          veredito_revisora: string | null;
-        };
-        Insert: {
-          acao?: string | null;
-          criado_em?: string;
-          id?: string;
-          modelo?: string | null;
-          post_id?: string | null;
-          tokens_in?: number | null;
-          tokens_out?: number | null;
-          veredito_revisora?: string | null;
-        };
-        Update: {
-          acao?: string | null;
-          criado_em?: string;
-          id?: string;
-          modelo?: string | null;
-          post_id?: string | null;
-          tokens_in?: number | null;
-          tokens_out?: number | null;
-          veredito_revisora?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "social_geracoes_post_id_fkey";
-            columns: ["post_id"];
-            isOneToOne: false;
-            referencedRelation: "social_posts";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      social_lotes: {
-        Row: {
-          criado_em: string;
-          custo_estimado_tokens: number | null;
-          id: string;
-          modo: string;
-          origem: string;
-          quantidade: number;
-          status: string;
-          tema: string | null;
-          tipo: Database["public"]["Enums"]["social_tipo"];
-        };
-        Insert: {
-          criado_em?: string;
-          custo_estimado_tokens?: number | null;
-          id?: string;
-          modo: string;
-          origem: string;
-          quantidade: number;
-          status?: string;
-          tema?: string | null;
-          tipo: Database["public"]["Enums"]["social_tipo"];
-        };
-        Update: {
-          criado_em?: string;
-          custo_estimado_tokens?: number | null;
-          id?: string;
-          modo?: string;
-          origem?: string;
-          quantidade?: number;
-          status?: string;
-          tema?: string | null;
-          tipo?: Database["public"]["Enums"]["social_tipo"];
-        };
-        Relationships: [];
-      };
-      social_metricas: {
-        Row: {
-          comments: number | null;
-          dia: string;
-          follows: number | null;
-          likes: number | null;
-          post_id: string;
-          reach: number | null;
-          saves: number | null;
-          shares: number | null;
-        };
-        Insert: {
-          comments?: number | null;
-          dia: string;
-          follows?: number | null;
-          likes?: number | null;
-          post_id: string;
-          reach?: number | null;
-          saves?: number | null;
-          shares?: number | null;
-        };
-        Update: {
-          comments?: number | null;
-          dia?: string;
-          follows?: number | null;
-          likes?: number | null;
-          post_id?: string;
-          reach?: number | null;
-          saves?: number | null;
-          shares?: number | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "social_metricas_post_id_fkey";
-            columns: ["post_id"];
-            isOneToOne: false;
-            referencedRelation: "social_posts";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      social_pauta: {
-        Row: {
-          cta: string;
-          dia: string;
-          estrutura: string | null;
-          formato: Database["public"]["Enums"]["social_tipo"];
-          gancho: string;
-          id: string;
-          pilar: string | null;
-          post_id: string | null;
-          semana: string;
-          status: string;
-        };
-        Insert: {
-          cta: string;
-          dia: string;
-          estrutura?: string | null;
-          formato: Database["public"]["Enums"]["social_tipo"];
-          gancho: string;
-          id?: string;
-          pilar?: string | null;
-          post_id?: string | null;
-          semana: string;
-          status?: string;
-        };
-        Update: {
-          cta?: string;
-          dia?: string;
-          estrutura?: string | null;
-          formato?: Database["public"]["Enums"]["social_tipo"];
-          gancho?: string;
-          id?: string;
-          pilar?: string | null;
-          post_id?: string | null;
-          semana?: string;
-          status?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "social_pauta_post_id_fkey";
-            columns: ["post_id"];
-            isOneToOne: false;
-            referencedRelation: "social_posts";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      social_posts: {
-        Row: {
-          alt_text: string[] | null;
-          aprovado_em: string | null;
-          aprovado_por: string | null;
-          caption: string;
-          created_at: string;
-          erro: string | null;
-          gancho: string;
-          id: string;
-          ig_media_id: string | null;
-          legenda_por_ia: boolean;
-          lote_id: string | null;
-          midias: string[];
-          origem_criacao: string;
-          permalink: string | null;
-          pilar: string | null;
-          scheduled_at: string | null;
-          slides: Json | null;
-          status: Database["public"]["Enums"]["social_status"];
-          tipo: Database["public"]["Enums"]["social_tipo"];
-          versoes: Json;
-        };
-        Insert: {
-          alt_text?: string[] | null;
-          aprovado_em?: string | null;
-          aprovado_por?: string | null;
-          caption: string;
-          created_at?: string;
-          erro?: string | null;
-          gancho: string;
-          id?: string;
-          ig_media_id?: string | null;
-          legenda_por_ia?: boolean;
-          lote_id?: string | null;
-          midias: string[];
-          origem_criacao?: string;
-          permalink?: string | null;
-          pilar?: string | null;
-          scheduled_at?: string | null;
-          slides?: Json | null;
-          status?: Database["public"]["Enums"]["social_status"];
-          tipo: Database["public"]["Enums"]["social_tipo"];
-          versoes?: Json;
-        };
-        Update: {
-          alt_text?: string[] | null;
-          aprovado_em?: string | null;
-          aprovado_por?: string | null;
-          caption?: string;
-          created_at?: string;
-          erro?: string | null;
-          gancho?: string;
-          id?: string;
-          ig_media_id?: string | null;
-          legenda_por_ia?: boolean;
-          lote_id?: string | null;
-          midias?: string[];
-          origem_criacao?: string;
-          permalink?: string | null;
-          pilar?: string | null;
-          scheduled_at?: string | null;
-          slides?: Json | null;
-          status?: Database["public"]["Enums"]["social_status"];
-          tipo?: Database["public"]["Enums"]["social_tipo"];
-          versoes?: Json;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "social_posts_lote_id_fkey";
-            columns: ["lote_id"];
-            isOneToOne: false;
-            referencedRelation: "social_lotes";
-            referencedColumns: ["id"];
-          },
-        ];
       };
       stripe_webhook_events: {
         Row: {
@@ -2217,60 +2307,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      user_profile: {
-        Row: {
-          created_at: string;
-          id: string;
-          nome_negocio: string | null;
-          segmento: string | null;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          id?: string;
-          nome_negocio?: string | null;
-          segmento?: string | null;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          id?: string;
-          nome_negocio?: string | null;
-          segmento?: string | null;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
-      user_progress: {
-        Row: {
-          created_at: string;
-          etapa_atual: number;
-          etapa_status: Json;
-          id: string;
-          updated_at: string;
-          user_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          etapa_atual?: number;
-          etapa_status?: Json;
-          id?: string;
-          updated_at?: string;
-          user_id: string;
-        };
-        Update: {
-          created_at?: string;
-          etapa_atual?: number;
-          etapa_status?: Json;
-          id?: string;
-          updated_at?: string;
-          user_id?: string;
-        };
-        Relationships: [];
-      };
     };
     Views: {
       [_ in never]: never;
@@ -2294,15 +2330,14 @@ export type Database = {
       checar_taxa_erro_e_alertar: { Args: never; Returns: undefined };
       checar_uptimerobot_e_alertar: { Args: never; Returns: undefined };
       compor_nota_presenca: { Args: { p_uid: string }; Returns: undefined };
+      disparar_founder_monitor: { Args: never; Returns: undefined };
       disparar_raiox_mensal: { Args: never; Returns: undefined };
-      disparar_social_metricas: { Args: never; Returns: undefined };
-      disparar_social_publisher: { Args: never; Returns: undefined };
-      disparar_social_token_renovar: { Args: never; Returns: undefined };
       estornar_ia_uso: {
         Args: { p_feature: string; p_periodo: string; p_user_id: string };
         Returns: undefined;
       };
       excluir_dados_do_usuario: { Args: never; Returns: undefined };
+      founder_jobs_falhos: { Args: { p_horas?: number }; Returns: number };
       hook_checar_convite_cadastro: { Args: { event: Json }; Returns: Json };
       incrementar_ia_uso: {
         Args: {
@@ -2315,37 +2350,7 @@ export type Database = {
       };
       is_admin: { Args: { _uid: string }; Returns: boolean };
       parse_primeiro_numero: { Args: { p: string }; Returns: number };
-      pegar_e_travar_posts_agendados: {
-        Args: never;
-        Returns: {
-          alt_text: string[] | null;
-          aprovado_em: string | null;
-          aprovado_por: string | null;
-          caption: string;
-          created_at: string;
-          erro: string | null;
-          gancho: string;
-          id: string;
-          ig_media_id: string | null;
-          legenda_por_ia: boolean;
-          lote_id: string | null;
-          midias: string[];
-          origem_criacao: string;
-          permalink: string | null;
-          pilar: string | null;
-          scheduled_at: string | null;
-          slides: Json | null;
-          status: Database["public"]["Enums"]["social_status"];
-          tipo: Database["public"]["Enums"]["social_tipo"];
-          versoes: Json;
-        }[];
-        SetofOptions: {
-          from: "*";
-          to: "social_posts";
-          isOneToOne: false;
-          isSetofReturn: true;
-        };
-      };
+      publicar_artigos_comunidade_agendados: { Args: never; Returns: undefined };
       publish_due_posts: { Args: never; Returns: undefined };
       registrar_venda_cliente: {
         Args: { p_cliente_id: string };

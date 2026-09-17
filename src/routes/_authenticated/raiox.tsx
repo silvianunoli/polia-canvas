@@ -10,6 +10,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarRaioX } from "@/lib/raiox.functions";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
 
 export const Route = createFileRoute("/_authenticated/raiox")({
@@ -105,6 +106,7 @@ function RaioXPage() {
       });
       if (resultado.ok) {
         track("raiox_gerado", { mes: mesLabel });
+        void registrar("feature_completed", { feature: "raiox", propriedades: { acao: "gerado" } });
         await qc.invalidateQueries({ queryKey: ["ia-raiox", userId, mesLabel] });
       } else {
         setMotivo(resultado.motivo);

@@ -6,6 +6,7 @@ import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { verificarConvite } from "@/lib/convites.functions";
 import { track } from "@/lib/analytics";
+import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import {
   AuthShell,
   AuthButton,
@@ -149,6 +150,10 @@ function CadastroPage() {
         via_convite: !!emailConvite,
         precisa_verificacao: !data.session,
       });
+      void registrar("signup", {
+        feature: "conta",
+        propriedades: { metodo: "email", via_convite: !!emailConvite },
+      });
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {
@@ -166,6 +171,7 @@ function CadastroPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
+    marcarLoginPendente("google");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/painel` },

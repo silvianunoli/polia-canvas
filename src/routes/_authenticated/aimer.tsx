@@ -5,6 +5,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { perguntarAimer, MENSAGENS_CANONICAS } from "@/lib/aimer.functions";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 
 export const Route = createFileRoute("/_authenticated/aimer")({
   head: () => ({
@@ -65,6 +66,10 @@ function AimerPage() {
           { id: novoId(), autor: "aimer", texto: resultado.texto, hora: new Date() },
         ]);
         track("aimer_pergunta_respondida");
+        void registrar("feature_completed", {
+          feature: "aimer",
+          propriedades: { acao: "pergunta" },
+        });
       } else if (resultado.motivo === "teto_atingido") {
         setTetoAtingido(true);
         setMensagens((prev) => [

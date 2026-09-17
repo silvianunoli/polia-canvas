@@ -1,5 +1,11 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  consumirLoginPendente,
+  montarHeartbeat,
+  registrarAberturaDeTela,
+} from "@/lib/founder-eventos";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
@@ -79,6 +85,15 @@ function AuthenticatedLayout() {
     "pulso_relacionamento",
     !isentoDeAssinatura(pathname),
   );
+
+  // Instrumentação do Founder Dashboard: cada tela da área logada vira um
+  // feature_opened; o heartbeat mede a duração da sessão.
+  useEffect(() => {
+    void consumirLoginPendente();
+    registrarAberturaDeTela(pathname);
+  }, [pathname]);
+  useEffect(() => montarHeartbeat(), []);
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <a href="#main-content" className="skip-link">

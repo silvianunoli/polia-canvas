@@ -7,6 +7,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import {
@@ -158,6 +159,10 @@ function ModuloPage() {
     } else {
       // Último: módulo concluído → tela de desbloqueio.
       track("planejamento_modulo_concluido", { modulo: n });
+      void registrar("feature_completed", {
+        feature: "planejamento",
+        propriedades: { acao: "modulo_concluido", modulo: n },
+      });
       // "Completo" não assume ordem — conta direto quantas seções (de todos os
       // módulos) estão concluídas pra essa usuária e compara com o total real.
       const { count } = await supabase

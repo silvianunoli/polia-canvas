@@ -203,10 +203,7 @@ async function checarEmails(): Promise<Check> {
 
 async function checarIa(): Promise<{ check: Check; chamadas: number; falhas: number }> {
   const desde = new Date(Date.now() - 86400000).toISOString();
-  const { data, error } = await admin
-    .from("ia_geracoes")
-    .select("sucesso")
-    .gte("criado_em", desde);
+  const { data, error } = await admin.from("ia_geracoes").select("sucesso").gte("criado_em", desde);
   if (error) {
     return {
       check: {
@@ -267,6 +264,60 @@ interface Snapshot {
   ia_falhas: number;
   jobs_falhos: number;
   pagamentos_falhos: number;
+  dau: number;
+  wau: number;
+  mau: number;
+  sessoes: number;
+  api_requests: number;
+  api_erros: number;
+  api_p95_ms: number | null;
+}
+
+// "Ativa" = ação real no produto (nunca feature_opened/heartbeat) — mesma
+// definição usada no /founder.
+const EVENTOS_ATIVOS = [
+  "feature_completed",
+  "create_product",
+  "edit_product",
+  "create_goal",
+  "edit_goal",
+  "onboarding_completed",
+  "business_created",
+];
+
+async function usuariasAtivasDesde(desde: string): Promise<number> {
+  const { data } = await admin
+    .from("founder_eventos")
+    .select("user_id")
+    .in("evento", EVENTOS_ATIVOS)
+    .not("user_id", "is", null)
+    .gte("criado_em", desde)
+    .limit(20000);
+  return new Set(((data ?? []) as { user_id: string }[]).map((l) => l.user_id)).size;
+}
+
+async function sessoesDesde(desde: string): Promise<number> {
+  const { data } = await admin
+    .from("founder_eventos")
+    .select("sessao_id")
+    .gte("criado_em", desde)
+    .limit(50000);
+  return new Set(((data ?? []) as { sessao_id: string }[]).map((l) => l.sessao_id)).size;
+}
+
+async function apiDesde(
+  desde: string,
+): Promise<{ requests: number; erros: number; p95: number | null }> {
+  const { data } = await admin
+    .from("founder_api_chamadas")
+    .select("ok, latencia_ms")
+    .gte("criado_em", desde)
+    .limit(50000);
+  const linhas = (data ?? []) as { ok: boolean; latencia_ms: number }[];
+  if (linhas.length === 0) return { requests: 0, erros: 0, p95: null };
+  const lat = linhas.map((l) => l.latencia_ms).sort((a, b) => a - b);
+  const p95 = lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))];
+  return { requests: linhas.length, erros: linhas.filter((l) => !l.ok).length, p95 };
 }
 
 async function contar(tabela: string, filtro?: (q: any) => any): Promise<number> {
@@ -300,14 +351,21 @@ async function valorMensalDoPrice(priceId: string): Promise<number> {
 
 async function montarSnapshot(ia: { chamadas: number; falhas: number }): Promise<Snapshot> {
   const ontem = new Date(Date.now() - 86400000).toISOString();
-  const [usuariasTotal, novasContas, usuariasAtivas, errosDia, { data: assinaturas }] =
+  const semana = new Date(Date.now() - 7 * 86400000).toISOString();
+  const mes = new Date(Date.now() - 30 * 86400000).toISOString();
+  const [usuariasTotal, novasContas, errosDia, { data: assinaturas }, dau, wau, mau, sessoes, api] =
     await Promise.all([
       contar("profiles"),
       contar("profiles", (q) => q.gte("created_at", ontem)),
-      contar("profiles", (q) => q.gte("updated_at", ontem)),
       contar("erros_app", (q) => q.gte("criado_em", ontem)),
       admin.from("assinaturas").select("price_id, status, updated_at"),
+      usuariasAtivasDesde(ontem),
+      usuariasAtivasDesde(semana),
+      usuariasAtivasDesde(mes),
+      sessoesDesde(ontem),
+      apiDesde(ontem),
     ]);
+  const usuariasAtivas = dau;
 
   const linhas = (assinaturas ?? []) as { price_id: string; status: string; updated_at: string }[];
   const ativas = linhas.filter((a) => STATUS_ASSINATURA_ATIVA.includes(a.status));
@@ -337,6 +395,13 @@ async function montarSnapshot(ia: { chamadas: number; falhas: number }): Promise
     ia_falhas: ia.falhas,
     jobs_falhos: jobsFalhos,
     pagamentos_falhos: pagamentosFalhos,
+    dau,
+    wau,
+    mau,
+    sessoes,
+    api_requests: api.requests,
+    api_erros: api.erros,
+    api_p95_ms: api.p95,
   };
 }
 
@@ -353,21 +418,47 @@ interface AlertaNovo {
 interface Baseline {
   dias: number;
   errosDiaMedia: number | null;
+  apiErrosMedia: number | null;
+  apiP95Media: number | null;
+  dauMedia: number | null;
+}
+
+function media(valores: number[]): number | null {
+  if (valores.length === 0) return null;
+  return valores.reduce((s, v) => s + v, 0) / valores.length;
 }
 
 async function carregarBaseline(): Promise<Baseline> {
   const hoje = dataBRT();
   const { data } = await admin
     .from("founder_metricas_diarias")
-    .select("erros_dia")
+    .select("erros_dia, api_erros, api_p95_ms, dau")
     .lt("dia", hoje)
     .order("dia", { ascending: false })
     .limit(7);
-  const linhas = (data ?? []) as { erros_dia: number }[];
-  if (linhas.length < 3) return { dias: linhas.length, errosDiaMedia: null };
+  const linhas = (data ?? []) as {
+    erros_dia: number;
+    api_erros: number;
+    api_p95_ms: number | null;
+    dau: number;
+  }[];
+  if (linhas.length < 3) {
+    return {
+      dias: linhas.length,
+      errosDiaMedia: null,
+      apiErrosMedia: null,
+      apiP95Media: null,
+      dauMedia: null,
+    };
+  }
   return {
     dias: linhas.length,
-    errosDiaMedia: linhas.reduce((s, l) => s + l.erros_dia, 0) / linhas.length,
+    errosDiaMedia: media(linhas.map((l) => l.erros_dia)),
+    apiErrosMedia: media(linhas.map((l) => l.api_erros)),
+    apiP95Media: media(
+      linhas.filter((l) => l.api_p95_ms !== null).map((l) => l.api_p95_ms as number),
+    ),
+    dauMedia: media(linhas.map((l) => l.dau)),
   };
 }
 
@@ -447,6 +538,54 @@ async function avaliarRegras(
     });
   }
 
+  chavesAvaliadas.push("api_erros_acima_normal");
+  if (baseline.apiErrosMedia !== null) {
+    const limite = Math.max(10, baseline.apiErrosMedia * 3);
+    if (snap.api_erros > limite) {
+      desejados.push({
+        chave: "api_erros_acima_normal",
+        tipo: "api_erros_acima_normal",
+        severidade: snap.api_erros > baseline.apiErrosMedia * 5 ? "critico" : "atencao",
+        titulo: "Erros de API acima do normal",
+        mensagem: `${snap.api_erros} chamada(s) com erro em 24h (de ${snap.api_requests}); a média dos últimos ${baseline.dias} dias era ${baseline.apiErrosMedia.toFixed(1)}.`,
+        detalhes: {
+          erros_24h: snap.api_erros,
+          requests_24h: snap.api_requests,
+          baseline: baseline.apiErrosMedia,
+        },
+        link: `${URL_FOUNDER}/infra/api`,
+      });
+    }
+  }
+
+  chavesAvaliadas.push("latencia_p95");
+  if (baseline.apiP95Media !== null && snap.api_p95_ms !== null) {
+    if (snap.api_p95_ms > 1500 && snap.api_p95_ms > baseline.apiP95Media * 2) {
+      desejados.push({
+        chave: "latencia_p95",
+        tipo: "latencia_p95",
+        severidade: "atencao",
+        titulo: "Latência da API acima do normal",
+        mensagem: `p95 de ${snap.api_p95_ms} ms nas últimas 24h; a média dos últimos ${baseline.dias} dias era ${baseline.apiP95Media.toFixed(0)} ms.`,
+        detalhes: { p95_ms: snap.api_p95_ms, baseline_ms: baseline.apiP95Media },
+        link: `${URL_FOUNDER}/infra/api`,
+      });
+    }
+  }
+
+  chavesAvaliadas.push("queda_uso");
+  if (baseline.dauMedia !== null && snap.mau >= 10 && snap.dau < baseline.dauMedia * 0.5) {
+    desejados.push({
+      chave: "queda_uso",
+      tipo: "queda_uso",
+      severidade: "atencao",
+      titulo: "Uso caiu em relação à semana",
+      mensagem: `${snap.dau} usuária(s) ativa(s) hoje contra média de ${baseline.dauMedia.toFixed(1)} nos últimos ${baseline.dias} dias.`,
+      detalhes: { dau: snap.dau, baseline: baseline.dauMedia, mau: snap.mau },
+      link: `${URL_FOUNDER}/analytics`,
+    });
+  }
+
   chavesAvaliadas.push("pico_erros_app");
   if (baseline.errosDiaMedia !== null) {
     const limite = Math.max(10, baseline.errosDiaMedia * 3);
@@ -491,7 +630,10 @@ async function sincronizarAlertas(desejados: AlertaNovo[], chavesAvaliadas: stri
     .eq("status", "aberto")
     .in("chave_dedup", chavesAvaliadas);
   const abertos = new Map(
-    ((abertosData ?? []) as { id: string; chave_dedup: string }[]).map((a) => [a.chave_dedup, a.id]),
+    ((abertosData ?? []) as { id: string; chave_dedup: string }[]).map((a) => [
+      a.chave_dedup,
+      a.id,
+    ]),
   );
 
   const novos = desejados.filter((d) => !abertos.has(d.chave));
@@ -573,7 +715,12 @@ Deno.serve(async (req) => {
   const snapshot = await montarSnapshot({ chamadas: ia.chamadas, falhas: ia.falhas });
   await admin.from("founder_metricas_diarias").upsert(snapshot, { onConflict: "dia" });
 
-  const { desejados, chavesAvaliadas } = await avaliarRegras(checks, anteriores, snapshot, baseline);
+  const { desejados, chavesAvaliadas } = await avaliarRegras(
+    checks,
+    anteriores,
+    snapshot,
+    baseline,
+  );
   const resultado = await sincronizarAlertas(desejados, chavesAvaliadas);
 
   return new Response(

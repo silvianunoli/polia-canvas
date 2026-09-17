@@ -223,6 +223,17 @@ function PrivacidadePage() {
                   banner de cookies.
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">
+                    Entender como quem tem conta usa a Pólia
+                  </strong>{" "}
+                  (quais telas abre, ações como criar um produto ou uma meta, quando entra e por
+                  quanto tempo fica) · base: execução de contrato / legítimo interesse. Isso fica só
+                  na nossa base, sem endereço IP, navegador ou localização, e serve pra ver o que
+                  está sendo usado, o que precisa de conserto e onde alguém travou. Não depende do
+                  banner de cookies porque não é rastreamento de navegação: é o registro de uso do
+                  serviço contratado.
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">Cumprir obrigações legais</strong> · base:
                   obrigação legal.
                 </li>
