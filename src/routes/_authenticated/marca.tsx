@@ -3,11 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import {
-  CamposDoc,
-  FerramentaVazia,
-  useCamposPlanejamento,
-} from "@/components/planejamento/CamposDoc";
+import { CamposDoc, FerramentaVazia } from "@/components/planejamento/CamposDoc";
+import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/marca")({

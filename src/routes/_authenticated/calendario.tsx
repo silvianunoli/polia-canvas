@@ -150,7 +150,7 @@ function CalendarioPage() {
       return (data ?? []) as Quadro[];
     },
   });
-  const quadros = quadrosQuery.data ?? [];
+  const quadros = useMemo(() => quadrosQuery.data ?? [], [quadrosQuery.data]);
   const quadrosPorId = useMemo(() => new Map(quadros.map((q) => [q.id, q])), [quadros]);
 
   const tarefasQuery = useQuery({
@@ -168,7 +168,6 @@ function CalendarioPage() {
       return (data ?? []) as unknown as TarefaCal[];
     },
   });
-  const tarefas = tarefasQuery.data ?? [];
 
   const statusGoogleQuery = useQuery({
     queryKey: ["google-status", userId],
@@ -276,14 +275,14 @@ function CalendarioPage() {
   const tarefasPorDia = useMemo(() => {
     const m = new Map<string, TarefaCal[]>();
     if (!mostrarPlanner) return m;
-    for (const t of tarefas) {
+    for (const t of tarefasQuery.data ?? []) {
       if (quadroFiltro !== "todos" && t.quadro_id !== quadroFiltro) continue;
       const lista = m.get(t.prazo) ?? [];
       lista.push(t);
       m.set(t.prazo, lista);
     }
     return m;
-  }, [tarefas, mostrarPlanner, quadroFiltro]);
+  }, [tarefasQuery.data, mostrarPlanner, quadroFiltro]);
 
   const eventosPorDia = useMemo(() => {
     const m = new Map<string, EventoGoogle[]>();

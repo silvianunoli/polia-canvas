@@ -113,8 +113,8 @@ function ProjecaoPage() {
   }, [ehProjete]);
 
   const dados = dadosQuery.data;
-  const lancamentos = dados?.lancamentos ?? [];
-  const produtos = dados?.produtos ?? [];
+  const lancamentos = useMemo(() => dados?.lancamentos ?? [], [dados?.lancamentos]);
+  const produtos = useMemo(() => dados?.produtos ?? [], [dados?.produtos]);
   const metaMes = dados?.metaMes ?? null;
 
   const custosFixosBase = useMemo(

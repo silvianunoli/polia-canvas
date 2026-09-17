@@ -88,6 +88,15 @@ interface ContaComCredencial {
   token_expira_em: string | null;
 }
 
+// Shape cru da linha do join -- supabaseAdmin não tem o generic <Database>,
+// então o select() volta implicitamente any; isso documenta só os campos lidos.
+interface LinhaContaBruta {
+  conta_id: string;
+  access_token: string | null;
+  token_expira_em: string | null;
+  contas_sociais: { nome: string; instagram_handle: string; ativo: boolean } | null;
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!autenticado(req)) return new Response("Unauthorized", { status: 401 });
@@ -107,8 +116,7 @@ Deno.serve(async (req) => {
   }
 
   const linhas = (contas ?? [])
-    // deno-lint-ignore no-explicit-any
-    .map((c: any) => ({
+    .map((c: LinhaContaBruta) => ({
       conta_id: c.conta_id,
       access_token: c.access_token,
       token_expira_em: c.token_expira_em ?? null,

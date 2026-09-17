@@ -1,17 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
-
-export function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface AuthShellProps {
   children: ReactNode;

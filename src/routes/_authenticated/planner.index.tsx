@@ -101,7 +101,7 @@ function PlannerIndex() {
     },
   });
 
-  const quadros = quadrosQuery.data ?? [];
+  const quadros = useMemo(() => quadrosQuery.data ?? [], [quadrosQuery.data]);
   const contagem = useMemo(
     () => contagemQuery.data?.total ?? new Map<string, number>(),
     [contagemQuery.data],

@@ -82,7 +82,7 @@ function ModuloPage() {
     },
   });
 
-  const drafts = dadosQuery.data?.drafts ?? [];
+  const drafts = useMemo(() => dadosQuery.data?.drafts ?? [], [dadosQuery.data?.drafts]);
   const concluidas = useMemo(
     () => new Set((dadosQuery.data?.secoes ?? []).filter((s) => s.concluido).map((s) => s.secao)),
     [dadosQuery.data?.secoes],
@@ -334,9 +334,13 @@ function SecaoForm({
     setStatus("saved");
   }, [onUpsert, secao]);
 
-  // Flush best-effort ao desmontar (troca de seção/saída).
+  // Flush best-effort ao desmontar (troca de seção/saída). Lê pendentes.current
+  // na hora do cleanup de propósito -- é o que há de pendente no desmonte, não
+  // uma cópia congelada de quando o effect montou (pendentes é um Set mutável
+  // de controle, não um nó de DOM).
   useEffect(() => {
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       const idxs = Array.from(pendentes.current);
       Object.values(timers.current).forEach((t) => clearTimeout(t));
       idxs.forEach((i) => void onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]));

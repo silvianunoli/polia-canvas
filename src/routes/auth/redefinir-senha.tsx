@@ -3,13 +3,10 @@ import { useEffect, useState, type FormEvent } from "react";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
-import {
-  CosmicInput,
-  useCapsLockWarning,
-  CapsLockHint,
-  senhaCumpreRequisitos,
-} from "@/components/cosmic/CosmicInput";
+import { CosmicInput, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
+import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
+import { senhaCumpreRequisitos } from "@/lib/senha";
 
 export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({

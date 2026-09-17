@@ -84,7 +84,7 @@ function PlanoConteudoPage() {
     },
   });
 
-  const dias = planoQuery.data ?? [];
+  const dias = useMemo(() => planoQuery.data ?? [], [planoQuery.data]);
   const diasDoMesAtivo = useMemo(
     () => dias.filter((d) => Number(d.data.split("-")[1]) === mesAtivo),
     [dias, mesAtivo],

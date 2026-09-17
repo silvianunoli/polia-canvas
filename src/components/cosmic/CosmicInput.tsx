@@ -1,13 +1,7 @@
-import {
-  forwardRef,
-  useId,
-  useState,
-  type InputHTMLAttributes,
-  type KeyboardEvent,
-  type ReactNode,
-} from "react";
+import { forwardRef, useId, useState, type InputHTMLAttributes, type ReactNode } from "react";
 import { Eye, EyeOff, Circle, CheckCircle2 } from "lucide-react";
 import { FieldError } from "@/components/ui/FieldError";
+import { REQUISITOS } from "@/lib/senha";
 
 interface CosmicInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -90,33 +84,12 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
 );
 CosmicInput.displayName = "CosmicInput";
 
-// Aviso de Caps Lock: hint, não erro (--muted). Some sozinho quando desliga.
-export function useCapsLockWarning() {
-  const [ligado, setLigado] = useState(false);
-  const onKeyUp = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.getModifierState) setLigado(e.getModifierState("CapsLock"));
-  };
-  return { ligado, onKeyUp };
-}
-
 export function CapsLockHint({ ligado }: { ligado: boolean }) {
   return (
     <p className="mt-1.5 min-h-[16px] text-[12px] text-[var(--muted)]">
       {ligado ? "Caps Lock está ligado." : ""}
     </p>
   );
-}
-
-// Guia de senha da criação de conta: requisitos visíveis desde o início (não
-// é erro até o submit), barra de 3 segmentos sem vermelho (pendente = --muted).
-const REQUISITOS = [
-  { id: "len", label: "Pelo menos 8 caracteres", teste: (v: string) => v.length >= 8 },
-  { id: "num", label: "Pelo menos 1 número", teste: (v: string) => /\d/.test(v) },
-  { id: "up", label: "Pelo menos 1 letra maiúscula", teste: (v: string) => /[A-Z]/.test(v) },
-];
-
-export function senhaCumpreRequisitos(password: string): boolean {
-  return REQUISITOS.every((r) => r.teste(password));
 }
 
 export function PasswordRequirements({ password }: { password: string }) {

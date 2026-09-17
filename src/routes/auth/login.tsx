@@ -6,11 +6,12 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthButton, Divider } from "@/components/cosmic/AuthShell";
 import { AuthSplitShell, AuthTabs, type ModoAuth } from "@/components/cosmic/AuthSplitShell";
-import { CosmicInput, useCapsLockWarning, CapsLockHint } from "@/components/cosmic/CosmicInput";
+import { CosmicInput, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
-import { ERROR_COPY } from "@/components/layout/ErrorPage";
+import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
+import { ERROR_COPY } from "@/lib/errorCopy";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),

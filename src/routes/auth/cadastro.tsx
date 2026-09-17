@@ -13,14 +13,10 @@ import {
   SerifHeadline,
   SubText,
 } from "@/components/cosmic/AuthShell";
-import {
-  CosmicInput,
-  PasswordRequirements,
-  senhaCumpreRequisitos,
-  useCapsLockWarning,
-  CapsLockHint,
-} from "@/components/cosmic/CosmicInput";
+import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
+import { senhaCumpreRequisitos } from "@/lib/senha";
+import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),

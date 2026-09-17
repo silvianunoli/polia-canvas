@@ -366,12 +366,17 @@ async function chamarClaude(
     model: MODELO,
     max_tokens: 8000,
     system,
+    // output_config é um parâmetro beta do output estruturado, fora do tipo
+    // público do SDK -- por isso o escape aqui (também via deno-lint-ignore
+    // pro linter do Deno) em vez de um tipo local que eu não consigo validar.
     // deno-lint-ignore no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     output_config: { format } as any,
     messages: [{ role: "user", content: JSON.stringify(userJson) }],
   });
-  // deno-lint-ignore no-explicit-any
-  const bloco = (resposta.content as any[]).find((b) => b.type === "text");
+  const bloco = (resposta.content as unknown as Array<{ type: string; text?: string }>).find(
+    (b) => b.type === "text",
+  );
   if (!bloco) throw new Error("Resposta da IA sem bloco de texto.");
   return {
     dados: JSON.parse(bloco.text),

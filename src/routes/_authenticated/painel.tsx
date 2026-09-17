@@ -414,7 +414,7 @@ function PainelPage() {
   const clientesEmEspera = clientes.filter((c) => c.status_pedido === "Em espera").length;
 
   // ── Suas tarefas (quadros do Planner, agrupadas por prazo) ──
-  const quadros = dados?.quadros ?? [];
+  const quadros = useMemo(() => dados?.quadros ?? [], [dados?.quadros]);
   const quadrosPorId = useMemo(() => new Map(quadros.map((q) => [q.id, q])), [quadros]);
   const tarefasQuadro = useMemo(
     () => (dados?.tarefas ?? []).filter((t) => t.quadro_id),

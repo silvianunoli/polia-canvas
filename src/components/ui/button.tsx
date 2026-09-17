@@ -46,4 +46,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
+// buttonVariants ao lado do componente é o padrão shadcn/ui pro projeto todo
+// (variant/size compartilhados por quem estende o botão); não vale separar
+// só pra silenciar o Fast Refresh aqui.
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants };

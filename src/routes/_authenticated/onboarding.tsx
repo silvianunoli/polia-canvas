@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
-import { gtagEvent } from "@/components/GoogleAnalytics";
+import { gtagEvent } from "@/lib/gtag";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
