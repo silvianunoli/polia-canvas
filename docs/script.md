@@ -25,4 +25,8 @@ Contexto: o Founder Dashboard vive no polia-admin (`office.usepolia.com.br/found
 - Política de privacidade: item novo sobre registro de uso do serviço por quem tem conta (sem consentimento de cookie, base contratual). ADR-001 em `docs/adr/`.
 - Decisão registrada: eventos de usuária logada gravam sempre; páginas públicas seguem no `track()` antigo com consentimento.
 
+Depois do deploy, nenhuma linha chegava em `founder_api_chamadas` em produção (no dev local chegava). Causa: o preset cloudflare-module do Nitro chama o `fetch` do `server.ts` só com a Request e guarda o ExecutionContext em `req.waitUntil` / `req.runtime.cloudflare.context`; sem `waitUntil`, o Worker cancela qualquer promessa solta quando a resposta sai. Solução em `src/lib/segundo-plano.server.ts`: resolve o contexto a partir da Request, guarda por AsyncLocalStorage e mantém uma fila global drenada pelo fetch handler. Detalhe do Worker: `Date.now()` só anda em I/O, então latência de SSR mede ~0 ms — o p95 do monitor usa só server functions.
+
+Também corrigida a FK `founder_alertas.resolvido_por` (agora `on delete set null`): sem isso, apagar a conta de uma admin que resolveu um alerta travava o `auth.admin.deleteUser`.
+
 Próximo: bloco 3, analytics de uso no admin (`founder_sessoes`, 8 páginas + perfil individual).

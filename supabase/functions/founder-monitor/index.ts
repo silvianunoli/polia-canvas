@@ -310,13 +310,18 @@ async function apiDesde(
 ): Promise<{ requests: number; erros: number; p95: number | null }> {
   const { data } = await admin
     .from("founder_api_chamadas")
-    .select("ok, latencia_ms")
+    .select("ok, tipo, latencia_ms")
     .gte("criado_em", desde)
     .limit(50000);
-  const linhas = (data ?? []) as { ok: boolean; latencia_ms: number }[];
+  const linhas = (data ?? []) as { ok: boolean; tipo: string; latencia_ms: number }[];
   if (linhas.length === 0) return { requests: 0, erros: 0, p95: null };
-  const lat = linhas.map((l) => l.latencia_ms).sort((a, b) => a - b);
-  const p95 = lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))];
+  // p95 só das server functions: no Worker o relógio só anda em I/O, então o
+  // SSR (CPU puro) mede ~0 ms e puxaria o percentil pra baixo.
+  const lat = linhas
+    .filter((l) => l.tipo === "server_fn")
+    .map((l) => l.latencia_ms)
+    .sort((a, b) => a - b);
+  const p95 = lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : null;
   return { requests: linhas.length, erros: linhas.filter((l) => !l.ok).length, p95 };
 }
 
