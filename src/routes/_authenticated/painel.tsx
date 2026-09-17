@@ -711,9 +711,12 @@ function PainelPage() {
             que ganha o cartão clicável. */}
         <Reveal className="mt-6">
           <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
-            <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Quanto sobrou · mês
-            </TituloCartao>
+            <div className="flex items-start justify-between gap-3">
+              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                Quanto sobrou · mês
+              </TituloCartao>
+              {!financeiroLiberado && <SeloControle />}
+            </div>
             <p
               className={`font-cabinet mt-1 text-[40px] leading-none ${
                 lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
@@ -725,10 +728,18 @@ function PainelPage() {
               {receitaMes > 0
                 ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
                 : "registre entradas e saídas pra ver"}
-              {financeiroLiberado && (
+              {financeiroLiberado ? (
                 <>
                   {" "}
                   · <span className="text-[var(--ink-soft)]">Financeiro</span>
+                </>
+              ) : (
+                <>
+                  {" "}
+                  ·{" "}
+                  <span className="text-[var(--ink-soft)]">
+                    no Premium, o histórico fica completo e dá pra corrigir lançamento
+                  </span>
                 </>
               )}
             </p>
@@ -1015,7 +1026,9 @@ function PainelPage() {
                 Calendário
               </span>
               <span>
-                Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google.
+                {calendarioLiberado
+                  ? "Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google."
+                  : "no Premium, o mês inteiro aparece num só calendário: tarefas do Planner e, se conectar, os compromissos do Google."}
               </span>
               {calendarioLiberado ? (
                 <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>

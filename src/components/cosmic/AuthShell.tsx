@@ -58,7 +58,7 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
 }
 
 /** Linha de acento acima do título. Fraunces itálica, o itálico da marca. */
-export function CaveatEyebrow({ children }: { children: ReactNode; size?: number }) {
+export function FraunceEyebrow({ children }: { children: ReactNode; size?: number }) {
   return (
     <p className="font-fraunces mb-2 text-center text-[15px] italic text-[var(--ink-soft)]">
       {children}
