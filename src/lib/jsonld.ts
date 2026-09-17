@@ -39,7 +39,7 @@ function organizacaoRef(): object {
     "@type": "Organization",
     name: NOME,
     url: HOST_CANONICO,
-    logo: urlCanonica("/logotipo-wordmark-ligth-one.svg"),
+    logo: urlCanonica("/polia-one-light.svg"),
   };
 }
 

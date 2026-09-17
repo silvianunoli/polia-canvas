@@ -40,7 +40,7 @@ describe("jsonLdOrganization e jsonLdWebSite", () => {
     const org = jsonLdOrganization() as { url: string; logo: string; name: string };
     expect(org.name).toBe("Pólia");
     expect(org.url).toBe("https://one.usepolia.com.br");
-    expect(org.logo).toBe("https://one.usepolia.com.br/logotipo-wordmark-ligth-one.svg");
+    expect(org.logo).toBe("https://one.usepolia.com.br/polia-one-light.svg");
 
     const site = jsonLdWebSite() as { url: string; name: string };
     expect(site.name).toBe("Pólia");

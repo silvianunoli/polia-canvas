@@ -8,8 +8,9 @@ type WordmarkProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> & 
 };
 
 /**
- * Wordmark completa com o selo "ONE" (16/09/2026). Usa os arquivos de verdade
- * (`public/logotipo-wordmark-ligth-one.svg` / `-dark-one.svg`, o mesmo lockup
+ * Wordmark "one" com a trilha de 3 pontos (17/09/2026, substitui o lockup
+ * "pólia" + selo "ONE" de 16/09). Usa os arquivos de verdade
+ * (`public/polia-one-light.svg` / `polia-one-dark.svg`, o mesmo lockup
  * dos e-mails transacionais) em vez de redesenhar o selo em paths à mão — cada
  * arquivo já traz cor e fundo fixos pro contexto certo, então não segue mais
  * `currentColor`: escolha a variante certa em vez de `text-[var(--ink)]`/
@@ -18,9 +19,7 @@ type WordmarkProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> & 
 export function PoliaWordmark({ className, variant = "light", ...props }: WordmarkProps) {
   return (
     <img
-      src={
-        variant === "dark" ? "/logotipo-wordmark-dark-one.svg" : "/logotipo-wordmark-ligth-one.svg"
-      }
+      src={variant === "dark" ? "/polia-one-dark.svg" : "/polia-one-light.svg"}
       alt="Pólia One"
       className={className}
       {...props}
