@@ -112,7 +112,7 @@ export const listarEventosDoMes = createServerFn({ method: "POST" })
       if (expirado || !accessToken) {
         const renovado = await renovarAccessToken(conexao.refresh_token);
         if (!renovado) {
-          void registrarEventoSistema({
+          registrarEventoSistema({
             tipo: "integration_failure",
             origem: "calendarGoogle.functions",
             servico: "google_calendar",

@@ -33,8 +33,10 @@ function amostrarSsr(): boolean {
   return paginasNaJanela <= 50 || paginasNaJanela % 10 === 0;
 }
 
-// Medição da API pro Founder Dashboard (founder_api_chamadas). Importa o lado
-// servidor dinamicamente pra nada disso chegar ao bundle do client.
+// Medição da API pro Founder Dashboard (founder_api_chamadas). O módulo é
+// importado dinamicamente pra nada disso chegar ao bundle do client; as
+// gravações vão pro ctx.waitUntil do Worker (ver segundo-plano.server.ts),
+// então não atrasam a resposta nem são canceladas quando ela sai.
 const medirRequest = createMiddleware().server(async ({ next, request }) => {
   const url = new URL(request.url);
   const ehPagina =
@@ -45,24 +47,24 @@ const medirRequest = createMiddleware().server(async ({ next, request }) => {
     (request.headers.get("accept") ?? "").includes("text/html");
   if (!ehPagina || !amostrarSsr()) return next();
 
+  const telemetria = await import("./lib/founder-eventos.server");
   const t0 = Date.now();
   const resultado = await next();
   const status = resultado.response.status;
-  void import("./lib/founder-eventos.server").then(({ registrarChamadaApi }) =>
-    registrarChamadaApi({
-      fn: url.pathname,
-      tipo: "ssr",
-      metodo: request.method,
-      ok: status < 500,
-      status,
-      latenciaMs: Date.now() - t0,
-    }),
-  );
+  telemetria.registrarChamadaApi({
+    fn: url.pathname,
+    tipo: "ssr",
+    metodo: request.method,
+    ok: status < 500,
+    status,
+    latenciaMs: Date.now() - t0,
+  });
   return resultado;
 });
 
 const medirServerFn = createMiddleware({ type: "function" }).server(
   async ({ next, serverFnMeta }) => {
+    const telemetria = await import("./lib/founder-eventos.server");
     const t0 = Date.now();
     let ok = true;
     let status = 200;
@@ -78,33 +80,29 @@ const medirServerFn = createMiddleware({ type: "function" }).server(
     } finally {
       const latenciaMs = Date.now() - t0;
       const nome = serverFnMeta?.name || serverFnMeta?.id || "server_fn";
-      void import("./lib/founder-eventos.server").then(
-        async ({ registrarChamadaApi, registrarEventoSistema, subDoBearer }) => {
-          let userId: string | null = null;
-          try {
-            userId = subDoBearer(getRequest()?.headers.get("authorization") ?? null);
-          } catch {
-            userId = null;
-          }
-          await registrarChamadaApi({
-            fn: nome,
-            tipo: "server_fn",
-            ok,
-            status,
-            latenciaMs,
-            userId,
-          });
-          if (!ok) {
-            await registrarEventoSistema({
-              tipo: "api_error",
-              origem: "server_fn",
-              servico: nome,
-              detalhes: { status },
-              latenciaMs,
-            });
-          }
-        },
-      );
+      let userId: string | null = null;
+      try {
+        userId = telemetria.subDoBearer(getRequest()?.headers.get("authorization") ?? null);
+      } catch {
+        userId = null;
+      }
+      telemetria.registrarChamadaApi({
+        fn: nome,
+        tipo: "server_fn",
+        ok,
+        status,
+        latenciaMs,
+        userId,
+      });
+      if (!ok) {
+        telemetria.registrarEventoSistema({
+          tipo: "api_error",
+          origem: "server_fn",
+          servico: nome,
+          detalhes: { status },
+          latenciaMs,
+        });
+      }
     }
   },
 );

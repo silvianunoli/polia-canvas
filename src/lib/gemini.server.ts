@@ -76,7 +76,7 @@ export async function gerarTexto(input: GerarTextoInput): Promise<GerarTextoResu
   const t0 = Date.now();
   try {
     const resultado = await chamarComRetry(input);
-    void registrarEventoSistema({
+    registrarEventoSistema({
       tipo: "ia_call",
       origem: "gemini",
       servico: input.modelo,
@@ -85,7 +85,7 @@ export async function gerarTexto(input: GerarTextoInput): Promise<GerarTextoResu
     });
     return resultado;
   } catch (erro) {
-    void registrarEventoSistema({
+    registrarEventoSistema({
       tipo: "ia_failure",
       origem: "gemini",
       servico: input.modelo,
