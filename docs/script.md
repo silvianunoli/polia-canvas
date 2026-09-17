@@ -41,4 +41,9 @@ Também corrigida a FK `founder_alertas.resolvido_por` (agora `on delete set nul
 - Leitores migrados: `csat.ts` (padrão false), `aimer.functions.ts`, `planejamentoIa.functions.ts`, `planoConteudo.functions.ts`, `raiox.functions.ts` (padrão true, kill-switch) e o cron `raiox-mensal-cron` (off desliga o lote; rollout/beta filtram por usuária).
 - `feature_flags` fica intocada até a Sil confirmar que tudo está lendo da nova (a tela antiga `/flags` do admin ainda escreve nela e não tem mais efeito).
 
-Próximo: bloco 5, produto (ativação, funil de onboarding, coortes, tempo até 1º valor, feedback, experimentos).
+## 2026-09-17 — Founder Dashboard, bloco 5 (produto, só no polia-admin)
+
+- Migration `20260917192140_founder_experimentos_schema.sql`: `founder_experimentos` (flag + evento-métrica; variante = lado da flag).
+- Admin: `src/lib/founder-produto.functions.ts` e páginas `/founder/produto/ativacao` (taxa de ativação = onboarding + 1ª ação de valor em 7 dias, tempo até o 1º valor, D1/D7/D30, coortes semanais, quem não ativou), `/produto/funil` (onboarding), `/produto/feedback` (CSAT de `feedback_responses` + chamados), `/produto/experimentos` (resultados com × sem flag) e `/features/experimentos` (configuração).
+
+Próximo: bloco 6, operação/infra/negócio (erros, logs, jobs, integrações, API, banco, storage, IA, releases, receita/assinaturas/conversão/churn).
