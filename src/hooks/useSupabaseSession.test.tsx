@@ -31,10 +31,12 @@ function setupAuthMocks({
   emitOnSubscribe = undefined as Session | null | undefined,
 } = {}) {
   const unsubscribe = vi.fn();
-  onAuthStateChangeMock.mockImplementation((cb: (event: string, session: Session | null) => void) => {
-    if (emitOnSubscribe !== undefined) cb("INITIAL", emitOnSubscribe);
-    return { data: { subscription: { unsubscribe } } };
-  });
+  onAuthStateChangeMock.mockImplementation(
+    (cb: (event: string, session: Session | null) => void) => {
+      if (emitOnSubscribe !== undefined) cb("INITIAL", emitOnSubscribe);
+      return { data: { subscription: { unsubscribe } } };
+    },
+  );
   getSessionMock.mockResolvedValue({ data: { session: initialSession } });
   return { unsubscribe };
 }

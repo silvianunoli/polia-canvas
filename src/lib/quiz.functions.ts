@@ -17,7 +17,6 @@ import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 // respostas. O que o navegador mandou nesses campos não é lido: o cliente
 // calcula só pra mostrar na tela.
 
-
 const inputSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
   consentimento: z.literal(true),

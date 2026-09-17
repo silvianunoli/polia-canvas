@@ -6,9 +6,7 @@ const faixa = FAIXAS[0];
 const territorio = TERRITORIOS[0];
 const DESCADASTRO = "https://usepolia.com.br/descadastrar?t=11111111-2222-3333-4444-555555555555";
 
-function montar(
-  args: { faixa?: (typeof FAIXAS)[number]; territorio?: Territorio } = {},
-) {
+function montar(args: { faixa?: (typeof FAIXAS)[number]; territorio?: Territorio } = {}) {
   return montarEmailDiagnostico({
     faixa: args.faixa ?? faixa,
     territorio: args.territorio ?? territorio,

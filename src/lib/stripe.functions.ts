@@ -110,7 +110,6 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
 
 const STATUS_ATIVOS = new Set(["active", "past_due", "trialing"]);
 
-
 const iniciarAssinaturaInput = z.object({
   plano: z.enum(["controle_mensal", "controle_anual", "projete_mensal", "projete_anual"]),
 });

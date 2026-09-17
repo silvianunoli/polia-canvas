@@ -97,6 +97,16 @@ export const excluirMinhaConta = createServerFn({ method: "POST" })
       // o próprio log por chave estrangeira, além de guardar quem já pediu
       // pra ser esquecida.
       await registrarFalhaDeExclusao("auth.admin.deleteUser", authError.message, null);
+      // Até 17/09/2026 esta etapa caía direto no `return { ok: true }` abaixo: o
+      // login continuava de pé e a tela dizia que a conta tinha sido excluída.
+      // Foi assim que a exclusão de 15/09 virou uma casca de login órfã sem
+      // ninguém perceber. Falha de verdade devolve falha, mesmo com o passo 2
+      // já feito — o texto conta as duas metades, porque os dados não voltam.
+      return {
+        ok: false,
+        error:
+          "Seus dados foram apagados, mas o login ainda não saiu do ar. A gente termina isso pra você: escreve pra oi@usepolia.com.br que resolvemos hoje mesmo.",
+      };
     }
 
     return { ok: true, error: null };

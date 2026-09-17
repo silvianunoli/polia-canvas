@@ -80,6 +80,10 @@ export async function verificarTurnstile(token: string): Promise<boolean> {
   }
 }
 
-export function TurnstileWidget({ containerRef }: { containerRef: React.RefObject<HTMLDivElement | null> }) {
+export function TurnstileWidget({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
   return <div ref={containerRef} className="mt-1" />;
 }

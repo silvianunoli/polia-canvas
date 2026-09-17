@@ -1,12 +1,4 @@
-import {
-  Sprout,
-  Users,
-  Package,
-  Wallet,
-  Megaphone,
-  Target,
-  type LucideIcon,
-} from "lucide-react";
+import { Sprout, Users, Package, Wallet, Megaphone, Target, type LucideIcon } from "lucide-react";
 
 // Um ícone por módulo, consistente nas 3 superfícies (header do documento,
 // faixa sticky e nós do mapa).

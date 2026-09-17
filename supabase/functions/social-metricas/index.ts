@@ -95,5 +95,8 @@ Deno.serve(async (req) => {
     processados++;
   }
 
-  return new Response(JSON.stringify({ processados }), { status: 200, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ processados }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 });

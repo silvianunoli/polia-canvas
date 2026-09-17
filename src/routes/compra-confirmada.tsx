@@ -6,10 +6,7 @@ import { BTN_CONTORNO } from "@/components/site/Editorial";
 
 export const Route = createFileRoute("/compra-confirmada")({
   head: () => ({
-    meta: [
-      { title: "Compra confirmada · Pólia" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Compra confirmada · Pólia" }, { name: "robots", content: "noindex" }],
   }),
   component: CompraConfirmadaPage,
 });

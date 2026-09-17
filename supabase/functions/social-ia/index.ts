@@ -317,7 +317,11 @@ const JSON_SCHEMA_REVISORA = {
         type: "array",
         items: {
           type: "object",
-          properties: { trecho: { type: "string" }, regra: { type: "string" }, correcao: { type: "string" } },
+          properties: {
+            trecho: { type: "string" },
+            regra: { type: "string" },
+            correcao: { type: "string" },
+          },
           required: ["trecho", "regra", "correcao"],
           additionalProperties: false,
         },
@@ -462,7 +466,10 @@ async function handlePauta(
     status: "sugerida",
   }));
 
-  const { data: inseridos, error } = await supabaseAdmin.from("social_pauta").insert(linhas).select();
+  const { data: inseridos, error } = await supabaseAdmin
+    .from("social_pauta")
+    .insert(linhas)
+    .select();
   if (error) throw new Error(`Falha ao salvar a pauta: ${error.message}`);
   return { itens: inseridos };
 }
@@ -474,7 +481,10 @@ async function produzirComRevisao(
   pedidoDeAjuste: string | null,
   postIdParaLog: string | null,
   contaId: string,
-): Promise<{ peca: z.infer<typeof produzirSaidaSchema>; veredito: z.infer<typeof revisoraSaidaSchema> }> {
+): Promise<{
+  peca: z.infer<typeof produzirSaidaSchema>;
+  veredito: z.infer<typeof revisoraSaidaSchema>;
+}> {
   const promptFormato = PROMPTS_PRODUZIR[item.formato] ?? PROMPTS_PRODUZIR.carrossel;
   let motivosRevisora: unknown = null;
   let ultimaPeca: z.infer<typeof produzirSaidaSchema> | null = null;
@@ -487,9 +497,19 @@ async function produzirComRevisao(
       pedido_de_ajuste: pedidoDeAjuste,
       motivos_revisora: motivosRevisora,
     };
-    const copy = await chamarClaude(`${GUARDRAILS}\n\n${promptFormato}`, entradaCopy, JSON_SCHEMA_PRODUZIR);
+    const copy = await chamarClaude(
+      `${GUARDRAILS}\n\n${promptFormato}`,
+      entradaCopy,
+      JSON_SCHEMA_PRODUZIR,
+    );
     const peca = produzirSaidaSchema.parse(copy.dados);
-    await registrarGeracao(postIdParaLog, contaId, pedidoDeAjuste ? "ajuste" : "copy", copy.tokensIn, copy.tokensOut);
+    await registrarGeracao(
+      postIdParaLog,
+      contaId,
+      pedidoDeAjuste ? "ajuste" : "copy",
+      copy.tokensIn,
+      copy.tokensOut,
+    );
 
     const revisao = await chamarClaude(
       `${GUARDRAILS}\n\n${PROMPT_REVISORA}`,
@@ -497,7 +517,14 @@ async function produzirComRevisao(
       JSON_SCHEMA_REVISORA,
     );
     const veredito = revisoraSaidaSchema.parse(revisao.dados);
-    await registrarGeracao(postIdParaLog, contaId, "revisao", revisao.tokensIn, revisao.tokensOut, veredito.veredito);
+    await registrarGeracao(
+      postIdParaLog,
+      contaId,
+      "revisao",
+      revisao.tokensIn,
+      revisao.tokensOut,
+      veredito.veredito,
+    );
 
     ultimaPeca = peca;
     ultimoVeredito = veredito;
@@ -524,7 +551,11 @@ const ASPECT_RATIO_POR_TIPO: Record<string, string> = {
  */
 function montarPromptImagem(slide: z.infer<typeof slideSchema>): string {
   const tema =
-    slide.destaque || slide.titulo || slide.texto || slide.nota || "mesa de trabalho de empreendedora, bastidor do dia a dia";
+    slide.destaque ||
+    slide.titulo ||
+    slide.texto ||
+    slide.nota ||
+    "mesa de trabalho de empreendedora, bastidor do dia a dia";
   return (
     `Fotografia editorial, estilo Pólia: paleta pedra/creme neutro com toques de turquesa e pêssego, luz natural, ` +
     `sem texto, sem letras, sem números, sem logotipo, sem marca d'água. Cena: ${tema}.`
@@ -555,7 +586,8 @@ async function chamarMagnificMystic(
   });
   const criadoTexto = await criar.text();
   console.log("[social-ia/imagem] criar mystic:", criar.status, criadoTexto);
-  if (!criar.ok) throw new Error(`Magnific recusou o pedido (HTTP ${criar.status}): ${criadoTexto}`);
+  if (!criar.ok)
+    throw new Error(`Magnific recusou o pedido (HTTP ${criar.status}): ${criadoTexto}`);
   const criado = JSON.parse(criadoTexto);
   const taskId: string | undefined = criado?.data?.task_id;
   if (!taskId) throw new Error(`Magnific não devolveu task_id. Resposta: ${criadoTexto}`);
@@ -569,21 +601,28 @@ async function chamarMagnificMystic(
     });
     const pollTexto = await poll.text();
     console.log(`[social-ia/imagem] poll ${tentativa}:`, poll.status, pollTexto);
-    if (!poll.ok) throw new Error(`Falha ao consultar o status da imagem (HTTP ${poll.status}): ${pollTexto}`);
+    if (!poll.ok)
+      throw new Error(`Falha ao consultar o status da imagem (HTTP ${poll.status}): ${pollTexto}`);
     const status = JSON.parse(pollTexto);
     const estado: string | undefined = status?.data?.status;
     if (estado === "COMPLETED") {
       const url: string | undefined = status?.data?.generated?.[0];
-      if (!url) throw new Error(`Magnific concluiu mas não devolveu imagem. Resposta: ${pollTexto}`);
+      if (!url)
+        throw new Error(`Magnific concluiu mas não devolveu imagem. Resposta: ${pollTexto}`);
       return { url };
     }
-    if (estado === "FAILED") throw new Error(`Magnific falhou ao gerar a imagem. Resposta: ${pollTexto}`);
+    if (estado === "FAILED")
+      throw new Error(`Magnific falhou ao gerar a imagem. Resposta: ${pollTexto}`);
   }
   throw new Error("Tempo esgotado esperando a imagem da Magnific.");
 }
 
 /** Baixa a imagem gerada (URL externa da Magnific) e sobe pro nosso bucket, pra ficar sob nosso controle. */
-async function uploadImagemGerada(postId: string, slideIndex: number, urlOrigem: string): Promise<string> {
+async function uploadImagemGerada(
+  postId: string,
+  slideIndex: number,
+  urlOrigem: string,
+): Promise<string> {
   const resposta = await fetch(urlOrigem);
   if (!resposta.ok) throw new Error("Não deu pra baixar a imagem gerada.");
   const bytes = new Uint8Array(await resposta.arrayBuffer());
@@ -633,7 +672,11 @@ async function handleImagem(
 
   let gerada: ResultadoImagemGerada;
   try {
-    gerada = await chamarMagnificMystic(prompt, aspectRatio, characterId ? AIMER_CHARACTER_NAME : null);
+    gerada = await chamarMagnificMystic(
+      prompt,
+      aspectRatio,
+      characterId ? AIMER_CHARACTER_NAME : null,
+    );
   } catch (err) {
     const mensagem = err instanceof Error ? err.message : String(err);
     return { error: `A imagem não veio. Tenta de novo. (${mensagem})` };
@@ -655,7 +698,12 @@ async function handleImagem(
     .from("admin_audit_log")
     .insert({ admin_id: userId, acao: "gerar_imagem_social", alvo: post_id });
 
-  return { post_id, slide_index, imagem_url: imagemUrl, provider: characterId ? "magnific-aimer" : "magnific" };
+  return {
+    post_id,
+    slide_index,
+    imagem_url: imagemUrl,
+    provider: characterId ? "magnific-aimer" : "magnific",
+  };
 }
 
 function handleConfig() {
@@ -682,7 +730,8 @@ function jsonResponse(body: unknown, status = 200): Response {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_HEADERS });
-  if (req.method !== "POST") return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
+  if (req.method !== "POST")
+    return new Response("Method not allowed", { status: 405, headers: CORS_HEADERS });
 
   let userId: string;
   try {
@@ -719,7 +768,10 @@ Deno.serve(async (req) => {
 
     if (body.acao === "pauta") {
       const contaId = await resolverContaId(body.conta_id);
-      const resultado = await handlePauta(body as unknown as Parameters<typeof handlePauta>[0], contaId);
+      const resultado = await handlePauta(
+        body as unknown as Parameters<typeof handlePauta>[0],
+        contaId,
+      );
       return jsonResponse(resultado);
     }
 
@@ -730,7 +782,8 @@ Deno.serve(async (req) => {
         .select("*")
         .eq("id", pauta_id)
         .maybeSingle();
-      if (erroPauta || !pautaItem) return jsonResponse({ error: "Item de pauta não encontrado." }, 404);
+      if (erroPauta || !pautaItem)
+        return jsonResponse({ error: "Item de pauta não encontrado." }, 404);
 
       const item: ItemPauta = {
         pilar: pautaItem.pilar ?? "",
@@ -739,7 +792,13 @@ Deno.serve(async (req) => {
         estrutura: pautaItem.estrutura ?? "",
         cta: pautaItem.cta,
       };
-      const { peca, veredito } = await produzirComRevisao(item, null, null, null, pautaItem.conta_id);
+      const { peca, veredito } = await produzirComRevisao(
+        item,
+        null,
+        null,
+        null,
+        pautaItem.conta_id,
+      );
 
       const tipoSocial = pautaItem.formato;
       const postId = crypto.randomUUID();
@@ -756,12 +815,19 @@ Deno.serve(async (req) => {
         origem_criacao: "ia",
         legenda_por_ia: true,
         slides: peca.slides,
-        versoes: [{ v: 1, caption: peca.caption, slides: peca.slides, criado_em: new Date().toISOString() }],
+        versoes: [
+          { v: 1, caption: peca.caption, slides: peca.slides, criado_em: new Date().toISOString() },
+        ],
       });
       if (erroInsert) return jsonResponse({ error: "Não salvou a peça." }, 500);
 
-      await supabaseAdmin.from("social_pauta").update({ status: "produzida", post_id: postId }).eq("id", pauta_id);
-      await supabaseAdmin.from("admin_audit_log").insert({ admin_id: userId, acao: "produzir_peca_social", alvo: postId });
+      await supabaseAdmin
+        .from("social_pauta")
+        .update({ status: "produzida", post_id: postId })
+        .eq("id", pauta_id);
+      await supabaseAdmin
+        .from("admin_audit_log")
+        .insert({ admin_id: userId, acao: "produzir_peca_social", alvo: postId });
 
       return jsonResponse({ post_id: postId, veredito });
     }
@@ -783,7 +849,13 @@ Deno.serve(async (req) => {
         cta: "",
       };
       const versaoAtual = { caption: post.caption, slides: post.slides };
-      const { peca, veredito } = await produzirComRevisao(item, versaoAtual, pedido_de_ajuste, post_id, post.conta_id);
+      const { peca, veredito } = await produzirComRevisao(
+        item,
+        versaoAtual,
+        pedido_de_ajuste,
+        post_id,
+        post.conta_id,
+      );
 
       const versoesAtuais = Array.isArray(post.versoes) ? post.versoes : [];
       const novaVersao = {
@@ -793,7 +865,8 @@ Deno.serve(async (req) => {
         pedido_de_ajuste,
         criado_em: new Date().toISOString(),
       };
-      const novoStatus = post.status === "aprovado" || post.status === "agendado" ? "revisado" : post.status;
+      const novoStatus =
+        post.status === "aprovado" || post.status === "agendado" ? "revisado" : post.status;
 
       const { error: erroUpdate } = await supabaseAdmin
         .from("social_posts")
@@ -807,7 +880,9 @@ Deno.serve(async (req) => {
         .eq("id", post_id);
       if (erroUpdate) return jsonResponse({ error: "Não salvou o ajuste." }, 500);
 
-      await supabaseAdmin.from("admin_audit_log").insert({ admin_id: userId, acao: "ajustar_peca_social", alvo: post_id });
+      await supabaseAdmin
+        .from("admin_audit_log")
+        .insert({ admin_id: userId, acao: "ajustar_peca_social", alvo: post_id });
       return jsonResponse({ post_id, veredito });
     }
 

@@ -47,13 +47,7 @@ const staggerItem: Variants = {
 };
 
 /** Container que revela os filhos em cascata (stagger) ao entrar na tela. */
-export function RevealGroup({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function RevealGroup({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
       className={className}
@@ -67,13 +61,7 @@ export function RevealGroup({
   );
 }
 
-export function RevealItem({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export function RevealItem({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <motion.div className={className} variants={staggerItem}>
       {children}

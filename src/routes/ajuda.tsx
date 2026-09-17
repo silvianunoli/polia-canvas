@@ -350,9 +350,9 @@ function AjudaPage() {
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mt-6 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Respostas curtas e diretas pra entender a Pólia e seguir com o negócio, sem
-                tutorial de dez minutos pra descobrir onde clicar. Não encontrou o que precisava?
-                Fala com a gente.
+                Respostas curtas e diretas pra entender a Pólia e seguir com o negócio, sem tutorial
+                de dez minutos pra descobrir onde clicar. Não encontrou o que precisava? Fala com a
+                gente.
               </p>
               <form
                 role="search"

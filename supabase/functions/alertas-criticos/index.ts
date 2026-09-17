@@ -47,7 +47,10 @@ function rotuloChave(chave: string): string {
 function formatarDetalhes(detalhes: Record<string, unknown> | undefined): string {
   if (!detalhes || Object.keys(detalhes).length === 0) return "";
   return Object.entries(detalhes)
-    .map(([chave, valor]) => `${rotuloChave(chave)}: ${typeof valor === "object" ? JSON.stringify(valor) : String(valor)}`)
+    .map(
+      ([chave, valor]) =>
+        `${rotuloChave(chave)}: ${typeof valor === "object" ? JSON.stringify(valor) : String(valor)}`,
+    )
     .join("\n");
 }
 
@@ -65,7 +68,9 @@ function montarMensagem(input: AlertaInput, ocorrenciasAnteriores: number): stri
   const detalhesTxt = formatarDetalhes(input.detalhes);
   if (detalhesTxt) linhas.push(detalhesTxt);
   if (ocorrenciasAnteriores > 1) {
-    linhas.push(`Esse tipo de incidente ocorreu ${ocorrenciasAnteriores}x desde o alerta anterior (agregado).`);
+    linhas.push(
+      `Esse tipo de incidente ocorreu ${ocorrenciasAnteriores}x desde o alerta anterior (agregado).`,
+    );
   }
   if (input.link) linhas.push(`Ver: ${input.link}`);
   return linhas.join("\n");
@@ -100,7 +105,12 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     if (!body.tipo || !body.titulo) throw new Error("tipo e titulo são obrigatórios");
-    input = { tipo: String(body.tipo), titulo: String(body.titulo), detalhes: body.detalhes, link: body.link };
+    input = {
+      tipo: String(body.tipo),
+      titulo: String(body.titulo),
+      detalhes: body.detalhes,
+      link: body.link,
+    };
   } catch (err) {
     return new Response(`Payload inválido: ${err}`, { status: 400 });
   }

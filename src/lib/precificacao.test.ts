@@ -12,7 +12,9 @@ describe("calcularTaxas", () => {
   });
 
   it("soma taxa de venda e imposto, os dois como % do preço", () => {
-    expect(calcularTaxas({ precoVenda: 100, precoCusto: 0, taxaVendaPct: 5, impostosPct: 6 })).toBe(11);
+    expect(calcularTaxas({ precoVenda: 100, precoCusto: 0, taxaVendaPct: 5, impostosPct: 6 })).toBe(
+      11,
+    );
   });
 
   it("é zero quando o preço é zero ou negativo", () => {
@@ -28,7 +30,12 @@ describe("calcularQuantoSobra", () => {
 
   it("desconta taxa e imposto do preço antes de subtrair o custo", () => {
     // preço 45.76, custo 27, taxa 5% + imposto 6% = 11% de 45.76 = 5.0336
-    const sobra = calcularQuantoSobra({ precoVenda: 45.76, precoCusto: 27, taxaVendaPct: 5, impostosPct: 6 });
+    const sobra = calcularQuantoSobra({
+      precoVenda: 45.76,
+      precoCusto: 27,
+      taxaVendaPct: 5,
+      impostosPct: 6,
+    });
     expect(sobra).toBeCloseTo(13.7264, 4);
   });
 

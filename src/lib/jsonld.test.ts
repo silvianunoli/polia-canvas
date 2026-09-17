@@ -107,7 +107,8 @@ describe("jsonLdBlogPosting", () => {
   const base = {
     titulo: "Faturamento não é o mesmo que dinheiro que sobra",
     descricao: "Entenda a diferença entre o que entra e o que sobra.",
-    urlCanonica: "https://one.usepolia.com.br/blog/faturamento-nao-e-o-mesmo-que-dinheiro-que-sobra",
+    urlCanonica:
+      "https://one.usepolia.com.br/blog/faturamento-nao-e-o-mesmo-que-dinheiro-que-sobra",
     imagem: null as string | null,
     publicadoEm: null as string | null,
     atualizadoEm: "2026-09-08T02:25:06.571Z",

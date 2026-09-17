@@ -163,7 +163,6 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     track("pageview");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   // Clique instrumentado por delegação: qualquer elemento com data-track vira

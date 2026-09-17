@@ -88,11 +88,15 @@ async function esperarProcessamento(token: string, mediaId: string): Promise<voi
     const json = await resp.json();
     if (json.status_code === "FINISHED") return;
     if (json.status_code === "ERROR") {
-      throw new ErroPublicacao("O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.");
+      throw new ErroPublicacao(
+        "O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.",
+      );
     }
     await new Promise((r) => setTimeout(r, INTERVALO_POLL_MS));
   }
-  throw new ErroPublicacao("O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.");
+  throw new ErroPublicacao(
+    "O Instagram não processou essa mídia. Confere o arquivo e tenta de novo.",
+  );
 }
 
 async function obterPermalink(token: string, mediaId: string): Promise<string | null> {
@@ -164,7 +168,10 @@ async function publicarStory(token: string, igUserId: string, post: PostRow): Pr
       }
     } catch (err) {
       const motivo = err instanceof ErroPublicacao ? err.message : String(err);
-      throw new ErroPublicacao(`parou no frame ${i + 1}: ${motivo}`, err instanceof ErroPublicacao ? err.codigo : undefined);
+      throw new ErroPublicacao(
+        `parou no frame ${i + 1}: ${motivo}`,
+        err instanceof ErroPublicacao ? err.codigo : undefined,
+      );
     }
   }
   return idsPublicados.join(",");
@@ -189,7 +196,9 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
   if (!autenticado(req)) return new Response("Unauthorized", { status: 401 });
 
-  const { data: posts, error: erroReserva } = await supabaseAdmin.rpc("pegar_e_travar_posts_agendados");
+  const { data: posts, error: erroReserva } = await supabaseAdmin.rpc(
+    "pegar_e_travar_posts_agendados",
+  );
   if (erroReserva) {
     return new Response(JSON.stringify({ error: erroReserva.message }), { status: 500 });
   }
@@ -243,7 +252,10 @@ Deno.serve(async (req) => {
           ? "A conexão com o Instagram venceu. Renova e clica em Tentar de novo."
           : erro.message;
 
-      await supabaseAdmin.from("social_posts").update({ status: "falhou", erro: mensagem }).eq("id", post.id);
+      await supabaseAdmin
+        .from("social_posts")
+        .update({ status: "falhou", erro: mensagem })
+        .eq("id", post.id);
       resultados.push({ id: post.id, status: "falhou" });
     }
   }

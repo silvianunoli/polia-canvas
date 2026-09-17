@@ -77,7 +77,6 @@ export const criarConvite = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-
 export const enviarConvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => emailInput.parse(input))

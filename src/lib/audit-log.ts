@@ -5,7 +5,11 @@ import type { Json } from "@/integrations/supabase/types";
 // mutação bem-sucedida no admin (toggle de flag, criar/remover convite,
 // resolver chamado). RLS só deixa a própria admin logada gravar em nome
 // dela mesma — não precisa checar is_admin aqui, o banco já barra.
-export async function logAcaoAdmin(acao: string, alvo?: string, detalhes?: Record<string, unknown>) {
+export async function logAcaoAdmin(
+  acao: string,
+  alvo?: string,
+  detalhes?: Record<string, unknown>,
+) {
   try {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;

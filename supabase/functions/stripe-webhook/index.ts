@@ -286,14 +286,9 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
     // Quem pagou já "ganhou" o convite: insere a linha antes de gerar o link
     // (23505 = e-mail já tinha convite de outra origem, ignora e segue —
     // o gatilho que marca usado_em roda de qualquer jeito na criação da conta).
-    const { error: erroConvite } = await supabaseAdmin
-      .from("convites_cadastro")
-      .insert({ email });
+    const { error: erroConvite } = await supabaseAdmin.from("convites_cadastro").insert({ email });
     if (erroConvite && erroConvite.code !== "23505") {
-      console.error(
-        "[stripe-webhook] Falha ao liberar convite implícito da compra:",
-        erroConvite,
-      );
+      console.error("[stripe-webhook] Falha ao liberar convite implícito da compra:", erroConvite);
     }
 
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({

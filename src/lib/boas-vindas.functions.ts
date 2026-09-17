@@ -20,8 +20,7 @@ export const garantirBoasVindas = createServerFn({ method: "POST" })
       return { ok: true };
     }
 
-    const email =
-      typeof context.claims.email === "string" ? context.claims.email : undefined;
+    const email = typeof context.claims.email === "string" ? context.claims.email : undefined;
     if (!email) return { ok: false };
 
     const enviado = await enviarEmailResend({

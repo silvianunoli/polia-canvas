@@ -351,8 +351,8 @@ function BlogPost() {
                 </h2>
                 <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
                   Pensar sobre isso é um passo. Ver o número da sua própria venda é o seguinte: a
-                  Pólia mostra quanto sobra e ajuda a decidir sem chute. Os planos abrem em breve,
-                  e quem está na lista entra primeiro.
+                  Pólia mostra quanto sobra e ajuda a decidir sem chute. Os planos abrem em breve, e
+                  quem está na lista entra primeiro.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Link to="/lista-de-espera" className={BTN_PRIMARIO}>

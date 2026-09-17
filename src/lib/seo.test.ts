@@ -9,12 +9,16 @@ describe("urlCanonica", () => {
 
   it("aceita caminho com barra inicial", () => {
     expect(urlCanonica("/sobre")).toBe("https://one.usepolia.com.br/sobre");
-    expect(urlCanonica("/blog/preco-no-chute")).toBe("https://one.usepolia.com.br/blog/preco-no-chute");
+    expect(urlCanonica("/blog/preco-no-chute")).toBe(
+      "https://one.usepolia.com.br/blog/preco-no-chute",
+    );
   });
 
   it("aceita caminho sem barra inicial", () => {
     expect(urlCanonica("sobre")).toBe("https://one.usepolia.com.br/sobre");
-    expect(urlCanonica("blog/preco-no-chute")).toBe("https://one.usepolia.com.br/blog/preco-no-chute");
+    expect(urlCanonica("blog/preco-no-chute")).toBe(
+      "https://one.usepolia.com.br/blog/preco-no-chute",
+    );
   });
 
   it("nunca devolve barra dupla", () => {

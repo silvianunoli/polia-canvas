@@ -35,12 +35,37 @@ export interface Modulo {
 }
 
 export const MODULOS: Modulo[] = [
-  { n: 1, nome: "Razão de existir", subtitulo: "Começa pela conta do mês. Depois, por que o negócio existe, para quem, e o que o diferencia." },
-  { n: 2, nome: "Quem você serve", subtitulo: "A pessoa que compra de você. Quem ela é de verdade." },
-  { n: 3, nome: "O que você vende", subtitulo: "Produto, proposta de valor, e o que faz do seu o único." },
-  { n: 4, nome: "Quanto vale", subtitulo: "Precificar é respeitar o seu trabalho. E entender o seu negócio." },
-  { n: 5, nome: "Como te acharem", subtitulo: "Onde você aparece, como você fala, e como as pessoas chegam até a compra." },
-  { n: 6, nome: "Onde você vai", subtitulo: "Metas que fazem sentido. Ações que te movem. Foco no que importa." },
+  {
+    n: 1,
+    nome: "Razão de existir",
+    subtitulo:
+      "Começa pela conta do mês. Depois, por que o negócio existe, para quem, e o que o diferencia.",
+  },
+  {
+    n: 2,
+    nome: "Quem você serve",
+    subtitulo: "A pessoa que compra de você. Quem ela é de verdade.",
+  },
+  {
+    n: 3,
+    nome: "O que você vende",
+    subtitulo: "Produto, proposta de valor, e o que faz do seu o único.",
+  },
+  {
+    n: 4,
+    nome: "Quanto vale",
+    subtitulo: "Precificar é respeitar o seu trabalho. E entender o seu negócio.",
+  },
+  {
+    n: 5,
+    nome: "Como te acharem",
+    subtitulo: "Onde você aparece, como você fala, e como as pessoas chegam até a compra.",
+  },
+  {
+    n: 6,
+    nome: "Onde você vai",
+    subtitulo: "Metas que fazem sentido. Ações que te movem. Foco no que importa.",
+  },
 ];
 
 export function moduloInfo(n: number): Modulo {
@@ -88,8 +113,14 @@ export const SECOES: Secao[] = [
     subtitulo: "Por que isso existe?",
     perguntas: [
       { label: "Por que você criou esse negócio? O que te fez começar?", campo: "marca.proposito" },
-      { label: "Se o seu negócio deixasse de existir amanhã, que falta faria pra sua cliente?", campo: "marca.proposito" },
-      { label: "Qual é a mudança que você quer ver na vida de quem compra de você?", campo: "marca.proposito" },
+      {
+        label: "Se o seu negócio deixasse de existir amanhã, que falta faria pra sua cliente?",
+        campo: "marca.proposito",
+      },
+      {
+        label: "Qual é a mudança que você quer ver na vida de quem compra de você?",
+        campo: "marca.proposito",
+      },
     ],
   },
   {
@@ -99,7 +130,10 @@ export const SECOES: Secao[] = [
     subtitulo: "O que você faz, pra quem, e como isso muda a vida delas.",
     perguntas: [
       { label: "Em uma frase: o que você faz, pra quem faz?", campo: "marca.missao" },
-      { label: "O que você entrega que vai além do produto ou serviço em si?", campo: "marca.missao" },
+      {
+        label: "O que você entrega que vai além do produto ou serviço em si?",
+        campo: "marca.missao",
+      },
     ],
   },
   {
@@ -108,7 +142,11 @@ export const SECOES: Secao[] = [
     titulo: "Visão",
     subtitulo: "Onde você quer que isso chegue.",
     perguntas: [
-      { label: "Onde você quer que esse negócio esteja em 3 anos? Seja específica: faturamento, quantas clientes, onde você está, o que mudou na sua rotina.", campo: "marca.visao" },
+      {
+        label:
+          "Onde você quer que esse negócio esteja em 3 anos? Seja específica: faturamento, quantas clientes, onde você está, o que mudou na sua rotina.",
+        campo: "marca.visao",
+      },
       { label: "Qual é o sonho maior por trás disso tudo?", campo: "marca.visao" },
     ],
   },
@@ -118,9 +156,19 @@ export const SECOES: Secao[] = [
     titulo: "Valores",
     subtitulo: "O que você nunca negocia.",
     perguntas: [
-      { label: "Liste de 3 a 5 coisas que guiam cada decisão do seu negócio. O que você nunca abre mão?", campo: "marca.valores" },
-      { label: "O que faria você dizer não a uma cliente, mesmo que custasse dinheiro?", campo: "marca.valores" },
-      { label: "O que você recusa fazer, mesmo que os concorrentes façam?", campo: "marca.valores" },
+      {
+        label:
+          "Liste de 3 a 5 coisas que guiam cada decisão do seu negócio. O que você nunca abre mão?",
+        campo: "marca.valores",
+      },
+      {
+        label: "O que faria você dizer não a uma cliente, mesmo que custasse dinheiro?",
+        campo: "marca.valores",
+      },
+      {
+        label: "O que você recusa fazer, mesmo que os concorrentes façam?",
+        campo: "marca.valores",
+      },
     ],
   },
   {
@@ -130,8 +178,16 @@ export const SECOES: Secao[] = [
     subtitulo: "Se seu negócio fosse uma pessoa.",
     // 2 campos: personalidade (quem ela é) + tom (como fala / o que não diz).
     perguntas: [
-      { label: "Se o seu negócio fosse uma pessoa, como ela seria? Como ela fala, como ela se veste, o que ela lê, onde ela está.", campo: "marca.personalidade" },
-      { label: "Escolha 3 palavras que descrevem como você quer que as pessoas se sintam ao interagir com a sua marca.", campo: "marca.tom" },
+      {
+        label:
+          "Se o seu negócio fosse uma pessoa, como ela seria? Como ela fala, como ela se veste, o que ela lê, onde ela está.",
+        campo: "marca.personalidade",
+      },
+      {
+        label:
+          "Escolha 3 palavras que descrevem como você quer que as pessoas se sintam ao interagir com a sua marca.",
+        campo: "marca.tom",
+      },
       { label: "O que sua marca NUNCA diria ou faria?", campo: "marca.tom" },
     ],
   },
@@ -141,11 +197,22 @@ export const SECOES: Secao[] = [
     id: "2.1",
     modulo: 2,
     titulo: "Retrato do dia",
-    subtitulo: "Quem é ela como pessoa, não como \"cliente\".",
+    subtitulo: 'Quem é ela como pessoa, não como "cliente".',
     perguntas: [
-      { label: "Quantos anos ela tem, onde mora, o que faz pra viver?", campo: "mercado.perfil_cliente" },
-      { label: "Descreva o dia a dia dela: o que ela faz pela manhã, o que ela consome, onde ela passa o tempo online e offline.", campo: "mercado.perfil_cliente" },
-      { label: "Que marcas ela gosta? Que pessoas ela segue? O que ela compra sem pensar duas vezes?", campo: "mercado.perfil_cliente" },
+      {
+        label: "Quantos anos ela tem, onde mora, o que faz pra viver?",
+        campo: "mercado.perfil_cliente",
+      },
+      {
+        label:
+          "Descreva o dia a dia dela: o que ela faz pela manhã, o que ela consome, onde ela passa o tempo online e offline.",
+        campo: "mercado.perfil_cliente",
+      },
+      {
+        label:
+          "Que marcas ela gosta? Que pessoas ela segue? O que ela compra sem pensar duas vezes?",
+        campo: "mercado.perfil_cliente",
+      },
     ],
   },
   {
@@ -155,10 +222,22 @@ export const SECOES: Secao[] = [
     subtitulo: "As dores reais e os sonhos verdadeiros.",
     // 2 campos: dores (frustração/problema) + sonhos (o que ela deseja).
     perguntas: [
-      { label: "Qual é a maior frustração que ela tem e que o seu negócio resolve?", campo: "mercado.dores" },
-      { label: "O que a mantém acordada à noite? O que ela mais quer mudar na vida dela?", campo: "mercado.dores" },
-      { label: "Quais são os sonhos dela? O que ela imagina quando pensa em 'vida que eu quero'?", campo: "mercado.sonhos" },
-      { label: "O que ela sente quando enfrenta o problema que você resolve?", campo: "mercado.dores" },
+      {
+        label: "Qual é a maior frustração que ela tem e que o seu negócio resolve?",
+        campo: "mercado.dores",
+      },
+      {
+        label: "O que a mantém acordada à noite? O que ela mais quer mudar na vida dela?",
+        campo: "mercado.dores",
+      },
+      {
+        label: "Quais são os sonhos dela? O que ela imagina quando pensa em 'vida que eu quero'?",
+        campo: "mercado.sonhos",
+      },
+      {
+        label: "O que ela sente quando enfrenta o problema que você resolve?",
+        campo: "mercado.dores",
+      },
     ],
   },
   {
@@ -168,9 +247,19 @@ export const SECOES: Secao[] = [
     subtitulo: "O que leva à decisão, e o que trava.",
     // 2 campos: gatilhos (o que faz comprar) + objecoes (o que trava).
     perguntas: [
-      { label: "O que faz ela escolher comprar de você? Qual é o gatilho da decisão?", campo: "mercado.gatilhos" },
-      { label: "O que poderia fazer ela hesitar antes de comprar? Quais são as dúvidas ou medos dela?", campo: "mercado.objecoes" },
-      { label: "Depois de comprar, como ela se sente? O que muda pra ela?", campo: "mercado.gatilhos" },
+      {
+        label: "O que faz ela escolher comprar de você? Qual é o gatilho da decisão?",
+        campo: "mercado.gatilhos",
+      },
+      {
+        label:
+          "O que poderia fazer ela hesitar antes de comprar? Quais são as dúvidas ou medos dela?",
+        campo: "mercado.objecoes",
+      },
+      {
+        label: "Depois de comprar, como ela se sente? O que muda pra ela?",
+        campo: "mercado.gatilhos",
+      },
     ],
   },
   {
@@ -179,9 +268,15 @@ export const SECOES: Secao[] = [
     titulo: "Concorrência",
     subtitulo: "O que existe no mercado, pelo ângulo certo.",
     perguntas: [
-      { label: "Quem mais faz algo parecido com o que você faz? Anota de 2 a 5 nomes.", campo: "mercado.concorrentes" },
+      {
+        label: "Quem mais faz algo parecido com o que você faz? Anota de 2 a 5 nomes.",
+        campo: "mercado.concorrentes",
+      },
       { label: "O que você admira nessas marcas?", campo: "mercado.concorrentes" },
-      { label: "O que você faria diferente? O que elas não entregam que você entrega?", campo: "mercado.concorrentes" },
+      {
+        label: "O que você faria diferente? O que elas não entregam que você entrega?",
+        campo: "mercado.concorrentes",
+      },
       { label: "Qual é o espaço que ninguém está ocupando ainda?", campo: "mercado.concorrentes" },
     ],
   },
@@ -191,8 +286,15 @@ export const SECOES: Secao[] = [
     titulo: "Seu lugar no mercado",
     subtitulo: "Por que você e não outra.",
     perguntas: [
-      { label: "Em 2 frases: quem você ajuda, qual transformação entrega, e o que te diferencia.", campo: "mercado.posicionamento" },
-      { label: "O que as pessoas dizem sobre você? (Se já tem clientes: o que elas elogiam mais? Se ainda não tem: o que você imagina que diriam?)", campo: "mercado.posicionamento" },
+      {
+        label: "Em 2 frases: quem você ajuda, qual transformação entrega, e o que te diferencia.",
+        campo: "mercado.posicionamento",
+      },
+      {
+        label:
+          "O que as pessoas dizem sobre você? (Se já tem clientes: o que elas elogiam mais? Se ainda não tem: o que você imagina que diriam?)",
+        campo: "mercado.posicionamento",
+      },
     ],
   },
 
@@ -203,8 +305,15 @@ export const SECOES: Secao[] = [
     titulo: "O que você oferece",
     subtitulo: "Tudo que você vende, em um só lugar.",
     perguntas: [
-      { label: "Liste o que você vende hoje (ou vai vender). Para cada item: nome, descrição curta, pra quem é. Um por linha.", campo: "produto.lista" },
-      { label: "Tem algo que você ainda não vende mas quer vender? Anota aqui também.", campo: "produto.lista" },
+      {
+        label:
+          "Liste o que você vende hoje (ou vai vender). Para cada item: nome, descrição curta, pra quem é. Um por linha.",
+        campo: "produto.lista",
+      },
+      {
+        label: "Tem algo que você ainda não vende mas quer vender? Anota aqui também.",
+        campo: "produto.lista",
+      },
     ],
   },
   {
@@ -213,9 +322,15 @@ export const SECOES: Secao[] = [
     titulo: "A transformação que você entrega",
     subtitulo: "Não o produto: o que muda na vida dela.",
     perguntas: [
-      { label: "Como é a vida da sua cliente antes de comprar de você?", campo: "produto.transformacao" },
+      {
+        label: "Como é a vida da sua cliente antes de comprar de você?",
+        campo: "produto.transformacao",
+      },
       { label: "Como é a vida dela depois?", campo: "produto.transformacao" },
-      { label: "O que ela consegue fazer depois que não conseguia antes?", campo: "produto.transformacao" },
+      {
+        label: "O que ela consegue fazer depois que não conseguia antes?",
+        campo: "produto.transformacao",
+      },
     ],
   },
   {
@@ -235,8 +350,15 @@ export const SECOES: Secao[] = [
     titulo: "Sua frase de valor",
     subtitulo: "Uma frase que resume tudo.",
     perguntas: [
-      { label: "Em 1 frase: o que você vende, pra quem, e qual transformação entrega.", campo: "marca.frase_valor" },
-      { label: "Teste: se uma pessoa que nunca te viu lesse essa frase, ela entenderia imediatamente o que você faz?", campo: "marca.frase_valor" },
+      {
+        label: "Em 1 frase: o que você vende, pra quem, e qual transformação entrega.",
+        campo: "marca.frase_valor",
+      },
+      {
+        label:
+          "Teste: se uma pessoa que nunca te viu lesse essa frase, ela entenderia imediatamente o que você faz?",
+        campo: "marca.frase_valor",
+      },
     ],
   },
 
@@ -251,7 +373,11 @@ export const SECOES: Secao[] = [
     subtitulo:
       "O custo fixo já entrou lá na abertura. Aqui é o que sai a cada produto ou atendimento.",
     perguntas: [
-      { label: "Quanto você gasta por produto ou atendimento? (material, tempo, embalagem, frete, etc.)", campo: "financeiro.custo_unitario" },
+      {
+        label:
+          "Quanto você gasta por produto ou atendimento? (material, tempo, embalagem, frete, etc.)",
+        campo: "financeiro.custo_unitario",
+      },
     ],
   },
   {
@@ -262,8 +388,14 @@ export const SECOES: Secao[] = [
     // preço, que depende do produto listado em 3.1.
     subtitulo: "Um número, e o que faz ele parecer alto demais.",
     perguntas: [
-      { label: "Qual o preço que você acha que o seu produto ou serviço merece? Por quê?", campo: "financeiro.preco_ideal" },
-      { label: "Tem algum receio de cobrar esse valor? O que te faz hesitar?", campo: "financeiro.preco_ideal" },
+      {
+        label: "Qual o preço que você acha que o seu produto ou serviço merece? Por quê?",
+        campo: "financeiro.preco_ideal",
+      },
+      {
+        label: "Tem algum receio de cobrar esse valor? O que te faz hesitar?",
+        campo: "financeiro.preco_ideal",
+      },
     ],
   },
   {
@@ -272,9 +404,19 @@ export const SECOES: Secao[] = [
     titulo: "Como o mercado precifica",
     subtitulo: "Entender o mercado é parte de se posicionar.",
     perguntas: [
-      { label: "Quanto os seus concorrentes cobram pelo que fazem?", campo: "financeiro.estrategia_preco" },
-      { label: "Você quer ser mais acessível, equivalente ou premium que eles? Por quê?", campo: "financeiro.estrategia_preco" },
-      { label: "O que justifica o preço que você vai cobrar? O que sua cliente está pagando além do produto em si?", campo: "financeiro.estrategia_preco" },
+      {
+        label: "Quanto os seus concorrentes cobram pelo que fazem?",
+        campo: "financeiro.estrategia_preco",
+      },
+      {
+        label: "Você quer ser mais acessível, equivalente ou premium que eles? Por quê?",
+        campo: "financeiro.estrategia_preco",
+      },
+      {
+        label:
+          "O que justifica o preço que você vai cobrar? O que sua cliente está pagando além do produto em si?",
+        campo: "financeiro.estrategia_preco",
+      },
     ],
   },
   {
@@ -286,7 +428,10 @@ export const SECOES: Secao[] = [
     // mês canônica: materializa em `metas` (trigger) e é lida por Painel,
     // Financeiro e a calculadora de Produtos.
     perguntas: [
-      { label: "Quanto você precisaria faturar no próximo mês pra pagar as contas?", campo: "financeiro.meta_minima" },
+      {
+        label: "Quanto você precisaria faturar no próximo mês pra pagar as contas?",
+        campo: "financeiro.meta_minima",
+      },
       { label: "Quanto faria esse mês ser considerado um mês bom?", campo: "financeiro.meta_boa" },
       { label: "Qual valor faria você celebrar?", campo: "financeiro.meta_celebracao" },
     ],
@@ -299,7 +444,11 @@ export const SECOES: Secao[] = [
     titulo: "Seus canais",
     subtitulo: "Mapear tudo pra escolher com intenção.",
     perguntas: [
-      { label: "Liste todos os lugares onde você está presente ou quer estar: Instagram, TikTok, WhatsApp, YouTube, LinkedIn, e-mail, marketplace, loja física, presencial, podcast, outro.", campo: "caderno.canais" },
+      {
+        label:
+          "Liste todos os lugares onde você está presente ou quer estar: Instagram, TikTok, WhatsApp, YouTube, LinkedIn, e-mail, marketplace, loja física, presencial, podcast, outro.",
+        campo: "caderno.canais",
+      },
       { label: "Onde suas clientes mais te encontram hoje?", campo: "caderno.canais" },
     ],
   },
@@ -309,9 +458,18 @@ export const SECOES: Secao[] = [
     titulo: "Onde focar agora",
     subtitulo: "Fazer bem em um canal vale mais do que mal em cinco.",
     perguntas: [
-      { label: "Qual canal tem mais potencial pra você agora? Por quê?", campo: "caderno.canal_principal" },
-      { label: "Se você só pudesse estar em um lugar, qual seria?", campo: "caderno.canal_principal" },
-      { label: "O que você já testou que não funcionou? Por que você acha que não deu certo?", campo: "caderno.canal_principal" },
+      {
+        label: "Qual canal tem mais potencial pra você agora? Por quê?",
+        campo: "caderno.canal_principal",
+      },
+      {
+        label: "Se você só pudesse estar em um lugar, qual seria?",
+        campo: "caderno.canal_principal",
+      },
+      {
+        label: "O que você já testou que não funcionou? Por que você acha que não deu certo?",
+        campo: "caderno.canal_principal",
+      },
     ],
   },
   {
@@ -321,9 +479,17 @@ export const SECOES: Secao[] = [
     subtitulo: "Como você fala define quem você atrai.",
     // 2 campos: voz (como fala / referência) + anti_exemplos (o que nunca diria).
     perguntas: [
-      { label: "Como você fala com a sua cliente? Formal ou informal? Técnica ou acolhedora? Séria ou bem-humorada? Minimalista ou expressiva?", campo: "caderno.voz" },
+      {
+        label:
+          "Como você fala com a sua cliente? Formal ou informal? Técnica ou acolhedora? Séria ou bem-humorada? Minimalista ou expressiva?",
+        campo: "caderno.voz",
+      },
       { label: "O que você NUNCA diria na sua comunicação?", campo: "caderno.anti_exemplos" },
-      { label: "Tem alguma marca (de qualquer setor) que você admira a forma de comunicar? O que você admira nela?", campo: "caderno.voz" },
+      {
+        label:
+          "Tem alguma marca (de qualquer setor) que você admira a forma de comunicar? O que você admira nela?",
+        campo: "caderno.voz",
+      },
     ],
   },
   {
@@ -332,9 +498,19 @@ export const SECOES: Secao[] = [
     titulo: "O caminho da sua cliente",
     subtitulo: "Da descoberta à compra, e depois.",
     perguntas: [
-      { label: "Da primeira vez que ela te encontra até comprar, o que acontece? Descreva passo a passo.", campo: "caderno.jornada_cliente" },
-      { label: "Onde a maioria das pessoas para antes de comprar? O que poderia estar travando?", campo: "caderno.jornada_cliente" },
-      { label: "Como você se relaciona com ela depois da compra? O que você faz pra ela voltar?", campo: "caderno.jornada_cliente" },
+      {
+        label:
+          "Da primeira vez que ela te encontra até comprar, o que acontece? Descreva passo a passo.",
+        campo: "caderno.jornada_cliente",
+      },
+      {
+        label: "Onde a maioria das pessoas para antes de comprar? O que poderia estar travando?",
+        campo: "caderno.jornada_cliente",
+      },
+      {
+        label: "Como você se relaciona com ela depois da compra? O que você faz pra ela voltar?",
+        campo: "caderno.jornada_cliente",
+      },
     ],
   },
   {
@@ -344,7 +520,10 @@ export const SECOES: Secao[] = [
     subtitulo: "3 linhas que fazem tudo.",
     // 2 campos: bio (o texto) + link (contato).
     perguntas: [
-      { label: "Em 3 linhas: quem você é, o que faz, pra quem, e como ela compra ou te contrata.", campo: "caderno.bio" },
+      {
+        label: "Em 3 linhas: quem você é, o que faz, pra quem, e como ela compra ou te contrata.",
+        campo: "caderno.bio",
+      },
       { label: "Qual o link ou contato que vai nessa bio?", campo: "caderno.link" },
     ],
   },
@@ -357,7 +536,11 @@ export const SECOES: Secao[] = [
     subtitulo: "O destino antes do mapa.",
     // 2 campos: visao_1ano + visao_3anos.
     perguntas: [
-      { label: "Qual seria o cenário ideal pro seu negócio em 1 ano? Seja específica: quanto você fatura, quantas clientes tem, onde você está, o que mudou na sua rotina.", campo: "metas.visao_1ano" },
+      {
+        label:
+          "Qual seria o cenário ideal pro seu negócio em 1 ano? Seja específica: quanto você fatura, quantas clientes tem, onde você está, o que mudou na sua rotina.",
+        campo: "metas.visao_1ano",
+      },
       { label: "Em 3 anos, como você imagina esse negócio?", campo: "metas.visao_3anos" },
     ],
   },
@@ -370,7 +553,11 @@ export const SECOES: Secao[] = [
     // em financeiro.meta_boa (módulo 4); pergunta duplicada removida daqui.
     perguntas: [
       { label: "Qual seria o número pra 3 meses?", campo: "metas.meta_trimestre" },
-      { label: "E pra 6 meses? Essa meta é realista dado o que você tem hoje? O que precisaria mudar?", campo: "metas.meta_semestre" },
+      {
+        label:
+          "E pra 6 meses? Essa meta é realista dado o que você tem hoje? O que precisaria mudar?",
+        campo: "metas.meta_semestre",
+      },
     ],
   },
   {
@@ -380,8 +567,16 @@ export const SECOES: Secao[] = [
     subtitulo: "Números que realmente dizem se está crescendo.",
     // 2 campos: metricas + frequencia.
     perguntas: [
-      { label: "Quais são os 3 números que você vai olhar todo mês? (não seguidores, resultados reais: faturamento, número de clientes, ticket médio, taxa de retorno…)", campo: "metas.metricas" },
-      { label: "Como e quando você vai acompanhar esses números? Uma vez por semana? No final do mês?", campo: "metas.frequencia" },
+      {
+        label:
+          "Quais são os 3 números que você vai olhar todo mês? (não seguidores, resultados reais: faturamento, número de clientes, ticket médio, taxa de retorno…)",
+        campo: "metas.metricas",
+      },
+      {
+        label:
+          "Como e quando você vai acompanhar esses números? Uma vez por semana? No final do mês?",
+        campo: "metas.frequencia",
+      },
     ],
   },
   {
@@ -391,8 +586,15 @@ export const SECOES: Secao[] = [
     subtitulo: "Decisões concretas, não intenções vagas.",
     // 2 campos: acoes (começar) + cortes (parar).
     perguntas: [
-      { label: "Liste 3 coisas concretas que você vai mudar ou começar a fazer pra chegar onde quer.", campo: "metas.acoes" },
-      { label: "O que você vai parar de fazer? O que está tomando tempo sem trazer resultado?", campo: "metas.cortes" },
+      {
+        label:
+          "Liste 3 coisas concretas que você vai mudar ou começar a fazer pra chegar onde quer.",
+        campo: "metas.acoes",
+      },
+      {
+        label: "O que você vai parar de fazer? O que está tomando tempo sem trazer resultado?",
+        campo: "metas.cortes",
+      },
     ],
   },
   {
@@ -402,7 +604,10 @@ export const SECOES: Secao[] = [
     subtitulo: "Uma coisa. Uma data.",
     // 2 campos: proxima_acao (o que) + data_proxima_acao (quando).
     perguntas: [
-      { label: "O que você vai fazer essa semana que move a agulha? Uma coisa só.", campo: "metas.proxima_acao" },
+      {
+        label: "O que você vai fazer essa semana que move a agulha? Uma coisa só.",
+        campo: "metas.proxima_acao",
+      },
       { label: "Até quando? Coloca uma data.", campo: "metas.data_proxima_acao" },
     ],
   },

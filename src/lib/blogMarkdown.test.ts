@@ -184,8 +184,14 @@ describe("serializeDocToMarkdown", () => {
         {
           type: "bulletList",
           content: [
-            { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "item 1" }] }] },
-            { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "item 2" }] }] },
+            {
+              type: "listItem",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "item 1" }] }],
+            },
+            {
+              type: "listItem",
+              content: [{ type: "paragraph", content: [{ type: "text", text: "item 2" }] }],
+            },
           ],
         },
       ],
@@ -246,7 +252,9 @@ describe("serializeDocToMarkdown", () => {
 describe("parseMarkdownToDoc", () => {
   it("parseia parágrafo simples", () => {
     const doc = parseMarkdownToDoc("Olá mundo");
-    expect(doc.content).toEqual([{ type: "paragraph", content: [{ type: "text", text: "Olá mundo" }] }]);
+    expect(doc.content).toEqual([
+      { type: "paragraph", content: [{ type: "text", text: "Olá mundo" }] },
+    ]);
   });
 
   it("parseia heading H2", () => {
@@ -290,7 +298,10 @@ describe("parseMarkdownToDoc", () => {
 
   it("parseia embed de vídeo standalone", () => {
     const doc = parseMarkdownToDoc("::video[https://youtu.be/abc123xyz]");
-    expect(doc.content?.[0]).toEqual({ type: "videoEmbed", attrs: { url: "https://youtu.be/abc123xyz" } });
+    expect(doc.content?.[0]).toEqual({
+      type: "videoEmbed",
+      attrs: { url: "https://youtu.be/abc123xyz" },
+    });
   });
 
   it("ignora linhas em branco entre blocos", () => {

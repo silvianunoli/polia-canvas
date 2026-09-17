@@ -44,8 +44,12 @@ describe("sanitizarTextoIA", () => {
 
   it("frase real em português sai limpa e legível", () => {
     expect(
-      sanitizarTextoIA("Esse mês tem pouco registrado — a leitura é limitada. O bolo — que é o carro-chefe — sobrou 40%."),
-    ).toBe("Esse mês tem pouco registrado, a leitura é limitada. O bolo, que é o carro-chefe, sobrou 40%.");
+      sanitizarTextoIA(
+        "Esse mês tem pouco registrado — a leitura é limitada. O bolo — que é o carro-chefe — sobrou 40%.",
+      ),
+    ).toBe(
+      "Esse mês tem pouco registrado, a leitura é limitada. O bolo, que é o carro-chefe, sobrou 40%.",
+    );
   });
 
   it("não mexe em texto sem travessão (hífen comum fica)", () => {

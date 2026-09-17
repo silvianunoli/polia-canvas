@@ -18,7 +18,9 @@ type WordmarkProps = Omit<ImgHTMLAttributes<HTMLImageElement>, "src" | "alt"> & 
 export function PoliaWordmark({ className, variant = "light", ...props }: WordmarkProps) {
   return (
     <img
-      src={variant === "dark" ? "/logotipo-wordmark-dark-one.svg" : "/logotipo-wordmark-ligth-one.svg"}
+      src={
+        variant === "dark" ? "/logotipo-wordmark-dark-one.svg" : "/logotipo-wordmark-ligth-one.svg"
+      }
       alt="Pólia One"
       className={className}
       {...props}
