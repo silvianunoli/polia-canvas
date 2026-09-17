@@ -47,3 +47,11 @@ Também corrigida a FK `founder_alertas.resolvido_por` (agora `on delete set nul
 - Admin: `src/lib/founder-produto.functions.ts` e páginas `/founder/produto/ativacao` (taxa de ativação = onboarding + 1ª ação de valor em 7 dias, tempo até o 1º valor, D1/D7/D30, coortes semanais, quem não ativou), `/produto/funil` (onboarding), `/produto/feedback` (CSAT de `feedback_responses` + chamados), `/produto/experimentos` (resultados com × sem flag) e `/features/experimentos` (configuração).
 
 Próximo: bloco 6, operação/infra/negócio (erros, logs, jobs, integrações, API, banco, storage, IA, releases, receita/assinaturas/conversão/churn).
+
+## 2026-09-17 — Founder Dashboard, bloco 6 (operação, infra, negócio, releases)
+
+- Migration `20260917193353_founder_operacao_funcoes.sql`: funções SECURITY DEFINER `founder_jobs_status(p_horas)` (cron.job + job_run_details), `founder_banco_status()` (pg_database_size, pg_stat_activity, tabelas maiores, top 10 de `extensions.pg_stat_statements`) e `founder_storage_status(p_dias)` (buckets × objetos × bytes), execute só pro service role; tabela `founder_releases` (registro manual, RLS admin).
+- Admin: `founder-operacao.functions.ts` (erros de `erros_app`, logs de `founder_eventos_sistema`, jobs, integrações: Stripe webhook, Resend, Google Agenda, IA), `founder-infra.functions.ts` (API p50/p95/p99 e taxa de erro de `founder_api_chamadas`, banco, storage, IA com custo estimado por modelo), `founder-negocio.functions.ts` (receita = faturas pagas no Stripe no período, MRR/ARR por price, assinaturas, conversão conta → assinante e teste → paga, churn sobre o snapshot diário; releases). 13 páginas trocam os últimos `EmConstrucao`.
+- Detalhe do banco: `pg_stat_statements` mora no schema `extensions`, então a função qualifica o nome e põe `extensions` no `search_path`.
+
+Com isso os 6 blocos do plano estão no ar. Pendências fora do código: rotacionar `STRIPE_SECRET_KEY` e `RESEND_API_KEY` nos secrets das Edge Functions, desagendar `checar-taxa-erro-alertas`, dropar `feature_flags` numa migration própria quando a Sil confirmar.
