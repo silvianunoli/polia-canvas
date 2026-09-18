@@ -9,7 +9,7 @@ Contexto: o Founder Dashboard vive no polia-admin (`office.usepolia.com.br/found
 - `supabase/functions/founder-monitor/`: health-checks por serviço (API `/health`, banco, auth, Stripe, Resend, IA via `ia_geracoes`, storage), snapshot diário em `founder_metricas_diarias`, regras de alerta com dedup em `founder_alertas`; alerta crítico novo repassa ao `alertas-criticos` com `tipo: founder:*`. Auth: header `x-founder-secret` (cron) ou JWT de admin (botão "Verificar agora").
 - `supabase/migrations/20260917162924_founder_monitor_base.sql`: colunas de baseline, `chave_dedup`, `founder_jobs_falhos()`, `disparar_founder_monitor()` e `cron.schedule('founder-monitor', '*/10 * * * *')`.
 - Segredo `founder_monitor_secret` criado no Vault e espelhado como `FOUNDER_MONITOR_SECRET` nos secrets das Edge Functions (fora de migration).
-- Pendente (decisão da Sil): desagendar `checar-taxa-erro-alertas`, que passa a duplicar a regra `pico_erros_app` do monitor.
+- Desagendado pela Sil no mesmo dia: `checar-taxa-erro-alertas`, que duplicava a regra `pico_erros_app` do monitor.
 - Achado na primeira rodada: `STRIPE_SECRET_KEY` das Edge Functions expirada (HTTP 401 "Expired API Key") e `RESEND_API_KEY` inválida. O `stripe-webhook` depende da primeira.
 
 ## 2026-09-17 — Founder Dashboard, bloco 2 (instrumentação de eventos)
@@ -54,4 +54,4 @@ Próximo: bloco 6, operação/infra/negócio (erros, logs, jobs, integrações, 
 - Admin: `founder-operacao.functions.ts` (erros de `erros_app`, logs de `founder_eventos_sistema`, jobs, integrações: Stripe webhook, Resend, Google Agenda, IA), `founder-infra.functions.ts` (API p50/p95/p99 e taxa de erro de `founder_api_chamadas`, banco, storage, IA com custo estimado por modelo), `founder-negocio.functions.ts` (receita = faturas pagas no Stripe no período, MRR/ARR por price, assinaturas, conversão conta → assinante e teste → paga, churn sobre o snapshot diário; releases). 13 páginas trocam os últimos `EmConstrucao`.
 - Detalhe do banco: `pg_stat_statements` mora no schema `extensions`, então a função qualifica o nome e põe `extensions` no `search_path`.
 
-Com isso os 6 blocos do plano estão no ar. Pendências fora do código: rotacionar `STRIPE_SECRET_KEY` e `RESEND_API_KEY` nos secrets das Edge Functions, desagendar `checar-taxa-erro-alertas`, dropar `feature_flags` numa migration própria quando a Sil confirmar.
+Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND_API_KEY` rotacionada e válida; `STRIPE_SECRET_KEY` ainda precisa da chave `sk_live_` certa; cron duplicado já desagendado; dropar `feature_flags` numa migration própria quando a Sil confirmar.

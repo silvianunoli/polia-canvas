@@ -25,7 +25,7 @@ Quatro chamadores, todos batendo no mesmo endpoint HTTP:
 |---|---|---|
 | Worker Cloudflare | Node (nodejs_compat) | `src/lib/alertas.server.ts`, usado em `src/server.ts`, `src/lib/error-capture.ts`, `src/lib/stripe.functions.ts`, `src/lib/compra-publica.functions.ts` |
 | Webhook do Stripe | Deno | `supabase/functions/stripe-webhook/index.ts` (função local `dispararAlerta`, mesmo segredo) |
-| Checagem periódica de taxa de erro | Postgres (pg_cron + pg_net) | função `public.checar_taxa_erro_e_alertar()`, agendada a cada 5 min |
+| Checagem periódica de taxa de erro | Postgres (pg_cron + pg_net) | função `public.checar_taxa_erro_e_alertar()`; **desagendada em 17/09/2026** (o `founder-monitor` cobre o sinal com `pico_erros_app`) |
 | Checagem periódica de uptime externo | Postgres (pg_cron + extensão `http` + `pg_net`) | função `public.checar_uptimerobot_e_alertar()`, agendada a cada 5 min |
 | Monitor do Founder Dashboard | Deno | `supabase/functions/founder-monitor/index.ts`, disparado por `public.disparar_founder_monitor()` (pg_cron, a cada 10 min) ou pelo botão "Verificar agora" em `office.usepolia.com.br/founder`; só repassa pro Telegram alerta novo de severidade crítica, com `tipo` prefixado `founder:` |
 
@@ -38,7 +38,7 @@ O `health_down` não usa webhook do UptimeRobot: o plano grátis deles bloqueou 
 | `health_down` | `checar_uptimerobot_e_alertar()` (pg_cron, a cada 5 min, lendo a API do UptimeRobot) | `/health` não respondeu 200 pro UptimeRobot — Worker ou Cloudflare fora do ar |
 | `stripe_webhook_assinatura_invalida` | `stripe-webhook/index.ts` | Assinatura HMAC do Stripe não validou |
 | `stripe_webhook_erro_processamento` | `stripe-webhook/index.ts` | Exceção ao processar um evento (`checkout.session.completed` etc.) — dinheiro passando batido |
-| `erro_taxa_alta` | `checar_taxa_erro_e_alertar()` (pg_cron, a cada 5 min) | Mais de 15 linhas em `erros_app` nos últimos 10 min |
+| `erro_taxa_alta` | `checar_taxa_erro_e_alertar()` (sem agenda desde 17/09/2026; substituído por `founder:pico_erros_app`) | Mais de 15 linhas em `erros_app` nos últimos 10 min |
 | `checkout_erro` | `stripe.functions.ts` (`iniciarAssinatura`) e `compra-publica.functions.ts` (`iniciarCompraPublica`) | Falha ao criar sessão/assinatura de checkout |
 | `erro_servidor_critico` | `src/server.ts` (catch do fetch handler + resposta catastrófica do SSR) e `error-capture.ts` (erro/unhandledrejection global) | Erro não tratado no Worker — cobre falha de conexão com Supabase e qualquer exceção que escape dos try/catch específicos |
 
@@ -46,7 +46,7 @@ O `health_down` não usa webhook do UptimeRobot: o plano grátis deles bloqueou 
 | `founder:pico_erros_app` | `founder-monitor` | `erros_app` em 24h acima de 5× a média dos últimos 7 dias (com 3× vira alerta de atenção, só no dashboard) |
 | `founder:jobs_falhos` | `founder-monitor` | 5 ou mais execuções de pg_cron falharam em 24h |
 
-Threshold do `erro_taxa_alta` (15 erros / 10 min) está hardcoded em `checar_taxa_erro_e_alertar()` — mudar exige uma migration nova. Desde 17/09/2026 o `founder-monitor` cobre o mesmo sinal com baseline (`pico_erros_app`); o cron `checar-taxa-erro-alertas` ficou agendado só até a Sil confirmar o desligamento (`select cron.unschedule('checar-taxa-erro-alertas')`), pra não mandar o mesmo incidente duas vezes.
+Threshold do `erro_taxa_alta` (15 erros / 10 min) está hardcoded em `checar_taxa_erro_e_alertar()` — mudar exige uma migration nova. Desde 17/09/2026 o `founder-monitor` cobre o mesmo sinal com baseline (`pico_erros_app`); o cron `checar-taxa-erro-alertas` foi desagendado pela Sil em 17/09/2026 (`cron.unschedule`), pra não mandar o mesmo incidente duas vezes; a função continua no banco, sem agenda.
 
 Os alertas do Founder Dashboard (todas as severidades, com auto-resolução) ficam em `founder_alertas` e aparecem em `office.usepolia.com.br/founder/alertas`; o Telegram só recebe os críticos novos.
 
