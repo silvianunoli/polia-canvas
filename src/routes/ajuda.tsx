@@ -21,6 +21,7 @@ import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { mascararTelefone } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
@@ -249,6 +250,7 @@ function AjudaPage() {
         })).filter((cat) => cat.itens.length > 0);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [assunto, setAssunto] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [errors, setErrors] = useState<Partial<Record<Campo, string>>>({});
@@ -313,6 +315,7 @@ function AjudaPage() {
         data: {
           nome: parsed.data.nome,
           email: email.trim(),
+          telefone,
           assunto: parsed.data.assunto,
           mensagem: parsed.data.mensagem,
           turnstileToken: turnstile.token,
@@ -648,6 +651,24 @@ function AjudaPage() {
                           className={campoClasse(!!errors.email)}
                         />
                         <FieldError id="email-error">{errors.email}</FieldError>
+                      </div>
+                      {/* Opcional: número quebrado volta nulo no servidor em vez
+                          de barrar quem só quer mandar uma dúvida. */}
+                      <div>
+                        <label className={ROTULO}>
+                          Seu WhatsApp{" "}
+                          <span className="font-normal text-[var(--muted)]">(opcional)</span>
+                        </label>
+                        <input
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          value={telefone}
+                          onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+                          maxLength={20}
+                          placeholder="(11) 99999-9999"
+                          className={campoClasse(false)}
+                        />
                       </div>
                       <div>
                         <label className={ROTULO}>Assunto</label>

@@ -8,6 +8,7 @@ import { gtagEvent } from "@/lib/gtag";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { mascararTelefone } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
@@ -240,6 +241,7 @@ function CartaoPedido({
 }) {
   const ts = useTurnstile();
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [aceite, setAceite] = useState(false);
   const [erroEmail, setErroEmail] = useState<string | undefined>();
   const [erroEnvio, setErroEnvio] = useState<string | undefined>();
@@ -276,7 +278,13 @@ function CartaoPedido({
     try {
       const r = await comTimeout(
         gravarLeadManual({
-          data: { email: email.trim(), consentimento: true, origem, turnstileToken: ts.token },
+          data: {
+            email: email.trim(),
+            telefone,
+            consentimento: true,
+            origem,
+            turnstileToken: ts.token,
+          },
         }),
       );
       if (!r.ok) {
@@ -413,6 +421,27 @@ function CartaoPedido({
             }`}
           />
           <FieldError id="manual-email-erro">{erroEmail}</FieldError>
+        </div>
+
+        {/* Opcional de verdade: não valida, não bloqueia o envio, e número
+            quebrado volta nulo no servidor em vez de custar a lead. */}
+        <div>
+          <label
+            htmlFor="manual-whatsapp"
+            className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+          >
+            Seu WhatsApp <span className="font-normal text-[var(--muted)]">(opcional)</span>
+          </label>
+          <input
+            id="manual-whatsapp"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="(11) 99999-9999"
+            value={telefone}
+            onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+            className="min-h-[52px] w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
+          />
         </div>
 
         {/* O link fica FORA do <label> de propósito: dentro, clicar nele conta

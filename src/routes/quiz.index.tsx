@@ -7,6 +7,7 @@ import { gtagEvent } from "@/lib/gtag";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { mascararTelefone } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
@@ -229,10 +230,11 @@ function TelaGate({
   onEnviar,
 }: {
   faixaNome: string;
-  onEnviar: (dados: { email: string; token: string }) => Promise<string | null>;
+  onEnviar: (dados: { email: string; telefone: string; token: string }) => Promise<string | null>;
 }) {
   const ts = useTurnstile();
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [aceite, setAceite] = useState(false);
   const [erroEmail, setErroEmail] = useState<string | undefined>();
   const [erroEnvio, setErroEnvio] = useState<string | undefined>();
@@ -258,7 +260,7 @@ function TelaGate({
 
     setErroEnvio(undefined);
     setEnviando(true);
-    const erro = await onEnviar({ email: email.trim(), token: ts.token });
+    const erro = await onEnviar({ email: email.trim(), telefone, token: ts.token });
     if (erro) {
       // As respostas continuam em memória: é só tentar de novo.
       ts.reset();
@@ -320,6 +322,28 @@ function TelaGate({
             }`}
           />
           <FieldError id="quiz-email-erro">{erroEmail}</FieldError>
+        </div>
+
+        {/* Opcional de verdade: não entra no podeEnviar, não valida e número
+            quebrado volta nulo no servidor em vez de barrar. Existe pra Sil
+            conseguir responder por WhatsApp quem prefere WhatsApp. */}
+        <div>
+          <label
+            htmlFor="quiz-whatsapp"
+            className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+          >
+            Seu WhatsApp <span className="font-normal text-[var(--muted)]">(opcional)</span>
+          </label>
+          <input
+            id="quiz-whatsapp"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="(11) 99999-9999"
+            value={telefone}
+            onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+            className="min-h-[52px] w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
+          />
         </div>
 
         {/* O link fica FORA do <label> de propósito. Dentro, clicar nele conta
@@ -474,15 +498,24 @@ function QuizPage() {
   /** Devolve a mensagem de erro pra mostrar, ou null se gravou. */
   async function enviarLead({
     email,
+    telefone,
     token,
   }: {
     email: string;
+    telefone: string;
     token: string;
   }): Promise<string | null> {
     try {
       const r = await comTimeout(
         gravarLeadQuiz({
-          data: { email, consentimento: true, respostas, origem, turnstileToken: token },
+          data: {
+            email,
+            telefone,
+            consentimento: true,
+            respostas,
+            origem,
+            turnstileToken: token,
+          },
         }),
       );
       if (!r.ok) {

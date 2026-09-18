@@ -9,6 +9,7 @@ import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
 import { SiteHeader } from "@/components/site/SiteHeader";
+import { mascararTelefone } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
@@ -111,6 +112,7 @@ function validarEmail(v: string): string | undefined {
 function ListaEsperaPage() {
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [telefone, setTelefone] = useState("");
   const [aceite, setAceite] = useState(false);
   const [aceiteErro, setAceiteErro] = useState(false);
   const [errors, setErrors] = useState<{ nome?: string; email?: string }>({});
@@ -176,6 +178,7 @@ function ListaEsperaPage() {
         data: {
           nome: nome.trim(),
           email: email.trim(),
+          telefone: telefone.trim(),
           tipo_negocio: null,
           // O aceite agora cobre o aviso de abertura, que é a razão da lista.
           novidades: true,
@@ -322,6 +325,29 @@ function ListaEsperaPage() {
                         className={`${campoBase} ${errors.email ? campoErro : campoOk}`}
                       />
                       <FieldError id="email-error">{errors.email}</FieldError>
+                    </div>
+                    {/* Opcional de verdade: não valida, não bloqueia o envio, e
+                        número quebrado volta nulo no servidor. Existe pra dar à
+                        Pólia um segundo caminho de conversa com quem quiser. */}
+                    <div>
+                      <label
+                        htmlFor="whatsapp"
+                        className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+                      >
+                        Seu WhatsApp{" "}
+                        <span className="font-normal text-[var(--muted)]">(opcional)</span>
+                      </label>
+                      <input
+                        id="whatsapp"
+                        name="whatsapp"
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel-national"
+                        placeholder="(11) 99999-9999"
+                        value={telefone}
+                        onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+                        className={`${campoBase} ${campoOk}`}
+                      />
                     </div>
                     {/* O select "o que mais trava" saiu: eram cinco opções pra ler
                         antes do botão, três delas de produtividade genérica, e nada

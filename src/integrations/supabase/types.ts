@@ -405,6 +405,7 @@ export type Database = {
       contatos: {
         Row: {
           assunto: string
+          telefone: string | null
           created_at: string
           email: string
           id: string
@@ -413,6 +414,7 @@ export type Database = {
         }
         Insert: {
           assunto: string
+          telefone?: string | null
           created_at?: string
           email: string
           id?: string
@@ -421,6 +423,7 @@ export type Database = {
         }
         Update: {
           assunto?: string
+          telefone?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -1357,6 +1360,7 @@ export type Database = {
           id: string
           nome: string
           novidades: boolean
+          telefone: string | null
           tipo_negocio: string | null
         }
         Insert: {
@@ -1365,6 +1369,7 @@ export type Database = {
           id?: string
           nome: string
           novidades?: boolean
+          telefone?: string | null
           tipo_negocio?: string | null
         }
         Update: {
@@ -1373,6 +1378,7 @@ export type Database = {
           id?: string
           nome?: string
           novidades?: boolean
+          telefone?: string | null
           tipo_negocio?: string | null
         }
         Relationships: []
@@ -1386,6 +1392,7 @@ export type Database = {
           descadastrado_em: string | null
           descadastro_token: string
           download_token: string
+          telefone: string | null
           downloads: number
           email: string
           id: string
@@ -1400,6 +1407,7 @@ export type Database = {
           descadastrado_em?: string | null
           descadastro_token?: string
           download_token?: string
+          telefone?: string | null
           downloads?: number
           email: string
           id?: string
@@ -1414,6 +1422,7 @@ export type Database = {
           descadastrado_em?: string | null
           descadastro_token?: string
           download_token?: string
+          telefone?: string | null
           downloads?: number
           email?: string
           id?: string
@@ -2250,6 +2259,7 @@ export type Database = {
           pontos: number | null
           respostas: Json | null
           territorio_fraco: string | null
+          telefone: string | null
           updated_at: string | null
         }
         Insert: {
@@ -2265,6 +2275,7 @@ export type Database = {
           pontos?: number | null
           respostas?: Json | null
           territorio_fraco?: string | null
+          telefone?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -2280,6 +2291,7 @@ export type Database = {
           pontos?: number | null
           respostas?: Json | null
           territorio_fraco?: string | null
+          telefone?: string | null
           updated_at?: string | null
         }
         Relationships: []

@@ -3,10 +3,13 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { emailPolia, enviarEmailResend, escapeHtml } from "@/lib/email-template";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
+import { normalizarTelefone } from "@/lib/telefone";
 
 const inputSchema = z.object({
   nome: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(255),
+  // WhatsApp opcional (CRM-08, 18/09/2026).
+  telefone: z.string().trim().max(40).optional(),
   assunto: z.string().trim().min(1).max(120),
   mensagem: z.string().trim().min(10).max(2000),
   turnstileToken: z.string().optional(),
@@ -29,6 +32,7 @@ export const enviarContato = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("contatos").insert({
       nome: data.nome,
       email: data.email,
+      telefone: normalizarTelefone(data.telefone),
       assunto: data.assunto,
       mensagem: data.mensagem,
     });

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
+import { normalizarTelefone } from "@/lib/telefone";
 import { enviarEmailResend } from "@/lib/email-template";
 import { CONSENT_TEXTO } from "@/lib/quiz/perguntas";
 import { montarEmailDiagnostico } from "@/lib/quiz/email";
@@ -19,6 +20,8 @@ import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
 const inputSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
+  // WhatsApp opcional (CRM-08, 18/09/2026): quem quiser deixar, deixa.
+  telefone: z.string().trim().max(40).optional(),
   consentimento: z.literal(true),
   respostas: z.record(z.unknown()).default({}),
   origem: z
@@ -106,6 +109,7 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
     }
 
     const { pontos, faixa, territorioFraco } = calcularResultado(respostas);
+    const telefone = normalizarTelefone(data.telefone);
 
     // Upsert por e-mail: refazer o quiz atualiza a linha, nunca duplica.
     // created_at e descadastro_token ficam de fora do payload de propósito — em
@@ -128,6 +132,10 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
           consentimento: true,
           consent_texto: CONSENT_TEXTO,
           descadastrado_em: null,
+          // Só entra no payload quando veio preenchido: o campo é opcional, e
+          // num upsert um `telefone: null` apagaria o número que ela já tinha
+          // deixado numa passagem anterior.
+          ...(telefone ? { telefone } : {}),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "email" },

@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
+import { normalizarTelefone } from "@/lib/telefone";
 import { enviarEmailResend } from "@/lib/email-template";
 import { urlCanonica } from "@/lib/seo";
 import { CONSENT_TEXTO_MANUAL } from "@/lib/manual/conteudo";
@@ -14,6 +15,8 @@ import { urlDownloadManual } from "@/lib/manual/download";
 
 const inputSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
+  // WhatsApp opcional (CRM-08, 18/09/2026): quem quiser deixar, deixa.
+  telefone: z.string().trim().max(40).optional(),
   consentimento: z.literal(true),
   origem: z
     .string()
@@ -57,6 +60,12 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
           consentimento: true,
           consent_texto: CONSENT_TEXTO_MANUAL,
           descadastrado_em: null,
+          // Só entra no payload quando veio preenchido: o campo é opcional, e
+          // num upsert um `telefone: null` apagaria o número que ela já tinha
+          // deixado numa passagem anterior.
+          ...(normalizarTelefone(data.telefone)
+            ? { telefone: normalizarTelefone(data.telefone) }
+            : {}),
           updated_at: new Date().toISOString(),
         },
         { onConflict: "email" },
