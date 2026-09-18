@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -594,30 +594,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      feature_flags: {
-        Row: {
-          description: string | null
-          enabled: boolean
-          id: string
-          key: string
-          updated_at: string
-        }
-        Insert: {
-          description?: string | null
-          enabled?: boolean
-          id?: string
-          key: string
-          updated_at?: string
-        }
-        Update: {
-          description?: string | null
-          enabled?: boolean
-          id?: string
-          key?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       feedback_responses: {
         Row: {
