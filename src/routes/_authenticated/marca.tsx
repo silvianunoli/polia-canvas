@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -6,6 +7,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { CamposDoc, FerramentaVazia } from "@/components/planejamento/CamposDoc";
 import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
+import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/marca")({
   head: () => ({
@@ -51,6 +53,11 @@ function MarcaPage() {
       eyebrow="Marca"
       titulo={profile?.business_name || "Sua marca"}
       subtitulo="A identidade do negócio, escrita por quem o toca."
+      acao={
+        <a href="/planejamento" className={BTN_ACAO_CONTORNO}>
+          <ArrowLeft size={15} aria-hidden="true" /> Planejamento
+        </a>
+      }
     >
       <div>
         {camposQuery.isLoading ? (

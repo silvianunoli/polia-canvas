@@ -70,7 +70,7 @@ function OnboardingPage() {
 
   return (
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
-      <div className="w-full px-5 pb-20 pt-10">
+      <div className="w-full px-5 pb-10 pt-6">
         {step > 1 && <StepIndicator step={step} />}
         <div className="mx-auto w-full max-w-[900px]">
           {step === 1 && (
@@ -176,11 +176,11 @@ function PrimaryCTA({
 /* ---------------- STEP 1 ---------------- */
 function Step1({ onNext }: { onNext: () => void }) {
   return (
-    <div className="flex flex-col items-center gap-10 pt-10">
+    <div className="flex flex-col items-center gap-6 pt-4">
       <LogoPlaceholder />
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-4">
         <Manuscrito>Ei. Que bom ter alguém aqui.</Manuscrito>
-        <Headline size={76}>Oi. Eu sou a Pólia.</Headline>
+        <Headline size={64}>Oi. Eu sou a Pólia.</Headline>
       </div>
       <div className="flex flex-col gap-1">
         <Body>Vou te guiar do primeiro passo até sua primeira ferramenta pronta.</Body>
@@ -230,10 +230,10 @@ function Step2({
   onNext: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-7 pt-12">
+    <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Um pouco sobre o que essa marca faz.</Manuscrito>
-      <Headline size={64}>Como é o que essa marca vende?</Headline>
+      <Manuscrito>Um pouco sobre o que sua marca faz.</Manuscrito>
+      <Headline size={64}>Como é o que sua marca vende?</Headline>
       <Body>Isso ajusta as próximas perguntas pro seu tipo de negócio.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
         {BIZ_TYPES.map((o) => (
@@ -325,9 +325,9 @@ function Step3({
   onNext: () => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-7 pt-12">
+    <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Em que momento essa marca está?</Manuscrito>
+      <Manuscrito>Em que momento sua marca está?</Manuscrito>
       <Headline size={64}>Conta a real pra mim.</Headline>
       <Body>Sem julgamento. A gente começa de onde estiver.</Body>
       <div className="grid w-full max-w-[820px] grid-cols-1 gap-4 md:grid-cols-3">
@@ -501,10 +501,10 @@ function Step4({
   }
 
   return (
-    <div className="flex flex-col items-center gap-7 pt-12">
+    <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Agora a parte mais sua.</Manuscrito>
-      <Headline size={56}>O que essa marca vende e o que entrega?</Headline>
+      <Headline size={56}>O que sua marca vende e o que entrega?</Headline>
       <p className="text-center text-[14px] text-[var(--muted)]">
         Pode ser breve. Dá pra ajustar depois.
       </p>
@@ -708,7 +708,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
 
   if (sobrou !== null) {
     return (
-      <div className="flex flex-col items-center gap-7 pt-12">
+      <div className="flex flex-col items-center gap-5 pt-6">
         <LogoPlaceholder />
         <Manuscrito>Primeiro número no lugar.</Manuscrito>
         <Headline size={56}>Sobram {fmt(sobrou)} por venda.</Headline>
@@ -719,12 +719,13 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
   }
 
   return (
-    <div className="flex flex-col items-center gap-7 pt-12">
+    <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Antes da marca, o número.</Manuscrito>
       <Headline size={56}>Quanto cobra e quanto custa?</Headline>
       <Body>
-        Pega {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar depois.
+        O preço de {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar
+        depois.
       </Body>
 
       <div className="flex w-full max-w-[420px] flex-col gap-5">
@@ -784,7 +785,7 @@ const ETAPA1_DESC: Record<BusinessType, string> = {
 function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
   const desc = tipo ? ETAPA1_DESC[tipo] : ETAPA1_DESC.produto_fisico;
   return (
-    <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-7 pt-12">
+    <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Pronto. Tá tudo no lugar.</Manuscrito>
       <Headline size={56}>Seu planejamento começa agora.</Headline>

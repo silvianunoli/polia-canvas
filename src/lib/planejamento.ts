@@ -18,6 +18,9 @@ export const TOTAL_MODULOS = 6;
 export interface Pergunta {
   label: string;
   campo: string;
+  /** "moeda": campo numérico com máscara de R$, sem ajuda da Aimer (não há o
+   * que redigir num valor). Omitido = pergunta de texto livre, como sempre foi. */
+  tipo?: "moeda";
 }
 
 export interface Secao {
@@ -98,11 +101,13 @@ export const SECOES: Secao[] = [
       {
         label: "Quanto você quer receber por mês com esse negócio?",
         campo: "financeiro.meta_mensal",
+        tipo: "moeda",
       },
       {
         label:
           "Quais são os seus custos fixos todo mês? (plataformas, ferramentas, espaço, contador, outros). Some tudo.",
         campo: "financeiro.custo_fixo",
+        tipo: "moeda",
       },
     ],
   },
@@ -635,7 +640,7 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
     nome: "Marca",
     rota: "/marca",
     desbloqueioSub: "A identidade do seu negócio, escrita por você.",
-    abrirLabel: "Abrir minha Marca",
+    abrirLabel: "Ver minha Marca",
     tags: "propósito, missão, valores, voz",
   },
   2: {

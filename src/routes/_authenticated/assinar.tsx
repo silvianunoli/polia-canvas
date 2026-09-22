@@ -6,11 +6,19 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib/stripe.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
-import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
-import { BTN_ACAO } from "@/lib/botoes";
+import { ehBeta, tierDoPlano, TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 type TierId = TierPago;
 type CicloId = "mensal" | "anual";
+
+const FEATURES_GRATIS = [
+  "Planejamento completo, os 6 módulos",
+  "Calculadora de preço para até 5 produtos",
+  "Até 3 metas ativas por vez",
+  "1 quadro no Planner e 1 nota no Caderno",
+  "Aimer para tirar dúvida, com teto diário",
+];
 
 interface AssinarSearch {
   plano?: TierId;
@@ -38,19 +46,18 @@ export const Route = createFileRoute("/_authenticated/assinar")({
     if (!sess.session) return;
     const { data: profile } = await supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, plano")
       .eq("id", sess.session.user.id)
       .maybeSingle();
     if (!profile?.onboarding_completed) throw redirect({ to: "/onboarding" });
 
-    const { data: assinatura } = await supabase
-      .from("assinaturas" as never)
-      .select("status")
-      .eq("user_id", sess.session.user.id)
-      .maybeSingle();
-    const status = (assinatura as { status: string } | null)?.status;
-    const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
-    if (ativa) throw redirect({ to: "/painel" });
+    // Tela só faz sentido pra quem está no Grátis. Checa `profiles.plano`
+    // (fonte única do direito de acesso, ver _authenticated.tsx) em vez de só
+    // `assinaturas.status`: conta beta não tem linha em `assinaturas`, mas já
+    // tem acesso completo e não devia ver o paywall.
+    const plano = (profile as { plano?: string | null } | null)?.plano;
+    const jaTemAcessoPago = ehBeta(plano) || tierDoPlano(plano) === "controle";
+    if (jaTemAcessoPago) throw redirect({ to: "/painel" });
   },
   component: AssinarPage,
 });
@@ -92,7 +99,7 @@ function AssinarPage() {
 
   return (
     <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
-      <div className="w-full max-w-[760px]">
+      <div className="w-full max-w-[1000px]">
         <p className="mb-2 text-center font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
           ÚLTIMO PASSO
         </p>
@@ -127,7 +134,17 @@ function AssinarPage() {
           ))}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <PlanoCard
+            titulo="Grátis"
+            preco="R$ 0"
+            periodo="sem cobrança"
+            features={FEATURES_GRATIS}
+            botaoLabel="Continuar no Grátis"
+            carregando={false}
+            desabilitado={planoIniciando !== null || assinaturaQuery.isLoading}
+            onAssinar={() => navigate({ to: "/painel" })}
+          />
           {(Object.entries(TIERS) as [TierId, (typeof TIERS)[TierId]][]).map(([tierId, tier]) => (
             <PlanoCard
               key={tierId}
@@ -177,6 +194,7 @@ function PlanoCard({
   carregando,
   desabilitado,
   onAssinar,
+  botaoLabel,
 }: {
   titulo: string;
   preco: string;
@@ -187,6 +205,7 @@ function PlanoCard({
   carregando: boolean;
   desabilitado: boolean;
   onAssinar: () => void;
+  botaoLabel?: string;
 }) {
   const realcado = destaque || foco;
   return (
@@ -227,9 +246,9 @@ function PlanoCard({
           type="button"
           onClick={onAssinar}
           disabled={desabilitado}
-          className={`${BTN_ACAO} w-full`}
+          className={`${botaoLabel ? BTN_ACAO_CONTORNO : BTN_ACAO} w-full`}
         >
-          {carregando ? "Preparando..." : `Assinar o ${titulo}`}
+          {carregando ? "Preparando..." : (botaoLabel ?? `Assinar o ${titulo}`)}
         </button>
       </div>
     </div>

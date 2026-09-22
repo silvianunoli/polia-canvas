@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { FileText, GitFork } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -12,8 +11,7 @@ import {
   ferramentaDe,
   secoesDoModulo,
 } from "@/lib/planejamento";
-import { MapaMental, type NoMapa } from "@/components/planejamento/MapaMental";
-import { MODULO_ICONE, MODULO_SNIPPET_CAMPO } from "@/components/planejamento/modulosVisual";
+import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
 
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
@@ -54,9 +52,6 @@ interface LancRow {
   valor: number;
   data: string;
 }
-
-type Vista = "documento" | "mapa";
-const VISTA_KEY = "polia-planejamento-vista";
 
 const TIPO_LABEL: Record<string, string> = {
   fisico: "Produto físico",
@@ -285,27 +280,6 @@ function PlanejamentoPage() {
   const userId = user?.id;
   const navigate = useNavigate();
 
-  const [vista, setVista] = useState<Vista>("documento");
-  const [scrollAlvo, setScrollAlvo] = useState<number | null>(null);
-
-  // Restaura a última vista escolhida.
-  useEffect(() => {
-    try {
-      const v = localStorage.getItem(VISTA_KEY);
-      if (v === "mapa" || v === "documento") setVista(v);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-  const escolherVista = (v: Vista) => {
-    setVista(v);
-    try {
-      localStorage.setItem(VISTA_KEY, v);
-    } catch {
-      /* ignore */
-    }
-  };
-
   const dadosQuery = useQuery({
     queryKey: ["planejamento-mapa", userId],
     enabled: !!userId,
@@ -397,11 +371,15 @@ function PlanejamentoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concluidas]);
   const concluidosCount = MODULOS.filter((m) => moduloCompleto(m.n)).length;
+  const secoesFeitasModuloAtual = useMemo(() => {
+    if (moduloAtual > TOTAL_MODULOS) return 0;
+    return secoesDoModulo(moduloAtual).filter((s) => concluidas.has(s.id)).length;
+  }, [moduloAtual, concluidas]);
 
-  // Scroll spy (só na vista Documento).
+  // Scroll spy.
   const [activeMod, setActiveMod] = useState<number | null>(null);
   useEffect(() => {
-    if (vista !== "documento" || typeof window === "undefined") return;
+    if (typeof window === "undefined") return;
     const els = MODULOS.map((m) => document.getElementById(`modulo-${m.n}`)).filter(
       (el): el is HTMLElement => !!el,
     );
@@ -417,19 +395,7 @@ function PlanejamentoPage() {
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
-  }, [dadosQuery.data, vista]);
-
-  // Ao voltar do mapa pra um módulo concluído, rola até a seção.
-  useEffect(() => {
-    if (vista !== "documento" || scrollAlvo == null) return;
-    const t = window.setTimeout(() => {
-      document
-        .getElementById(`modulo-${scrollAlvo}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      setScrollAlvo(null);
-    }, 80);
-    return () => window.clearTimeout(t);
-  }, [vista, scrollAlvo]);
+  }, [dadosQuery.data]);
 
   // `search` explícito: a rota do módulo declara `secao` no validateSearch, e o
   // TanStack exige a chave mesmo quando o valor é opcional.
@@ -452,58 +418,22 @@ function PlanejamentoPage() {
 
   const val = (c: string) => valorDe.get(c);
 
-  const nosMapa: NoMapa[] = MODULOS.map((m) => ({
-    n: m.n,
-    nome: m.nome,
-    concluido: moduloCompleto(m.n),
-    snippet: valorDe.get(MODULO_SNIPPET_CAMPO[m.n]) ?? "",
-    ferramentaNome: ferramentaDe(m.n).nome,
-    ferramentaRota: ferramentaDe(m.n).rota,
-  }));
-
   return (
     <PaginaLogada
-      // Larga nas duas vistas: o Mapa é diagrama, e o Documento é um bento de
-      // cartões, não prosa corrida. A medida do bloco de destaque acompanha o
-      // container (ver `max-w-[64ch]` em BlocoDestaque) — quando ela ficou
-      // travada em 46ch com o container em 1.120px, sobravam ~365px vazios à
-      // direita e o bloco parecia diagramação errada.
+      // Larga: o Documento é um bento de cartões, não prosa corrida. A medida
+      // do bloco de destaque acompanha o container (ver `max-w-[64ch]` em
+      // BlocoDestaque) — quando ela ficou travada em 46ch com o container em
+      // 1.120px, sobravam ~365px vazios à direita e o bloco parecia
+      // diagramação errada.
       largura="larga"
       eyebrow="Planejamento"
       titulo={businessName || "A base do seu negócio."}
-      acao={
-        <div className="inline-flex shrink-0 rounded-lg border border-[var(--line)] bg-white p-[3px]">
-          {(["documento", "mapa"] as const).map((v) => {
-            const ativo = vista === v;
-            return (
-              <button
-                key={v}
-                type="button"
-                onClick={() => escolherVista(v)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] transition-colors duration-200 ${
-                  ativo
-                    ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                    : "text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                }`}
-                style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
-              >
-                {v === "documento" ? (
-                  <FileText size={16} aria-hidden="true" />
-                ) : (
-                  <GitFork size={16} aria-hidden="true" />
-                )}
-                {v === "documento" ? "Documento" : "Mapa"}
-              </button>
-            );
-          })}
-        </div>
-      }
     >
       <div>
         <div className="mb-8">
           <div>
-            {/* Progresso global: a vista Mapa já mostrava, a Documento obrigava
-                a somar os chips com o olho. */}
+            {/* Progresso global: sem isso, a única forma de saber quanto falta
+                era somar os chips com o olho. */}
             <div className="flex max-w-[280px] items-center gap-3">
               <div
                 className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--line)]"
@@ -531,268 +461,250 @@ function PlanejamentoPage() {
                 onClick={() => irParaModulo(moduloAtual)}
                 className={`${BOTAO_PRIMARIO} mt-4`}
               >
-                Continuar o Módulo {moduloAtual}
+                {secoesFeitasModuloAtual > 0 ? "Continuar" : "Começar"} o Módulo {moduloAtual}
                 <span aria-hidden="true">→</span>
               </button>
             )}
           </div>
         </div>
 
-        {vista === "mapa" ? (
-          <FadeIn key="mapa">
-            <MapaMental
-              nodes={nosMapa}
-              businessName={businessName}
-              concluidos={concluidosCount}
-              total={TOTAL_MODULOS}
-              onAbrirConcluido={(n) => {
-                escolherVista("documento");
-                setScrollAlvo(n);
-              }}
-              onAbrirModulo={irParaModulo}
-            />
-          </FadeIn>
-        ) : (
-          <FadeIn key="documento">
-            {/* Faixa dos 6 módulos. Fica sticky e sangra pras laterais com
+        <FadeIn key="documento">
+          {/* Faixa dos 6 módulos. Fica sticky e sangra pras laterais com
                 margem negativa, pra borda e fundo cobrirem o container inteiro
                 enquanto o conteúdo passa por baixo. */}
-            <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
-              <div className="py-3">
-                <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {MODULOS.map((m) => {
-                    const secoes = secoesDoModulo(m.n);
-                    const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
-                    const completo = moduloCompleto(m.n);
-                    const atual = m.n === moduloAtual;
-                    const emAndamento = atual && feitas > 0;
-                    const bloqueado = m.n > moduloAtual;
-                    const clicavel = completo || atual;
-                    const Icone = MODULO_ICONE[m.n];
-                    return (
-                      <button
-                        key={m.n}
-                        type="button"
-                        onClick={() => onClickChip(m.n)}
-                        disabled={!clicavel}
-                        title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
-                        aria-label={
-                          bloqueado
-                            ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
-                            : `Módulo ${m.n}: ${m.nome}`
-                        }
-                        className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
-                          clicavel
-                            ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
-                            : "cursor-not-allowed"
-                        } ${
-                          /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
+          <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
+            <div className="py-3">
+              <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {MODULOS.map((m) => {
+                  const secoes = secoesDoModulo(m.n);
+                  const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
+                  const completo = moduloCompleto(m.n);
+                  const atual = m.n === moduloAtual;
+                  const emAndamento = atual && feitas > 0;
+                  const bloqueado = m.n > moduloAtual;
+                  const clicavel = completo || atual;
+                  const Icone = MODULO_ICONE[m.n];
+                  return (
+                    <button
+                      key={m.n}
+                      type="button"
+                      onClick={() => onClickChip(m.n)}
+                      disabled={!clicavel}
+                      title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
+                      aria-label={
+                        bloqueado
+                          ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
+                          : `Módulo ${m.n}: ${m.nome}`
+                      }
+                      className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
+                        clicavel
+                          ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
+                          : "cursor-not-allowed"
+                      } ${
+                        /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
                            e overflow num eixo faz o outro virar auto também, o que
                            recortava o anel (ele é desenhado FORA da caixa) e deixava
                            só os cantos à mostra. Borda vive dentro da caixa. */
-                          m.n === activeMod
-                            ? "border border-[var(--secondary)]"
-                            : clicavel
-                              ? "border border-transparent hover:border-[var(--line)]"
-                              : "border border-transparent"
-                        }`}
-                        style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
-                      >
-                        {completo ? (
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
-                            <Icone size={13} className="text-white" aria-hidden="true" />
-                          </span>
-                        ) : (
-                          <span
-                            className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
-                            style={{
-                              border: emAndamento
-                                ? "2px solid var(--secondary)"
-                                : "1px solid var(--line)",
-                            }}
-                          >
-                            <span
-                              className={`font-cabinet text-[12px] ${
-                                emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
-                              }`}
-                            >
-                              {m.n}
-                            </span>
-                          </span>
-                        )}
-                        <span
-                          className={`text-[0.8125rem] leading-tight ${
-                            m.n === activeMod
-                              ? "font-semibold text-[var(--secondary-text)]"
-                              : completo || emAndamento
-                                ? "font-medium text-[var(--ink)]"
-                                : bloqueado
-                                  ? "text-[var(--muted)]"
-                                  : "text-[var(--ink-soft)]"
-                          }`}
-                        >
-                          {m.nome}
+                        m.n === activeMod
+                          ? "border border-[var(--secondary)]"
+                          : clicavel
+                            ? "border border-transparent hover:border-[var(--line)]"
+                            : "border border-transparent"
+                      }`}
+                      style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
+                    >
+                      {completo ? (
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
+                          <Icone size={13} className="text-white" aria-hidden="true" />
                         </span>
-                        {/* Só o módulo em andamento mostra status. Concluído já se
+                      ) : (
+                        <span
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
+                          style={{
+                            border: emAndamento
+                              ? "2px solid var(--secondary)"
+                              : "1px solid var(--line)",
+                          }}
+                        >
+                          <span
+                            className={`font-cabinet text-[12px] ${
+                              emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
+                            }`}
+                          >
+                            {m.n}
+                          </span>
+                        </span>
+                      )}
+                      <span
+                        className={`text-[0.8125rem] leading-tight ${
+                          m.n === activeMod
+                            ? "font-semibold text-[var(--secondary-text)]"
+                            : completo || emAndamento
+                              ? "font-medium text-[var(--ink)]"
+                              : bloqueado
+                                ? "text-[var(--muted)]"
+                                : "text-[var(--ink-soft)]"
+                        }`}
+                      >
+                        {m.nome}
+                      </span>
+                      {/* Só o módulo em andamento mostra status. Concluído já se
                           distingue pelo ícone preenchido, e repetir "concluído"
                           em até 5 chips só engorda a faixa. */}
-                        {emAndamento ? (
-                          <span className="text-[11px] text-[var(--secondary-text)]">
-                            seção {feitas} de {secoes.length}
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
+                      {emAndamento ? (
+                        <span className="text-[11px] text-[var(--secondary-text)]">
+                          seção {feitas} de {secoes.length}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
               </div>
             </div>
+          </div>
 
-            {/* Outputs dos módulos */}
-            <div className="mt-10 space-y-10">
-              {/* Só o que já tem conteúdo e o módulo atual entram por extenso. Os
+          {/* Outputs dos módulos */}
+          <div className="mt-10 space-y-10">
+            {/* Só o que já tem conteúdo e o módulo atual entram por extenso. Os
                   futuros iam por extenso também, e pra quem começa a tela virava
                   seis blocos repetindo "está em branco". */}
-              {MODULOS.filter((m) => m.n <= moduloAtual).map((m) => {
-                const ferramenta = ferramentaDe(m.n);
-                const temAlgo =
-                  camposDoLayout(m.n).some((c) => valorDe.has(c)) ||
-                  (m.n === 3 && produtos.length > 0) ||
-                  (m.n === 6 && metasAtivas.length > 0);
-                const proximo = m.n === moduloAtual;
-                const Icone = MODULO_ICONE[m.n];
-                return (
-                  <Reveal key={m.n}>
-                    <section
-                      id={`modulo-${m.n}`}
-                      className="group scroll-mt-24 border-t border-[var(--line)] pt-8"
-                    >
-                      {/* Header do módulo */}
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white transition-[background] duration-200 group-hover:bg-[var(--secondary-light)]">
-                            <Icone size={20} className="text-[var(--ink)]" aria-hidden="true" />
-                          </span>
-                          <div>
-                            {/* O nome do módulo é o rótulo do bloco: sobe pra
+            {MODULOS.filter((m) => m.n <= moduloAtual).map((m) => {
+              const ferramenta = ferramentaDe(m.n);
+              const temAlgo =
+                camposDoLayout(m.n).some((c) => valorDe.has(c)) ||
+                (m.n === 3 && produtos.length > 0) ||
+                (m.n === 6 && metasAtivas.length > 0);
+              const proximo = m.n === moduloAtual;
+              const Icone = MODULO_ICONE[m.n];
+              return (
+                <Reveal key={m.n}>
+                  <section
+                    id={`modulo-${m.n}`}
+                    className="group scroll-mt-24 border-t border-[var(--line)] pt-8"
+                  >
+                    {/* Header do módulo */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white transition-[background] duration-200 group-hover:bg-[var(--secondary-light)]">
+                          <Icone size={20} className="text-[var(--ink)]" aria-hidden="true" />
+                        </span>
+                        <div>
+                          {/* O nome do módulo é o rótulo do bloco: sobe pra
                                 <h2> em --ink e o "MÓDULO N" fica como eyebrow. */}
-                            <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                              Módulo {m.n}
-                            </p>
-                            <h2 className="mt-1 text-[20px] leading-tight text-[var(--ink)]">
-                              {m.nome}
-                            </h2>
-                            {temAlgo && (
-                              <a href={ferramenta.rota} className={`${BOTAO_SECUNDARIO} mt-2`}>
-                                {ferramenta.nome}
-                                <span aria-hidden="true">→</span>
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                        {temAlgo && (
-                          <a
-                            href={`/planejamento/modulo/${m.n}`}
-                            className={`${BOTAO_SECUNDARIO} shrink-0`}
-                          >
-                            Editar
-                            <span aria-hidden="true">→</span>
-                          </a>
-                        )}
-                      </div>
-
-                      {temAlgo ? (
-                        <div className="mt-5">
-                          {(LAYOUT[m.n] ?? []).map((b, i) => (
-                            <BlocoView
-                              key={i}
-                              bloco={b}
-                              val={val}
-                              produtos={produtos}
-                              metasAtivas={metasAtivas}
-                              receitaMes={receitaMes}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="mt-4">
-                          <p className="text-[0.9rem] text-[var(--ink-soft)]">
-                            {proximo
-                              ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
-                              : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
+                          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                            Módulo {m.n}
                           </p>
-                          {proximo && (
-                            <a
-                              href={`/planejamento/modulo/${m.n}`}
-                              className={`${BOTAO_PRIMARIO} mt-3`}
-                            >
-                              Começar o Módulo {m.n}
+                          <h2 className="mt-1 text-[20px] leading-tight text-[var(--ink)]">
+                            {m.nome}
+                          </h2>
+                          {temAlgo && (
+                            <a href={ferramenta.rota} className={`${BOTAO_SECUNDARIO} mt-2`}>
+                              {ferramenta.nome}
                               <span aria-hidden="true">→</span>
                             </a>
                           )}
                         </div>
+                      </div>
+                      {temAlgo && (
+                        <a
+                          href={`/planejamento/modulo/${m.n}`}
+                          className={`${BOTAO_SECUNDARIO} shrink-0`}
+                        >
+                          Editar
+                          <span aria-hidden="true">→</span>
+                        </a>
                       )}
-                    </section>
-                  </Reveal>
-                );
-              })}
-            </div>
+                    </div>
 
-            {/* O que vem depois: uma linha por módulo, em vez de um bloco de
+                    {temAlgo ? (
+                      <div className="mt-5">
+                        {(LAYOUT[m.n] ?? []).map((b, i) => (
+                          <BlocoView
+                            key={i}
+                            bloco={b}
+                            val={val}
+                            produtos={produtos}
+                            metasAtivas={metasAtivas}
+                            receitaMes={receitaMes}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-4">
+                        <p className="text-[0.9rem] text-[var(--ink-soft)]">
+                          {proximo
+                            ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
+                            : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
+                        </p>
+                        {proximo && (
+                          <a
+                            href={`/planejamento/modulo/${m.n}`}
+                            className={`${BOTAO_PRIMARIO} mt-3`}
+                          >
+                            Começar o Módulo {m.n}
+                            <span aria-hidden="true">→</span>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                </Reveal>
+              );
+            })}
+          </div>
+
+          {/* O que vem depois: uma linha por módulo, em vez de um bloco de
                 vazio para cada um. Dá noção de caminho sem simular conteúdo. */}
-            {moduloAtual < TOTAL_MODULOS && (
-              <div className="mt-12 border-t border-[var(--line)] pt-8">
-                <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                  O que vem depois
-                </p>
-                <ul className="mt-4 flex list-none flex-col">
-                  {MODULOS.filter((m) => m.n > moduloAtual).map((m) => {
-                    const Icone = MODULO_ICONE[m.n];
-                    return (
-                      <li
-                        key={m.n}
-                        className="flex items-center gap-3 border-b border-[var(--line)] py-3 last:border-b-0"
-                      >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)]">
-                          <Icone size={14} className="text-[var(--muted)]" aria-hidden="true" />
-                        </span>
-                        <span className="text-[14px] text-[var(--ink-soft)]">
-                          Módulo {m.n} · {m.nome}
-                        </span>
-                        <span className="ml-auto shrink-0 text-[12px] text-[var(--muted)]">
-                          abre depois do {m.n - 1}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
+          {moduloAtual < TOTAL_MODULOS && (
+            <div className="mt-12 border-t border-[var(--line)] pt-8">
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                O que vem depois
+              </p>
+              <ul className="mt-4 flex list-none flex-col">
+                {MODULOS.filter((m) => m.n > moduloAtual).map((m) => {
+                  const Icone = MODULO_ICONE[m.n];
+                  return (
+                    <li
+                      key={m.n}
+                      className="flex items-center gap-3 border-b border-[var(--line)] py-3 last:border-b-0"
+                    >
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)]">
+                        <Icone size={14} className="text-[var(--muted)]" aria-hidden="true" />
+                      </span>
+                      <span className="text-[14px] text-[var(--ink-soft)]">
+                        Módulo {m.n} · {m.nome}
+                      </span>
+                      <span className="ml-auto shrink-0 text-[12px] text-[var(--muted)]">
+                        abre depois do {m.n - 1}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
 
-            {moduloAtual > TOTAL_MODULOS && (
-              <div className="mt-12 rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
-                <p className="text-[1.25rem] leading-snug text-[var(--ink)]">
-                  Seu planejamento está completo.
-                </p>
-                <p className="mt-1 text-[0.9rem] text-[var(--ink-soft)]">
-                  Agora coloca em prática.
-                </p>
-                <div className="mt-5 flex flex-wrap justify-center gap-2">
-                  {[
-                    { rota: "/produtos", nome: "Abrir o Catálogo" },
-                    { rota: "/financeiro", nome: "Abrir o Financeiro" },
-                    { rota: "/metas", nome: "Abrir as Metas" },
-                  ].map((f) => (
-                    <a key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
-                      {f.nome}
-                      <span aria-hidden="true">→</span>
-                    </a>
-                  ))}
-                </div>
+          {moduloAtual > TOTAL_MODULOS && (
+            <div className="mt-12 rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
+              <p className="text-[1.25rem] leading-snug text-[var(--ink)]">
+                Seu planejamento está completo.
+              </p>
+              <p className="mt-1 text-[0.9rem] text-[var(--ink-soft)]">Agora coloca em prática.</p>
+              <div className="mt-5 flex flex-wrap justify-center gap-2">
+                {[
+                  { rota: "/produtos", nome: "Abrir o Catálogo" },
+                  { rota: "/financeiro", nome: "Abrir o Financeiro" },
+                  { rota: "/metas", nome: "Abrir as Metas" },
+                ].map((f) => (
+                  <a key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
+                    {f.nome}
+                    <span aria-hidden="true">→</span>
+                  </a>
+                ))}
               </div>
-            )}
-          </FadeIn>
-        )}
+            </div>
+          )}
+        </FadeIn>
       </div>
     </PaginaLogada>
   );
@@ -834,16 +746,20 @@ function BlocoView({
     const v = val(bloco.c);
     if (!v) return null;
     return (
-      /* A medida vai no parágrafo, em `ch`, porque precisa acompanhar os 26px do
+      /* A medida vai no parágrafo, em `ch`, porque precisa acompanhar o tamanho do
          texto — `em` no wrapper herdaria 16px e daria ~480px, quebrando a frase
          a cada três palavras.
          64ch e não 46ch: com o container em 1.120px, 46ch parava em ~755px e
          deixava ~365px vazios à direita, que lia como diagramação errada. 64ch
          preenche a largura e ainda fica dentro da faixa legível de 45–75
-         caracteres por linha. */
+         caracteres por linha.
+         18px, não 26px: 26px foi pensado pra uma resposta curta de destaque, mas
+         a Aimer também gera parágrafos longos aqui (ex: Propósito), e nesse
+         tamanho de fonte um texto de vários parágrafos ficava grande demais pra
+         ler. */
       <div className="mb-8 border-l-[3px] border-[var(--secondary)] pl-6">
         <Rotulo campo={bloco.c} />
-        <p className="mt-1 max-w-[64ch] whitespace-pre-line text-[26px] leading-[1.35] text-[var(--ink)]">
+        <p className="mt-1 max-w-[64ch] whitespace-pre-line text-[18px] leading-[1.6] text-[var(--ink)]">
           {v}
         </p>
       </div>

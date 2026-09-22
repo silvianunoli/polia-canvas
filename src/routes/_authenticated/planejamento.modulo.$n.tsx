@@ -10,6 +10,7 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
+import { toastInfo } from "@/lib/toast";
 import {
   type Secao,
   SECOES,
@@ -275,6 +276,20 @@ function ModuloPage() {
   );
 }
 
+// Máscara de moeda: cada dígito digitado empurra a casa dos centavos, sem
+// depender de o texto já ter "R$" ou separador (funciona também colando um
+// valor pronto). Formato final: "R$ 1.234,56".
+function formatarMoedaDigitada(valor: string): string {
+  const digitos = valor.replace(/\D/g, "");
+  if (!digitos) return "";
+  const centavos = parseInt(digitos, 10);
+  const reais = (centavos / 100).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `R$ ${reais}`;
+}
+
 function SecaoForm({
   secao,
   indice,
@@ -320,7 +335,12 @@ function SecaoForm({
       try {
         await onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]);
       } finally {
-        if (pendentes.current.size === 0) setStatus("saved");
+        // Toast, não só o texto "Salvo" no topo: rolada a página, esse texto
+        // some da vista e não dava pra saber se a resposta gravou.
+        if (pendentes.current.size === 0) {
+          setStatus("saved");
+          toastInfo("Salvo");
+        }
       }
     },
     [onUpsert, secao],
@@ -387,6 +407,11 @@ function SecaoForm({
         });
         setRascunho((s) => ({ ...s, [i]: resultado.texto }));
         track("planejamento_ia_gerado", { campo: secao.perguntas[i].campo });
+        // Salva na hora: o campo já aparece preenchido com o rascunho, e sem
+        // isto ele só ia pro banco se a usuária clicasse "Usar" — avançando
+        // direto (Salvar e continuar) o rascunho sumia sem nunca ser salvo.
+        setStatus("saving");
+        await salvarUm(i);
       } else if (resultado.motivo === "cota_atingida") {
         setCotaAtingida((s) => ({ ...s, [i]: true }));
       } else if (resultado.motivo === "contexto_insuficiente") {
@@ -418,6 +443,11 @@ function SecaoForm({
       return c;
     });
     setRascunho((s) => ({ ...s, [i]: null }));
+    // O rascunho foi salvo assim que a Aimer gerou (ver gerarComAimer):
+    // descartar também precisa gravar a reversão, senão o banco fica com o
+    // texto da IA mesmo depois de "Descartar".
+    setStatus("saving");
+    void salvarUm(i);
   };
 
   const concluir = async () => {
@@ -454,99 +484,117 @@ function SecaoForm({
       <p className="mt-1 text-[14px] text-[var(--ink-soft)]">{secao.subtitulo}</p>
 
       <div className="mt-8 space-y-6">
-        {secao.perguntas.map((p, i) => (
-          <label key={i} className="block">
-            <span className="mb-2 block text-[1rem] leading-snug text-[var(--ink)]">{p.label}</span>
-            <textarea
-              value={valores[i]}
-              onChange={(e) => onChange(i, e.target.value)}
-              disabled={gerando[i]}
-              placeholder="Escreva aqui…"
-              className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none disabled:bg-[var(--surface)]"
-            />
-
-            {cotaAtingida[i] ? (
-              <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas vezes
-                precisar.{" "}
-                <Link
-                  to="/upgrade"
-                  search={{ rota: "/planejamento", tier: "controle" }}
-                  className="font-medium text-[var(--secondary-text)] no-underline"
-                >
-                  Conhecer o Premium
-                </Link>
-              </p>
-            ) : contextoInsuf[i] ? (
-              <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                Preciso saber o básico do seu negócio antes. Responda o que você vende (
-                <Link
-                  to="/produtos"
-                  className="font-medium text-[var(--secondary-text)] no-underline"
-                >
-                  Produtos
-                </Link>
-                ) e o tipo do seu negócio (
-                <Link
-                  to="/configuracoes"
-                  className="font-medium text-[var(--secondary-text)] no-underline"
-                >
-                  Configurações
-                </Link>
-                ) e a Aimer rascunha o resto.
-              </p>
-            ) : erroGeracao[i] ? (
-              <p className="mt-2 text-[13px] text-[var(--danger)]">
-                {erroGeracao[i]}{" "}
-                <button
-                  type="button"
-                  onClick={() => void gerarComAimer(i)}
-                  className="font-medium underline"
-                >
-                  Tentar de novo
-                </button>
-              </p>
-            ) : rascunho[i] != null ? (
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
-                  <Sparkles size={11} aria-hidden="true" />
-                  rascunho de IA
-                </span>
-                <button
-                  type="button"
-                  onClick={() => usarRascunho(i)}
-                  className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-                >
-                  Usar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => descartarRascunho(i)}
-                  className="text-[13px] text-[var(--muted)] hover:underline"
-                >
-                  Descartar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void gerarComAimer(i)}
-                  className="text-[13px] text-[var(--muted)] hover:underline"
-                >
-                  Gerar outro
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void gerarComAimer(i)}
+        {secao.perguntas.map((p, i) =>
+          p.tipo === "moeda" ? (
+            <label key={i} className="block">
+              <span className="mb-2 block text-[1rem] leading-snug text-[var(--ink)]">
+                {p.label}
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={valores[i]}
+                onChange={(e) => onChange(i, formatarMoedaDigitada(e.target.value))}
+                placeholder="R$ 0,00"
+                className="w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none"
+              />
+            </label>
+          ) : (
+            <label key={i} className="block">
+              <span className="mb-2 block text-[1rem] leading-snug text-[var(--ink)]">
+                {p.label}
+              </span>
+              <textarea
+                value={valores[i]}
+                onChange={(e) => onChange(i, e.target.value)}
                 disabled={gerando[i]}
-                className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-              >
-                <Sparkles size={13} aria-hidden="true" />
-                {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
-              </button>
-            )}
-          </label>
-        ))}
+                placeholder="Escreva aqui…"
+                className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none disabled:bg-[var(--surface)]"
+              />
+
+              {cotaAtingida[i] ? (
+                <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                  Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas vezes
+                  precisar.{" "}
+                  <Link
+                    to="/upgrade"
+                    search={{ rota: "/planejamento", tier: "controle" }}
+                    className="font-medium text-[var(--secondary-text)] no-underline"
+                  >
+                    Conhecer o Premium
+                  </Link>
+                </p>
+              ) : contextoInsuf[i] ? (
+                <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                  Preciso saber o básico do seu negócio antes. Responda o que você vende (
+                  <Link
+                    to="/produtos"
+                    className="font-medium text-[var(--secondary-text)] no-underline"
+                  >
+                    Produtos
+                  </Link>
+                  ) e o tipo do seu negócio (
+                  <Link
+                    to="/configuracoes"
+                    className="font-medium text-[var(--secondary-text)] no-underline"
+                  >
+                    Configurações
+                  </Link>
+                  ) e a Aimer rascunha o resto.
+                </p>
+              ) : erroGeracao[i] ? (
+                <p className="mt-2 text-[13px] text-[var(--danger)]">
+                  {erroGeracao[i]}{" "}
+                  <button
+                    type="button"
+                    onClick={() => void gerarComAimer(i)}
+                    className="font-medium underline"
+                  >
+                    Tentar de novo
+                  </button>
+                </p>
+              ) : rascunho[i] != null ? (
+                <div className="mt-2 flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
+                    <Sparkles size={11} aria-hidden="true" />
+                    rascunho de IA
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => usarRascunho(i)}
+                    className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                  >
+                    Usar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => descartarRascunho(i)}
+                    className="text-[13px] text-[var(--muted)] hover:underline"
+                  >
+                    Descartar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void gerarComAimer(i)}
+                    className="text-[13px] text-[var(--muted)] hover:underline"
+                  >
+                    Gerar outro
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void gerarComAimer(i)}
+                  disabled={gerando[i]}
+                  className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                >
+                  <Sparkles size={13} aria-hidden="true" />
+                  {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
+                </button>
+              )}
+            </label>
+          ),
+        )}
       </div>
 
       <div className="mt-8 flex flex-col items-start gap-4">

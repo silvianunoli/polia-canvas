@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -6,6 +7,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { CamposDoc, FerramentaVazia } from "@/components/planejamento/CamposDoc";
 import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
+import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/mercado")({
   head: () => ({
@@ -47,6 +49,11 @@ function MercadoPage() {
       eyebrow="Mapa de Mercado"
       titulo="Quem a marca serve."
       subtitulo="Sua cliente, o mercado e o seu lugar nele, pra consultar quando criar conteúdo, produto ou campanha."
+      acao={
+        <a href="/planejamento" className={BTN_ACAO_CONTORNO}>
+          <ArrowLeft size={15} aria-hidden="true" /> Planejamento
+        </a>
+      }
     >
       <div>
         {camposQuery.isLoading ? (

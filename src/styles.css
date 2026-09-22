@@ -192,6 +192,13 @@
     font-family: inherit;
   }
 
+  /* O browser não dá cursor de mão pra <button> por padrão (só <a> tem isso de
+     graça) — todo card e opção que é na verdade um <button> ficava com cursor
+     de seta, sem sinalizar que é clicável. */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+
   /* Todo título (h1-h6) usa Cabinet Grotesk por padrão, sem precisar da
      classe .font-cabinet. */
   h1, h2, h3, h4, h5, h6 {
@@ -249,7 +256,7 @@
    Use SEMPRE uma destas classes em texto manuscrito decorativo. */
 .anzylna-decorativo {
   font-family: "Anzylna", cursive;
-  font-size: 18px;
+  font-size: 30px;
   line-height: 1.4;
   opacity: 1 !important;
 }
@@ -260,7 +267,7 @@
   opacity: 1 !important;
 }
 @media (max-width: 768px) {
-  .anzylna-decorativo { font-size: 20px; }
+  .anzylna-decorativo { font-size: 30px; }
   .anzylna-informacional { font-size: 22px; }
 }
 

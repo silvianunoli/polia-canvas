@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Sparkles, Copy } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -45,6 +45,14 @@ function AimerPage() {
   const [tetoAtingido, setTetoAtingido] = useState(false);
   const [copiadoId, setCopiadoId] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fimDaConversaRef = useRef<HTMLDivElement>(null);
+
+  // Cada mensagem nova (da usuária ou da Aimer) empurra a conversa pra baixo;
+  // sem isso a mensagem mais recente nascia atrás da caixa de texto, que é
+  // sticky e cobre o fim da lista.
+  useEffect(() => {
+    fimDaConversaRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [mensagens, enviando]);
 
   const enviar = async (textoForcado?: string) => {
     const texto = (textoForcado ?? pergunta).trim();
@@ -165,25 +173,25 @@ function AimerPage() {
             (vazio, conversa, carregando, erro), sem "já vi". Texto no fluxo
             normal, lido por leitor de tela. --muted #6B6B6B sobre --bg
             #F2F0ED dá 4,6:1, passa AA em texto de 14px. */}
-        <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
+        <p className="mt-2 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
           A Aimer é gerada por inteligência artificial. Os números vêm dos dados registrados aqui; o
           texto é escrito pela IA e pode errar. Vale conferir antes de decidir.
         </p>
         {mensagens.length === 0 ? (
-          <div className="mt-10 rounded-2xl border border-[var(--line)] bg-white p-6">
+          <div className="mt-5 rounded-2xl border border-[var(--line)] bg-white p-5">
             <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--secondary-light)]">
               <Sparkles size={18} className="text-[var(--secondary-text)]" aria-hidden="true" />
             </span>
             <p className="text-[16px] leading-relaxed text-[var(--ink)]">
               Pergunte o que quiser sobre como usar a Pólia, ou sobre o negócio.
             </p>
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-3 flex flex-col gap-2">
               {EXEMPLOS.map((ex) => (
                 <button
                   key={ex}
                   type="button"
                   onClick={() => setPergunta(ex)}
-                  className="rounded-xl border border-[var(--line)] px-4 py-2.5 text-left text-[13px] text-[var(--ink-soft)] hover:border-[var(--secondary)] hover:bg-[var(--surface)]"
+                  className="rounded-xl border border-[var(--line)] px-4 py-2 text-left text-[13px] text-[var(--ink-soft)] hover:border-[var(--secondary)] hover:bg-[var(--surface)]"
                 >
                   {ex}
                 </button>
@@ -191,7 +199,7 @@ function AimerPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-8 flex-1 space-y-4">
+          <div className="mt-5 flex-1 space-y-4">
             {mensagens.map((msg) => (
               <div
                 key={msg.id}
@@ -264,10 +272,11 @@ function AimerPage() {
                 </div>
               </div>
             )}
+            <div ref={fimDaConversaRef} />
           </div>
         )}
 
-        <div className="sticky bottom-6 mt-6 rounded-2xl border border-[var(--line)] bg-white p-5">
+        <div className="sticky bottom-6 mt-4 rounded-2xl border border-[var(--line)] bg-white p-5">
           <textarea
             ref={textareaRef}
             value={pergunta}

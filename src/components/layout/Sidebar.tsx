@@ -158,8 +158,8 @@ export function Sidebar() {
                   aria-current={active ? "page" : undefined}
                   className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
                     active
-                      ? "border-l-[3px] border-[var(--secondary)] pl-[9px] font-medium text-[var(--ink)]"
-                      : "border-l-[3px] border-transparent text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                      ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                      : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                   } ${compact ? "justify-center" : ""}`}
                 >
                   <Icon size={20} aria-hidden="true" />
@@ -173,7 +173,7 @@ export function Sidebar() {
                   onClick={onNavigate}
                   data-track="nav_bloqueado_clicado"
                   data-track-props={JSON.stringify({ destino: item.to })}
-                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] border-l-[3px] border-transparent ${
+                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
                     compact ? "justify-center" : ""
                   }`}
                 >
