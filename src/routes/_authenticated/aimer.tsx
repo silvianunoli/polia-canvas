@@ -276,7 +276,7 @@ function AimerPage() {
           </div>
         )}
 
-        <div className="sticky bottom-6 mt-4 rounded-2xl border border-[var(--line)] bg-white p-5">
+        <div className="sticky bottom-6 mt-8 rounded-2xl border border-[var(--line)] bg-white p-4">
           <textarea
             ref={textareaRef}
             value={pergunta}
@@ -289,9 +289,9 @@ function AimerPage() {
             }}
             placeholder="Pergunte pra Aimer…"
             aria-label="Escreva sua pergunta pra Aimer"
-            rows={3}
+            rows={2}
             disabled={enviando || tetoAtingido}
-            className="mb-4 w-full resize-none font-sans text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] disabled:opacity-60"
+            className="mb-3 w-full resize-none font-sans text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] disabled:opacity-60"
           />
           <div className="flex justify-end">
             <button
