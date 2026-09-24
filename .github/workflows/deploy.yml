@@ -13,6 +13,12 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+
+      # Antes do build de propósito, mesmo padrão do polia-admin: se a suíte
+      # quebrou, o deploy não sai. É mais barato o push falhar aqui do que a
+      # regressão chegar em usepolia.com.br.
+      - run: npm test
+
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
@@ -22,6 +28,7 @@ jobs:
           VITE_TURNSTILE_SITE_KEY: ${{ vars.VITE_TURNSTILE_SITE_KEY }}
           VITE_TURNSTILE_VERIFY_URL: ${{ vars.VITE_TURNSTILE_VERIFY_URL }}
           VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID }}
+          VITE_META_PIXEL_ID: ${{ vars.VITE_META_PIXEL_ID }}
       - uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

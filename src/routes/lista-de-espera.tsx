@@ -5,6 +5,7 @@ import { z } from "zod";
 import { ArrowUp } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { pixelLead } from "@/lib/metaPixel";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { entrarListaEspera } from "@/lib/lista-espera.functions";
@@ -188,6 +189,9 @@ function ListaEsperaPage() {
       if (resultado.ok) {
         if (resultado.jaEstava) toastErro("Esse e-mail já está na lista. Já está dentro.");
         track("lista_espera_enviada", { ja_estava: resultado.jaEstava });
+        // Lead só pra inscrição nova: e-mail repetido já converteu antes e não
+        // deve contar de novo pro anúncio.
+        if (!resultado.jaEstava && resultado.eventId) pixelLead(resultado.eventId);
         setEnviado(true);
       } else {
         track("lista_espera_falhou", { motivo: "resultado_nao_ok" });

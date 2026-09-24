@@ -15,6 +15,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { MetaPixel } from "@/components/MetaPixel";
+import { pixelPageView } from "@/lib/metaPixel";
 import { ErrorPage, type ErrorPageProps } from "@/components/layout/ErrorPage";
 import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
@@ -160,9 +162,12 @@ function RootComponent() {
 
   // Pageview automático em toda página, pública ou logada — um hook aqui
   // no root cobre todas as rotas, sem precisar instrumentar cada uma.
+  // pixelPageView() segue o mesmo gatilho (troca de pathname), com dedup
+  // próprio por pathname pra não duplicar no carregamento inicial.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   useEffect(() => {
     track("pageview");
+    pixelPageView(pathname);
   }, [pathname]);
 
   // Clique instrumentado por delegação: qualquer elemento com data-track vira
@@ -264,6 +269,7 @@ function RootComponent() {
       />
       <CookieConsent />
       <GoogleAnalytics />
+      <MetaPixel />
       {import.meta.env.DEV && <DiagnosticPanel />}
     </QueryClientProvider>
   );

@@ -45,5 +45,9 @@ export const entrarListaEspera = createServerFn({ method: "POST" })
       return { ok: false, jaEstava: false };
     }
 
-    return { ok: true, jaEstava: false };
+    // eventId só existe quando a linha foi gravada de verdade agora (nunca no
+    // honeypot, nunca em falha, nunca em duplicidade): é o gatilho pro Meta
+    // Pixel disparar o Lead uma vez por inscrição nova, com o mesmo ID que a
+    // API de Conversões vai usar depois pra deduplicar.
+    return { ok: true, jaEstava: false, eventId: crypto.randomUUID() };
   });

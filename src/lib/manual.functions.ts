@@ -31,7 +31,7 @@ const inputSchema = z.object({
 });
 
 export type ResultadoManual =
-  | { ok: true; downloadUrl: string }
+  | { ok: true; downloadUrl: string; eventId?: string }
   | { ok: false; motivo: "turnstile" | "erro" };
 
 export const gravarLeadManual = createServerFn({ method: "POST" })
@@ -43,6 +43,16 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
     if (!(await verificarTurnstileServer(data.turnstileToken))) {
       return { ok: false, motivo: "turnstile" };
     }
+
+    // Descobre ANTES do upsert se o e-mail já tinha lead: pedir o manual de
+    // novo sempre reenvia o PDF, mas não deve contar como um novo Lead pro
+    // anúncio (senão a mesma pessoa infla o Lead várias vezes).
+    const { data: existente } = await supabaseAdmin
+      .from("manual_leads")
+      .select("email")
+      .eq("email", data.email)
+      .maybeSingle();
+    const leadNovo = !existente;
 
     // Upsert por e-mail: pedir de novo atualiza a linha, nunca duplica.
     // created_at e os dois tokens ficam de fora do payload de propósito: em
@@ -95,5 +105,9 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
       contexto: "[Manual]",
     });
 
-    return { ok: true, downloadUrl };
+    // eventId só existe pra lead novo de verdade (nunca no honeypot, nunca em
+    // falha, nunca em reenvio de e-mail já cadastrado): é o gatilho pro Meta
+    // Pixel disparar o Lead, com o mesmo ID que a API de Conversões vai usar
+    // depois pra deduplicar.
+    return { ok: true, downloadUrl, eventId: leadNovo ? crypto.randomUUID() : undefined };
   });
