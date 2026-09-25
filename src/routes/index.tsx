@@ -24,16 +24,16 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pólia · Descubra se o seu negócio dá lucro" },
+      { title: "Pólia · Cobre o que a sua marca vale" },
       {
         name: "description",
         content:
-          "Números para decidir melhor: veja quanto sobra, quanto precisa entrar no mês e o que merece atenção no seu negócio. Sem planilha e sem achismo.",
+          "Confie no valor da marca que você construiu e cobre de acordo. A Pólia organiza preço, meta e rotina num só lugar, com os números provando que faz sentido.",
       },
-      { property: "og:title", content: "Pólia · Descubra se o seu negócio dá lucro" },
+      { property: "og:title", content: "Pólia · Cobre o que a sua marca vale" },
       {
         property: "og:description",
-        content: "Ver quanto sobra em cada venda e cobrar o que o negócio vale, no mesmo lugar.",
+        content: "A marca dá coragem pro preço. O número prova que a coragem tinha razão.",
       },
     ],
     links: [linkCanonico("/")],
@@ -46,9 +46,10 @@ export const Route = createFileRoute("/")({
 
 /* ───────────────────────────── conteúdo ───────────────────────────── */
 
-// Copy V4 (14/09/2026): a Home conta uma história só, nesta ordem. Eu descubro se
-// dá lucro, entendo quanto sobra, passo a cobrar com clareza, decido melhor e
-// construo uma marca que sustenta essas decisões. O número abre, a marca aprofunda.
+// Copy V5 (25/09/2026, eixo marca-primeiro): a Home conta uma história só, nesta
+// ordem. Eu reconheço o que a marca já vale, ganho coragem pra cobrar de acordo,
+// o número prova que fez sentido, e a rotina sustenta essas decisões. A marca
+// abre, o número prova. Substitui a V4 (número abre, marca aprofunda).
 
 const credenciais = [
   "Feita no Brasil",
@@ -193,12 +194,12 @@ const ferramentas = [
   "Financeiro",
 ];
 
-/** As perguntas que a Pólia responde antes de qualquer conversa sobre marca. */
-const perguntasDoNumero = [
-  "Dá lucro?",
-  "Quanto sobra?",
-  "Quanto precisa entrar?",
-  "Quanto vale o que eu vendo?",
+/** O que a Pólia ajuda a reconhecer antes de qualquer conversa sobre número. */
+const perguntasDaMarca = [
+  "O que a marca já entrega?",
+  "Pra quem ela existe?",
+  "Por que ela merece esse preço?",
+  "O que ela tem que a concorrente não tem?",
 ];
 
 const credenciaisSil = [
@@ -246,7 +247,7 @@ const planos: {
 }[] = [
   {
     nome: "Grátis",
-    frase: "Descubra se o seu negócio dá lucro.",
+    frase: "Descubra o que a sua marca já vale.",
     preco: "R$ 0",
     ciclo: "· para sempre",
     features: [
@@ -469,7 +470,7 @@ function HomePage() {
               data-track-props='{"contexto":"flutuante"}'
               className={BTN_PRIMARIO}
             >
-              Quero descobrir se dá lucro
+              Quero cobrar o que a marca vale
               <span aria-hidden="true">→</span>
             </a>
           </motion.div>
@@ -489,15 +490,15 @@ function HomePage() {
                   <Eyebrow>Gestão para quem vende</Eyebrow>
                 </Reveal>
                 <h1 className="mb-6 mt-4 text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                  Descubra se o seu negócio dá{" "}
+                  Sua marca já vale mais do que{" "}
                   <span className="whitespace-nowrap">
-                    <HighlightWord delay={0.35}>lucro</HighlightWord>.
+                    você está <HighlightWord delay={0.35}>cobrando</HighlightWord>.
                   </span>
                 </h1>
                 <Reveal delay={0.1}>
                   <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    Veja quanto sobra em cada venda, quanto precisa entrar no mês e tome decisões
-                    com mais clareza, sem planilha e sem achismo.
+                    A Pólia ajuda a transformar essa confiança em preço real, com o número provando
+                    que fez sentido, sem planilha e sem achismo.
                   </p>
                   <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                     A Pólia organiza os números e as decisões do seu negócio em um só lugar, para
@@ -510,7 +511,7 @@ function HomePage() {
                       data-track-props='{"contexto":"hero"}'
                       className={BTN_PRIMARIO}
                     >
-                      Quero descobrir se dá lucro
+                      Quero cobrar o que a marca vale
                       <span aria-hidden="true">→</span>
                     </a>
                     <a href="#produto" className={BTN_CONTORNO}>
@@ -871,7 +872,7 @@ function HomePage() {
         <section className="bg-[var(--ink)] py-[clamp(80px,10vw,140px)] text-[var(--bg)]">
           <div className={CONTAINER}>
             <Reveal>
-              <Eyebrow claro>Número e marca</Eyebrow>
+              <Eyebrow claro>Marca e número</Eyebrow>
               <h2 className="mb-6 mt-4 max-w-[20ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
                 Preço, meta e rotina também são{" "}
                 <em className="font-fraunces font-normal italic text-[var(--secondary-light)]">
@@ -880,22 +881,21 @@ function HomePage() {
                 .
               </h2>
               <p className="max-w-[52ch] text-[16px] leading-[1.7] text-[var(--bg)]/70">
-                Quando você sabe quem a sua marca serve, o que ela entrega e quanto precisa receber
-                por isso, o preço deixa de ser chute. A meta deixa de ser desejo. E a rotina deixa
-                de ser uma lista infinita de coisas para fazer.
+                Quando você confia no que a sua marca vale, o preço deixa de ser chute. A meta deixa
+                de ser desejo. E a rotina deixa de ser uma lista infinita de coisas para fazer.
               </p>
             </Reveal>
 
             <RevealGroup className="mt-[clamp(48px,6vw,80px)] grid grid-cols-1 gap-8 border-t border-white/[0.18] pt-8 md:grid-cols-2 md:gap-[clamp(32px,5vw,64px)]">
               <RevealItem>
                 <p className="max-w-[16ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  O número dá chão para a decisão.
+                  A marca dá coragem para a{" "}
+                  <span className="text-[var(--secondary-light)]">decisão</span>.
                 </p>
               </RevealItem>
               <RevealItem>
                 <p className="max-w-[18ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  A marca dá sentido para o que você está{" "}
-                  <span className="text-[var(--secondary-light)]">construindo</span>.
+                  O número prova que a coragem tinha razão.
                 </p>
               </RevealItem>
             </RevealGroup>
@@ -916,17 +916,17 @@ function HomePage() {
           >
             <Reveal>
               <h2 className="max-w-[12ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                O número abre. A marca aprofunda.
+                A marca abre. O número prova.
               </h2>
               <p className="mt-6 max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                 A Pólia não começa dizendo para você postar mais, vender mais ou faturar mais.
-                Primeiro, ela ajuda você a entender:
+                Primeiro, ela ajuda você a reconhecer:
               </p>
             </Reveal>
 
             <div>
               <RevealGroup className="flex flex-col">
-                {perguntasDoNumero.map((q, i) => (
+                {perguntasDaMarca.map((q, i) => (
                   <RevealItem
                     key={q}
                     className={`flex items-start gap-5 py-5 ${
@@ -945,10 +945,10 @@ function HomePage() {
               </RevealGroup>
               <Reveal delay={0.1}>
                 <p className="mt-8 max-w-[44ch] border-t border-[var(--line)] pt-6 text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                  Depois, essa clareza sustenta as outras decisões do negócio.
+                  Depois, o número prova que essa confiança tinha razão.
                 </p>
                 <p className="mt-3 max-w-[44ch] text-[16px] font-semibold leading-[1.6] text-[var(--ink)]">
-                  Porque uma marca forte também precisa saber sustentar o preço que cobra.
+                  Porque cobrar direito também exige saber o que a marca vale.
                 </p>
               </Reveal>
             </div>
@@ -1169,14 +1169,14 @@ function HomePage() {
                 O próximo orçamento vai chegar de qualquer jeito.
               </h2>
               <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                A questão é como você vai chegar nele. Com mais uma conta feita no chute? Ou sabendo
-                quanto precisa cobrar?
+                A questão é se você vai chegar nele sabendo o que a marca vale, ou só torcendo pra
+                dar certo.
               </p>
               <p className="mt-6 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                 A Pólia existe para colocar o negócio no lugar certo:
               </p>
               <p className="mt-2 max-w-[24ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
-                na sua frente, com os números à vista.
+                com a marca na frente, e o número provando.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
@@ -1185,7 +1185,7 @@ function HomePage() {
                   data-track-props='{"contexto":"cta_final"}'
                   className={BTN_PRIMARIO}
                 >
-                  Quero descobrir se dá lucro
+                  Quero cobrar o que a marca vale
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>
@@ -1216,7 +1216,7 @@ function HomePage() {
           <div className={`${CONTAINER} border-t border-[var(--line)] pt-[clamp(48px,6vw,80px)]`}>
             <Reveal>
               <p className="max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Clareza sobre o negócio gera lucro.
+                Confiar na marca é o que sustenta o lucro.
               </p>
             </Reveal>
           </div>
