@@ -72,7 +72,15 @@ const CARTAO =
 
 function CoverBlock({ post, index }: { post: Post; index: number }) {
   if (post.capa_url) {
-    return <img src={post.capa_url} alt="" className="aspect-video w-full object-cover" />;
+    return (
+      <img
+        src={post.capa_url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="aspect-video w-full object-cover"
+      />
+    );
   }
   return <div className="aspect-video" style={{ background: CAPAS[index % CAPAS.length] }} />;
 }
@@ -98,7 +106,7 @@ function BlogList() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         {/* HERO */}
         <section className="pb-[clamp(32px,4vw,48px)] pt-[clamp(48px,7vw,96px)]">
           <div className={CONTAINER}>
@@ -122,7 +130,7 @@ function BlogList() {
                   type="button"
                   onClick={() => setCategoriaAtiva(null)}
                   aria-pressed={categoriaAtiva === null}
-                  className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
+                  className={`rounded-full border px-4 py-3 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                     categoriaAtiva === null
                       ? "border-[var(--ink)] bg-[var(--ink)] text-white"
                       : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
@@ -136,7 +144,7 @@ function BlogList() {
                     type="button"
                     onClick={() => setCategoriaAtiva(cat)}
                     aria-pressed={categoriaAtiva === cat}
-                    className={`rounded-full border px-4 py-2 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
+                    className={`rounded-full border px-4 py-3 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                       categoriaAtiva === cat
                         ? "border-[var(--ink)] bg-[var(--ink)] text-white"
                         : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"

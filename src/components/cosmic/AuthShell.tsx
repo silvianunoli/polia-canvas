@@ -21,28 +21,36 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
   }, []);
 
   return (
-    <div className="polia-v3 flex min-h-screen w-full flex-col items-center justify-center bg-[var(--bg)] px-5 py-6">
-      <div className="w-full" style={{ maxWidth }}>
-        <div
-          className="rounded-2xl border border-[var(--line)] bg-white px-5 py-6 sm:px-8 sm:py-7"
-          style={
-            reduce
-              ? undefined
-              : {
-                  opacity: shown ? 1 : 0,
-                  transform: shown ? "none" : "translateY(10px)",
-                  transition:
-                    "opacity 220ms cubic-bezier(0.22,1,0.36,1), transform 220ms cubic-bezier(0.22,1,0.36,1)",
-                }
-          }
-        >
-          <div className="mb-3 flex justify-center text-[var(--ink)]">
-            <PoliaWordmark className="h-[22px] w-auto" />
+    <>
+      <a href="#conteudo" className="skip-link">
+        Pular para o conteúdo
+      </a>
+      <main
+        id="conteudo"
+        className="polia-v3 flex min-h-screen w-full flex-col items-center justify-center bg-[var(--bg)] px-5 py-6"
+      >
+        <div className="w-full" style={{ maxWidth }}>
+          <div
+            className="rounded-2xl border border-[var(--line)] bg-white px-5 py-6 sm:px-8 sm:py-7"
+            style={
+              reduce
+                ? undefined
+                : {
+                    opacity: shown ? 1 : 0,
+                    transform: shown ? "none" : "translateY(10px)",
+                    transition:
+                      "opacity 220ms cubic-bezier(0.22,1,0.36,1), transform 220ms cubic-bezier(0.22,1,0.36,1)",
+                  }
+            }
+          >
+            <div className="mb-3 flex justify-center text-[var(--ink)]">
+              <PoliaWordmark className="h-[22px] w-auto" />
+            </div>
+            {children}
           </div>
-          {children}
         </div>
-      </div>
-    </div>
+      </main>
+    </>
   );
 }
 

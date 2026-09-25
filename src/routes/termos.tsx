@@ -53,7 +53,7 @@ function TermosPage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         <section className={SECAO}>
           <div className={`${CONTAINER} max-w-[68ch]`}>
             {/* CABEÇALHO */}
@@ -138,7 +138,7 @@ function TermosPage() {
                 </li>
                 <li>
                   A cobrança é recorrente e renova automaticamente. Ao cancelar, a cobrança para a
-                  partir dali — não há mais nenhuma renovação.
+                  partir dali. Não há mais nenhuma renovação.
                 </li>
                 <li>Impostos aplicáveis podem incidir conforme a legislação brasileira.</li>
               </ul>

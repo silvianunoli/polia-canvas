@@ -76,7 +76,7 @@ function PrivacidadePage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         {/* CABEÇALHO */}
         <section className="pb-[clamp(32px,4vw,48px)] pt-[clamp(48px,7vw,96px)]">
           <div className={CONTAINER}>

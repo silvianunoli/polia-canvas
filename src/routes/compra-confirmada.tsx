@@ -15,7 +15,7 @@ function CompraConfirmadaPage() {
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
-      <main className="mx-auto max-w-[560px] px-6 py-24 text-center">
+      <main id="conteudo" className="mx-auto max-w-[560px] px-6 py-24 text-center">
         <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--surface-pink)]">
           <Mail size={28} aria-hidden="true" />
         </div>

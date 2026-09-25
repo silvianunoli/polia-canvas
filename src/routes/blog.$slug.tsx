@@ -66,7 +66,7 @@ function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; aca
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
-      <main className={SECAO}>
+      <main id="conteudo" className={SECAO}>
         <div className={CONTAINER}>
           <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
             <p className="font-semibold">{titulo}</p>
@@ -177,7 +177,7 @@ export const Route = createFileRoute("/blog/$slug")({
   pendingComponent: () => (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
-      <main className={SECAO}>
+      <main id="conteudo" className={SECAO}>
         <div className={CONTAINER}>
           <p className="text-[var(--ink-soft)]">Abrindo o texto…</p>
         </div>
@@ -189,7 +189,15 @@ export const Route = createFileRoute("/blog/$slug")({
 
 function RelatedCover({ post, index }: { post: RelatedPost; index: number }) {
   if (post.capa_url) {
-    return <img src={post.capa_url} alt="" className="aspect-video w-full object-cover" />;
+    return (
+      <img
+        src={post.capa_url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="aspect-video w-full object-cover"
+      />
+    );
   }
   return (
     <div
@@ -233,7 +241,7 @@ function BlogPost() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         <article className="pb-[clamp(48px,6vw,72px)] pt-[clamp(32px,5vw,64px)]">
           <div className={`${CONTAINER} max-w-[68ch]`}>
             <Link
@@ -279,6 +287,9 @@ function BlogPost() {
                 alt=""
                 aria-hidden="true"
                 className="my-[clamp(32px,5vw,56px)] aspect-[16/7] w-full rounded-2xl border border-[var(--line)] object-cover"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
               />
             ) : (
               <div

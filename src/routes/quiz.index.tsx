@@ -95,7 +95,7 @@ function Casca({ children }: { children: React.ReactNode }) {
           <PoliaWordmark className="h-6 w-auto" />
         </div>
       </header>
-      <main className="flex flex-1 items-start">
+      <main id="conteudo" className="flex flex-1 items-start">
         <div className={`${CONTAINER} w-full`}>
           <div className={COLUNA}>{children}</div>
         </div>

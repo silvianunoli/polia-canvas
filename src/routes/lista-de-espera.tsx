@@ -218,7 +218,7 @@ function ListaEsperaPage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader semLogin />
 
-      <main>
+      <main id="conteudo">
         {/* 1. HERO + FORMULÁRIO */}
         <section className="pb-[clamp(48px,6vw,72px)] pt-[clamp(48px,7vw,96px)]">
           <div className={CONTAINER}>
@@ -520,14 +520,15 @@ function ListaEsperaPage() {
             </Reveal>
 
             <RevealGroup className="mt-[clamp(40px,5vw,56px)] grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-              {BENEFICIOS.map((b, i) => (
+              {BENEFICIOS.map((b) => (
                 <RevealItem
                   key={b.titulo}
                   className="flex gap-4 border-t border-[var(--line)] pt-5"
                 >
-                  <span className="font-cabinet text-[22px] leading-none text-[var(--secondary-text)]">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="mt-[9px] block h-2 w-2 flex-none rounded-full bg-[var(--secondary)]"
+                  />
                   <div>
                     <h3 className="text-[18px] font-bold tracking-[-0.01em]">{b.titulo}</h3>
                     <p className="mt-2 text-[15px] leading-[1.6] text-[var(--ink-soft)]">

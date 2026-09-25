@@ -135,43 +135,36 @@ const CENA = [
   "Fazendo absolutamente tudo.",
 ];
 
-const DECISOES: { n: string; titulo: string; texto: string }[] = [
+const DECISOES: { titulo: string; texto: string }[] = [
   {
-    n: "01",
     titulo: "O DNA da marca",
     texto: "Quem ela é, o que representa e como quer ser lembrada.",
   },
   {
-    n: "02",
     titulo: "O posicionamento",
     texto: "Parar de falar com todo mundo e atrair as pessoas certas.",
   },
   {
-    n: "03",
     titulo: "O que diferencia",
     texto: "O que torna o negócio especial vira percepção de valor.",
   },
   {
-    n: "04",
     titulo: "A voz própria",
     texto: "Comunicar a marca com personalidade e consistência.",
   },
   {
-    n: "05",
     titulo: "O Instagram",
     texto: "Um perfil que diz quem é a marca e por que escolher ela.",
   },
   {
-    n: "06",
     titulo: "Conteúdo com intenção",
     texto: "Parar de só postar e começar a construir percepção.",
   },
   {
-    n: "07",
     titulo: "A consistência",
     texto: "Uma marca reconhecida sem depender de um post perfeito.",
   },
-  { n: "08", titulo: "A prática", texto: "Um plano de 7 dias pra tirar tudo do papel." },
+  { titulo: "A prática", texto: "Um plano de 7 dias pra tirar tudo do papel." },
 ];
 
 const ENTREGAS = [
@@ -622,10 +615,10 @@ function ManualPage() {
         </Reveal>
         <RevealGroup className="mt-12 grid gap-x-12 md:grid-cols-2">
           {DECISOES.map((d) => (
-            <RevealItem key={d.n} className="border-t border-[var(--line)] py-6">
+            <RevealItem key={d.titulo} className="border-t border-[var(--line)] py-6">
               <div className="flex gap-5">
-                <span className="font-cabinet w-9 flex-none pt-[2px] text-[14px] font-bold tracking-[-0.02em] text-[var(--secondary-text)]">
-                  {d.n}
+                <span aria-hidden="true" className="flex w-9 flex-none justify-start pt-[10px]">
+                  <span className="h-2 w-2 rounded-full bg-[var(--secondary)]" />
                 </span>
                 <div>
                   <h3 className="text-[clamp(1.15rem,2vw,1.35rem)] font-bold leading-[1.2] tracking-[-0.02em]">

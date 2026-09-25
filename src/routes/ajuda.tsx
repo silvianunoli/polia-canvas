@@ -342,7 +342,7 @@ function AjudaPage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         {/* HERO + BUSCA */}
         <section className="pb-[clamp(48px,6vw,72px)] pt-[clamp(48px,7vw,96px)]">
           <div className={CONTAINER}>

@@ -476,7 +476,7 @@ function HomePage() {
         )}
       </AnimatePresence>
 
-      <main>
+      <main id="conteudo">
         {/* HERO */}
         <section className="overflow-hidden pb-0 pt-[clamp(48px,7vw,96px)]">
           <div className={CONTAINER}>
@@ -552,7 +552,7 @@ function HomePage() {
                   WebkitMaskImage: "linear-gradient(to bottom, black 78%, transparent 100%)",
                 }}
               >
-                <MockPainel className="shadow-[0_24px_64px_-16px_rgba(10,10,10,0.18)]" />
+                <MockPainel className="shadow-[0_24px_64px_-16px_color-mix(in_srgb,var(--ink)_18%,transparent)]" />
               </div>
             </Reveal>
           </div>
@@ -564,8 +564,7 @@ function HomePage() {
             <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[1.1fr_0.9fr]">
               <div>
                 <Reveal>
-                  <Eyebrow>A pesquisa</Eyebrow>
-                  <h2 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                  <h2 className="max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                     66% mistura a conta da casa com a conta do negócio.
                   </h2>
                   <p className="mt-5 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
@@ -602,12 +601,7 @@ function HomePage() {
                 <Eyebrow>O problema</Eyebrow>
               </Reveal>
               <h2 className="mt-4 text-[clamp(2rem,4.4vw,3.4rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
-                Você vende. Mas sabe quanto realmente{" "}
-                {/* O marcador é inline-block e não quebra, então a pontuação precisa
-                    viajar junto com ele, senão a interrogação cai sozinha na linha. */}
-                <span className="whitespace-nowrap">
-                  <HighlightWord delay={0.3}>sobra</HighlightWord>?
-                </span>
+                Você vende. Mas sabe quanto realmente sobra?
               </h2>
             </div>
             <RevealGroup className="flex flex-col gap-6 border-l border-[var(--line)] pl-8">
@@ -698,8 +692,7 @@ function HomePage() {
         <section id="como-funciona" className={`scroll-mt-[88px] bg-[var(--surface)] ${SECAO}`}>
           <div className={CONTAINER}>
             <Reveal>
-              <Eyebrow>Como funciona</Eyebrow>
-              <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+              <h2 className="max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                 Do papel em branco à rotina que roda.
               </h2>
             </Reveal>
@@ -746,8 +739,7 @@ function HomePage() {
         <section id="produto" className={`scroll-mt-[88px] ${SECAO}`}>
           <div className={CONTAINER}>
             <Reveal className="mb-[clamp(40px,5vw,48px)] max-w-[720px]">
-              <Eyebrow>O produto</Eyebrow>
-              <h2 className="mb-4 mt-3 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+              <h2 className="mb-4 text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                 Um documento vivo, não um formulário.
               </h2>
               <p className="max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
@@ -782,7 +774,7 @@ function HomePage() {
                 >
                   3
                 </span>
-                <MockPlanejamento className="shadow-[0_24px_64px_-16px_rgba(10,10,10,0.18)]" />
+                <MockPlanejamento className="shadow-[0_24px_64px_-16px_color-mix(in_srgb,var(--ink)_18%,transparent)]" />
               </Reveal>
 
               <RevealGroup className="flex flex-col gap-6 lg:sticky lg:top-[104px]">
@@ -808,6 +800,11 @@ function HomePage() {
         {/* RECURSOS: preço, metas e rotina */}
         <section className="pb-[clamp(72px,9vw,128px)]">
           <div className={CONTAINER}>
+            <Reveal>
+              <h2 className="max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+                Preço, metas e rotina no mesmo lugar.
+              </h2>
+            </Reveal>
             {recursos.map((r, i) => (
               <article
                 key={r.titulo}
@@ -816,9 +813,8 @@ function HomePage() {
                 }`}
               >
                 <Reveal className={i % 2 === 1 ? "md:order-2" : ""}>
-                  <Eyebrow>{r.eyebrow}</Eyebrow>
                   <h3
-                    className={`mb-4 mt-3 font-bold tracking-[-0.02em] text-balance ${
+                    className={`mb-4 font-bold tracking-[-0.02em] text-balance ${
                       r.grande
                         ? "text-[clamp(2rem,4.4vw,3.4rem)] leading-[1.08]"
                         : "text-[clamp(1.5rem,2.6vw,2.1rem)] leading-[1.15]"
@@ -831,13 +827,9 @@ function HomePage() {
                   </p>
                   {r.trio && (
                     <p className="mt-6 text-[clamp(1.5rem,2.8vw,2.2rem)] font-bold leading-[1.2] tracking-[-0.02em]">
-                      {r.trio.map((linha, j) => (
+                      {r.trio.map((linha) => (
                         <span key={linha} className="block">
-                          {j === (r.trio?.length ?? 0) - 1 ? (
-                            <HighlightWord delay={0.2}>{linha}</HighlightWord>
-                          ) : (
-                            linha
-                          )}
+                          {linha}
                         </span>
                       ))}
                     </p>
@@ -923,8 +915,7 @@ function HomePage() {
             className={`${CONTAINER} grid grid-cols-1 items-start gap-[clamp(32px,5vw,80px)] md:grid-cols-[1fr_1fr]`}
           >
             <Reveal>
-              <Eyebrow>O diferencial</Eyebrow>
-              <h2 className="mt-4 max-w-[12ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+              <h2 className="max-w-[12ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
                 O número abre. A marca aprofunda.
               </h2>
               <p className="mt-6 max-w-[44ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
@@ -938,13 +929,14 @@ function HomePage() {
                 {perguntasDoNumero.map((q, i) => (
                   <RevealItem
                     key={q}
-                    className={`flex items-baseline gap-5 py-5 ${
+                    className={`flex items-start gap-5 py-5 ${
                       i > 0 ? "border-t border-[var(--line)]" : ""
                     }`}
                   >
-                    <span className="font-accent text-[13px] font-bold tracking-[0.1em] text-[var(--secondary-text)]">
-                      0{i + 1}
-                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="mt-[14px] h-2 w-2 flex-none rounded-full bg-[var(--secondary)]"
+                    />
                     <p className="text-[clamp(1.4rem,2.6vw,2.1rem)] font-bold leading-[1.15] tracking-[-0.02em]">
                       {q}
                     </p>
@@ -1028,7 +1020,7 @@ function HomePage() {
                   A Pólia organiza os números e mostra o cenário.
                 </p>
                 <p className="mt-2 text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.12] tracking-[-0.02em]">
-                  <HighlightWord delay={0.2}>A decisão continua sendo sua.</HighlightWord>
+                  A decisão continua sendo sua.
                 </p>
               </div>
             </Reveal>
@@ -1173,8 +1165,7 @@ function HomePage() {
         <section className="py-[clamp(80px,10vw,140px)] text-center">
           <div className={CONTAINER}>
             <Reveal className="flex flex-col items-center">
-              <Eyebrow>Pólia</Eyebrow>
-              <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+              <h2 className="mb-6 max-w-[18ch] text-[clamp(2.5rem,5.8vw,4.4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
                 O próximo orçamento vai chegar de qualquer jeito.
               </h2>
               <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
@@ -1185,10 +1176,7 @@ function HomePage() {
                 A Pólia existe para colocar o negócio no lugar certo:
               </p>
               <p className="mt-2 max-w-[24ch] text-[clamp(1.6rem,3.2vw,2.6rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
-                na sua frente, com os{" "}
-                <span className="whitespace-nowrap">
-                  <HighlightWord delay={0.3}>números à vista</HighlightWord>.
-                </span>
+                na sua frente, com os números à vista.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link

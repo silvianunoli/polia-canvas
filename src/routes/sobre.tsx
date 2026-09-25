@@ -221,7 +221,7 @@ function SobrePage() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
-      <main>
+      <main id="conteudo">
         {/* HERO */}
         <section className="pb-[clamp(48px,6vw,72px)] pt-[clamp(48px,7vw,96px)]">
           <div
@@ -277,8 +277,7 @@ function SobrePage() {
         <section id="historia" className={SECAO}>
           <div className={CONTAINER}>
             <Reveal>
-              <Eyebrow>A história</Eyebrow>
-              <h2 className="mt-4 max-w-[18ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+              <h2 className="max-w-[18ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
                 A Pólia é a ferramenta{" "}
                 <span className="whitespace-nowrap">
                   <HighlightWord delay={0.3}>que eu não tive</HighlightWord>.
@@ -327,8 +326,7 @@ function SobrePage() {
 
               <div className="mt-[clamp(40px,5vw,56px)]">
                 <Reveal>
-                  <Eyebrow>O caminho até aqui</Eyebrow>
-                  <h3 className="mt-4 text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                  <h3 className="text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
                     De vender no improviso a construir um método.
                   </h3>
                 </Reveal>
@@ -414,23 +412,33 @@ function SobrePage() {
               </p>
             </Reveal>
 
-            <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-3">
-              {pontos.map((p) => {
+            {/* Timeline vertical em vez de 3 cards idênticos (mesmo tratamento
+                visual usado nos "marcos" da seção "A história", acima): os
+                três pontos são um fluxo em sequência (Planejamento → números
+                → execução), não features soltas para caixinhas separadas. */}
+            <ul className="mt-[clamp(40px,5vw,48px)] max-w-[64ch] list-none">
+              {pontos.map((p, i) => {
                 const Icon = p.icon;
                 return (
-                  <RevealItem
+                  <li
                     key={p.titulo}
-                    className="rounded-2xl border border-[var(--line)] bg-white p-8"
+                    className={`relative border-l-2 pb-8 pl-8 ${
+                      i === pontos.length - 1 ? "border-transparent pb-0" : "border-[var(--line)]"
+                    }`}
                   >
-                    <Icon size={22} className="text-[var(--secondary-text)]" aria-hidden="true" />
-                    <h3 className="mt-4 text-[18px] font-bold tracking-[-0.01em]">{p.titulo}</h3>
-                    <p className="mt-2 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-                      {p.desc}
-                    </p>
-                  </RevealItem>
+                    <span
+                      aria-hidden="true"
+                      className="absolute -left-[7px] top-[3px] h-3 w-3 rounded-[3px] bg-[var(--secondary)]"
+                    />
+                    <div className="flex items-center gap-2.5">
+                      <Icon size={20} className="text-[var(--secondary-text)]" aria-hidden="true" />
+                      <h3 className="text-[18px] font-bold tracking-[-0.01em]">{p.titulo}</h3>
+                    </div>
+                    <p className="mt-2 leading-[1.6] text-[var(--ink-soft)]">{p.desc}</p>
+                  </li>
                 );
               })}
-            </RevealGroup>
+            </ul>
 
             <Reveal className="mx-auto mt-[clamp(40px,5vw,48px)] max-w-[68ch]">
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
@@ -574,7 +582,7 @@ function SobrePage() {
             <div className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-2">
               <Reveal>
                 <div className="h-full rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <Eyebrow>A Pólia recusa</Eyebrow>
+                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">A Pólia recusa</h3>
                   <ul className="mt-4 grid list-none gap-3">
                     {recusa.map((item) => (
                       <li
@@ -594,7 +602,7 @@ function SobrePage() {
               </Reveal>
               <Reveal delay={0.1}>
                 <div className="h-full rounded-2xl bg-[var(--surface-pink)] p-8">
-                  <Eyebrow>A Pólia escolhe</Eyebrow>
+                  <h3 className="text-[18px] font-bold tracking-[-0.01em]">A Pólia escolhe</h3>
                   <ul className="mt-4 grid list-none gap-3">
                     {escolhe.map((item) => (
                       <li
@@ -737,8 +745,7 @@ function SobrePage() {
         <section className="py-[clamp(80px,10vw,140px)] text-center">
           <div className={CONTAINER}>
             <Reveal className="flex flex-col items-center">
-              <Eyebrow>A Pólia está chegando</Eyebrow>
-              <h2 className="mb-6 mt-4 max-w-[18ch] text-[clamp(2.2rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+              <h2 className="mb-6 max-w-[18ch] text-[clamp(2.2rem,5vw,3.6rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
                 O método que faltou pra mim está virando produto.
               </h2>
               <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">

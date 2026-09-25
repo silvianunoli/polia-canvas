@@ -1,11 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { getCookieConsent, setCookieConsent, type CookieConsentValue } from "@/lib/cookieConsent";
 
+// Mesmos seletores de sempre pra achar o que é focável dentro do aviso —
+// não tem primitive de Dialog reutilizável aqui (é uma barra no rodapé, sem
+// overlay, não um modal de tela cheia), então a prisão de foco é feita à mão.
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function CookieConsent() {
   const [visible, setVisible] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -13,6 +21,42 @@ export function CookieConsent() {
     const t = setTimeout(() => setVisible(true), 2000);
     return () => clearTimeout(t);
   }, []);
+
+  // Ao aparecer, guarda quem tinha foco e manda o foco pro primeiro elemento
+  // focável do aviso (mesma ideia do headingRef de ErrorPage.tsx); ao sumir,
+  // devolve o foco pra quem tinha antes.
+  useEffect(() => {
+    if (!visible) return;
+    previousFocusRef.current = document.activeElement as HTMLElement | null;
+    const first = containerRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+    first?.focus();
+    return () => {
+      previousFocusRef.current?.focus?.();
+    };
+  }, [visible]);
+
+  // Prende o Tab dentro do aviso enquanto ele estiver visível: no limite,
+  // Tab/Shift+Tab volta pro outro extremo em vez de escapar pro resto da
+  // página.
+  useEffect(() => {
+    if (!visible) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const focusables = containerRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (!focusables || focusables.length === 0) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [visible]);
 
   const handle = (value: CookieConsentValue) => {
     setCookieConsent(value);
@@ -23,11 +67,13 @@ export function CookieConsent() {
     <AnimatePresence>
       {visible && (
         <motion.div
+          ref={containerRef}
           initial={{ y: 40, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 40, opacity: 0 }}
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           role="dialog"
+          aria-modal="true"
           aria-live="polite"
           aria-label="Aviso de cookies"
           className="polia-v3 fixed inset-x-0 bottom-0 z-[1000] border-t border-[var(--line)] bg-white px-5 py-5 md:px-6"
