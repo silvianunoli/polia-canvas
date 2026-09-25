@@ -407,8 +407,8 @@ function SobrePage() {
                 entrar. E esses números acompanham a rotina do negócio.
               </p>
               <p className="mt-6 text-[clamp(1.2rem,1.9vw,1.5rem)] font-bold leading-[1.3] tracking-[-0.02em] text-[var(--ink)]">
-                <span className="block">O número dá chão para a decisão.</span>
-                <span className="block">A marca dá sentido para o que está sendo construído.</span>
+                <span className="block">A marca dá coragem para a decisão.</span>
+                <span className="block">O número prova que a coragem tinha razão.</span>
               </p>
             </Reveal>
 
@@ -778,7 +778,7 @@ function SobrePage() {
           <div className={`${CONTAINER} border-t border-[var(--line)] pt-[clamp(48px,6vw,80px)]`}>
             <Reveal>
               <p className="max-w-[20ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                Clareza sobre o negócio gera lucro.
+                Confiar na marca é o que sustenta o lucro.
               </p>
             </Reveal>
           </div>

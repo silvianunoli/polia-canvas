@@ -17,7 +17,7 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
         <div className="flex flex-wrap items-start justify-between gap-8">
           <div>
             <PoliaWordmark variant="dark" className="h-6 w-auto" />
-            <p className="mt-3">Clareza sobre o negócio gera lucro.</p>
+            <p className="mt-3">Confiar na marca é o que sustenta o lucro.</p>
           </div>
           <nav className="flex flex-wrap gap-6" aria-label="Links do rodapé">
             <Link to="/sobre" className="no-underline hover:text-[var(--bg)]">
