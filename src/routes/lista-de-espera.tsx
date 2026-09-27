@@ -30,13 +30,13 @@ export const Route = createFileRoute("/lista-de-espera")({
       {
         name: "description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
+          "A Pólia ajuda você a cobrar o que a sua marca vale, com o número provando que faz sentido. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
       },
       { property: "og:title", content: "Entrar na lista · Pólia" },
       {
         property: "og:description",
         content:
-          "A Pólia mostra se o seu negócio dá lucro e quanto sobra em cada venda. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
+          "A Pólia ajuda você a cobrar o que a sua marca vale, com o número provando que faz sentido. Será lançada em outubro: entre na lista pra ser uma das primeiras a usar.",
       },
     ],
     links: [linkCanonico("/lista-de-espera")],
@@ -51,7 +51,7 @@ export const Route = createFileRoute("/lista-de-espera")({
 
 const BENEFICIOS = [
   {
-    titulo: "Saber se o negócio dá lucro",
+    titulo: "Cobrar o que a marca vale",
     desc: "Veja quanto sobra em cada venda e pare de depender do chute para descobrir se a conta fecha.",
   },
   {
@@ -230,16 +230,17 @@ function ListaEsperaPage() {
                 {/* Quem chega aqui pode nunca ter ouvido falar da Pólia: a
                     pergunta abre, a Pólia se apresenta, e só então entra a data. */}
                 <h1 className="mt-4 text-[clamp(2.3rem,5vw,3.5rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                  Você sabe quanto realmente <HighlightWord delay={0.3}>sobra</HighlightWord> em
-                  cada venda?
+                  Você cobra o que a sua marca realmente{" "}
+                  <HighlightWord delay={0.3}>vale</HighlightWord>?
                 </h1>
                 <Reveal delay={0.1}>
                   <p className="mt-5 text-[clamp(1.3rem,2.2vw,1.75rem)] font-bold leading-[1.2] tracking-[-0.02em]">
-                    A Pólia foi criada para mostrar.
+                    A Pólia existe para ajudar você a descobrir.
                   </p>
                   <p className="mt-5 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    Uma plataforma para pequenas empreendedoras entenderem seus números, organizarem
-                    o negócio e tomarem decisões com mais clareza, sem planilha e sem achismo.
+                    Uma plataforma para pequenas empreendedoras confiarem no valor que já
+                    construíram e cobrarem de acordo, com o número provando que faz sentido, sem
+                    planilha e sem achismo.
                   </p>
                   <p className="mt-4 max-w-[54ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink)]">
                     A Pólia será lançada em outubro. Entre na lista para ser uma das primeiras a
@@ -514,8 +515,8 @@ function ListaEsperaPage() {
                 O que dá pra enxergar com a Pólia
               </h2>
               <p className="mt-4 text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                Primeiro o número aparece: quanto custa, por quanto vender e o que sobra. Depois,
-                essa clareza começa a organizar o resto do negócio.
+                Primeiro você reconhece o que a marca vale. Depois, o número prova, e essa clareza
+                começa a organizar o resto do negócio.
               </p>
             </Reveal>
 

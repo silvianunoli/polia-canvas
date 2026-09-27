@@ -509,12 +509,11 @@ function AjudaPage() {
               <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
                 <Eyebrow>Ainda não tem conta?</Eyebrow>
                 <h2 className="mt-4 max-w-[22ch] text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.2] tracking-[-0.02em] text-balance">
-                  Comece pela pergunta mais importante.
+                  Comece reconhecendo o que a marca vale.
                 </h2>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  A Pólia começa mostrando o que realmente importa: quanto custa, quanto entra e
-                  quanto sobra. No plano Grátis, você pode descobrir se o seu negócio dá lucro, sem
-                  cartão de crédito.
+                  A Pólia começa ajudando você a reconhecer o que a marca realmente vale, e a cobrar
+                  de acordo. No plano Grátis, você já pode começar, sem cartão de crédito.
                 </p>
                 <div className="mt-8">
                   {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
