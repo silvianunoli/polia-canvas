@@ -2,16 +2,18 @@ import { toast } from "sonner";
 
 interface ToastOpts {
   action?: { label: string; onClick: () => void };
+  /** Pra toast com "Desfazer", que precisa ficar mais que o padrão. */
+  duracaoMs?: number;
 }
 
 /** Some sozinho em ~4s. Pra feedback passageiro que não exige decisão. */
 export function toastSucesso(mensagem: string, opts?: ToastOpts) {
-  return toast.success(mensagem, { duration: 4000, action: opts?.action });
+  return toast.success(mensagem, { duration: opts?.duracaoMs ?? 4000, action: opts?.action });
 }
 
 /** Some sozinho em ~4s. Pra feedback neutro (copiado, desfeito, aviso leve). */
 export function toastInfo(mensagem: string, opts?: ToastOpts) {
-  return toast(mensagem, { duration: 4000, action: opts?.action });
+  return toast(mensagem, { duration: opts?.duracaoMs ?? 4000, action: opts?.action });
 }
 
 // O sonner só expõe uma região aria-live="polite" única pra todos os toasts —

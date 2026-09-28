@@ -436,7 +436,7 @@ function ConfiguracoesPage() {
                 onChange={(e) => setNome(e.target.value)}
                 maxLength={80}
                 placeholder="Seu nome"
-                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
               />
             </Campo>
             <Campo label="E-MAIL">
@@ -460,7 +460,7 @@ function ConfiguracoesPage() {
                       type="email"
                       value={novoEmail}
                       onChange={(e) => setNovoEmail(e.target.value)}
-                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
                     />
                   </Campo>
                   <Campo
@@ -475,7 +475,7 @@ function ConfiguracoesPage() {
                       type="email"
                       value={confirmarEmail}
                       onChange={(e) => setConfirmarEmail(e.target.value)}
-                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
                     />
                   </Campo>
                   {emailErro && (
@@ -529,7 +529,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setNomeNegocio(e.target.value)}
               maxLength={80}
               placeholder="Ex: Ateliê Florescer · Estúdio da Lua · Doces da Rê"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               aparece no topo do seu planejamento
@@ -543,7 +543,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setRazaoSocial(e.target.value)}
               maxLength={120}
               placeholder="Ex: Florescer Confecções e Serviços LTDA"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               usada no cabeçalho do Resumo pro contador (Pro)
@@ -557,7 +557,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setCnpj(e.target.value)}
               maxLength={18}
               placeholder="00.000.000/0000-00"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
             />
           </Campo>
         </Secao>
@@ -637,7 +637,7 @@ function ConfiguracoesPage() {
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   minLength={8}
-                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
                 />
               </Campo>
               <Campo
@@ -652,7 +652,7 @@ function ConfiguracoesPage() {
                   type="password"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
-                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
                 />
               </Campo>
               {senhaErro && (
@@ -889,7 +889,7 @@ function ConfiguracoesPage() {
                 value={confirmacaoExclusao}
                 onChange={(e) => setConfirmacaoExclusao(e.target.value)}
                 placeholder={fraseConfirmacao}
-                className="w-full h-[48px] border border-[var(--danger)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] outline-none focus:shadow-[0_0_0_3px_var(--danger-soft)] transition-all"
+                className="w-full h-[48px] border border-[var(--danger)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] outline-none focus:shadow-[0_0_0_3px_var(--danger-soft)] transition-[border-color,box-shadow]"
               />
               <div className="flex gap-2 justify-end mt-3">
                 <button

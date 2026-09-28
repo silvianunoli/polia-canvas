@@ -288,7 +288,7 @@ function ChoiceCard({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-all ${
+      className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-[border-color,background-color] duration-150 ${
         selected
           ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
           : "border-[var(--line)] bg-white"
@@ -584,7 +584,7 @@ function Step4({
 }
 
 const CAMPO_CLS =
-  "rounded-lg border border-[var(--line)] bg-white px-4 text-[16px] text-[var(--ink)] outline-none transition-all placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]";
+  "rounded-lg border border-[var(--line)] bg-white px-4 text-[16px] text-[var(--ink)] outline-none transition-[border-color,box-shadow] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]";
 
 function Field({
   label,

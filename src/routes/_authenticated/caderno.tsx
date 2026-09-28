@@ -7,7 +7,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
-import { toastErro } from "@/lib/toast";
+import { toastErro, toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
 import { COTAS_CONFERE } from "@/lib/planos";
@@ -108,9 +108,6 @@ function CadernoPage() {
   const idCarregadoRef = useRef<string | null>(null);
   const trocaTimerRef = useRef<number | null>(null);
 
-  const [toast, setToast] = useState<{ msg: string; notaId: string } | null>(null);
-  const toastTimerRef = useRef<number | null>(null);
-
   const invalidar = () => {
     qc.invalidateQueries({ queryKey: ["notas", userId] });
   };
@@ -143,7 +140,6 @@ function CadernoPage() {
   useEffect(() => {
     return () => {
       if (trocaTimerRef.current) window.clearTimeout(trocaTimerRef.current);
-      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
     };
   }, []);
 
@@ -255,9 +251,10 @@ function CadernoPage() {
   });
 
   function mostrarToast(msg: string, notaId: string) {
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    setToast({ msg, notaId });
-    toastTimerRef.current = window.setTimeout(() => setToast(null), 6000);
+    toastInfo(msg, {
+      duracaoMs: 6000,
+      action: { label: "Desfazer", onClick: () => desfazer.mutate(notaId) },
+    });
   }
 
   function handleExcluirClick() {
@@ -267,13 +264,6 @@ function CadernoPage() {
       return;
     }
     remover.mutate(selecionada.id);
-  }
-
-  function handleDesfazer() {
-    if (!toast) return;
-    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
-    desfazer.mutate(toast.notaId);
-    setToast(null);
   }
 
   function criarDeBusca() {
@@ -563,24 +553,6 @@ function CadernoPage() {
             )}
           </section>
         </div>
-      </div>
-
-      {/* Toast de exclusão com desfazer (rede de segurança de 6s) */}
-      <div
-        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] shadow-[var(--shadow-card-hover)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          toast ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
-        }`}
-        role="status"
-        aria-live="polite"
-      >
-        <span>{toast?.msg}</span>
-        <button
-          type="button"
-          onClick={handleDesfazer}
-          className="font-semibold text-[var(--secondary-text)] underline underline-offset-2"
-        >
-          Desfazer
-        </button>
       </div>
     </PaginaLogada>
   );

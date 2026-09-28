@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, ChevronDown, CalendarDays, Target, AlertTriangle } from "lucide-react";
@@ -12,6 +12,7 @@ import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_ACAO } from "@/lib/botoes";
+import { toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
@@ -101,8 +102,6 @@ function MetasPage() {
   const [verConcluidas, setVerConcluidas] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [metaArquivar, setMetaArquivar] = useState<Meta | null>(null);
-  const [toast, setToast] = useState<{ id: string; titulo: string } | null>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const metasQuery = useQuery({
     queryKey: ["metas", userId],
@@ -161,23 +160,15 @@ function MetasPage() {
         ...(m.valor_alvo != null ? { valor_atual: m.valor_alvo } : {}),
       },
     });
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ id: m.id, titulo: m.titulo });
-    toastTimerRef.current = setTimeout(() => setToast(null), 6000);
+    toastInfo(`Meta concluída: ${m.titulo}`, {
+      duracaoMs: 6000,
+      action: {
+        label: "Desfazer",
+        onClick: () =>
+          atualizar.mutate({ id: m.id, patch: { status: "ativa", concluida_em: null } }),
+      },
+    });
   };
-
-  const desfazerConclusao = () => {
-    if (!toast) return;
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    atualizar.mutate({ id: toast.id, patch: { status: "ativa", concluida_em: null } });
-    setToast(null);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    };
-  }, []);
 
   const arquivar = (m: Meta) => {
     setMetaArquivar(m);
@@ -350,24 +341,6 @@ function MetasPage() {
           }}
         />
       )}
-
-      {/* ───────── Toast: meta concluída ───────── */}
-      <div
-        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] text-[var(--ink)] shadow-[var(--shadow-card-hover)] transition-opacity duration-[220ms] ${
-          toast ? "opacity-100" : "pointer-events-none opacity-0"
-        }`}
-        role="status"
-        aria-live="polite"
-        inert={!toast}
-      >
-        <span>Meta concluída: {toast?.titulo}</span>
-        <button
-          onClick={desfazerConclusao}
-          className="font-semibold text-[var(--secondary-text)] underline underline-offset-2 hover:opacity-80"
-        >
-          Desfazer
-        </button>
-      </div>
 
       {/* ───────── Confirmação: arquivar meta ───────── */}
       <ConfirmarAcao
