@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { getCookieConsent, setCookieConsent, type CookieConsentValue } from "@/lib/cookieConsent";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 // Mesmos seletores de sempre pra achar o que é focável dentro do aviso —
 // não tem primitive de Dialog reutilizável aqui (é uma barra no rodapé, sem
@@ -14,6 +15,7 @@ export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const reduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -68,10 +70,20 @@ export function CookieConsent() {
       {visible && (
         <motion.div
           ref={containerRef}
-          initial={{ y: 40, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 40, opacity: 0 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          initial={{
+            transform: reduceMotion ? "translateY(0px)" : "translateY(40px)",
+            opacity: 0,
+          }}
+          animate={{
+            transform: "translateY(0px)",
+            opacity: 1,
+            transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+          }}
+          exit={{
+            transform: reduceMotion ? "translateY(0px)" : "translateY(40px)",
+            opacity: 0,
+            transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
+          }}
           role="dialog"
           aria-modal="true"
           aria-live="polite"

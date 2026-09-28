@@ -18,13 +18,22 @@ export function GoogleButton({
       type="button"
       onClick={onClick}
       disabled={loading || disabled}
-      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-white text-[15px] text-[var(--ink)] transition-colors hover:bg-[var(--surface)] disabled:opacity-60"
+      className="inline-flex h-[52px] w-full items-center justify-center gap-3 rounded-xl border border-[var(--line)] bg-white text-[15px] text-[var(--ink)] transition-[color,background-color,opacity,transform] duration-150 ease-out hover:bg-[var(--surface)] active:scale-[0.98] disabled:opacity-60"
     >
-      {loading ? (
-        <Loader2 size={18} className="animate-spin" />
-      ) : (
-        // Cores oficiais de marca do Google — exceção às regras de token Pólia
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <span className="relative inline-flex h-[18px] w-[18px] shrink-0" aria-hidden="true">
+        <Loader2
+          size={18}
+          className="absolute inset-0 animate-spin transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{ opacity: loading ? 1 : 0 }}
+        />
+        {/* Cores oficiais de marca do Google — exceção às regras de token Pólia */}
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          className="absolute inset-0 transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{ opacity: loading ? 0 : 1 }}
+        >
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -42,7 +51,7 @@ export function GoogleButton({
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-      )}
+      </span>
       <span>{label}</span>
     </button>
   );

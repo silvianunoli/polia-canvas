@@ -1,8 +1,10 @@
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail, Check } from "lucide-react";
 import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export const Route = createFileRoute("/auth/esqueci-senha")({
   head: () => ({
@@ -23,77 +25,105 @@ export const Route = createFileRoute("/auth/esqueci-senha")({
 function EsqueciSenhaPage() {
   const { email, setEmail, error, setError, loading, sent, cooldown, handleSubmit, handleResend } =
     useRecuperarSenha();
+  const reduce = usePrefersReducedMotion();
+  const [shown, setShown] = useState(true);
+  const primeiraRenderizacao = useRef(true);
+  useEffect(() => {
+    if (primeiraRenderizacao.current) {
+      primeiraRenderizacao.current = false;
+      return;
+    }
+    if (reduce) return;
+    setShown(false);
+    const r = requestAnimationFrame(() => setShown(true));
+    return () => cancelAnimationFrame(r);
+  }, [sent, reduce]);
 
   return (
     <AuthShell maxWidth={420}>
-      {!sent ? (
-        <>
-          <SerifHeadline size={26}>Vamos recuperar.</SerifHeadline>
-          <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
-            É só informar o e-mail da conta que a Pólia manda o link.
-          </p>
+      <div
+        style={
+          reduce
+            ? undefined
+            : {
+                opacity: shown ? 1 : 0,
+                transform: shown ? "none" : "translateY(6px)",
+                transition: "opacity 200ms ease-out, transform 200ms ease-out",
+              }
+        }
+      >
+        {!sent ? (
+          <>
+            <SerifHeadline size={26}>Vamos recuperar.</SerifHeadline>
+            <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
+              É só informar o e-mail da conta que a Pólia manda o link.
+            </p>
 
-          <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
-            <CosmicInput
-              label="Seu e-mail"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="voce@seunegocio.com.br"
-              icon={<Mail size={18} />}
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (error) setError(undefined);
-              }}
-              error={error}
-              reserveErrorSpace
-              disabled={loading}
-            />
-            <div className="mt-1">
-              <AuthButton type="submit" fullWidth loading={loading}>
-                {loading ? (
-                  "Enviando..."
-                ) : (
-                  <>
-                    Enviar link <span aria-hidden="true">→</span>
-                  </>
-                )}
-              </AuthButton>
+            <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
+              <CosmicInput
+                label="Seu e-mail"
+                name="email"
+                type="email"
+                autoComplete="email"
+                placeholder="voce@seunegocio.com.br"
+                icon={<Mail size={18} />}
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(undefined);
+                }}
+                error={error}
+                reserveErrorSpace
+                disabled={loading}
+              />
+              <div className="mt-1">
+                <AuthButton type="submit" fullWidth loading={loading}>
+                  {loading ? (
+                    "Enviando..."
+                  ) : (
+                    <>
+                      Enviar link <span aria-hidden="true">→</span>
+                    </>
+                  )}
+                </AuthButton>
+              </div>
+            </form>
+
+            <p className="mt-5 text-center text-[14px] text-[var(--muted)]">
+              <Link
+                to="/auth/login"
+                className="text-[var(--ink-soft)] underline underline-offset-2"
+              >
+                Lembrei a senha
+              </Link>
+            </p>
+          </>
+        ) : (
+          <div className="flex flex-col items-center text-center">
+            <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
+              <Check size={22} aria-hidden="true" />
             </div>
-          </form>
-
-          <p className="mt-5 text-center text-[14px] text-[var(--muted)]">
-            <Link to="/auth/login" className="text-[var(--ink-soft)] underline underline-offset-2">
-              Lembrei a senha
+            <h1 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
+              Se esse e-mail tiver conta,
+              <br />a Pólia manda o link.
+            </h1>
+            <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+              Confira a caixa de entrada (e o spam). O link vale por 1 hora.
+            </p>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={cooldown > 0 || loading}
+              className="mt-5 py-2 px-1 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+            >
+              {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
+            </button>
+            <Link to="/auth/login" className="mt-4 py-2 px-1 text-[14px] text-[var(--muted)]">
+              Voltar pra entrada
             </Link>
-          </p>
-        </>
-      ) : (
-        <div className="flex flex-col items-center text-center">
-          <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
-            <Check size={22} aria-hidden="true" />
           </div>
-          <h1 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
-            Se esse e-mail tiver conta,
-            <br />a Pólia manda o link.
-          </h1>
-          <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
-            Confira a caixa de entrada (e o spam). O link vale por 1 hora.
-          </p>
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={cooldown > 0 || loading}
-            className="mt-5 py-2 px-1 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
-          >
-            {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
-          </button>
-          <Link to="/auth/login" className="mt-4 py-2 px-1 text-[14px] text-[var(--muted)]">
-            Voltar pra entrada
-          </Link>
-        </div>
-      )}
+        )}
+      </div>
     </AuthShell>
   );
 }

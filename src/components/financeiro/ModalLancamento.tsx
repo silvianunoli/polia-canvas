@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -71,6 +73,7 @@ export function ModalLancamento({
   const [novaCategoriaTexto, setNovaCategoriaTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const reduceMotion = usePrefersReducedMotion();
 
   const valorNum = cents / 100;
 
@@ -165,141 +168,157 @@ export function ModalLancamento({
   }, []);
 
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-[440px] rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
+    <AnimatePresence>
+      <motion.div
+        className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1, transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] } }}
+        exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
       >
-        <h2 className="mb-5 text-[24px] text-[var(--ink)]">
-          {edit ? "Editar lançamento" : "Novo lançamento"}
-        </h2>
+        <motion.div
+          className="w-full max-w-[440px] rounded-2xl bg-white p-6"
+          onClick={(e) => e.stopPropagation()}
+          initial={{ opacity: 0, transform: reduceMotion ? "scale(1)" : "scale(0.95)" }}
+          animate={{
+            opacity: 1,
+            transform: "scale(1)",
+            transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] },
+          }}
+          exit={{
+            opacity: 0,
+            transform: reduceMotion ? "scale(1)" : "scale(0.95)",
+            transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] },
+          }}
+        >
+          <h2 className="mb-5 text-[24px] text-[var(--ink)]">
+            {edit ? "Editar lançamento" : "Novo lançamento"}
+          </h2>
 
-        {/* Tipo */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
-          <div className="flex gap-2">
-            {(
-              [
-                { id: "entrada", label: "Entrada" },
-                { id: "saida", label: "Saída" },
-              ] as { id: RegistrarTipo; label: string }[]
-            ).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => trocarTipo(t.id)}
-                className={`flex-1 rounded-lg border px-3 py-2 text-[14px] ${
-                  tipo === t.id
-                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                    : "border-[var(--line)] text-[var(--ink-soft)]"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* Tipo */}
+          <div className="mb-4">
+            <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
+            <div className="flex gap-2">
+              {(
+                [
+                  { id: "entrada", label: "Entrada" },
+                  { id: "saida", label: "Saída" },
+                ] as { id: RegistrarTipo; label: string }[]
+              ).map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => trocarTipo(t.id)}
+                  className={`flex-1 rounded-lg border px-3 py-2 text-[14px] ${
+                    tipo === t.id
+                      ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                      : "border-[var(--line)] text-[var(--ink-soft)]"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Valor */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor (R$)</label>
-          <input
-            type="text"
-            inputMode="numeric"
-            value={cents ? moedaFmt : ""}
-            onKeyDown={onValorKeyDown}
-            onChange={() => {}}
-            placeholder="R$ 0,00"
-            autoFocus
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-          />
-        </div>
+          {/* Valor */}
+          <div className="mb-4">
+            <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor (R$)</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={cents ? moedaFmt : ""}
+              onKeyDown={onValorKeyDown}
+              onChange={() => {}}
+              placeholder="R$ 0,00"
+              autoFocus
+              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            />
+          </div>
 
-        {/* Data */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Data</label>
-          <input
-            type="date"
-            value={data}
-            onChange={(e) => setData(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
-          />
-        </div>
+          {/* Data */}
+          <div className="mb-4">
+            <label className="mb-1 block text-[12px] text-[var(--muted)]">Data</label>
+            <input
+              type="date"
+              value={data}
+              onChange={(e) => setData(e.target.value)}
+              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+            />
+          </div>
 
-        {/* Descrição */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Descrição</label>
-          <input
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-            placeholder="ex: pagamento da Ana"
-          />
-        </div>
+          {/* Descrição */}
+          <div className="mb-4">
+            <label className="mb-1 block text-[12px] text-[var(--muted)]">Descrição</label>
+            <input
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+              placeholder="ex: pagamento da Ana"
+            />
+          </div>
 
-        {/* Categoria */}
-        <div className="mb-6">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Categoria</label>
-          <div className="flex flex-wrap gap-2">
-            {categorias.map((c) => (
+          {/* Categoria */}
+          <div className="mb-6">
+            <label className="mb-1 block text-[12px] text-[var(--muted)]">Categoria</label>
+            <div className="flex flex-wrap gap-2">
+              {categorias.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => escolherCategoria(c)}
+                  className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
+                    categoria === c
+                      ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                      : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+                  }`}
+                >
+                  {c}
+                </button>
+              ))}
               <button
-                key={c}
-                onClick={() => escolherCategoria(c)}
+                onClick={() => escolherCategoria(NOVA_CATEGORIA)}
                 className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-                  categoria === c
+                  novaCategoriaAberta
                     ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
                     : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
                 }`}
               >
-                {c}
+                {NOVA_CATEGORIA}
               </button>
-            ))}
-            <button
-              onClick={() => escolherCategoria(NOVA_CATEGORIA)}
-              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-                novaCategoriaAberta
-                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-              }`}
-            >
-              {NOVA_CATEGORIA}
-            </button>
+            </div>
+            {novaCategoriaAberta && (
+              <input
+                autoFocus
+                value={novaCategoriaTexto}
+                onChange={(e) => setNovaCategoriaTexto(e.target.value)}
+                placeholder="Nome da categoria"
+                maxLength={40}
+                className="mt-2 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+              />
+            )}
           </div>
-          {novaCategoriaAberta && (
-            <input
-              autoFocus
-              value={novaCategoriaTexto}
-              onChange={(e) => setNovaCategoriaTexto(e.target.value)}
-              placeholder="Nome da categoria"
-              maxLength={40}
-              className="mt-2 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-            />
-          )}
-        </div>
 
-        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+          {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
 
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[13px] text-[var(--muted)]">{faltaMsg}</span>
-          <span className="flex gap-3">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={salvar}
-              disabled={salvando || !!faltaMsg}
-              className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-            >
-              {salvando ? "Salvando..." : edit ? "Salvar alterações" : "Salvar lançamento"}
-            </button>
-          </span>
-        </div>
-      </div>
-    </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[13px] text-[var(--muted)]">{faltaMsg}</span>
+            <span className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={salvar}
+                disabled={salvando || !!faltaMsg}
+                className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
+              >
+                {salvando ? "Salvando..." : edit ? "Salvar alterações" : "Salvar lançamento"}
+              </button>
+            </span>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

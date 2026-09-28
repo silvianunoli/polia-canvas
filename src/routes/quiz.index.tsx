@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import { linkCanonico } from "@/lib/seo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
@@ -203,15 +204,15 @@ function TelaPergunta({
               type="button"
               aria-pressed={selecionada}
               onClick={() => onResponder(alternativa.id)}
-              className={`flex min-h-[60px] w-full items-center gap-3 rounded-2xl border px-5 py-4 text-left text-[16px] leading-[1.4] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
+              className={`flex min-h-[60px] w-full items-center gap-3 rounded-2xl border px-5 py-4 text-left text-[16px] leading-[1.4] transition-[color,background-color,border-color,transform] duration-150 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
                 selecionada
                   ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--ink)]"
-                  : "border-[var(--line)] bg-white text-[var(--ink)] hover:border-[var(--secondary)]"
+                  : "border-[var(--line)] bg-white text-[var(--ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:border-[var(--secondary)]"
               }`}
             >
               <span
                 aria-hidden="true"
-                className={`h-4 w-4 flex-none rounded-md border-[1.5px] ${
+                className={`h-4 w-4 flex-none rounded-md border-[1.5px] transition-colors duration-150 ${
                   selecionada
                     ? "border-[var(--ink)] bg-[var(--secondary)]"
                     : "border-[var(--line)] bg-white"
@@ -578,21 +579,61 @@ function QuizPage() {
     setTela("abertura");
   }
 
+  // Só as 4 telas macro (abertura/pergunta/gate/resultado) cruzam com fade; a
+  // key é a própria `tela`, então trocar de PERGUNTA PRA PERGUNTA dentro do
+  // wizard (só o `idx` muda) não recria o motion.div e não anima – de
+  // propósito, ver o comentário de TelaResultado sobre whileInView/scroll:
+  // aqui é animate/exit no mount, não whileInView, então não reintroduz o
+  // bug de conteúdo invisível até rolar.
   return (
     <Casca>
-      {tela === "abertura" && <TelaAbertura onComecar={comecar} />}
-      {tela === "pergunta" && (
-        <TelaPergunta
-          idx={idx}
-          escolha={respostas[PERGUNTAS[idx].id]}
-          onResponder={responder}
-          onVoltar={voltar}
-        />
-      )}
-      {tela === "gate" && (
-        <TelaGate faixaNome={calcularResultado(respostas).faixa.nome} onEnviar={enviarLead} />
-      )}
-      {tela === "resultado" && <TelaResultado respostas={respostas} onRefazer={refazer} />}
+      <AnimatePresence mode="wait">
+        {tela === "abertura" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaAbertura onComecar={comecar} />
+          </motion.div>
+        )}
+        {tela === "pergunta" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaPergunta
+              idx={idx}
+              escolha={respostas[PERGUNTAS[idx].id]}
+              onResponder={responder}
+              onVoltar={voltar}
+            />
+          </motion.div>
+        )}
+        {tela === "gate" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaGate faixaNome={calcularResultado(respostas).faixa.nome} onEnviar={enviarLead} />
+          </motion.div>
+        )}
+        {tela === "resultado" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaResultado respostas={respostas} onRefazer={refazer} />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Casca>
   );
 }

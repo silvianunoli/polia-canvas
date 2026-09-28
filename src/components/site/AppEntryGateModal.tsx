@@ -28,6 +28,11 @@ export function AppEntryGateModal({ onExplorar }: { onExplorar: () => void }) {
           <motion.div
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
+            exit={{
+              opacity: 0,
+              transform: "translateY(16px)",
+              transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
+            }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="w-full max-w-[380px] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-6"
           >

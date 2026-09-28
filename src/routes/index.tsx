@@ -347,7 +347,9 @@ function FaixaFerramentas() {
     >
       <motion.div
         className="flex w-max items-center"
-        animate={reduzirMovimento ? undefined : { x: ["0%", "-50%"] }}
+        animate={
+          reduzirMovimento ? undefined : { transform: ["translateX(0%)", "translateX(-50%)"] }
+        }
         transition={{ duration: 36, ease: "linear", repeat: Infinity }}
       >
         {lista.map((nome, i) => (
@@ -452,16 +454,25 @@ function HomePage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]" id="topo">
-      {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
+      <AnimatePresence>
+        {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
+      </AnimatePresence>
       <SiteHeader />
 
       <AnimatePresence>
         {mostrarCtaFlutuante && (
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.25 }}
+            initial={{ opacity: 0, transform: "translateY(16px)" }}
+            animate={{
+              opacity: 1,
+              transform: "translateY(0px)",
+              transition: { duration: 0.25, ease: [0.23, 1, 0.32, 1] },
+            }}
+            exit={{
+              opacity: 0,
+              transform: "translateY(16px)",
+              transition: { duration: 0.16, ease: [0.23, 1, 0.32, 1] },
+            }}
             className="fixed bottom-6 right-6 z-40 hidden md:block"
           >
             <Link

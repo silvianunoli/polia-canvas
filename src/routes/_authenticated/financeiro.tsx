@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, FileText, Lock, Wallet } from "lucide-react";
@@ -426,10 +427,10 @@ function FinanceiroPage() {
               </a>
             </p>
           ) : (
-            <div className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white">
+            <div className="relative mt-7 mb-14 h-3.5 overflow-hidden rounded-lg border border-[var(--line)] bg-white">
               <div
-                className="absolute inset-y-0 left-0 rounded-lg rounded-r-none bg-[var(--secondary)] transition-[width] duration-[800ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
-                style={{ width: `${barOn ? metaPct : 0}%` }}
+                className="absolute inset-y-0 left-0 w-full origin-left rounded-lg rounded-r-none bg-[var(--secondary)] transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+                style={{ transform: `scaleX(${(barOn ? metaPct : 0) / 100})` }}
               />
               {marcas.map((m) => {
                 const left = Math.min(99, (m.num / metaAlvo) * 100);
@@ -603,21 +604,28 @@ function FinanceiroPage() {
       </div>
 
       {/* ───────── 5. Modal ───────── */}
-      {modalAberto && userId && (
-        <ModalLancamento
-          userId={userId}
-          tipoInicial={modalTipo}
-          dataPadrao={hojeISOStr}
-          prefill={prefill}
-          lancamentoEdit={lancamentoEdit}
-          historico={lancamentos}
-          onClose={() => setModalAberto(false)}
-          onSaved={() => {
-            qc.invalidateQueries({ queryKey: ["financeiro", userId] });
-            setModalAberto(false);
-          }}
-        />
-      )}
+      {/* AnimatePresence aqui fora (não só dentro de ModalLancamento) é o que
+          deixa a animação de saída rodar: o pai monta/desmonta o componente
+          inteiro por render condicional puro, e sem esse AnimatePresence
+          envolvendo o ponto de uso, o exit interno nunca chega a tocar. */}
+      <AnimatePresence>
+        {modalAberto && userId && (
+          <ModalLancamento
+            key="modal-lancamento"
+            userId={userId}
+            tipoInicial={modalTipo}
+            dataPadrao={hojeISOStr}
+            prefill={prefill}
+            lancamentoEdit={lancamentoEdit}
+            historico={lancamentos}
+            onClose={() => setModalAberto(false)}
+            onSaved={() => {
+              qc.invalidateQueries({ queryKey: ["financeiro", userId] });
+              setModalAberto(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* ───────── 6. Modal: registrar venda de um produto ───────── */}
       {modalVendaAberto && userId && (

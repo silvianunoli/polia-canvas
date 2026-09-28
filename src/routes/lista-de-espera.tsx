@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { linkCanonico } from "@/lib/seo";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowUp } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -123,6 +124,7 @@ function ListaEsperaPage() {
   // preenche tudo, sim. Se vier preenchido, finge sucesso e não insere nada.
   const [hp, setHp] = useState("");
   const [mostrarTopo, setMostrarTopo] = useState(false);
+  const reduceMotion = useReducedMotion();
   const turnstile = useTurnstile();
   const nomeRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -260,175 +262,189 @@ function ListaEsperaPage() {
 
               {/* FORMULÁRIO (única ação da página) */}
               <Reveal delay={0.15} y={28}>
-                {!enviado ? (
-                  <form
-                    id="lista"
-                    onSubmit={handleSubmit}
-                    className="grid scroll-mt-[88px] gap-4 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
-                    noValidate
-                  >
-                    <p className="text-[15px] font-semibold text-[var(--ink)]">
-                      Entre na lista para ser uma das primeiras a usar a Pólia.
-                    </p>
-                    {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
-                    <input
-                      type="text"
-                      name="empresa_site"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      aria-hidden="true"
-                      value={hp}
-                      onChange={(e) => setHp(e.target.value)}
-                      className="absolute left-[-9999px] h-0 w-0 opacity-0"
-                    />
-                    <div>
-                      <label
-                        htmlFor="nome"
-                        className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-                      >
-                        Seu nome
-                      </label>
+                <AnimatePresence mode="wait">
+                  {!enviado ? (
+                    <motion.form
+                      key="form"
+                      id="lista"
+                      onSubmit={handleSubmit}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] }}
+                      className="grid scroll-mt-[88px] gap-4 rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
+                      noValidate
+                    >
+                      <p className="text-[15px] font-semibold text-[var(--ink)]">
+                        Entre na lista para ser uma das primeiras a usar a Pólia.
+                      </p>
+                      {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
                       <input
-                        ref={nomeRef}
-                        id="nome"
-                        name="nome"
                         type="text"
-                        autoComplete="name"
-                        placeholder="Como te chamar?"
-                        value={nome}
-                        onChange={(e) => {
-                          setNome(e.target.value);
-                          if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
-                        }}
-                        aria-invalid={!!errors.nome || undefined}
-                        aria-describedby={errors.nome ? "nome-error" : undefined}
-                        className={`${campoBase} ${errors.nome ? campoErro : campoOk}`}
+                        name="empresa_site"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        aria-hidden="true"
+                        value={hp}
+                        onChange={(e) => setHp(e.target.value)}
+                        className="absolute left-[-9999px] h-0 w-0 opacity-0"
                       />
-                      <FieldError id="nome-error">{errors.nome}</FieldError>
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="email"
-                        className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-                      >
-                        Seu e-mail
-                      </label>
-                      <input
-                        ref={emailRef}
-                        id="email"
-                        name="email"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="voce@email.com"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
-                        }}
-                        aria-invalid={!!errors.email || undefined}
-                        aria-describedby={errors.email ? "email-error" : undefined}
-                        className={`${campoBase} ${errors.email ? campoErro : campoOk}`}
-                      />
-                      <FieldError id="email-error">{errors.email}</FieldError>
-                    </div>
-                    {/* Opcional de verdade: não valida, não bloqueia o envio, e
+                      <div>
+                        <label
+                          htmlFor="nome"
+                          className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+                        >
+                          Seu nome
+                        </label>
+                        <input
+                          ref={nomeRef}
+                          id="nome"
+                          name="nome"
+                          type="text"
+                          autoComplete="name"
+                          placeholder="Como te chamar?"
+                          value={nome}
+                          onChange={(e) => {
+                            setNome(e.target.value);
+                            if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
+                          }}
+                          aria-invalid={!!errors.nome || undefined}
+                          aria-describedby={errors.nome ? "nome-error" : undefined}
+                          className={`${campoBase} ${errors.nome ? campoErro : campoOk}`}
+                        />
+                        <FieldError id="nome-error">{errors.nome}</FieldError>
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="email"
+                          className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+                        >
+                          Seu e-mail
+                        </label>
+                        <input
+                          ref={emailRef}
+                          id="email"
+                          name="email"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="voce@email.com"
+                          value={email}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
+                          }}
+                          aria-invalid={!!errors.email || undefined}
+                          aria-describedby={errors.email ? "email-error" : undefined}
+                          className={`${campoBase} ${errors.email ? campoErro : campoOk}`}
+                        />
+                        <FieldError id="email-error">{errors.email}</FieldError>
+                      </div>
+                      {/* Opcional de verdade: não valida, não bloqueia o envio, e
                         número quebrado volta nulo no servidor. Existe pra dar à
                         Pólia um segundo caminho de conversa com quem quiser. */}
-                    <div>
-                      <label
-                        htmlFor="whatsapp"
-                        className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-                      >
-                        Seu WhatsApp{" "}
-                        <span className="font-normal text-[var(--muted)]">(opcional)</span>
-                      </label>
-                      <input
-                        id="whatsapp"
-                        name="whatsapp"
-                        type="tel"
-                        inputMode="tel"
-                        autoComplete="tel-national"
-                        placeholder="(11) 99999-9999"
-                        value={telefone}
-                        onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
-                        className={`${campoBase} ${campoOk}`}
-                      />
-                    </div>
-                    {/* O select "o que mais trava" saiu: eram cinco opções pra ler
+                      <div>
+                        <label
+                          htmlFor="whatsapp"
+                          className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+                        >
+                          Seu WhatsApp{" "}
+                          <span className="font-normal text-[var(--muted)]">(opcional)</span>
+                        </label>
+                        <input
+                          id="whatsapp"
+                          name="whatsapp"
+                          type="tel"
+                          inputMode="tel"
+                          autoComplete="tel-national"
+                          placeholder="(11) 99999-9999"
+                          value={telefone}
+                          onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+                          className={`${campoBase} ${campoOk}`}
+                        />
+                      </div>
+                      {/* O select "o que mais trava" saiu: eram cinco opções pra ler
                         antes do botão, três delas de produtividade genérica, e nada
                         voltava pra quem respondia. O consentimento de novidades saiu
                         junto e foi consolidado no aceite abaixo. */}
-                    <div className="mt-1 grid gap-3">
-                      <label className="flex cursor-pointer items-start gap-3 text-[14px] text-[var(--ink-soft)]">
-                        <input
-                          type="checkbox"
-                          checked={aceite}
-                          onChange={(e) => {
-                            setAceite(e.target.checked);
-                            if (e.target.checked) setAceiteErro(false);
-                          }}
-                          aria-invalid={aceiteErro || undefined}
-                          aria-describedby={aceiteErro ? "aceite-error" : undefined}
-                          className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
-                        />
-                        <span>
-                          Li e aceito os{" "}
-                          <Link
-                            to="/termos"
-                            className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
-                          >
-                            Termos de uso
-                          </Link>{" "}
-                          e a{" "}
-                          <Link
-                            to="/privacidade"
-                            className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
-                          >
-                            Política de Privacidade
-                          </Link>
-                          , e quero ser avisada quando a Pólia abrir.
-                        </span>
-                      </label>
-                    </div>
+                      <div className="mt-1 grid gap-3">
+                        <label className="flex cursor-pointer items-start gap-3 text-[14px] text-[var(--ink-soft)]">
+                          <input
+                            type="checkbox"
+                            checked={aceite}
+                            onChange={(e) => {
+                              setAceite(e.target.checked);
+                              if (e.target.checked) setAceiteErro(false);
+                            }}
+                            aria-invalid={aceiteErro || undefined}
+                            aria-describedby={aceiteErro ? "aceite-error" : undefined}
+                            className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
+                          />
+                          <span>
+                            Li e aceito os{" "}
+                            <Link
+                              to="/termos"
+                              className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                            >
+                              Termos de uso
+                            </Link>{" "}
+                            e a{" "}
+                            <Link
+                              to="/privacidade"
+                              className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                            >
+                              Política de Privacidade
+                            </Link>
+                            , e quero ser avisada quando a Pólia abrir.
+                          </span>
+                        </label>
+                      </div>
 
-                    {aceiteErro && (
+                      {/* Sempre montado (nunca monta/desmonta) pra poder animar entrada e
+                        saída em vez de aparecer/sumir seco. A visibilidade é por atributo
+                        (data-hidden), e o texto só existe no DOM quando o erro está ativo:
+                        é essa mutação que faz o role="alert"/aria-live disparar de novo pro
+                        leitor de tela a cada vez que o erro aparece, mesmo com o <p> fixo. */}
                       <p
                         id="aceite-error"
                         role="alert"
-                        className="text-[13px] text-[var(--danger)]"
+                        aria-live="assertive"
+                        data-hidden={!aceiteErro}
+                        className="text-[13px] text-[var(--danger)] opacity-100 translate-y-0 transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] data-[hidden=true]:pointer-events-none data-[hidden=true]:opacity-0 data-[hidden=true]:-translate-y-1 motion-reduce:data-[hidden=true]:translate-y-0"
                       >
-                        Pra continuar, falta aceitar os termos.
+                        {aceiteErro ? "Pra continuar, falta aceitar os termos." : ""}
                       </p>
-                    )}
 
-                    <TurnstileWidget containerRef={turnstile.containerRef} />
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className={`${BTN_PRIMARIO} w-full disabled:cursor-not-allowed disabled:opacity-60`}
+                      <TurnstileWidget containerRef={turnstile.containerRef} />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className={`${BTN_PRIMARIO} w-full disabled:cursor-not-allowed disabled:opacity-60`}
+                      >
+                        {loading ? "Enviando…" : "Quero ser uma das primeiras"}
+                      </button>
+                      <p className="text-[13px] text-[var(--muted)]">
+                        Sem cobrança e sem spam. Você pode sair da lista quando quiser.
+                      </p>
+                    </motion.form>
+                  ) : (
+                    <motion.div
+                      key="confirmacao"
+                      id="lista"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.23, 1, 0.32, 1] }}
+                      className="scroll-mt-[88px] rounded-2xl bg-[var(--surface-pink)] p-8"
+                      role="status"
+                      aria-live="polite"
                     >
-                      {loading ? "Enviando…" : "Quero ser uma das primeiras"}
-                    </button>
-                    <p className="text-[13px] text-[var(--muted)]">
-                      Sem cobrança e sem spam. Você pode sair da lista quando quiser.
-                    </p>
-                  </form>
-                ) : (
-                  <div
-                    id="lista"
-                    className="scroll-mt-[88px] rounded-2xl bg-[var(--surface-pink)] p-8"
-                    role="status"
-                    aria-live="polite"
-                  >
-                    <h2 className="max-w-[20ch] text-[clamp(1.4rem,2.4vw,1.75rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
-                      Pronto. Seu e-mail está na lista.
-                    </h2>
-                    <p className="mt-3 max-w-[48ch] leading-[1.65] text-[var(--ink-soft)]">
-                      Quando a Pólia abrir, em outubro, o convite chega antes de todo mundo. Pode
-                      fechar essa página tranquila.
-                    </p>
-                  </div>
-                )}
+                      <h2 className="max-w-[20ch] text-[clamp(1.4rem,2.4vw,1.75rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+                        Pronto. Seu e-mail está na lista.
+                      </h2>
+                      <p className="mt-3 max-w-[48ch] leading-[1.65] text-[var(--ink-soft)]">
+                        Quando a Pólia abrir, em outubro, o convite chega antes de todo mundo. Pode
+                        fechar essa página tranquila.
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Reveal>
             </div>
           </div>

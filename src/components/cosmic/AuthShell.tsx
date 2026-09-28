@@ -16,8 +16,14 @@ export function AuthShell({ children, maxWidth = 420 }: AuthShellProps) {
   const reduce = usePrefersReducedMotion();
   const [shown, setShown] = useState(false);
   useEffect(() => {
-    const r = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(r);
+    let raf2: number | undefined;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setShown(true));
+    });
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2 !== undefined) cancelAnimationFrame(raf2);
+    };
   }, []);
 
   return (
@@ -118,14 +124,15 @@ export function AuthButton({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`inline-flex h-[52px] items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-6 font-semibold text-[var(--secondary-ink)] transition-[transform,opacity] duration-180 hover:-translate-y-px hover:opacity-90 disabled:opacity-60 disabled:hover:translate-y-0 ${
+      className={`inline-flex h-[52px] items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-6 font-semibold text-[var(--secondary-ink)] transition-[transform,opacity] duration-180 hover:-translate-y-px hover:opacity-90 active:scale-[0.97] disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100 ${
         fullWidth ? "w-full" : ""
       }`}
     >
-      {loading && !reduce && (
+      {!reduce && (
         <span
           aria-hidden="true"
-          className="h-[14px] w-[14px] shrink-0 animate-spin rounded-full border-2 border-[var(--secondary-ink)] border-r-transparent"
+          className="h-[14px] w-[14px] shrink-0 animate-spin rounded-full border-2 border-[var(--secondary-ink)] border-r-transparent transition-opacity duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]"
+          style={{ opacity: loading ? 1 : 0 }}
         />
       )}
       {children}

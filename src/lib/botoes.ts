@@ -12,15 +12,16 @@
  */
 
 const BASE =
-  "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] font-semibold no-underline transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0";
+  "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] font-semibold no-underline transition-transform focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:active:scale-100";
 
 const GRANDE = "px-[26px] py-[13px] text-[15px]";
 const MEDIO = "px-5 py-2.5 text-[14px]";
 const PEQUENO = "px-3.5 py-1.5 text-[13px]";
 
 const PREENCHIDO =
-  "bg-[var(--secondary)] text-[var(--secondary-ink)] hover:-translate-y-px hover:opacity-90";
-const CONTORNO = "text-[var(--ink)] hover:-translate-y-px hover:bg-white";
+  "bg-[var(--secondary)] text-[var(--secondary-ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-px [@media(hover:hover)_and_(pointer:fine)]:hover:opacity-90";
+const CONTORNO =
+  "text-[var(--ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-px [@media(hover:hover)_and_(pointer:fine)]:hover:bg-white";
 
 /** Ação principal do site público (hero, planos). */
 export const BTN_PRIMARIO = `${BASE} ${GRANDE} ${PREENCHIDO}`;

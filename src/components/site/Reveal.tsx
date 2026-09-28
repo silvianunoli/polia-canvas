@@ -24,8 +24,11 @@ export function Reveal({
   return (
     <Comp
       className={className}
-      initial={{ opacity: 0, y: reduceMotion ? 0 : y }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{
+        opacity: 0,
+        transform: reduceMotion ? "translateY(0px)" : `translateY(${y}px)`,
+      }}
+      whileInView={{ opacity: 1, transform: "translateY(0px)" }}
       viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
       transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
     >
@@ -42,8 +45,12 @@ const staggerContainer: Variants = {
 };
 
 const staggerItem: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+  hidden: { opacity: 0, transform: "translateY(16px)" },
+  show: {
+    opacity: 1,
+    transform: "translateY(0px)",
+    transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] },
+  },
 };
 
 /** Container que revela os filhos em cascata (stagger) ao entrar na tela. */
@@ -88,7 +95,7 @@ export function RevealLines({
       initial="hidden"
       whileInView="show"
       viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
-      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.09 } } }}
+      variants={{ hidden: {}, show: { transition: { staggerChildren: 0.06 } } }}
     >
       {lines.map((line, i) => (
         <div key={i} className="overflow-hidden">
@@ -96,9 +103,9 @@ export function RevealLines({
             className={lineClassName}
             style={{ display: "block" }}
             variants={{
-              hidden: { y: "100%", opacity: 0 },
+              hidden: { transform: "translateY(100%)", opacity: 0 },
               show: {
-                y: 0,
+                transform: "translateY(0%)",
                 opacity: 1,
                 transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] },
               },

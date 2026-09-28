@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
 const ITENS: { texto: string; to: string; hash?: string }[] = [
@@ -43,6 +44,7 @@ const classeMobile = (ativo: boolean) =>
 export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
   const [menuAberto, setMenuAberto] = useState(false);
   const [rolou, setRolou] = useState(false);
+  const reduzirMovimento = useReducedMotion();
   const location = useRouterState({ select: (s) => s.location });
   const ajudaAtiva = rotaAtiva(location.pathname, "/ajuda");
   const sobreAtiva = rotaAtiva(location.pathname, "/sobre");
@@ -107,7 +109,7 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
                   to="/lista-de-espera"
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"header"}'
-                  className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+                  className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform duration-150 ease-out active:scale-[0.97] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                 >
                   Entrar na lista
                 </Link>
@@ -132,47 +134,63 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
           )}
         </div>
 
-        {menuAberto && !semLogin && (
-          <nav
-            className="mx-auto flex w-full max-w-[1200px] flex-col border-t border-[var(--line)] px-[clamp(20px,4vw,48px)] pb-6 md:hidden"
-            aria-label="Navegação principal"
-          >
-            {ITENS.map((i) => {
-              const ativo = itemAtivo(i, location.pathname, location.hash);
-              return (
-                <Link
-                  key={i.texto}
-                  to={i.to}
-                  hash={i.hash}
-                  onClick={() => setMenuAberto(false)}
-                  aria-current={ativo ? "page" : undefined}
-                  className={classeMobile(ativo)}
-                >
-                  {i.texto}
-                </Link>
-              );
-            })}
-            <Link
-              to="/ajuda"
-              onClick={() => setMenuAberto(false)}
-              aria-current={ajudaAtiva ? "page" : undefined}
-              className={classeMobile(ajudaAtiva)}
+        <AnimatePresence>
+          {menuAberto && !semLogin && (
+            <motion.nav
+              initial={{
+                opacity: 0,
+                transform: reduzirMovimento ? "translateY(0px)" : "translateY(-8px)",
+              }}
+              animate={{
+                opacity: 1,
+                transform: "translateY(0px)",
+                transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] },
+              }}
+              exit={{
+                opacity: 0,
+                transform: reduzirMovimento ? "translateY(0px)" : "translateY(-8px)",
+                transition: { duration: 0.13, ease: [0.16, 1, 0.3, 1] },
+              }}
+              className="mx-auto flex w-full max-w-[1200px] flex-col border-t border-[var(--line)] px-[clamp(20px,4vw,48px)] pb-6 md:hidden"
+              aria-label="Navegação principal"
             >
-              Ajuda
-            </Link>
-            <Link
-              to="/sobre"
-              onClick={() => setMenuAberto(false)}
-              aria-current={sobreAtiva ? "page" : undefined}
-              className={classeMobile(sobreAtiva)}
-            >
-              Sobre
-            </Link>
-            <Link to="/auth/login" className="py-3.5 text-[17px] text-[var(--ink)] no-underline">
-              Entrar
-            </Link>
-          </nav>
-        )}
+              {ITENS.map((i) => {
+                const ativo = itemAtivo(i, location.pathname, location.hash);
+                return (
+                  <Link
+                    key={i.texto}
+                    to={i.to}
+                    hash={i.hash}
+                    onClick={() => setMenuAberto(false)}
+                    aria-current={ativo ? "page" : undefined}
+                    className={classeMobile(ativo)}
+                  >
+                    {i.texto}
+                  </Link>
+                );
+              })}
+              <Link
+                to="/ajuda"
+                onClick={() => setMenuAberto(false)}
+                aria-current={ajudaAtiva ? "page" : undefined}
+                className={classeMobile(ajudaAtiva)}
+              >
+                Ajuda
+              </Link>
+              <Link
+                to="/sobre"
+                onClick={() => setMenuAberto(false)}
+                aria-current={sobreAtiva ? "page" : undefined}
+                className={classeMobile(sobreAtiva)}
+              >
+                Sobre
+              </Link>
+              <Link to="/auth/login" className="py-3.5 text-[17px] text-[var(--ink)] no-underline">
+                Entrar
+              </Link>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </header>
     </>
   );

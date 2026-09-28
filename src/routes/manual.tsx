@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { linkCanonico } from "@/lib/seo";
 import { track } from "@/lib/analytics";
@@ -236,6 +237,7 @@ function CartaoPedido({
   aviso: "link" | "erro" | undefined;
 }) {
   const ts = useTurnstile();
+  const reduceMotion = useReducedMotion();
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
   const [aceite, setAceite] = useState(false);
@@ -304,193 +306,205 @@ function CartaoPedido({
     }
   }
 
-  if (downloadUrl) {
-    return (
-      <div className="rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8">
-        <Eyebrow>Pronto</Eyebrow>
-        <h2
-          ref={prontoRef}
-          tabIndex={-1}
-          className="mt-3 text-[clamp(1.5rem,4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance outline-none"
+  // Um só JSX (em vez de dois `return` separados) pra caber num AnimatePresence:
+  // a troca do form pro card "Pronto" anima em vez de remontar tudo seco.
+  return (
+    <AnimatePresence mode="wait">
+      {downloadUrl ? (
+        <motion.div
+          key="pronto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: reduceMotion ? 0 : 0.22, ease: [0.23, 1, 0.32, 1] }}
+          className="rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
         >
-          Seu manual está a caminho.
-        </h2>
-        <p className="mt-4 text-[16px] leading-[1.6] text-[var(--ink-soft)]">
-          O download começou automaticamente. Se o navegador segurou, o botão abaixo baixa de novo.
-        </p>
-        <a
-          href={downloadUrl}
-          download={NOME_ARQUIVO_PDF}
-          className={`${BTN_PRIMARIO} mt-6 ${CTA_LARGO}`}
-          onClick={() => {
-            track("manual_download_clicado");
-            gtagEvent("manual_download_clicado");
-          }}
-        >
-          Baixar o manual
-        </a>
-        <p className="mt-6 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-          Uma cópia também foi pro seu e-mail, pra ficar guardada.
-        </p>
-        <div className="mt-6 border-t border-[var(--line)] pt-6">
-          <p className="text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-            Enquanto isso, a Pólia está sendo construída em público: primeiro mostra se o negócio dá
-            lucro, depois ajuda a construir a marca que sustenta o preço.
+          <Eyebrow>Pronto</Eyebrow>
+          <h2
+            ref={prontoRef}
+            tabIndex={-1}
+            className="mt-3 text-[clamp(1.5rem,4vw,1.9rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance outline-none"
+          >
+            Seu manual está a caminho.
+          </h2>
+          <p className="mt-4 text-[16px] leading-[1.6] text-[var(--ink-soft)]">
+            O download começou automaticamente. Se o navegador segurou, o botão abaixo baixa de
+            novo.
           </p>
           <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`${BTN_CONTORNO} mt-4 ${CTA_LARGO}`}
+            href={downloadUrl}
+            download={NOME_ARQUIVO_PDF}
+            className={`${BTN_PRIMARIO} mt-6 ${CTA_LARGO}`}
+            onClick={() => {
+              track("manual_download_clicado");
+              gtagEvent("manual_download_clicado");
+            }}
           >
-            Seguir @hub.polia
-            <span aria-hidden="true">→</span>
+            Baixar o manual
           </a>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <form
-      onSubmit={enviar}
-      noValidate
-      className="rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
-      aria-labelledby="manual-form-titulo"
-    >
-      <h2
-        id="manual-form-titulo"
-        className="text-[clamp(1.35rem,3.4vw,1.6rem)] font-bold leading-[1.15] tracking-[-0.02em]"
-      >
-        Quero receber o manual
-      </h2>
-      <p className="mt-2 text-[15px] leading-[1.55] text-[var(--ink-soft)]">
-        O download começa na hora e uma cópia vai pro seu e-mail.
-      </p>
-
-      {aviso && (
-        <p
-          role="status"
-          className="mt-5 rounded-xl bg-[var(--surface-pink)] px-4 py-3 text-[14px] leading-[1.5] text-[var(--ink)]"
-        >
-          {AVISOS[aviso]}
-        </p>
-      )}
-
-      <div className="mt-6 grid gap-5">
-        <input
-          type="text"
-          name="empresa_site"
-          tabIndex={-1}
-          autoComplete="off"
-          aria-hidden="true"
-          value={hp}
-          onChange={(e) => setHp(e.target.value)}
-          className="absolute left-[-9999px] h-0 w-0 opacity-0"
-        />
-
-        <div>
-          <label
-            htmlFor={ID_EMAIL}
-            className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-          >
-            Seu melhor e-mail
-          </label>
-          <input
-            id={ID_EMAIL}
-            ref={emailRef}
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder="voce@email.com"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (erroEmail) setErroEmail(undefined);
-            }}
-            onBlur={() => {
-              if (email.trim() && !emailValido(email)) setErroEmail(ERRO_EMAIL);
-            }}
-            aria-invalid={!!erroEmail || undefined}
-            aria-describedby={erroEmail ? "manual-email-erro" : undefined}
-            className={`min-h-[52px] w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
-              erroEmail
-                ? "border-[var(--danger)] focus:border-[var(--danger)]"
-                : "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]"
-            }`}
-          />
-          <FieldError id="manual-email-erro">{erroEmail}</FieldError>
-        </div>
-
-        {/* Opcional de verdade: não valida, não bloqueia o envio, e número
-            quebrado volta nulo no servidor em vez de custar a lead. */}
-        <div>
-          <label
-            htmlFor="manual-whatsapp"
-            className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
-          >
-            Seu WhatsApp <span className="font-normal text-[var(--muted)]">(opcional)</span>
-          </label>
-          <input
-            id="manual-whatsapp"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel-national"
-            placeholder="(11) 99999-9999"
-            value={telefone}
-            onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
-            className="min-h-[52px] w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
-          />
-        </div>
-
-        {/* O link fica FORA do <label> de propósito: dentro, clicar nele conta
-            como clique no label e marca/desmarca o consentimento junto. */}
-        <div className="flex items-start gap-3 text-[14px] leading-[1.5] text-[var(--ink-soft)]">
-          <input
-            id="manual-consent"
-            type="checkbox"
-            checked={aceite}
-            onChange={(e) => setAceite(e.target.checked)}
-            className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
-          />
-          <span>
-            <label htmlFor="manual-consent" className="cursor-pointer">
-              {CONSENT_TEXTO_MANUAL}
-            </label>{" "}
-            <Link
-              to="/privacidade"
+          <p className="mt-6 text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+            Uma cópia também foi pro seu e-mail, pra ficar guardada.
+          </p>
+          <div className="mt-6 border-t border-[var(--line)] pt-6">
+            <p className="text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+              Enquanto isso, a Pólia está sendo construída em público: primeiro mostra se o negócio
+              dá lucro, depois ajuda a construir a marca que sustenta o preço.
+            </p>
+            <a
+              href={INSTAGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+              className={`${BTN_CONTORNO} mt-4 ${CTA_LARGO}`}
             >
-              Política de privacidade
-            </Link>
-          </span>
-        </div>
-
-        <TurnstileWidget containerRef={ts.containerRef} />
-        {ts.erroCarregamento && (
-          <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
-            {ERRO_TURNSTILE_CARREGAMENTO}
-          </p>
-        )}
-
-        <button
-          type="submit"
-          disabled={!podeEnviar}
-          className={`${BTN_PRIMARIO} min-h-[52px] w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0`}
+              Seguir @hub.polia
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.form
+          key="form"
+          onSubmit={enviar}
+          noValidate
+          exit={{ opacity: 0 }}
+          transition={{ duration: reduceMotion ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] }}
+          className="rounded-2xl border border-[var(--line)] bg-white p-6 md:p-8"
+          aria-labelledby="manual-form-titulo"
         >
-          {enviando ? "Enviando…" : "Quero receber o manual"}
-          {!enviando && <span aria-hidden="true">→</span>}
-        </button>
-
-        {erroEnvio && (
-          <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
-            {erroEnvio}
+          <h2
+            id="manual-form-titulo"
+            className="text-[clamp(1.35rem,3.4vw,1.6rem)] font-bold leading-[1.15] tracking-[-0.02em]"
+          >
+            Quero receber o manual
+          </h2>
+          <p className="mt-2 text-[15px] leading-[1.55] text-[var(--ink-soft)]">
+            O download começa na hora e uma cópia vai pro seu e-mail.
           </p>
-        )}
-      </div>
-    </form>
+
+          {aviso && (
+            <p
+              role="status"
+              className="mt-5 rounded-xl bg-[var(--surface-pink)] px-4 py-3 text-[14px] leading-[1.5] text-[var(--ink)]"
+            >
+              {AVISOS[aviso]}
+            </p>
+          )}
+
+          <div className="mt-6 grid gap-5">
+            <input
+              type="text"
+              name="empresa_site"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              value={hp}
+              onChange={(e) => setHp(e.target.value)}
+              className="absolute left-[-9999px] h-0 w-0 opacity-0"
+            />
+
+            <div>
+              <label
+                htmlFor={ID_EMAIL}
+                className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+              >
+                Seu melhor e-mail
+              </label>
+              <input
+                id={ID_EMAIL}
+                ref={emailRef}
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                placeholder="voce@email.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (erroEmail) setErroEmail(undefined);
+                }}
+                onBlur={() => {
+                  if (email.trim() && !emailValido(email)) setErroEmail(ERRO_EMAIL);
+                }}
+                aria-invalid={!!erroEmail || undefined}
+                aria-describedby={erroEmail ? "manual-email-erro" : undefined}
+                className={`min-h-[52px] w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:ring-4 ${
+                  erroEmail
+                    ? "border-[var(--danger)] focus:border-[var(--danger)]"
+                    : "border-[var(--line)] focus:border-[var(--secondary)] focus:ring-[var(--secondary-light)]"
+                }`}
+              />
+              <FieldError id="manual-email-erro">{erroEmail}</FieldError>
+            </div>
+
+            {/* Opcional de verdade: não valida, não bloqueia o envio, e número
+            quebrado volta nulo no servidor em vez de custar a lead. */}
+            <div>
+              <label
+                htmlFor="manual-whatsapp"
+                className="mb-2 block text-[14px] font-semibold text-[var(--ink-soft)]"
+              >
+                Seu WhatsApp <span className="font-normal text-[var(--muted)]">(opcional)</span>
+              </label>
+              <input
+                id="manual-whatsapp"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel-national"
+                placeholder="(11) 99999-9999"
+                value={telefone}
+                onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+                className="min-h-[52px] w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:ring-4 focus:ring-[var(--secondary-light)]"
+              />
+            </div>
+
+            {/* O link fica FORA do <label> de propósito: dentro, clicar nele conta
+            como clique no label e marca/desmarca o consentimento junto. */}
+            <div className="flex items-start gap-3 text-[14px] leading-[1.5] text-[var(--ink-soft)]">
+              <input
+                id="manual-consent"
+                type="checkbox"
+                checked={aceite}
+                onChange={(e) => setAceite(e.target.checked)}
+                className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
+              />
+              <span>
+                <label htmlFor="manual-consent" className="cursor-pointer">
+                  {CONSENT_TEXTO_MANUAL}
+                </label>{" "}
+                <Link
+                  to="/privacidade"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
+                >
+                  Política de privacidade
+                </Link>
+              </span>
+            </div>
+
+            <TurnstileWidget containerRef={ts.containerRef} />
+            {ts.erroCarregamento && (
+              <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
+                {ERRO_TURNSTILE_CARREGAMENTO}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={!podeEnviar}
+              className={`${BTN_PRIMARIO} min-h-[52px] w-full disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0`}
+            >
+              {enviando ? "Enviando…" : "Quero receber o manual"}
+              {!enviando && <span aria-hidden="true">→</span>}
+            </button>
+
+            {erroEnvio && (
+              <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
+                {erroEnvio}
+              </p>
+            )}
+          </div>
+        </motion.form>
+      )}
+    </AnimatePresence>
   );
 }
 

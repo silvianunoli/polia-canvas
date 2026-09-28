@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
 import { linkCanonico } from "@/lib/seo";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { z } from "zod";
@@ -147,10 +148,10 @@ function Opcao({
       aria-pressed={selecionada}
       disabled={desabilitada}
       onClick={onClick}
-      className={`w-full rounded-xl border px-4 py-3 text-left text-[16px] leading-[1.45] transition-colors ${FOCO_SUAVE} ${
+      className={`w-full rounded-xl border px-4 py-3 text-left text-[16px] leading-[1.45] transition-[color,background-color,border-color,opacity,transform] duration-150 active:scale-[0.97] ${FOCO_SUAVE} ${
         selecionada
           ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--ink)]"
-          : "border-[var(--line)] bg-white text-[var(--ink)] hover:border-[var(--secondary)] disabled:opacity-40 disabled:hover:border-[var(--line)]"
+          : "border-[var(--line)] bg-white text-[var(--ink)] [@media(hover:hover)_and_(pointer:fine)]:hover:border-[var(--secondary)] disabled:opacity-40 disabled:hover:border-[var(--line)]"
       }`}
     >
       {rotulo}
@@ -716,27 +717,62 @@ function PesquisaPage() {
     );
   }
 
+  // Mesmo tratamento do quiz (src/routes/quiz.index.tsx): só as 4 telas macro
+  // cruzam com fade, key={tela} pra troca de PERGUNTA PRA PERGUNTA (só o
+  // `idx` muda) não recriar o motion.div e não animar.
   return (
     <Casca>
-      {tela === "intro" && (
-        <TelaIntro titulo={dados.titulo} subtitulo={dados.subtitulo} onComecar={iniciar} />
-      )}
-      {tela === "pergunta" && (
-        <TelaPergunta
-          pergunta={config.perguntas[idx]}
-          idx={idx}
-          total={totalPerguntas(config)}
-          valor={respostas[config.perguntas[idx].id]}
-          onResponder={responder}
-          onAvancar={avancar}
-          onVoltar={voltar}
-          concluindo={concluindo}
-        />
-      )}
-      {tela === "contato" && (
-        <TelaContato onEnviar={enviarContato} onPular={() => setTela("fim")} />
-      )}
-      {tela === "fim" && <TelaFim />}
+      <AnimatePresence mode="wait">
+        {tela === "intro" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaIntro titulo={dados.titulo} subtitulo={dados.subtitulo} onComecar={iniciar} />
+          </motion.div>
+        )}
+        {tela === "pergunta" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaPergunta
+              pergunta={config.perguntas[idx]}
+              idx={idx}
+              total={totalPerguntas(config)}
+              valor={respostas[config.perguntas[idx].id]}
+              onResponder={responder}
+              onAvancar={avancar}
+              onVoltar={voltar}
+              concluindo={concluindo}
+            />
+          </motion.div>
+        )}
+        {tela === "contato" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaContato onEnviar={enviarContato} onPular={() => setTela("fim")} />
+          </motion.div>
+        )}
+        {tela === "fim" && (
+          <motion.div
+            key={tela}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
+          >
+            <TelaFim />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Casca>
   );
 }

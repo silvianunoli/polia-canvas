@@ -49,7 +49,7 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
             {...rest}
             className={`h-[48px] w-full rounded-lg bg-white px-4 ${
               isPassword ? "pr-12" : icon ? "pr-11" : ""
-            } text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] outline-none transition-colors border ${
+            } text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] outline-none transition-[border-color,box-shadow] duration-150 border ${
               marcarErro
                 ? "border-[var(--danger)] focus:border-[var(--danger)]"
                 : "border-[var(--line)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]"
@@ -66,7 +66,7 @@ export const CosmicInput = forwardRef<HTMLInputElement, CosmicInputProps>(
                 <button
                   type="button"
                   onClick={() => setShow((v) => !v)}
-                  className="flex h-11 w-11 items-center justify-center rounded-md transition-colors hover:text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--secondary)]"
+                  className="flex h-11 w-11 items-center justify-center rounded-md transition-colors hover:text-[var(--ink)]"
                   aria-label={show ? "Esconder senha" : "Mostrar senha"}
                   title={show ? "Esconder senha" : "Mostrar senha"}
                 >
@@ -122,15 +122,14 @@ export function PasswordRequirements({ password, id }: { password: string; id?: 
                 ok ? "text-[var(--ink-soft)]" : "text-[var(--muted)]"
               }`}
             >
-              {ok ? (
+              <span className="relative inline-flex h-[14px] w-[14px] shrink-0" aria-hidden="true">
+                <Circle size={14} className="absolute inset-0" />
                 <CheckCircle2
                   size={14}
-                  className="shrink-0 text-[var(--secondary)]"
-                  aria-hidden="true"
+                  className="absolute inset-0 text-[var(--secondary)] transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]"
+                  style={{ opacity: ok ? 1 : 0, transform: ok ? "scale(1)" : "scale(0.95)" }}
                 />
-              ) : (
-                <Circle size={14} className="shrink-0" aria-hidden="true" />
-              )}
+              </span>
               {r.label}
             </span>
           );

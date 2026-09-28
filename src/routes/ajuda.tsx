@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { linkCanonico } from "@/lib/seo";
 import { jsonLdFaq, tagJsonLd } from "@/lib/jsonld";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   PlayCircle,
   User,
@@ -250,6 +251,7 @@ function AjudaPage() {
   // Honeypot: campo invisível fora do fluxo de teclado. Humano nunca preenche; bot que
   // preenche tudo, sim. Se vier preenchido, finge sucesso e não insere nada.
   const [hp, setHp] = useState("");
+  const reduceMotion = useReducedMotion();
   const turnstile = useTurnstile();
   const refs = {
     nome: useRef<HTMLInputElement>(null),
@@ -552,139 +554,153 @@ function AjudaPage() {
               {/* coluna direita */}
               <Reveal delay={0.1}>
                 <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-                  {!enviado ? (
-                    <form onSubmit={handleSubmit} className="grid gap-5" noValidate>
-                      {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
-                      <input
-                        type="text"
-                        name="empresa_site"
-                        tabIndex={-1}
-                        autoComplete="off"
-                        aria-hidden="true"
-                        value={hp}
-                        onChange={(e) => setHp(e.target.value)}
-                        className="absolute left-[-9999px] h-0 w-0 opacity-0"
-                      />
-                      <div>
-                        <label className={ROTULO}>Seu nome</label>
-                        <input
-                          ref={refs.nome}
-                          type="text"
-                          value={nome}
-                          onChange={(e) => {
-                            setNome(e.target.value);
-                            if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
-                          }}
-                          maxLength={120}
-                          placeholder="Como a gente te chama"
-                          aria-invalid={!!errors.nome || undefined}
-                          aria-describedby={errors.nome ? "nome-error" : undefined}
-                          className={campoClasse(!!errors.nome)}
-                        />
-                        <FieldError id="nome-error">{errors.nome}</FieldError>
-                      </div>
-                      <div>
-                        <label className={ROTULO}>Seu e-mail</label>
-                        <input
-                          ref={refs.email}
-                          type="email"
-                          value={email}
-                          onChange={(e) => {
-                            setEmail(e.target.value);
-                            if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
-                          }}
-                          maxLength={255}
-                          placeholder="voce@email.com"
-                          aria-invalid={!!errors.email || undefined}
-                          aria-describedby={errors.email ? "email-error" : undefined}
-                          className={campoClasse(!!errors.email)}
-                        />
-                        <FieldError id="email-error">{errors.email}</FieldError>
-                      </div>
-                      {/* Opcional: número quebrado volta nulo no servidor em vez
-                          de barrar quem só quer mandar uma dúvida. */}
-                      <div>
-                        <label className={ROTULO}>
-                          Seu WhatsApp{" "}
-                          <span className="font-normal text-[var(--muted)]">(opcional)</span>
-                        </label>
-                        <input
-                          type="tel"
-                          inputMode="tel"
-                          autoComplete="tel-national"
-                          value={telefone}
-                          onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
-                          maxLength={20}
-                          placeholder="(11) 99999-9999"
-                          className={campoClasse(false)}
-                        />
-                      </div>
-                      <div>
-                        <label className={ROTULO}>Assunto</label>
-                        <select
-                          ref={refs.assunto}
-                          value={assunto}
-                          onChange={(e) => {
-                            setAssunto(e.target.value);
-                            if (errors.assunto) setErrors((er) => ({ ...er, assunto: undefined }));
-                          }}
-                          aria-invalid={!!errors.assunto || undefined}
-                          aria-describedby={errors.assunto ? "assunto-error" : undefined}
-                          className={`appearance-none ${campoClasse(!!errors.assunto)}`}
-                        >
-                          <option value="" disabled>
-                            Escolher assunto
-                          </option>
-                          {ASSUNTOS.map((a) => (
-                            <option key={a} value={a}>
-                              {a}
-                            </option>
-                          ))}
-                        </select>
-                        <FieldError id="assunto-error">{errors.assunto}</FieldError>
-                      </div>
-                      <div>
-                        <label className={ROTULO}>Mensagem</label>
-                        <textarea
-                          ref={refs.mensagem}
-                          value={mensagem}
-                          onChange={(e) => {
-                            setMensagem(e.target.value);
-                            if (errors.mensagem)
-                              setErrors((er) => ({ ...er, mensagem: undefined }));
-                          }}
-                          rows={5}
-                          maxLength={2000}
-                          placeholder="Conta pra mim. Uma coisa de cada vez."
-                          aria-invalid={!!errors.mensagem || undefined}
-                          aria-describedby={errors.mensagem ? "mensagem-error" : undefined}
-                          className={`resize-none ${campoClasse(!!errors.mensagem)}`}
-                        />
-                        <FieldError id="mensagem-error">{errors.mensagem}</FieldError>
-                      </div>
-                      <TurnstileWidget containerRef={turnstile.containerRef} />
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className={`${BTN_PRIMARIO} mt-1 w-full disabled:pointer-events-none disabled:opacity-50`}
+                  <AnimatePresence mode="wait">
+                    {!enviado ? (
+                      <motion.form
+                        key="form"
+                        onSubmit={handleSubmit}
+                        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, filter: "blur(2px)" }}
+                        transition={{ duration: reduceMotion ? 0 : 0.2, ease: [0.23, 1, 0.32, 1] }}
+                        className="grid gap-5"
+                        noValidate
                       >
-                        {loading ? "Enviando…" : "Enviar"}
-                      </button>
-                    </form>
-                  ) : (
-                    <div
-                      role="status"
-                      aria-live="polite"
-                      className="rounded-2xl bg-[var(--surface-pink)] p-8"
-                    >
-                      <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                        A Pólia recebeu sua mensagem.
-                      </h2>
-                      <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
-                        Você vai receber o retorno em até 24 horas úteis, direto no seu e-mail.
-                      </p>
-                    </div>
-                  )}
+                        {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
+                        <input
+                          type="text"
+                          name="empresa_site"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          aria-hidden="true"
+                          value={hp}
+                          onChange={(e) => setHp(e.target.value)}
+                          className="absolute left-[-9999px] h-0 w-0 opacity-0"
+                        />
+                        <div>
+                          <label className={ROTULO}>Seu nome</label>
+                          <input
+                            ref={refs.nome}
+                            type="text"
+                            value={nome}
+                            onChange={(e) => {
+                              setNome(e.target.value);
+                              if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
+                            }}
+                            maxLength={120}
+                            placeholder="Como a gente te chama"
+                            aria-invalid={!!errors.nome || undefined}
+                            aria-describedby={errors.nome ? "nome-error" : undefined}
+                            className={campoClasse(!!errors.nome)}
+                          />
+                          <FieldError id="nome-error">{errors.nome}</FieldError>
+                        </div>
+                        <div>
+                          <label className={ROTULO}>Seu e-mail</label>
+                          <input
+                            ref={refs.email}
+                            type="email"
+                            value={email}
+                            onChange={(e) => {
+                              setEmail(e.target.value);
+                              if (errors.email) setErrors((er) => ({ ...er, email: undefined }));
+                            }}
+                            maxLength={255}
+                            placeholder="voce@email.com"
+                            aria-invalid={!!errors.email || undefined}
+                            aria-describedby={errors.email ? "email-error" : undefined}
+                            className={campoClasse(!!errors.email)}
+                          />
+                          <FieldError id="email-error">{errors.email}</FieldError>
+                        </div>
+                        {/* Opcional: número quebrado volta nulo no servidor em vez
+                          de barrar quem só quer mandar uma dúvida. */}
+                        <div>
+                          <label className={ROTULO}>
+                            Seu WhatsApp{" "}
+                            <span className="font-normal text-[var(--muted)]">(opcional)</span>
+                          </label>
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            autoComplete="tel-national"
+                            value={telefone}
+                            onChange={(e) => setTelefone(mascararTelefone(e.target.value))}
+                            maxLength={20}
+                            placeholder="(11) 99999-9999"
+                            className={campoClasse(false)}
+                          />
+                        </div>
+                        <div>
+                          <label className={ROTULO}>Assunto</label>
+                          <select
+                            ref={refs.assunto}
+                            value={assunto}
+                            onChange={(e) => {
+                              setAssunto(e.target.value);
+                              if (errors.assunto)
+                                setErrors((er) => ({ ...er, assunto: undefined }));
+                            }}
+                            aria-invalid={!!errors.assunto || undefined}
+                            aria-describedby={errors.assunto ? "assunto-error" : undefined}
+                            className={`appearance-none ${campoClasse(!!errors.assunto)}`}
+                          >
+                            <option value="" disabled>
+                              Escolher assunto
+                            </option>
+                            {ASSUNTOS.map((a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                          <FieldError id="assunto-error">{errors.assunto}</FieldError>
+                        </div>
+                        <div>
+                          <label className={ROTULO}>Mensagem</label>
+                          <textarea
+                            ref={refs.mensagem}
+                            value={mensagem}
+                            onChange={(e) => {
+                              setMensagem(e.target.value);
+                              if (errors.mensagem)
+                                setErrors((er) => ({ ...er, mensagem: undefined }));
+                            }}
+                            rows={5}
+                            maxLength={2000}
+                            placeholder="Conta pra mim. Uma coisa de cada vez."
+                            aria-invalid={!!errors.mensagem || undefined}
+                            aria-describedby={errors.mensagem ? "mensagem-error" : undefined}
+                            className={`resize-none ${campoClasse(!!errors.mensagem)}`}
+                          />
+                          <FieldError id="mensagem-error">{errors.mensagem}</FieldError>
+                        </div>
+                        <TurnstileWidget containerRef={turnstile.containerRef} />
+                        <button
+                          type="submit"
+                          disabled={loading}
+                          className={`${BTN_PRIMARIO} mt-1 w-full disabled:pointer-events-none disabled:opacity-50`}
+                        >
+                          {loading ? "Enviando…" : "Enviar"}
+                        </button>
+                      </motion.form>
+                    ) : (
+                      <motion.div
+                        key="confirmacao"
+                        initial={{ opacity: 0, filter: reduceMotion ? "none" : "blur(2px)" }}
+                        animate={{ opacity: 1, filter: "none" }}
+                        transition={{ duration: reduceMotion ? 0 : 0.25, ease: [0.23, 1, 0.32, 1] }}
+                        role="status"
+                        aria-live="polite"
+                        className="rounded-2xl bg-[var(--surface-pink)] p-8"
+                      >
+                        <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
+                          A Pólia recebeu sua mensagem.
+                        </h2>
+                        <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
+                          Você vai receber o retorno em até 24 horas úteis, direto no seu e-mail.
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </Reveal>
             </div>

@@ -18,6 +18,8 @@ import type { ReactNode } from "react";
  * confiável para medir elemento sem área.
  *
  * Com prefers-reduced-motion o grifo já aparece pintado, sem varrer.
+ *
+ * Na Home e na lista de espera o h1 fica de propósito fora do <Reveal> (LCP); não mude isso, só documente se encontrar o mesmo padrão em outra tela.
  */
 export function HighlightWord({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
   const reduzirMovimento = useReducedMotion();
@@ -33,10 +35,10 @@ export function HighlightWord({ children, delay = 0 }: { children: ReactNode; de
         aria-hidden="true"
         className="absolute inset-x-0 bottom-[0.06em] top-[0.32em] origin-left bg-[var(--highlight)]"
         variants={{
-          oculto: { scaleX: reduzirMovimento ? 1 : 0 },
-          pintado: { scaleX: 1 },
+          oculto: { transform: reduzirMovimento ? "scaleX(1)" : "scaleX(0)" },
+          pintado: { transform: "scaleX(1)" },
         }}
-        transition={{ duration: 0.5, delay, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.4, delay, ease: [0.16, 1, 0.3, 1] }}
       />
       <span className="relative text-[var(--highlight-ink)]">{children}</span>
     </motion.span>

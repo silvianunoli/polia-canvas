@@ -20,19 +20,22 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
             <p className="mt-3">Confiar na marca é o que sustenta o lucro.</p>
           </div>
           <nav className="flex flex-wrap gap-6" aria-label="Links do rodapé">
-            <Link to="/sobre" className="no-underline hover:text-[var(--bg)]">
+            <Link to="/sobre" className="no-underline transition-colors hover:text-[var(--bg)]">
               Sobre
             </Link>
-            <Link to="/blog" className="no-underline hover:text-[var(--bg)]">
+            <Link to="/blog" className="no-underline transition-colors hover:text-[var(--bg)]">
               Blog
             </Link>
-            <Link to="/ajuda" className="no-underline hover:text-[var(--bg)]">
+            <Link to="/ajuda" className="no-underline transition-colors hover:text-[var(--bg)]">
               Ajuda
             </Link>
-            <Link to="/termos" className="no-underline hover:text-[var(--bg)]">
+            <Link to="/termos" className="no-underline transition-colors hover:text-[var(--bg)]">
               Termos
             </Link>
-            <Link to="/privacidade" className="no-underline hover:text-[var(--bg)]">
+            <Link
+              to="/privacidade"
+              className="no-underline transition-colors hover:text-[var(--bg)]"
+            >
               Privacidade
             </Link>
           </nav>
@@ -43,7 +46,7 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
             Desenvolvido por{" "}
             <a
               href="https://servicos.usepolia.com.br/"
-              className="underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] hover:text-[var(--bg)]"
+              className="underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] transition-colors hover:text-[var(--bg)]"
             >
               Hub Pólia Soluções Digitais
             </a>
