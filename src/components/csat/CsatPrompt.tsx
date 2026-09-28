@@ -39,12 +39,12 @@ export function CsatPrompt({
   };
 
   return (
-    <div className="polia-v3 fixed bottom-6 right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.08)] relative">
+    <div className="polia-v3 fixed bottom-6 right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
       <button
         type="button"
         onClick={onFechar}
         aria-label="Fechar"
-        className="absolute right-3 top-3 rounded-full p-1 text-[var(--muted)] hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)]"
+        className="absolute right-2 top-2 flex min-h-11 min-w-11 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)]"
       >
         <X size={16} aria-hidden="true" />
       </button>
