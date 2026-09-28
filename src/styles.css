@@ -289,9 +289,12 @@
 
 /* Focus ring global — WCAG 2.1 AA */
 *:focus-visible {
-  /* var(--secondary) resolve aqui porque o :root também define a paleta,
-     fora do escopo .polia-v3. Hex cravado seria o único do arquivo. */
-  outline: 2px solid var(--secondary);
+  /* var(--secondary-text) resolve aqui porque o :root também define a paleta,
+     fora do escopo .polia-v3. Hex cravado seria o único do arquivo. Turquesa
+     claro (--secondary) não fecha 3:1 de contraste contra fundo claro; o
+     token de texto/CTA (mais escuro) mantém a identidade turquesa com
+     contraste suficiente. */
+  outline: 2px solid var(--secondary-text);
   outline-offset: 2px;
   border-radius: 4px;
 }

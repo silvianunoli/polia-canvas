@@ -52,7 +52,7 @@ export function AuthSplitShell({ headline, subtext, rodape, children }: AuthSpli
 export type ModoAuth = "entrar" | "recuperar";
 
 function classeAba(ativa: boolean) {
-  return `flex-1 rounded-lg px-2 py-2 text-center text-[13.5px] font-semibold transition-colors ${
+  return `flex-1 rounded-lg px-2 py-[14px] text-center text-[13.5px] font-semibold transition-colors ${
     ativa
       ? "border-[1.5px] border-[var(--ink)] bg-white text-[var(--ink)]"
       : "text-[var(--muted)] hover:text-[var(--ink-soft)]"
@@ -68,7 +68,7 @@ export function AuthTabs({
   onModoChange: (modo: ModoAuth) => void;
 }) {
   return (
-    <nav className="mb-6 flex gap-1 rounded-xl bg-[var(--line)] p-1" aria-label="Sessões de acesso">
+    <nav className="mb-6 flex gap-2 rounded-xl bg-[var(--line)] p-1" aria-label="Sessões de acesso">
       <button
         type="button"
         onClick={() => onModoChange("entrar")}

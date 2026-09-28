@@ -51,14 +51,23 @@ const FOCO_SUAVE =
 
 const BTN_DESABILITADO = "disabled:cursor-not-allowed disabled:opacity-50";
 
+const ERRO_TURNSTILE_CARREGAMENTO =
+  "A verificação de segurança não carregou. Pode ser bloqueador de anúncios ou de privacidade ativo. Recarrega a página e tenta de novo.";
+
 function getOrCreateSessao(sessaoKey: string): string {
   if (typeof window === "undefined") return "";
-  let id = localStorage.getItem(sessaoKey);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(sessaoKey, id);
+  try {
+    let id = localStorage.getItem(sessaoKey);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(sessaoKey, id);
+    }
+    return id;
+  } catch {
+    // Navegação privada restritiva pode barrar o localStorage. A pesquisa é
+    // opcional: segue com um id só em memória em vez de derrubar a tela.
+    return crypto.randomUUID();
   }
-  return id;
 }
 
 function respondida(p: Pergunta, v: Valor | undefined): boolean {
@@ -79,6 +88,9 @@ function validarEmail(v: string): string | undefined {
 function Casca({ children }: { children: ReactNode }) {
   return (
     <div className="polia-v3 flex min-h-screen flex-col bg-[var(--bg)] text-[var(--ink)]">
+      <a href="#conteudo" className="skip-link">
+        Pular para o conteúdo
+      </a>
       <header className="border-b border-[var(--line)]">
         <div className={`${CONTAINER} flex items-center py-5`}>
           <Link
@@ -90,9 +102,16 @@ function Casca({ children }: { children: ReactNode }) {
           </Link>
         </div>
       </header>
-      <main className={`flex-1 ${SECAO}`}>
+      <main id="conteudo" className={`flex-1 ${SECAO}`}>
         <div className={CONTAINER}>
-          <div className="mx-auto w-full max-w-[640px]">{children}</div>
+          <div className="mx-auto w-full max-w-[640px]">
+            {/* TelaIntro tem h1 próprio; TelaPergunta/TelaContato/TelaFim usam
+                h2 sem h1 nenhum no documento. Este h1 fica fixo e fora do
+                condicional de troca de tela pra manter a hierarquia sempre
+                presente, mesmo padrão do quiz (src/routes/quiz.index.tsx). */}
+            <h1 className="sr-only">Uma pergunta rápida sobre o seu negócio</h1>
+            {children}
+          </div>
         </div>
       </main>
     </div>
@@ -179,6 +198,11 @@ function TelaIntro({
         <div className="mt-6">
           <TurnstileWidget containerRef={ts.containerRef} />
         </div>
+        {ts.erroCarregamento && (
+          <p role="alert" className="mt-2 text-[14px] leading-[1.5] text-[var(--danger)]">
+            {ERRO_TURNSTILE_CARREGAMENTO}
+          </p>
+        )}
         <button
           type="button"
           onClick={comecar}
@@ -237,7 +261,11 @@ function TelaPergunta({
           {pergunta.opcional ? " · opcional" : ""}
         </Eyebrow>
         <div
-          aria-hidden="true"
+          role="progressbar"
+          aria-valuenow={idx + 1}
+          aria-valuemin={1}
+          aria-valuemax={total}
+          aria-label={`Pergunta ${idx + 1} de ${total}`}
           className="mt-3 h-[6px] w-full overflow-hidden rounded-full bg-[var(--line)]"
         >
           <div
@@ -294,6 +322,19 @@ function TelaPergunta({
           </div>
         )}
       </div>
+
+      {/* As opções restantes ficam desabilitadas ao bater o limite, sem nenhum
+          aviso textual pra quem usa leitor de tela. Este aria-live anuncia o
+          limite; fica sempre no DOM e só troca de conteúdo quando bate. */}
+      {pergunta.tipo === "multipla" && (
+        <p role="status" aria-live="polite" className="sr-only">
+          {Array.isArray(valor) &&
+          pergunta.maxSelecoes !== undefined &&
+          valor.length >= pergunta.maxSelecoes
+            ? `Máximo de ${pergunta.maxSelecoes} selecionado.`
+            : ""}
+        </p>
+      )}
 
       <div className="mt-8 flex items-center justify-between gap-3">
         {idx > 0 ? (
@@ -461,6 +502,11 @@ function TelaContato({
           )}
 
           <TurnstileWidget containerRef={ts.containerRef} />
+          {ts.erroCarregamento && (
+            <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
+              {ERRO_TURNSTILE_CARREGAMENTO}
+            </p>
+          )}
 
           <button
             type="submit"

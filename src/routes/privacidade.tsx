@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { linkCanonico } from "@/lib/seo";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
-import { CONTAINER, SECAO, Eyebrow } from "@/components/site/Editorial";
+import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 
 export const Route = createFileRoute("/privacidade")({
   head: () => ({
@@ -350,6 +350,25 @@ function PrivacidadePage() {
                 </a>
                 .
               </p>
+            </div>
+
+            {/* PRÓXIMO PASSO */}
+            <div
+              className={`${LEITURA} mt-[clamp(48px,6vw,72px)] rounded-2xl border border-[var(--line)] bg-white p-8`}
+            >
+              <Eyebrow>Documentos</Eyebrow>
+              <p className="mt-4 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
+                Os Termos de uso explicam as regras de uso do site e do aplicativo. Para qualquer
+                dúvida sobre o tratamento dos dados, o contato é direto.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a href="mailto:privacidade@usepolia.com.br" className={BTN_PRIMARIO}>
+                  Falar com a gente
+                </a>
+                <Link to="/termos" className={BTN_CONTORNO}>
+                  Ler os Termos de uso
+                </Link>
+              </div>
             </div>
           </div>
         </section>

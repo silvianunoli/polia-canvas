@@ -70,6 +70,18 @@ const CAPAS = ["var(--secondary)", "var(--accent)", "var(--surface-pink)"];
 const CARTAO =
   "overflow-hidden rounded-2xl border border-[var(--line)] bg-white no-underline transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
 
+// Data curta pro cartão da listagem ("12 set"). Mesmo campo (`publicado_em`) que
+// blog.$slug.tsx usa pra data completa do post individual.
+function dataCurta(publicadoEm: string | null): string {
+  if (!publicadoEm) return "";
+  const partes = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).formatToParts(
+    new Date(publicadoEm),
+  );
+  const dia = partes.find((p) => p.type === "day")?.value;
+  const mes = partes.find((p) => p.type === "month")?.value.replace(".", "");
+  return dia && mes ? `${dia} ${mes}` : "";
+}
+
 function CoverBlock({ post, index }: { post: Post; index: number }) {
   if (post.capa_url) {
     return (
@@ -243,6 +255,9 @@ function BlogList() {
                       )}
                       <p className="text-[13px] text-[var(--ink-soft)]">
                         Por Sil
+                        {dataCurta(destaque.publicado_em)
+                          ? ` · ${dataCurta(destaque.publicado_em)}`
+                          : ""}
                         {destaque.tempo_leitura
                           ? ` · ${destaque.tempo_leitura} min de leitura`
                           : ""}
@@ -264,7 +279,7 @@ function BlogList() {
                   <Reveal>
                     <Eyebrow>Mais textos</Eyebrow>
                   </Reveal>
-                  <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+                  <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
                     {resto.map((post, i) => (
                       <RevealItem key={post.id} className="h-full">
                         <Link
@@ -284,7 +299,11 @@ function BlogList() {
                               </p>
                             )}
                             <p className="text-[13px] text-[var(--ink-soft)]">
-                              Por Sil{post.tempo_leitura ? ` · ${post.tempo_leitura} min` : ""}
+                              Por Sil
+                              {dataCurta(post.publicado_em)
+                                ? ` · ${dataCurta(post.publicado_em)}`
+                                : ""}
+                              {post.tempo_leitura ? ` · ${post.tempo_leitura} min` : ""}
                             </p>
                             <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[14px] font-semibold">
                               Ler o texto

@@ -60,7 +60,7 @@ function VerificacaoPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email });
     setResending(false);
     if (error) {
-      toastErro("Não conseguimos reenviar agora. Tenta de novo em alguns segundos.");
+      toastErro("A Pólia não conseguiu reenviar agora. Tenta de novo em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
       setCooldown(60);
@@ -87,7 +87,7 @@ function VerificacaoPage() {
             type="button"
             onClick={handleResend}
             disabled={!email || cooldown > 0 || resending}
-            className="text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+            className="py-2 px-1 text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
           >
             {cooldown > 0
               ? `Pode pedir outro em ${cooldown}s`
@@ -97,8 +97,11 @@ function VerificacaoPage() {
           </button>
         </p>
 
-        <p className="mt-6 text-center text-[14px] text-[var(--muted)]">
-          <Link to="/auth/login" className="text-[var(--ink-soft)] underline underline-offset-2">
+        <p className="mt-4 text-center text-[14px] text-[var(--muted)]">
+          <Link
+            to="/auth/login"
+            className="inline-block py-2 px-1 text-[var(--ink-soft)] underline underline-offset-2"
+          >
             Voltar pra entrada
           </Link>
         </p>

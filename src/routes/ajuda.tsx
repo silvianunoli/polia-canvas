@@ -25,15 +25,6 @@ import { mascararTelefone } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetFooter,
-  SheetClose,
-} from "@/components/ui/sheet";
 
 export const Route = createFileRoute("/ajuda")({
   head: () => ({
@@ -234,7 +225,6 @@ function campoClasse(temErro: boolean): string {
 const ROTULO = "mb-2 block text-[13px] font-semibold text-[var(--ink)]";
 
 function AjudaPage() {
-  const [faqAtiva, setFaqAtiva] = useState<{ pergunta: string; resposta: string } | null>(null);
   const [busca, setBusca] = useState("");
   const buscaNormalizada = normalizar(busca.trim());
   const categoriasFiltradas =
@@ -248,6 +238,7 @@ function AjudaPage() {
               normalizar(item.resposta).includes(buscaNormalizada),
           ),
         })).filter((cat) => cat.itens.length > 0);
+  const totalResultados = categoriasFiltradas.reduce((acc, cat) => acc + cat.itens.length, 0);
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -383,6 +374,13 @@ function AjudaPage() {
                   Buscar
                 </button>
               </form>
+              {buscaNormalizada.length >= 2 && (
+                <p aria-live="polite" className="mt-3 text-[13px] text-[var(--muted)]">
+                  {totalResultados === 0
+                    ? "Nenhum resultado encontrado."
+                    : `${totalResultados} ${totalResultados === 1 ? "resultado" : "resultados"}`}
+                </p>
+              )}
             </Reveal>
           </div>
         </section>
@@ -403,7 +401,7 @@ function AjudaPage() {
                 responde.
               </p>
             ) : (
-              <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-3">
+              <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
                 {categoriasFiltradas.map((cat) => {
                   const Icon = cat.icon;
                   return (
@@ -421,16 +419,20 @@ function AjudaPage() {
                             key={item.pergunta}
                             className={i > 0 ? "border-t border-[var(--line)]" : ""}
                           >
-                            <button
-                              type="button"
-                              onClick={() => setFaqAtiva(item)}
-                              className="flex w-full items-center justify-between gap-3 py-3 text-left text-[15px] leading-[1.5] text-[var(--ink)] no-underline transition-colors hover:text-[var(--secondary-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-                            >
-                              {item.pergunta}
-                              <span aria-hidden="true" className="flex-none text-[var(--muted)]">
-                                →
-                              </span>
-                            </button>
+                            <details className="group">
+                              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-3 text-[15px] leading-[1.5] text-[var(--ink)] no-underline transition-colors hover:text-[var(--secondary-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] [&::-webkit-details-marker]:hidden">
+                                {item.pergunta}
+                                <span
+                                  aria-hidden="true"
+                                  className="flex-none text-[var(--muted)] group-open:rotate-90"
+                                >
+                                  →
+                                </span>
+                              </summary>
+                              <p className="max-w-[62ch] pb-4 text-[14px] leading-[1.7] text-[var(--ink-soft)]">
+                                {item.resposta}
+                              </p>
+                            </details>
                           </li>
                         ))}
                       </ul>
@@ -441,26 +443,6 @@ function AjudaPage() {
             )}
           </div>
         </section>
-
-        <Sheet open={!!faqAtiva} onOpenChange={(open) => !open && setFaqAtiva(null)}>
-          <SheetContent className="polia-v3 flex flex-col gap-4 border-l border-[var(--line)] bg-white p-8">
-            <SheetHeader>
-              <SheetTitle className="text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                {faqAtiva?.pergunta}
-              </SheetTitle>
-              <SheetDescription className="mt-3 text-[16px] leading-[1.7] text-[var(--ink-soft)]">
-                {faqAtiva?.resposta}
-              </SheetDescription>
-            </SheetHeader>
-            <SheetFooter className="mt-auto pt-6">
-              <SheetClose asChild>
-                <button type="button" className={`${BTN_CONTORNO} w-full sm:w-auto`}>
-                  Fechar
-                </button>
-              </SheetClose>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
 
         {/* CONTEXTO */}
         <section className={SECAO}>
@@ -488,44 +470,12 @@ function AjudaPage() {
                   Não encontrou? Fala com a gente.
                 </h2>
                 <p className="mt-4 max-w-[54ch] text-[16px] leading-[1.65] text-[var(--secondary-ink)]">
-                  Escreve no formulário aqui embaixo. Eu leio e respondo cada mensagem.
+                  Escreve no formulário aqui embaixo. A Pólia lê e responde cada mensagem.
                 </p>
                 <div className="mt-8">
                   <a href="#contato" className={BTN_CONTORNO}>
                     Ir pro formulário
                   </a>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
-        {/* AINDA SEM CONTA: quem chega aqui em geral ainda não assinou, está
-            medindo risco antes de entrar. A página terminava no formulário, sem
-            caminho de volta pra conversão. */}
-        <section className="pb-[clamp(48px,6vw,72px)]">
-          <div className={CONTAINER}>
-            <Reveal>
-              <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
-                <Eyebrow>Ainda não tem conta?</Eyebrow>
-                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.2] tracking-[-0.02em] text-balance">
-                  Comece reconhecendo o que a marca vale.
-                </h2>
-                <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
-                  A Pólia começa ajudando você a reconhecer o que a marca realmente vale, e a cobrar
-                  de acordo. No plano Grátis, você já pode começar, sem cartão de crédito.
-                </p>
-                <div className="mt-8">
-                  {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
-                  <Link
-                    to="/lista-de-espera"
-                    data-track="cadastro_cta_clicado"
-                    data-track-props='{"contexto":"ajuda_sem_conta"}'
-                    className={BTN_PRIMARIO}
-                  >
-                    Entrar na lista
-                    <span aria-hidden="true">→</span>
-                  </Link>
                 </div>
               </div>
             </Reveal>
@@ -728,7 +678,7 @@ function AjudaPage() {
                       className="rounded-2xl bg-[var(--surface-pink)] p-8"
                     >
                       <h2 className="max-w-[20ch] text-[22px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)] text-balance">
-                        Recebemos a mensagem!
+                        A Pólia recebeu sua mensagem.
                       </h2>
                       <p className="mt-3 leading-[1.65] text-[var(--ink-soft)]">
                         Você vai receber o retorno em até 24 horas úteis, direto no seu e-mail.
@@ -738,6 +688,38 @@ function AjudaPage() {
                 </div>
               </Reveal>
             </div>
+          </div>
+        </section>
+
+        {/* AINDA SEM CONTA: quem chega aqui em geral ainda não assinou, está
+            medindo risco antes de entrar. Fica depois do formulário de contato,
+            pra não interromper quem já decidiu escrever pro suporte. */}
+        <section className="pb-[clamp(48px,6vw,72px)]">
+          <div className={CONTAINER}>
+            <Reveal>
+              <div className="rounded-2xl border border-[var(--line)] bg-white p-8 md:p-12">
+                <Eyebrow>Ainda não tem conta?</Eyebrow>
+                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.4rem,2.4vw,1.9rem)] font-bold leading-[1.2] tracking-[-0.02em] text-balance">
+                  Comece reconhecendo o que a marca vale.
+                </h2>
+                <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
+                  A Pólia começa ajudando você a reconhecer o que a marca realmente vale, e a cobrar
+                  de acordo. No plano Grátis, você já pode começar, sem cartão de crédito.
+                </p>
+                <div className="mt-8">
+                  {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
+                  <Link
+                    to="/lista-de-espera"
+                    data-track="cadastro_cta_clicado"
+                    data-track-props='{"contexto":"ajuda_sem_conta"}'
+                    className={BTN_PRIMARIO}
+                  >
+                    Entrar na lista
+                    <span aria-hidden="true">→</span>
+                  </Link>
+                </div>
+              </div>
+            </Reveal>
           </div>
         </section>
       </main>

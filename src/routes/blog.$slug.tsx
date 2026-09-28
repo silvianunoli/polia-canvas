@@ -321,7 +321,7 @@ function BlogPost() {
               <Reveal>
                 <Eyebrow>Pra continuar</Eyebrow>
               </Reveal>
-              <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+              <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
                 {related.map((r, i) => (
                   <RevealItem key={r.id} className="h-full">
                     <Link

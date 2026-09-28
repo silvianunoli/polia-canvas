@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
@@ -30,6 +30,8 @@ function RedefinirSenhaPage() {
   const [salvo, setSalvo] = useState(false);
   const [hasRecovery, setHasRecovery] = useState(false);
   const caps = useCapsLockWarning();
+  const senhaRef = useRef<HTMLInputElement>(null);
+  const confirmaRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Detecção rápida: se o Supabase já voltou com o erro no hash da URL
@@ -72,17 +74,19 @@ function RedefinirSenhaPage() {
     // não descoberta errando.
     if (!senhaCumpreRequisitos(senha)) {
       setErro("A senha precisa de 8 caracteres, com pelo menos 1 número e 1 letra maiúscula.");
+      senhaRef.current?.focus();
       return;
     }
     if (senha !== confirma) {
       setConfirmaErro("As senhas não coincidem.");
+      confirmaRef.current?.focus();
       return;
     }
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: senha });
     if (error) {
       setLoading(false);
-      toastErro("Não conseguimos salvar agora. Tenta de novo em alguns segundos.");
+      toastErro("A Pólia não conseguiu salvar agora. Tenta de novo em alguns segundos.");
       return;
     }
     setSalvo(true);
@@ -98,6 +102,7 @@ function RedefinirSenhaPage() {
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
         <div>
           <CosmicInput
+            ref={senhaRef}
             label="Nova senha"
             name="senha"
             type="password"
@@ -117,6 +122,7 @@ function RedefinirSenhaPage() {
         </div>
 
         <CosmicInput
+          ref={confirmaRef}
           label="Confirme a nova senha"
           name="confirma"
           type="password"

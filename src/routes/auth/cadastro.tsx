@@ -60,6 +60,8 @@ function CadastroPage() {
   const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const nomeRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
   const caps = useCapsLockWarning();
 
@@ -84,7 +86,10 @@ function CadastroPage() {
     if (!senhaOk) setSenhaInvalida(true);
     if (Object.keys(fieldErrors).length || !senhaOk) {
       setErrors(fieldErrors);
-      if (!senhaOk) senhaRef.current?.focus();
+      // Foca sempre o primeiro campo com erro, na ordem visual: nome → e-mail → senha.
+      if (fieldErrors.nome) nomeRef.current?.focus();
+      else if (fieldErrors.email) emailRef.current?.focus();
+      else if (!senhaOk) senhaRef.current?.focus();
       return;
     }
 
@@ -139,7 +144,7 @@ function CadastroPage() {
         } else {
           track("cadastro_falhou", { motivo: "erro_signup" });
           toastErro(
-            "Não conseguimos criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
+            "A Pólia não conseguiu criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
           );
         }
         return;
@@ -162,7 +167,7 @@ function CadastroPage() {
     } catch {
       track("cadastro_falhou", { motivo: "excecao_client" });
       toastErro(
-        "Não conseguimos criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
+        "A Pólia não conseguiu criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
       );
     } finally {
       setLoading(false);
@@ -189,6 +194,7 @@ function CadastroPage() {
 
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
         <CosmicInput
+          ref={nomeRef}
           label="Seu nome"
           name="nome"
           autoComplete="name"
@@ -197,9 +203,11 @@ function CadastroPage() {
           value={values.nome}
           onChange={(e) => set("nome", e.target.value)}
           error={errors.nome}
+          reserveErrorSpace
           disabled={loading}
         />
         <CosmicInput
+          ref={emailRef}
           label="Seu e-mail"
           name="email"
           type="email"
@@ -209,6 +217,7 @@ function CadastroPage() {
           value={values.email}
           onChange={(e) => set("email", e.target.value)}
           error={errors.email}
+          reserveErrorSpace
           disabled={loading}
         />
         <div>
@@ -223,10 +232,11 @@ function CadastroPage() {
             onChange={(e) => set("senha", e.target.value)}
             onKeyUp={caps.onKeyUp}
             invalid={senhaInvalida}
+            aria-describedby="senha-requisitos"
             disabled={loading}
           />
           <CapsLockHint ligado={caps.ligado} />
-          <PasswordRequirements password={values.senha} />
+          <PasswordRequirements id="senha-requisitos" password={values.senha} />
         </div>
 
         <div className="mt-1">

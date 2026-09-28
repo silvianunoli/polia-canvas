@@ -75,6 +75,7 @@ function LoginPage() {
   const [lockoutCooldown, setLockoutCooldown] = useState(0);
   const caps = useCapsLockWarning();
   const emailRef = useRef<HTMLInputElement>(null);
+  const senhaRef = useRef<HTMLInputElement>(null);
   const [modo, setModo] = useState<ModoAuth>("entrar");
   const recuperar = useRecuperarSenha();
 
@@ -116,6 +117,9 @@ function LoginPage() {
     const senhaErro = !values.senha ? "Falta a sua senha." : undefined;
     if (emailErro || senhaErro) {
       setErrors({ email: emailErro, senha: senhaErro });
+      // Foca o primeiro campo inválido, na ordem visual (e-mail antes de senha).
+      if (emailErro) emailRef.current?.focus();
+      else senhaRef.current?.focus();
       return;
     }
     setErrors({});
@@ -153,7 +157,9 @@ function LoginPage() {
         navigate({ to: target });
       }
     } catch {
-      toastErro("Não conseguimos entrar agora. Tenta de novo, o seu e-mail continua preenchido.");
+      toastErro(
+        "A Pólia não conseguiu entrar agora. Tenta de novo, o seu e-mail continua preenchido.",
+      );
     } finally {
       setLoading(false);
     }
@@ -162,9 +168,13 @@ function LoginPage() {
   async function handleGoogle() {
     setGoogleLoading(true);
     marcarLoginPendente("google");
+    // Mesmo destino calculado do login por e-mail (search.next validado por
+    // destinoSeguro). Sem next, cai em /painel — que já redireciona sozinho
+    // pro /onboarding via guard de _authenticated quando falta concluir.
+    const destino = destinoSeguro(search.next) ?? "/painel";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/painel` },
+      options: { redirectTo: `${window.location.origin}${destino}` },
     });
     if (error) {
       setGoogleLoading(false);
@@ -178,7 +188,7 @@ function LoginPage() {
     const { error } = await supabase.auth.resend({ type: "signup", email: unverified });
     setResending(false);
     if (error) {
-      toastErro("Não conseguimos reenviar agora. Tenta em alguns segundos.");
+      toastErro("A Pólia não conseguiu reenviar agora. Tenta em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
       setResendCooldown(RESEND_COOLDOWN_SEGUNDOS);
@@ -233,10 +243,12 @@ function LoginPage() {
               value={values.email}
               onChange={(e) => set("email", e.target.value)}
               error={errors.email}
+              reserveErrorSpace
               disabled={loading}
             />
             <div>
               <CosmicInput
+                ref={senhaRef}
                 label="Sua senha"
                 name="senha"
                 type="password"
@@ -246,6 +258,7 @@ function LoginPage() {
                 onChange={(e) => set("senha", e.target.value)}
                 onKeyUp={caps.onKeyUp}
                 error={errors.senha}
+                reserveErrorSpace
                 disabled={loading}
               />
               <CapsLockHint ligado={caps.ligado} />
@@ -307,7 +320,7 @@ function LoginPage() {
             Vamos recuperar.
           </h2>
           <p className="mt-1.5 text-[14px] text-[var(--muted)]">
-            É só informar o e-mail da conta que a gente manda o link.
+            É só informar o e-mail da conta que a Pólia manda o link.
           </p>
 
           <form
@@ -328,6 +341,7 @@ function LoginPage() {
                 if (recuperar.error) recuperar.setError(undefined);
               }}
               error={recuperar.error}
+              reserveErrorSpace
               disabled={recuperar.loading}
             />
             <AuthButton type="submit" fullWidth loading={recuperar.loading}>
@@ -348,7 +362,7 @@ function LoginPage() {
           </div>
           <h2 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
             Se esse e-mail tiver conta,
-            <br />a gente manda o link.
+            <br />a Pólia manda o link.
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
             Confira a caixa de entrada (e o spam). O link vale por 1 hora.

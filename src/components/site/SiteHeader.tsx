@@ -1,13 +1,37 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 
-const ITENS = [
-  { hash: "como-funciona", texto: "Como funciona" },
-  { hash: "produto", texto: "O produto" },
-  { hash: "planos", texto: "Planos" },
-  { hash: "perguntas", texto: "Perguntas" },
-] as const;
+const ITENS: { texto: string; to: string; hash?: string }[] = [
+  { hash: "como-funciona", texto: "Como funciona", to: "/" },
+  { hash: "produto", texto: "O produto", to: "/" },
+  { hash: "planos", texto: "Planos", to: "/" },
+  { hash: "perguntas", texto: "Perguntas", to: "/" },
+  { texto: "Blog", to: "/blog" },
+];
+
+/** Rota atual bate com o destino (a própria rota ou uma sub-rota dela). */
+function rotaAtiva(pathname: string, alvo: string) {
+  return pathname === alvo || pathname.startsWith(`${alvo}/`);
+}
+
+/** Ativo pela rota, ou pela âncora da home quando o item aponta pra uma seção. */
+function itemAtivo(item: { to: string; hash?: string }, pathname: string, hash: string) {
+  if (item.hash) return pathname === "/" && hash === `#${item.hash}`;
+  return rotaAtiva(pathname, item.to);
+}
+
+const classeDesktop = (ativo: boolean) =>
+  `border-b-2 py-1.5 text-[15px] font-medium no-underline transition-colors hover:border-[var(--secondary)] hover:text-[var(--ink)] ${
+    ativo
+      ? "border-[var(--secondary)] text-[var(--secondary-text)]"
+      : "border-transparent text-[var(--ink-soft)]"
+  }`;
+
+const classeMobile = (ativo: boolean) =>
+  `border-b border-[var(--line)] py-3.5 text-[17px] no-underline ${
+    ativo ? "font-semibold text-[var(--secondary-text)]" : "text-[var(--ink)]"
+  }`;
 
 /**
  * Cabeçalho de todas as páginas públicas. A navegação aponta pras seções da
@@ -19,6 +43,9 @@ const ITENS = [
 export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
   const [menuAberto, setMenuAberto] = useState(false);
   const [rolou, setRolou] = useState(false);
+  const location = useRouterState({ select: (s) => s.location });
+  const ajudaAtiva = rotaAtiva(location.pathname, "/ajuda");
+  const sobreAtiva = rotaAtiva(location.pathname, "/sobre");
 
   useEffect(() => {
     const onScroll = () => setRolou(window.scrollY > 8);
@@ -51,16 +78,20 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
           {!semLogin && (
             <>
               <nav className="mx-auto hidden gap-6 md:flex" aria-label="Navegação principal">
-                {ITENS.map((i) => (
-                  <Link
-                    key={i.hash}
-                    to="/"
-                    hash={i.hash}
-                    className="border-b-2 border-transparent py-1.5 text-[15px] font-medium text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)] hover:text-[var(--ink)]"
-                  >
-                    {i.texto}
-                  </Link>
-                ))}
+                {ITENS.map((i) => {
+                  const ativo = itemAtivo(i, location.pathname, location.hash);
+                  return (
+                    <Link
+                      key={i.texto}
+                      to={i.to}
+                      hash={i.hash}
+                      aria-current={ativo ? "page" : undefined}
+                      className={classeDesktop(ativo)}
+                    >
+                      {i.texto}
+                    </Link>
+                  );
+                })}
               </nav>
 
               <div className="ml-auto flex items-center gap-3 md:ml-0">
@@ -106,20 +137,34 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
             className="mx-auto flex w-full max-w-[1200px] flex-col border-t border-[var(--line)] px-[clamp(20px,4vw,48px)] pb-6 md:hidden"
             aria-label="Navegação principal"
           >
-            {ITENS.map((i) => (
-              <Link
-                key={i.hash}
-                to="/"
-                hash={i.hash}
-                onClick={() => setMenuAberto(false)}
-                className="border-b border-[var(--line)] py-3.5 text-[17px] text-[var(--ink)] no-underline"
-              >
-                {i.texto}
-              </Link>
-            ))}
+            {ITENS.map((i) => {
+              const ativo = itemAtivo(i, location.pathname, location.hash);
+              return (
+                <Link
+                  key={i.texto}
+                  to={i.to}
+                  hash={i.hash}
+                  onClick={() => setMenuAberto(false)}
+                  aria-current={ativo ? "page" : undefined}
+                  className={classeMobile(ativo)}
+                >
+                  {i.texto}
+                </Link>
+              );
+            })}
+            <Link
+              to="/ajuda"
+              onClick={() => setMenuAberto(false)}
+              aria-current={ajudaAtiva ? "page" : undefined}
+              className={classeMobile(ajudaAtiva)}
+            >
+              Ajuda
+            </Link>
             <Link
               to="/sobre"
-              className="border-b border-[var(--line)] py-3.5 text-[17px] text-[var(--ink)] no-underline"
+              onClick={() => setMenuAberto(false)}
+              aria-current={sobreAtiva ? "page" : undefined}
+              className={classeMobile(sobreAtiva)}
             >
               Sobre
             </Link>

@@ -68,64 +68,72 @@ function DescadastrarPage() {
 
   return (
     <div className="polia-v3 flex min-h-screen flex-col bg-white text-[var(--ink)]">
+      <a href="#conteudo" className="skip-link">
+        Pular para o conteúdo
+      </a>
       <header className="border-b border-[var(--line)]">
         <div className="mx-auto flex max-w-[640px] items-center px-6 py-5">
           <PoliaWordmark className="h-6 w-auto" />
         </div>
       </header>
 
-      <main className="flex flex-1 items-start justify-center px-6 py-10 md:py-16">
+      <main id="conteudo" className="flex flex-1 items-start justify-center px-6 py-10 md:py-16">
         <div className="w-full max-w-[560px]">
           {estado === "processando" && (
             <p className="text-[17px] leading-[1.5] text-[var(--ink-soft)]">Tirando da lista…</p>
           )}
 
-          {estado === "saiu" && (
-            <div>
-              <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
-                Pronto, sem mais e-mails
-              </h1>
-              <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
-                Esse endereço saiu da lista da Pólia. O que já chegou por e-mail continua na sua
-                caixa.
-              </p>
-              <p className="mt-6 text-[15px] leading-[1.5] text-[var(--muted)]">
-                Clicou sem querer?
-              </p>
-              <button
-                type="button"
-                onClick={voltarAReceber}
-                disabled={ocupado}
-                className="mt-2 rounded-xl border border-[var(--line)] px-6 py-3 text-[16px] font-semibold transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {ocupado ? "Voltando…" : "Voltar a receber"}
-              </button>
-            </div>
-          )}
+          {/* A troca "Tirando da lista…" → resultado não movia foco nem era
+              anunciada pra leitor de tela. role="status" + aria-live cobre os
+              3 estados finais, mesmo padrão de TelaFim em src/routes/pesquisa.tsx. */}
+          <div role="status" aria-live="polite">
+            {estado === "saiu" && (
+              <div>
+                <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
+                  Pronto, sem mais e-mails
+                </h1>
+                <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
+                  Esse endereço saiu da lista da Pólia. O que já chegou por e-mail continua na sua
+                  caixa.
+                </p>
+                <p className="mt-6 text-[15px] leading-[1.5] text-[var(--muted)]">
+                  Clicou sem querer?
+                </p>
+                <button
+                  type="button"
+                  onClick={voltarAReceber}
+                  disabled={ocupado}
+                  className="mt-2 rounded-xl border border-[var(--line)] px-6 py-3 text-[16px] font-semibold transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {ocupado ? "Voltando…" : "Voltar a receber"}
+                </button>
+              </div>
+            )}
 
-          {estado === "voltou" && (
-            <div>
-              <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
-                De volta à lista
-              </h1>
-              <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
-                Esse endereço volta a receber os e-mails da Pólia. Pra sair de novo, o link do
-                rodapé continua valendo.
-              </p>
-            </div>
-          )}
+            {estado === "voltou" && (
+              <div>
+                <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
+                  De volta à lista
+                </h1>
+                <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
+                  Esse endereço volta a receber os e-mails da Pólia. Pra sair de novo, o link do
+                  rodapé continua valendo.
+                </p>
+              </div>
+            )}
 
-          {estado === "falhou" && (
-            <div>
-              <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
-                Esse link não funcionou
-              </h1>
-              <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
-                Pode ter vindo cortado pelo programa de e-mail. Abra o link direto do rodapé da
-                mensagem, ou escreva pra oi@usepolia.com.br que a gente tira na mão.
-              </p>
-            </div>
-          )}
+            {estado === "falhou" && (
+              <div>
+                <h1 className="font-cabinet text-[28px] leading-[1.15] tracking-[-0.02em] md:text-[32px]">
+                  Esse link não funcionou
+                </h1>
+                <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
+                  Pode ter vindo cortado pelo programa de e-mail. Abra o link direto do rodapé da
+                  mensagem, ou escreva pra oi@usepolia.com.br que a gente tira na mão.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>

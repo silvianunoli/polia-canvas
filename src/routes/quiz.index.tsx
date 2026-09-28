@@ -34,6 +34,8 @@ const ERRO_REDE =
   "Não conseguimos salvar agora. Suas respostas estão guardadas aqui, é só tentar de novo.";
 const ERRO_EMAIL = "Esse e-mail não parece completo. Confere pra gente?";
 const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
+const ERRO_TURNSTILE_CARREGAMENTO =
+  "A verificação de segurança não carregou. Pode ser bloqueador de anúncios ou de privacidade ativo. Recarrega a página e tenta de novo.";
 
 /** Ritmo vertical das telas de fluxo (pergunta, gate, resultado). A abertura usa
  *  SECAO, que é o respiro das páginas públicas; aqui dentro do quiz o espaço
@@ -90,6 +92,9 @@ function comTimeout<T>(promessa: Promise<T>): Promise<T> {
 function Casca({ children }: { children: React.ReactNode }) {
   return (
     <div className="polia-v3 flex min-h-screen flex-col bg-[var(--bg)] text-[var(--ink)]">
+      <a href="#conteudo" className="skip-link">
+        Pular para o conteúdo
+      </a>
       <header className="border-b border-[var(--line)] bg-[var(--bg)]">
         <div className={`${CONTAINER} flex items-center py-5`}>
           <PoliaWordmark className="h-6 w-auto" />
@@ -97,6 +102,11 @@ function Casca({ children }: { children: React.ReactNode }) {
       </header>
       <main id="conteudo" className="flex flex-1 items-start">
         <div className={`${CONTAINER} w-full`}>
+          {/* Só uma tela é renderizada por vez, então nas telas "pergunta"/
+              "gate"/"resultado" o heading mais alto vira h2 sem h1 nenhum no
+              documento. Este h1 fica fixo e fora do condicional de troca de
+              tela pra manter a hierarquia sequencial sempre presente. */}
+          <h1 className="sr-only">Você está pagando pra trabalhar?</h1>
           <div className={COLUNA}>{children}</div>
         </div>
       </main>
@@ -241,8 +251,15 @@ function TelaGate({
   const [enviando, setEnviando] = useState(false);
   const [hp, setHp] = useState("");
   const emailRef = useRef<HTMLInputElement>(null);
+  const tituloRef = useRef<HTMLHeadingElement>(null);
 
   const podeEnviar = emailValido(email) && aceite && !enviando;
+
+  // Tela nova depois do último "responder": leva o foco pro heading, mesmo
+  // padrão de TelaPergunta, pra quem usa leitor de tela ouvir a mudança.
+  useEffect(() => {
+    tituloRef.current?.focus();
+  }, []);
 
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
@@ -272,7 +289,11 @@ function TelaGate({
   return (
     <div className={RESPIRO}>
       <Eyebrow>Seu resultado</Eyebrow>
-      <h2 className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+      <h2
+        ref={tituloRef}
+        tabIndex={-1}
+        className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance outline-none"
+      >
         {faixaNome}
       </h2>
       <p className="mt-4 text-[17px] leading-[1.55] text-[var(--ink-soft)]">
@@ -375,6 +396,11 @@ function TelaGate({
         </div>
 
         <TurnstileWidget containerRef={ts.containerRef} />
+        {ts.erroCarregamento && (
+          <p role="alert" className="text-[14px] leading-[1.5] text-[var(--danger)]">
+            {ERRO_TURNSTILE_CARREGAMENTO}
+          </p>
+        )}
 
         <button
           type="submit"
@@ -403,13 +429,24 @@ function TelaResultado({
   onRefazer: () => void;
 }) {
   const { faixa, territorioFraco } = calcularResultado(respostas);
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+
+  // É a conversão inteira do funil: leva o foco pro heading do resultado, mesmo
+  // padrão de TelaPergunta, pra quem usa leitor de tela ouvir a chegada.
+  useEffect(() => {
+    tituloRef.current?.focus();
+  }, []);
 
   return (
     <div className={RESPIRO}>
       {/* Sem Reveal daqui pra baixo: a tela troca com a rolagem onde o gate
           parou, e o whileInView deixaria o diagnóstico invisível até rolar. */}
       <Eyebrow>Seu resultado</Eyebrow>
-      <h2 className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
+      <h2
+        ref={tituloRef}
+        tabIndex={-1}
+        className="mt-4 text-[clamp(1.75rem,5vw,2.3rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance outline-none"
+      >
         {faixa.nome}
       </h2>
       <p className="mt-4 text-[17px] leading-[1.55] text-[var(--ink-soft)]">{faixa.resumo}</p>

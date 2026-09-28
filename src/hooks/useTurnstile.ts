@@ -37,6 +37,10 @@ export function useTurnstile() {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  // Fica true quando o script do Cloudflare falha ao carregar (bloqueador de
+  // anúncio/privacidade, rede instável). Sem isso, o widget nunca aparece e o
+  // botão de envio continua clicável até o submit tropeçar num erro genérico.
+  const [erroCarregamento, setErroCarregamento] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
@@ -51,7 +55,10 @@ export function useTurnstile() {
           "error-callback": () => setToken(null),
         });
       })
-      .catch(() => setToken(null));
+      .catch(() => {
+        setToken(null);
+        setErroCarregamento(true);
+      });
     return () => {
       cancelado = true;
       if (widgetIdRef.current && window.turnstile) window.turnstile.remove(widgetIdRef.current);
@@ -63,5 +70,5 @@ export function useTurnstile() {
     if (widgetIdRef.current && window.turnstile) window.turnstile.reset(widgetIdRef.current);
   }
 
-  return { containerRef, token, reset };
+  return { containerRef, token, reset, erroCarregamento };
 }

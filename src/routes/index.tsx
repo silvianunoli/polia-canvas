@@ -421,7 +421,7 @@ function Pergunta({ pergunta, resposta }: { pergunta: string; resposta: string }
         {pergunta}
         <span
           aria-hidden="true"
-          className="grid h-7 w-7 flex-none place-items-center rounded-full border border-[var(--line)] text-[16px] text-[var(--ink-soft)] transition-transform group-open:rotate-45 group-open:border-[var(--secondary)] group-open:bg-[var(--secondary)] group-open:text-[var(--secondary-ink)]"
+          className="grid h-7 w-7 flex-none place-items-center rounded-full border border-[var(--line)] text-[16px] text-[var(--ink-soft)] group-open:rotate-45 group-open:border-[var(--secondary)] group-open:bg-[var(--secondary)] group-open:text-[var(--secondary-ink)]"
         >
           +
         </span>
@@ -464,15 +464,15 @@ function HomePage() {
             transition={{ duration: 0.25 }}
             className="fixed bottom-6 right-6 z-40 hidden md:block"
           >
-            <a
-              href="#planos"
+            <Link
+              to="/lista-de-espera"
               data-track="cadastro_cta_clicado"
               data-track-props='{"contexto":"flutuante"}'
               className={BTN_PRIMARIO}
             >
               Quero cobrar o que a marca vale
               <span aria-hidden="true">→</span>
-            </a>
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
@@ -505,15 +505,15 @@ function HomePage() {
                     você saber o que está acontecendo antes de decidir o próximo passo.
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
-                    <a
-                      href="#planos"
+                    <Link
+                      to="/lista-de-espera"
                       data-track="cadastro_cta_clicado"
                       data-track-props='{"contexto":"hero"}'
                       className={BTN_PRIMARIO}
                     >
                       Quero cobrar o que a marca vale
                       <span aria-hidden="true">→</span>
-                    </a>
+                    </Link>
                     <a href="#produto" className={BTN_CONTORNO}>
                       Ver o produto
                     </a>

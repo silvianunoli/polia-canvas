@@ -30,7 +30,7 @@ function EsqueciSenhaPage() {
         <>
           <SerifHeadline size={26}>Vamos recuperar.</SerifHeadline>
           <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
-            É só informar o e-mail da conta que a gente manda o link.
+            É só informar o e-mail da conta que a Pólia manda o link.
           </p>
 
           <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
@@ -74,10 +74,10 @@ function EsqueciSenhaPage() {
           <div className="mt-1 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[var(--secondary-ink)]">
             <Check size={22} aria-hidden="true" />
           </div>
-          <h2 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
+          <h1 className="font-cabinet mt-3 text-[22px] leading-snug text-[var(--ink)]">
             Se esse e-mail tiver conta,
-            <br />a gente manda o link.
-          </h2>
+            <br />a Pólia manda o link.
+          </h1>
           <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
             Confira a caixa de entrada (e o spam). O link vale por 1 hora.
           </p>
@@ -85,11 +85,11 @@ function EsqueciSenhaPage() {
             type="button"
             onClick={handleResend}
             disabled={cooldown > 0 || loading}
-            className="mt-5 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+            className="mt-5 py-2 px-1 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
           >
             {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
           </button>
-          <Link to="/auth/login" className="mt-6 text-[14px] text-[var(--muted)]">
+          <Link to="/auth/login" className="mt-4 py-2 px-1 text-[14px] text-[var(--muted)]">
             Voltar pra entrada
           </Link>
         </div>

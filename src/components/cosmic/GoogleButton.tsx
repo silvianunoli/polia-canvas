@@ -23,6 +23,7 @@ export function GoogleButton({
       {loading ? (
         <Loader2 size={18} className="animate-spin" />
       ) : (
+        // Cores oficiais de marca do Google — exceção às regras de token Pólia
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
           <path
             fill="#4285F4"

@@ -11,7 +11,7 @@ interface FieldErrorProps {
 export function FieldError({ id, children, reserveSpace }: FieldErrorProps) {
   if (!children && !reserveSpace) return null;
   return (
-    <p id={id} className="mt-1.5 min-h-[18px] text-[12.5px] text-[var(--danger)]">
+    <p id={id} role="alert" className="mt-1.5 min-h-[18px] text-[12.5px] text-[var(--danger)]">
       {children}
     </p>
   );
