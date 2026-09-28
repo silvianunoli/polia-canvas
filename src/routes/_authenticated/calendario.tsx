@@ -49,16 +49,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
@@ -732,33 +723,18 @@ function CalendarioPage() {
           </SheetContent>
         </Sheet>
 
-        <AlertDialog open={confirmarDesconectar} onOpenChange={setConfirmarDesconectar}>
-          <AlertDialogContent
-            className="polia-v3 rounded-xl border border-[var(--line)] bg-white"
-            style={TOKEN_BRIDGE_V3}
-          >
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-[var(--ink)]">
-                Desconectar o Google Calendar?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-[var(--ink-soft)]">
-                Os compromissos somem da grade. As tarefas do Planner continuam.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--surface)]">
-                Voltar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => desconectarMutation.mutate()}
-                disabled={desconectarMutation.isPending}
-                className="rounded-lg bg-[var(--danger)] text-white hover:opacity-90"
-              >
-                {desconectarMutation.isPending ? "Desconectando..." : "Desconectar"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <ConfirmarAcao
+          open={confirmarDesconectar}
+          onOpenChange={setConfirmarDesconectar}
+          titulo="Desconectar o Google Calendar?"
+          descricao="Os compromissos somem da grade. As tarefas do Planner continuam."
+          textoConfirmar="Desconectar"
+          textoCarregando="Desconectando…"
+          textoCancelar="Voltar"
+          destrutivo
+          carregando={desconectarMutation.isPending}
+          onConfirmar={() => desconectarMutation.mutate()}
+        />
       </div>
     </PaginaLogada>
   );

@@ -31,16 +31,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -1295,33 +1285,19 @@ function PlannerBoard() {
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={!!confirmarId} onOpenChange={(open) => !open && setConfirmarId(null)}>
-        <AlertDialogContent
-          className="polia-v3 rounded-xl border border-[var(--line)] bg-white"
-          style={TOKEN_BRIDGE_V3}
-        >
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[var(--ink)]">Concluir esta tarefa?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[var(--ink-soft)]">
-              {cardConfirmando ? `"${cardConfirmando.titulo}" vai pra coluna Pronto.` : ""}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--surface)]">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (confirmarId) concluirComTransicao(confirmarId);
-                setConfirmarId(null);
-              }}
-              className="rounded-lg bg-[var(--secondary)] text-[var(--secondary-ink)] hover:opacity-90"
-            >
-              Concluir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmarAcao
+        open={!!confirmarId}
+        onOpenChange={(open) => !open && setConfirmarId(null)}
+        titulo="Concluir esta tarefa?"
+        descricao={
+          cardConfirmando ? `"${cardConfirmando.titulo}" vai pra coluna Pronto.` : undefined
+        }
+        textoConfirmar="Concluir"
+        onConfirmar={() => {
+          if (confirmarId) concluirComTransicao(confirmarId);
+          setConfirmarId(null);
+        }}
+      />
 
       <ConfirmarAcao
         open={!!apagarCardId}
