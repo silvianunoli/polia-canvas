@@ -274,6 +274,7 @@ function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={selected}
       className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-all ${
         selected
           ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
@@ -638,6 +639,7 @@ function Toggle({
               key={o.v}
               type="button"
               onClick={() => onChange(on ? "" : o.v)}
+              aria-pressed={on}
               className={`rounded-full border px-4 py-2 text-[14px] transition-colors ${
                 on
                   ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"

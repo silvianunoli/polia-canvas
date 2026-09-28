@@ -6,6 +6,8 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { Users } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { Campo } from "@/components/ui/Campo";
+import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -515,78 +517,90 @@ function ModalCliente({
   const statusOptions = STATUS_PEDIDO_OPTIONS;
 
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title="Adicionar cliente"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Salvar"}
+          </button>
+        </>
+      }
     >
-      <div
-        className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-white p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
-          NOVA CLIENTE
-        </p>
-        <h2 className="mb-6 text-[26px] text-[var(--ink)]">Adicionar cliente</h2>
-
-        <div className="mb-4">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Nome</label>
+      <div className="mb-4">
+        <Campo label="Nome" required>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            autoFocus
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="Ex: Marina Duarte"
           />
-        </div>
+        </Campo>
+      </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Contato</label>
+      <div className="mb-4">
+        <Campo label="Contato">
           <input
             value={contato}
             onChange={(e) => setContato(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="@instagram ou telefone"
           />
-        </div>
+        </Campo>
+      </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
-            Status do pedido
-          </label>
-          <div className="flex flex-wrap gap-2">
+      <div className="mb-4">
+        <label className="mb-1 block text-[12px] text-[var(--muted)]">Status do pedido</label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => setStatusPedido("")}
+            className={`rounded border px-3 py-1.5 text-[12px] ${
+              statusPedido === ""
+                ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                : "border-[var(--line)] text-[var(--muted)]"
+            }`}
+          >
+            Sem pedido
+          </button>
+          {statusOptions.map((s) => (
             <button
-              onClick={() => setStatusPedido("")}
-              className={`rounded border px-3 py-1.5 font-sans text-[12px] ${
-                statusPedido === ""
+              key={s}
+              type="button"
+              onClick={() => setStatusPedido(s)}
+              className={`rounded border px-3 py-1.5 text-[12px] ${
+                statusPedido === s
                   ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
                   : "border-[var(--line)] text-[var(--muted)]"
               }`}
             >
-              Sem pedido
+              {s}
             </button>
-            {statusOptions.map((s) => (
-              <button
-                key={s}
-                onClick={() => setStatusPedido(s)}
-                className={`rounded border px-3 py-1.5 font-sans text-[12px] ${
-                  statusPedido === s
-                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                    : "border-[var(--line)] text-[var(--muted)]"
-                }`}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
+      </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
-            Produto (opcional)
-          </label>
+      <div className="mb-4">
+        <Campo label="Produto (opcional)">
           <select
             value={produtoId}
             onChange={(e) => selecionarProduto(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
           >
             <option value="">Sem produto</option>
             {produtos.map((p) => (
@@ -595,49 +609,33 @@ function ModalCliente({
               </option>
             ))}
           </select>
-        </div>
+        </Campo>
+      </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">
-            Valor da venda (R$)
-          </label>
+      <div className="mb-4">
+        <Campo label="Valor da venda (R$)">
           <input
             type="number"
             value={valor}
             onChange={(e) => setValor(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="0"
           />
-        </div>
+        </Campo>
+      </div>
 
-        <div className="mb-6">
-          <label className="mb-1 block font-sans text-[12px] text-[var(--muted)]">Notas</label>
+      <div>
+        <Campo label="Notas">
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={3}
-            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 font-sans text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
-        </div>
-
-        {erro && <p className="mb-3 font-sans text-[13px] text-[var(--danger)]">{erro}</p>}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 font-sans text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? "Salvando..." : "Salvar"}
-          </button>
-        </div>
+        </Campo>
       </div>
-    </div>
+
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

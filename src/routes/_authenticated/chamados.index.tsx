@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,8 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { MessagesSquare } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { Campo } from "@/components/ui/Campo";
+import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -190,28 +192,33 @@ function ModalNovoChamado({
     onSaved();
   };
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title="Abrir chamado"
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando || !podeSalvar}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Enviando..." : "Abrir chamado"}
+          </button>
+        </>
+      }
     >
-      <div
-        className="w-full max-w-[480px] rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-5 text-[24px] text-[var(--ink)]">Abrir chamado</h2>
-
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Título</label>
+      <div className="mb-4">
+        <Campo label="Título" required>
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
@@ -220,12 +227,11 @@ function ModalNovoChamado({
             placeholder="ex: não consigo exportar meus clientes"
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
-        </div>
+        </Campo>
+      </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            O que está acontecendo
-          </label>
+      <div className="mb-4">
+        <Campo label="O que está acontecendo" required>
           <textarea
             value={corpo}
             onChange={(e) => setCorpo(e.target.value)}
@@ -234,36 +240,20 @@ function ModalNovoChamado({
             placeholder="conta com o máximo de detalhe que puder"
             className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
-        </div>
-
-        <label className="mb-6 flex items-center gap-2 text-[13px] text-[var(--ink-soft)]">
-          <input
-            type="checkbox"
-            checked={urgente}
-            onChange={(e) => setUrgente(e.target.checked)}
-            className="h-4 w-4 rounded border-[var(--line)]"
-          />
-          É urgente: travou algo que preciso agora
-        </label>
-
-        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? "Enviando..." : "Abrir chamado"}
-          </button>
-        </div>
+        </Campo>
       </div>
-    </div>
+
+      <label className="mb-2 flex items-center gap-2 text-[13px] text-[var(--ink-soft)]">
+        <input
+          type="checkbox"
+          checked={urgente}
+          onChange={(e) => setUrgente(e.target.checked)}
+          className="h-4 w-4 rounded border-[var(--line)]"
+        />
+        É urgente: travou algo que preciso agora
+      </label>
+
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

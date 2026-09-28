@@ -191,7 +191,11 @@ function PlannerIndex() {
         {criando && (
           <section className="mt-8 rounded-xl border border-[var(--line)] bg-white p-5">
             <div className="flex flex-wrap items-center gap-2">
+              <label htmlFor="planner-novo-quadro-nome" className="sr-only">
+                Nome do quadro
+              </label>
               <input
+                id="planner-novo-quadro-nome"
                 type="text"
                 autoFocus
                 value={novoNome}

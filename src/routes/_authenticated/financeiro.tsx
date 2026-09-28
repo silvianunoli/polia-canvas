@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { AnimatePresence } from "framer-motion";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MoreHorizontal, FileText, Lock, Wallet } from "lucide-react";
@@ -8,6 +7,8 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
+import { Campo } from "@/components/ui/Campo";
+import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -535,7 +536,9 @@ function FinanceiroPage() {
                 return (
                   <button
                     key={p.id}
+                    type="button"
                     onClick={() => setPeriodo(p.id)}
+                    aria-pressed={ativo}
                     className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
                       ativo
                         ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
@@ -559,7 +562,9 @@ function FinanceiroPage() {
                 return (
                   <button
                     key={t.id}
+                    type="button"
                     onClick={() => setFiltroTipo(t.id)}
+                    aria-pressed={ativo}
                     className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
                       ativo
                         ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
@@ -634,28 +639,25 @@ function FinanceiroPage() {
       </div>
 
       {/* ───────── 5. Modal ───────── */}
-      {/* AnimatePresence aqui fora (não só dentro de ModalLancamento) é o que
-          deixa a animação de saída rodar: o pai monta/desmonta o componente
-          inteiro por render condicional puro, e sem esse AnimatePresence
-          envolvendo o ponto de uso, o exit interno nunca chega a tocar. */}
-      <AnimatePresence>
-        {modalAberto && userId && (
-          <ModalLancamento
-            key="modal-lancamento"
-            userId={userId}
-            tipoInicial={modalTipo}
-            dataPadrao={hojeISOStr}
-            prefill={prefill}
-            lancamentoEdit={lancamentoEdit}
-            historico={lancamentos}
-            onClose={() => setModalAberto(false)}
-            onSaved={() => {
-              qc.invalidateQueries({ queryKey: ["financeiro", userId] });
-              setModalAberto(false);
-            }}
-          />
-        )}
-      </AnimatePresence>
+      {/* ModalLancamento migrou pro <Modal> (Radix Dialog) em 28/09/2026: a
+          animação de abrir/fechar agora vive dentro dele (data-state do
+          Radix), então não precisa mais de AnimatePresence aqui fora —
+          mesmo padrão de ModalMeta em metas.tsx. */}
+      {modalAberto && userId && (
+        <ModalLancamento
+          userId={userId}
+          tipoInicial={modalTipo}
+          dataPadrao={hojeISOStr}
+          prefill={prefill}
+          lancamentoEdit={lancamentoEdit}
+          historico={lancamentos}
+          onClose={() => setModalAberto(false)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["financeiro", userId] });
+            setModalAberto(false);
+          }}
+        />
+      )}
 
       {/* ───────── 6. Modal: registrar venda de um produto ───────── */}
       {modalVendaAberto && userId && (
@@ -734,7 +736,7 @@ function LinhaLancamento({
             onClick={() => setMenuAberto((v) => !v)}
             aria-label="Opções do lançamento"
             title="Opções do lançamento"
-            className={`rounded-md p-1 text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
+            className={`flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
               menuAberto ? "opacity-100" : ""
             }`}
           >
@@ -850,42 +852,47 @@ function ModalRegistrarVendaProduto({
     );
   };
 
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title="Registrar venda de um produto"
+      description="Cria a entrada no caixa com o preço do catálogo."
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={salvar}
+            disabled={salvando || !produto}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Registrando..." : "Registrar venda"}
+          </button>
+        </>
+      }
     >
-      <div
-        className="w-full max-w-[440px] rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-1 text-[24px] text-[var(--ink)]">Registrar venda de um produto</h2>
-        <p className="mb-5 text-[13px] text-[var(--ink-soft)]">
-          Cria a entrada no caixa com o preço do catálogo.
+      {produtosQuery.isLoading ? (
+        <p className="py-6 text-center text-[14px] text-[var(--muted)]">Carregando produtos…</p>
+      ) : produtos.length === 0 ? (
+        <p className="py-6 text-[14px] text-[var(--ink-soft)]">
+          Ainda não tem produto no catálogo.{" "}
+          <Link to="/produtos" className="text-[var(--secondary-text)] hover:underline">
+            Adicionar em Produtos →
+          </Link>
         </p>
-
-        {produtosQuery.isLoading ? (
-          <p className="py-6 text-center text-[14px] text-[var(--muted)]">Carregando produtos…</p>
-        ) : produtos.length === 0 ? (
-          <p className="py-6 text-[14px] text-[var(--ink-soft)]">
-            Ainda não tem produto no catálogo.{" "}
-            <Link to="/produtos" className="text-[var(--secondary-text)] hover:underline">
-              Adicionar em Produtos →
-            </Link>
-          </p>
-        ) : (
-          <>
-            <div className="mb-4">
-              <label className="mb-1 block text-[12px] text-[var(--muted)]">Produto</label>
+      ) : (
+        <>
+          <div className="mb-4">
+            <Campo label="Produto">
               <select
                 value={produtoId}
                 onChange={(e) => setProdutoId(e.target.value)}
@@ -899,48 +906,33 @@ function ModalRegistrarVendaProduto({
                   </option>
                 ))}
               </select>
-            </div>
+            </Campo>
+          </div>
 
-            <div className="mb-4">
-              <label className="mb-1 block text-[12px] text-[var(--muted)]">Data</label>
+          <div className="mb-4">
+            <Campo label="Data">
               <input
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
                 className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
               />
+            </Campo>
+          </div>
+
+          {produto && (
+            <div className="mb-4 rounded-lg bg-[var(--secondary-light)] px-3 py-2.5 text-[13px] text-[var(--secondary-text)]">
+              {sobrou !== null ? (
+                <>Dessa venda sobram {fmt(Math.round(sobrou))}, descontado o custo direto.</>
+              ) : (
+                <>Cadastre o custo desse produto pra ver quanto sobra.</>
+              )}
             </div>
+          )}
+        </>
+      )}
 
-            {produto && (
-              <div className="mb-4 rounded-lg bg-[var(--secondary-light)] px-3 py-2.5 text-[13px] text-[var(--secondary-text)]">
-                {sobrou !== null ? (
-                  <>Dessa venda sobram {fmt(Math.round(sobrou))}, descontado o custo direto.</>
-                ) : (
-                  <>Cadastre o custo desse produto pra ver quanto sobra.</>
-                )}
-              </div>
-            )}
-          </>
-        )}
-
-        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-        <div className="flex items-center justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando || !produto}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? "Registrando..." : "Registrar venda"}
-          </button>
-        </div>
-      </div>
-    </div>
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

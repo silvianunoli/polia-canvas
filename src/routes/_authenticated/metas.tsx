@@ -158,7 +158,7 @@ function MetasPage() {
     onError: (e: unknown) => {
       // O erro do banco vem em inglês técnico: fica no log, não na tela.
       console.error("meta_salvar", e);
-      setErroAcao("Não conseguimos salvar a meta agora. Tenta de novo.");
+      setErroAcao("A Pólia não conseguiu salvar a meta agora. Tenta de novo, nada se perdeu.");
     },
   });
 
@@ -256,7 +256,7 @@ function MetasPage() {
           ) : metasQuery.isError ? (
             <Vazio
               icone={AlertTriangle}
-              titulo="Não conseguimos carregar as suas metas."
+              titulo="A Pólia não conseguiu carregar as suas metas."
               texto="Pode ter sido a conexão. Tenta de novo, nada do que já está salvo se perdeu."
               acao={
                 <button
@@ -305,7 +305,7 @@ function MetasPage() {
             <button
               onClick={() => setVerConcluidas((v) => !v)}
               aria-expanded={verConcluidas}
-              className="inline-flex items-center gap-1.5 text-[14px] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+              className="-mx-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-[14px] text-[var(--ink-soft)] hover:text-[var(--ink)]"
             >
               <ChevronDown
                 size={16}
@@ -369,6 +369,7 @@ function MetasPage() {
         }`}
         role="status"
         aria-live="polite"
+        inert={!toast}
       >
         <span>Meta concluída: {toast?.titulo}</span>
         <button
@@ -455,7 +456,7 @@ function MetaCard({
           <button
             onClick={() => setMenuAberto((v) => !v)}
             aria-label="Opções da meta"
-            className="rounded-md p-1 text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)]"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)]"
           >
             <MoreHorizontal size={18} aria-hidden="true" />
           </button>
@@ -585,7 +586,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)]"
       />
     );
   }
@@ -638,7 +639,7 @@ function InlineValor({
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="w-24 rounded-md border border-[var(--secondary)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        className="w-24 rounded-md border border-[var(--secondary)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)]"
       />
     );
   }
@@ -773,6 +774,7 @@ function ModalMeta({
             <button
               key={f.id}
               onClick={() => setFormato(f.id)}
+              aria-pressed={formato === f.id}
               className={`rounded-lg border px-3 py-1.5 text-[13px] ${
                 formato === f.id
                   ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"

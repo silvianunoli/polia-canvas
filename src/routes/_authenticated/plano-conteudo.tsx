@@ -7,6 +7,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
@@ -109,11 +110,11 @@ function PlanoConteudoPage() {
       } else {
         setMotivo(resultado.motivo);
         if (resultado.motivo === "falha_ia") {
-          setErro("Não conseguimos montar o seu plano agora. Tenta de novo.");
+          setErro("A Aimer não conseguiu montar o seu plano agora. Tenta de novo.");
         }
       }
     } catch {
-      setErro("Não conseguimos montar o seu plano agora. Tenta de novo.");
+      setErro("A Aimer não conseguiu montar o seu plano agora. Tenta de novo.");
     } finally {
       setGerando(false);
     }
@@ -205,37 +206,43 @@ function PlanoConteudoPage() {
           <div className="mt-6 h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
         ) : dias.length > 0 ? (
           <>
-            <select
-              value={mesAtivo}
-              onChange={(e) => setMesAtivo(Number(e.target.value))}
-              className="mt-6 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-            >
-              {MESES.map((nome, i) => (
-                <option key={nome} value={i + 1}>
-                  {nome} {anoAtual}
-                </option>
-              ))}
-            </select>
+            <div className="mt-6">
+              <Campo label="Mês">
+                <select
+                  value={mesAtivo}
+                  onChange={(e) => setMesAtivo(Number(e.target.value))}
+                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                >
+                  {MESES.map((nome, i) => (
+                    <option key={nome} value={i + 1}>
+                      {nome} {anoAtual}
+                    </option>
+                  ))}
+                </select>
+              </Campo>
+            </div>
 
             <ul className="mt-4 space-y-3">
               {diasDoMesAtivo.map((row) => (
                 <li key={row.id} className="rounded-xl border border-[var(--line)] bg-white p-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-end gap-2">
                       <span className="text-[13px] font-medium text-[var(--muted)]">
                         {row.data.split("-")[2]}
                       </span>
-                      <select
-                        value={row.tipo}
-                        onChange={(e) => void salvarCampo(row, "tipo", e.target.value)}
-                        className="rounded-md border border-[var(--line)] bg-white px-2 py-1 text-[12px] text-[var(--ink-soft)]"
-                      >
-                        {Object.entries(TIPO_LABEL).map(([valor, label]) => (
-                          <option key={valor} value={valor}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
+                      <Campo label="Tipo de post">
+                        <select
+                          value={row.tipo}
+                          onChange={(e) => void salvarCampo(row, "tipo", e.target.value)}
+                          className="rounded-md border border-[var(--line)] bg-white px-2 py-1 text-[12px] text-[var(--ink-soft)]"
+                        >
+                          {Object.entries(TIPO_LABEL).map(([valor, label]) => (
+                            <option key={valor} value={valor}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </Campo>
                     </div>
                     <button
                       type="button"
@@ -251,17 +258,25 @@ function PlanoConteudoPage() {
                       {row.postado ? "Postado" : "Marcar como postado"}
                     </button>
                   </div>
-                  <input
-                    defaultValue={row.titulo}
-                    onBlur={(e) => void salvarCampo(row, "titulo", e.target.value)}
-                    className="mt-2 w-full rounded-md border-none bg-transparent p-0 text-[15px] font-medium text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
-                  />
-                  <textarea
-                    defaultValue={row.ideia}
-                    onBlur={(e) => void salvarCampo(row, "ideia", e.target.value)}
-                    rows={2}
-                    className="mt-1 w-full resize-none rounded-md border-none bg-transparent p-0 text-[14px] text-[var(--ink-soft)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
-                  />
+                  <div className="mt-2">
+                    <Campo label="Título do post">
+                      <input
+                        defaultValue={row.titulo}
+                        onBlur={(e) => void salvarCampo(row, "titulo", e.target.value)}
+                        className="w-full rounded-md border-none bg-transparent p-0 text-[15px] font-medium text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                      />
+                    </Campo>
+                  </div>
+                  <div className="mt-1">
+                    <Campo label="Ideia do post">
+                      <textarea
+                        defaultValue={row.ideia}
+                        onBlur={(e) => void salvarCampo(row, "ideia", e.target.value)}
+                        rows={2}
+                        className="w-full resize-none rounded-md border-none bg-transparent p-0 text-[14px] text-[var(--ink-soft)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                      />
+                    </Campo>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -271,7 +286,7 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo="Ainda falta saber da sua marca."
-              texto="A gente precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
+              texto="A Aimer precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
               acao={
                 <Link to="/planejamento" className={BTN_ACAO}>
                   Ir pro Planejamento
@@ -284,7 +299,7 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo="As gerações do plano deste ano acabaram."
-              texto="Se precisar de outro, abre um chamado que a gente resolve."
+              texto="Se precisar de outro, abre um chamado que a Pólia resolve."
             />
           </div>
         ) : (

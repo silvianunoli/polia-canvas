@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useId, useMemo, useState, type ChangeEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { Modal } from "@/components/ui/Modal";
+import { Campo } from "@/components/ui/Campo";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -13,6 +13,11 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
  * sempre. A AÇÃO de registrar é de todo plano; a TELA /financeiro (histórico
  * completo, filtros, período, os três números do mês, resumo pro contador)
  * continua sendo do Premium.
+ *
+ * Migrado pro <Modal> (Radix Dialog) em 28/09/2026: antes era um overlay
+ * artesanal com framer-motion e listener de Escape na mão, sem role="dialog"
+ * nem trava de foco. Segue o mesmo padrão já aplicado em ModalMeta
+ * (src/routes/_authenticated/metas.tsx).
  */
 
 export type RegistrarTipo = "entrada" | "saida";
@@ -58,10 +63,12 @@ export function ModalLancamento({
   onSaved: () => void;
 }) {
   const edit = !!lancamentoEdit;
+  const tipoLabelId = useId();
+  const categoriaLabelId = useId();
   const [tipo, setTipo] = useState<RegistrarTipo>(
     (lancamentoEdit?.tipo as RegistrarTipo) ?? tipoInicial,
   );
-  // Campo de valor: dígitos acumulam da direita pra esquerda, em centavos.
+  // Campo de valor: os dígitos do texto digitado/colado/ditado viram centavos.
   const [cents, setCents] = useState(() => {
     const v = lancamentoEdit?.valor ?? prefill?.valor;
     return v ? Math.round(v * 100) : 0;
@@ -73,7 +80,6 @@ export function ModalLancamento({
   const [novaCategoriaTexto, setNovaCategoriaTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const reduceMotion = usePrefersReducedMotion();
 
   const valorNum = cents / 100;
 
@@ -109,16 +115,12 @@ export function ModalLancamento({
 
   const moedaFmt = (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-  const onValorKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key >= "0" && e.key <= "9") {
-      e.preventDefault();
-      setCents((c) => c * 10 + Number(e.key));
-    } else if (e.key === "Backspace") {
-      e.preventDefault();
-      setCents((c) => Math.floor(c / 10));
-    } else if (!["Tab", "Escape"].includes(e.key)) {
-      e.preventDefault();
-    }
+  // Extrai os dígitos do texto atual do campo e usa como centavos — funciona
+  // com dígito digitado, colar (Ctrl/Cmd+V), setas, seleção e ditado por voz,
+  // ao contrário do bloqueio de tecla anterior no onKeyDown.
+  const onValorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const digitos = e.target.value.replace(/\D/g, "");
+    setCents(digitos ? Number(digitos) : 0);
   };
 
   const categoriaFinal = novaCategoriaAberta ? novaCategoriaTexto.trim() : categoria;
@@ -158,167 +160,154 @@ export function ModalLancamento({
     onSaved();
   };
 
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
-    <AnimatePresence>
-      <motion.div
-        className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-        onClick={onClose}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] } }}
-        exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
-      >
-        <motion.div
-          className="w-full max-w-[440px] rounded-2xl bg-white p-6"
-          onClick={(e) => e.stopPropagation()}
-          initial={{ opacity: 0, transform: reduceMotion ? "scale(1)" : "scale(0.95)" }}
-          animate={{
-            opacity: 1,
-            transform: "scale(1)",
-            transition: { duration: 0.2, ease: [0.23, 1, 0.32, 1] },
-          }}
-          exit={{
-            opacity: 0,
-            transform: reduceMotion ? "scale(1)" : "scale(0.95)",
-            transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] },
-          }}
-        >
-          <h2 className="mb-5 text-[24px] text-[var(--ink)]">
-            {edit ? "Editar lançamento" : "Novo lançamento"}
-          </h2>
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title={edit ? "Editar lançamento" : "Novo lançamento"}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={salvar}
+            disabled={salvando || !!faltaMsg}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : edit ? "Salvar alterações" : "Salvar lançamento"}
+          </button>
+        </>
+      }
+    >
+      {/* Tipo — grupo de botões, não um único controle, então a associação é
+          por role="group" + aria-labelledby (Campo clona id num filho único). */}
+      <div className="mb-4">
+        <span id={tipoLabelId} className="mb-1 block text-[12px] text-[var(--muted)]">
+          Tipo
+        </span>
+        <div role="group" aria-labelledby={tipoLabelId} className="flex gap-2">
+          {(
+            [
+              { id: "entrada", label: "Entrada" },
+              { id: "saida", label: "Saída" },
+            ] as { id: RegistrarTipo; label: string }[]
+          ).map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => trocarTipo(t.id)}
+              aria-pressed={tipo === t.id}
+              className={`flex-1 rounded-lg border px-3 py-2 text-[14px] ${
+                tipo === t.id
+                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                  : "border-[var(--line)] text-[var(--ink-soft)]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-          {/* Tipo */}
-          <div className="mb-4">
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
-            <div className="flex gap-2">
-              {(
-                [
-                  { id: "entrada", label: "Entrada" },
-                  { id: "saida", label: "Saída" },
-                ] as { id: RegistrarTipo; label: string }[]
-              ).map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => trocarTipo(t.id)}
-                  className={`flex-1 rounded-lg border px-3 py-2 text-[14px] ${
-                    tipo === t.id
-                      ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                      : "border-[var(--line)] text-[var(--ink-soft)]"
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+      {/* Valor */}
+      <div className="mb-4">
+        <Campo label="Valor (R$)" required>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={cents ? moedaFmt : ""}
+            onChange={onValorChange}
+            placeholder="R$ 0,00"
+            autoFocus
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          />
+        </Campo>
+      </div>
 
-          {/* Valor */}
-          <div className="mb-4">
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor (R$)</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={cents ? moedaFmt : ""}
-              onKeyDown={onValorKeyDown}
-              onChange={() => {}}
-              placeholder="R$ 0,00"
-              autoFocus
-              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-            />
-          </div>
+      {/* Data */}
+      <div className="mb-4">
+        <Campo label="Data">
+          <input
+            type="date"
+            value={data}
+            onChange={(e) => setData(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+          />
+        </Campo>
+      </div>
 
-          {/* Data */}
-          <div className="mb-4">
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">Data</label>
-            <input
-              type="date"
-              value={data}
-              onChange={(e) => setData(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
-            />
-          </div>
+      {/* Descrição */}
+      <div className="mb-4">
+        <Campo label="Descrição">
+          <input
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            placeholder="ex: pagamento da Ana"
+          />
+        </Campo>
+      </div>
 
-          {/* Descrição */}
-          <div className="mb-4">
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">Descrição</label>
-            <input
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-              placeholder="ex: pagamento da Ana"
-            />
-          </div>
-
-          {/* Categoria */}
-          <div className="mb-6">
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">Categoria</label>
-            <div className="flex flex-wrap gap-2">
-              {categorias.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => escolherCategoria(c)}
-                  className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-                    categoria === c
-                      ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                      : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
-              <button
-                onClick={() => escolherCategoria(NOVA_CATEGORIA)}
-                className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-                  novaCategoriaAberta
-                    ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                    : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                }`}
-              >
-                {NOVA_CATEGORIA}
-              </button>
-            </div>
-            {novaCategoriaAberta && (
+      {/* Categoria — mesmo caso do Tipo: grupo de botões. */}
+      <div>
+        <span id={categoriaLabelId} className="mb-1 block text-[12px] text-[var(--muted)]">
+          Categoria
+        </span>
+        <div role="group" aria-labelledby={categoriaLabelId} className="flex flex-wrap gap-2">
+          {categorias.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => escolherCategoria(c)}
+              aria-pressed={categoria === c}
+              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
+                categoria === c
+                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => escolherCategoria(NOVA_CATEGORIA)}
+            aria-pressed={novaCategoriaAberta}
+            className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
+              novaCategoriaAberta
+                ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
+                : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
+            }`}
+          >
+            {NOVA_CATEGORIA}
+          </button>
+        </div>
+        {novaCategoriaAberta && (
+          <div className="mt-2">
+            <Campo label="Nome da categoria">
               <input
                 autoFocus
                 value={novaCategoriaTexto}
                 onChange={(e) => setNovaCategoriaTexto(e.target.value)}
                 placeholder="Nome da categoria"
                 maxLength={40}
-                className="mt-2 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
               />
-            )}
+            </Campo>
           </div>
+        )}
+      </div>
 
-          {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-[13px] text-[var(--muted)]">{faltaMsg}</span>
-            <span className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={salvar}
-                disabled={salvando || !!faltaMsg}
-                className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-              >
-                {salvando ? "Salvando..." : edit ? "Salvar alterações" : "Salvar lançamento"}
-              </button>
-            </span>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      {faltaMsg && <p className="mt-4 text-[13px] text-[var(--muted)]">{faltaMsg}</p>}
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

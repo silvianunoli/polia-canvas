@@ -22,6 +22,8 @@ import {
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { Campo } from "@/components/ui/Campo";
+import { Modal } from "@/components/ui/Modal";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
 
@@ -232,7 +234,11 @@ function ProdutosPage() {
     >
       <div>
         {/* ───────── Tabs ───────── */}
-        <div className="inline-flex gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]">
+        <div
+          role="tablist"
+          aria-label="Produtos"
+          className="inline-flex gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]"
+        >
           {(
             [
               { id: "produtos", label: "Meus produtos" },
@@ -243,6 +249,10 @@ function ProdutosPage() {
             return (
               <button
                 key={t.id}
+                id={`produtos-tab-${t.id}`}
+                role="tab"
+                aria-selected={ativo}
+                aria-controls={`produtos-painel-${t.id}`}
                 onClick={() => setTab(t.id)}
                 className={`rounded-md px-[18px] py-2 text-[14px] font-medium transition-colors duration-200 ${
                   ativo
@@ -258,7 +268,12 @@ function ProdutosPage() {
 
         {/* ───────── TAB 1 — Meus produtos ───────── */}
         {tab === "produtos" && (
-          <section className="mt-8">
+          <section
+            id="produtos-painel-produtos"
+            role="tabpanel"
+            aria-labelledby="produtos-tab-produtos"
+            className="mt-8"
+          >
             <button
               onClick={() => abrirAdicionar(null)}
               disabled={cotaAtingida}
@@ -316,24 +331,30 @@ function ProdutosPage() {
 
         {/* ───────── TAB 2 — Calculadora ───────── */}
         {tab === "calculadora" && (
-          <Calculadora
-            onSalvarComoProduto={abrirAdicionar}
-            metaBoa={metaBoa}
-            userId={userId}
-            ehProjete={ehProjete}
-            valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
-            valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
-            produtoRecalcular={produtoRecalcular}
-            onCancelarRecalculo={() => {
-              setProdutoRecalcular(null);
-              setTab("produtos");
-            }}
-            onAtualizado={() => {
-              setProdutoRecalcular(null);
-              setTab("produtos");
-              qc.invalidateQueries({ queryKey: ["produtos", userId] });
-            }}
-          />
+          <div
+            id="produtos-painel-calculadora"
+            role="tabpanel"
+            aria-labelledby="produtos-tab-calculadora"
+          >
+            <Calculadora
+              onSalvarComoProduto={abrirAdicionar}
+              metaBoa={metaBoa}
+              userId={userId}
+              ehProjete={ehProjete}
+              valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
+              valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
+              produtoRecalcular={produtoRecalcular}
+              onCancelarRecalculo={() => {
+                setProdutoRecalcular(null);
+                setTab("produtos");
+              }}
+              onAtualizado={() => {
+                setProdutoRecalcular(null);
+                setTab("produtos");
+                qc.invalidateQueries({ queryKey: ["produtos", userId] });
+              }}
+            />
+          </div>
         )}
       </div>
 
@@ -399,11 +420,11 @@ function ProdutoCard({
   return (
     <div className="group relative rounded-xl border border-[var(--line)] bg-white p-4">
       {/* Menu de contexto */}
-      <div className="absolute right-3 top-3">
+      <div className="absolute right-1 top-1">
         <button
           onClick={() => setMenuAberto((v) => !v)}
           aria-label="Opções do produto"
-          className={`rounded-md p-1 text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
+          className={`flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
             menuAberto ? "opacity-100" : ""
           }`}
         >
@@ -451,7 +472,13 @@ function ProdutoCard({
       {/* Foto ou avatar de inicial */}
       {produto.foto_url ? (
         <div className="aspect-square w-full overflow-hidden rounded-lg">
-          <img src={produto.foto_url} alt={produto.nome} className="h-full w-full object-cover" />
+          <img
+            src={produto.foto_url}
+            alt={produto.nome}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover"
+          />
         </div>
       ) : (
         <div
@@ -911,7 +938,7 @@ function Calculadora({
       )}
 
       {/* Seletor de perfil */}
-      <div className="flex flex-wrap gap-2">
+      <div role="tablist" aria-label="Perfil da calculadora" className="flex flex-wrap gap-2">
         {(
           [
             { id: "produto", label: "Produto (físico/digital)" },
@@ -922,6 +949,10 @@ function Calculadora({
           return (
             <button
               key={p.id}
+              id={`calc-tab-${p.id}`}
+              role="tab"
+              aria-selected={ativo}
+              aria-controls={`calc-painel-${p.id}`}
               onClick={() => setPerfil(p.id)}
               className={`rounded-full px-4 py-2 text-[13px] ${
                 ativo
@@ -935,6 +966,10 @@ function Calculadora({
         })}
         {ehProjete ? (
           <button
+            id="calc-tab-encomenda"
+            role="tab"
+            aria-selected={perfil === "encomenda"}
+            aria-controls="calc-painel-encomenda"
             onClick={() => setPerfil("encomenda")}
             className={`rounded-full px-4 py-2 text-[13px] ${
               perfil === "encomenda"
@@ -958,7 +993,7 @@ function Calculadora({
 
       {/* Campos */}
       {perfil === "produto" ? (
-        <>
+        <div id="calc-painel-produto" role="tabpanel" aria-labelledby="calc-tab-produto">
           <GrupoCalc titulo="Custos diretos (por unidade)">
             <CampoNum
               label="Matéria-prima / insumos (R$)"
@@ -991,9 +1026,9 @@ function Calculadora({
             <CampoNum label="Impostos sobre a venda (%)" value={impostos} onChange={setImpostos} />
             <CampoNum label="Quanto quer que sobre (%)" value={margem} onChange={setMargem} />
           </GrupoCalc>
-        </>
+        </div>
       ) : perfil === "servico" ? (
-        <>
+        <div id="calc-painel-servico" role="tabpanel" aria-labelledby="calc-tab-servico">
           <GrupoCalc titulo="Seu trabalho">
             <CampoNum label="Valor da sua hora (R$)" value={valorHora} onChange={setValorHora} />
             <CampoNum label="Horas estimadas no serviço" value={horas} onChange={setHoras} />
@@ -1017,9 +1052,9 @@ function Calculadora({
             />
             <CampoNum label="Quanto quer que sobre (%)" value={margemSeg} onChange={setMargemSeg} />
           </GrupoCalc>
-        </>
+        </div>
       ) : (
-        <>
+        <div id="calc-painel-encomenda" role="tabpanel" aria-labelledby="calc-tab-encomenda">
           {encomendaVazia && (
             <p className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-5 py-8 text-center text-[13px] leading-relaxed text-[var(--muted)]">
               Monte a encomenda: adicione os materiais, as horas de trabalho e os custos extras. O
@@ -1148,7 +1183,7 @@ function Calculadora({
               onChange={setQuantoSobraPct}
             />
           </GrupoCalc>
-        </>
+        </div>
       )}
 
       {/* Resultado — na Encomenda, só aparece com algo lançado (estado "vazio" não calcula) */}
@@ -1364,7 +1399,7 @@ function LinhaMaterial({
             onClick={onDuplicar}
             aria-label="Duplicar material"
             title="Duplicar"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
           >
             <Copy size={15} aria-hidden="true" />
           </button>
@@ -1373,7 +1408,7 @@ function LinhaMaterial({
             onClick={onRemover}
             aria-label="Remover material"
             title="Remover"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
           >
             <Trash2 size={15} aria-hidden="true" />
           </button>
@@ -1417,7 +1452,7 @@ function LinhaExtra({
           onClick={onRemover}
           aria-label="Remover custo extra"
           title="Remover"
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
         >
           <Trash2 size={15} aria-hidden="true" />
         </button>
@@ -1536,21 +1571,33 @@ function ModalProduto({
   };
 
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title={edit ? "Editar produto" : "Adicionar produto"}
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando || !podeSalvar}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Salvando..." : "Salvar produto"}
+          </button>
+        </>
+      }
     >
-      <div
-        className="max-h-[90vh] w-full max-w-[440px] overflow-y-auto rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-5 text-[24px] text-[var(--ink)]">
-          {edit ? "Editar produto" : "Adicionar produto"}
-        </h2>
-
-        {/* Nome */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Nome</label>
+      {/* Nome */}
+      <div className="mb-4">
+        <Campo label="Nome" required>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -1558,51 +1605,50 @@ function ModalProduto({
             placeholder="ex: Camiseta bordada"
             autoFocus
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Tipo */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
-          <div className="flex flex-wrap gap-2">
-            {(
-              [
-                { id: "fisico", label: "Produto físico" },
-                { id: "digital", label: "Produto digital" },
-                { id: "servico", label: "Serviço" },
-              ] as { id: ProdutoTipo; label: string }[]
-            ).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setTipo(t.id)}
-                className={`rounded-lg border px-3 py-1.5 text-[13px] ${
-                  tipo === t.id
-                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                    : "border-[var(--line)] text-[var(--ink-soft)]"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+      {/* Tipo */}
+      <div className="mb-4">
+        <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
+        <div className="flex flex-wrap gap-2">
+          {(
+            [
+              { id: "fisico", label: "Produto físico" },
+              { id: "digital", label: "Produto digital" },
+              { id: "servico", label: "Serviço" },
+            ] as { id: ProdutoTipo; label: string }[]
+          ).map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTipo(t.id)}
+              className={`rounded-lg border px-3 py-1.5 text-[13px] ${
+                tipo === t.id
+                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                  : "border-[var(--line)] text-[var(--ink-soft)]"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Foto (URL) */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Foto</label>
+      {/* Foto (URL) */}
+      <div className="mb-4">
+        <Campo label="Foto" hint="cole o link de uma imagem (opcional)">
           <input
             value={fotoUrl}
             onChange={(e) => setFotoUrl(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="https://..."
           />
-          <p className="mt-1 text-[11px] text-[var(--muted)]">
-            cole o link de uma imagem (opcional)
-          </p>
-        </div>
+        </Campo>
+      </div>
 
-        {/* Preço de venda */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Preço de venda (R$)</label>
+      {/* Preço de venda */}
+      <div className="mb-4">
+        <Campo label="Preço de venda (R$)" required>
           <input
             type="number"
             inputMode="decimal"
@@ -1611,13 +1657,12 @@ function ModalProduto({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="0"
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Preço de custo */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            Custo de produção (R$)
-          </label>
+      {/* Preço de custo */}
+      <div className="mb-4">
+        <Campo label="Custo de produção (R$)">
           <input
             type="number"
             inputMode="decimal"
@@ -1626,50 +1671,34 @@ function ModalProduto({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="0"
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Descrição */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Descrição curta</label>
+      {/* Descrição */}
+      <div className="mb-4">
+        <Campo label="Descrição curta">
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="ex: algodão pima, tamanho único"
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Canal de venda */}
-        <div className="mb-6">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            Onde a compra acontece
-          </label>
+      {/* Canal de venda */}
+      <div>
+        <Campo label="Onde a compra acontece">
           <input
             value={canal}
             onChange={(e) => setCanal(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="ex: DM do Instagram, link de pagamento"
           />
-        </div>
-
-        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? "Salvando..." : "Salvar produto"}
-          </button>
-        </div>
+        </Campo>
       </div>
-    </div>
+
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

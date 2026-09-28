@@ -6,6 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
+import { Campo } from "@/components/ui/Campo";
 import { BTN_MIUDO } from "@/lib/botoes";
 import {
   ArrowLeft,
@@ -604,7 +605,7 @@ function PlannerBoard() {
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <PainelNav navActive="/planner" />
         <main className="mx-auto max-w-[600px] px-6 py-20 text-center">
-          <p className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</p>
+          <h1 className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</h1>
           <LinkInterno
             href="/planner"
             className="text-[14px] text-[var(--secondary-text)] hover:underline"
@@ -760,7 +761,7 @@ function PlannerBoard() {
                               setNovoTitulo("");
                             }}
                             aria-label={`Adicionar cartão em ${nomeColuna(col.id)}`}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-white hover:text-[var(--secondary-text)]"
+                            className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-white hover:text-[var(--secondary-text)]"
                           >
                             <Plus size={16} aria-hidden="true" />
                           </button>
@@ -897,7 +898,7 @@ function PlannerBoard() {
                                   }
                                   setConfirmarId(c.id);
                                 }}
-                                className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors ${
+                                className={`relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-[14px] before:content-[''] ${
                                   concluido
                                     ? "border-[var(--secondary)] bg-[var(--secondary)]"
                                     : "border-[var(--muted)] hover:border-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
@@ -988,7 +989,7 @@ function PlannerBoard() {
                                     }}
                                     aria-label="Avançar"
                                     title="Avançar"
-                                    className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
+                                    className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--secondary-light)]"
                                   >
                                     <ArrowRight size={14} aria-hidden="true" />
                                   </button>
@@ -1001,7 +1002,7 @@ function PlannerBoard() {
                                   }}
                                   aria-label="Remover cartão"
                                   title="Remover"
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                                  className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                                 >
                                   <Trash2 size={13} aria-hidden="true" />
                                 </button>
@@ -1054,7 +1055,7 @@ function PlannerBoard() {
               }}
               placeholder="Título do cartão (obrigatório)"
               aria-label="Título do cartão"
-              className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)]"
+              className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] focus-visible:ring-offset-2"
             />
 
             <div className="mt-5">
@@ -1096,22 +1097,22 @@ function PlannerBoard() {
                 }}
                 onBlur={adicionarTagPendente}
                 maxLength={30}
+                aria-label="Nova tag"
                 placeholder="Nova tag · Enter adiciona"
                 className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
               />
             </div>
 
             <div className="mt-5">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                Descrição
-              </p>
-              <textarea
-                value={dDesc}
-                onChange={(e) => setDDesc(e.target.value)}
-                rows={2}
-                placeholder="O que é esta entrega"
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-              />
+              <Campo label="Descrição">
+                <textarea
+                  value={dDesc}
+                  onChange={(e) => setDDesc(e.target.value)}
+                  rows={2}
+                  placeholder="O que é esta entrega"
+                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                />
+              </Campo>
             </div>
 
             <div className="mt-5 flex gap-3">
@@ -1123,6 +1124,7 @@ function PlannerBoard() {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
+                      aria-label="Data de início"
                       className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
                     >
                       {dInicio ? fmtDataCompleta(dInicio) : "Selecionar"}
@@ -1158,6 +1160,7 @@ function PlannerBoard() {
                   <PopoverTrigger asChild>
                     <button
                       type="button"
+                      aria-label="Data de fim (prazo)"
                       className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
                     >
                       {dFim ? fmtDataCompleta(dFim) : "Selecionar"}

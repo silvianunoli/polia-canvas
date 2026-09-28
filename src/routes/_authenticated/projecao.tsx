@@ -252,7 +252,7 @@ function ProjecaoPage() {
           <div className="mt-6">
             <Vazio
               icone={AlertTriangle}
-              titulo="Não conseguimos puxar os seus números agora."
+              titulo="A Pólia não conseguiu puxar os seus números agora."
               texto="Pode ter sido a conexão. Nada do que já está salvo se perdeu."
               acao={
                 <button

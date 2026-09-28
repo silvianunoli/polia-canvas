@@ -571,7 +571,10 @@ function PainelPage() {
 
           {/* Intenção do dia */}
           <div className="mt-6 max-w-[560px]">
-            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+            <p
+              id="intencao-dia-rotulo"
+              className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]"
+            >
               {intencaoSalva && !editandoIntencao
                 ? "Intenção de hoje"
                 : "Qual é a sua intenção pra hoje?"}
@@ -587,7 +590,8 @@ function PainelPage() {
                     if (e.key === "Escape" && intencaoSalva) setEditandoIntencao(false);
                   }}
                   placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
-                  className="h-[38px] flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                  aria-labelledby="intencao-dia-rotulo"
+                  className="h-[38px] flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary)]"
                 />
                 <button
                   type="button"

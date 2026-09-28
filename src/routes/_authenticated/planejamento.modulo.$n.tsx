@@ -420,13 +420,13 @@ function SecaoForm({
       } else {
         setErroGeracao((s) => ({
           ...s,
-          [i]: "Não conseguimos gerar o rascunho agora. Tenta de novo.",
+          [i]: "A Aimer não conseguiu gerar o rascunho agora. Tenta de novo.",
         }));
       }
     } catch {
       setErroGeracao((s) => ({
         ...s,
-        [i]: "Não conseguimos gerar o rascunho agora. Tenta de novo.",
+        [i]: "A Aimer não conseguiu gerar o rascunho agora. Tenta de novo.",
       }));
     } finally {
       setGerando((s) => ({ ...s, [i]: false }));
@@ -497,7 +497,7 @@ function SecaoForm({
                 value={valores[i]}
                 onChange={(e) => onChange(i, formatarMoedaDigitada(e.target.value))}
                 placeholder="R$ 0,00"
-                className="w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none"
+                className="w-full rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none"
               />
             </label>
           ) : (
@@ -510,7 +510,7 @@ function SecaoForm({
                 onChange={(e) => onChange(i, e.target.value)}
                 disabled={gerando[i]}
                 placeholder="Escreva aqui…"
-                className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none disabled:bg-[var(--surface)]"
+                className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
               />
 
               {cotaAtingida[i] ? (
@@ -527,7 +527,7 @@ function SecaoForm({
                 </p>
               ) : contextoInsuf[i] ? (
                 <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                  Preciso saber o básico do seu negócio antes. Responda o que você vende (
+                  A Aimer precisa saber o básico do seu negócio antes. Responda o que você vende (
                   <Link
                     to="/produtos"
                     className="font-medium text-[var(--secondary-text)] no-underline"

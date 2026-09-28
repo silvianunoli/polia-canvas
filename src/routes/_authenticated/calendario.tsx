@@ -14,6 +14,7 @@ import {
   CalendarDays,
 } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
+import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -358,7 +359,7 @@ function CalendarioPage() {
               type="button"
               onClick={() => setMes((m) => subMonths(m, 1))}
               aria-label="Mês anterior"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
             >
               <ChevronLeft size={16} aria-hidden="true" />
             </button>
@@ -369,7 +370,7 @@ function CalendarioPage() {
               type="button"
               onClick={() => setMes((m) => addMonths(m, 1))}
               aria-label="Próximo mês"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--line)] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
             >
               <ChevronRight size={16} aria-hidden="true" />
             </button>
@@ -602,17 +603,19 @@ function CalendarioPage() {
                   </p>
                 ) : mostrarComposer ? (
                   <div className="mb-4 flex flex-col gap-2 rounded-lg border border-[var(--line)] p-3">
-                    <input
-                      autoFocus
-                      value={novoTitulo}
-                      onChange={(e) => setNovoTitulo(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Escape") setMostrarComposer(false);
-                      }}
-                      placeholder="Nome da tarefa"
-                      maxLength={200}
-                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                    />
+                    <Campo label="Nome da tarefa">
+                      <input
+                        autoFocus
+                        value={novoTitulo}
+                        onChange={(e) => setNovoTitulo(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Escape") setMostrarComposer(false);
+                        }}
+                        placeholder="Nome da tarefa"
+                        maxLength={200}
+                        className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                      />
+                    </Campo>
                     <Select value={novoQuadroId} onValueChange={setNovoQuadroId}>
                       <SelectTrigger className="h-9 w-full rounded-lg border border-[var(--line)] px-3 text-[13px] text-[var(--ink-soft)] focus:ring-0">
                         <SelectValue placeholder="Escolher quadro" />
@@ -705,7 +708,7 @@ function CalendarioPage() {
                             href={item.href}
                             target={item.fonte === "google" ? "_blank" : undefined}
                             rel={item.fonte === "google" ? "noreferrer" : undefined}
-                            className="shrink-0 text-[var(--secondary-text)]"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--secondary-text)]"
                             aria-label="Abrir"
                           >
                             <ExternalLink size={14} aria-hidden="true" />

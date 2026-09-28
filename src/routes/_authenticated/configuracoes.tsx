@@ -1,4 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import { z } from "zod";
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { registrar, registrarEAguardar } from "@/lib/founder-eventos";
@@ -940,10 +949,13 @@ function ToggleLinha({
         <p className="font-sans text-[14px] font-medium text-[var(--ink)]">{titulo}</p>
         <p className="font-sans text-[12px] text-[var(--ink-soft)]">{descricao}</p>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} />
+      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={titulo} />
     </div>
   );
 }
+
+// Elementos nativos que um <label htmlFor> consegue de fato associar.
+const CAMPO_ELEMENTOS_ASSOCIAVEIS = new Set(["input", "textarea", "select"]);
 
 function Campo({
   label,
@@ -954,12 +966,36 @@ function Campo({
   saved?: boolean;
   children: React.ReactNode;
 }) {
+  const id = useId();
+  // Alguns usos deste Campo embrulham só o input (associa de verdade); outros
+  // embrulham um <div> de exibição sem controle nenhum (ex: bloco de e-mail),
+  // então só clonamos o primeiro filho com o id quando ele é mesmo um campo
+  // nativo — senão o label vira <span>, sem htmlFor pra um alvo que não existe.
+  const filhos = Children.toArray(children);
+  const [primeiroFilho, ...demaisFilhos] = filhos;
+  const associavel =
+    isValidElement(primeiroFilho) &&
+    typeof primeiroFilho.type === "string" &&
+    CAMPO_ELEMENTOS_ASSOCIAVEIS.has(primeiroFilho.type);
+  const conteudo = associavel
+    ? [cloneElement(primeiroFilho as ReactElement<{ id?: string }>, { id }), ...demaisFilhos]
+    : filhos;
+
   return (
     <div>
       <p className="flex items-center justify-between mb-2">
-        <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-          {label}
-        </span>
+        {associavel ? (
+          <label
+            htmlFor={id}
+            className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]"
+          >
+            {label}
+          </label>
+        ) : (
+          <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+            {label}
+          </span>
+        )}
         {saved !== undefined && (
           <span
             className={`font-sans text-[12px] text-[var(--muted)] normal-case tracking-normal font-normal transition-opacity duration-200 ${
@@ -970,7 +1006,7 @@ function Campo({
           </span>
         )}
       </p>
-      {children}
+      {conteudo}
     </div>
   );
 }

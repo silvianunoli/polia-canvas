@@ -341,6 +341,7 @@ function CadernoPage() {
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar anotações…"
+                  aria-label="Buscar anotações"
                   className="h-10 w-full rounded-xl border border-[var(--line)] bg-white pl-9 pr-3 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
                 />
               </div>
@@ -403,10 +404,18 @@ function CadernoPage() {
                     .trim();
                   return (
                     <li key={n.id}>
-                      <button
-                        type="button"
+                      <div
+                        role="button"
+                        tabIndex={0}
                         onClick={() => selecionar(n.id)}
-                        className={`block w-full rounded-xl border bg-white p-4 text-left transition-colors ${
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            selecionar(n.id);
+                          }
+                        }}
+                        aria-pressed={ativa}
+                        className={`block w-full cursor-pointer rounded-xl border bg-white p-4 text-left transition-colors ${
                           ativa
                             ? "border-[var(--secondary)]"
                             : "border-[var(--line)] hover:border-[var(--secondary)]"
@@ -451,7 +460,7 @@ function CadernoPage() {
                             </p>
                           </div>
                         </div>
-                      </button>
+                      </div>
                     </li>
                   );
                 })}
