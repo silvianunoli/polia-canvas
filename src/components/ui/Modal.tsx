@@ -34,7 +34,7 @@ export function Modal({ open, onOpenChange, title, description, children, footer
           <Dialog.Close
             type="button"
             aria-label="Fechar"
-            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)]"
+            className="absolute right-2 top-2 inline-flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)]"
           >
             <X size={18} aria-hidden="true" />
           </Dialog.Close>

@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
@@ -304,7 +304,12 @@ export function Sidebar() {
               <Menu size={22} aria-hidden="true" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="polia-v3 w-64 bg-[var(--surface)] p-0">
+          <SheetContent
+            side="left"
+            className="polia-v3 w-64 bg-[var(--surface)] p-0"
+            style={TOKEN_BRIDGE_V3}
+          >
+            <SheetTitle className="sr-only">Menu de navegação</SheetTitle>
             <Body
               compact={false}
               onNavigate={() => setMobileOpen(false)}

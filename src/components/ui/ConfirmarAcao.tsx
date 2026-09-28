@@ -17,6 +17,8 @@ interface ConfirmarAcaoProps {
   titulo: string;
   descricao?: ReactNode;
   textoConfirmar?: string;
+  /** Texto do botão enquanto `carregando` é true. Default: "Confirmando…". */
+  textoCarregando?: string;
   textoCancelar?: string;
   onConfirmar: () => void;
   /** Se true, o botão de confirmar usa --danger em vez de --secondary. */
@@ -24,8 +26,9 @@ interface ConfirmarAcaoProps {
   /**
    * Desabilita os dois botões enquanto onConfirmar ainda está em andamento —
    * evita duplo clique num pedido que demora (mesmo cuidado de
-   * `desconectarMutation.isPending` em calendario.tsx). Opcional: quem chama
-   * uma ação síncrona pode ignorar essa prop.
+   * `desconectarMutation.isPending` em calendario.tsx). Também troca o texto
+   * do botão e anuncia a mudança pro leitor de tela (role="status"), pra não
+   * ficar sem nenhum retorno perceptível durante o carregamento.
    */
   carregando?: boolean;
 }
@@ -43,6 +46,7 @@ export function ConfirmarAcao({
   titulo,
   descricao,
   textoConfirmar = "Confirmar",
+  textoCarregando = "Confirmando…",
   textoCancelar = "Cancelar",
   onConfirmar,
   destrutivo = false,
@@ -51,7 +55,7 @@ export function ConfirmarAcao({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent
-        className="polia-v3 rounded-xl border border-[var(--line)] bg-white"
+        className="polia-v3 rounded-xl border border-[var(--line)] bg-white shadow-none"
         style={TOKEN_BRIDGE_V3}
       >
         <AlertDialogHeader>
@@ -65,20 +69,23 @@ export function ConfirmarAcao({
         <AlertDialogFooter>
           <AlertDialogCancel
             disabled={carregando}
-            className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+            className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] shadow-none hover:bg-[var(--surface)]"
           >
             {textoCancelar}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirmar}
             disabled={carregando}
+            aria-busy={carregando}
             className={
               destrutivo
-                ? "rounded-lg bg-[var(--danger)] text-white hover:opacity-90"
-                : "rounded-lg bg-[var(--secondary)] text-[var(--secondary-ink)] hover:opacity-90"
+                ? "rounded-lg bg-[var(--danger)] text-white shadow-none hover:bg-[var(--danger)] hover:opacity-90"
+                : "rounded-lg bg-[var(--secondary)] text-[var(--secondary-ink)] shadow-none hover:bg-[var(--secondary)] hover:opacity-90"
             }
           >
-            {textoConfirmar}
+            <span role="status" aria-live="polite">
+              {carregando ? textoCarregando : textoConfirmar}
+            </span>
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

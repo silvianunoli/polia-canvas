@@ -15,6 +15,13 @@ interface MenuOpcoesProps {
   itens: MenuOpcoesItem[];
   /** Conteúdo do gatilho. Sem essa prop, cai no ícone MoreHorizontal padrão. */
   trigger?: ReactNode;
+  /**
+   * Nome acessível do gatilho. Obrigatório quando `trigger` é passado (o
+   * conteúdo customizado pode ser só um ícone, sem texto visível) — sem essa
+   * prop nesse caso o botão fica sem nome nenhum pro leitor de tela. Sem
+   * `trigger`, o padrão "Mais opções" já cobre o ícone MoreHorizontal.
+   */
+  ariaLabel?: string;
   align?: "start" | "end";
 }
 
@@ -27,13 +34,13 @@ interface MenuOpcoesProps {
  * foco por teclado e Esc/clique-fora funcionam mesmo se `trigger` for só um
  * ícone solto, sem precisar que quem chama lembre de embrulhar num botão.
  */
-export function MenuOpcoes({ itens, trigger, align = "end" }: MenuOpcoesProps) {
+export function MenuOpcoes({ itens, trigger, ariaLabel, align = "end" }: MenuOpcoesProps) {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         type="button"
-        aria-label={trigger ? undefined : "Mais opções"}
-        className="inline-flex items-center justify-center rounded-md p-1 text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] data-[state=open]:bg-[var(--surface)] data-[state=open]:text-[var(--ink)]"
+        aria-label={ariaLabel ?? (trigger ? undefined : "Mais opções")}
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-[var(--muted)] transition-colors duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] data-[state=open]:bg-[var(--surface)] data-[state=open]:text-[var(--ink)]"
       >
         {trigger ?? <MoreHorizontal size={18} aria-hidden="true" />}
       </DropdownMenu.Trigger>
