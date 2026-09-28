@@ -243,7 +243,7 @@ function LinhaCliente({
       .eq("id", cliente.id);
     setSalvandoStatus(false);
     if (error) {
-      toastErro("Não conseguimos atualizar o status. Tenta de novo.");
+      toastErro("A Pólia não conseguiu atualizar o status. Tenta de novo.");
       return;
     }
     track("cliente_status_atualizado", { status: novo });
@@ -282,7 +282,7 @@ function LinhaCliente({
       toastErro(
         jaRegistrada
           ? "Essa venda já foi registrada. Atualize a página."
-          : "Não conseguimos registrar a venda no Financeiro. Tenta de novo.",
+          : "A Pólia não conseguiu registrar a venda no Financeiro. Tenta de novo.",
       );
       // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
       if (jaRegistrada) onRegistrado();
@@ -324,10 +324,10 @@ function LinhaCliente({
       </div>
       <div className="flex shrink-0 items-center gap-3">
         <MenuOpcoes
+          ariaLabel={`Alterar status do pedido. Status atual: ${cliente.status_pedido ?? "sem pedido"}.`}
           trigger={
             <span
-              aria-label={`Alterar status do pedido. Status atual: ${cliente.status_pedido ?? "sem pedido"}.`}
-              className={`rounded px-3 py-1 font-sans text-[11px] transition-opacity hover:opacity-80 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
+              className={`rounded px-3 py-1.5 font-sans text-[11px] transition-opacity hover:opacity-80 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
             >
               {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem pedido")}
             </span>
@@ -507,8 +507,10 @@ function ModalCliente({
       </div>
 
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] text-[var(--muted)]">Status do pedido</label>
-        <div className="flex flex-wrap gap-2">
+        <p id="cliente-status-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
+          Status do pedido
+        </p>
+        <div role="group" aria-labelledby="cliente-status-rotulo" className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setStatusPedido("")}
