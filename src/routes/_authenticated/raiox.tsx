@@ -281,7 +281,7 @@ function RaioXPage() {
             <Vazio
               icone={Sparkles}
               titulo="Nenhum raio-x deste mês ainda."
-              texto="Quando o seu mês tiver receitas e despesas registradas, a Pólia lê pra você o que aconteceu."
+              texto="Quando o seu mês tiver receitas e despesas registradas, a Aimer lê pra você o que aconteceu."
               acao={
                 <>
                   <button

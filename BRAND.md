@@ -17,10 +17,10 @@
 
 - **Pólia = a marca, a empresa e o produto.** É quem faz as promessas do produto, explica funcionalidades, responde dúvida, escreve página institucional e mensagem de interface. Fala no plural institucional ("a gente"), nunca em 1ª pessoa do singular.
 - **Sil = a fundadora real.** É a pessoa por trás da Pólia e a voz da história real de origem. 1ª pessoa do singular, autoridade pela história vivida, não por personagem. Só aparece assim em `/sobre`, `/lista-de-espera`, no bloco de contato da `/ajuda` e em relato explicitamente assinado por ela.
-- **Aimer = personagem fictícia criada com inteligência artificial**, protagonista do universo narrativo da Pólia e uma das faces públicas da marca (Reels, storytelling, construção pública) — nunca o chatbot de suporte, nunca "a Pólia falando", nunca equivalente a uma atendente virtual estilo Lu do Magalu. Detalhe completo em §11.
+- **Aimer = personagem fictícia criada com inteligência artificial**, protagonista do universo narrativo da Pólia e uma das faces públicas da marca (Reels, storytelling, construção pública) — nunca "a Pólia falando", nunca equivalente a uma atendente virtual estilo Lu do Magalu. Exceção registrada em 2026-09-28: dentro do produto logado (Planejamento, Plano de Conteúdo, Raio-X) Aimer também é o nome da IA funcional de geração de rascunho — ver §11.
 - **Ana = a persona da usuária.** Quem a Pólia escuta e atende. É o nome que aparece em copy, exemplo, story, VPC e mapa de empatia. Plural: as Anas. Ana não é personagem do universo narrativo da Aimer. Nomes mortos da persona: "Aimer" (era, até 23/07) e "Dani".
 - **Regra fundamental:** Aimer não é Ana. Aimer não é Sil. Ana não é personagem da novelinha da Aimer. Sil não entra na ficção. Não atribuir à Aimer experiência que pertence à Sil, nem à Pólia-empresa a voz de personagem que pertence à Aimer.
-- A IA que completa o Planejamento (Gemini) é uma função sem nome, **NÃO** é a Aimer.
+- A IA que gera rascunho no Planejamento, no Plano de Conteúdo e no Raio-X (Gemini) usa o nome e a persona **Aimer** dentro do produto logado (decisão de 2026-09-28, ver §11) — é a única superfície funcional em que Aimer é o sujeito; fora dela, o sujeito continua sendo a Pólia.
 
 ## 1. Eixo e essência da marca — número-primeiro
 
@@ -116,7 +116,7 @@ O diferencial não está em cada tela isoladamente. Está no encadeamento: **Pla
 
 Aimer é uma personagem fictícia criada com inteligência artificial, protagonista do universo narrativo da Pólia. Existe principalmente para: contar a construção da Pólia; viver situações relacionadas ao universo da marca; aparecer nos Reels; aproximar a marca das pessoas; transformar a construção do produto em história; dar continuidade narrativa à presença da Pólia nas redes.
 
-**Removido em 2026-09-15** (era a definição antiga, agora morta — ver §17): Aimer como chatbot de suporte, chatbot da marca, "a Pólia falando", equivalente à Lu do Magalu, ou representante direta da empresa em toda superfície.
+**Removido em 2026-09-15** (era a definição antiga, agora morta — ver §17): Aimer como "a Pólia falando", equivalente à Lu do Magalu, ou representante direta da empresa em toda superfície. **Exceção registrada em 2026-09-28:** dentro do produto logado, a IA funcional de geração de rascunho em Planejamento, Plano de Conteúdo e Raio-X usa o nome e a persona Aimer (menu, rota `/aimer`, botões e mensagens de geração) — nessas três superfícies, e só nelas, Aimer volta a ser também o nome da assistente funcional. Fora delas, o sujeito de qualquer mensagem de sistema continua sendo a Pólia.
 
 **Personalidade:** alegre, empolgada, simpática, persuasiva, curiosa, ansiosa, expressiva, energética, otimista, espontânea. Regra central: **Aimer tem pressa emocional, não pressa estratégica** — pode estar muito empolgada com uma descoberta, uma etapa da construção ou algo que está por vir, mas não deve ser infantil, parecer adolescente, virar caricatura, agir como coach, gritar entusiasmo ou tratar o público como incapaz.
 
