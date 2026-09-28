@@ -225,7 +225,7 @@ describe("iniciarAssinatura", () => {
     const r = await iniciar({ data: { plano: "controle_mensal" }, context });
     expect(r).toEqual({
       clientSecret: null,
-      error: "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+      error: "A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.",
     });
   });
 
@@ -241,7 +241,7 @@ describe("iniciarAssinatura", () => {
     const r = await iniciar({ data: { plano: "controle_mensal" }, context });
     expect(r).toEqual({
       clientSecret: null,
-      error: "Não conseguimos preparar o pagamento agora. Tenta de novo.",
+      error: "A Pólia não conseguiu preparar o pagamento agora. Tenta de novo.",
     });
   });
 
@@ -252,7 +252,7 @@ describe("iniciarAssinatura", () => {
     const r = await iniciar({ data: { plano: "controle_mensal" }, context });
     expect(r).toEqual({
       clientSecret: null,
-      error: "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+      error: "A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.",
     });
     expect(dispararAlerta).toHaveBeenCalledWith(
       "checkout_erro",
@@ -357,7 +357,7 @@ describe("abrirPortalCobranca", () => {
     stripeMock.billingPortal.sessions.create.mockResolvedValue({ url: null });
     expect(await portal({ context })).toEqual({
       url: null,
-      error: "Não conseguimos abrir a página de pagamento agora. Tenta de novo.",
+      error: "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
     });
   });
 
@@ -366,7 +366,7 @@ describe("abrirPortalCobranca", () => {
     stripeMock.billingPortal.sessions.create.mockRejectedValue(new Error("No configuration"));
     expect(await portal({ context })).toEqual({
       url: null,
-      error: "Não conseguimos abrir a página de pagamento agora. Tenta de novo.",
+      error: "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
     });
     expect(dispararAlerta).toHaveBeenCalledWith(
       "portal_cobranca_erro",
@@ -420,7 +420,7 @@ describe("cancelarAssinatura", () => {
     stripeMock.subscriptions.update.mockRejectedValue(new Error("x"));
     expect(await cancelar({ context })).toEqual({
       ok: false,
-      error: "Não conseguimos cancelar sua assinatura agora. Tenta de novo.",
+      error: "A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.",
     });
   });
 });

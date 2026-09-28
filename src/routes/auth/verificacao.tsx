@@ -75,7 +75,7 @@ function VerificacaoPage() {
         </div>
         <SerifHeadline size={26}>Quase lá.</SerifHeadline>
         <p className="mt-2 text-center text-[14px] leading-relaxed text-[var(--ink-soft)]">
-          A gente mandou um link pra{" "}
+          A Pólia mandou um link pra{" "}
           <span className="font-semibold text-[var(--ink)]">{email ?? "seu e-mail"}</span>.
           <br />
           Confirma pra entrar.

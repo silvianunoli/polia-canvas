@@ -40,7 +40,7 @@ describe("ERROR_COPY", () => {
     }
   });
 
-  // Mensagem de sistema fala pela empresa no plural ("a gente"), nunca em 1ª
+  // Mensagem de sistema tem a Pólia como sujeito (nunca "a gente"), nunca em 1ª
   // pessoa do singular, que é reservada à Sil em /sobre e afins.
   it.each(CODIGOS)("%s não fala em 1ª pessoa do singular", (code) => {
     for (const texto of textosVisiveis(code)) {

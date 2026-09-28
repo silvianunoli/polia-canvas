@@ -167,7 +167,7 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("Não conseguimos salvar a nota. O texto ainda está na tela."),
+    onError: () => toastErro("A Pólia não conseguiu salvar a nota. O texto ainda está na tela."),
     onSuccess: (id) => {
       // Só reflete "salvo" se ainda estivermos na mesma nota (evita closure obsoleta).
       if (idCarregadoRef.current === id) {
@@ -209,7 +209,7 @@ function CadernoPage() {
       if (error) throw error;
       return { id: data?.id as string | undefined, titulo: t };
     },
-    onError: () => toastErro("Não conseguimos criar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia não conseguiu criar a nota. Tenta de novo."),
     onSuccess: ({ id, titulo: tituloCriado }) => {
       track("nota_criada");
       invalidar();
@@ -232,7 +232,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("Não conseguimos fixar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia não conseguiu fixar a nota. Tenta de novo."),
   });
 
   // Exclusão com soft delete (mantém deleted_at) + toast de 6s com desfazer.
@@ -245,7 +245,7 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("Não conseguimos excluir a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia não conseguiu excluir a nota. Tenta de novo."),
     onSuccess: (id) => {
       invalidar();
       const nota = notas.find((n) => n.id === id);
@@ -262,7 +262,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("Não conseguimos restaurar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia não conseguiu restaurar a nota. Tenta de novo."),
   });
 
   function mostrarToast(msg: string, notaId: string) {

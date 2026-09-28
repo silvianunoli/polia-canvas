@@ -32,8 +32,8 @@ const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
 const TIMEOUT_MS = 8000;
 
 const ERRO_REDE =
-  "Não conseguimos salvar agora. Suas respostas estão guardadas aqui, é só tentar de novo.";
-const ERRO_EMAIL = "Esse e-mail não parece completo. Confere pra gente?";
+  "A Pólia não conseguiu salvar agora. Suas respostas estão guardadas aqui, é só tentar de novo.";
+const ERRO_EMAIL = "Esse e-mail não parece completo. Confere o endereço?";
 const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
 const ERRO_TURNSTILE_CARREGAMENTO =
   "A verificação de segurança não carregou. Pode ser bloqueador de anúncios ou de privacidade ativo. Recarrega a página e tenta de novo.";

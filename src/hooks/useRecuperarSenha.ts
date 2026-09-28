@@ -30,7 +30,7 @@ export function useRecuperarSenha() {
       redirectTo: `${window.location.origin}/auth/redefinir-senha`,
     });
     if (error) {
-      toastErro("Não conseguimos enviar agora. Tenta de novo em alguns segundos.");
+      toastErro("A Pólia não conseguiu enviar agora. Tenta de novo em alguns segundos.");
       return false;
     }
     return true;

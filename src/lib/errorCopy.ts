@@ -38,11 +38,11 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
     pageTitle: "Página não encontrada",
     icon: Compass,
     primaryAction: { label: "Ir pro início", href: "/painel" },
-    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
+    secondaryAction: { label: "Falar com a Pólia", href: "/ajuda#contato" },
   },
   "500": {
-    title: "Algo travou do nosso lado.",
-    subtitle: "Não foi nada que você fez. O erro já chegou pra gente e os seus dados estão salvos.",
+    title: "Algo travou do lado da Pólia.",
+    subtitle: "Não foi nada que você fez. O erro já chegou pra Pólia e os seus dados estão salvos.",
     pageTitle: "Erro interno",
     icon: AlertTriangle,
     // Recarregar de verdade: antes os dois botões iam pro mesmo lugar e o
@@ -52,11 +52,11 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   },
   "403": {
     title: "Essa parte é de acesso restrito.",
-    subtitle: "Se acha que deveria ter, fala com a gente.",
+    subtitle: "Se acha que deveria ter, fala com a Pólia.",
     pageTitle: "Acesso restrito",
     icon: Lock,
     primaryAction: { label: "Ir pro painel", href: "/painel" },
-    secondaryAction: { label: "Falar com a gente", href: "/ajuda#contato" },
+    secondaryAction: { label: "Falar com a Pólia", href: "/ajuda#contato" },
   },
   manutencao: {
     title: "A Pólia está em manutenção agora.",
@@ -75,14 +75,14 @@ export const ERROR_COPY: Record<ErrorCode, CopyMap> = {
   "sessao-expirada": {
     title: "Sua sessão expirou.",
     subtitle:
-      "Por segurança, a gente encerrou o acesso. Entra de novo pra continuar de onde parou.",
+      "Por segurança, a Pólia encerrou o acesso. Entra de novo pra continuar de onde parou.",
     pageTitle: "Sessão expirada",
     icon: Clock,
     primaryAction: { label: "Entrar", href: "/auth/login" },
   },
   "link-expirado": {
     title: "Esse link expirou.",
-    subtitle: "Pede um link novo que a gente manda na hora.",
+    subtitle: "Pede um link novo que a Pólia manda na hora.",
     pageTitle: "Link expirado",
     icon: Link2Off,
     primaryAction: { label: "Enviar novo link", href: "/auth/esqueci-senha" },

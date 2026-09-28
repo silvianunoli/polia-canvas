@@ -151,7 +151,7 @@ function PlannerIndex() {
       if (slug) navigate({ to: "/planner/$slug", params: { slug } });
     },
     onError: () => {
-      toastErro("Não conseguimos criar o quadro agora. Tenta de novo.");
+      toastErro("A Pólia não conseguiu criar o quadro agora. Tenta de novo.");
     },
   });
 

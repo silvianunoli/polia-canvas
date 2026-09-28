@@ -32,8 +32,8 @@ describe("toasts", () => {
   });
 
   it("toastErro fica 6 s (erro não pode sumir antes de ser lido)", () => {
-    toastErro("Não conseguimos salvar");
-    expect(toastMock.error).toHaveBeenCalledWith("Não conseguimos salvar", {
+    toastErro("A Pólia não conseguiu salvar");
+    expect(toastMock.error).toHaveBeenCalledWith("A Pólia não conseguiu salvar", {
       duration: 6000,
       action: undefined,
     });

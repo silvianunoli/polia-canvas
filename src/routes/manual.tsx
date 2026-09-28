@@ -41,14 +41,15 @@ import {
 
 const TIMEOUT_MS = 8000;
 
-const ERRO_REDE = "Não conseguimos salvar agora. O e-mail continua aqui, é só tentar de novo.";
-const ERRO_EMAIL = "Esse e-mail não parece completo. Confere pra gente?";
+const ERRO_REDE =
+  "A Pólia não conseguiu salvar agora. O e-mail continua aqui, é só tentar de novo.";
+const ERRO_EMAIL = "Esse e-mail não parece completo. Confere o endereço?";
 const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
 const ERRO_TURNSTILE_CARREGAMENTO =
   "A verificação de segurança não carregou. Pode ser bloqueador de anúncios ou de privacidade ativo. Recarrega a página e tenta de novo.";
 
 const AVISOS: Record<"link" | "erro", string> = {
-  link: "Esse link de download não funcionou. Pede o manual de novo aqui que a gente manda outro.",
+  link: "Esse link de download não funcionou. Pede o manual de novo aqui que a Pólia manda outro.",
   erro: "O download não saiu agora. Pede o manual de novo, ou tenta pelo link do e-mail daqui a pouco.",
 };
 

@@ -282,6 +282,6 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
   tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Premium libera bem mais.",
-  falhaIa: "Não conseguimos responder agora. Tenta de novo.",
+  falhaIa: "A Pólia não conseguiu responder agora. Tenta de novo.",
   manutencao: "A Aimer está em manutenção rápida. Volta já já.",
 } as const;

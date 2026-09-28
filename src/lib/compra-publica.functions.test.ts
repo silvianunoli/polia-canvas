@@ -37,7 +37,7 @@ import { iniciarCompraPublica } from "./compra-publica.functions";
 type Chamavel = (opts?: { data?: unknown }) => Promise<unknown>;
 const comprar = iniciarCompraPublica as unknown as Chamavel;
 
-const ERRO = "Não conseguimos abrir o checkout agora. Tenta de novo.";
+const ERRO = "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.";
 
 beforeEach(() => {
   sessionsCreate.mockReset();

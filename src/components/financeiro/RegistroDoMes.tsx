@@ -85,7 +85,7 @@ export function RegistroDoMes({
     const { error } = await supabase.from("lancamentos").delete().eq("id", lancamentoExcluir.id);
     setExcluindo(false);
     if (error) {
-      toastErro("Não conseguimos excluir o lançamento. Tenta de novo.");
+      toastErro("A Pólia não conseguiu excluir o lançamento. Tenta de novo.");
       return;
     }
     track("lancamento_excluido", { tipo: lancamentoExcluir.tipo });

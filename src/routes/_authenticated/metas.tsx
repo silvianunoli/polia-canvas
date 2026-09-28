@@ -759,8 +759,10 @@ function ModalMeta({
 
       {/* Formato */}
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] text-[var(--muted)]">Formato da medida</label>
-        <div className="flex gap-2">
+        <p id="meta-formato-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
+          Formato da medida
+        </p>
+        <div role="group" aria-labelledby="meta-formato-rotulo" className="flex gap-2">
           {(
             [
               { id: "numero", label: "Quantidade" },

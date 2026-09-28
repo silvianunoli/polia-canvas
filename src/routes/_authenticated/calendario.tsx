@@ -199,12 +199,12 @@ function CalendarioPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "Não conseguimos conectar com o Google agora.");
+        toastErro(res.error ?? "A Pólia não conseguiu conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("Não conseguimos iniciar a conexão com o Google."),
+    onError: () => toastErro("A Pólia não conseguiu iniciar a conexão com o Google."),
   });
 
   const desconectarMutation = useMutation({
@@ -214,7 +214,7 @@ function CalendarioPage() {
       qc.invalidateQueries({ queryKey: ["google-eventos"] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("Não conseguimos desconectar agora."),
+    onError: () => toastErro("A Pólia não conseguiu desconectar agora."),
   });
 
   const criarTarefaMutation = useMutation({
@@ -244,7 +244,7 @@ function CalendarioPage() {
       setNovoTitulo("");
       toastSucesso("Tarefa criada.");
     },
-    onError: () => toastErro("Não conseguimos criar a tarefa. Tenta de novo."),
+    onError: () => toastErro("A Pólia não conseguiu criar a tarefa. Tenta de novo."),
   });
 
   const abrirComposer = () => {
@@ -263,10 +263,10 @@ function CalendarioPage() {
         if (res.ok) {
           track("evento_google_conectado");
           toastSucesso("Google Calendar conectado.");
-        } else toastErro(res.error ?? "Não conseguimos confirmar a conexão com o Google.");
+        } else toastErro(res.error ?? "A Pólia não conseguiu confirmar a conexão com o Google.");
         qc.invalidateQueries({ queryKey: ["google-status", userId] });
       })
-      .catch(() => toastErro("Não conseguimos confirmar a conexão com o Google."))
+      .catch(() => toastErro("A Pólia não conseguiu confirmar a conexão com o Google."))
       .finally(() => {
         setProcessandoCallback(false);
         navigate({ to: "/calendario", search: {}, replace: true });

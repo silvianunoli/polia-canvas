@@ -61,7 +61,7 @@ export function montarEmailManual({
     "",
     "Pólia One",
     TAGLINE_MANUAL,
-    "Alguma dúvida? Fale com a gente: https://usepolia.com.br/ajuda",
+    "Alguma dúvida? A Ajuda da Pólia responde: https://usepolia.com.br/ajuda",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
 

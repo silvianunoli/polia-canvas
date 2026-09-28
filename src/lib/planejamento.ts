@@ -42,7 +42,7 @@ export const MODULOS: Modulo[] = [
     n: 1,
     nome: "Razão de existir",
     subtitulo:
-      "Começa pela conta do mês. Depois, por que o negócio existe, para quem, e o que o diferencia.",
+      "Por que a marca existe, para quem, e o que a diferencia. A conta do mês abre o módulo como referência do que ela precisa sustentar.",
   },
   {
     n: 2,
@@ -95,7 +95,7 @@ export const SECOES: Secao[] = [
     modulo: 1,
     titulo: "A conta do mês",
     subtitulo:
-      "O Planejamento abre pelo número: o que você quer tirar daqui e o que o negócio custa todo mês.",
+      "Dois números de referência: o que você quer receber e o que o negócio custa todo mês. É o que a marca vai precisar sustentar, e o resto do Planejamento mostra por que ela vale isso.",
     // 2 campos: meta_mensal (o que ela quer receber) + custo_fixo (o que sai).
     perguntas: [
       {

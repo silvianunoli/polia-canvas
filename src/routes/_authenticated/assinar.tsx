@@ -83,7 +83,7 @@ function AssinarPage() {
       if (resultado.error || !resultado.clientSecret) {
         track("assinatura_falhou", { plano, motivo: resultado.error ?? "sem_client_secret" });
         toastErro(
-          resultado.error ?? "Não conseguimos iniciar sua assinatura agora. Tenta de novo.",
+          resultado.error ?? "A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.",
         );
         return;
       }
@@ -91,7 +91,7 @@ function AssinarPage() {
       setClientSecret(resultado.clientSecret);
     } catch {
       track("assinatura_falhou", { plano, motivo: "excecao_client" });
-      toastErro("Não conseguimos iniciar sua assinatura agora. Tenta de novo.");
+      toastErro("A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.");
     } finally {
       setPlanoIniciando(null);
     }

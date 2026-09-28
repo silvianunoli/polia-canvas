@@ -201,7 +201,7 @@ function DescadastrarPage() {
                   </h1>
                   <p className="mt-4 text-[17px] leading-[1.5] text-[var(--ink-soft)]">
                     Pode ter vindo cortado pelo programa de e-mail. Abra o link direto do rodapé da
-                    mensagem, ou escreva pra oi@usepolia.com.br que a gente tira na mão.
+                    mensagem, ou escreva pra oi@usepolia.com.br que a Pólia tira na mão.
                   </p>
                 </motion.div>
               )}

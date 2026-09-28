@@ -176,7 +176,7 @@ function ModalNovoChamado({
     });
     setSalvando(false);
     if (error) {
-      setErro(error.message || "Não conseguimos abrir o chamado. Tenta de novo.");
+      setErro(error.message || "A Pólia não conseguiu abrir o chamado. Tenta de novo.");
       return;
     }
     track("chamado_aberto", { urgente });

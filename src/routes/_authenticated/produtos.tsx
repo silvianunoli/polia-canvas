@@ -895,7 +895,7 @@ function Calculadora({
       .eq("id", produtoRecalcular.id);
     setSalvando(false);
     if (error) {
-      setErro(error.message || "Não conseguimos atualizar o preço. Tenta de novo.");
+      setErro(error.message || "A Pólia não conseguiu atualizar o preço. Tenta de novo.");
       return;
     }
     track("produto_preco_recalculado");
@@ -1592,8 +1592,10 @@ function ModalProduto({
 
       {/* Tipo */}
       <div className="mb-4">
-        <label className="mb-1 block text-[12px] text-[var(--muted)]">Tipo</label>
-        <div className="flex flex-wrap gap-2">
+        <p id="produto-tipo-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
+          Tipo
+        </p>
+        <div role="group" aria-labelledby="produto-tipo-rotulo" className="flex flex-wrap gap-2">
           {(
             [
               { id: "fisico", label: "Produto físico" },

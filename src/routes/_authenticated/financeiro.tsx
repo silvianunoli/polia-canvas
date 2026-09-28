@@ -329,7 +329,7 @@ function FinanceiroPage() {
     const { error } = await supabase.from("lancamentos").delete().eq("id", lancamentoExcluir.id);
     setExcluindoLancamento(false);
     if (error) {
-      toastErro("Não conseguimos excluir o lançamento. Tenta de novo.");
+      toastErro("A Pólia não conseguiu excluir o lançamento. Tenta de novo.");
       return;
     }
     track("lancamento_excluido", { tipo: lancamentoExcluir.tipo });
@@ -831,7 +831,7 @@ function ModalRegistrarVendaProduto({
     if (error) {
       // Mesmo motivo do modal de lançamento: técnico no log, casa na tela.
       console.error("venda_produto_registrar", error);
-      setErro("Não conseguimos registrar a venda agora. Tenta de novo.");
+      setErro("A Pólia não conseguiu registrar a venda agora. Tenta de novo.");
       return;
     }
     track("venda_produto_registrada", { produto_id: produto.id });

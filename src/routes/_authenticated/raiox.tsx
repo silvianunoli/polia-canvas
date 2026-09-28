@@ -114,11 +114,11 @@ function RaioXPage() {
       } else {
         setMotivo(resultado.motivo);
         if (resultado.motivo === "falha_ia") {
-          setErro("Não conseguimos ler o seu mês agora. Tenta de novo.");
+          setErro("A Pólia não conseguiu ler o seu mês agora. Tenta de novo.");
         }
       }
     } catch {
-      setErro("Não conseguimos ler o seu mês agora. Tenta de novo.");
+      setErro("A Pólia não conseguiu ler o seu mês agora. Tenta de novo.");
     } finally {
       setGerando(false);
     }
@@ -223,7 +223,7 @@ function RaioXPage() {
             <Vazio
               icone={CalendarClock}
               titulo="O mês ainda está correndo."
-              texto="A gente pode ler o que tem até aqui, ou escolha o mês passado, que está fechado."
+              texto="A Pólia lê o que tem até aqui, ou dá pra escolher o mês passado, que já fechou."
               acao={
                 <button
                   type="button"

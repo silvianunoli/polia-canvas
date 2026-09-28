@@ -42,7 +42,7 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         console.error("[CompraPublica] Sessão criada sem URL de checkout.");
         return {
           url: null,
-          error: "Não conseguimos abrir o checkout agora. Tenta de novo.",
+          error: "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.",
           sessionId: null,
         };
       }
@@ -54,7 +54,7 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
       });
       return {
         url: null,
-        error: "Não conseguimos abrir o checkout agora. Tenta de novo.",
+        error: "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.",
         sessionId: null,
       };
     }

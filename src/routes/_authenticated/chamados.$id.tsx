@@ -73,7 +73,7 @@ function ChamadoDetalhe() {
     });
     setEnviando(false);
     if (error) {
-      toastErro("Não conseguimos enviar sua mensagem. Tenta de novo.");
+      toastErro("A Pólia não conseguiu enviar sua mensagem. Tenta de novo.");
       return;
     }
     // Reabre o chamado se já tinha sido marcado como resolvido e a usuária voltou a escrever.
@@ -133,7 +133,7 @@ function ChamadoDetalhe() {
             <Vazio
               icone={MessageCircle}
               titulo="Ainda sem resposta por aqui."
-              texto="A gente responde em até um dia útil. Se lembrar de mais alguma coisa, escreve abaixo que entra no mesmo chamado."
+              texto="A Pólia responde em até um dia útil. Se lembrar de mais alguma coisa, escreve abaixo que entra no mesmo chamado."
             />
           </div>
         ) : (

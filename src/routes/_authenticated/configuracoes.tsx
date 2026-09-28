@@ -135,12 +135,12 @@ function ConfiguracoesPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "Não conseguimos conectar com o Google agora.");
+        toastErro(res.error ?? "A Pólia não conseguiu conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("Não conseguimos iniciar a conexão com o Google."),
+    onError: () => toastErro("A Pólia não conseguiu iniciar a conexão com o Google."),
   });
 
   const desconectarGoogleMutation = useMutation({
@@ -149,7 +149,7 @@ function ConfiguracoesPage() {
       queryClient.invalidateQueries({ queryKey: ["google-status", userId] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("Não conseguimos desconectar agora."),
+    onError: () => toastErro("A Pólia não conseguiu desconectar agora."),
   });
 
   // Portal da Stripe: sessão curta criada no servidor, a gente só redireciona.
@@ -158,13 +158,16 @@ function ConfiguracoesPage() {
     mutationFn: () => abrirPortalCobranca(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "Não conseguimos abrir a página de pagamento agora. Tenta de novo.");
+        toastErro(
+          res.error ?? "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
+        );
         return;
       }
       track("portal_cobranca_aberto");
       window.location.href = res.url;
     },
-    onError: () => toastErro("Não conseguimos abrir a página de pagamento agora. Tenta de novo."),
+    onError: () =>
+      toastErro("A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo."),
   });
 
   const cancelar = async () => {
@@ -173,7 +176,7 @@ function ConfiguracoesPage() {
       const resultado = await cancelarAssinatura();
       if (!resultado.ok) {
         toastErro(
-          resultado.error ?? "Não conseguimos cancelar sua assinatura agora. Tenta de novo.",
+          resultado.error ?? "A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.",
         );
         return;
       }
@@ -182,7 +185,7 @@ function ConfiguracoesPage() {
       setConfirmandoCancelamento(false);
       invalidarAssinatura();
     } catch {
-      toastErro("Não conseguimos cancelar sua assinatura agora. Tenta de novo.");
+      toastErro("A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.");
     } finally {
       setCancelando(false);
     }
@@ -362,7 +365,7 @@ function ConfiguracoesPage() {
         if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
           setEmailErro("Esse e-mail já está em uso por outra conta.");
         } else {
-          setEmailErro("Não conseguimos trocar o e-mail agora. Tenta de novo.");
+          setEmailErro("A Pólia não conseguiu trocar o e-mail agora. Tenta de novo.");
         }
         return;
       }
@@ -396,12 +399,12 @@ function ConfiguracoesPage() {
       resultado = await excluirMinhaConta();
     } catch (err) {
       console.error("[Configurações] Falha ao chamar a exclusão de conta:", err);
-      toastErro("Não conseguimos excluir a conta agora. Confere a internet e tenta de novo.");
+      toastErro("A Pólia não conseguiu excluir a conta agora. Confere a internet e tenta de novo.");
       setExcluindo(false);
       return;
     }
     if (!resultado.ok) {
-      toastErro(resultado.error ?? "Não conseguimos excluir a conta agora. Tenta de novo.");
+      toastErro(resultado.error ?? "A Pólia não conseguiu excluir a conta agora. Tenta de novo.");
       setExcluindo(false);
       return;
     }
@@ -836,8 +839,7 @@ function ConfiguracoesPage() {
         {/* SEÇÃO 7 — AJUDA */}
         <Secao titulo="Ajuda">
           <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
-            dúvida rápida, fala com a gente em Ajuda. Coisa que precisa de acompanhamento, abre um
-            chamado.
+            dúvida rápida, a Ajuda responde. Coisa que precisa de acompanhamento, abre um chamado.
           </p>
           <div className="flex flex-wrap gap-2">
             <LinkInterno

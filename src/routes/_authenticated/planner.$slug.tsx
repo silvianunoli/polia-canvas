@@ -332,7 +332,7 @@ function PlannerBoard() {
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
-      toastErro("Não conseguimos mover o cartão. Tenta de novo.");
+      toastErro("A Pólia não conseguiu mover o cartão. Tenta de novo.");
       invalidar();
       return;
     }
@@ -343,7 +343,7 @@ function PlannerBoard() {
     updateLocal((l) => l.map((c) => (c.id === id ? { ...c, prioridade } : c)));
     const { error } = await supabase.from("tarefas").update({ prioridade }).eq("id", id);
     if (error) {
-      toastErro("Não conseguimos mudar a prioridade.");
+      toastErro("A Pólia não conseguiu mudar a prioridade.");
       invalidar();
     }
   };
@@ -352,7 +352,7 @@ function PlannerBoard() {
     updateLocal((l) => l.filter((c) => c.id !== id));
     const { error } = await supabase.from("tarefas").delete().eq("id", id);
     if (error) {
-      toastErro("Não conseguimos remover o cartão.");
+      toastErro("A Pólia não conseguiu remover o cartão.");
       invalidar();
     }
   };
@@ -390,7 +390,7 @@ function PlannerBoard() {
       },
     );
     if (error) {
-      toastErro("Não conseguimos renomear a coluna.");
+      toastErro("A Pólia não conseguiu renomear a coluna.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadro-colunas", quadroId] });
@@ -534,7 +534,7 @@ function PlannerBoard() {
       } as never)
       .eq("id", id);
     if (error) {
-      toastErro("Não conseguimos salvar as alterações do cartão.");
+      toastErro("A Pólia não conseguiu salvar as alterações do cartão.");
       invalidar();
     }
   };
@@ -579,7 +579,7 @@ function PlannerBoard() {
       prazo: hoje,
     } as never);
     if (error) {
-      toastErro("Não conseguimos salvar o cartão. Tenta de novo.");
+      toastErro("A Pólia não conseguiu salvar o cartão. Tenta de novo.");
       return;
     }
     track("tarefa_criada", { status });
@@ -752,7 +752,7 @@ function PlannerBoard() {
                             }}
                             aria-label="Renomear coluna"
                             title="Renomear coluna"
-                            className="rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100"
+                            className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-3 before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
                           >
                             <Pencil size={12} aria-hidden="true" />
                           </button>
@@ -1085,7 +1085,7 @@ function PlannerBoard() {
                         type="button"
                         onClick={() => setDTags((t) => t.filter((x) => x !== tag))}
                         aria-label={`Remover tag ${tag}`}
-                        className="flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                        className="relative flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] before:absolute before:-inset-[14px] before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                       >
                         <X size={11} aria-hidden="true" />
                       </button>

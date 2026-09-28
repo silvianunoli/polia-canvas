@@ -52,7 +52,7 @@ export const iniciarConexaoGoogle = createServerFn({ method: "POST" })
         { onConflict: "user_id" },
       );
     if (upsertError)
-      return { url: null, error: "Não conseguimos iniciar a conexão. Tenta de novo." };
+      return { url: null, error: "A Pólia não conseguiu iniciar a conexão. Tenta de novo." };
     return montarUrlConsentimento(state);
   });
 
@@ -68,7 +68,7 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
     }
     const { tokens, error } = await trocarCodigoPorTokens(data.code);
     if (error || !tokens)
-      return { ok: false, error: error ?? "Não conseguimos confirmar com o Google." };
+      return { ok: false, error: error ?? "A Pólia não conseguiu confirmar com o Google." };
 
     const email = await buscarEmailConectado(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
@@ -89,7 +89,7 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
     if (saveError)
       return {
         ok: false,
-        error: "Conectamos com o Google mas não conseguimos salvar. Tenta de novo.",
+        error: "A Pólia conectou com o Google, mas não conseguiu salvar. Tenta de novo.",
       };
     return { ok: true, error: null };
   });

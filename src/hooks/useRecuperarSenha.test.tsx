@@ -97,7 +97,7 @@ describe("useRecuperarSenha", () => {
     const { result } = renderHook(() => useRecuperarSenha());
     await enviar(result, "ana@exemplo.com");
     expect(toastErroMock).toHaveBeenCalledWith(
-      "Não conseguimos enviar agora. Tenta de novo em alguns segundos.",
+      "A Pólia não conseguiu enviar agora. Tenta de novo em alguns segundos.",
     );
     expect(result.current.sent).toBeNull();
     expect(result.current.cooldown).toBe(0);

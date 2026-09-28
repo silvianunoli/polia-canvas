@@ -189,7 +189,7 @@ describe("enviarConvite", () => {
     from.mockReturnValueOnce(consulta({ data: { usado_em: null } }));
     enviarEmailResend.mockResolvedValue(false);
     await expect(enviar({ data: { email: "a@b.co" }, context: admin })).rejects.toThrow(
-      "Não conseguimos enviar o convite agora. Tenta de novo.",
+      "A Pólia não conseguiu enviar o convite agora. Tenta de novo.",
     );
     // profiles + select do convite; o update de enviado_em nunca acontece.
     expect(from).toHaveBeenCalledTimes(2);

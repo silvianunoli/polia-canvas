@@ -58,7 +58,7 @@ export async function trocarCodigoPorTokens(
       console.error("Google trocarCodigo error:", res.status, await res.text());
       return {
         tokens: null,
-        error: "Não conseguimos confirmar a conexão com o Google. Tenta de novo.",
+        error: "A Pólia não conseguiu confirmar a conexão com o Google. Tenta de novo.",
       };
     }
     return { tokens: (await res.json()) as TokensGoogle, error: null };
@@ -148,7 +148,7 @@ export async function listarEventosGoogle(
       console.error("Google listarEventos error:", res.status, await res.text());
       return {
         eventos: null,
-        error: "Não conseguimos buscar os eventos do Google agora.",
+        error: "A Pólia não conseguiu buscar os eventos do Google agora.",
         expirado: false,
       };
     }

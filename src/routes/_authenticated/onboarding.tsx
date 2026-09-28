@@ -72,6 +72,19 @@ function OnboardingPage() {
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
       <div className="w-full px-5 pb-10 pt-6">
         {step > 1 && <StepIndicator step={step} />}
+        {/* Só até o passo 4: a partir do 5 as respostas já foram gravadas, e
+            voltar reenviaria o formulário do passo 4. */}
+        {step >= 2 && step <= 4 && (
+          <div className="mx-auto mt-2 w-full max-w-[900px]">
+            <button
+              type="button"
+              onClick={() => setStep((s) => s - 1)}
+              className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[14px] text-[var(--secondary-text)] hover:underline"
+            >
+              <span aria-hidden="true">←</span> Voltar
+            </button>
+          </div>
+        )}
         <div className="mx-auto w-full max-w-[900px]">
           {step === 1 && (
             <Step1
@@ -329,8 +342,8 @@ function Step3({
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Em que momento sua marca está?</Manuscrito>
-      <Headline size={64}>Conta a real pra mim.</Headline>
-      <Body>Sem julgamento. A gente começa de onde estiver.</Body>
+      <Headline size={64}>Sem pose, só o momento real.</Headline>
+      <Body>Sem julgamento. O Planejamento parte de onde a marca está hoje.</Body>
       <div className="grid w-full max-w-[820px] grid-cols-1 gap-4 md:grid-cols-3">
         {STAGES.map((o) => (
           <ChoiceCard
@@ -770,18 +783,18 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
 }
 
 /* ---------------- STEP 6 ---------------- */
-// Abre pela conta do mês (EST-01): o módulo 1 do Planejamento começa na seção
-// 1.0, financeira. Se esta tela prometesse só marca, a 1ª pergunta desmentiria
-// a promessa dois cliques depois.
+// O módulo 1 ainda abre na seção 1.0, financeira (EST-01). Esta tela cita a
+// conta do mês pra 1ª pergunta não desmentir a promessa, mas com a marca como
+// assunto e o número como referência (eixo marca-primeiro, 25/09/2026).
 const ETAPA1_DESC: Record<BusinessType, string> = {
   produto_fisico:
-    "Começa pela conta do mês. Depois, quem está por trás da marca, o que ela produz e de onde vem o que vende.",
+    "Quem está por trás da marca, o que ela produz e de onde vem o que vende. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
   produto_digital:
-    "Começa pela conta do mês. Depois, quem está por trás da marca, o que ela ensina e qual problema resolve.",
+    "Quem está por trás da marca, o que ela ensina e qual problema resolve. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
   servico:
-    "Começa pela conta do mês. Depois, quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
+    "Quem está por trás da marca, qual problema resolve e como funciona o trabalho. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
   hibrido:
-    "Começa pela conta do mês. Depois, quem está por trás da marca e como as duas frentes do negócio se complementam.",
+    "Quem está por trás da marca e como as duas frentes do negócio se complementam. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
 };
 
 function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
