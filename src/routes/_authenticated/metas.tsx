@@ -15,6 +15,8 @@ import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { Campo } from "@/components/ui/Campo";
+import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -719,19 +721,33 @@ function ModalMeta({
   };
 
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      title={edit ? "Editar meta" : "Nova meta"}
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando || !podeSalvar}
+            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+          >
+            {salvando ? "Salvando…" : edit ? "Salvar" : "Criar meta"}
+          </button>
+        </>
+      }
     >
-      <div
-        className="max-h-[90vh] w-full max-w-[440px] overflow-y-auto rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2 className="mb-5 text-[24px] text-[var(--ink)]">{edit ? "Editar meta" : "Nova meta"}</h2>
-
-        {/* Título */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Meta</label>
+      {/* Título */}
+      <div className="mb-4">
+        <Campo label="Meta" required>
           <input
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
@@ -740,65 +756,62 @@ function ModalMeta({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="ex: chegar a 30 clientes fixas"
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Formato */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Formato da medida</label>
-          <div className="flex gap-2">
-            {(
-              [
-                { id: "numero", label: "Quantidade" },
-                { id: "moeda", label: "Dinheiro (R$)" },
-              ] as { id: Formato; label: string }[]
-            ).map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setFormato(f.id)}
-                className={`rounded-lg border px-3 py-1.5 text-[13px] ${
-                  formato === f.id
-                    ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                    : "border-[var(--line)] text-[var(--ink-soft)]"
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+      {/* Formato */}
+      <div className="mb-4">
+        <label className="mb-1 block text-[12px] text-[var(--muted)]">Formato da medida</label>
+        <div className="flex gap-2">
+          {(
+            [
+              { id: "numero", label: "Quantidade" },
+              { id: "moeda", label: "Dinheiro (R$)" },
+            ] as { id: Formato; label: string }[]
+          ).map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFormato(f.id)}
+              className={`rounded-lg border px-3 py-1.5 text-[13px] ${
+                formato === f.id
+                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                  : "border-[var(--line)] text-[var(--ink-soft)]"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
+      </div>
 
-        {/* Alvo + (unidade) */}
-        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-[12px] text-[var(--muted)]">
-              {formato === "moeda" ? "Meta (R$)" : "Meta (quanto alcançar)"}
-            </label>
+      {/* Alvo + (unidade) */}
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <Campo label={formato === "moeda" ? "Meta (R$)" : "Meta (quanto alcançar)"} required>
+          <input
+            type="number"
+            inputMode="decimal"
+            value={alvo}
+            onChange={(e) => setAlvo(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            placeholder="0"
+          />
+        </Campo>
+        {formato === "numero" && (
+          <Campo label="Unidade">
             <input
-              type="number"
-              inputMode="decimal"
-              value={alvo}
-              onChange={(e) => setAlvo(e.target.value)}
+              value={unidade}
+              onChange={(e) => setUnidade(e.target.value)}
+              maxLength={24}
               className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-              placeholder="0"
+              placeholder="clientes, vendas…"
             />
-          </div>
-          {formato === "numero" && (
-            <div>
-              <label className="mb-1 block text-[12px] text-[var(--muted)]">Unidade</label>
-              <input
-                value={unidade}
-                onChange={(e) => setUnidade(e.target.value)}
-                maxLength={24}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
-                placeholder="clientes, vendas…"
-              />
-            </div>
-          )}
-        </div>
+          </Campo>
+        )}
+      </div>
 
-        {/* Atual */}
-        <div className="mb-4">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">Valor atual, hoje</label>
+      {/* Atual */}
+      <div className="mb-4">
+        <Campo label="Valor atual, hoje">
           <input
             type="number"
             inputMode="decimal"
@@ -807,39 +820,22 @@ function ModalMeta({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
             placeholder="0"
           />
-        </div>
+        </Campo>
+      </div>
 
-        {/* Prazo */}
-        <div className="mb-6">
-          <label className="mb-1 block text-[12px] text-[var(--muted)]">
-            Data alvo <span className="text-[var(--muted)]">(opcional)</span>
-          </label>
+      {/* Prazo */}
+      <div>
+        <Campo label="Data alvo (opcional)">
           <input
             type="date"
             value={prazo}
             onChange={(e) => setPrazo(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
           />
-        </div>
-
-        {erro && <p className="mb-3 text-[13px] text-[var(--danger)]">{erro}</p>}
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] hover:text-[var(--ink)]"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={salvar}
-            disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
-          >
-            {salvando ? "Salvando…" : edit ? "Salvar" : "Criar meta"}
-          </button>
-        </div>
+        </Campo>
       </div>
-    </div>
+
+      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+    </Modal>
   );
 }

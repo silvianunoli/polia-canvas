@@ -707,7 +707,7 @@ function PlannerBoard() {
                       : "border-[var(--line)] bg-[var(--surface)]"
                   }`}
                 >
-                  <div className="mb-3 flex items-center justify-between gap-1.5">
+                  <div className="group/col mb-3 flex items-center justify-between gap-1.5">
                     {renomeando ? (
                       <input
                         autoFocus
@@ -735,7 +735,7 @@ function PlannerBoard() {
                             }}
                             aria-label="Renomear coluna"
                             title="Renomear coluna"
-                            className="rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100"
+                            className="rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100"
                           >
                             <Pencil size={12} aria-hidden="true" />
                           </button>
@@ -776,7 +776,7 @@ function PlannerBoard() {
                     </div>
                   )}
 
-                  <div className="group/col flex flex-col gap-2.5">
+                  <div className="flex flex-col gap-2.5">
                     {lista.length === 0 && composerCol !== col.id ? (
                       /* "arraste um cartão pra cá" não existe no celular: não há
                          drag. O estado vazio precisa de um botão que faça a
@@ -832,6 +832,22 @@ function PlannerBoard() {
                               setOverCol(null);
                             }}
                             onClick={() => abrirDetalhe(c)}
+                            tabIndex={0}
+                            role="button"
+                            aria-label={`Abrir cartão: ${c.titulo}`}
+                            onKeyDown={(e) => {
+                              // Só reage quando o próprio cartão está focado — os 4 botões
+                              // internos (concluir, prioridade, avançar, remover) também
+                              // recebem Enter/Espaço, e o keydown deles borbulha até aqui
+                              // mesmo com stopPropagation no onClick (evento diferente).
+                              if (e.target !== e.currentTarget) return;
+                              if (e.key === "Enter") {
+                                abrirDetalhe(c);
+                              } else if (e.key === " ") {
+                                e.preventDefault();
+                                abrirDetalhe(c);
+                              }
+                            }}
                             className="group cursor-grab rounded-xl border border-[var(--line)] bg-white p-3 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:cursor-grabbing"
                             style={
                               saindo ? { opacity: 0, transform: "translateX(12px)" } : undefined

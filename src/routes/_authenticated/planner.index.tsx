@@ -167,6 +167,7 @@ function PlannerIndex() {
           onClick={() => setCriando((v) => !v)}
           disabled={cotaAtingida}
           className={BTN_ACAO}
+          aria-label="Novo quadro"
         >
           <Plus size={16} aria-hidden="true" />
           <span className="hidden sm:inline">Novo quadro</span>
