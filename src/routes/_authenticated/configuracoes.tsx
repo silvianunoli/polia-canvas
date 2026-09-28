@@ -26,6 +26,7 @@ import {
   desconectarGoogle,
 } from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { FieldError } from "@/components/ui/FieldError";
 
 const ERRO_AUTOSAVE =
   "A Pólia não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
@@ -462,18 +463,20 @@ function ConfiguracoesPage() {
                       className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                     />
                   </Campo>
-                  <Campo label="CONFIRMAR NOVO E-MAIL">
+                  <Campo
+                    label="CONFIRMAR NOVO E-MAIL"
+                    error={
+                      novoEmail && confirmarEmail && novoEmail !== confirmarEmail
+                        ? "os e-mails não coincidem"
+                        : undefined
+                    }
+                  >
                     <input
                       type="email"
                       value={confirmarEmail}
                       onChange={(e) => setConfirmarEmail(e.target.value)}
                       className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                     />
-                    {novoEmail && confirmarEmail && novoEmail !== confirmarEmail && (
-                      <p className="font-sans text-[var(--ink-soft)] text-[12px] mt-1.5">
-                        os e-mails não coincidem
-                      </p>
-                    )}
                   </Campo>
                   {emailErro && (
                     <p className="font-sans text-[var(--danger)] text-[12px]">{emailErro}</p>
@@ -637,18 +640,20 @@ function ConfiguracoesPage() {
                   className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                 />
               </Campo>
-              <Campo label="CONFIRMAR NOVA SENHA">
+              <Campo
+                label="CONFIRMAR NOVA SENHA"
+                error={
+                  novaSenha && confirmarSenha && novaSenha !== confirmarSenha
+                    ? "as senhas não coincidem"
+                    : undefined
+                }
+              >
                 <input
                   type="password"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
                   className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-all"
                 />
-                {novaSenha && confirmarSenha && novaSenha !== confirmarSenha && (
-                  <p className="font-sans text-[var(--ink-soft)] text-[12px] mt-1.5">
-                    as senhas não coincidem
-                  </p>
-                )}
               </Campo>
               {senhaErro && (
                 <p className="font-sans text-[var(--danger)] text-[12px]">{senhaErro}</p>
@@ -962,13 +967,17 @@ const CAMPO_ELEMENTOS_ASSOCIAVEIS = new Set(["input", "textarea", "select"]);
 function Campo({
   label,
   saved,
+  error,
   children,
 }: {
   label: string;
   saved?: boolean;
+  /** Mensagem de erro de validação. Liga ao primeiro filho associável via aria-describedby/aria-invalid. */
+  error?: string;
   children: React.ReactNode;
 }) {
   const id = useId();
+  const errorId = `${id}-erro`;
   // Alguns usos deste Campo embrulham só o input (associa de verdade); outros
   // embrulham um <div> de exibição sem controle nenhum (ex: bloco de e-mail),
   // então só clonamos o primeiro filho com o id quando ele é mesmo um campo
@@ -980,7 +989,21 @@ function Campo({
     typeof primeiroFilho.type === "string" &&
     CAMPO_ELEMENTOS_ASSOCIAVEIS.has(primeiroFilho.type);
   const conteudo = associavel
-    ? [cloneElement(primeiroFilho as ReactElement<{ id?: string }>, { id }), ...demaisFilhos]
+    ? [
+        cloneElement(
+          primeiroFilho as ReactElement<{
+            id?: string;
+            "aria-describedby"?: string;
+            "aria-invalid"?: boolean;
+          }>,
+          {
+            id,
+            "aria-describedby": error ? errorId : undefined,
+            "aria-invalid": error ? true : undefined,
+          },
+        ),
+        ...demaisFilhos,
+      ]
     : filhos;
 
   return (
@@ -1009,6 +1032,7 @@ function Campo({
         )}
       </p>
       {conteudo}
+      <FieldError id={errorId}>{error}</FieldError>
     </div>
   );
 }

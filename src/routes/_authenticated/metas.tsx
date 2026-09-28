@@ -15,18 +15,7 @@ import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export const Route = createFileRoute("/_authenticated/metas")({
   head: () => ({

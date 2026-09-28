@@ -153,7 +153,7 @@ export function RegistroDoMes({
                 onClick={() => excluir(l)}
                 aria-label={`Excluir lançamento de ${fmtValor(Number(l.valor))}`}
                 title="Excluir"
-                className="shrink-0 rounded-md p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--danger)]"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--danger)]"
               >
                 <Trash2 size={15} aria-hidden="true" />
               </button>

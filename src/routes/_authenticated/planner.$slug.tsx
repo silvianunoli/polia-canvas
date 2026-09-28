@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,18 +43,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 interface BoardSearch {
   filtro?: "today" | "7" | "30" | "all";
@@ -549,16 +539,6 @@ function PlannerBoard() {
     setDelArmado(false);
   };
 
-  useEffect(() => {
-    if (!detalheId) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") fecharDetalhe();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [detalheId, dTitulo, dTags, dDesc, dInicio, dFim, dHorario, dHpd, dMetaId, dNota, dColuna]);
-
   const cardEmDetalhe = cards.find((c) => c.id === detalheExibidoId) ?? null;
   const cardConfirmando = cards.find((c) => c.id === confirmarId) ?? null;
   const cardApagando = cards.find((c) => c.id === apagarCardId) ?? null;
@@ -657,6 +637,7 @@ function PlannerBoard() {
                 key={f.id}
                 type="button"
                 onClick={() => setFiltro(f.id)}
+                aria-pressed={filtro === f.id}
                 className={`rounded-[7px] px-3.5 py-1.5 text-[13px] font-medium transition-colors ${
                   filtro === f.id
                     ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
@@ -736,6 +717,7 @@ function PlannerBoard() {
                           if (e.key === "Escape") setRenomeandoCol(null);
                         }}
                         onBlur={() => salvarNomeColuna(col.id)}
+                        aria-label={`Renomear coluna ${nomeColuna(col.id)}`}
                         className="w-full rounded-md border border-[var(--secondary)] bg-white px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)] outline-none"
                       />
                     ) : (
@@ -788,6 +770,7 @@ function PlannerBoard() {
                         }}
                         maxLength={200}
                         placeholder="Nome do cartão · Enter salva, Esc cancela"
+                        aria-label="Nome do cartão"
                         className="w-full rounded-lg border border-[var(--line)] px-2.5 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
                       />
                     </div>
@@ -1025,299 +1008,292 @@ function PlannerBoard() {
         </div>
       </section>
 
-      {/* Overlay + painel de detalhe do cartão */}
-      <div
-        onClick={fecharDetalhe}
-        aria-hidden="true"
-        className="fixed inset-0 z-30 bg-[rgba(10,10,10,0.18)]"
-        style={{
-          opacity: detalheId ? 1 : 0,
-          pointerEvents: detalheId ? "auto" : "none",
-          transition: reduceMotion ? "none" : "opacity 200ms cubic-bezier(0.22,1,0.36,1)",
-        }}
-      />
-      <aside
-        role="dialog"
-        aria-label="Detalhe do cartão"
-        aria-hidden={!detalheId}
-        inert={!detalheId}
-        className="fixed right-0 top-0 z-40 h-screen w-[400px] max-w-[92vw] overflow-y-auto border-l border-[var(--line)] bg-white p-6"
-        style={{
-          transform: detalheId ? "translateX(0)" : "translateX(100%)",
-          transition: reduceMotion ? "none" : "transform 280ms cubic-bezier(0.32,0.72,0,1)",
-        }}
-      >
-        {cardEmDetalhe && (
-          <>
-            <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-              Cartão
-            </p>
-            <textarea
-              rows={1}
-              value={dTitulo}
-              onChange={(e) => setDTitulo(e.target.value.replace(/\n/g, " "))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") e.preventDefault();
-              }}
-              placeholder="Título do cartão (obrigatório)"
-              aria-label="Título do cartão"
-              className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] focus-visible:ring-offset-2"
-            />
-
-            <div className="mt-5">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                Tags
-              </p>
-              {dTags.length > 0 && (
-                <div className="mb-2 flex flex-wrap gap-1.5">
-                  {dTags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] py-1 pl-2.5 pr-1.5 text-[13px] text-[var(--ink-soft)]"
-                    >
-                      <span
-                        className="h-2 w-2 shrink-0 rounded-full"
-                        style={{ background: corDaTag(tag) }}
-                        aria-hidden="true"
-                      />
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => setDTags((t) => t.filter((x) => x !== tag))}
-                        aria-label={`Remover tag ${tag}`}
-                        className="relative flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] before:absolute before:-inset-[14px] before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                      >
-                        <X size={11} aria-hidden="true" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <input
-                value={dTagInput}
-                onChange={(e) => setDTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key !== "Enter") return;
-                  e.preventDefault();
-                  adicionarTagPendente();
-                }}
-                onBlur={adicionarTagPendente}
-                maxLength={30}
-                aria-label="Nova tag"
-                placeholder="Nova tag · Enter adiciona"
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-              />
-            </div>
-
-            <div className="mt-5">
-              <Campo label="Descrição">
-                <textarea
-                  value={dDesc}
-                  onChange={(e) => setDDesc(e.target.value)}
-                  rows={2}
-                  placeholder="O que é esta entrega"
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                />
-              </Campo>
-            </div>
-
-            <div className="mt-5 flex gap-3">
-              <div className="flex-1">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Início <span className="text-[var(--danger)]">*</span>
-                </p>
-                <Popover open={inicioAberto} onOpenChange={setInicioAberto}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Data de início"
-                      className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                    >
-                      {dInicio ? fmtDataCompleta(dInicio) : "Selecionar"}
-                      <CalendarDays
-                        size={15}
-                        className="shrink-0 text-[var(--muted)]"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="start"
-                    className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
-                    style={TOKEN_BRIDGE_V3}
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={dataDeIso(dInicio)}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        setDInicio(isoDeData(d));
-                        setInicioAberto(false);
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div className="flex-1">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Fim (prazo) <span className="text-[var(--danger)]">*</span>
-                </p>
-                <Popover open={fimAberto} onOpenChange={setFimAberto}>
-                  <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Data de fim (prazo)"
-                      className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                    >
-                      {dFim ? fmtDataCompleta(dFim) : "Selecionar"}
-                      <CalendarDays
-                        size={15}
-                        className="shrink-0 text-[var(--muted)]"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    align="start"
-                    className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
-                    style={TOKEN_BRIDGE_V3}
-                  >
-                    <Calendar
-                      mode="single"
-                      selected={dataDeIso(dFim)}
-                      onSelect={(d) => {
-                        if (!d) return;
-                        setDFim(isoDeData(d));
-                        setFimAberto(false);
-                      }}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="mt-5 flex gap-3">
-              <div className="flex-1">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Horário
-                </p>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={dHorario}
-                  onChange={(e) => setDHorario(e.target.value)}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (v && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(v)) setDHorario("");
-                  }}
-                  maxLength={5}
-                  placeholder="14:00"
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                />
-              </div>
-              <div className="flex-1">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Horas por dia
-                </p>
-                <input
-                  type="number"
-                  min={0}
-                  max={24}
-                  step={0.5}
-                  value={dHpd}
-                  onChange={(e) => setDHpd(e.target.value)}
-                  placeholder="Ex: 2"
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
-                />
-              </div>
-            </div>
-
-            <div className="mt-5">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                Vinculado à meta
-              </p>
-              <Select
-                value={dMetaId || "none"}
-                onValueChange={(v) => setDMetaId(v === "none" ? "" : v)}
-              >
-                <SelectTrigger className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0">
-                  <SelectValue placeholder="Nenhuma" />
-                </SelectTrigger>
-                <SelectContent
-                  className="polia-v3 rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)]"
-                  style={TOKEN_BRIDGE_V3}
-                >
-                  <SelectItem value="none" className="text-[14px]">
-                    Nenhuma
-                  </SelectItem>
-                  {metas.map((m) => (
-                    <SelectItem key={m.id} value={m.id} className="text-[14px]">
-                      {m.titulo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="mt-5">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                Anotações rápidas
+      {/* Painel de detalhe do cartão — Sheet do Radix cuida de foco preso, Esc
+          e nome acessível; o overlay some junto (antes era feito à mão aqui). */}
+      <Sheet open={!!detalheId} onOpenChange={(open) => !open && fecharDetalhe()}>
+        <SheetContent
+          side="right"
+          className="polia-v3 h-screen w-[400px] max-w-[92vw] overflow-y-auto border-l border-[var(--line)] bg-white p-6"
+          style={TOKEN_BRIDGE_V3}
+        >
+          {/* "Cartão" logo abaixo já funciona como título visual do painel —
+              este SheetTitle só dá nome acessível, sem duplicar na tela. */}
+          <SheetTitle className="sr-only">Detalhe do cartão</SheetTitle>
+          {cardEmDetalhe && (
+            <>
+              <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                Cartão
               </p>
               <textarea
-                value={dNota}
-                onChange={(e) => setDNota(e.target.value)}
-                rows={3}
-                placeholder="Notas soltas durante a execução"
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                rows={1}
+                value={dTitulo}
+                onChange={(e) => setDTitulo(e.target.value.replace(/\n/g, " "))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") e.preventDefault();
+                }}
+                placeholder="Título do cartão (obrigatório)"
+                aria-label="Título do cartão"
+                className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] focus-visible:ring-offset-2"
               />
-            </div>
 
-            <div className="mt-5">
-              <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                Coluna
-              </p>
-              <Select value={dColuna} onValueChange={(v) => setDColuna(v as ColId)}>
-                <SelectTrigger className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent
-                  className="polia-v3 rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)]"
-                  style={TOKEN_BRIDGE_V3}
+              <div className="mt-5">
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                  Tags
+                </p>
+                {dTags.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {dTags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] py-1 pl-2.5 pr-1.5 text-[13px] text-[var(--ink-soft)]"
+                      >
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: corDaTag(tag) }}
+                          aria-hidden="true"
+                        />
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => setDTags((t) => t.filter((x) => x !== tag))}
+                          aria-label={`Remover tag ${tag}`}
+                          className="relative flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] before:absolute before:-inset-[14px] before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                        >
+                          <X size={11} aria-hidden="true" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <input
+                  value={dTagInput}
+                  onChange={(e) => setDTagInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter") return;
+                    e.preventDefault();
+                    adicionarTagPendente();
+                  }}
+                  onBlur={adicionarTagPendente}
+                  maxLength={30}
+                  aria-label="Nova tag"
+                  placeholder="Nova tag · Enter adiciona"
+                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                />
+              </div>
+
+              <div className="mt-5">
+                <Campo label="Descrição">
+                  <textarea
+                    value={dDesc}
+                    onChange={(e) => setDDesc(e.target.value)}
+                    rows={2}
+                    placeholder="O que é esta entrega"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                  />
+                </Campo>
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <div className="flex-1">
+                  <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Início <span className="text-[var(--danger)]">*</span>
+                  </p>
+                  <Popover open={inicioAberto} onOpenChange={setInicioAberto}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Data de início"
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                      >
+                        {dInicio ? fmtDataCompleta(dInicio) : "Selecionar"}
+                        <CalendarDays
+                          size={15}
+                          className="shrink-0 text-[var(--muted)]"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
+                      style={TOKEN_BRIDGE_V3}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={dataDeIso(dInicio)}
+                        onSelect={(d) => {
+                          if (!d) return;
+                          setDInicio(isoDeData(d));
+                          setInicioAberto(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex-1">
+                  <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Fim (prazo) <span className="text-[var(--danger)]">*</span>
+                  </p>
+                  <Popover open={fimAberto} onOpenChange={setFimAberto}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="Data de fim (prazo)"
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                      >
+                        {dFim ? fmtDataCompleta(dFim) : "Selecionar"}
+                        <CalendarDays
+                          size={15}
+                          className="shrink-0 text-[var(--muted)]"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="start"
+                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
+                      style={TOKEN_BRIDGE_V3}
+                    >
+                      <Calendar
+                        mode="single"
+                        selected={dataDeIso(dFim)}
+                        onSelect={(d) => {
+                          if (!d) return;
+                          setDFim(isoDeData(d));
+                          setFimAberto(false);
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <div className="flex-1">
+                  <Campo label="Horário">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={dHorario}
+                      onChange={(e) => setDHorario(e.target.value)}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v && !/^([01]\d|2[0-3]):([0-5]\d)$/.test(v)) setDHorario("");
+                      }}
+                      maxLength={5}
+                      placeholder="14:00"
+                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                    />
+                  </Campo>
+                </div>
+                <div className="flex-1">
+                  <Campo label="Horas por dia">
+                    <input
+                      type="number"
+                      min={0}
+                      max={24}
+                      step={0.5}
+                      value={dHpd}
+                      onChange={(e) => setDHpd(e.target.value)}
+                      placeholder="Ex: 2"
+                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                    />
+                  </Campo>
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                  Vinculado à meta
+                </p>
+                <Select
+                  value={dMetaId || "none"}
+                  onValueChange={(v) => setDMetaId(v === "none" ? "" : v)}
                 >
-                  {COLUNAS_BASE.map((col) => (
-                    <SelectItem key={col.id} value={col.id} className="text-[14px]">
-                      {nomeColuna(col.id)}
+                  <SelectTrigger
+                    aria-label="Vinculado à meta"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0"
+                  >
+                    <SelectValue placeholder="Nenhuma" />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="polia-v3 rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)]"
+                    style={TOKEN_BRIDGE_V3}
+                  >
+                    <SelectItem value="none" className="text-[14px]">
+                      Nenhuma
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    {metas.map((m) => (
+                      <SelectItem key={m.id} value={m.id} className="text-[14px]">
+                        {m.titulo}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="mt-8 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={fecharDetalhe}
-                className="rounded-lg bg-[var(--secondary)] px-4 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-colors hover:opacity-90"
-              >
-                Salvar e fechar
-              </button>
-              <button
-                type="button"
-                onClick={excluirDoDetalhe}
-                className="rounded-md px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
-              >
-                {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
-              </button>
-            </div>
-            {/* Aqui não tem desfazer: a confirmação diz o que some junto. */}
-            {delArmado && (
-              <p className="mt-2 text-right text-[12px] text-[var(--muted)]">
-                Some com prazo, etiquetas e anotações.
-              </p>
-            )}
-          </>
-        )}
-      </aside>
+              <div className="mt-5">
+                <Campo label="Anotações rápidas">
+                  <textarea
+                    value={dNota}
+                    onChange={(e) => setDNota(e.target.value)}
+                    rows={3}
+                    placeholder="Notas soltas durante a execução"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                  />
+                </Campo>
+              </div>
+
+              <div className="mt-5">
+                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                  Coluna
+                </p>
+                <Select value={dColuna} onValueChange={(v) => setDColuna(v as ColId)}>
+                  <SelectTrigger
+                    aria-label="Coluna"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent
+                    className="polia-v3 rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)]"
+                    style={TOKEN_BRIDGE_V3}
+                  >
+                    {COLUNAS_BASE.map((col) => (
+                      <SelectItem key={col.id} value={col.id} className="text-[14px]">
+                        {nomeColuna(col.id)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-8 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={fecharDetalhe}
+                  className="rounded-lg bg-[var(--secondary)] px-4 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-colors hover:opacity-90"
+                >
+                  Salvar e fechar
+                </button>
+                <button
+                  type="button"
+                  onClick={excluirDoDetalhe}
+                  className="rounded-md px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
+                >
+                  {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
+                </button>
+              </div>
+              {/* Aqui não tem desfazer: a confirmação diz o que some junto. */}
+              {delArmado && (
+                <p className="mt-2 text-right text-[12px] text-[var(--muted)]">
+                  Some com prazo, etiquetas e anotações.
+                </p>
+              )}
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <AlertDialog open={!!confirmarId} onOpenChange={(open) => !open && setConfirmarId(null)}>
         <AlertDialogContent

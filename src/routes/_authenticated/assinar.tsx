@@ -123,6 +123,7 @@ function AssinarPage() {
               key={c.id}
               type="button"
               onClick={() => setCiclo(c.id)}
+              aria-pressed={ciclo === c.id}
               className={`rounded-md px-4 py-2 font-sans text-[13px] font-medium transition-colors ${
                 ciclo === c.id
                   ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"

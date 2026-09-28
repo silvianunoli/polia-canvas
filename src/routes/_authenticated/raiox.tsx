@@ -159,6 +159,7 @@ function RaioXPage() {
         {/* Só não existe na tela de upgrade (return acima), que não tem conteúdo de IA. */}
         <AvisoConteudoIA texto="O raio-x é gerado por inteligência artificial. Os números vêm dos dados registrados aqui; a leitura é escrita pela IA e pode errar. Vale conferir antes de decidir." />
         <select
+          aria-label="Mês do raio-x"
           value={`${selecionado.mes}-${selecionado.ano}`}
           onChange={(e) => {
             const [mes, ano] = e.target.value.split("-").map(Number);

@@ -199,7 +199,12 @@ function AimerPage() {
             </div>
           </div>
         ) : (
-          <div className="mt-5 flex-1 space-y-4">
+          <div
+            className="mt-5 flex-1 space-y-4"
+            role="log"
+            aria-live="polite"
+            aria-label="Conversa com a Aimer"
+          >
             {mensagens.map((msg) => (
               <div
                 key={msg.id}

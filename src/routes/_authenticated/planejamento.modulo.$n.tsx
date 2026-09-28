@@ -242,10 +242,17 @@ function ModuloPage() {
     >
       <div>
         {/* Barra de progresso do módulo */}
-        <div className="mb-8 h-1 w-full overflow-hidden rounded-full bg-[var(--line)]">
-          <div
-            className="h-full rounded-full bg-[var(--secondary)] transition-all"
-            style={{ width: `${total > 0 ? ((idx < 0 ? 0 : idx) / total) * 100 : 0}%` }}
+        <div
+          className="mb-8 h-1 w-full overflow-hidden rounded-full bg-[var(--line)]"
+          role="progressbar"
+          aria-valuenow={idx < 0 ? 0 : idx}
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-label={`${idx < 0 ? 0 : idx} de ${total} seções concluídas`}
+        >
+          <span
+            className="block h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+            style={{ transform: `scaleX(${total > 0 ? (idx < 0 ? 0 : idx) / total : 0})` }}
           />
         </div>
 
@@ -510,89 +517,97 @@ function SecaoForm({
                 onChange={(e) => onChange(i, e.target.value)}
                 disabled={gerando[i]}
                 placeholder="Escreva aqui…"
+                aria-describedby={
+                  cotaAtingida[i] || contextoInsuf[i] || erroGeracao[i]
+                    ? `pergunta-${i}-mensagem`
+                    : undefined
+                }
+                aria-invalid={erroGeracao[i] ? true : undefined}
                 className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
               />
 
-              {cotaAtingida[i] ? (
-                <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                  Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas vezes
-                  precisar.{" "}
-                  <Link
-                    to="/upgrade"
-                    search={{ rota: "/planejamento", tier: "controle" }}
-                    className="font-medium text-[var(--secondary-text)] no-underline"
-                  >
-                    Conhecer o Premium
-                  </Link>
-                </p>
-              ) : contextoInsuf[i] ? (
-                <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                  A Aimer precisa saber o básico do seu negócio antes. Responda o que você vende (
-                  <Link
-                    to="/produtos"
-                    className="font-medium text-[var(--secondary-text)] no-underline"
-                  >
-                    Produtos
-                  </Link>
-                  ) e o tipo do seu negócio (
-                  <Link
-                    to="/configuracoes"
-                    className="font-medium text-[var(--secondary-text)] no-underline"
-                  >
-                    Configurações
-                  </Link>
-                  ) e a Aimer rascunha o resto.
-                </p>
-              ) : erroGeracao[i] ? (
-                <p className="mt-2 text-[13px] text-[var(--danger)]">
-                  {erroGeracao[i]}{" "}
+              <div id={`pergunta-${i}-mensagem`} aria-live="polite">
+                {cotaAtingida[i] ? (
+                  <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                    Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas
+                    vezes precisar.{" "}
+                    <Link
+                      to="/upgrade"
+                      search={{ rota: "/planejamento", tier: "controle" }}
+                      className="font-medium text-[var(--secondary-text)] no-underline"
+                    >
+                      Conhecer o Premium
+                    </Link>
+                  </p>
+                ) : contextoInsuf[i] ? (
+                  <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                    A Aimer precisa saber o básico do seu negócio antes. Responda o que você vende (
+                    <Link
+                      to="/produtos"
+                      className="font-medium text-[var(--secondary-text)] no-underline"
+                    >
+                      Produtos
+                    </Link>
+                    ) e o tipo do seu negócio (
+                    <Link
+                      to="/configuracoes"
+                      className="font-medium text-[var(--secondary-text)] no-underline"
+                    >
+                      Configurações
+                    </Link>
+                    ) e a Aimer rascunha o resto.
+                  </p>
+                ) : erroGeracao[i] ? (
+                  <p className="mt-2 text-[13px] text-[var(--danger)]">
+                    {erroGeracao[i]}{" "}
+                    <button
+                      type="button"
+                      onClick={() => void gerarComAimer(i)}
+                      className="font-medium underline"
+                    >
+                      Tentar de novo
+                    </button>
+                  </p>
+                ) : rascunho[i] != null ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
+                      <Sparkles size={11} aria-hidden="true" />
+                      rascunho de IA
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => usarRascunho(i)}
+                      className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                    >
+                      Usar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => descartarRascunho(i)}
+                      className="text-[13px] text-[var(--muted)] hover:underline"
+                    >
+                      Descartar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void gerarComAimer(i)}
+                      className="text-[13px] text-[var(--muted)] hover:underline"
+                    >
+                      Gerar outro
+                    </button>
+                  </div>
+                ) : (
                   <button
                     type="button"
                     onClick={() => void gerarComAimer(i)}
-                    className="font-medium underline"
+                    disabled={gerando[i]}
+                    className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                   >
-                    Tentar de novo
+                    <Sparkles size={13} aria-hidden="true" />
+                    {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
                   </button>
-                </p>
-              ) : rascunho[i] != null ? (
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
-                    <Sparkles size={11} aria-hidden="true" />
-                    rascunho de IA
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => usarRascunho(i)}
-                    className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-                  >
-                    Usar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => descartarRascunho(i)}
-                    className="text-[13px] text-[var(--muted)] hover:underline"
-                  >
-                    Descartar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void gerarComAimer(i)}
-                    className="text-[13px] text-[var(--muted)] hover:underline"
-                  >
-                    Gerar outro
-                  </button>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => void gerarComAimer(i)}
-                  disabled={gerando[i]}
-                  className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-                >
-                  <Sparkles size={13} aria-hidden="true" />
-                  {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
-                </button>
-              )}
+                )}
+              </div>
             </label>
           ),
         )}

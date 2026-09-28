@@ -390,6 +390,7 @@ function CalendarioPage() {
           <button
             type="button"
             onClick={() => setMostrarPlanner((v) => !v)}
+            aria-pressed={mostrarPlanner}
             className={`rounded-full border px-3 py-1.5 text-[13px] transition-colors ${
               mostrarPlanner
                 ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
@@ -402,6 +403,7 @@ function CalendarioPage() {
             type="button"
             onClick={() => conectado && setMostrarGoogle((v) => !v)}
             disabled={!conectado}
+            aria-pressed={mostrarGoogle}
             title={!conectado ? "Conecte o Google Calendar pra filtrar por ele" : undefined}
             className={`rounded-full border px-3 py-1.5 text-[13px] transition-colors ${
               !conectado
@@ -482,11 +484,17 @@ function CalendarioPage() {
             const foraDoMes = !isSameMonth(dia, mes);
             const hoje = isToday(dia);
             const selecionado = diaSelecionado === iso;
+            const numeroDia = format(dia, "d");
+            const rotuloDia =
+              itens.length > 0
+                ? `${numeroDia}, ${itens.length} ${itens.length === 1 ? "item" : "itens"}`
+                : numeroDia;
             return (
               <button
                 type="button"
                 key={iso}
                 onClick={() => setDiaSelecionado(selecionado ? null : iso)}
+                aria-label={rotuloDia}
                 className={`flex min-h-[60px] flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors sm:min-h-[100px] ${
                   selecionado
                     ? "border-[var(--secondary)] bg-[var(--secondary-light)]"

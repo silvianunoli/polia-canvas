@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Lock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
@@ -31,18 +32,6 @@ import {
   type RegistrarTipo,
 } from "@/components/financeiro/ModalLancamento";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
 
 interface FinanceiroSearch {
   registrar?: RegistrarTipo;
@@ -462,7 +451,15 @@ function FinanceiroPage() {
               </LinkInterno>
             </p>
           ) : (
-            <div className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white">
+            <div
+              className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white"
+              role="progressbar"
+              aria-valuenow={Math.round(metaPct)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label="Progresso da Meta do mês"
+              aria-valuetext={`${fmt(Math.round(entradas))} de ${fmt(metaAlvo)}, ${Math.round(metaPct)}% da meta`}
+            >
               {/* O corte fica só no preenchimento: no trilho, cortava os rótulos
                   das marcas e o selo de "entraram até aqui", que moram fora dele. */}
               <div className="absolute inset-0 overflow-hidden rounded-lg">
@@ -923,7 +920,11 @@ function ModalRegistrarVendaProduto({
         </>
       )}
 
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

@@ -12,18 +12,7 @@ import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({

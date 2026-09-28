@@ -8,6 +8,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
+import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -338,51 +339,86 @@ function ProjecaoPage() {
               </div>
 
               <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
-                <Campo
-                  label="Custos fixos do mês (R$)"
-                  valor={custosFixosTxt ?? paraCampo(custosFixosBase)}
-                  onChange={(v) => {
-                    setCustosFixosTxt(v);
-                    validarCampo("custosFixos", v);
-                  }}
-                  erro={erroValidacao.custosFixos}
-                />
-                <Campo
-                  label="Pró-labore desejado (R$)"
-                  valor={proLaboreTxt ?? String(proLaboreBase ?? "")}
-                  onChange={(v) => {
-                    setProLaboreTxt(v);
-                    validarCampo("proLabore", v);
-                  }}
-                  erro={erroValidacao.proLabore}
-                />
-                <Campo
-                  label="Ticket médio (R$)"
-                  valor={ticketTxt ?? paraCampo(ticketBase)}
-                  onChange={(v) => {
-                    setTicketTxt(v);
-                    validarCampo("ticket", v);
-                  }}
-                  erro={erroValidacao.ticket}
-                />
-                <Campo
-                  label="Custo médio (R$)"
-                  valor={custoTxt ?? paraCampo(custoBase)}
-                  onChange={(v) => {
-                    setCustoTxt(v);
-                    validarCampo("custo", v);
-                  }}
-                  erro={erroValidacao.custo}
-                />
-                <Campo
-                  label="Meta do mês (R$)"
-                  valor={metaTxt ?? String(metaMes?.valor_alvo ?? "")}
-                  onChange={(v) => {
-                    setMetaTxt(v);
-                    validarCampo("meta", v);
-                  }}
-                  erro={erroValidacao.meta}
-                />
+                <Campo label="Custos fixos do mês (R$)" error={erroValidacao.custosFixos}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={custosFixosTxt ?? paraCampo(custosFixosBase)}
+                    onChange={(e) => {
+                      setCustosFixosTxt(e.target.value);
+                      validarCampo("custosFixos", e.target.value);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                      erroValidacao.custosFixos
+                        ? "border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                </Campo>
+                <Campo label="Pró-labore desejado (R$)" error={erroValidacao.proLabore}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={proLaboreTxt ?? String(proLaboreBase ?? "")}
+                    onChange={(e) => {
+                      setProLaboreTxt(e.target.value);
+                      validarCampo("proLabore", e.target.value);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                      erroValidacao.proLabore
+                        ? "border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                </Campo>
+                <Campo label="Ticket médio (R$)" error={erroValidacao.ticket}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={ticketTxt ?? paraCampo(ticketBase)}
+                    onChange={(e) => {
+                      setTicketTxt(e.target.value);
+                      validarCampo("ticket", e.target.value);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                      erroValidacao.ticket
+                        ? "border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                </Campo>
+                <Campo label="Custo médio (R$)" error={erroValidacao.custo}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={custoTxt ?? paraCampo(custoBase)}
+                    onChange={(e) => {
+                      setCustoTxt(e.target.value);
+                      validarCampo("custo", e.target.value);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                      erroValidacao.custo
+                        ? "border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                </Campo>
+                <Campo label="Meta do mês (R$)" error={erroValidacao.meta}>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={metaTxt ?? String(metaMes?.valor_alvo ?? "")}
+                    onChange={(e) => {
+                      setMetaTxt(e.target.value);
+                      validarCampo("meta", e.target.value);
+                    }}
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                      erroValidacao.meta
+                        ? "border-[var(--danger)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                    }`}
+                  />
+                </Campo>
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
@@ -422,33 +458,5 @@ function ProjecaoPage() {
         )}
       </div>
     </PaginaLogada>
-  );
-}
-
-function Campo({
-  label,
-  valor,
-  onChange,
-  erro,
-}: {
-  label: string;
-  valor: string;
-  onChange: (v: string) => void;
-  erro?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="text-[12px] font-medium text-[var(--ink-soft)]">{label}</span>
-      <input
-        type="text"
-        inputMode="decimal"
-        value={valor}
-        onChange={(e) => onChange(e.target.value)}
-        className={`mt-1 w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none focus:shadow-[0_0_0_3px_var(--secondary-light)] ${
-          erro ? "border-[var(--danger)]" : "border-[var(--line)] focus:border-[var(--secondary)]"
-        }`}
-      />
-      {erro && <span className="mt-1 block text-[12px] text-[var(--danger)]">{erro}</span>}
-    </label>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
@@ -195,18 +196,6 @@ function camposDoLayout(n: number): string[] {
 }
 
 // ── Hooks / helpers de motion ──
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
-
 function useEntrada() {
   const [shown, setShown] = useState(false);
   useEffect(() => {

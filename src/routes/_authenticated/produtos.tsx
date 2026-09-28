@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
@@ -28,19 +29,6 @@ import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
-
-// ── Motion ──
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
 
 export const Route = createFileRoute("/_authenticated/produtos")({
   head: () => ({
@@ -1288,15 +1276,16 @@ function CampoNum({
   value,
   onChange,
   dica,
+  error,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   dica?: string;
+  error?: string;
 }) {
   return (
-    <label className="block">
-      <span className="mb-1 block text-[12px] text-[var(--muted)]">{label}</span>
+    <Campo label={label} hint={dica} error={error}>
       <input
         type="number"
         inputMode="decimal"
@@ -1305,8 +1294,7 @@ function CampoNum({
         className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
         placeholder="0"
       />
-      {dica && <span className="mt-1 block text-[11px] text-[var(--muted)]">{dica}</span>}
-    </label>
+    </Campo>
   );
 }
 
@@ -1352,28 +1340,24 @@ function LinhaMaterial({
 }) {
   return (
     <div className="rounded-lg border border-[var(--line)] p-3">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_90px_120px_auto]">
+      <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[1fr_90px_120px_auto]">
         <input
           value={item.nome}
           onChange={(e) => onChange({ ...item, nome: e.target.value })}
           placeholder="Ex: Farinha"
           className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
         />
-        <input
-          type="number"
-          inputMode="decimal"
+        <CampoNum
+          label="Quantidade"
           value={item.quantidade}
-          onChange={(e) => onChange({ ...item, quantidade: e.target.value })}
-          placeholder="qtd"
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          onChange={(v) => onChange({ ...item, quantidade: v })}
+          error={numInvalido(item.quantidade) ? "Coloque um número." : undefined}
         />
-        <input
-          type="number"
-          inputMode="decimal"
+        <CampoNum
+          label="Custo unitário (R$)"
           value={item.custoUnitario}
-          onChange={(e) => onChange({ ...item, custoUnitario: e.target.value })}
-          placeholder="custo unit. (R$)"
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          onChange={(v) => onChange({ ...item, custoUnitario: v })}
+          error={numInvalido(item.custoUnitario) ? "Coloque um número." : undefined}
         />
         <div className="flex items-center gap-1">
           <button
@@ -1396,9 +1380,6 @@ function LinhaMaterial({
           </button>
         </div>
       </div>
-      {(numInvalido(item.quantidade) || numInvalido(item.custoUnitario)) && (
-        <p className="mt-1.5 text-[12px] text-[var(--danger)]">Coloque um número.</p>
-      )}
     </div>
   );
 }
@@ -1414,20 +1395,18 @@ function LinhaExtra({
 }) {
   return (
     <div className="rounded-lg border border-[var(--line)] p-3">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_120px_auto]">
+      <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-[1fr_120px_auto]">
         <input
           value={item.descricao}
           onChange={(e) => onChange({ ...item, descricao: e.target.value })}
           placeholder="Ex: Embalagem especial"
           className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
         />
-        <input
-          type="number"
-          inputMode="decimal"
+        <CampoNum
+          label="Valor (R$)"
           value={item.valor}
-          onChange={(e) => onChange({ ...item, valor: e.target.value })}
-          placeholder="valor (R$)"
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          onChange={(v) => onChange({ ...item, valor: v })}
+          error={numInvalido(item.valor) ? "Coloque um número." : undefined}
         />
         <button
           type="button"
@@ -1439,9 +1418,6 @@ function LinhaExtra({
           <Trash2 size={15} aria-hidden="true" />
         </button>
       </div>
-      {numInvalido(item.valor) && (
-        <p className="mt-1.5 text-[12px] text-[var(--danger)]">Coloque um número.</p>
-      )}
     </div>
   );
 }

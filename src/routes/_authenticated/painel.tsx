@@ -478,9 +478,18 @@ function PainelPage() {
   const [editandoIntencao, setEditandoIntencao] = useState(false);
   const [rascunhoIntencao, setRascunhoIntencao] = useState("");
   const intencaoSalva = dados?.intencao ?? null;
+  const inputIntencaoRef = useRef<HTMLInputElement>(null);
+  const botaoEditarIntencaoRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!editandoIntencao) setRascunhoIntencao(intencaoSalva ?? "");
   }, [intencaoSalva, editandoIntencao]);
+  // Enter/Escape desmontam o <input> (vira <span> + botão "Editar intenção") e,
+  // sem isso, o foco caía pro <body>. O input é focado ao entrar em modo edição;
+  // o botão "Editar intenção" é focado ao sair, depois que o novo elemento
+  // existe no DOM (por isso o requestAnimationFrame nos handlers abaixo).
+  useEffect(() => {
+    if (editandoIntencao) inputIntencaoRef.current?.focus();
+  }, [editandoIntencao]);
 
   const salvarIntencao = async () => {
     const texto = rascunhoIntencao.trim();
@@ -582,12 +591,19 @@ function PainelPage() {
             {editandoIntencao || !intencaoSalva ? (
               <div className="mt-2 flex items-center gap-2">
                 <input
+                  ref={inputIntencaoRef}
                   type="text"
                   value={rascunhoIntencao}
                   onChange={(e) => setRascunhoIntencao(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") salvarIntencao();
-                    if (e.key === "Escape" && intencaoSalva) setEditandoIntencao(false);
+                    if (e.key === "Enter") {
+                      salvarIntencao();
+                      requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
+                    }
+                    if (e.key === "Escape" && intencaoSalva) {
+                      setEditandoIntencao(false);
+                      requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
+                    }
                   }}
                   placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
                   aria-labelledby="intencao-dia-rotulo"
@@ -609,6 +625,7 @@ function PainelPage() {
                   {intencaoSalva}
                 </span>
                 <button
+                  ref={botaoEditarIntencaoRef}
                   type="button"
                   onClick={() => {
                     setRascunhoIntencao(intencaoSalva ?? "");
