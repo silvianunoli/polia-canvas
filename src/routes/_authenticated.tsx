@@ -79,7 +79,8 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Pulso de relacionamento: fora das rotas isentas de assinatura (funil de
-  // pagamento e admin/blog-admin, que têm público e propósito diferentes).
+  // pagamento — onboarding, assinar, upgrade —, que tem público e propósito
+  // diferente do resto da área logada).
   const csatPulso = useCsatTrigger(
     "pulso_periodico",
     "pulso_relacionamento",

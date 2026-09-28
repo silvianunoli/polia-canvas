@@ -171,9 +171,7 @@ function ClientesPage() {
     >
       <div>
         {dadosQuery.isLoading ? (
-          <p className="py-16 text-center font-fraunces italic text-[15px] text-[var(--muted)]">
-            carregando…
-          </p>
+          <p className="py-16 text-center text-[14px] text-[var(--muted)]">Carregando…</p>
         ) : clientes.length === 0 ? (
           <Vazio
             icone={Users}
