@@ -736,7 +736,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
   return (
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Antes da marca, o número.</Manuscrito>
+      <Manuscrito>Com a marca no papel, o primeiro número.</Manuscrito>
       <Headline size={56}>Quanto cobra e quanto custa?</Headline>
       <Body>
         O preço de {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar
@@ -783,18 +783,12 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
 }
 
 /* ---------------- STEP 6 ---------------- */
-// O módulo 1 ainda abre na seção 1.0, financeira (EST-01). Esta tela cita a
-// conta do mês pra 1ª pergunta não desmentir a promessa, mas com a marca como
-// assunto e o número como referência (eixo marca-primeiro, 25/09/2026).
+// O módulo 1 é só marca desde 28/09/2026: a conta do mês foi pro módulo 4.
 const ETAPA1_DESC: Record<BusinessType, string> = {
-  produto_fisico:
-    "Quem está por trás da marca, o que ela produz e de onde vem o que vende. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
-  produto_digital:
-    "Quem está por trás da marca, o que ela ensina e qual problema resolve. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
-  servico:
-    "Quem está por trás da marca, qual problema resolve e como funciona o trabalho. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
-  hibrido:
-    "Quem está por trás da marca e como as duas frentes do negócio se complementam. Abre com a conta do mês, a referência do que a marca precisa sustentar.",
+  produto_fisico: "Quem está por trás da marca, o que ela produz e de onde vem o que vende.",
+  produto_digital: "Quem está por trás da marca, o que ela ensina e qual problema resolve.",
+  servico: "Quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
+  hibrido: "Quem está por trás da marca e como as duas frentes do negócio se complementam.",
 };
 
 function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {

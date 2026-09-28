@@ -63,7 +63,7 @@ const CATEGORIAS = [
       {
         pergunta: "Por onde começar no Planejamento",
         resposta:
-          "Pelo módulo 1, que abre pela conta do mês: quanto você quer receber e quanto o negócio custa. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, as principais decisões do negócio já estão organizadas.",
+          "Pelo módulo 1, que começa pela razão de a marca existir: para quem ela é e o que a diferencia. A conta do mês, quanto você quer receber e quanto o negócio custa, entra no módulo 4, com a marca já no papel. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, as principais decisões do negócio já estão organizadas.",
       },
       {
         pergunta: "O que fazer no primeiro dia",

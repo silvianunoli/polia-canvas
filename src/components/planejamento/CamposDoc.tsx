@@ -1,7 +1,7 @@
 import { FileText, Pencil } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
-import { CAMPO_LABEL, SECOES } from "@/lib/planejamento";
+import { CAMPO_LABEL, SECOES, secaoPorId } from "@/lib/planejamento";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function secaoDoCampo(campo: string): string | undefined {
@@ -17,7 +17,8 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
     <div className="space-y-6">
       {preenchidos.map((campo) => {
         const secId = secaoDoCampo(campo);
-        const moduloN = secId ? Number(secId.split(".")[0]) : undefined;
+        // Módulo vem da seção, não do prefixo do id: "1.0" mora no módulo 4.
+        const moduloN = secId ? secaoPorId(secId)?.modulo : undefined;
         return (
           <div key={campo}>
             <div className="flex items-baseline justify-between gap-4">

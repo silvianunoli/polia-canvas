@@ -41,8 +41,7 @@ export const MODULOS: Modulo[] = [
   {
     n: 1,
     nome: "Razão de existir",
-    subtitulo:
-      "Por que a marca existe, para quem, e o que a diferencia. A conta do mês abre o módulo como referência do que ela precisa sustentar.",
+    subtitulo: "Por que a marca existe, para quem, e o que a diferencia.",
   },
   {
     n: 2,
@@ -77,40 +76,6 @@ export function moduloInfo(n: number): Modulo {
 
 export const SECOES: Secao[] = [
   // ───────── MÓDULO 1 — Razão de existir ─────────
-  // Abertura pelo número (decisão EST-01, 2026-09-03). Até aqui o Planejamento
-  // pedia 39 perguntas de marca, cliente e produto antes da 1ª de dinheiro, o
-  // contrário do eixo do produto ("saber se o negócio dá lucro vem na frente").
-  //
-  // As duas perguntas desta seção vieram de 4.1 e 4.2 (módulo Quanto vale) e
-  // foram REMOVIDAS de lá, não duplicadas. São as únicas do módulo financeiro
-  // que não dependem de nada respondido antes: as outras pedem o preço do
-  // produto (que só é listado em 3.1) ou o preço do concorrente (que só é
-  // mapeado em 2.4), então o módulo inteiro não podia ser promovido a primeiro.
-  //
-  // Efeito colateral desejado: `financeiro.meta_mensal` materializa em
-  // financeiro_mensal.meta pelo trigger, então a meta do mês já aparece no
-  // Painel e no /financeiro depois da 1ª pergunta respondida.
-  {
-    id: "1.0",
-    modulo: 1,
-    titulo: "A conta do mês",
-    subtitulo:
-      "Dois números de referência: o que você quer receber e o que o negócio custa todo mês. É o que a marca vai precisar sustentar, e o resto do Planejamento mostra por que ela vale isso.",
-    // 2 campos: meta_mensal (o que ela quer receber) + custo_fixo (o que sai).
-    perguntas: [
-      {
-        label: "Quanto você quer receber por mês com esse negócio?",
-        campo: "financeiro.meta_mensal",
-        tipo: "moeda",
-      },
-      {
-        label:
-          "Quais são os seus custos fixos todo mês? (plataformas, ferramentas, espaço, contador, outros). Some tudo.",
-        campo: "financeiro.custo_fixo",
-        tipo: "moeda",
-      },
-    ],
-  },
   {
     id: "1.1",
     modulo: 1,
@@ -368,15 +333,38 @@ export const SECOES: Secao[] = [
   },
 
   // ───────── MÓDULO 4 — Quanto vale ─────────
+  // "A conta do mês" abriu o módulo 1 de 03/09 a 28/09/2026 (EST-01, eixo
+  // número-primeiro). Com o eixo marca-primeiro, a Sil decidiu que o dinheiro
+  // vem depois das perguntas de marca: a seção voltou pra abertura deste módulo.
+  // O id segue "1.0" porque é chave persistida (ver o topo do arquivo); o
+  // módulo sai do campo `modulo`, nunca do prefixo do id.
+  {
+    id: "1.0",
+    modulo: 4,
+    titulo: "A conta do mês",
+    subtitulo:
+      "Dois números de referência: o que você quer receber e o que o negócio custa todo mês. Com a marca, a cliente e o produto já no papel, fica claro o que a marca precisa sustentar.",
+    // 2 campos: meta_mensal (o que ela quer receber) + custo_fixo (o que sai).
+    perguntas: [
+      {
+        label: "Quanto você quer receber por mês com esse negócio?",
+        campo: "financeiro.meta_mensal",
+        tipo: "moeda",
+      },
+      {
+        label:
+          "Quais são os seus custos fixos todo mês? (plataformas, ferramentas, espaço, contador, outros). Some tudo.",
+        campo: "financeiro.custo_fixo",
+        tipo: "moeda",
+      },
+    ],
+  },
   {
     id: "4.1",
     modulo: 4,
     titulo: "O que sai por venda",
-    // O custo fixo saiu daqui pra abertura do módulo 1 (seção 1.0). Sobrou o
-    // custo variável, que precisa saber o que ela vende (módulo 3) pra fazer
-    // sentido, e por isso ficou.
     subtitulo:
-      "O custo fixo já entrou lá na abertura. Aqui é o que sai a cada produto ou atendimento.",
+      "O custo fixo entrou na conta do mês, logo acima. Aqui é o que sai a cada produto ou atendimento.",
     perguntas: [
       {
         label:
@@ -389,8 +377,6 @@ export const SECOES: Secao[] = [
     id: "4.2",
     modulo: 4,
     titulo: "O preço que você cobra",
-    // "Quanto você quer receber por mês" saiu daqui pra seção 1.0. Sobrou o
-    // preço, que depende do produto listado em 3.1.
     subtitulo: "Um número, e o que faz ele parecer alto demais.",
     perguntas: [
       {
