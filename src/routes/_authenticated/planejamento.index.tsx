@@ -12,6 +12,7 @@ import {
   secoesDoModulo,
 } from "@/lib/planejamento";
 import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
@@ -598,21 +599,24 @@ function PlanejamentoPage() {
                             {m.nome}
                           </h2>
                           {temAlgo && (
-                            <a href={ferramenta.rota} className={`${BOTAO_SECUNDARIO} mt-2`}>
+                            <LinkInterno
+                              href={ferramenta.rota}
+                              className={`${BOTAO_SECUNDARIO} mt-2`}
+                            >
                               {ferramenta.nome}
                               <span aria-hidden="true">→</span>
-                            </a>
+                            </LinkInterno>
                           )}
                         </div>
                       </div>
                       {temAlgo && (
-                        <a
+                        <LinkInterno
                           href={`/planejamento/modulo/${m.n}`}
                           className={`${BOTAO_SECUNDARIO} shrink-0`}
                         >
                           Editar
                           <span aria-hidden="true">→</span>
-                        </a>
+                        </LinkInterno>
                       )}
                     </div>
 
@@ -637,13 +641,13 @@ function PlanejamentoPage() {
                             : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
                         </p>
                         {proximo && (
-                          <a
+                          <LinkInterno
                             href={`/planejamento/modulo/${m.n}`}
                             className={`${BOTAO_PRIMARIO} mt-3`}
                           >
                             Começar o Módulo {m.n}
                             <span aria-hidden="true">→</span>
-                          </a>
+                          </LinkInterno>
                         )}
                       </div>
                     )}
@@ -696,10 +700,10 @@ function PlanejamentoPage() {
                   { rota: "/financeiro", nome: "Abrir o Financeiro" },
                   { rota: "/metas", nome: "Abrir as Metas" },
                 ].map((f) => (
-                  <a key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
+                  <LinkInterno key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
                     {f.nome}
                     <span aria-hidden="true">→</span>
-                  </a>
+                  </LinkInterno>
                 ))}
               </div>
             </div>

@@ -2,6 +2,7 @@ import { FileText, Pencil } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { CAMPO_LABEL, SECOES } from "@/lib/planejamento";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function secaoDoCampo(campo: string): string | undefined {
   return SECOES.find((s) => s.perguntas.some((p) => p.campo === campo))?.id;
@@ -28,13 +29,13 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
                 {CAMPO_LABEL[campo] ?? campo}
               </h2>
               {secId && moduloN && (
-                <a
+                <LinkInterno
                   href={`/planejamento/modulo/${moduloN}?secao=${secId}`}
                   aria-label={`Editar ${CAMPO_LABEL[campo] ?? campo}`}
                   className="shrink-0 text-[var(--muted)] hover:text-[var(--secondary-text)]"
                 >
                   <Pencil size={14} aria-hidden="true" />
-                </a>
+                </LinkInterno>
               )}
             </div>
             <p className="mt-2 whitespace-pre-line text-[16px] leading-relaxed text-[var(--ink-soft)]">
@@ -67,10 +68,10 @@ export function FerramentaVazia({
       titulo={titulo ?? `Essa ferramenta é escrita no Módulo ${moduloN}.`}
       texto={texto ?? "É de lá que ela sai pronta."}
       acao={
-        <a href={`/planejamento/modulo/${moduloN}`} className={BTN_ACAO}>
+        <LinkInterno href={`/planejamento/modulo/${moduloN}`} className={BTN_ACAO}>
           Ir pro Módulo {moduloN}
           <span aria-hidden="true">→</span>
-        </a>
+        </LinkInterno>
       }
     />
   );

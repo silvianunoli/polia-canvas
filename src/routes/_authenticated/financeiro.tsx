@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { BlockError } from "@/components/ui/BlockError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -26,6 +27,7 @@ import {
   type Lancamento,
   type RegistrarTipo,
 } from "@/components/financeiro/ModalLancamento";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -166,6 +168,8 @@ function FinanceiroPage() {
           .eq("titulo", "Meta do mês")
           .maybeSingle(),
       ]);
+      const falha = [lancRes, camposRes, metaRes].find((r) => (r as { error: unknown }).error);
+      if (falha) throw (falha as { error: unknown }).error;
       return {
         lancamentos: (lancRes.data ?? []) as Lancamento[],
         campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
@@ -333,10 +337,29 @@ function FinanceiroPage() {
   }, [reduce]);
 
   // ── Loading ──
-  if (dadosQuery.isLoading) {
+  if (dadosQuery.isError) {
     return (
       <PaginaLogada largura="larga" eyebrow="Este mês" titulo="O dinheiro do mês.">
-        <p className="text-[14px] text-[var(--muted)]">Carregando o mês…</p>
+        <div role="alert">
+          <BlockError
+            message="A Pólia não conseguiu ler os lançamentos agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => dadosQuery.refetch()}
+          />
+        </div>
+      </PaginaLogada>
+    );
+  }
+  if (!dadosQuery.isSuccess) {
+    return (
+      <PaginaLogada largura="larga" eyebrow="Este mês" titulo="O dinheiro do mês.">
+        <div className="grid gap-4 sm:grid-cols-3" aria-busy="true" aria-label="Carregando o mês">
+          {[0, 1, 2].map((i) => (
+            <div
+              key={i}
+              className="h-[104px] animate-pulse rounded-xl border border-[var(--line)] bg-white motion-reduce:animate-none"
+            />
+          ))}
+        </div>
       </PaginaLogada>
     );
   }
@@ -422,16 +445,20 @@ function FinanceiroPage() {
           {metaAlvo <= 0 ? (
             <p className="mt-6 text-[14px] text-[var(--ink-soft)]">
               Ainda sem Meta do mês ativa.{" "}
-              <a href="/metas" className="text-[var(--secondary-text)] hover:underline">
+              <LinkInterno href="/metas" className="text-[var(--secondary-text)] hover:underline">
                 Criar em Metas →
-              </a>
+              </LinkInterno>
             </p>
           ) : (
-            <div className="relative mt-7 mb-14 h-3.5 overflow-hidden rounded-lg border border-[var(--line)] bg-white">
-              <div
-                className="absolute inset-y-0 left-0 w-full origin-left rounded-lg rounded-r-none bg-[var(--secondary)] transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
-                style={{ transform: `scaleX(${(barOn ? metaPct : 0) / 100})` }}
-              />
+            <div className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white">
+              {/* O corte fica só no preenchimento: no trilho, cortava os rótulos
+                  das marcas e o selo de "entraram até aqui", que moram fora dele. */}
+              <div className="absolute inset-0 overflow-hidden rounded-lg">
+                <div
+                  className="absolute inset-y-0 left-0 w-full origin-left bg-[var(--secondary)] transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+                  style={{ transform: `scaleX(${(barOn ? metaPct : 0) / 100})` }}
+                />
+              </div>
               {marcas.map((m) => {
                 const left = Math.min(99, (m.num / metaAlvo) * 100);
                 return (
@@ -442,8 +469,9 @@ function FinanceiroPage() {
                   >
                     <span
                       title={m.detalhe}
-                      className="absolute -top-[34px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)] transition-colors duration-150 group-hover/mark:bg-[var(--secondary-light)]"
-                      style={left > 90 ? { transform: "translateX(-90%)" } : undefined}
+                      className={`absolute -top-[34px] left-1/2 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)] transition-colors duration-150 group-hover/mark:bg-[var(--secondary-light)] ${
+                        left > 90 ? "-translate-x-[90%]" : "-translate-x-1/2"
+                      }`}
                     >
                       {m.rotulo}
                     </span>
@@ -451,8 +479,10 @@ function FinanceiroPage() {
                 );
               })}
               <span
-                className="absolute top-[22px] -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)]"
-                style={{ left: `${Math.min(96, metaPct)}%` }}
+                className={`absolute top-[22px] whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)] ${
+                  metaPct < 8 ? "" : metaPct > 92 ? "-translate-x-full" : "-translate-x-1/2"
+                }`}
+                style={{ left: `${Math.min(100, metaPct)}%` }}
               >
                 {fmt(Math.round(entradas))} entraram até aqui
               </span>

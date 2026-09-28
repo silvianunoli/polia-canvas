@@ -21,6 +21,7 @@ import {
   taxasDoBreakdown,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
 
@@ -288,10 +289,10 @@ function ProdutosPage() {
                   titulo="Nenhum produto ainda."
                   texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
                   acao={
-                    <a href="/planejamento/modulo/3" className={BTN_ACAO}>
+                    <LinkInterno href="/planejamento/modulo/3" className={BTN_ACAO}>
                       Configurar pelo Planejamento
                       <span aria-hidden="true">→</span>
-                    </a>
+                    </LinkInterno>
                   }
                 />
               </div>

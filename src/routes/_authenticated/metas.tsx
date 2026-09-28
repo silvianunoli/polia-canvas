@@ -20,6 +20,7 @@ import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -273,10 +274,10 @@ function MetasPage() {
               titulo="Nenhuma meta ainda."
               texto={`Defina até ${LIMITE_ATIVAS} para manter o foco no que importa.`}
               acao={
-                <a href="/planejamento/modulo/6" className={BTN_ACAO}>
+                <LinkInterno href="/planejamento/modulo/6" className={BTN_ACAO}>
                   Definir pelo Planejamento
                   <span aria-hidden="true">→</span>
-                </a>
+                </LinkInterno>
               }
             />
           ) : (

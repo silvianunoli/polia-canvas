@@ -12,6 +12,8 @@ import { hojeISO, ehMesAtual } from "@/lib/data.functions";
 import { rotaLiberada } from "@/lib/planos";
 import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
+import { BlockError } from "@/components/ui/BlockError";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -141,12 +143,12 @@ function CartaoFinanceiro({
   const base = `block rounded-xl border border-[var(--line)] bg-white ${padding}`;
   if (!href) return <div className={base}>{children}</div>;
   return (
-    <a
+    <LinkInterno
       href={href}
       className={`group ${base} no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]`}
     >
       {children}
-    </a>
+    </LinkInterno>
   );
 }
 
@@ -191,80 +193,11 @@ function fmtDDMM(iso: string): string {
   return `${d}/${m}`;
 }
 
-// ── Motion (respeita prefers-reduced-motion) ──
-function usePrefersReducedMotion() {
-  const [reduce, setReduce] = useState(false);
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduce(mq.matches);
-    const on = () => setReduce(mq.matches);
-    mq.addEventListener("change", on);
-    return () => mq.removeEventListener("change", on);
-  }, []);
-  return reduce;
-}
-
-function useEntrada() {
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const r = requestAnimationFrame(() => setShown(true));
-    return () => cancelAnimationFrame(r);
-  }, []);
-  return shown;
-}
-
-function Reveal({ children, className }: { children: ReactNode; className?: string }) {
-  const reduce = usePrefersReducedMotion();
-  const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    if (reduce) {
-      setShown(true);
-      return;
-    }
-    const el = ref.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setShown(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.15 },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [reduce]);
-  return (
-    <div
-      ref={ref}
-      className={className}
-      style={
-        reduce
-          ? undefined
-          : {
-              opacity: shown ? 1 : 0,
-              transform: shown ? "none" : "translateY(12px)",
-              transition:
-                "opacity 240ms cubic-bezier(0.22,1,0.36,1), transform 240ms cubic-bezier(0.22,1,0.36,1)",
-            }
-      }
-    >
-      {children}
-    </div>
-  );
-}
-
 function PainelPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
   const qc = useQueryClient();
-
-  const reduce = usePrefersReducedMotion();
-  const entrou = useEntrada();
-  const barOn = reduce || entrou;
 
   // O painel exibia métrica de rota que o plano Grátis não abre (Financeiro,
   // Clientes, Calendário) com link direto e sem cadeado: mostrava o número,
@@ -332,6 +265,19 @@ function PainelPage() {
           .eq("data", hoje)
           .maybeSingle(),
       ]);
+      // Leitura que falha não pode virar R$ 0: a tela de dinheiro mentiria.
+      const falha = [
+        profileRes,
+        secoesRes,
+        camposRes,
+        metaMesRes,
+        lancRes,
+        clientesRes,
+        quadrosRes,
+        tarefasRes,
+        intencaoRes,
+      ].find((r) => (r as { error: unknown }).error);
+      if (falha) throw (falha as { error: unknown }).error;
       return {
         createdAt: (profileRes.data as { created_at: string } | null)?.created_at ?? null,
         secoes: ((secoesRes as unknown as { data: SecaoRow[] | null }).data ?? []) as SecaoRow[],
@@ -595,14 +541,23 @@ function PainelPage() {
             {saudacao}, {meta.displayName}.
           </p>
           <h1 className="font-cabinet mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)]">
-            {headline}
+            {dadosQuery.isSuccess ? (
+              headline
+            ) : dadosQuery.isError ? (
+              "O Painel não carregou agora."
+            ) : (
+              <span
+                aria-hidden="true"
+                className="block h-[1.1em] w-[70%] animate-pulse rounded-lg bg-[var(--line)] motion-reduce:animate-none"
+              />
+            )}
           </h1>
 
           {acaoPrincipal.href ? (
-            <a href={acaoPrincipal.href} className={`${BOTAO_PRIMARIO} mt-5`}>
+            <LinkInterno href={acaoPrincipal.href} className={`${BOTAO_PRIMARIO} mt-5`}>
               {acaoPrincipal.texto}
               <span aria-hidden="true">→</span>
-            </a>
+            </LinkInterno>
           ) : (
             <button
               type="button"
@@ -666,380 +621,389 @@ function PainelPage() {
           </div>
         </div>
 
-        {/* Linha de contexto */}
-        <Reveal className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--line)] py-4">
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-              Dia no planejamento
-            </span>
-            <span className="font-cabinet rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
-              {ordinal(diasDesdeCadastro)}
-            </span>
+        {dadosQuery.isError ? (
+          <div className="mt-8" role="alert">
+            <BlockError
+              message="A Pólia não conseguiu ler os seus números agora. Nada foi perdido, é só a leitura que falhou."
+              onRetry={() => dadosQuery.refetch()}
+            />
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-              Status
-            </span>
-            <span className="text-[15px] text-[var(--ink-soft)]">
-              {jornadaFinalizada
-                ? "Planejamento concluído"
-                : `Módulo ${moduloAtual} · ${etapaInfo.nome}`}
-            </span>
-            {/* Era um "ver" da mesma cor do texto e sem sublinhado, colado na
+        ) : !dadosQuery.isSuccess ? (
+          <div className="mt-8 space-y-4" aria-busy="true" aria-label="Carregando o Painel">
+            {[88, 140, 240].map((h) => (
+              <div
+                key={h}
+                className="animate-pulse rounded-xl border border-[var(--line)] bg-white motion-reduce:animate-none"
+                style={{ height: h }}
+              />
+            ))}
+          </div>
+        ) : (
+          <>
+            {/* Linha de contexto */}
+            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--line)] py-4">
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Dia no planejamento
+                </span>
+                <span className="font-cabinet rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
+                  {ordinal(diasDesdeCadastro)}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Status
+                </span>
+                <span className="text-[15px] text-[var(--ink-soft)]">
+                  {jornadaFinalizada
+                    ? "Planejamento concluído"
+                    : `Módulo ${moduloAtual} · ${etapaInfo.nome}`}
+                </span>
+                {/* Era um "ver" da mesma cor do texto e sem sublinhado, colado na
                 frase: lia como "Planejamento concluído ver". */}
-            <a
-              href="/planejamento"
-              className="text-[14px] text-[var(--secondary-text)] underline-offset-2 hover:underline"
-            >
-              abrir
-            </a>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
-              Presença
-            </span>
-            <span className="text-[15px] text-[var(--ink-soft)]">
-              {meta.streak} {meta.streak === 1 ? "dia" : "dias"}
-            </span>
-          </div>
-        </Reveal>
+                <LinkInterno
+                  href="/planejamento"
+                  className="text-[14px] text-[var(--secondary-text)] underline-offset-2 hover:underline"
+                >
+                  abrir
+                </LinkInterno>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Presença
+                </span>
+                <span className="text-[15px] text-[var(--ink-soft)]">
+                  {meta.streak} {meta.streak === 1 ? "dia" : "dias"}
+                </span>
+              </div>
+            </div>
 
-        {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
+            {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
             Desde 03/09/2026 (COPY-04) o número é real em TODO plano: o cadeado
             saiu daqui porque o registro de entrada e saída deixou de ser pago.
             O que continua no Premium é a tela /financeiro, e só quem a tem é
             que ganha o cartão clicável. */}
-        <Reveal className="mt-6">
-          <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
-            <div className="flex items-start justify-between gap-3">
-              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                Quanto sobrou · mês
-              </TituloCartao>
-              {!financeiroLiberado && <SeloControle />}
-            </div>
-            <p
-              className={`font-cabinet mt-1 text-[40px] leading-none ${
-                lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
-              }`}
-            >
-              {fmtBRL(lucroMes)}
-            </p>
-            <p className="mt-2 text-[13px] text-[var(--muted)]">
-              {receitaMes > 0
-                ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
-                : "registre entradas e saídas pra ver"}
-              {financeiroLiberado ? (
-                <>
-                  {" "}
-                  · <span className="text-[var(--ink-soft)]">Financeiro</span>
-                </>
-              ) : (
-                <>
-                  {" "}
-                  ·{" "}
-                  <span className="text-[var(--ink-soft)]">
-                    no Premium, o histórico fica completo e dá pra corrigir lançamento
-                  </span>
-                </>
-              )}
-            </p>
-          </CartaoFinanceiro>
-        </Reveal>
-
-        {/* Bento de dados */}
-        <div className="mt-6 grid grid-cols-12 gap-4">
-          <Reveal className={SPAN_CLASS[4]}>
-            <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
-              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                Receita · mês
-              </TituloCartao>
-              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                {fmtBRL(receitaMes)}
-              </p>
-              {metaCelebracao > 0 && (
-                <div className="relative mx-0.5 mt-4 h-2 rounded-md border border-[var(--line)] bg-[var(--bg)]">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-md bg-[var(--secondary)]"
-                    style={{
-                      width: barOn
-                        ? `${Math.min(100, (receitaMes / metaCelebracao) * 100)}%`
-                        : "0%",
-                      transition: reduce ? "none" : "width 800ms cubic-bezier(0.22,1,0.36,1)",
-                    }}
-                  />
-                  {metaBoa > 0 && (
-                    <div
-                      className="absolute -top-1 -bottom-1 w-0.5 bg-[var(--ink)]"
-                      style={{ left: `${Math.min(100, (metaBoa / metaCelebracao) * 100)}%` }}
-                    />
-                  )}
+            <div className="mt-6">
+              <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
+                <div className="flex items-start justify-between gap-3">
+                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Quanto sobrou · mês
+                  </TituloCartao>
+                  {!financeiroLiberado && <SeloControle />}
                 </div>
-              )}
-              <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {metaBoa > 0
-                  ? `${Math.min(100, Math.round((receitaMes / metaBoa) * 100))}% da Meta do mês (${fmtBRL(metaBoa)})`
-                  : receitaMes > 0
-                    ? "entradas esse mês"
-                    : "ainda sem entradas"}
-                {financeiroLiberado && (
-                  <>
-                    {" "}
-                    · <span className="text-[var(--ink-soft)]">Financeiro</span>
-                  </>
-                )}
-              </p>
-            </CartaoFinanceiro>
-          </Reveal>
+                <p
+                  className={`font-cabinet mt-1 text-[40px] leading-none ${
+                    lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+                  }`}
+                >
+                  {fmtBRL(lucroMes)}
+                </p>
+                <p className="mt-2 text-[13px] text-[var(--muted)]">
+                  {receitaMes > 0
+                    ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
+                    : "registre entradas e saídas pra ver"}
+                  {financeiroLiberado ? (
+                    <>
+                      {" "}
+                      · <span className="text-[var(--ink-soft)]">Financeiro</span>
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      ·{" "}
+                      <span className="text-[var(--ink-soft)]">
+                        no Premium, o histórico fica completo e dá pra corrigir lançamento
+                      </span>
+                    </>
+                  )}
+                </p>
+              </CartaoFinanceiro>
+            </div>
 
-          <Reveal className={SPAN_CLASS[4]}>
-            <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
-              <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                Pedidos · mês
-              </TituloCartao>
-              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                {pedidosMes}
-              </p>
-              <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"}
-                {financeiroLiberado && (
-                  <>
-                    {" "}
-                    · <span className="text-[var(--ink-soft)]">ver entradas</span>
-                  </>
-                )}
-              </p>
-            </CartaoFinanceiro>
-          </Reveal>
-
-          <Reveal className={SPAN_CLASS[4]}>
-            <a
-              href={destino("/clientes", clientesLiberado)}
-              className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
-                  Clientes
-                </TituloCartao>
-                {!clientesLiberado && <SeloControle />}
+            {/* Bento de dados */}
+            <div className="mt-6 grid grid-cols-12 gap-4">
+              <div className={SPAN_CLASS[4]}>
+                <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
+                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Receita · mês
+                  </TituloCartao>
+                  <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                    {fmtBRL(receitaMes)}
+                  </p>
+                  {metaCelebracao > 0 && (
+                    <div className="relative mx-0.5 mt-4 h-2 rounded-md border border-[var(--line)] bg-[var(--bg)]">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-md bg-[var(--secondary)] transition-[width] duration-200 ease-out motion-reduce:transition-none"
+                        style={{
+                          width: `${Math.min(100, (receitaMes / metaCelebracao) * 100)}%`,
+                        }}
+                      />
+                      {metaBoa > 0 && (
+                        <div
+                          className="absolute -top-1 -bottom-1 w-0.5 bg-[var(--ink)]"
+                          style={{ left: `${Math.min(100, (metaBoa / metaCelebracao) * 100)}%` }}
+                        />
+                      )}
+                    </div>
+                  )}
+                  <p className="mt-2 text-[13px] text-[var(--muted)]">
+                    {metaBoa > 0
+                      ? `${Math.min(100, Math.round((receitaMes / metaBoa) * 100))}% da Meta do mês (${fmtBRL(metaBoa)})`
+                      : receitaMes > 0
+                        ? "entradas esse mês"
+                        : "ainda sem entradas"}
+                    {financeiroLiberado && (
+                      <>
+                        {" "}
+                        · <span className="text-[var(--ink-soft)]">Financeiro</span>
+                      </>
+                    )}
+                  </p>
+                </CartaoFinanceiro>
               </div>
-              <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                {clientesCount}
-              </p>
-              {/* Trancado, o zero não é falta de cadastro: é a trava do plano.
-                  Então a linha diz o ganho, não um vazio que ela não causou. */}
-              <p className="mt-2 text-[13px] text-[var(--muted)]">
-                {!clientesLiberado ? (
-                  "no Premium cada cliente fica com o status do pedido"
-                ) : (
-                  <>
-                    {clientesCount > 0
-                      ? `${clientesEntregues} entregues · ${clientesEmEspera} em espera`
-                      : "nenhuma cadastrada ainda"}{" "}
-                    · <span className="text-[var(--ink-soft)]">Clientes</span>
-                  </>
-                )}
-              </p>
-            </a>
-          </Reveal>
 
-          {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os
+              <div className={SPAN_CLASS[4]}>
+                <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
+                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Pedidos · mês
+                  </TituloCartao>
+                  <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                    {pedidosMes}
+                  </p>
+                  <p className="mt-2 text-[13px] text-[var(--muted)]">
+                    {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"}
+                    {financeiroLiberado && (
+                      <>
+                        {" "}
+                        · <span className="text-[var(--ink-soft)]">ver entradas</span>
+                      </>
+                    )}
+                  </p>
+                </CartaoFinanceiro>
+              </div>
+
+              <div className={SPAN_CLASS[4]}>
+                <LinkInterno
+                  href={destino("/clientes", clientesLiberado)}
+                  className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                      Clientes
+                    </TituloCartao>
+                    {!clientesLiberado && <SeloControle />}
+                  </div>
+                  <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
+                    {clientesCount}
+                  </p>
+                  {/* Trancado, o zero não é falta de cadastro: é a trava do plano.
+                  Então a linha diz o ganho, não um vazio que ela não causou. */}
+                  <p className="mt-2 text-[13px] text-[var(--muted)]">
+                    {!clientesLiberado ? (
+                      "no Premium cada cliente fica com o status do pedido"
+                    ) : (
+                      <>
+                        {clientesCount > 0
+                          ? `${clientesEntregues} entregues · ${clientesEmEspera} em espera`
+                          : "nenhuma cadastrada ainda"}{" "}
+                        · <span className="text-[var(--ink-soft)]">Clientes</span>
+                      </>
+                    )}
+                  </p>
+                </LinkInterno>
+              </div>
+
+              {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os
               três cartões acima pra quem não tem a tela /financeiro. Quem tem o
               Premium não vê este cartão — os cartões acima já levam pro
               Financeiro, que faz isso e muito mais. */}
-          {!financeiroLiberado && userId && (
-            <Reveal className={SPAN_CLASS[12]}>
-              <RegistroDoMes
-                userId={userId}
-                lancamentos={dados?.lancamentos ?? []}
-                onMudou={() => qc.invalidateQueries({ queryKey: ["painel-dados", userId] })}
-              />
-            </Reveal>
-          )}
+              {!financeiroLiberado && userId && (
+                <div className={SPAN_CLASS[12]}>
+                  <RegistroDoMes
+                    userId={userId}
+                    lancamentos={dados?.lancamentos ?? []}
+                    onMudou={() => qc.invalidateQueries({ queryKey: ["painel-dados", userId] })}
+                  />
+                </div>
+              )}
 
-          {/* Tarefas de hoje */}
-          <Reveal className={SPAN_CLASS[6]}>
-            <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white transition-colors duration-200 group-hover:bg-[var(--secondary-light)]">
-                  <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
-                </span>
-                <div>
-                  <TituloCartao className="text-[18px] text-[var(--ink)]">
-                    Suas tarefas
-                  </TituloCartao>
-                  <p className="text-[13px] text-[var(--muted)]">
-                    do Planner · {gruposTarefas.atrasadas.length}{" "}
-                    {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
-                    {gruposTarefas.hoje.length} pra hoje · {gruposTarefas.proximas.length}{" "}
-                    {gruposTarefas.proximas.length === 1 ? "próxima" : "próximas"}
+              {/* Tarefas de hoje */}
+              <div className={SPAN_CLASS[6]}>
+                <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
+                      <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <TituloCartao className="text-[18px] text-[var(--ink)]">
+                        Suas tarefas
+                      </TituloCartao>
+                      <p className="text-[13px] text-[var(--muted)]">
+                        do Planner · {gruposTarefas.atrasadas.length}{" "}
+                        {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
+                        {gruposTarefas.hoje.length} pra hoje · {gruposTarefas.proximas.length}{" "}
+                        {gruposTarefas.proximas.length === 1 ? "próxima" : "próximas"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {totalTarefasPainel === 0 ? (
+                    /* `semBorda`: já estamos dentro de um cartão, caixa tracejada
+                   aqui viraria caixa dentro de caixa. A saída fica no link
+                   "Abrir no Planner" logo abaixo, que vale pros dois estados. */
+                    <div className="mt-4">
+                      <Vazio
+                        semBorda
+                        titulo="Nenhuma tarefa com prazo nos próximos 7 dias."
+                        texto="A próxima nasce no Planner."
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      {gruposTarefas.atrasadas.length > 0 && (
+                        <GrupoTarefasPainel
+                          titulo="Passou do prazo"
+                          corTitulo="text-[var(--danger)]"
+                          itens={gruposTarefas.atrasadas}
+                          rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}
+                          corRotulo="text-[var(--danger)]"
+                          destacarAte={3}
+                          linkTarefa={linkTarefa}
+                          link={`${quadroPendentesLink}?filtro=all`}
+                          linkTitulo="Abrir o Planner"
+                          rotuloMais={(n) => `mais ${n} ${n === 1 ? "atrasada" : "atrasadas"}`}
+                        />
+                      )}
+                      {gruposTarefas.hoje.length > 0 && (
+                        <GrupoTarefasPainel
+                          titulo="Hoje"
+                          itens={gruposTarefas.hoje}
+                          rotulo={(t) => (t.horario ? `hoje · ${t.horario}` : "prazo hoje")}
+                          linkTarefa={linkTarefa}
+                          link={`${quadroPendentesLink}?filtro=today`}
+                          linkTitulo="Abrir o Planner filtrado em Hoje"
+                          rotuloMais={(n) => `mais ${n} pra hoje`}
+                        />
+                      )}
+                      {gruposTarefas.proximas.length > 0 && (
+                        <GrupoTarefasPainel
+                          titulo="Próximos 7 dias"
+                          itens={gruposTarefas.proximas}
+                          rotulo={(t) => `até ${fmtDDMM(t.prazo!)}`}
+                          linkTarefa={linkTarefa}
+                          link={`${quadroPendentesLink}?filtro=7`}
+                          linkTitulo="Abrir o Planner filtrado em 7 dias"
+                          rotuloMais={(n) => `mais ${n} nos próximos dias`}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <p className="mt-3 text-[13px]">
+                    <LinkInterno
+                      href={quadroPendentesLink}
+                      className="text-[var(--secondary-text)] hover:underline"
+                    >
+                      Abrir no Planner →
+                    </LinkInterno>
                   </p>
                 </div>
               </div>
 
-              {totalTarefasPainel === 0 ? (
-                /* `semBorda`: já estamos dentro de um cartão, caixa tracejada
-                   aqui viraria caixa dentro de caixa. A saída fica no link
-                   "Abrir no Planner" logo abaixo, que vale pros dois estados. */
-                <div className="mt-4">
-                  <Vazio
-                    semBorda
-                    titulo="Nenhuma tarefa com prazo nos próximos 7 dias."
-                    texto="A próxima nasce no Planner."
-                  />
-                </div>
-              ) : (
-                <div className="mt-3">
-                  {gruposTarefas.atrasadas.length > 0 && (
-                    <GrupoTarefasPainel
-                      titulo="Passou do prazo"
-                      corTitulo="text-[var(--danger)]"
-                      itens={gruposTarefas.atrasadas}
-                      rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}
-                      corRotulo="text-[var(--danger)]"
-                      destacarAte={3}
-                      linkTarefa={linkTarefa}
-                      link={`${quadroPendentesLink}?filtro=all`}
-                      linkTitulo="Abrir o Planner"
-                      rotuloMais={(n) => `mais ${n} ${n === 1 ? "atrasada" : "atrasadas"}`}
-                    />
-                  )}
-                  {gruposTarefas.hoje.length > 0 && (
-                    <GrupoTarefasPainel
-                      titulo="Hoje"
-                      itens={gruposTarefas.hoje}
-                      rotulo={(t) => (t.horario ? `hoje · ${t.horario}` : "prazo hoje")}
-                      linkTarefa={linkTarefa}
-                      link={`${quadroPendentesLink}?filtro=today`}
-                      linkTitulo="Abrir o Planner filtrado em Hoje"
-                      rotuloMais={(n) => `mais ${n} pra hoje`}
-                    />
-                  )}
-                  {gruposTarefas.proximas.length > 0 && (
-                    <GrupoTarefasPainel
-                      titulo="Próximos 7 dias"
-                      itens={gruposTarefas.proximas}
-                      rotulo={(t) => `até ${fmtDDMM(t.prazo!)}`}
-                      linkTarefa={linkTarefa}
-                      link={`${quadroPendentesLink}?filtro=7`}
-                      linkTitulo="Abrir o Planner filtrado em 7 dias"
-                      rotuloMais={(n) => `mais ${n} nos próximos dias`}
-                    />
-                  )}
-                </div>
-              )}
-
-              <p className="mt-3 text-[13px]">
-                <a
-                  href={quadroPendentesLink}
-                  className="text-[var(--secondary-text)] hover:underline"
-                >
-                  Abrir no Planner →
-                </a>
-              </p>
-            </div>
-          </Reveal>
-
-          {/* Semana de trabalho */}
-          <Reveal className={SPAN_CLASS[6]}>
-            <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white transition-colors duration-200 group-hover:bg-[var(--secondary-light)]">
-                  <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
-                </span>
-                <div>
-                  <TituloCartao className="text-[18px] text-[var(--ink)]">
-                    Sua semana de trabalho
-                  </TituloCartao>
-                  <p className="text-[13px] text-[var(--muted)]">tarefas concluídas por dia</p>
-                </div>
-              </div>
-              {semanaVazia ? (
-                /* Semana sem nenhuma conclusão desenhava 150px de altura com
+              {/* Semana de trabalho */}
+              <div className={SPAN_CLASS[6]}>
+                <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
+                      <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <TituloCartao className="text-[18px] text-[var(--ink)]">
+                        Sua semana de trabalho
+                      </TituloCartao>
+                      <p className="text-[13px] text-[var(--muted)]">tarefas concluídas por dia</p>
+                    </div>
+                  </div>
+                  {semanaVazia ? (
+                    /* Semana sem nenhuma conclusão desenhava 150px de altura com
                    quatro zeros e barras de 2px. Um gráfico que não desenha nada
                    é pior que uma frase que explica o que falta. */
-                <div className="mt-5">
-                  <Vazio
-                    semBorda
-                    titulo="Nenhuma tarefa concluída nesta semana ainda."
-                    texto="O gráfico aparece assim que a primeira fechar."
-                    acao={
-                      <a
-                        href={quadroPendentesLink}
-                        className="text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
-                      >
-                        Abrir o Planner <span aria-hidden="true">→</span>
-                      </a>
-                    }
-                  />
+                    <div className="mt-5">
+                      <Vazio
+                        semBorda
+                        titulo="Nenhuma tarefa concluída nesta semana ainda."
+                        texto="O gráfico aparece assim que a primeira fechar."
+                        acao={
+                          <LinkInterno
+                            href={quadroPendentesLink}
+                            className="text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
+                          >
+                            Abrir o Planner <span aria-hidden="true">→</span>
+                          </LinkInterno>
+                        }
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-5 flex h-[150px] items-end gap-2">
+                      {dias.map((d, i) => {
+                        const alturaPx = d.tarefas > 0 ? 10 + (d.tarefas / maxSemana) * 70 : 2;
+                        return (
+                          <div
+                            key={i}
+                            className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                          >
+                            <span className="text-[13px] font-semibold text-[var(--ink)]">
+                              {d.tarefas > 0 ? d.tarefas : d.isFuturo ? "" : "0"}
+                            </span>
+                            <span
+                              className="w-full max-w-[72px] rounded-t-md"
+                              style={{
+                                height: `${alturaPx}px`,
+                                background: d.tarefas === 0 ? "var(--line)" : "var(--accent)",
+                                border: d.isHoje ? "2px solid var(--ink)" : undefined,
+                                borderBottom: d.isHoje ? "0" : undefined,
+                              }}
+                            />
+                            <span
+                              className={`text-[12px] ${d.isHoje ? "font-semibold text-[var(--ink)]" : "text-[var(--muted)]"}`}
+                            >
+                              {d.abrev}
+                              {d.isHoje ? " · hoje" : ""}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div className="mt-5 flex h-[150px] items-end gap-2">
-                  {dias.map((d, i) => {
-                    const alturaPx = d.tarefas > 0 ? 10 + (d.tarefas / maxSemana) * 70 : 2;
-                    return (
-                      <div
-                        key={i}
-                        className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                      >
-                        <span
-                          className="text-[13px] font-semibold text-[var(--ink)]"
-                          style={{
-                            opacity: barOn ? 1 : 0,
-                            transition: reduce ? "none" : "opacity 300ms ease",
-                          }}
-                        >
-                          {d.tarefas > 0 ? d.tarefas : d.isFuturo ? "" : "0"}
-                        </span>
-                        <span
-                          className="w-full max-w-[72px] rounded-t-md"
-                          style={{
-                            height: barOn ? `${alturaPx}px` : "0px",
-                            background: d.tarefas === 0 ? "var(--line)" : "var(--accent)",
-                            border: d.isHoje ? "2px solid var(--ink)" : undefined,
-                            borderBottom: d.isHoje ? "0" : undefined,
-                            transition: reduce
-                              ? "none"
-                              : "height 600ms cubic-bezier(0.22,1,0.36,1)",
-                          }}
-                        />
-                        <span
-                          className={`text-[12px] ${d.isHoje ? "font-semibold text-[var(--ink)]" : "text-[var(--muted)]"}`}
-                        >
-                          {d.abrev}
-                          {d.isHoje ? " · hoje" : ""}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </Reveal>
+              </div>
 
-          {/* Agenda: link pro calendário mensal (Planner + Google, quando conectado) */}
-          <Reveal className={SPAN_CLASS[12]}>
-            <a
-              href={destino("/calendario", calendarioLiberado)}
-              className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-white px-5 py-4 text-[14px] text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)]"
-            >
-              <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
-                Calendário
-              </span>
-              <span>
-                {calendarioLiberado
-                  ? "Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google."
-                  : "no Premium, o mês inteiro aparece num só calendário: tarefas do Planner e, se conectar, os compromissos do Google."}
-              </span>
-              {calendarioLiberado ? (
-                <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>
-              ) : (
-                <span className="ml-auto">
-                  <SeloControle />
-                </span>
-              )}
-            </a>
-          </Reveal>
-        </div>
+              {/* Agenda: link pro calendário mensal (Planner + Google, quando conectado) */}
+              <div className={SPAN_CLASS[12]}>
+                <LinkInterno
+                  href={destino("/calendario", calendarioLiberado)}
+                  className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-white px-5 py-4 text-[14px] text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)]"
+                >
+                  <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                    Calendário
+                  </span>
+                  <span>
+                    {calendarioLiberado
+                      ? "Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google."
+                      : "no Premium, o mês inteiro aparece num só calendário: tarefas do Planner e, se conectar, os compromissos do Google."}
+                  </span>
+                  {calendarioLiberado ? (
+                    <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>
+                  ) : (
+                    <span className="ml-auto">
+                      <SeloControle />
+                    </span>
+                  )}
+                </LinkInterno>
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Registro aberto pelo botão da manchete. Mesmo componente do cartão
@@ -1093,7 +1057,7 @@ function GrupoTarefasPainel({
   return (
     <div className="mb-3">
       {link ? (
-        <a
+        <LinkInterno
           href={link}
           title={linkTitulo}
           className={`mb-1 inline-block text-[10px] font-semibold uppercase tracking-[0.14em] no-underline hover:underline ${
@@ -1101,7 +1065,7 @@ function GrupoTarefasPainel({
           }`}
         >
           {titulo} →
-        </a>
+        </LinkInterno>
       ) : (
         <p
           className={`mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
@@ -1114,7 +1078,7 @@ function GrupoTarefasPainel({
       <ul>
         {visiveis.map((t, i) => (
           <li key={t.id} className="border-b border-[var(--line)] last:border-b-0">
-            <a
+            <LinkInterno
               href={linkTarefa(t)}
               title="Abrir esta tarefa no Planner"
               className="flex items-center gap-3 rounded-lg px-2 py-2.5 text-inherit no-underline transition-colors duration-150 hover:bg-[var(--secondary-light)]"
@@ -1133,18 +1097,18 @@ function GrupoTarefasPainel({
               >
                 {rotulo(t)}
               </span>
-            </a>
+            </LinkInterno>
           </li>
         ))}
       </ul>
       {restantes > 0 && link && (
-        <a
+        <LinkInterno
           href={link}
           className="mt-2 inline-block text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
         >
           {rotuloMais ? rotuloMais(restantes) : `mais ${restantes} no Planner`}{" "}
           <span aria-hidden="true">→</span>
-        </a>
+        </LinkInterno>
       )}
     </div>
   );

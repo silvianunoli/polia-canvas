@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PainelNav } from "@/components/painel/PainelNav";
 import { Vazio } from "@/components/layout/Vazio";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_MIUDO } from "@/lib/botoes";
 import {
   ArrowLeft,
@@ -39,6 +40,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -296,9 +298,13 @@ function PlannerBoard() {
   const [renomeandoCol, setRenomeandoCol] = useState<ColId | null>(null);
   const [nomeRename, setNomeRename] = useState("");
   const [confirmarId, setConfirmarId] = useState<string | null>(null);
+  const [apagarCardId, setApagarCardId] = useState<string | null>(null);
+  const [confirmarApagarQuadro, setConfirmarApagarQuadro] = useState(false);
 
   // ---- Painel de detalhe ----
   const [detalheId, setDetalheId] = useState<string | null>(null);
+  // Não zera ao fechar: a gaveta desliza pra fora ainda mostrando o cartão.
+  const [detalheExibidoId, setDetalheExibidoId] = useState<string | null>(null);
   const [dTitulo, setDTitulo] = useState("");
   const [dTags, setDTags] = useState<string[]>([]);
   const [dTagInput, setDTagInput] = useState("");
@@ -410,6 +416,7 @@ function PlannerBoard() {
 
   const abrirDetalhe = (c: Card) => {
     setDetalheId(c.id);
+    setDetalheExibidoId(c.id);
     setDTitulo(c.titulo);
     setDTags(c.tags ?? []);
     setDTagInput("");
@@ -551,8 +558,9 @@ function PlannerBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [detalheId, dTitulo, dTags, dDesc, dInicio, dFim, dHorario, dHpd, dMetaId, dNota, dColuna]);
 
-  const cardEmDetalhe = cards.find((c) => c.id === detalheId) ?? null;
+  const cardEmDetalhe = cards.find((c) => c.id === detalheExibidoId) ?? null;
   const cardConfirmando = cards.find((c) => c.id === confirmarId) ?? null;
+  const cardApagando = cards.find((c) => c.id === apagarCardId) ?? null;
 
   // Quick add: Enter salva só com o nome; obrigatórios preenchidos por padrão
   // (categoria mais usada do quadro, início e fim = hoje). Ajuste fino no detalhe.
@@ -581,10 +589,10 @@ function PlannerBoard() {
 
   const apagarQuadro = async () => {
     if (!quadroId) return;
-    if (!window.confirm("Apagar este quadro e todos os cartões dele? Não dá pra desfazer.")) return;
     const { error } = await supabase.from("quadros").delete().eq("id", quadroId);
+    setConfirmarApagarQuadro(false);
     if (error) {
-      toastErro("Não conseguimos apagar o quadro. Tenta de novo.");
+      toastErro("A Pólia não conseguiu apagar o quadro. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadros", userId] });
@@ -597,9 +605,12 @@ function PlannerBoard() {
         <PainelNav navActive="/planner" />
         <main className="mx-auto max-w-[600px] px-6 py-20 text-center">
           <p className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</p>
-          <a href="/planner" className="text-[14px] text-[var(--secondary-text)] hover:underline">
+          <LinkInterno
+            href="/planner"
+            className="text-[14px] text-[var(--secondary-text)] hover:underline"
+          >
             ← voltar ao Planner
-          </a>
+          </LinkInterno>
         </main>
       </div>
     );
@@ -611,12 +622,12 @@ function PlannerBoard() {
 
       <section className="px-6 pb-5 pt-8 md:px-10">
         <div className="mx-auto max-w-[1400px]">
-          <a
+          <LinkInterno
             href="/planner"
             className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)]"
           >
             <ArrowLeft size={15} aria-hidden="true" /> Planner
-          </a>
+          </LinkInterno>
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="font-cabinet mb-1 text-[clamp(28px,5vw,40px)] leading-tight text-[var(--ink)]">
@@ -630,7 +641,7 @@ function PlannerBoard() {
             </div>
             <button
               type="button"
-              onClick={apagarQuadro}
+              onClick={() => setConfirmarApagarQuadro(true)}
               aria-label="Apagar quadro"
               className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
             >
@@ -967,7 +978,7 @@ function PlannerBoard() {
                                 </span>
                               </button>
 
-                              <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                              <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                                 {col.id !== "concluido" && (
                                   <button
                                     type="button"
@@ -986,7 +997,7 @@ function PlannerBoard() {
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    deletar(c.id);
+                                    setApagarCardId(c.id);
                                   }}
                                   aria-label="Remover cartão"
                                   title="Remover"
@@ -1022,19 +1033,28 @@ function PlannerBoard() {
         role="dialog"
         aria-label="Detalhe do cartão"
         aria-hidden={!detalheId}
-        className="fixed top-0 z-40 h-screen w-[400px] max-w-[92vw] overflow-y-auto border-l border-[var(--line)] bg-white p-6 transition-[right] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={{ right: detalheId ? 0 : -420 }}
+        inert={!detalheId}
+        className="fixed right-0 top-0 z-40 h-screen w-[400px] max-w-[92vw] overflow-y-auto border-l border-[var(--line)] bg-white p-6"
+        style={{
+          transform: detalheId ? "translateX(0)" : "translateX(100%)",
+          transition: reduceMotion ? "none" : "transform 280ms cubic-bezier(0.32,0.72,0,1)",
+        }}
       >
         {cardEmDetalhe && (
           <>
             <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
               Cartão
             </p>
-            <input
+            <textarea
+              rows={1}
               value={dTitulo}
-              onChange={(e) => setDTitulo(e.target.value)}
+              onChange={(e) => setDTitulo(e.target.value.replace(/\n/g, " "))}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.preventDefault();
+              }}
               placeholder="Título do cartão (obrigatório)"
-              className="w-full border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] text-[var(--ink)] outline-none focus:border-[var(--secondary)]"
+              aria-label="Título do cartão"
+              className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)]"
             />
 
             <div className="mt-5">
@@ -1317,6 +1337,29 @@ function PlannerBoard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmarAcao
+        open={!!apagarCardId}
+        onOpenChange={(open) => !open && setApagarCardId(null)}
+        titulo="Apagar este cartão?"
+        descricao={cardApagando ? `"${cardApagando.titulo}" sai do quadro e não volta.` : undefined}
+        textoConfirmar="Apagar cartão"
+        destrutivo
+        onConfirmar={() => {
+          if (apagarCardId) deletar(apagarCardId);
+          setApagarCardId(null);
+        }}
+      />
+
+      <ConfirmarAcao
+        open={confirmarApagarQuadro}
+        onOpenChange={setConfirmarApagarQuadro}
+        titulo="Apagar este quadro?"
+        descricao="O quadro e todos os cartões dele somem de vez. Não dá pra desfazer."
+        textoConfirmar="Apagar quadro"
+        destrutivo
+        onConfirmar={() => void apagarQuadro()}
+      />
     </div>
   );
 }

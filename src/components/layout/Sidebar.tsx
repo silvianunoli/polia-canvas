@@ -63,9 +63,202 @@ async function signOut() {
   window.location.href = "/auth/login";
 }
 
-export function Sidebar() {
+// Fica fora do Sidebar de propósito: declarado lá dentro, o React via um
+// componente novo a cada troca de rota e remontava o menu inteiro (a rolagem
+// do menu voltava pro topo e o tooltip perdia o estado).
+function Body({
+  compact,
+  onNavigate,
+  onCollapsedChange,
+}: {
+  compact: boolean;
+  onNavigate?: () => void;
+  onCollapsedChange: (collapsed: boolean) => void;
+}) {
   const meta = useUserMeta();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const configAtiva = isActive("/configuracoes", pathname) || isActive("/chamados", pathname);
+
+  const streakLabel =
+    meta.streak > 0
+      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} de presença, com algo registrado na Pólia. Só cresce, nunca zera.`
+      : "Conta os dias com presença e algo registrado na Pólia. Só cresce.";
+
+  return (
+    <TooltipProvider delayDuration={150}>
+      <div className="flex h-full flex-col overflow-y-auto bg-white">
+        {/* Topo: logo + negócio + presença + avatar */}
+        <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
+          <Link
+            to="/painel"
+            onClick={onNavigate}
+            aria-label="Pólia, ir para o painel"
+            className="text-[var(--ink)] no-underline"
+          >
+            {compact ? (
+              <PoliaIcon className="h-7 w-auto" />
+            ) : (
+              <PoliaWordmark className="h-6 w-auto" />
+            )}
+          </Link>
+          {!compact && meta.businessName && (
+            <p className="text-[13px] text-[var(--muted)] leading-tight -mt-1">
+              {meta.businessName}
+            </p>
+          )}
+          <div className={`flex items-center gap-2 ${compact ? "flex-col" : "justify-between"}`}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="flex min-h-[28px] items-center gap-1.5 rounded-lg px-1 text-[13px] text-[var(--ink)]"
+                  aria-label={`Presença: ${meta.streak} dias`}
+                >
+                  <Flame size={18} aria-hidden="true" />
+                  {!compact && (
+                    <span>
+                      {meta.streak} {meta.streak === 1 ? "dia" : "dias"} de presença
+                    </span>
+                  )}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                {streakLabel}
+              </TooltipContent>
+            </Tooltip>
+            <span
+              aria-hidden="true"
+              className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--accent)] text-[13px] font-medium text-[var(--accent-ink)]"
+            >
+              {meta.initial}
+            </span>
+          </div>
+        </div>
+
+        <div className="mx-3 h-px bg-[var(--line)]" />
+
+        <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 px-2 py-3">
+          {NAV.map((item) => {
+            const active = isActive(item.to, pathname);
+            const Icon = item.icon;
+            // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
+            // de conteúdo passam pelo guard de tier (são "controle") e só são
+            // barradas por um portão dentro da página. Com a checagem antiga a
+            // usuária do Premium via esses três itens SEM cadeado e só
+            // descobria que eram pagos depois de clicar.
+            const liberado = recursoLiberado(item.to, meta.plano);
+            const tierNecessario = tierPagoDaRota(item.to);
+            const content = liberado ? (
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={onNavigate}
+                data-track="nav_clicado"
+                data-track-props={JSON.stringify({ destino: item.to })}
+                aria-current={active ? "page" : undefined}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+                  active
+                    ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                    : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                } ${compact ? "justify-center" : ""}`}
+              >
+                <Icon size={20} aria-hidden="true" />
+                <span className={compact ? "sr-only" : undefined}>{item.label}</span>
+              </Link>
+            ) : (
+              <Link
+                key={item.to}
+                to="/upgrade"
+                search={{ rota: item.to, tier: tierNecessario }}
+                onClick={onNavigate}
+                data-track="nav_bloqueado_clicado"
+                data-track-props={JSON.stringify({ destino: item.to })}
+                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
+                  compact ? "justify-center" : ""
+                }`}
+              >
+                {compact ? (
+                  <>
+                    <Lock size={18} aria-hidden="true" />
+                    <span className="sr-only">{`${item.label}, disponível no ${TIERS_PAGOS[tierNecessario].titulo}`}</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon size={20} aria-hidden="true" />
+                    <span className="flex flex-1 items-center justify-between gap-2">
+                      {item.label}
+                      <Lock size={14} aria-hidden="true" />
+                    </span>
+                  </>
+                )}
+              </Link>
+            );
+            const tooltipLabel = liberado
+              ? item.label
+              : `${item.label}: abre no ${TIERS_PAGOS[tierNecessario].titulo}`;
+            return compact ? (
+              <Tooltip key={item.to}>
+                <TooltipTrigger asChild>{content}</TooltipTrigger>
+                <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                  {tooltipLabel}
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              content
+            );
+          })}
+        </nav>
+
+        {/* Rodapé: config, sair, toggle colapso */}
+        <div className="flex flex-col gap-1 border-t border-[var(--line)] px-2 py-3">
+          <Link
+            to="/configuracoes"
+            onClick={onNavigate}
+            aria-current={configAtiva ? "page" : undefined}
+            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+              configAtiva
+                ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+            } ${compact ? "justify-center" : ""}`}
+          >
+            <Settings size={20} aria-hidden="true" />
+            <span className={compact ? "sr-only" : undefined}>Configurações</span>
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            data-track="sair_clicado"
+            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+          >
+            <LogOut size={20} aria-hidden="true" />
+            <span className={compact ? "sr-only" : undefined}>Sair</span>
+          </button>
+          {!compact && (
+            <button
+              type="button"
+              onClick={() => onCollapsedChange(true)}
+              aria-label="Recolher menu"
+              className="mt-2 hidden self-end rounded-md px-2 py-1 text-[12px] text-[var(--muted)] transition-colors md:flex md:items-center md:gap-1.5 hover:text-[var(--ink-soft)]"
+            >
+              Recolher <ChevronsLeft size={15} aria-hidden="true" />
+            </button>
+          )}
+          {compact && (
+            <button
+              type="button"
+              onClick={() => onCollapsedChange(false)}
+              aria-label="Expandir menu"
+              className="mt-1 hidden md:flex min-h-9 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
+            >
+              <ChevronsRight size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+      </div>
+    </TooltipProvider>
+  );
+}
+
+export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -79,178 +272,6 @@ export function Sidebar() {
     return () => mq.removeEventListener("change", apply);
   }, []);
 
-  const streakLabel =
-    meta.streak > 0
-      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} de presença, com algo registrado na Pólia. Só cresce, nunca zera.`
-      : "Conta os dias com presença e algo registrado na Pólia. Só cresce.";
-
-  function Body({ compact, onNavigate }: { compact: boolean; onNavigate?: () => void }) {
-    return (
-      <TooltipProvider delayDuration={150}>
-        <div className="flex h-full flex-col overflow-y-auto bg-white">
-          {/* Topo: logo + negócio + presença + avatar */}
-          <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
-            <Link
-              to="/painel"
-              onClick={onNavigate}
-              aria-label="Pólia, ir para o painel"
-              className="text-[var(--ink)] no-underline"
-            >
-              {compact ? (
-                <PoliaIcon className="h-7 w-auto" />
-              ) : (
-                <PoliaWordmark className="h-6 w-auto" />
-              )}
-            </Link>
-            {!compact && meta.businessName && (
-              <p className="text-[13px] text-[var(--muted)] leading-tight -mt-1">
-                {meta.businessName}
-              </p>
-            )}
-            <div className={`flex items-center gap-2 ${compact ? "flex-col" : "justify-between"}`}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span
-                    className="flex min-h-[28px] items-center gap-1.5 rounded-lg px-1 text-[13px] text-[var(--ink)]"
-                    aria-label={`Presença: ${meta.streak} dias`}
-                  >
-                    <Flame size={18} aria-hidden="true" />
-                    {!compact && (
-                      <span>
-                        {meta.streak} {meta.streak === 1 ? "dia" : "dias"} de presença
-                      </span>
-                    )}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                  {streakLabel}
-                </TooltipContent>
-              </Tooltip>
-              <span
-                aria-hidden="true"
-                className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--accent)] text-[13px] font-medium text-[var(--accent-ink)]"
-              >
-                {meta.initial}
-              </span>
-            </div>
-          </div>
-
-          <div className="mx-3 h-px bg-[var(--line)]" />
-
-          <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 px-2 py-3">
-            {NAV.map((item) => {
-              const active = isActive(item.to, pathname);
-              const Icon = item.icon;
-              // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
-              // de conteúdo passam pelo guard de tier (são "controle") e só são
-              // barradas por um portão dentro da página. Com a checagem antiga a
-              // usuária do Premium via esses três itens SEM cadeado e só
-              // descobria que eram pagos depois de clicar.
-              const liberado = recursoLiberado(item.to, meta.plano);
-              const tierNecessario = tierPagoDaRota(item.to);
-              const content = liberado ? (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  onClick={onNavigate}
-                  data-track="nav_clicado"
-                  data-track-props={JSON.stringify({ destino: item.to })}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
-                    active
-                      ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
-                      : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                  } ${compact ? "justify-center" : ""}`}
-                >
-                  <Icon size={20} aria-hidden="true" />
-                  {!compact && <span>{item.label}</span>}
-                </Link>
-              ) : (
-                <Link
-                  key={item.to}
-                  to="/upgrade"
-                  search={{ rota: item.to, tier: tierNecessario }}
-                  onClick={onNavigate}
-                  data-track="nav_bloqueado_clicado"
-                  data-track-props={JSON.stringify({ destino: item.to })}
-                  className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
-                    compact ? "justify-center" : ""
-                  }`}
-                >
-                  {compact ? (
-                    <Lock size={18} aria-hidden="true" />
-                  ) : (
-                    <>
-                      <Icon size={20} aria-hidden="true" />
-                      <span className="flex flex-1 items-center justify-between gap-2">
-                        {item.label}
-                        <Lock size={14} aria-hidden="true" />
-                      </span>
-                    </>
-                  )}
-                </Link>
-              );
-              const tooltipLabel = liberado
-                ? item.label
-                : `${item.label}: abre no ${TIERS_PAGOS[tierNecessario].titulo}`;
-              return compact ? (
-                <Tooltip key={item.to}>
-                  <TooltipTrigger asChild>{content}</TooltipTrigger>
-                  <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                    {tooltipLabel}
-                  </TooltipContent>
-                </Tooltip>
-              ) : (
-                content
-              );
-            })}
-          </nav>
-
-          {/* Rodapé: config, sair, toggle colapso */}
-          <div className="flex flex-col gap-1 border-t border-[var(--line)] px-2 py-3">
-            <Link
-              to="/configuracoes"
-              onClick={onNavigate}
-              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--ink-soft)] no-underline hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-            >
-              <Settings size={20} aria-hidden="true" />
-              {!compact && <span>Configurações</span>}
-            </Link>
-            <button
-              type="button"
-              onClick={signOut}
-              data-track="sair_clicado"
-              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
-            >
-              <LogOut size={20} aria-hidden="true" />
-              {!compact && <span>Sair</span>}
-            </button>
-            {!compact && (
-              <button
-                type="button"
-                onClick={() => setCollapsed(true)}
-                aria-label="Recolher menu"
-                className="mt-2 hidden self-end rounded-md px-2 py-1 text-[12px] text-[var(--muted)] transition-colors md:flex md:items-center md:gap-1.5 hover:text-[var(--ink-soft)]"
-              >
-                Recolher <ChevronsLeft size={15} aria-hidden="true" />
-              </button>
-            )}
-            {compact && (
-              <button
-                type="button"
-                onClick={() => setCollapsed(false)}
-                aria-label="Expandir menu"
-                className="mt-1 hidden md:flex min-h-9 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
-              >
-                <ChevronsRight size={18} aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        </div>
-      </TooltipProvider>
-    );
-  }
-
   return (
     <>
       {/* Sidebar fixa — desktop/tablet */}
@@ -258,7 +279,7 @@ export function Sidebar() {
         className="polia-v3 sticky top-0 hidden h-screen flex-shrink-0 border-r border-[var(--line)] bg-white md:block"
         style={{ width: collapsed ? 64 : 232 }}
       >
-        <Body compact={collapsed} />
+        <Body compact={collapsed} onCollapsedChange={setCollapsed} />
       </aside>
 
       {/* Mobile — hambúrguer + drawer */}
@@ -274,7 +295,11 @@ export function Sidebar() {
             </button>
           </SheetTrigger>
           <SheetContent side="left" className="polia-v3 w-64 bg-white p-0">
-            <Body compact={false} onNavigate={() => setMobileOpen(false)} />
+            <Body
+              compact={false}
+              onNavigate={() => setMobileOpen(false)}
+              onCollapsedChange={setCollapsed}
+            />
           </SheetContent>
         </Sheet>
         <PoliaWordmark className="h-[18px] w-auto text-[var(--ink)]" />

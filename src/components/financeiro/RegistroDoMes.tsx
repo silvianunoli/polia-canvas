@@ -7,6 +7,7 @@ import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { hojeISO, ehMesAtual } from "@/lib/data.functions";
 import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 /**
  * Registro mínimo de entradas e saídas, pra viver DENTRO do Painel.
@@ -162,12 +163,12 @@ export function RegistroDoMes({
       <p className="mt-4 border-t border-[var(--line)] pt-3 text-[12px] leading-relaxed text-[var(--muted)]">
         O Premium abre o Financeiro inteiro: todos os meses, filtro por período, a régua do mínimo
         pra fechar as contas e o resumo pro contador.{" "}
-        <a
+        <LinkInterno
           href="/upgrade?rota=%2Ffinanceiro&tier=controle"
           className="text-[var(--secondary-text)] underline-offset-2 hover:underline"
         >
           Conhecer o Premium
-        </a>
+        </LinkInterno>
       </p>
 
       {modalAberto && (

@@ -20,6 +20,7 @@ import {
   secoesDoModulo,
 } from "@/lib/planejamento";
 import { gerarRascunhoPlanejamento } from "@/lib/planejamentoIa.functions";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -201,19 +202,19 @@ function ModuloPage() {
           <p className="mt-3 max-w-[420px] text-[0.9rem] leading-relaxed text-[var(--ink-soft)]">
             {ferramenta.desbloqueioSub}
           </p>
-          <a
+          <LinkInterno
             href={ferramenta.rota}
             className="mt-8 inline-flex w-full max-w-[320px] items-center justify-center gap-1.5 rounded-full bg-[var(--secondary)] px-6 py-3.5 font-medium text-[var(--secondary-ink)] no-underline transition-opacity hover:opacity-90"
           >
             {ferramenta.abrirLabel}
             <ArrowRight size={16} aria-hidden="true" />
-          </a>
-          <a
+          </LinkInterno>
+          <LinkInterno
             href="/planejamento"
             className="mt-4 text-[0.875rem] text-[var(--muted)] no-underline hover:text-[var(--ink-soft)]"
           >
             Ver o planejamento
-          </a>
+          </LinkInterno>
         </div>
         {csat.mostrar && (
           <CsatPrompt
@@ -234,9 +235,9 @@ function ModuloPage() {
       titulo={modulo.nome}
       subtitulo={modulo.subtitulo}
       acao={
-        <a href="/planejamento" className={BTN_ACAO_CONTORNO}>
+        <LinkInterno href="/planejamento" className={BTN_ACAO_CONTORNO}>
           <ArrowLeft size={15} aria-hidden="true" /> Planejamento
-        </a>
+        </LinkInterno>
       }
     >
       <div>

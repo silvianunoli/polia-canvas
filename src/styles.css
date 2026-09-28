@@ -319,8 +319,8 @@
 }
 
 /* Reduced motion — as classes utilitárias de animação vêm de tw-animate-css
-   (zoom-in-95/zoom-out-95/slide-in-from-*/slide-out-to-*, usadas por tooltip/
-   select/popover/alert-dialog) e não respeitam prefers-reduced-motion sozinhas.
+   (zoom-in-95, zoom-out-95, slide-in-from-X, slide-out-to-X, usadas por tooltip,
+   select, popover e alert-dialog) e não respeitam prefers-reduced-motion sozinhas.
    Zeramos as variáveis de escala/translação que elas leem (--tw-enter-scale,
    --tw-enter-translate-x/y, --tw-exit-scale, --tw-exit-translate-x/y) pra
    cancelar zoom e slide, mantendo só o fade (--tw-enter-opacity/--tw-exit-opacity,

@@ -11,6 +11,7 @@ import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
 import { COTAS_CONFERE } from "@/lib/planos";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 function usePrefersReducedMotion() {
   const [reduce, setReduce] = useState(false);
@@ -369,12 +370,12 @@ function CadernoPage() {
                     </button>
                     <p className="mt-3 text-[12px] text-[var(--muted)]">
                       ou monte seu guia de presença pelo{" "}
-                      <a
+                      <LinkInterno
                         href="/planejamento/modulo/5"
                         className="font-medium text-[var(--secondary-text)] hover:underline"
                       >
                         Planejamento →
-                      </a>
+                      </LinkInterno>
                     </p>
                   </>
                 }

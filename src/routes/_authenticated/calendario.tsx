@@ -59,6 +59,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface CalendarioSearch {
   code?: string;
@@ -561,10 +562,10 @@ function CalendarioPage() {
               texto={textoVazioDoMes}
               acao={
                 mostrarPlanner ? (
-                  <a href="/planner" className={BTN_ACAO}>
+                  <LinkInterno href="/planner" className={BTN_ACAO}>
                     Quero criar uma tarefa
                     <span aria-hidden="true">→</span>
-                  </a>
+                  </LinkInterno>
                 ) : undefined
               }
             />
@@ -591,9 +592,12 @@ function CalendarioPage() {
                 {quadros.length === 0 ? (
                   <p className="mb-4 text-[13px] italic text-[var(--muted)]">
                     Crie um quadro no{" "}
-                    <a href="/planner" className="text-[var(--secondary-text)] hover:underline">
+                    <LinkInterno
+                      href="/planner"
+                      className="text-[var(--secondary-text)] hover:underline"
+                    >
                       Planner
-                    </a>{" "}
+                    </LinkInterno>{" "}
                     antes de adicionar tarefas por aqui.
                   </p>
                 ) : mostrarComposer ? (

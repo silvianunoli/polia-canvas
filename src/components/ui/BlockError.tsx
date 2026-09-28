@@ -7,7 +7,7 @@ interface BlockErrorProps {
 
 /** Cartão discreto pra quando só um bloco/lista falhou — o resto da tela continua útil. */
 export function BlockError({
-  message = "Não conseguimos carregar essa parte. O resto da tela continua funcionando.",
+  message = "A Pólia não conseguiu carregar essa parte. O resto da tela continua funcionando.",
   onRetry,
 }: BlockErrorProps) {
   return (

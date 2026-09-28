@@ -8,6 +8,7 @@ import { CamposDoc, FerramentaVazia } from "@/components/planejamento/CamposDoc"
 import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/mercado")({
   head: () => ({
@@ -50,9 +51,9 @@ function MercadoPage() {
       titulo="Quem a marca serve."
       subtitulo="Sua cliente, o mercado e o seu lugar nele, pra consultar quando criar conteúdo, produto ou campanha."
       acao={
-        <a href="/planejamento" className={BTN_ACAO_CONTORNO}>
+        <LinkInterno href="/planejamento" className={BTN_ACAO_CONTORNO}>
           <ArrowLeft size={15} aria-hidden="true" /> Planejamento
-        </a>
+        </LinkInterno>
       }
     >
       <div>

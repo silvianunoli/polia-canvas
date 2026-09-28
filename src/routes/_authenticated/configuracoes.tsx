@@ -16,6 +16,10 @@ import {
   iniciarConexaoGoogle,
   desconectarGoogle,
 } from "@/lib/calendarGoogle.functions";
+import { LinkInterno } from "@/components/ui/LinkInterno";
+
+const ERRO_AUTOSAVE =
+  "A Pólia não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
 
 const NOME_PLANO: Record<string, string> = {
   beta: "Plano de lançamento",
@@ -216,7 +220,11 @@ function ConfiguracoesPage() {
     if (!userId || !carregouInicial.current) return;
     if (nomeTimer.current) clearTimeout(nomeTimer.current);
     nomeTimer.current = setTimeout(async () => {
-      await supabase.from("profiles").update({ full_name: nome }).eq("id", userId);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: nome })
+        .eq("id", userId);
+      if (error) return toastErro(ERRO_AUTOSAVE);
       setNomeSalvo(true);
       setTimeout(() => setNomeSalvo(false), 1600);
     }, 600);
@@ -230,7 +238,11 @@ function ConfiguracoesPage() {
     if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
     nomeNegocioTimer.current = setTimeout(async () => {
       const criouNegocio = !businessNameAtualRef.current.trim() && nomeNegocio.trim().length > 0;
-      await supabase.from("profiles").update({ business_name: nomeNegocio }).eq("id", userId);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ business_name: nomeNegocio })
+        .eq("id", userId);
+      if (error) return toastErro(ERRO_AUTOSAVE);
       if (criouNegocio) void registrar("business_created", { feature: "configuracoes" });
       setNomeNegocioSalvo(true);
       setTimeout(() => setNomeNegocioSalvo(false), 1600);
@@ -244,7 +256,11 @@ function ConfiguracoesPage() {
     if (!userId || !carregouInicial.current) return;
     if (razaoSocialTimer.current) clearTimeout(razaoSocialTimer.current);
     razaoSocialTimer.current = setTimeout(async () => {
-      await supabase.from("profiles").update({ razao_social: razaoSocial }).eq("id", userId);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ razao_social: razaoSocial })
+        .eq("id", userId);
+      if (error) return toastErro(ERRO_AUTOSAVE);
       setRazaoSocialSalvo(true);
       setTimeout(() => setRazaoSocialSalvo(false), 1600);
     }, 600);
@@ -257,7 +273,8 @@ function ConfiguracoesPage() {
     if (!userId || !carregouInicial.current) return;
     if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
     cnpjTimer.current = setTimeout(async () => {
-      await supabase.from("profiles").update({ cnpj }).eq("id", userId);
+      const { error } = await supabase.from("profiles").update({ cnpj }).eq("id", userId);
+      if (error) return toastErro(ERRO_AUTOSAVE);
       setCnpjSalvo(true);
       setTimeout(() => setCnpjSalvo(false), 1600);
     }, 600);
@@ -280,7 +297,13 @@ function ConfiguracoesPage() {
         : campo === "notif_novidades"
           ? { notif_novidades: valor }
           : { notif_dicas: valor };
-    await supabase.from("profiles").update(payload).eq("id", userId);
+    const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
+    if (error) {
+      if (campo === "notif_resumo_semanal") setNotifResumo(!valor);
+      if (campo === "notif_novidades") setNotifNovidades(!valor);
+      if (campo === "notif_dicas") setNotifDicas(!valor);
+      toastErro("A Pólia não conseguiu salvar essa preferência. Tenta de novo em instantes.");
+    }
   };
 
   const alterarSenha = async () => {
@@ -716,12 +739,12 @@ function ConfiguracoesPage() {
                   ? "sua assinatura foi cancelada. assine de novo quando quiser."
                   : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
               </p>
-              <a
+              <LinkInterno
                 href="/assinar"
                 className="inline-block rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-colors hover:opacity-90"
               >
                 Ver planos
-              </a>
+              </LinkInterno>
             </>
           )}
 
@@ -808,18 +831,18 @@ function ConfiguracoesPage() {
             chamado.
           </p>
           <div className="flex flex-wrap gap-2">
-            <a
+            <LinkInterno
               href="/ajuda#contato"
               className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
             >
               Central de ajuda
-            </a>
-            <a
+            </LinkInterno>
+            <LinkInterno
               href="/chamados"
               className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
             >
               Seus chamados
-            </a>
+            </LinkInterno>
           </div>
         </Secao>
 

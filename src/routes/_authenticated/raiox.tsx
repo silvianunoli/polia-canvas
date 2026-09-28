@@ -12,6 +12,7 @@ import { gerarRaioX } from "@/lib/raiox.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
+import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/raiox")({
   head: () => ({
@@ -214,12 +215,12 @@ function RaioXPage() {
                   <li key={i} className="text-[14px] text-[var(--ink)]">
                     <p>{s.texto}</p>
                     {s.rota && ROTA_LABEL[s.rota] && (
-                      <a
+                      <LinkInterno
                         href={`/${s.rota}`}
                         className="mt-1 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
                       >
                         {ROTA_LABEL[s.rota]} →
-                      </a>
+                      </LinkInterno>
                     )}
                   </li>
                 ))}

@@ -85,7 +85,9 @@ export function PaginaLogada({
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <div className={`mx-auto w-full ${LARGURA[largura]} px-6 pb-24 pt-12 md:px-10`}>
         <header className="mb-8 flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-          <div className="min-w-0 flex-1">
+          {/* Base de 18rem: sem ela a coluna encolhia até o título virar 3 linhas
+              ao lado do botão no celular, em vez de o botão descer. */}
+          <div className="min-w-0 flex-1 basis-[min(100%,18rem)]">
             {eyebrow && (
               <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
                 {eyebrow}
