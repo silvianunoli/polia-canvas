@@ -200,6 +200,21 @@
     cursor: pointer;
   }
 
+  /* Resposta ao toque em todo botão. Usa a propriedade `scale` (não `transform`)
+     pra não brigar com translate/transform que o botão já tenha. Utilitário de
+     transition no próprio botão ganha desta base; aí o aperto só não anima. */
+  button:not(:disabled, [aria-disabled="true"]) {
+    transition: scale 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  button:not(:disabled, [aria-disabled="true"]):active {
+    scale: 0.97;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button:not(:disabled):active {
+      scale: none;
+    }
+  }
+
   /* Todo título (h1-h6) usa Cabinet Grotesk por padrão, sem precisar da
      classe .font-cabinet. */
   h1,

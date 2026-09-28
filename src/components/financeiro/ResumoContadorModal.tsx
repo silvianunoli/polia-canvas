@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { X } from "lucide-react";
+import { Modal } from "@/components/ui/Modal";
 import {
   montarResumoContador,
   linhasCsvResumoContador,
@@ -86,7 +86,7 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("Não conseguimos gerar o arquivo agora. Tenta de novo.");
+      setErro("A Pólia não conseguiu gerar o arquivo agora. Tenta de novo.");
     }
   };
 
@@ -104,36 +104,24 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("Não conseguimos gerar o arquivo agora. Tenta de novo.");
+      setErro("A Pólia não conseguiu gerar o arquivo agora. Tenta de novo.");
     }
   };
 
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      title="Resumo pro contador"
     >
-      <div
-        className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto rounded-2xl bg-white p-6"
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Resumo do mês pro contador"
-      >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="text-[22px] text-[var(--ink)]">Resumo pro contador</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Fechar"
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)]"
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </div>
-
-        <label className="mb-1 block text-[12px] text-[var(--muted)]">Mês</label>
+      <div>
+        <label htmlFor="resumo-contador-mes" className="mb-1 block text-[12px] text-[var(--muted)]">
+          Mês
+        </label>
         <select
+          id="resumo-contador-mes"
           value={`${selecionado.mes}-${selecionado.ano}`}
           onChange={(e) => {
             const [mes, ano] = e.target.value.split("-").map(Number);
@@ -244,7 +232,7 @@ export function ResumoContadorModal({
           </>
         )}
       </div>
-    </div>
+    </Modal>
   );
 }
 

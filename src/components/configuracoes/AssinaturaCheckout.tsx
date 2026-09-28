@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripeClient";
 import { toastErro } from "@/lib/toast";
+import { Modal } from "@/components/ui/Modal";
 
 export function AssinaturaCheckout({
   clientSecret,
@@ -13,23 +14,18 @@ export function AssinaturaCheckout({
   onSucesso: () => void;
 }) {
   return (
-    <div
-      className="polia-v3 fixed inset-0 z-50 flex items-center justify-center bg-[var(--ink)]/50 px-4"
-      onClick={onClose}
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto) onClose();
+      }}
+      title="Confirmar pagamento"
+      description="Assinatura da Pólia. O pagamento é processado pelo Stripe."
     >
-      <div
-        className="max-h-[90vh] w-full max-w-[480px] overflow-y-auto rounded-2xl bg-white p-8"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <p className="mb-2 font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
-          ASSINATURA
-        </p>
-        <h2 className="mb-6 text-[26px] text-[var(--ink)]">Confirmar pagamento</h2>
-        <Elements stripe={getStripe()} options={{ clientSecret }}>
-          <FormularioPagamento onClose={onClose} onSucesso={onSucesso} />
-        </Elements>
-      </div>
-    </div>
+      <Elements stripe={getStripe()} options={{ clientSecret }}>
+        <FormularioPagamento onClose={onClose} onSucesso={onSucesso} />
+      </Elements>
+    </Modal>
   );
 }
 
@@ -55,7 +51,7 @@ function FormularioPagamento({
     });
     setConfirmando(false);
     if (error) {
-      setErro(error.message ?? "Não conseguimos confirmar o pagamento. Tenta outro cartão.");
+      setErro(error.message ?? "A Pólia não conseguiu confirmar o pagamento. Tenta outro cartão.");
       return;
     }
     if (
@@ -86,7 +82,7 @@ function FormularioPagamento({
           onClick={() => {
             confirmar().catch(() => {
               setConfirmando(false);
-              toastErro("Não conseguimos confirmar o pagamento agora. Tenta de novo.");
+              toastErro("A Pólia não conseguiu confirmar o pagamento agora. Tenta de novo.");
             });
           }}
           disabled={!stripe || confirmando}
