@@ -1,18 +1,20 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Lock, CalendarClock } from "lucide-react";
+import { Sparkles, CalendarClock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarRaioX } from "@/lib/raiox.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
 
 export const Route = createFileRoute("/_authenticated/raiox")({
   head: () => ({
@@ -88,7 +90,7 @@ function RaioXPage() {
     enabled: !!userId && ehProjete,
     queryFn: async () => {
       const { data } = await supabase
-        .from("ia_raiox" as never)
+        .from("ia_raiox")
         .select("placar, causas, sugestoes, dado_ralo")
         .eq("user_id", userId!)
         .eq("mes", mesLabel)
@@ -133,24 +135,12 @@ function RaioXPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Raio-x do mês" titulo="O raio-x do mês é do Pro">
-        <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
-          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
-            <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
-          </span>
-          <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
-            A Aimer lê os seus números reais todo mês e devolve o que puxou o resultado e o que
-            fazer diferente.
-          </p>
-          <Link
-            to="/upgrade"
-            search={{ rota: "/raiox", tier: "projete" }}
-            className={`${BTN_ACAO} mt-6`}
-          >
-            Conhecer o Pro
-          </Link>
-        </div>
-      </PaginaLogada>
+      <UpgradeGate
+        eyebrow="Raio-x do mês"
+        titulo="O raio-x do mês é do Pro"
+        feature="A Aimer lê os seus números reais todo mês e devolve o que puxou o resultado e o que fazer diferente."
+        rota="/raiox"
+      />
     );
   }
 
@@ -166,15 +156,8 @@ function RaioXPage() {
       subtitulo="A Aimer lê os números do mês fechado e devolve o que puxou o resultado."
     >
       <div>
-        {/* Aviso de conteúdo gerado por IA, mesmo tratamento da Aimer: fixo
-            abaixo do cabeçalho, todos os estados (carregando, gerado, erro),
-            sem dispensar. Só não existe na tela de upgrade (return acima),
-            que não tem conteúdo de IA. --muted #6B6B6B sobre --bg #F2F0ED
-            dá 4,7:1, passa AA em 14px. */}
-        <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
-          O raio-x é gerado por inteligência artificial. Os números vêm dos dados registrados aqui;
-          a leitura é escrita pela IA e pode errar. Vale conferir antes de decidir.
-        </p>
+        {/* Só não existe na tela de upgrade (return acima), que não tem conteúdo de IA. */}
+        <AvisoConteudoIA texto="O raio-x é gerado por inteligência artificial. Os números vêm dos dados registrados aqui; a leitura é escrita pela IA e pode errar. Vale conferir antes de decidir." />
         <select
           value={`${selecionado.mes}-${selecionado.ano}`}
           onChange={(e) => {

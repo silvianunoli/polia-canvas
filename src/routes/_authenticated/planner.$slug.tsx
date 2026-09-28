@@ -96,7 +96,7 @@ const PROXIMA: Record<ColId, ColId> = {
 // média em destaque, alta em alerta.
 const PRIORIDADES = [
   { v: "baixa", label: "Baixa", cor: "var(--muted)" },
-  { v: "media", label: "Média", cor: "var(--highlight)" },
+  { v: "media", label: "Média", cor: "var(--accent)" },
   { v: "alta", label: "Alta", cor: "var(--danger)" },
 ];
 const corPrioridade = (v: string | null) =>
@@ -120,7 +120,7 @@ const PALETA_TAGS = [
   "var(--accent)",
   "var(--cat-vendas)",
   "var(--cat-admin)",
-  "var(--highlight)",
+  "var(--secondary-light)",
 ];
 function corDaTag(tag: string): string {
   let h = 0;
@@ -676,8 +676,13 @@ function PlannerBoard() {
             </span>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface)]">
               <div
-                className="h-full rounded-full bg-[var(--secondary)] transition-all duration-300"
-                style={{ width: `${pctShown}%` }}
+                className="h-full w-full origin-left rounded-full bg-[var(--secondary)]"
+                style={{
+                  transform: `scaleX(${pctShown / 100})`,
+                  transition: reduceMotion
+                    ? "none"
+                    : "transform 250ms cubic-bezier(0.4, 0, 0.2, 1)",
+                }}
               />
             </div>
             <span className="shrink-0 text-[13px] text-[var(--ink-soft)]">
@@ -1024,10 +1029,11 @@ function PlannerBoard() {
       <div
         onClick={fecharDetalhe}
         aria-hidden="true"
-        className="fixed inset-0 z-30 bg-[rgba(10,10,10,0.18)] transition-opacity duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        className="fixed inset-0 z-30 bg-[rgba(10,10,10,0.18)]"
         style={{
           opacity: detalheId ? 1 : 0,
           pointerEvents: detalheId ? "auto" : "none",
+          transition: reduceMotion ? "none" : "opacity 200ms cubic-bezier(0.22,1,0.36,1)",
         }}
       />
       <aside

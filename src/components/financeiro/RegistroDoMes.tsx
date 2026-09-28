@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Vazio } from "@/components/layout/Vazio";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -55,6 +56,8 @@ export function RegistroDoMes({
 }) {
   const [modalAberto, setModalAberto] = useState(false);
   const [lancamentoEdit, setLancamentoEdit] = useState<Lancamento | null>(null);
+  const [lancamentoExcluir, setLancamentoExcluir] = useState<Lancamento | null>(null);
+  const [excluindo, setExcluindo] = useState(false);
 
   const doMes = useMemo(() => {
     return lancamentos
@@ -72,14 +75,21 @@ export function RegistroDoMes({
     setModalAberto(true);
   };
 
-  const excluir = async (l: Lancamento) => {
-    if (!window.confirm("Excluir este lançamento? Essa ação não pode ser desfeita.")) return;
-    const { error } = await supabase.from("lancamentos").delete().eq("id", l.id);
+  const excluir = (l: Lancamento) => {
+    setLancamentoExcluir(l);
+  };
+
+  const confirmarExcluir = async () => {
+    if (!lancamentoExcluir) return;
+    setExcluindo(true);
+    const { error } = await supabase.from("lancamentos").delete().eq("id", lancamentoExcluir.id);
+    setExcluindo(false);
     if (error) {
       toastErro("Não conseguimos excluir o lançamento. Tenta de novo.");
       return;
     }
-    track("lancamento_excluido", { tipo: l.tipo });
+    track("lancamento_excluido", { tipo: lancamentoExcluir.tipo });
+    setLancamentoExcluir(null);
     onMudou();
   };
 
@@ -140,7 +150,7 @@ export function RegistroDoMes({
               </button>
               <button
                 type="button"
-                onClick={() => void excluir(l)}
+                onClick={() => excluir(l)}
                 aria-label={`Excluir lançamento de ${fmtValor(Number(l.valor))}`}
                 title="Excluir"
                 className="shrink-0 rounded-md p-1.5 text-[var(--muted)] transition-colors hover:bg-[var(--surface)] hover:text-[var(--danger)]"
@@ -186,6 +196,17 @@ export function RegistroDoMes({
           }}
         />
       )}
+
+      <ConfirmarAcao
+        open={!!lancamentoExcluir}
+        onOpenChange={(open) => !open && setLancamentoExcluir(null)}
+        titulo="Excluir lançamento"
+        descricao="Essa ação não pode ser desfeita."
+        textoConfirmar="Excluir"
+        destrutivo
+        carregando={excluindo}
+        onConfirmar={() => void confirmarExcluir()}
+      />
     </div>
   );
 }

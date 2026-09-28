@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, FileText, Lock, Wallet } from "lucide-react";
+import { FileText, Lock, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -9,6 +9,8 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -140,6 +142,8 @@ function FinanceiroPage() {
   } | null>(null);
   const [lancamentoEdit, setLancamentoEdit] = useState<Lancamento | null>(null);
   const [modalVendaAberto, setModalVendaAberto] = useState(false);
+  const [lancamentoExcluir, setLancamentoExcluir] = useState<Lancamento | null>(null);
+  const [excluindoLancamento, setExcluindoLancamento] = useState(false);
 
   // ── Filtros do histórico ──
   const [periodo, setPeriodo] = useState<PeriodoId>("mes");
@@ -315,15 +319,22 @@ function FinanceiroPage() {
     setModalAberto(true);
   };
 
-  const excluirLancamento = async (l: Lancamento) => {
-    if (!window.confirm("Excluir este lançamento? Essa ação não pode ser desfeita.")) return;
-    const { error } = await supabase.from("lancamentos").delete().eq("id", l.id);
+  const excluirLancamento = (l: Lancamento) => {
+    setLancamentoExcluir(l);
+  };
+
+  const confirmarExcluirLancamento = async () => {
+    if (!lancamentoExcluir) return;
+    setExcluindoLancamento(true);
+    const { error } = await supabase.from("lancamentos").delete().eq("id", lancamentoExcluir.id);
+    setExcluindoLancamento(false);
     if (error) {
       toastErro("Não conseguimos excluir o lançamento. Tenta de novo.");
       return;
     }
-    track("lancamento_excluido", { tipo: l.tipo });
+    track("lancamento_excluido", { tipo: lancamentoExcluir.tipo });
     qc.invalidateQueries({ queryKey: ["financeiro", userId] });
+    setLancamentoExcluir(null);
   };
 
   // Denominador único: valor_alvo da meta "Meta do mês" (mesma fonte que /metas gerencia).
@@ -400,7 +411,7 @@ function FinanceiroPage() {
       <div>
         {/* ───────── 1. Cards de resumo ───────── */}
         <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Entradas
             </p>
@@ -410,7 +421,7 @@ function FinanceiroPage() {
             <p className="mt-1 text-[13px] text-[var(--muted)]">{numEntradasMes} registros</p>
           </div>
 
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Saídas
             </p>
@@ -422,7 +433,7 @@ function FinanceiroPage() {
             </p>
           </div>
 
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]">
+          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
               Sobrou no mês
             </p>
@@ -456,7 +467,11 @@ function FinanceiroPage() {
                   das marcas e o selo de "entraram até aqui", que moram fora dele. */}
               <div className="absolute inset-0 overflow-hidden rounded-lg">
                 <div
-                  className="absolute inset-y-0 left-0 w-full origin-left bg-[var(--secondary)] transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+                  className={`absolute inset-y-0 left-0 w-full origin-left bg-[var(--secondary)] ${
+                    reduce
+                      ? ""
+                      : "transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+                  }`}
                   style={{ transform: `scaleX(${(barOn ? metaPct : 0) / 100})` }}
                 />
               </div>
@@ -689,6 +704,18 @@ function FinanceiroPage() {
           onIrParaFinanceiro={() => setResumoContadorAberto(false)}
         />
       )}
+
+      {/* ───────── 8. Confirmação: excluir lançamento ───────── */}
+      <ConfirmarAcao
+        open={!!lancamentoExcluir}
+        onOpenChange={(open) => !open && setLancamentoExcluir(null)}
+        titulo="Excluir lançamento"
+        descricao="Essa ação não pode ser desfeita."
+        textoConfirmar="Excluir"
+        destrutivo
+        carregando={excluindoLancamento}
+        onConfirmar={() => void confirmarExcluirLancamento()}
+      />
     </PaginaLogada>
   );
 }
@@ -703,11 +730,10 @@ function LinhaLancamento({
   onEditar: () => void;
   onExcluir: () => void;
 }) {
-  const [menuAberto, setMenuAberto] = useState(false);
   const entrada = l.tipo === "entrada";
 
   return (
-    <div className="group relative flex items-center justify-between gap-4 rounded-lg border-b border-[var(--line)] px-3 py-4 transition-colors duration-150 hover:bg-white">
+    <div className="flex items-center justify-between gap-4 rounded-lg border-b border-[var(--line)] px-3 py-4 transition-colors duration-150 hover:bg-white">
       <div className="min-w-0">
         <p className="text-[15px] text-[var(--ink-soft)]">
           {l.descricao || (entrada ? "Entrada" : "Saída")}
@@ -730,48 +756,13 @@ function LinhaLancamento({
           {entrada ? "+ " : "− "}
           {fmt(Number(l.valor))}
         </p>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setMenuAberto((v) => !v)}
-            aria-label="Opções do lançamento"
-            title="Opções do lançamento"
-            className={`flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
-              menuAberto ? "opacity-100" : ""
-            }`}
-          >
-            <MoreHorizontal size={18} aria-hidden="true" />
-          </button>
-          {menuAberto && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setMenuAberto(false)}
-                aria-hidden="true"
-              />
-              <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--line)] bg-white py-1 shadow-sm">
-                <button
-                  onClick={() => {
-                    setMenuAberto(false);
-                    onEditar();
-                  }}
-                  className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuAberto(false);
-                    onExcluir();
-                  }}
-                  className="block w-full px-3 py-2 text-left text-[14px] text-[var(--danger)] hover:bg-[var(--surface)]"
-                >
-                  Excluir
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        <MenuOpcoes
+          align="end"
+          itens={[
+            { label: "Editar", onClick: onEditar },
+            { label: "Excluir", onClick: onExcluir, destrutivo: true },
+          ]}
+        />
       </div>
     </div>
   );

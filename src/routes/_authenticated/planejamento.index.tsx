@@ -13,6 +13,7 @@ import {
 } from "@/lib/planejamento";
 import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
@@ -327,8 +328,6 @@ function PlanejamentoPage() {
   });
 
   const profile = dadosQuery.data?.profile;
-  const initial = (profile?.full_name?.charAt(0) || "P").toUpperCase();
-  const streak = profile?.streak ?? 0;
   const businessName = profile?.business_name?.trim() || "";
   const produtos = dadosQuery.data?.produtos ?? [];
   const metasAtivas = useMemo(
@@ -445,8 +444,8 @@ function PlanejamentoPage() {
                 aria-label={`${concluidosCount} de ${TOTAL_MODULOS} módulos concluídos`}
               >
                 <span
-                  className="block h-full rounded-full bg-[var(--secondary)] transition-[width] duration-500"
-                  style={{ width: `${(concluidosCount / TOTAL_MODULOS) * 100}%` }}
+                  className="block h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+                  style={{ transform: `scaleX(${concluidosCount / TOTAL_MODULOS})` }}
                 />
               </div>
               <span className="shrink-0 text-[13px] text-[var(--ink-soft)]">
@@ -460,7 +459,7 @@ function PlanejamentoPage() {
               <button
                 type="button"
                 onClick={() => irParaModulo(moduloAtual)}
-                className={`${BOTAO_PRIMARIO} mt-4`}
+                className={`${BTN_ACAO} mt-4`}
               >
                 {secoesFeitasModuloAtual > 0 ? "Continuar" : "Começar"} o Módulo {moduloAtual}
                 <span aria-hidden="true">→</span>
@@ -475,7 +474,7 @@ function PlanejamentoPage() {
                 enquanto o conteúdo passa por baixo. */}
           <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
             <div className="py-3">
-              <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2">
                 {MODULOS.map((m) => {
                   const secoes = secoesDoModulo(m.n);
                   const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
@@ -599,10 +598,7 @@ function PlanejamentoPage() {
                             {m.nome}
                           </h2>
                           {temAlgo && (
-                            <LinkInterno
-                              href={ferramenta.rota}
-                              className={`${BOTAO_SECUNDARIO} mt-2`}
-                            >
+                            <LinkInterno href={ferramenta.rota} className={`${BTN_MIUDO} mt-2`}>
                               {ferramenta.nome}
                               <span aria-hidden="true">→</span>
                             </LinkInterno>
@@ -612,7 +608,7 @@ function PlanejamentoPage() {
                       {temAlgo && (
                         <LinkInterno
                           href={`/planejamento/modulo/${m.n}`}
-                          className={`${BOTAO_SECUNDARIO} shrink-0`}
+                          className={`${BTN_MIUDO} shrink-0`}
                         >
                           Editar
                           <span aria-hidden="true">→</span>
@@ -643,7 +639,7 @@ function PlanejamentoPage() {
                         {proximo && (
                           <LinkInterno
                             href={`/planejamento/modulo/${m.n}`}
-                            className={`${BOTAO_PRIMARIO} mt-3`}
+                            className={`${BTN_ACAO} mt-3`}
                           >
                             Começar o Módulo {m.n}
                             <span aria-hidden="true">→</span>
@@ -700,7 +696,7 @@ function PlanejamentoPage() {
                   { rota: "/financeiro", nome: "Abrir o Financeiro" },
                   { rota: "/metas", nome: "Abrir as Metas" },
                 ].map((f) => (
-                  <LinkInterno key={f.rota} href={f.rota} className={BOTAO_SECUNDARIO}>
+                  <LinkInterno key={f.rota} href={f.rota} className={BTN_MIUDO}>
                     {f.nome}
                     <span aria-hidden="true">→</span>
                   </LinkInterno>
@@ -713,17 +709,6 @@ function PlanejamentoPage() {
     </PaginaLogada>
   );
 }
-
-/**
- * As duas únicas formas de botão da tela, iguais às do site público: o que muda
- * entre elas é o preenchimento, não o contorno. Antes esta tela tinha cinco
- * formas convivendo (pílula sólida, pílula clara, link de texto, canto médio e
- * uma variável de raio usada só aqui), e nada ensinava o que era clicável.
- */
-const BOTAO_PRIMARIO =
-  "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform hover:-translate-y-px";
-const BOTAO_SECUNDARIO =
-  "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] px-4 py-2 text-[13px] font-semibold text-[var(--ink)] no-underline transition-transform hover:-translate-y-px hover:bg-white";
 
 function Rotulo({ campo }: { campo: string }) {
   return (
@@ -785,8 +770,8 @@ function BlocoView({
         {cards.map((c) => (
           <div
             key={c.c}
-            className={`rounded-xl border border-[var(--line)] p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)] ${
-              c.tom === "pink" ? "bg-[var(--surface)]" : "bg-white"
+            className={`rounded-xl border border-[var(--line)] p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)] ${
+              c.tom === "pink" ? "bg-[var(--surface-pink)]" : "bg-white"
             }`}
           >
             <Rotulo campo={c.c} />
@@ -882,7 +867,9 @@ function BlocoView({
 }
 
 function ProductCard({ produto }: { produto: ProdutoRow }) {
+  const reduce = usePrefersReducedMotion();
   const shown = useEntrada();
+  const cheio = shown || reduce;
   const custo = produto.preco_custo ?? 0;
   const margem =
     produto.preco_venda > 0
@@ -895,7 +882,7 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
        olho pela coluna de preços. Antes o nome de duas ou três linhas empurrava
        o preço pra alturas diferentes em cada cartão. Três colunas, não quatro:
        a quarta deixava ~200px e picotava o nome. */
-    <div className="col-span-12 flex flex-col rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)] sm:col-span-6 lg:col-span-4">
+    <div className="col-span-12 flex flex-col rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)] sm:col-span-6 lg:col-span-4">
       <p className="text-[18px] leading-tight text-[var(--ink)]">{produto.nome}</p>
       <p className="mt-0.5 text-[12px] text-[var(--muted)]">
         {TIPO_LABEL[produto.tipo] ?? produto.tipo}
@@ -907,11 +894,8 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
       </p>
       <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
         <div
-          className="h-full rounded-full bg-[var(--secondary)]"
-          style={{
-            width: shown ? `${margem}%` : "0%",
-            transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
-          }}
+          className="h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+          style={{ transform: `scaleX(${cheio ? margem / 100 : 0})` }}
         />
       </div>
       <p className="mt-1.5 text-[12px] text-[var(--muted)]">
@@ -938,7 +922,9 @@ function MetaTrack({
   celebracao?: string;
   agora: number;
 }) {
+  const reduce = usePrefersReducedMotion();
   const shown = useEntrada();
+  const cheio = shown || reduce;
   const textos: Record<string, string | undefined> = {
     "financeiro.meta_minima": minima,
     "financeiro.meta_boa": boa,
@@ -958,13 +944,12 @@ function MetaTrack({
         Onde o negócio está agora
       </p>
       <div className="relative mx-1 my-9 h-3.5 rounded-lg border border-[var(--line)] bg-white">
-        <div
-          className="absolute inset-y-0 left-0 rounded-lg bg-[var(--secondary)]"
-          style={{
-            width: shown ? `${pct(agora)}%` : "0%",
-            transition: "width 800ms cubic-bezier(0.22,1,0.36,1)",
-          }}
-        />
+        <div className="absolute inset-0 overflow-hidden rounded-lg">
+          <div
+            className="absolute inset-y-0 left-0 w-full origin-left bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+            style={{ transform: `scaleX(${(cheio ? pct(agora) : 0) / 100})` }}
+          />
+        </div>
         {marcas.map((m, i) => {
           const v = valores[i];
           const ultimo = i === marcas.length - 1;
@@ -1065,7 +1050,9 @@ function GoalRow({
   alvo: number;
   formato: string;
 }) {
+  const reduce = usePrefersReducedMotion();
   const shown = useEntrada();
+  const cheio = shown || reduce;
   const pct = alvo > 0 ? Math.min(100, Math.round((atual / alvo) * 100)) : 0;
   const fmt = (v: number) =>
     formato === "moeda" ? `R$ ${v.toLocaleString("pt-BR")}` : v.toLocaleString("pt-BR");
@@ -1076,11 +1063,8 @@ function GoalRow({
       </span>
       <span className="h-2.5 flex-1 overflow-hidden rounded-md border border-[var(--line)] bg-white">
         <span
-          className="block h-full rounded-md bg-[var(--accent)]"
-          style={{
-            width: shown ? `${pct}%` : "0%",
-            transition: "width 700ms cubic-bezier(0.22,1,0.36,1)",
-          }}
+          className="block h-full w-full origin-left rounded-md bg-[var(--accent)] transition-transform duration-200 motion-reduce:transition-none"
+          style={{ transform: `scaleX(${cheio ? pct / 100 : 0})` }}
         />
       </span>
       <span className="w-[110px] shrink-0 text-right text-[13px] tabular-nums text-[var(--ink-soft)]">

@@ -140,12 +140,12 @@ function CartaoFinanceiro({
   padding?: string;
   children: ReactNode;
 }) {
-  const base = `block rounded-xl border border-[var(--line)] bg-white ${padding}`;
+  const base = `block rounded-xl border border-[var(--line)] bg-[var(--surface)] ${padding}`;
   if (!href) return <div className={base}>{children}</div>;
   return (
     <LinkInterno
       href={href}
-      className={`group ${base} no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]`}
+      className={`group ${base} no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]`}
     >
       {children}
     </LinkInterno>
@@ -493,7 +493,7 @@ function PainelPage() {
         { onConflict: "user_id,data" },
       );
     if (error) {
-      toastErro("Não conseguimos guardar sua intenção. Tenta de novo.");
+      toastErro("A Pólia não conseguiu guardar sua intenção. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
@@ -591,14 +591,14 @@ function PainelPage() {
                   }}
                   placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
                   aria-labelledby="intencao-dia-rotulo"
-                  className="h-[38px] flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary)]"
+                  className="h-11 flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary)]"
                 />
                 <button
                   type="button"
                   onClick={salvarIntencao}
                   aria-label="Guardar intenção"
                   title="Guardar intenção"
-                  className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] transition-transform duration-150 hover:-translate-y-px"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] transition-transform duration-150 hover:-translate-y-px"
                 >
                   <Check size={16} aria-hidden="true" />
                 </button>
@@ -616,7 +616,7 @@ function PainelPage() {
                   }}
                   aria-label="Editar intenção"
                   title="Editar intenção"
-                  className="rounded-md p-1 text-[var(--muted)] transition-colors hover:bg-[var(--secondary-light)] hover:text-[var(--ink)]"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--secondary-light)] hover:text-[var(--ink)]"
                 >
                   <Pencil size={14} aria-hidden="true" />
                 </button>
@@ -789,7 +789,7 @@ function PainelPage() {
               <div className={SPAN_CLASS[4]}>
                 <LinkInterno
                   href={destino("/clientes", clientesLiberado)}
-                  className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
+                  className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
@@ -833,7 +833,7 @@ function PainelPage() {
 
               {/* Tarefas de hoje */}
               <div className={SPAN_CLASS[6]}>
-                <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
                       <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
@@ -916,7 +916,7 @@ function PainelPage() {
 
               {/* Semana de trabalho */}
               <div className={SPAN_CLASS[6]}>
-                <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
                       <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />

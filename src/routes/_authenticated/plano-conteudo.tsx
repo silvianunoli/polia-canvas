@@ -1,13 +1,15 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Lock, Check } from "lucide-react";
+import { Sparkles, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
+import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
@@ -77,7 +79,7 @@ function PlanoConteudoPage() {
     enabled: !!userId && ehProjete,
     queryFn: async () => {
       const { data } = await supabase
-        .from("ia_plano_conteudo" as never)
+        .from("ia_plano_conteudo")
         .select("id, data, tipo, titulo, ideia, postado")
         .eq("user_id", userId!)
         .eq("ano", anoAtual)
@@ -120,21 +122,34 @@ function PlanoConteudoPage() {
     }
   };
 
+  // marcarPostado/salvarCampo aplicam um patch otimista só na linha editada em
+  // vez de invalidateQueries (que refazia o fetch do ano inteiro a cada
+  // clique/blur) — o UPDATE já confirmou no servidor antes do patch local.
   const marcarPostado = async (row: DiaRow, postado: boolean) => {
     await supabase
-      .from("ia_plano_conteudo" as never)
-      .update({ postado, postado_em: postado ? new Date().toISOString() : null } as never)
+      .from("ia_plano_conteudo")
+      .update({ postado, postado_em: postado ? new Date().toISOString() : null })
       .eq("id", row.id);
-    await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
+    qc.setQueryData<DiaRow[]>(["ia-plano-conteudo", userId, anoAtual], (old) =>
+      old?.map((d) => (d.id === row.id ? { ...d, postado } : d)),
+    );
   };
 
   const salvarCampo = async (row: DiaRow, campo: "titulo" | "ideia" | "tipo", valor: string) => {
     if (valor === row[campo]) return;
-    await supabase
-      .from("ia_plano_conteudo" as never)
-      .update({ [campo]: valor } as never)
-      .eq("id", row.id);
-    await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
+    // Update por branch em vez de `{ [campo]: valor }` — a chave computada
+    // com tipo união não bate com o Update gerado do Supabase sem `as never`.
+    const query = supabase.from("ia_plano_conteudo");
+    if (campo === "titulo") {
+      await query.update({ titulo: valor }).eq("id", row.id);
+    } else if (campo === "ideia") {
+      await query.update({ ideia: valor }).eq("id", row.id);
+    } else {
+      await query.update({ tipo: valor }).eq("id", row.id);
+    }
+    qc.setQueryData<DiaRow[]>(["ia-plano-conteudo", userId, anoAtual], (old) =>
+      old?.map((d) => (d.id === row.id ? { ...d, [campo]: valor } : d)),
+    );
   };
 
   // Só barra depois de saber o plano de verdade — ver `carregando` em useUserMeta.
@@ -148,24 +163,12 @@ function PlanoConteudoPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Plano de conteúdo" titulo="O plano de conteúdo do ano é do Pro">
-        <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
-          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
-            <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
-          </span>
-          <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
-            A Aimer monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e
-            do seu público.
-          </p>
-          <Link
-            to="/upgrade"
-            search={{ rota: "/plano-conteudo", tier: "projete" }}
-            className={`${BTN_ACAO} mt-6`}
-          >
-            Conhecer o Pro
-          </Link>
-        </div>
-      </PaginaLogada>
+      <UpgradeGate
+        eyebrow="Plano de conteúdo"
+        titulo="O plano de conteúdo do ano é do Pro"
+        feature="A Aimer monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e do seu público."
+        rota="/plano-conteudo"
+      />
     );
   }
 
@@ -177,15 +180,8 @@ function PlanoConteudoPage() {
       subtitulo="Montado a partir da sua marca, do seu público e do que você vende."
     >
       <div>
-        {/* Aviso de conteúdo gerado por IA, mesmo tratamento da Aimer: fixo
-            abaixo do cabeçalho, todos os estados (carregando, gerado, erro),
-            sem dispensar. Só não existe na tela de upgrade (return acima),
-            que não tem conteúdo de IA. --muted #6B6B6B sobre --bg #F2F0ED
-            dá 4,7:1, passa AA em 14px. */}
-        <p className="mt-3 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
-          O plano de conteúdo é gerado por inteligência artificial. São sugestões pra ajustar, não
-          um calendário fechado, e a IA pode errar. Vale ler antes de publicar.
-        </p>
+        {/* Só não existe na tela de upgrade (return acima), que não tem conteúdo de IA. */}
+        <AvisoConteudoIA texto="O plano de conteúdo é gerado por inteligência artificial. São sugestões pra ajustar, não um calendário fechado, e a IA pode errar. Vale ler antes de publicar." />
         {precisaLembrar && (
           <div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--secondary-light)] px-4 py-3">
             <p className="text-[14px] text-[var(--ink)]">

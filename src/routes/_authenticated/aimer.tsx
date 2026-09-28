@@ -233,7 +233,7 @@ function AimerPage() {
                         type="button"
                         onClick={() => copiar(msg.id, msg.texto)}
                         aria-label="Copiar resposta"
-                        className="flex items-center gap-1 text-[11px] text-[var(--muted)] hover:text-[var(--ink-soft)]"
+                        className="relative flex items-center gap-1 text-[11px] text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:text-[var(--ink-soft)]"
                       >
                         <Copy size={11} aria-hidden="true" />
                         {copiadoId === msg.id ? "copiado" : "copiar"}

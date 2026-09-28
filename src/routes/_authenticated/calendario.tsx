@@ -343,6 +343,7 @@ function CalendarioPage() {
     : googleAtivo
       ? "O calendário junta as tarefas do Planner e os compromissos do Google Calendar. As duas fontes estão vazias por aqui."
       : "O calendário mostra as tarefas do Planner que têm prazo. Nenhuma delas cai neste mês.";
+  const itensDiaSelecionado = diaSelecionado ? itensDoDia(diaSelecionado) : [];
 
   return (
     <PaginaLogada
@@ -512,7 +513,7 @@ function CalendarioPage() {
                         key={`${item.fonte}-${item.id}`}
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
                           item.fonte === "google"
-                            ? "bg-[var(--muted)]"
+                            ? "bg-[var(--ink-soft)]"
                             : item.concluido
                               ? "bg-[var(--line)]"
                               : "bg-[var(--secondary)]"
@@ -667,7 +668,7 @@ function CalendarioPage() {
                   </button>
                 )}
 
-                {itensDoDia(diaSelecionado).length === 0 ? (
+                {itensDiaSelecionado.length === 0 ? (
                   <Vazio
                     denso
                     titulo="Nada marcado nesse dia."
@@ -679,7 +680,7 @@ function CalendarioPage() {
                   />
                 ) : (
                   <ul className="flex flex-col gap-2">
-                    {itensDoDia(diaSelecionado).map((item) => (
+                    {itensDiaSelecionado.map((item) => (
                       <li
                         key={`${item.fonte}-${item.id}`}
                         className="flex items-center gap-3 rounded-lg border border-[var(--line)] px-3 py-2"
@@ -687,7 +688,7 @@ function CalendarioPage() {
                         <span
                           className={`h-2 w-2 shrink-0 rounded-full ${
                             item.fonte === "google"
-                              ? "bg-[var(--highlight)]"
+                              ? "bg-[var(--ink-soft)]"
                               : "bg-[var(--secondary)]"
                           }`}
                           aria-hidden="true"

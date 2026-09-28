@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { MoreHorizontal, Lock, Plus, Trash2, Copy, Package } from "lucide-react";
+import { Lock, Plus, Trash2, Copy, Package, Pencil, RefreshCw, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -24,6 +24,8 @@ import {
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 
 type ProdutoTipo = "fisico" | "digital" | "servico";
 
@@ -145,6 +147,8 @@ function ProdutosPage() {
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   const [produtoEdit, setProdutoEdit] = useState<Produto | null>(null);
   const [produtoRecalcular, setProdutoRecalcular] = useState<Produto | null>(null);
+  const [produtoParaArquivar, setProdutoParaArquivar] = useState<Produto | null>(null);
+  const [arquivando, setArquivando] = useState(false);
 
   const initial = (user?.user_metadata?.full_name ?? user?.email ?? "P").charAt(0).toUpperCase();
 
@@ -211,9 +215,12 @@ function ProdutosPage() {
     setTab("calculadora");
   };
 
-  const arquivar = async (p: Produto) => {
-    if (!window.confirm(`Arquivar "${p.nome}"? Ele sai do seu catálogo.`)) return;
-    await supabase.from("produtos").update({ arquivado: true }).eq("id", p.id);
+  const confirmarArquivar = async () => {
+    if (!produtoParaArquivar) return;
+    setArquivando(true);
+    await supabase.from("produtos").update({ arquivado: true }).eq("id", produtoParaArquivar.id);
+    setArquivando(false);
+    setProdutoParaArquivar(null);
     qc.invalidateQueries({ queryKey: ["produtos", userId] });
   };
 
@@ -320,7 +327,7 @@ function ProdutosPage() {
                     indice={i}
                     somenteLeitura={idsExcedentes.has(p.id)}
                     onEditar={() => abrirEditar(p)}
-                    onArquivar={() => arquivar(p)}
+                    onArquivar={() => setProdutoParaArquivar(p)}
                     onRecalcular={() => abrirRecalcular(p)}
                   />
                 ))}
@@ -371,6 +378,18 @@ function ProdutosPage() {
           }}
         />
       )}
+
+      <ConfirmarAcao
+        open={!!produtoParaArquivar}
+        onOpenChange={(open) => {
+          if (!open) setProdutoParaArquivar(null);
+        }}
+        titulo={`Arquivar "${produtoParaArquivar?.nome ?? ""}"?`}
+        descricao="Sai do seu catálogo, mas continua guardado. Não é o mesmo que apagar."
+        textoConfirmar="Arquivar"
+        onConfirmar={confirmarArquivar}
+        carregando={arquivando}
+      />
     </PaginaLogada>
   );
 }
@@ -393,7 +412,6 @@ function ProdutoCard({
   onArquivar: () => void;
   onRecalcular: () => void;
 }) {
-  const [menuAberto, setMenuAberto] = useState(false);
   const reduce = usePrefersReducedMotion();
   const [shown, setShown] = useState(false);
 
@@ -405,8 +423,6 @@ function ProdutoCard({
     const r = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
     return () => cancelAnimationFrame(r);
   }, [reduce]);
-
-  const fecharMenu = () => setMenuAberto(false);
 
   const precoVenda = Number(produto.preco_venda);
   const custo = produto.preco_custo != null ? Number(produto.preco_custo) : 0;
@@ -420,53 +436,19 @@ function ProdutoCard({
   return (
     <div className="group relative rounded-xl border border-[var(--line)] bg-white p-4">
       {/* Menu de contexto */}
-      <div className="absolute right-1 top-1">
-        <button
-          onClick={() => setMenuAberto((v) => !v)}
-          aria-label="Opções do produto"
-          className={`flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] opacity-0 transition-opacity duration-150 hover:bg-[var(--surface)] hover:text-[var(--ink)] focus-visible:opacity-100 group-hover:opacity-100 ${
-            menuAberto ? "opacity-100" : ""
-          }`}
-        >
-          <MoreHorizontal size={18} aria-hidden="true" />
-        </button>
-        {menuAberto && (
-          <>
-            {/* Camada para fechar ao clicar fora */}
-            <div className="fixed inset-0 z-10" onClick={fecharMenu} aria-hidden="true" />
-            <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--line)] bg-white py-1 shadow-sm">
-              <button
-                onClick={() => {
-                  fecharMenu();
-                  onEditar();
-                }}
-                disabled={somenteLeitura}
-                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-              >
-                Editar
-              </button>
-              <button
-                onClick={() => {
-                  fecharMenu();
-                  onRecalcular();
-                }}
-                disabled={somenteLeitura}
-                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:hover:bg-transparent"
-              >
-                Recalcular preço
-              </button>
-              <button
-                onClick={() => {
-                  fecharMenu();
-                  onArquivar();
-                }}
-                className="block w-full px-3 py-2 text-left text-[14px] text-[var(--danger)] hover:bg-[var(--surface)]"
-              >
-                Arquivar
-              </button>
-            </div>
-          </>
-        )}
+      <div className="absolute right-1 top-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
+        <MenuOpcoes
+          itens={[
+            { label: "Editar", icone: Pencil, onClick: onEditar, desabilitado: somenteLeitura },
+            {
+              label: "Recalcular preço",
+              icone: RefreshCw,
+              onClick: onRecalcular,
+              desabilitado: somenteLeitura,
+            },
+            { label: "Arquivar", icone: Archive, onClick: onArquivar },
+          ]}
+        />
       </div>
 
       {/* Foto ou avatar de inicial */}
@@ -523,10 +505,10 @@ function ProdutoCard({
           {produto.preco_custo != null && (
             <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
               <div
-                className="h-full rounded-full bg-[var(--secondary)]"
+                className="h-full w-full origin-left rounded-full bg-[var(--secondary)]"
                 style={{
-                  width: shown ? `${sobraPct}%` : "0%",
-                  transition: "width 600ms cubic-bezier(0.22,1,0.36,1)",
+                  transform: `scaleX(${shown ? sobraPct / 100 : 0})`,
+                  transition: reduce ? "none" : "transform 200ms cubic-bezier(0.22,1,0.36,1)",
                 }}
               />
             </div>

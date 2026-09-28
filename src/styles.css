@@ -96,6 +96,7 @@
   --danger-soft: #fbeae7; /* fundo sutil da zona de perigo */
   --cat-vendas: #e0a8c0; /* categoria "Vendas" do Planner — só fundo/borda/dot, nunca texto corrido */
   --cat-admin: #b9b2a6; /* categoria "Admin" do Planner — idem */
+  --shadow-card-hover: 0 4px 12px rgba(10, 10, 10, 0.08); /* hover de cartão clicável — token único, nunca repetir o rgba solto */
 
   /* Bridge pros defaults internos dos primitivos shadcn (Switch, Checkbox, etc.)
      que usam --primary/--background direto e NÃO são portalados — ficam dentro
@@ -316,6 +317,23 @@
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 600;
+}
+
+/* Sidebar: largura inicial decidida por CSS puro, sem esperar o JS. O
+   `useEffect` que detecta o breakpoint só roda depois do primeiro paint — se
+   a largura dependesse só dele, a sidebar pintava expandida (232px) e
+   recolhia pra 64px visivelmente em toda carga de página em tela ≤1366px.
+   O componente (`Sidebar.tsx`) só aplica `width` inline depois que o JS
+   confirma o breakpoint via `matchMedia`, então até lá esta media query
+   decide a largura; quando o inline style assume, os dois já concordam e
+   não há salto. */
+.sidebar-largura {
+  width: 232px;
+}
+@media (max-width: 1366px) {
+  .sidebar-largura {
+    width: 64px;
+  }
 }
 
 /* Reduced motion — as classes utilitárias de animação vêm de tw-animate-css

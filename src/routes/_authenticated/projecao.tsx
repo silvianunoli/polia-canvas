@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Lock, AlertTriangle, TrendingDown } from "lucide-react";
+import { Sparkles, AlertTriangle, TrendingDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
+import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -183,12 +184,12 @@ function ProjecaoPage() {
     try {
       await supabase
         .from("profiles")
-        .update({ pro_labore_desejado: proLaboreDesejado } as never)
+        .update({ pro_labore_desejado: proLaboreDesejado })
         .eq("id", userId!);
       if (metaMes?.id && metaTxt != null && metaAlvo != null) {
         await supabase
           .from("metas")
-          .update({ valor_alvo: metaAlvo, updated_at: new Date().toISOString() } as never)
+          .update({ valor_alvo: metaAlvo, updated_at: new Date().toISOString() })
           .eq("id", metaMes.id);
       }
       track("projecao_confirmada", { proLaboreDesejado, metaAlvo });
@@ -213,24 +214,12 @@ function ProjecaoPage() {
 
   if (!ehProjete) {
     return (
-      <PaginaLogada eyebrow="Projeção" titulo="Projeção é do Pro">
-        <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
-          <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
-            <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
-          </span>
-          <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
-            Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo
-            a partir do que já está na Pólia.
-          </p>
-          <Link
-            to="/upgrade"
-            search={{ rota: "/projecao", tier: "projete" }}
-            className={`${BTN_ACAO} mt-6`}
-          >
-            Conhecer o Pro
-          </Link>
-        </div>
-      </PaginaLogada>
+      <UpgradeGate
+        eyebrow="Projeção"
+        titulo="Projeção é do Pro"
+        feature="Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo a partir do que já está na Pólia."
+        rota="/projecao"
+      />
     );
   }
 
@@ -348,7 +337,7 @@ function ProjecaoPage() {
                 )}
               </div>
 
-              <div className="mt-6 grid grid-cols-2 gap-4 border-t border-[var(--line)] pt-4">
+              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
                 <Campo
                   label="Custos fixos do mês (R$)"
                   valor={custosFixosTxt ?? paraCampo(custosFixosBase)}

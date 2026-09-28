@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<Ticket["status"], string> = {
 };
 
 const STATUS_COR: Record<Ticket["status"], string> = {
-  aberto: "bg-[var(--highlight)] text-[var(--highlight-ink)]",
+  aberto: "bg-[var(--accent)] text-[var(--accent-ink)]",
   em_andamento: "bg-[var(--secondary-light)] text-[var(--secondary-text)]",
   resolvido: "bg-[var(--line)] text-[var(--ink-soft)]",
 };
@@ -57,25 +57,16 @@ function ChamadosPage() {
     queryKey: ["chamados-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [{ data: profile }, { data: tickets }] = await Promise.all([
-        supabase.from("profiles").select("full_name, streak").eq("id", userId!).maybeSingle(),
-        supabase
-          .from("tickets")
-          .select("id, title, status, priority, created_at, updated_at")
-          .eq("user_id", userId!)
-          .order("updated_at", { ascending: false }),
-      ]);
-      return {
-        profile: profile as { full_name: string | null; streak: number | null } | null,
-        tickets: (tickets ?? []) as Ticket[],
-      };
+      const { data } = await supabase
+        .from("tickets")
+        .select("id, title, status, priority, created_at, updated_at")
+        .eq("user_id", userId!)
+        .order("updated_at", { ascending: false });
+      return (data ?? []) as Ticket[];
     },
   });
 
-  const profile = dadosQuery.data?.profile;
-  const tickets = dadosQuery.data?.tickets ?? [];
-  const initial = (profile?.full_name?.charAt(0) || "P").toUpperCase();
-  const streak = profile?.streak ?? 0;
+  const tickets = dadosQuery.data ?? [];
 
   return (
     <PaginaLogada

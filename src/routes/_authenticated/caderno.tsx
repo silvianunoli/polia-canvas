@@ -430,7 +430,7 @@ function CadernoPage() {
                             }}
                             aria-label={n.fixada ? "Desafixar" : "Fixar no topo"}
                             title={n.fixada ? "Desafixar" : "Fixar no topo"}
-                            className={`mt-0.5 shrink-0 ${
+                            className={`relative mt-0.5 shrink-0 before:absolute before:-inset-[14px] before:content-[''] ${
                               n.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                             }`}
                           >
@@ -578,7 +578,7 @@ function CadernoPage() {
 
       {/* Toast de exclusão com desfazer (rede de segurança de 6s) */}
       <div
-        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] shadow-[0_4px_12px_rgba(10,10,10,0.08)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] shadow-[var(--shadow-card-hover)] transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
           toast ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-3 opacity-0"
         }`}
         role="status"

@@ -180,10 +180,10 @@ function Step1({ onNext }: { onNext: () => void }) {
       <LogoPlaceholder />
       <div className="flex flex-col items-center gap-4">
         <Manuscrito>Ei. Que bom ter alguém aqui.</Manuscrito>
-        <Headline size={64}>Oi. Eu sou a Pólia.</Headline>
+        <Headline size={64}>Oi. Essa é a Pólia.</Headline>
       </div>
       <div className="flex flex-col gap-1">
-        <Body>Vou te guiar do primeiro passo até sua primeira ferramenta pronta.</Body>
+        <Body>A Pólia te guia do primeiro passo até sua primeira ferramenta pronta.</Body>
         <Body>Sem curso, sem teoria solta. Só direção.</Body>
       </div>
       <PrimaryCTA onClick={onNext}>Contar do meu negócio →</PrimaryCTA>

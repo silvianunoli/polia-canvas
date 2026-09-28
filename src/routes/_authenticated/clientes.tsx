@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,8 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -227,27 +229,10 @@ function LinhaCliente({
   const [popAberto, setPopAberto] = useState(false);
   const [duplicataData, setDuplicataData] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
-  const [statusAberto, setStatusAberto] = useState(false);
   const [salvandoStatus, setSalvandoStatus] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!popAberto && !statusAberto) return;
-    const aoClicarFora = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setPopAberto(false);
-        setStatusAberto(false);
-      }
-    };
-    document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, [popAberto, statusAberto]);
 
   const mudarStatus = async (novo: StatusPedido) => {
-    if (novo === cliente.status_pedido) {
-      setStatusAberto(false);
-      return;
-    }
+    if (novo === cliente.status_pedido) return;
     setSalvandoStatus(true);
     const { error } = await (
       supabase.from("clientes" as never) as unknown as {
@@ -264,12 +249,10 @@ function LinhaCliente({
       return;
     }
     track("cliente_status_atualizado", { status: novo });
-    setStatusAberto(false);
     onRegistrado();
   };
 
   const abrirPopover = async () => {
-    setStatusAberto(false);
     setPopAberto(true);
     setDuplicataData(null);
     const seteDiasAtras = new Date();
@@ -320,65 +303,43 @@ function LinhaCliente({
   const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
-    >
-      <div className="flex items-center gap-4">
+    <div className="mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]">
+      <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
           <span className="font-sans text-[16px] font-semibold text-[var(--accent-ink)]">
             {cliente.nome.charAt(0).toUpperCase()}
           </span>
         </div>
-        <div>
-          <p className="font-sans text-[15px] font-semibold text-[var(--ink)]">{cliente.nome}</p>
-          <p className="font-sans text-[12px] text-[var(--muted)]">
+        <div className="min-w-0">
+          <p className="truncate font-sans text-[15px] font-semibold text-[var(--ink)]">
+            {cliente.nome}
+          </p>
+          <p className="truncate font-sans text-[12px] text-[var(--muted)]">
             {cliente.contato || "sem contato"}
           </p>
-          <p className="mt-0.5 font-sans text-[13px] text-[var(--ink-soft)]">
+          <p className="mt-0.5 truncate font-sans text-[13px] text-[var(--ink-soft)]">
             {nomeProduto}
             {formatarValorBRL(cliente.valor) ? ` · ${formatarValorBRL(cliente.valor)}` : ""}
             {` · ${formatarDataCurta(cliente.created_at)}`}
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setPopAberto(false);
-              setStatusAberto((v) => !v);
-            }}
-            disabled={salvandoStatus}
-            aria-label="Alterar status do pedido"
-            title="Alterar status do pedido"
-            className={`font-sans text-[11px] px-3 py-1 rounded transition-opacity hover:opacity-80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-50 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
-          >
-            {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem pedido")}
-          </button>
-          {statusAberto && (
-            <div
-              className="absolute right-0 top-[calc(100%+6px)] z-20 w-[190px] rounded-xl border border-[var(--line)] bg-white p-1.5 shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-              onClick={(e) => e.stopPropagation()}
+      <div className="flex shrink-0 items-center gap-3">
+        <MenuOpcoes
+          trigger={
+            <span
+              aria-label={`Alterar status do pedido. Status atual: ${cliente.status_pedido ?? "sem pedido"}.`}
+              className={`rounded px-3 py-1 font-sans text-[11px] transition-opacity hover:opacity-80 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
             >
-              {STATUS_PEDIDO_OPTIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => mudarStatus(s)}
-                  className={`block w-full rounded-lg px-3 py-2 text-left font-sans text-[13px] transition-colors ${
-                    s === cliente.status_pedido
-                      ? "bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                      : "text-[var(--ink)] hover:bg-[var(--bg)]"
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+              {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem pedido")}
+            </span>
+          }
+          itens={STATUS_PEDIDO_OPTIONS.map((s) => ({
+            label: s === cliente.status_pedido ? `${s} (atual)` : s,
+            onClick: () => mudarStatus(s),
+            desabilitado: salvandoStatus,
+          }))}
+        />
         {cliente.venda_registrada ? (
           <span className="shrink-0 font-sans text-[13px] text-[var(--ink-soft)]">
             Registrada ·{" "}
@@ -396,46 +357,29 @@ function LinhaCliente({
         ) : null}
       </div>
 
-      {popAberto && (
-        <div
-          className="absolute right-0 top-[calc(100%+8px)] z-10 w-[300px] rounded-xl border border-[var(--line)] bg-white p-4 text-left shadow-[0_4px_12px_rgba(10,10,10,0.08)]"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <p className="font-sans text-[14px] font-semibold text-[var(--ink)]">
-            Registrar no Financeiro
-          </p>
-          <p className="mt-1 font-sans text-[13px] text-[var(--ink-soft)]">
+      <ConfirmarAcao
+        open={popAberto}
+        onOpenChange={setPopAberto}
+        titulo="Registrar no Financeiro"
+        descricao={
+          <>
             {nomeProduto}
             {formatarValorBRL(cliente.valor) ? ` · ${formatarValorBRL(cliente.valor)}` : ""}
-            {` · categoria: Venda de produto`}
-          </p>
-          {duplicataData && (
-            <p className="mt-3 rounded-lg bg-[var(--bg)] px-3 py-2 font-sans text-[12.5px] text-[var(--ink-soft)]">
-              Já existe um lançamento parecido em {formatarDataCurta(duplicataData)}. Registrar
-              mesmo assim?
-            </p>
-          )}
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              onClick={() => setPopAberto(false)}
-              className="rounded-md border border-[var(--line)] bg-white px-3 py-1.5 font-sans text-[13px] text-[var(--ink)]"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={registrar}
-              disabled={registrando}
-              className="rounded-md border border-[var(--secondary)] bg-[var(--secondary)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--secondary-ink)] disabled:opacity-50"
-            >
-              {registrando
-                ? "Registrando..."
-                : duplicataData
-                  ? "Registrar mesmo assim"
-                  : "Registrar"}
-            </button>
-          </div>
-        </div>
-      )}
+            {" · categoria: Venda de produto"}
+            {duplicataData && (
+              <span className="mt-3 block rounded-lg bg-[var(--bg)] px-3 py-2 text-[12.5px] text-[var(--ink-soft)]">
+                Já existe um lançamento parecido em {formatarDataCurta(duplicataData)}. Registrar
+                mesmo assim?
+              </span>
+            )}
+          </>
+        }
+        textoConfirmar={
+          registrando ? "Registrando..." : duplicataData ? "Registrar mesmo assim" : "Registrar"
+        }
+        onConfirmar={registrar}
+        carregando={registrando}
+      />
     </div>
   );
 }

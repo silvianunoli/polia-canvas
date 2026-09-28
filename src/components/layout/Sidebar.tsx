@@ -86,7 +86,7 @@ function Body({
 
   return (
     <TooltipProvider delayDuration={150}>
-      <div className="flex h-full flex-col overflow-y-auto bg-white">
+      <div className="flex h-full flex-col overflow-y-auto bg-[var(--surface)]">
         {/* Topo: logo + negócio + presença + avatar */}
         <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
           <Link
@@ -261,12 +261,22 @@ function Body({
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  // Enquanto false, a largura da sidebar vem só da classe CSS
+  // `.sidebar-largura` (ver styles.css) — que já nasce no tamanho certo via
+  // media query, sem depender do JS. Assim que o `useEffect` abaixo confirma
+  // o breakpoint real, passamos a aplicar `width` inline (que sobrepõe a
+  // media query) pra manter a interatividade de expandir/colapsar manual;
+  // como os dois valores concordam nesse momento, a troca não causa salto.
+  const [breakpointConfirmado, setBreakpointConfirmado] = useState(false);
 
   // ≤1366px: colapsa para ícones automaticamente.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(max-width: 1366px)");
-    const apply = () => setCollapsed(mq.matches);
+    const apply = () => {
+      setCollapsed(mq.matches);
+      setBreakpointConfirmado(true);
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -276,14 +286,14 @@ export function Sidebar() {
     <>
       {/* Sidebar fixa — desktop/tablet */}
       <aside
-        className="polia-v3 sticky top-0 hidden h-screen flex-shrink-0 border-r border-[var(--line)] bg-white md:block"
-        style={{ width: collapsed ? 64 : 232 }}
+        className="polia-v3 sidebar-largura sticky top-0 hidden h-screen flex-shrink-0 border-r border-[var(--line)] bg-[var(--surface)] md:block"
+        style={breakpointConfirmado ? { width: collapsed ? 64 : 232 } : undefined}
       >
         <Body compact={collapsed} onCollapsedChange={setCollapsed} />
       </aside>
 
       {/* Mobile — hambúrguer + drawer */}
-      <div className="polia-v3 sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-[var(--line)] bg-white px-3 md:hidden">
+      <div className="polia-v3 sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-[var(--line)] bg-[var(--surface)] px-3 md:hidden">
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetTrigger asChild>
             <button
@@ -294,7 +304,7 @@ export function Sidebar() {
               <Menu size={22} aria-hidden="true" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="polia-v3 w-64 bg-white p-0">
+          <SheetContent side="left" className="polia-v3 w-64 bg-[var(--surface)] p-0">
             <Body
               compact={false}
               onNavigate={() => setMobileOpen(false)}

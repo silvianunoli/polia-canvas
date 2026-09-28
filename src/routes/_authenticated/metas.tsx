@@ -1,15 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Plus,
-  MoreHorizontal,
-  Check,
-  ChevronDown,
-  CalendarDays,
-  Target,
-  AlertTriangle,
-} from "lucide-react";
+import { Plus, Check, ChevronDown, CalendarDays, Target, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { TablesUpdate } from "@/integrations/supabase/types";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -17,6 +9,8 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -117,6 +111,7 @@ function MetasPage() {
   const [metaEdit, setMetaEdit] = useState<Meta | null>(null);
   const [verConcluidas, setVerConcluidas] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
+  const [metaArquivar, setMetaArquivar] = useState<Meta | null>(null);
   const [toast, setToast] = useState<{ id: string; titulo: string } | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -196,8 +191,13 @@ function MetasPage() {
   }, []);
 
   const arquivar = (m: Meta) => {
-    if (!window.confirm(`Arquivar "${m.titulo}"? Ela sai da sua lista de metas ativas.`)) return;
-    atualizar.mutate({ id: m.id, patch: { status: "arquivada" } });
+    setMetaArquivar(m);
+  };
+
+  const confirmarArquivar = () => {
+    if (!metaArquivar) return;
+    atualizar.mutate({ id: metaArquivar.id, patch: { status: "arquivada" } });
+    setMetaArquivar(null);
   };
 
   const reabrir = (m: Meta) => {
@@ -364,7 +364,7 @@ function MetasPage() {
 
       {/* ───────── Toast: meta concluída ───────── */}
       <div
-        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] text-[var(--ink)] shadow-[0_4px_12px_rgba(10,10,10,0.08)] transition-opacity duration-[220ms] ${
+        className={`fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-lg border border-[var(--line)] bg-white px-5 py-3 text-[14px] text-[var(--ink)] shadow-[var(--shadow-card-hover)] transition-opacity duration-[220ms] ${
           toast ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         role="status"
@@ -379,6 +379,20 @@ function MetasPage() {
           Desfazer
         </button>
       </div>
+
+      {/* ───────── Confirmação: arquivar meta ───────── */}
+      <ConfirmarAcao
+        open={!!metaArquivar}
+        onOpenChange={(open) => !open && setMetaArquivar(null)}
+        titulo="Arquivar meta"
+        descricao={
+          metaArquivar ? `"${metaArquivar.titulo}" sai da sua lista de metas ativas.` : undefined
+        }
+        textoConfirmar="Arquivar"
+        destrutivo
+        carregando={atualizar.isPending}
+        onConfirmar={confirmarArquivar}
+      />
     </PaginaLogada>
   );
 }
@@ -427,12 +441,19 @@ function MetaCard({
   onSalvarTitulo: (titulo: string) => void;
   onSalvarAtual: (valor: number) => void;
 }) {
-  const [menuAberto, setMenuAberto] = useState(false);
   const [armada, setArmada] = useState(false);
   const pct = progressoPct(meta);
   const pronta = pct >= 100;
   const alvo = meta.valor_alvo ?? 0;
   const vencido = !!meta.prazo && meta.prazo < hojeISODate();
+
+  const reduceMotion = usePrefersReducedMotion();
+  const [barraEntrou, setBarraEntrou] = useState(reduceMotion);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setBarraEntrou(true)));
+    return () => cancelAnimationFrame(raf);
+  }, [reduceMotion]);
 
   const clicarConcluir = () => {
     if (!pronta && !armada) {
@@ -452,43 +473,14 @@ function MetaCard({
       {/* Título + menu */}
       <div className="flex items-start justify-between gap-3">
         <InlineTitle titulo={meta.titulo} onCommit={onSalvarTitulo} />
-        <div className="relative shrink-0">
-          <button
-            onClick={() => setMenuAberto((v) => !v)}
-            aria-label="Opções da meta"
-            className="flex h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--ink)]"
-          >
-            <MoreHorizontal size={18} aria-hidden="true" />
-          </button>
-          {menuAberto && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setMenuAberto(false)}
-                aria-hidden="true"
-              />
-              <div className="absolute right-0 z-20 mt-1 w-32 overflow-hidden rounded-lg border border-[var(--line)] bg-white py-1 shadow-sm">
-                <button
-                  onClick={() => {
-                    setMenuAberto(false);
-                    onEditar();
-                  }}
-                  className="block w-full px-3 py-2 text-left text-[14px] text-[var(--ink)] hover:bg-[var(--surface)]"
-                >
-                  Editar
-                </button>
-                <button
-                  onClick={() => {
-                    setMenuAberto(false);
-                    onArquivar();
-                  }}
-                  className="block w-full px-3 py-2 text-left text-[14px] text-[var(--danger)] hover:bg-[var(--surface)]"
-                >
-                  Arquivar
-                </button>
-              </div>
-            </>
-          )}
+        <div className="shrink-0">
+          <MenuOpcoes
+            align="end"
+            itens={[
+              { label: "Editar", onClick: onEditar },
+              { label: "Arquivar", onClick: onArquivar, destrutivo: true },
+            ]}
+          />
         </div>
       </div>
 
@@ -513,8 +505,12 @@ function MetaCard({
             aria-valuemax={100}
           >
             <div
-              className="h-full rounded-full bg-[var(--secondary)] transition-all"
-              style={{ width: `${pct}%` }}
+              className={`h-full w-full origin-left rounded-full bg-[var(--secondary)] ${
+                reduceMotion
+                  ? ""
+                  : "transition-transform duration-[200ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
+              }`}
+              style={{ transform: `scaleX(${(barraEntrou ? pct : 0) / 100})` }}
             />
           </div>
           <span className="w-9 shrink-0 text-right text-[12px] font-medium text-[var(--muted)]">

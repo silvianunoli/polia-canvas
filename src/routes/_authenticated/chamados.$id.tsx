@@ -39,11 +39,9 @@ function ChamadoDetalhe() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [resposta, setResposta] = useState("");
   const [enviando, setEnviando] = useState(false);
-  const [initial, setInitial] = useState("P");
-  const [streak, setStreak] = useState(0);
 
   const carregar = async () => {
-    const [{ data: t }, { data: msgs }, { data: profile }] = await Promise.all([
+    const [{ data: t }, { data: msgs }] = await Promise.all([
       supabase
         .from("tickets")
         .select("id, title, body, status, created_at")
@@ -54,16 +52,9 @@ function ChamadoDetalhe() {
         .select("id, author_role, body, created_at")
         .eq("ticket_id", id)
         .order("created_at", { ascending: true }),
-      userId
-        ? supabase.from("profiles").select("full_name, streak").eq("id", userId).maybeSingle()
-        : Promise.resolve({ data: null }),
     ]);
     setTicket((t as Ticket | null) ?? null);
     setMensagens((msgs as Mensagem[] | null) ?? []);
-    if (profile) {
-      setInitial((profile.full_name?.charAt(0) || "P").toUpperCase());
-      setStreak(profile.streak ?? 0);
-    }
   };
 
   useEffect(() => {
