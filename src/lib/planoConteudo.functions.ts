@@ -6,7 +6,13 @@ import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
 
 const FEATURE = "plano_conteudo";
-const MODELO = "gemini-pro-latest";
+// Flash, não Pro: um mês são ~30 ideias e o Pro leva ~33s sozinho (medido em
+// 01/10/2026), estourando o prazo de 20s em 100% das tentativas desde agosto.
+// O Flash faz o mesmo mês em ~14s.
+const MODELO = "gemini-flash-latest";
+// 12 meses em paralelo + 1 retry: 2 x 45s = 90s, abaixo dos 100s em que o
+// Cloudflare derruba a requisição.
+const TIMEOUT_MS = 45_000;
 const LIMITE_ANUAL = 3; // 1 geração + até 2 re-gerações, teto único (ia_uso)
 
 // Campos mínimos do Planejamento sem os quais a IA não tem o que dizer sobre
@@ -247,6 +253,7 @@ export const gerarPlanoConteudo = createServerFn({ method: "POST" })
         systemInstruction,
         prompt,
         responseSchema: responseSchemaDoMes(diasNoMes),
+        timeoutMs: TIMEOUT_MS,
       });
       const json = JSON.parse(resultadoIa.texto);
       const dias = sanearRespostaMes(json, diasNoMes);

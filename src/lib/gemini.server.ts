@@ -28,6 +28,9 @@ export interface GerarTextoInput {
   // chama ainda precisa validar o JSON recebido (nunca confiar cegamente
   // numa saída de IA, mesmo "forçada").
   responseSchema?: unknown;
+  // Prazo por chamada. Padrão 20s; geração longa (ex.: um mês inteiro de ideias de
+  // post) precisa de mais. Com o 1 retry, o pior caso é o dobro disso.
+  timeoutMs?: number;
 }
 
 export interface GerarTextoResultado {
@@ -48,13 +51,14 @@ async function chamarUmaVez({
   systemInstruction,
   prompt,
   responseSchema,
+  timeoutMs,
 }: GerarTextoInput): Promise<GerarTextoResultado> {
   const resposta = await geminiClient().models.generateContent({
     model: modelo,
     contents: prompt,
     config: {
       systemInstruction,
-      httpOptions: { timeout: TIMEOUT_MS },
+      httpOptions: { timeout: timeoutMs ?? TIMEOUT_MS },
       ...(responseSchema ? { responseMimeType: "application/json", responseSchema } : {}),
     },
   });
