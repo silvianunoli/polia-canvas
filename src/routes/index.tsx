@@ -253,7 +253,8 @@ const planos: {
     features: [
       "Os 6 módulos do Planejamento",
       "Painel diário",
-      "Calculadora de preço para até 5 produtos",
+      "Calculadora de preço",
+      "Catálogo de até 5 produtos",
       "Até 3 metas acompanhadas",
       "Um quadro no Planner",
     ],
@@ -271,7 +272,7 @@ const planos: {
     ciclo: "/mês",
     abre: "Tudo do Grátis, mais:",
     features: [
-      "Calculadora de preço sem limite de produtos",
+      "Catálogo sem limite de produtos",
       "Financeiro com os números que ajudam a decidir o mês",
       "Clientes e pedidos, do orçamento à entrega",
       "Quadros ilimitados no Planner",

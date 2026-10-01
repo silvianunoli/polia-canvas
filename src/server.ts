@@ -72,6 +72,7 @@ const PREFIXOS_AUTENTICADOS = [
   "/aimer",
   "/assinar",
   "/caderno",
+  "/calculadora",
   "/calendario",
   "/chamados",
   "/clientes",

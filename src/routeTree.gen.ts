@@ -44,6 +44,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
+import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
 import { Route as AuthenticatedCadernoRouteImport } from './routes/_authenticated/caderno'
 import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticated/assinar'
 import { Route as AuthenticatedAimerRouteImport } from './routes/_authenticated/aimer'
@@ -231,6 +232,12 @@ const AuthenticatedCalendarioRoute = AuthenticatedCalendarioRouteImport.update({
   path: '/calendario',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedCalculadoraRoute =
+  AuthenticatedCalculadoraRouteImport.update({
+    id: '/calculadora',
+    path: '/calculadora',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCadernoRoute = AuthenticatedCadernoRouteImport.update({
   id: '/caderno',
   path: '/caderno',
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
+  '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -348,6 +356,7 @@ export interface FileRoutesByTo {
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
+  '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -396,6 +405,7 @@ export interface FileRoutesById {
   '/_authenticated/aimer': typeof AuthenticatedAimerRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
+  '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/aimer'
     | '/assinar'
     | '/caderno'
+    | '/calculadora'
     | '/calendario'
     | '/clientes'
     | '/configuracoes'
@@ -490,6 +501,7 @@ export interface FileRouteTypes {
     | '/aimer'
     | '/assinar'
     | '/caderno'
+    | '/calculadora'
     | '/calendario'
     | '/clientes'
     | '/configuracoes'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/aimer'
     | '/_authenticated/assinar'
     | '/_authenticated/caderno'
+    | '/_authenticated/calculadora'
     | '/_authenticated/calendario'
     | '/_authenticated/clientes'
     | '/_authenticated/configuracoes'
@@ -841,6 +854,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalendarioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/calculadora': {
+      id: '/_authenticated/calculadora'
+      path: '/calculadora'
+      fullPath: '/calculadora'
+      preLoaderRoute: typeof AuthenticatedCalculadoraRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/caderno': {
       id: '/_authenticated/caderno'
       path: '/caderno'
@@ -918,6 +938,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAimerRoute: typeof AuthenticatedAimerRoute
   AuthenticatedAssinarRoute: typeof AuthenticatedAssinarRoute
   AuthenticatedCadernoRoute: typeof AuthenticatedCadernoRoute
+  AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -945,6 +966,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAimerRoute: AuthenticatedAimerRoute,
   AuthenticatedAssinarRoute: AuthenticatedAssinarRoute,
   AuthenticatedCadernoRoute: AuthenticatedCadernoRoute,
+  AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,

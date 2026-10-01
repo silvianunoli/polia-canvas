@@ -32,6 +32,8 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
 const GANHO_POR_ROTA: Record<string, string> = {
   "/financeiro": "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto sobrou no mês.",
   "/produtos": "O Premium solta o limite: cada produto com o custo, o preço e quanto sobra.",
+  "/calculadora":
+    "O Pro abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
   // Raio-x é Pro, não Premium (ROTAS_PROJETE + o portão `temProjete` dentro
   // da página). Nomear o Premium aqui vendia por R$ 29,90 uma tela que só abre
   // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.

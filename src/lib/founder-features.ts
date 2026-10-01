@@ -5,6 +5,7 @@ export const FEATURES_POR_ROTA: { prefixo: string; feature: string }[] = [
   { prefixo: "/painel", feature: "painel" },
   { prefixo: "/planejamento", feature: "planejamento" },
   { prefixo: "/produtos", feature: "produtos" },
+  { prefixo: "/calculadora", feature: "calculadora" },
   { prefixo: "/projecao", feature: "projecao" },
   { prefixo: "/financeiro", feature: "financeiro" },
   { prefixo: "/raiox", feature: "raiox" },

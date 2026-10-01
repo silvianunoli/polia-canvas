@@ -21,6 +21,7 @@ import {
   TrendingUp,
   Stethoscope,
   Megaphone,
+  Calculator,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
@@ -41,6 +42,7 @@ const NAV: NavItem[] = [
   { to: "/aimer", label: "Aimer", icon: Sparkles },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
+  { to: "/calculadora", label: "Calculadora", icon: Calculator },
   { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/raiox", label: "Raio-x do mês", icon: Stethoscope },

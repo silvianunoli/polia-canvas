@@ -70,6 +70,9 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/planejamento", tier: "confere" },
   { prefixo: "/aimer", tier: "confere" }, // todo plano abre o chat; teto diário e modo data-aware são no servidor
   { prefixo: "/produtos", tier: "confere" }, // cotada, ver COTAS_CONFERE
+  // Ferramenta independente do catálogo. Calcular é livre no Grátis; a cota só
+  // pega ao guardar o resultado como produto.
+  { prefixo: "/calculadora", tier: "confere" },
   { prefixo: "/planner", tier: "confere" }, // cotada
   { prefixo: "/caderno", tier: "confere" }, // cotada
   { prefixo: "/raiox", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Resumo/Encomenda
@@ -144,7 +147,7 @@ export const TIERS_PAGOS: Record<
     precoAnual: 299,
     features: [
       "Tudo do Grátis, mais:",
-      "Calculadora de preço sem limite de produtos: quanto sobra em cada venda, antes de cobrar",
+      "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto sobra",
       "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       "Clientes com o status de cada pedido, do orçamento à entrega",
       "Quadros ilimitados no Planner",

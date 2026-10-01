@@ -58,6 +58,14 @@ describe("rotaLiberada", () => {
     expect(tierMinimoDaRota("/metas")).toBe("confere");
   });
 
+  // A Calculadora virou ferramenta própria e abre no plano Grátis: calcular não
+  // gasta cota, só guardar como produto (cota do catálogo, em /produtos).
+  it("abre /calculadora no confere", () => {
+    expect(rotaLiberada("/calculadora", "confere")).toBe(true);
+    expect(recursoLiberado("/calculadora", "confere")).toBe(true);
+    expect(tierMinimoDaRota("/calculadora")).toBe("confere");
+  });
+
   // COPY-04 (03/09/2026): o registro de entrada/saída abriu pro Confere por um
   // modal no Painel, mas a TELA /financeiro (histórico, filtros, os três
   // números do mês, resumo pro contador) segue sendo do Controle.

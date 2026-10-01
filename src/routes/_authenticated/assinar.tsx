@@ -14,7 +14,8 @@ type CicloId = "mensal" | "anual";
 
 const FEATURES_GRATIS = [
   "Planejamento completo, os 6 módulos",
-  "Calculadora de preço para até 5 produtos",
+  "Calculadora de preço",
+  "Catálogo de até 5 produtos",
   "Até 3 metas ativas por vez",
   "1 quadro no Planner e 1 nota no Caderno",
   "Aimer para tirar dúvida, com teto diário",
