@@ -29,8 +29,11 @@ export interface GerarTextoInput {
   // numa saída de IA, mesmo "forçada").
   responseSchema?: unknown;
   // Prazo por chamada. Padrão 20s; geração longa (ex.: um mês inteiro de ideias de
-  // post) precisa de mais. Com o 1 retry, o pior caso é o dobro disso.
+  // post) precisa de mais. Timeout/abort não dispara o retry (ver ehFalhaTransitoria).
   timeoutMs?: number;
+  // Desliga o "pensamento" do modelo (thinkingBudget 0). Pra tarefa de preencher
+  // um formato fixo ele não ajuda e leva ~40% do tempo e dos tokens de saída.
+  semPensar?: boolean;
 }
 
 export interface GerarTextoResultado {
@@ -52,6 +55,7 @@ async function chamarUmaVez({
   prompt,
   responseSchema,
   timeoutMs,
+  semPensar,
 }: GerarTextoInput): Promise<GerarTextoResultado> {
   const resposta = await geminiClient().models.generateContent({
     model: modelo,
@@ -59,6 +63,7 @@ async function chamarUmaVez({
     config: {
       systemInstruction,
       httpOptions: { timeout: timeoutMs ?? TIMEOUT_MS },
+      ...(semPensar ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       ...(responseSchema ? { responseMimeType: "application/json", responseSchema } : {}),
     },
   });
