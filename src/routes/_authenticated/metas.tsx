@@ -616,7 +616,7 @@ function InlineValor({
       type="button"
       onClick={start}
       aria-label="Atualizar valor atual da meta"
-      className="inline-flex min-h-6 items-center font-medium text-[var(--ink)] underline decoration-dotted decoration-[var(--muted)] underline-offset-2 hover:decoration-[var(--secondary)]"
+      className="inline-flex min-h-6 min-w-6 items-center justify-center font-medium text-[var(--ink)] underline decoration-dotted decoration-[var(--muted)] underline-offset-2 hover:decoration-[var(--secondary)]"
     >
       {valorFmt(formato, value)}
     </button>
