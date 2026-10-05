@@ -682,7 +682,7 @@ export function Calculadora({
                     label="Custo por unidade"
                     valor={fmt(round2(produtoCalc.custoUnitario))}
                   />
-                  <p className="text-[12px] text-[var(--muted)]">
+                  <p className="text-[12px] text-[var(--ink-soft)]">
                     diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
                     {fmt(round2(produtoCalc.rateio))}
                   </p>

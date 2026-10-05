@@ -342,7 +342,10 @@ function LinhaCliente({
         {cliente.venda_registrada ? (
           <span className="shrink-0 font-sans text-[13px] text-[var(--ink-soft)]">
             Registrada ·{" "}
-            <Link to="/financeiro" className="text-[var(--secondary-text)] hover:underline">
+            <Link
+              to="/financeiro"
+              className="inline-flex min-h-6 items-center text-[var(--secondary-text)] hover:underline"
+            >
               ver no Financeiro
             </Link>
           </span>

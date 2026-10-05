@@ -699,9 +699,15 @@ function PlanejamentoPage() {
   );
 }
 
-function Rotulo({ campo }: { campo: string }) {
+// Sobre o cartão rosa (--surface-pink) o --muted fica em 4,03:1, abaixo do AA
+// pra 10px; lá o rótulo usa --ink-soft.
+function Rotulo({ campo, sobreRosa = false }: { campo: string; sobreRosa?: boolean }) {
   return (
-    <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+    <p
+      className={`text-[10px] font-accent font-bold uppercase tracking-[0.14em] ${
+        sobreRosa ? "text-[var(--ink-soft)]" : "text-[var(--muted)]"
+      }`}
+    >
       {CAMPO_LABEL[campo] ?? campo}
     </p>
   );
@@ -759,11 +765,11 @@ function BlocoView({
         {cards.map((c) => (
           <div
             key={c.c}
-            className={`rounded-xl border border-[var(--line)] p-5 transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)] ${
+            className={`rounded-xl border border-[var(--line)] p-5 ${
               c.tom === "pink" ? "bg-[var(--surface-pink)]" : "bg-white"
             }`}
           >
-            <Rotulo campo={c.c} />
+            <Rotulo campo={c.c} sobreRosa={c.tom === "pink"} />
             <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-[var(--ink-soft)]">
               {val(c.c)}
             </p>

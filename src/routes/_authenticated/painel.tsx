@@ -117,7 +117,7 @@ function SeloControle() {
  * restrita a texto grande e curto, e ficaria errada em caixa alta de 10px.
  */
 function TituloCartao({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <h2 className={`font-sans ${className}`}>{children}</h2>;
+  return <h2 className={className || "font-sans"}>{children}</h2>;
 }
 
 /**
@@ -689,7 +689,7 @@ function PainelPage() {
                 frase: lia como "Planejamento concluído ver". */}
                 <LinkInterno
                   href="/planejamento"
-                  className="text-[14px] text-[var(--secondary-text)] underline-offset-2 hover:underline"
+                  className="inline-flex min-h-6 items-center text-[14px] text-[var(--secondary-text)] underline-offset-2 hover:underline"
                 >
                   abrir
                 </LinkInterno>
@@ -928,7 +928,7 @@ function PainelPage() {
                   <p className="mt-3 text-[13px]">
                     <LinkInterno
                       href={quadroPendentesLink}
-                      className="text-[var(--secondary-text)] hover:underline"
+                      className="inline-flex min-h-6 items-center text-[var(--secondary-text)] hover:underline"
                     >
                       Abrir no Planner →
                     </LinkInterno>
@@ -962,7 +962,7 @@ function PainelPage() {
                         acao={
                           <LinkInterno
                             href={quadroPendentesLink}
-                            className="text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
+                            className="inline-flex min-h-6 items-center gap-1 text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
                           >
                             Abrir o Planner <span aria-hidden="true">→</span>
                           </LinkInterno>
@@ -1086,7 +1086,7 @@ function GrupoTarefasPainel({
         <LinkInterno
           href={link}
           title={linkTitulo}
-          className={`mb-1 inline-block text-[10px] font-accent font-bold uppercase tracking-[0.14em] no-underline hover:underline ${
+          className={`mb-1 inline-flex min-h-6 items-center text-[10px] font-accent font-bold uppercase tracking-[0.14em] no-underline hover:underline ${
             corTitulo ?? "text-[var(--muted)] hover:text-[var(--ink-soft)]"
           }`}
         >
@@ -1130,7 +1130,7 @@ function GrupoTarefasPainel({
       {restantes > 0 && link && (
         <LinkInterno
           href={link}
-          className="mt-2 inline-block text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
+          className="mt-2 inline-flex min-h-6 items-center gap-1 text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
         >
           {rotuloMais ? rotuloMais(restantes) : `mais ${restantes} no Planner`}{" "}
           <span aria-hidden="true">→</span>

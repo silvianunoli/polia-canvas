@@ -553,7 +553,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)]"
+        className="min-w-0 flex-1 rounded-md border border-[var(--secondary-text)] px-2 py-1 text-[17px] text-[var(--ink)]"
       />
     );
   }
@@ -563,7 +563,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
       type="button"
       onClick={start}
       aria-label="Editar título da meta"
-      className="min-w-0 flex-1 text-left text-[17px] leading-snug text-[var(--ink)] hover:text-[var(--secondary-text)]"
+      className="min-h-6 min-w-0 flex-1 text-left text-[17px] leading-snug text-[var(--ink)] hover:text-[var(--secondary-text)]"
     >
       {titulo}
     </button>
@@ -606,7 +606,7 @@ function InlineValor({
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="w-24 rounded-md border border-[var(--secondary)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)]"
+        className="min-h-6 w-24 rounded-md border border-[var(--secondary-text)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)]"
       />
     );
   }
@@ -616,7 +616,7 @@ function InlineValor({
       type="button"
       onClick={start}
       aria-label="Atualizar valor atual da meta"
-      className="font-medium text-[var(--ink)] underline decoration-dotted decoration-[var(--muted)] underline-offset-2 hover:decoration-[var(--secondary)]"
+      className="inline-flex min-h-6 items-center font-medium text-[var(--ink)] underline decoration-dotted decoration-[var(--muted)] underline-offset-2 hover:decoration-[var(--secondary)]"
     >
       {valorFmt(formato, value)}
     </button>
