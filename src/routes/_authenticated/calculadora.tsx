@@ -130,6 +130,7 @@ function CalculadoraPage() {
 
   return (
     <PaginaLogada
+      dica="calculadora"
       largura="larga"
       eyebrow="Calculadora"
       titulo="Quanto sobra em cada venda."

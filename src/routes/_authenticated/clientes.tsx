@@ -152,6 +152,7 @@ function ClientesPage() {
 
   return (
     <PaginaLogada
+      dica="clientes"
       largura="larga"
       eyebrow="Seus clientes"
       titulo="Do primeiro contato ao sim."

@@ -107,6 +107,7 @@ function ProdutosPage() {
 
   return (
     <PaginaLogada
+      dica="produtos"
       largura="larga"
       eyebrow="Produtos"
       titulo="Seus produtos."

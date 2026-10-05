@@ -338,6 +338,7 @@ function CalendarioPage() {
 
   return (
     <PaginaLogada
+      dica="calendario"
       largura="larga"
       eyebrow="Calendário"
       titulo="O mês inteiro à vista."

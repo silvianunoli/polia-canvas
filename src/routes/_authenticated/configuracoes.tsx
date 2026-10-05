@@ -27,6 +27,7 @@ import {
   desconectarGoogle,
 } from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { FieldError } from "@/components/ui/FieldError";
 
 const ERRO_AUTOSAVE =
@@ -885,6 +886,7 @@ function ConfiguracoesPage() {
             >
               Seus chamados
             </LinkInterno>
+            <BotaoReverTour className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] transition-colors hover:border-[var(--secondary)]" />
           </div>
         </Secao>
 

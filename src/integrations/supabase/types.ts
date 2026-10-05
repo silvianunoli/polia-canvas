@@ -1916,6 +1916,7 @@ export type Database = {
           decision_trigger: string | null
           delivery_method: string | null
           descricao_produto: Json | null
+          dicas_vistas: string[]
           differentiators: string | null
           display_name: string | null
           etapa_atual: number
@@ -2011,6 +2012,7 @@ export type Database = {
           decision_trigger?: string | null
           delivery_method?: string | null
           descricao_produto?: Json | null
+          dicas_vistas?: string[]
           differentiators?: string | null
           display_name?: string | null
           etapa_atual?: number
@@ -2106,6 +2108,7 @@ export type Database = {
           decision_trigger?: string | null
           delivery_method?: string | null
           descricao_produto?: Json | null
+          dicas_vistas?: string[]
           differentiators?: string | null
           display_name?: string | null
           etapa_atual?: number

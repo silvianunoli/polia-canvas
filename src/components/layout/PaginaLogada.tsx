@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
 
+import { DicaDaTela } from "@/components/dicas/DicaDaTela";
+import type { ChaveDicaTela } from "@/lib/dicas";
+
 /**
  * Casca única de toda tela da área logada: container, margem, cabeçalho e a
  * posição da ação principal.
@@ -70,6 +73,9 @@ interface PaginaLogadaProps {
   /** Ação principal da tela. Use BTN_ACAO de `lib/botoes`. */
   acao?: ReactNode;
   largura?: LarguraPagina;
+  /** Dica de primeira visita, logo abaixo do cabeçalho (some depois do "Entendi").
+   *  Só no retorno principal da tela, nunca no carregamento nem no portão do Pro. */
+  dica?: ChaveDicaTela;
   children: ReactNode;
 }
 
@@ -79,6 +85,7 @@ export function PaginaLogada({
   subtitulo,
   acao,
   largura = "estreita",
+  dica,
   children,
 }: PaginaLogadaProps) {
   return (
@@ -104,6 +111,7 @@ export function PaginaLogada({
           </div>
           {acao && <div className="shrink-0 pt-1">{acao}</div>}
         </header>
+        {dica && <DicaDaTela chave={dica} className="mb-6" />}
         {children}
       </div>
     </div>

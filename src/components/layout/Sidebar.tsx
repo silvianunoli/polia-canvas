@@ -135,6 +135,7 @@ function Body({
                 <span
                   className="flex min-h-[28px] items-center gap-1.5 rounded-lg px-1 text-[13px] text-[var(--ink)]"
                   aria-label={`Presença: ${meta.streak} dias`}
+                  data-tour="presenca"
                 >
                   <Flame size={18} aria-hidden="true" />
                   {!compact && (
@@ -184,6 +185,7 @@ function Body({
                 key={item.to}
                 to={item.to}
                 onClick={onNavigate}
+                data-tour={item.to.slice(1)}
                 data-track="nav_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
                 aria-current={active ? "page" : undefined}
@@ -202,6 +204,7 @@ function Body({
                 to="/upgrade"
                 search={{ rota: item.to, tier: tierNecessario }}
                 onClick={onNavigate}
+                data-tour={item.to.slice(1)}
                 data-track="nav_bloqueado_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
                 className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${

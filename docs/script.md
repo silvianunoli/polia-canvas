@@ -55,3 +55,10 @@ Próximo: bloco 6, operação/infra/negócio (erros, logs, jobs, integrações, 
 - Detalhe do banco: `pg_stat_statements` mora no schema `extensions`, então a função qualifica o nome e põe `extensions` no `search_path`.
 
 Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND_API_KEY` rotacionada e válida; `STRIPE_SECRET_KEY` ainda precisa da chave `sk_live_` certa; cron duplicado já desagendado; dropar `feature_flags` numa migration própria quando a Sil confirmar.
+
+## 2026-10-05 — Tour de boas-vindas e dicas de primeira visita (Pólia One)
+
+- Proposta aprovada pela Sil no chat: 4 balões na primeira chegada ao Painel (Planejamento, Aimer, botão principal do Painel, presença) + uma faixa "Entendi" na primeira visita de 11 telas + "Rever o tour" em Configurações > Ajuda.
+- Estado em `profiles.dicas_vistas text[]` (migration `20261005180000_profiles_dicas_vistas.sql`), não no localStorage, pra não voltar em outro aparelho. Se a coluna não existir ou a leitura falhar, nada aparece (fail closed).
+- Código: textos e regra pura em `src/lib/dicas.ts` (+ teste), hook `useDicasVistas`, `components/dicas/` (TourBoasVindas com Popover do Radix ancorado em `data-tour`, DicaDaTela, BotaoReverTour) e prop `dica` no `PaginaLogada`, usada só no retorno principal de cada tela (nunca no carregamento nem no portão do Pro).
+- Copy das dicas conferida contra o código de cada tela; 7 textos da proposta foram ajustados porque prometiam o que a tela não faz (Projeção sem "vender o dobro", Raio-x só lê totais, Clientes guarda um pedido por cliente, Painel só acompanha a Meta do mês, Plano de conteúdo gera o ano de uma vez, Calendário não mostra posts, Planner é por projeto).

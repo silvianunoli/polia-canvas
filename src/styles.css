@@ -200,6 +200,13 @@
     cursor: pointer;
   }
 
+  /* Item apontado pelo balão do tour de boas-vindas (TourBoasVindas.tsx). */
+  [data-tour-ativo] {
+    outline: 2px solid var(--secondary);
+    outline-offset: 2px;
+    border-radius: 8px;
+  }
+
   /* Resposta ao toque em todo botão. Usa a propriedade `scale` (não `transform`)
      pra não brigar com translate/transform que o botão já tenha. Utilitário de
      transition no próprio botão ganha desta base; aí o aperto só não anima. */

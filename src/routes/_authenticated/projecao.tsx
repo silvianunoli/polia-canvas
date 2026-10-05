@@ -230,6 +230,7 @@ function ProjecaoPage() {
 
   return (
     <PaginaLogada
+      dica="projecao"
       largura="larga"
       eyebrow="Projeção"
       titulo="Quanto vender pra se pagar."

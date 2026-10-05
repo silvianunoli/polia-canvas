@@ -367,6 +367,7 @@ function FinanceiroPage() {
 
   return (
     <PaginaLogada
+      dica="financeiro"
       largura="larga"
       eyebrow={
         clientReady && mesAtual > 0

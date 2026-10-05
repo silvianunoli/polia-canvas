@@ -174,6 +174,7 @@ function PlanoConteudoPage() {
 
   return (
     <PaginaLogada
+      dica="plano-conteudo"
       largura="larga"
       eyebrow="Plano de conteúdo"
       titulo="Uma ideia de post pra cada dia do ano."

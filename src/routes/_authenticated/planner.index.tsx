@@ -157,6 +157,7 @@ function PlannerIndex() {
 
   return (
     <PaginaLogada
+      dica="planner"
       largura="larga"
       eyebrow="Planner"
       titulo="Seus quadros de trabalho."

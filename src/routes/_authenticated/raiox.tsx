@@ -151,6 +151,7 @@ function RaioXPage() {
 
   return (
     <PaginaLogada
+      dica="raiox"
       eyebrow="Raio-x do mês"
       titulo="A leitura do seu mês."
       subtitulo="A Aimer lê os números do mês fechado e devolve o que puxou o resultado."

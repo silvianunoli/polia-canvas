@@ -14,6 +14,7 @@ import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalL
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { TourBoasVindas } from "@/components/dicas/TourBoasVindas";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -543,6 +544,7 @@ function PainelPage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+      <TourBoasVindas />
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-24 pt-16 md:px-10">
         {/* Header: primeira dobra, sem reveal */}
         <div>
@@ -563,7 +565,11 @@ function PainelPage() {
           </h1>
 
           {acaoPrincipal.href ? (
-            <LinkInterno href={acaoPrincipal.href} className={`${BOTAO_PRIMARIO} mt-5`}>
+            <LinkInterno
+              href={acaoPrincipal.href}
+              data-tour="acao-principal"
+              className={`${BOTAO_PRIMARIO} mt-5`}
+            >
               {acaoPrincipal.texto}
               <span aria-hidden="true">→</span>
             </LinkInterno>
@@ -571,6 +577,7 @@ function PainelPage() {
             <button
               type="button"
               onClick={() => setRegistroAberto(true)}
+              data-tour="acao-principal"
               className={`${BOTAO_PRIMARIO} mt-5`}
             >
               {acaoPrincipal.texto}

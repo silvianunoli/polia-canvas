@@ -198,6 +198,7 @@ function MetasPage() {
 
   return (
     <PaginaLogada
+      dica="metas"
       largura="larga"
       eyebrow="Suas metas"
       titulo="Onde a marca quer chegar."

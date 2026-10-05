@@ -274,6 +274,7 @@ function CadernoPage() {
 
   return (
     <PaginaLogada
+      dica="caderno"
       largura="larga"
       eyebrow="Caderno"
       titulo="Suas anotações."
