@@ -1,21 +1,16 @@
 import { useMemo, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Sparkles, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
-import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
-import {
-  gerarPlanoConteudo,
-  textoModulosFaltando,
-  type ModuloFaltando,
-} from "@/lib/planoConteudo.functions";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { NICHOS } from "@/lib/bancoIdeias";
+import { montarPlanoConteudoDoBanco } from "@/lib/planoConteudoBanco.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
@@ -24,7 +19,10 @@ export const Route = createFileRoute("/_authenticated/plano-conteudo")({
   head: () => ({
     meta: [
       { title: "Plano de conteúdo do ano · Pólia One" },
-      { name: "description", content: "365 ideias de post pras suas redes, pela Pólia One." },
+      {
+        name: "description",
+        content: "Uma ideia de post por dia, pronta pro seu tipo de negócio.",
+      },
     ],
   }),
   component: PlanoConteudoPage,
@@ -76,8 +74,8 @@ function PlanoConteudoPage() {
   const [mesAtivo, setMesAtivo] = useState(new Date().getMonth() + 1);
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [motivo, setMotivo] = useState<string | null>(null);
-  const [faltando, setFaltando] = useState<ModuloFaltando[]>([]);
+  const [nichos, setNichos] = useState<string[]>([]);
+  const [trocando, setTrocando] = useState(false);
 
   const planoQuery = useQuery({
     queryKey: ["ia-plano-conteudo", userId, anoAtual],
@@ -101,28 +99,24 @@ function PlanoConteudoPage() {
   const itemDeHoje = useMemo(() => dias.find((d) => d.data === hojeISO()) ?? null, [dias]);
   const precisaLembrar = !!itemDeHoje && !itemDeHoje.postado;
 
+  // Banco fixo de ideias por nicho (05/10/2026): sem IA, sem cota e sem
+  // depender do Planejamento completo.
   const gerar = async () => {
+    if (nichos.length === 0) return;
     setErro(null);
-    setMotivo(null);
-    setFaltando([]);
     setGerando(true);
     try {
-      const resultado = await gerarPlanoConteudo({ data: { ano: anoAtual } });
+      const resultado = await montarPlanoConteudoDoBanco({ data: { ano: anoAtual, nichos } });
       if (resultado.ok) {
-        track("plano_conteudo_gerado", { ano: anoAtual });
+        track("plano_conteudo_gerado", { ano: anoAtual, nichos: nichos.join(",") });
         void registrar("feature_completed", {
           feature: "plano_conteudo",
           propriedades: { acao: "gerado" },
         });
+        setTrocando(false);
         await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
       } else {
-        setMotivo(resultado.motivo);
-        if (resultado.motivo === "planejamento_incompleto") {
-          setFaltando(resultado.modulosFaltando ?? []);
-        }
-        if (resultado.motivo === "falha_ia") {
-          setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
-        }
+        setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
       }
     } catch {
       setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
@@ -130,6 +124,59 @@ function PlanoConteudoPage() {
       setGerando(false);
     }
   };
+
+  // Um nicho só (decisão da Sil, 05/10/2026): escolher outro troca a escolha.
+  const escolherNicho = (chave: string) => setNichos([chave]);
+
+  const escolhaDeNicho = (
+    <div className="rounded-2xl border border-[var(--line)] bg-white p-5">
+      <h2 className="font-cabinet text-[19px] leading-tight text-[var(--ink)]">
+        {dias.length > 0 ? "Trocar o tipo de negócio" : "Qual é o tipo do seu negócio?"}
+      </h2>
+      <p className="mt-1 text-[14px] text-[var(--ink-soft)]">
+        Escolhe o que mais combina com o que a marca vende.
+        {dias.length > 0 && " Os dias que já passaram ficam como estão."}
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2" role="radiogroup" aria-label="Tipo de negócio">
+        {NICHOS.map((n) => {
+          const on = nichos.includes(n.chave);
+          return (
+            <button
+              key={n.chave}
+              type="button"
+              onClick={() => escolherNicho(n.chave)}
+              role="radio"
+              aria-checked={on}
+              title={n.exemplos}
+              className={`${BTN_MIUDO} ${on ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            >
+              {n.nome}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-5 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void gerar()}
+          disabled={gerando || nichos.length === 0}
+          className={BTN_ACAO}
+        >
+          {gerando ? "Montando..." : dias.length > 0 ? "Refazer o plano" : "Montar meu plano"}
+        </button>
+        {trocando && (
+          <button type="button" onClick={() => setTrocando(false)} className={BTN_ACAO_CONTORNO}>
+            Cancelar
+          </button>
+        )}
+      </div>
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
+    </div>
+  );
 
   // marcarPostado/salvarCampo aplicam um patch otimista só na linha editada em
   // vez de invalidateQueries (que refazia o fetch do ano inteiro a cada
@@ -175,7 +222,7 @@ function PlanoConteudoPage() {
       <UpgradeGate
         eyebrow="Plano de conteúdo"
         titulo="O plano de conteúdo do ano é do Pro"
-        feature="A Pólia One monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e do seu público."
+        feature="A Pólia One sugere uma ideia de post por dia, o ano inteiro, pronta pro seu tipo de negócio."
         rota="/plano-conteudo"
       />
     );
@@ -187,11 +234,10 @@ function PlanoConteudoPage() {
       largura="larga"
       eyebrow="Plano de conteúdo"
       titulo="Uma ideia de post pra cada dia do ano."
-      subtitulo="Montado a partir da sua marca, do seu público e do que você vende."
+      subtitulo="Ideias de post prontas pro seu tipo de negócio, uma por dia. Cada uma dá pra ajustar pra sua marca."
     >
       <div>
-        {/* Só não existe na tela de upgrade (return acima), que não tem conteúdo de IA. */}
-        <AvisoConteudoIA texto="O plano de conteúdo é gerado por inteligência artificial. São sugestões pra ajustar, não um calendário fechado, e a IA pode errar. Vale ler antes de publicar." />
+        {trocando && dias.length > 0 && <div className="mt-2">{escolhaDeNicho}</div>}
         {precisaLembrar && (
           <div className="mt-6 flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--secondary-light)] px-4 py-3">
             <p className="text-[14px] text-[var(--ink)]">
@@ -283,86 +329,22 @@ function PlanoConteudoPage() {
               ))}
             </ul>
           </>
-        ) : motivo === "planejamento_incompleto" ? (
-          <div className="mt-6">
-            <Vazio
-              icone={Sparkles}
-              titulo="Ainda falta saber da sua marca."
-              texto={textoModulosFaltando(faltando)}
-              acao={
-                faltando.length > 0 ? (
-                  <Link
-                    to="/planejamento/modulo/$n"
-                    params={{ n: String(faltando[0].n) }}
-                    search={{ secao: undefined }}
-                    className={BTN_ACAO}
-                  >
-                    Preencher o Módulo {faltando[0].n}
-                  </Link>
-                ) : (
-                  <Link to="/planejamento" className={BTN_ACAO}>
-                    Ir pro Planejamento
-                  </Link>
-                )
-              }
-            />
-          </div>
-        ) : motivo === "teto_atingido" ? (
-          <div className="mt-6">
-            <Vazio
-              icone={Sparkles}
-              titulo="As gerações do plano deste ano acabaram."
-              texto="Se precisar de outro, abre um chamado que a Pólia One resolve."
-            />
-          </div>
         ) : (
-          <div className="mt-6">
-            <Vazio
-              icone={Sparkles}
-              titulo={`Nenhum plano de conteúdo pra ${anoAtual} ainda.`}
-              texto={`A Pólia One monta 365 ideias de post pra ${anoAtual}, uma por dia, a partir da sua marca, do seu público e do que você vende.`}
-              acao={
-                <>
-                  <button
-                    type="button"
-                    onClick={() => void gerar()}
-                    disabled={gerando}
-                    className={BTN_ACAO}
-                  >
-                    {gerando
-                      ? "A Pólia One está montando o seu plano..."
-                      : "Gerar plano de conteúdo"}
-                  </button>
-                  {gerando && (
-                    <p className="mt-2 text-[12px] text-[var(--muted)]">
-                      Isso pode levar um minuto.
-                    </p>
-                  )}
-                  {erro && (
-                    <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
-                      {erro}
-                    </p>
-                  )}
-                </>
-              }
-            />
-          </div>
+          <div className="mt-6">{escolhaDeNicho}</div>
         )}
 
-        {dias.length > 0 && (
+        {dias.length > 0 && !trocando && (
           <button
             type="button"
-            onClick={() => void gerar()}
-            disabled={gerando}
-            className="mt-6 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+            onClick={() => {
+              setNichos([]);
+              setTrocando(true);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="mt-6 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
           >
-            {gerando ? "Gerando outro..." : "Gerar outro plano"}
+            Trocar o tipo de negócio
           </button>
-        )}
-        {dias.length > 0 && erro && (
-          <p role="alert" className="mt-2 text-[13px] text-[var(--danger)]">
-            {erro}
-          </p>
         )}
       </div>
     </PaginaLogada>

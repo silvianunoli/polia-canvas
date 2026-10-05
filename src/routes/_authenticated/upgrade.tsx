@@ -40,7 +40,8 @@ const GANHO_POR_ROTA: Record<string, string> = {
   // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
   "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
   "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
-  "/plano-conteudo": "O Pro monta as 365 ideias de post do ano a partir da sua marca.",
+  "/plano-conteudo":
+    "O Pro sugere uma ideia de post por dia, o ano inteiro, pro seu tipo de negócio.",
 };
 
 function UpgradePage() {

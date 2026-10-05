@@ -71,7 +71,7 @@ export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
     "Ideia solta, anotação de reunião, aquele insight que chega no banho. Tem lugar pra isso aqui.",
   planner: "Um quadro pra cada projeto, pra lançamento e campanha não morarem só na cabeça.",
   "plano-conteudo":
-    "A Pólia One monta um ano de ideias de post a partir do Planejamento, e o post do dia fica em destaque.",
+    "Escolhe o tipo do seu negócio e a Pólia One sugere um post por dia, com o post do dia em destaque.",
   calendario: "Prazos das tarefas e compromissos do Google Calendar, o mês inteiro numa tela só.",
 };
 

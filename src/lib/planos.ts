@@ -173,7 +173,7 @@ export const TIERS_PAGOS: Record<
       "Tudo do Premium, mais:",
       "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
       "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Plano de conteúdo do ano: uma ideia de post por dia, ligada ao que a marca vende",
+      "Plano de conteúdo do ano: uma ideia de post por dia, pronta pro seu tipo de negócio",
       "Resumo do mês pro contador, em PDF e CSV",
     ],
   },

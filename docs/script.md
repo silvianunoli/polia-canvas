@@ -78,3 +78,9 @@ Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND
 - IA do Planejamento complementa o texto da usuária (vai no prompt); com campo vazio o botão some e aparece a dica. Servidor recusa `sem_texto` antes de gastar cota.
 - Presença removida da sidebar, do Painel e do tour (3 balões). Toasts com fundo por tipo. Lembrete diário do módulo em andamento (`LembretePlanejamento`, 1x por dia por aparelho, nunca junto do tour).
 - "Pólia" → "Pólia One" nos textos do produto (script com o parser do TS); site público, iscas, remetente de e-mail, cookies e páginas de erro continuam "Pólia".
+
+## 2026-10-05 — Plano de conteúdo pelo banco fixo de ideias (sem IA)
+
+- Decisão da Sil: o Plano de conteúdo deixa de usar IA. `src/lib/bancoIdeias/` tem 8 nichos × 60 ideias (tipos, categorias, voz revisados; teste de qualidade em `bancoIdeias.test.ts`). A usuária escolhe UM nicho (`MAX_NICHOS = 1`) e `montarPlanoConteudoDoBanco` grava o ano em `ia_plano_conteudo` (mesma tabela e mesma tela). Trocar de nicho refaz só de hoje em diante.
+- Sem cota, sem exigir Planejamento completo; continua no Pro. O código da geração por IA (`gerarPlanoConteudo`) ficou sem uso, apagar quando a Sil confirmar.
+- Revisão das ideias pela Sil: https://claude.ai/artifact/ERUAoBZV2NtHs8juTZ5eZC
