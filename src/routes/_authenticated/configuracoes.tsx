@@ -19,6 +19,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Switch } from "@/components/ui/switch";
 import { track } from "@/lib/analytics";
 import { statusAssinatura, cancelarAssinatura, abrirPortalCobranca } from "@/lib/stripe.functions";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import {
   statusConexaoGoogle,
@@ -728,7 +729,7 @@ function ConfiguracoesPage() {
                   </span>
                   <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
                     {assinatura.cancelAtPeriodEnd
-                      ? `Cancelada. Fica ativa até ${formatarData(assinatura.currentPeriodEnd)}.`
+                      ? `Cancelada. Fica ativa até ${formatarData(assinatura.currentPeriodEnd)}. Depois, a conta volta pro plano Grátis.`
                       : `Próxima cobrança em ${formatarData(assinatura.currentPeriodEnd)}.`}
                   </p>
                 </div>
@@ -775,7 +776,7 @@ function ConfiguracoesPage() {
             {/* PAY-06: até aqui não existia jeito nenhum de trocar cartão, e os
                 e-mails de cobrança recusada mandavam pra esta tela. Só aparece
                 pra quem já tem customer na Stripe. */}
-            {!assinaturaQuery.isLoading && assinatura?.temCobranca && !confirmandoCancelamento && (
+            {!assinaturaQuery.isLoading && assinatura?.temCobranca && (
               <button
                 type="button"
                 onClick={() => portalCobrancaMutation.mutate()}
@@ -785,7 +786,7 @@ function ConfiguracoesPage() {
                 {portalCobrancaMutation.isPending ? "Abrindo..." : "Atualizar pagamento"}
               </button>
             )}
-            {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && !confirmandoCancelamento && (
+            {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && (
               <button
                 type="button"
                 onClick={() => setConfirmandoCancelamento(true)}
@@ -794,33 +795,32 @@ function ConfiguracoesPage() {
                 Cancelar assinatura
               </button>
             )}
-            {/* A frase do cancelamento é longa: empilha em cima dos botões. */}
-            {confirmandoCancelamento && (
-              <div className="flex flex-col items-start gap-2">
-                <span className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
-                  Cancelar mesmo? A assinatura fica ativa até o fim do período já pago. Depois a
-                  conta volta pro plano Grátis: os dados continuam, o acesso às telas pagas para.
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setConfirmandoCancelamento(false)}
-                    disabled={cancelando}
-                    className="rounded-xl border border-[var(--line)] px-3 py-1.5 font-sans text-[13px] text-[var(--ink)] hover:bg-[var(--surface)] disabled:opacity-50"
-                  >
-                    Voltar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelar}
-                    disabled={cancelando}
-                    className="rounded-xl border border-[var(--danger)] px-3 py-1.5 font-sans text-[13px] font-medium text-[var(--danger)] hover:bg-[var(--danger)] hover:text-white disabled:opacity-50"
-                  >
-                    {cancelando ? "Cancelando..." : "Confirmar cancelamento"}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Modal em vez de confirmação inline (pedido da Sil, 05/10/2026): a
+                frase solta abaixo do botão passava despercebida, e quem cancela
+                precisa ler que a conta volta pro Grátis antes de confirmar. */}
+            <ConfirmarAcao
+              open={confirmandoCancelamento}
+              onOpenChange={(aberto) => {
+                if (!cancelando) setConfirmandoCancelamento(aberto);
+              }}
+              titulo="Cancelar a assinatura?"
+              descricao={
+                <>
+                  O {NOME_PLANO[plano] ?? "plano"} continua ativo até{" "}
+                  {assinatura?.currentPeriodEnd
+                    ? formatarData(assinatura.currentPeriodEnd)
+                    : "o fim do período já pago"}
+                  . Depois, a conta volta pro plano Grátis: os dados continuam guardados, e as telas
+                  do plano pago deixam de abrir. Não tem nova cobrança.
+                </>
+              }
+              textoCancelar="Manter assinatura"
+              textoConfirmar="Cancelar assinatura"
+              textoCarregando="Cancelando…"
+              destrutivo
+              carregando={cancelando}
+              onConfirmar={cancelar}
+            />
             {/* Recibo em PDF saiu (CFG-02): a emissão virou nota fiscal de
                 verdade, mandada direto pro e-mail cadastrado, então não tem
                 mais nada pra baixar aqui dentro — só o aviso. Mesma
