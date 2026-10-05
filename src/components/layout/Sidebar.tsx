@@ -90,19 +90,40 @@ function Body({
     <TooltipProvider delayDuration={150}>
       <div className="flex h-full flex-col overflow-y-auto bg-[var(--surface)]">
         {/* Topo: logo + negócio + presença + avatar */}
-        <div className={`flex flex-col gap-3 px-3 pb-4 pt-4 ${compact ? "items-center" : ""}`}>
-          <Link
-            to="/painel"
-            onClick={onNavigate}
-            aria-label="Pólia, ir para o painel"
-            className="text-[var(--ink)] no-underline"
-          >
-            {compact ? (
-              <PoliaIcon className="h-7 w-auto" />
-            ) : (
-              <PoliaWordmark className="h-6 w-auto" />
+        <div className={`flex flex-col gap-2 px-3 pb-3 pt-4 ${compact ? "items-center" : ""}`}>
+          <div className={`flex items-center ${compact ? "justify-center" : "justify-between"}`}>
+            <Link
+              to="/painel"
+              onClick={onNavigate}
+              aria-label="Pólia, ir para o painel"
+              className="text-[var(--ink)] no-underline"
+            >
+              {compact ? (
+                <PoliaIcon className="h-7 w-auto" />
+              ) : (
+                <PoliaWordmark className="h-6 w-auto" />
+              )}
+            </Link>
+            {/* Recolher mora aqui em cima (e não no rodapé) pra sobrar altura:
+                o menu inteiro precisa caber na tela sem rolagem. */}
+            {!compact && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onCollapsedChange(true)}
+                    aria-label="Recolher menu"
+                    className="hidden h-7 w-7 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink-soft)] md:flex"
+                  >
+                    <ChevronsLeft size={16} aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                  Recolher menu
+                </TooltipContent>
+              </Tooltip>
             )}
-          </Link>
+          </div>
           {!compact && meta.businessName && (
             <p className="text-[13px] text-[var(--muted)] leading-tight -mt-1">
               {meta.businessName}
@@ -127,18 +148,27 @@ function Body({
                 {streakLabel}
               </TooltipContent>
             </Tooltip>
-            <span
-              aria-hidden="true"
-              className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--accent)] text-[13px] font-medium text-[var(--accent-ink)]"
-            >
-              {meta.initial}
-            </span>
+            {/* No modo recolhido o avatar (só decorativo) sai pra caber em altura. */}
+            {!compact && (
+              <span
+                aria-hidden="true"
+                className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[var(--accent)] text-[13px] font-medium text-[var(--accent-ink)]"
+              >
+                {meta.initial}
+              </span>
+            )}
           </div>
         </div>
 
         <div className="mx-3 h-px bg-[var(--line)]" />
 
-        <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-1 px-2 py-3">
+        {/* Desktop: cada item cresce até 44px e encolhe até 26px conforme a altura
+            da tela, pra lista inteira caber sem rolagem. No celular (drawer) fica
+            44px fixo, que é o alvo de toque confortável. */}
+        <nav
+          aria-label="Navegação principal"
+          className="flex flex-1 flex-col gap-1 px-2 py-2 md:gap-0"
+        >
           {NAV.map((item) => {
             const active = isActive(item.to, pathname);
             const Icon = item.icon;
@@ -157,7 +187,7 @@ function Body({
                 data-track="nav_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
                   active
                     ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
                     : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
@@ -174,7 +204,7 @@ function Body({
                 onClick={onNavigate}
                 data-track="nav_bloqueado_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
-                className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
+                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
                   compact ? "justify-center" : ""
                 }`}
               >
@@ -210,13 +240,13 @@ function Body({
           })}
         </nav>
 
-        {/* Rodapé: config, sair, toggle colapso */}
-        <div className="flex flex-col gap-1 border-t border-[var(--line)] px-2 py-3">
+        {/* Rodapé: config, sair e, no modo recolhido, o botão de expandir */}
+        <div className="flex flex-col gap-0.5 border-t border-[var(--line)] px-2 py-2">
           <Link
             to="/configuracoes"
             onClick={onNavigate}
             aria-current={configAtiva ? "page" : undefined}
-            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
               configAtiva
                 ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
                 : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
@@ -229,27 +259,17 @@ function Body({
             type="button"
             onClick={signOut}
             data-track="sair_clicado"
-            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
           >
             <LogOut size={20} aria-hidden="true" />
             <span className={compact ? "sr-only" : undefined}>Sair</span>
           </button>
-          {!compact && (
-            <button
-              type="button"
-              onClick={() => onCollapsedChange(true)}
-              aria-label="Recolher menu"
-              className="mt-2 hidden self-end rounded-md px-2 py-1 text-[12px] text-[var(--muted)] transition-colors md:flex md:items-center md:gap-1.5 hover:text-[var(--ink-soft)]"
-            >
-              Recolher <ChevronsLeft size={15} aria-hidden="true" />
-            </button>
-          )}
           {compact && (
             <button
               type="button"
               onClick={() => onCollapsedChange(false)}
               aria-label="Expandir menu"
-              className="mt-1 hidden md:flex min-h-9 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
+              className="hidden md:flex min-h-8 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
             >
               <ChevronsRight size={18} aria-hidden="true" />
             </button>

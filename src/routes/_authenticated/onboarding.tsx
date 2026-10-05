@@ -192,15 +192,18 @@ function Step1({ onNext }: { onNext: () => void }) {
     <div className="flex flex-col items-center gap-6 pt-4">
       <LogoPlaceholder />
       <div className="flex flex-col items-center gap-4">
-        <Manuscrito>Ei. Que bom ter alguém aqui.</Manuscrito>
-        <Headline size={64}>Oi. Essa é a Pólia.</Headline>
+        <Manuscrito>Que bom ter você aqui</Manuscrito>
+        <Headline size={64}>Bem-vinda à Pólia One</Headline>
       </div>
       <div className="flex flex-col gap-1">
-        <Body>A Pólia te guia do primeiro passo até sua primeira ferramenta pronta.</Body>
-        <Body>Sem curso, sem teoria solta. Só direção.</Body>
+        <Body>
+          A Pólia One te leva do primeiro passo até a primeira ferramenta da sua marca, pronta pra
+          usar.
+        </Body>
+        <Body>Sem curso e sem teoria solta, é direção do começo ao fim.</Body>
       </div>
-      <PrimaryCTA onClick={onNext}>Contar do meu negócio →</PrimaryCTA>
-      <p className="text-center text-[14px] text-[var(--muted)]">Leva 3 minutos.</p>
+      <PrimaryCTA onClick={onNext}>Quero contar da minha marca →</PrimaryCTA>
+      <p className="text-center text-[14px] text-[var(--muted)]">Leva só 3 minutinhos</p>
     </div>
   );
 }
@@ -245,7 +248,7 @@ function Step2({
   return (
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Um pouco sobre o que sua marca faz.</Manuscrito>
+      <Manuscrito>Agora, um pouco sobre o que sua marca faz</Manuscrito>
       <Headline size={64}>Como é o que sua marca vende?</Headline>
       <Body>Isso ajusta as próximas perguntas pro seu tipo de negócio.</Body>
       <div className="grid w-full max-w-[600px] grid-cols-1 gap-4 md:grid-cols-2">
@@ -342,7 +345,7 @@ function Step3({
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Em que momento sua marca está?</Manuscrito>
-      <Headline size={64}>Sem pose, só o momento real.</Headline>
+      <Headline size={64}>Sem pose, só o momento real</Headline>
       <Body>Sem julgamento. O Planejamento parte de onde a marca está hoje.</Body>
       <div className="grid w-full max-w-[820px] grid-cols-1 gap-4 md:grid-cols-3">
         {STAGES.map((o) => (
@@ -517,7 +520,7 @@ function Step4({
   return (
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Agora a parte mais sua.</Manuscrito>
+      <Manuscrito>Agora vem a parte mais sua</Manuscrito>
       <Headline size={56}>O que sua marca vende e o que entrega?</Headline>
       <p className="text-center text-[14px] text-[var(--muted)]">
         Pode ser breve. Dá pra ajustar depois.
@@ -725,8 +728,8 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
     return (
       <div className="flex flex-col items-center gap-5 pt-6">
         <LogoPlaceholder />
-        <Manuscrito>Primeiro número no lugar.</Manuscrito>
-        <Headline size={56}>Sobram {fmt(sobrou)} por venda.</Headline>
+        <Manuscrito>Olha aí o primeiro número no lugar</Manuscrito>
+        <Headline size={56}>Sobram {fmt(sobrou)} por venda</Headline>
         <Body>Esse é o número que decide se o preço se paga.</Body>
         <PrimaryCTA onClick={onSuccess}>Continuar →</PrimaryCTA>
       </div>
@@ -736,7 +739,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
   return (
     <div className="flex flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Com a marca no papel, o primeiro número.</Manuscrito>
+      <Manuscrito>Marca no papel, agora o primeiro número</Manuscrito>
       <Headline size={56}>Quanto cobra e quanto custa?</Headline>
       <Body>
         O preço de {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar
@@ -796,8 +799,8 @@ function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: ()
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
-      <Manuscrito>Pronto. Tá tudo no lugar.</Manuscrito>
-      <Headline size={56}>Seu planejamento começa agora.</Headline>
+      <Manuscrito>Pronto, tá tudo no lugar</Manuscrito>
+      <Headline size={56}>Seu planejamento começa agora</Headline>
 
       <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6">
         <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
