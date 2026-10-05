@@ -258,11 +258,10 @@ const planos: {
       "Até 3 metas acompanhadas",
       "Um quadro no Planner",
     ],
-    // Pré-lançamento: cadastro e checkout estão fechados, então os três botões
-    // levam pra lista de espera. Em outubro voltam pra /auth/cadastro e
-    // /assinar?plano=... (destinos originais no histórico do git).
-    botao: "Entrar na lista",
-    href: "/lista-de-espera",
+    // Cadastro e compra abertos (05/10/2026). O Grátis cria conta direto; os
+    // pagos abrem /planos já com o plano escolhido.
+    botao: "Criar conta grátis",
+    href: "/auth/cadastro",
     destaque: false,
   },
   {
@@ -278,8 +277,8 @@ const planos: {
       "Quadros ilimitados no Planner",
     ],
     apoio: "Um desconto dado no chute pode custar mais do que a assinatura.",
-    botao: "Entrar na lista",
-    href: "/lista-de-espera",
+    botao: "Assinar o Premium",
+    href: "/planos?plano=premium",
     destaque: true,
   },
   {
@@ -295,8 +294,8 @@ const planos: {
       "Resumo do mês para o contador",
       "Acesso antecipado a novos recursos",
     ],
-    botao: "Entrar na lista",
-    href: "/lista-de-espera",
+    botao: "Assinar o Pro",
+    href: "/planos?plano=pro",
     destaque: false,
   },
 ];
@@ -477,7 +476,7 @@ function HomePage() {
             className="fixed bottom-6 right-6 z-40 hidden md:block"
           >
             <Link
-              to="/lista-de-espera"
+              to="/planos"
               data-track="cadastro_cta_clicado"
               data-track-props='{"contexto":"flutuante"}'
               className={BTN_PRIMARIO}
@@ -518,7 +517,7 @@ function HomePage() {
                   </p>
                   <div className="mt-8 flex flex-wrap gap-3">
                     <Link
-                      to="/lista-de-espera"
+                      to="/planos"
                       data-track="cadastro_cta_clicado"
                       data-track-props='{"contexto":"hero"}'
                       className={BTN_PRIMARIO}
@@ -530,8 +529,6 @@ function HomePage() {
                       Ver o produto
                     </a>
                   </div>
-                  {/* Pré-lançamento: o botão leva à lista, então a linha diz que o
-                      Grátis é grátis, sem prometer "comece agora". */}
                   <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
                     O plano Grátis não pede cartão de crédito.
                   </p>
@@ -1164,10 +1161,8 @@ function HomePage() {
             </RevealGroup>
 
             <Reveal>
-              {/* Enquanto os planos não abrem, a linha de apoio responde à
-                  objeção certa (quando dá pra entrar), não à de cancelamento. */}
               <p className="mx-auto mt-6 max-w-[64ch] text-center text-[14px] leading-[1.65] text-[var(--ink)]">
-                Os planos abrem em breve. Quem está na lista entra primeiro.
+                Sem cartão no Grátis. Nos planos pagos, o cancelamento é em um clique.
               </p>
             </Reveal>
           </div>
@@ -1192,7 +1187,7 @@ function HomePage() {
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Link
-                  to="/lista-de-espera"
+                  to="/planos"
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"cta_final"}'
                   className={BTN_PRIMARIO}

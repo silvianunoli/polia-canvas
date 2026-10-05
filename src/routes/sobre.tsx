@@ -750,21 +750,19 @@ function SobrePage() {
               </h2>
               <p className="max-w-[52ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
                 Estou construindo a Pólia em público e testando cada parte primeiro na minha própria
-                marca. Em outubro, ela chega às primeiras empreendedoras.
+                marca. Agora ela está aberta para as primeiras empreendedoras.
               </p>
               <p className="mt-4 max-w-[52ch] text-[16px] leading-[1.65] text-[var(--ink)]">
-                Entre na lista para ser uma das primeiras a usar.
+                Comece pelo plano Grátis ou escolha um plano pago.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
-                {/* Pré-lançamento: cadastro fechado, então o CTA leva pra lista.
-                    Volta pra /auth/cadastro quando os planos abrirem. */}
                 <Link
-                  to="/lista-de-espera"
+                  to="/planos"
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"sobre_cta_final"}'
                   className={BTN_PRIMARIO}
                 >
-                  Quero entrar na lista
+                  Ver os planos
                   <span aria-hidden="true">→</span>
                 </Link>
               </div>

@@ -1,10 +1,9 @@
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Mail, User } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
-import { verificarConvite } from "@/lib/convites.functions";
 import { track } from "@/lib/analytics";
 import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import {
@@ -24,15 +23,9 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/auth/cadastro")({
+  // Cadastro aberto ao público (05/10/2026). ?email= ainda pré-preenche o campo
+  // pra quem chega por link de convite, mas não é mais exigido.
   validateSearch: (search) => searchSchema.parse(search),
-  // Pré-lançamento: autocadastro público fica fechado. Quem chega com
-  // ?email= veio de um link de convite (allowlist) — deixa passar, a
-  // checagem de convite de verdade acontece no submit (verificarConvite).
-  beforeLoad: async ({ search }) => {
-    if (typeof window === "undefined" || search.email) return;
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/lista-de-espera" });
-  },
   head: () => ({
     meta: [
       // Não é conteúdo de busca: fica fora do índice.
@@ -97,25 +90,6 @@ function CadastroPage() {
     setSenhaInvalida(false);
     setLoading(true);
     try {
-      const { permitido } = await verificarConvite({ data: { email } });
-      if (!permitido) {
-        track("cadastro_falhou", { motivo: "sem_convite" });
-        setErrors({
-          email: (
-            <>
-              Esse e-mail ainda não tem convite pra Pólia.{" "}
-              <Link
-                to="/lista-de-espera"
-                className="text-[var(--danger)] underline underline-offset-2"
-              >
-                Entra na lista de espera
-              </Link>
-            </>
-          ),
-        });
-        return;
-      }
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password: values.senha,

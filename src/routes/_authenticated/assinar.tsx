@@ -6,20 +6,11 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib/stripe.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
-import { ehBeta, tierDoPlano, TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { ehBeta, tierDoPlano, FEATURES_GRATIS, TIERS_PAGOS, type TierPago } from "@/lib/planos";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 type TierId = TierPago;
 type CicloId = "mensal" | "anual";
-
-const FEATURES_GRATIS = [
-  "Planejamento completo, os 6 módulos",
-  "Calculadora de preço",
-  "Catálogo de até 5 produtos",
-  "Até 3 metas ativas por vez",
-  "1 quadro no Planner e 1 nota no Caderno",
-  "Aimer para tirar dúvida, com teto diário",
-];
 
 interface AssinarSearch {
   plano?: TierId;

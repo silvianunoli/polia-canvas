@@ -723,14 +723,13 @@ function AjudaPage() {
                   de acordo. No plano Grátis, você já pode começar, sem cartão de crédito.
                 </p>
                 <div className="mt-8">
-                  {/* Pré-lançamento: volta pra /auth/cadastro quando abrir. */}
                   <Link
-                    to="/lista-de-espera"
+                    to="/auth/cadastro"
                     data-track="cadastro_cta_clicado"
                     data-track-props='{"contexto":"ajuda_sem_conta"}'
                     className={BTN_PRIMARIO}
                   >
-                    Entrar na lista
+                    Criar conta grátis
                     <span aria-hidden="true">→</span>
                   </Link>
                 </div>

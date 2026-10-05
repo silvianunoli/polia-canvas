@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
@@ -69,6 +70,11 @@ const SobreRoute = SobreRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlanosRoute = PlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PesquisaRoute = PesquisaRouteImport.update({
@@ -303,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -350,6 +357,7 @@ export interface FileRoutesByTo {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -399,6 +407,7 @@ export interface FileRoutesById {
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -448,6 +457,7 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
+    | '/planos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -495,6 +505,7 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
+    | '/planos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -543,6 +554,7 @@ export interface FileRouteTypes {
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
+    | '/planos'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -592,6 +604,7 @@ export interface RootRouteChildren {
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   ManualRoute: typeof ManualRoute
   PesquisaRoute: typeof PesquisaRoute
+  PlanosRoute: typeof PlanosRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -628,6 +641,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/planos': {
+      id: '/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof PlanosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pesquisa': {
@@ -1004,6 +1024,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   ManualRoute: ManualRoute,
   PesquisaRoute: PesquisaRoute,
+  PlanosRoute: PlanosRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,

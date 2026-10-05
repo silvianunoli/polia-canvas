@@ -128,6 +128,17 @@ export const COTAS_CONFERE = {
 // de ser verdade em 14/08/2026, e duplicava o teto do plano gratuito em dois
 // lugares que podiam divergir em silêncio.
 
+// O que o plano Grátis inclui. Fica aqui, ao lado dos pagos, pra /planos (público)
+// e /assinar (dentro do app) mostrarem sempre a mesma lista.
+export const FEATURES_GRATIS = [
+  "Planejamento completo, os 6 módulos",
+  "Calculadora de preço",
+  "Catálogo de até 5 produtos",
+  "Até 3 metas ativas por vez",
+  "1 quadro no Planner e 1 nota no Caderno",
+  "Aimer para tirar dúvida, com teto diário",
+];
+
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
 // (src/routes/_authenticated/assinar.tsx) e na tela de upgrade
 // (src/routes/_authenticated/upgrade.tsx), pra não duplicar em dois lugares.
