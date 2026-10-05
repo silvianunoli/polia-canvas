@@ -141,12 +141,9 @@ const LAYOUT: Record<number, Bloco[]> = {
     { t: "metaTrack" },
     {
       t: "bento",
-      cards: [
-        { c: "financeiro.custo_fixo" },
-        { c: "financeiro.estrategia_preco" },
-        { c: "financeiro.custo_unitario" },
-        { c: "financeiro.preco_ideal" },
-      ],
+      // Desde 05/10/2026 o módulo 4 é só número: custo por venda, preço e
+      // mercado saíram (o preço de cada produto mora na Calculadora).
+      cards: [{ c: "financeiro.meta_mensal" }, { c: "financeiro.custo_fixo" }],
     },
   ],
   5: [
@@ -628,12 +625,14 @@ function PlanejamentoPage() {
                             ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
                             : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
                         </p>
-                        {proximo && (
+                        {/* Concluído mas vazio (respostas perdidas ou puladas):
+                            atalho pra preencher, igual ao do próximo módulo. */}
+                        {(proximo || moduloCompleto(m.n)) && (
                           <LinkInterno
                             href={`/planejamento/modulo/${m.n}`}
                             className={`${BTN_ACAO} mt-3`}
                           >
-                            Começar o Módulo {m.n}
+                            {proximo ? "Começar" : "Preencher"} o Módulo {m.n}
                             <span aria-hidden="true">→</span>
                           </LinkInterno>
                         )}
@@ -928,11 +927,17 @@ function MetaTrack({
     "financeiro.meta_boa": boa,
     "financeiro.meta_celebracao": celebracao,
   };
+  // Só entra valor que é número de verdade ("R$ 3.000,00", "3000"). Até
+  // 05/10/2026 esses campos eram texto livre com IA, e parágrafo inteiro ia
+  // parar na faixa e nos cartões (texto gigante vazando pela tela).
   const marcas = META_MARCAS.map((m) => ({ ...m, texto: textos[m.campo] })).filter(
-    (m): m is { campo: string; curto: string; texto: string } => !!m.texto,
+    (m): m is { campo: string; curto: string; texto: string } =>
+      !!m.texto && /^\s*(R\$)?\s*[\d.]+(,\d{1,2})?\s*$/.test(m.texto) && numeroDe(m.texto) > 0,
   );
   if (marcas.length === 0) return null;
   const valores = marcas.map((m) => numeroDe(m.texto));
+  const brl = (v: number) =>
+    v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
   const max = Math.max(...valores, agora, 1);
   const pct = (v: number) => Math.min(99, Math.max(0, (v / max) * 100));
 
@@ -961,7 +966,7 @@ function MetaTrack({
                 className="absolute -top-9 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)]"
                 style={ultimo ? { right: 0 } : { left: "50%", transform: "translateX(-50%)" }}
               >
-                {m.curto} · {m.texto}
+                {m.curto} · {brl(valores[i])}
               </span>
             </div>
           );
@@ -981,7 +986,7 @@ function MetaTrack({
             style={{ borderColor: i === marcas.length - 1 ? "var(--secondary)" : "var(--line)" }}
           >
             <Rotulo campo={m.campo} />
-            <p className="mt-1 text-[24px] leading-none text-[var(--ink)]">{m.texto}</p>
+            <p className="mt-1 text-[24px] leading-none text-[var(--ink)]">{brl(valores[i])}</p>
           </div>
         ))}
       </div>

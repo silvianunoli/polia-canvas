@@ -5,6 +5,7 @@ import {
   contextoInsuficiente,
   respostaValida,
   montarPrompt,
+  limitarTamanho,
 } from "./planejamentoIa.functions";
 
 describe("configDoPlano", () => {
@@ -93,5 +94,23 @@ describe("montarPrompt", () => {
       camposModulo: [],
     });
     expect(prompt).toContain("Pergunta qualquer");
+  });
+});
+
+describe("limitarTamanho", () => {
+  it("devolve o texto como veio quando cabe", () => {
+    expect(limitarTamanho("Frase curta.", 50)).toBe("Frase curta.");
+  });
+
+  it("corta no fim da última frase que cabe", () => {
+    const t = "Primeira frase aqui. Segunda frase também cabe. Terceira passa do limite com folga.";
+    expect(limitarTamanho(t, 50)).toBe("Primeira frase aqui. Segunda frase também cabe.");
+  });
+
+  it("sem fim de frase por perto, corta na palavra e marca com reticências", () => {
+    const t = "palavra ".repeat(30).trim();
+    const r = limitarTamanho(t, 40);
+    expect(r.endsWith("…")).toBe(true);
+    expect(r.length).toBeLessThanOrEqual(41);
   });
 });

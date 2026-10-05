@@ -7,7 +7,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
-import { toastErro, toastInfo } from "@/lib/toast";
+import { toastErro, toastInfo, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
 import { COTAS_CONFERE } from "@/lib/planos";
@@ -267,6 +267,36 @@ function CadernoPage() {
     remover.mutate(selecionada.id);
   }
 
+  // "Salvar e fechar": grava agora o que estiver pendente do autosave (mesma
+  // mutation, sem mexer no debounce de digitação) e só fecha se a gravação deu
+  // certo. Se falhar, o onError de `salvar` já avisa e o editor fica aberto com
+  // o texto na tela. Durante a gravação os campos ficam só leitura, senão o que
+  // fosse digitado depois do clique sumiria junto com o editor.
+  const [fechando, setFechando] = useState(false);
+  async function salvarEFechar() {
+    if (!selecionada || fechando) return;
+    const id = selecionada.id;
+    if (notaExcedente) {
+      selecionar(null);
+      return;
+    }
+    const mudou = selecionada.titulo !== titulo || selecionada.conteudo !== conteudo;
+    setFechando(true);
+    try {
+      if (mudou) {
+        await salvar.mutateAsync({ id, t: titulo, c: conteudo });
+      }
+    } catch {
+      setFechando(false);
+      return;
+    }
+    setFechando(false);
+    // Ela pode ter trocado de nota enquanto gravava: aí não fecha a outra.
+    if (idCarregadoRef.current !== id) return;
+    toastSucesso("Nota salva.");
+    selecionar(null);
+  }
+
   function criarDeBusca() {
     const termo = busca.trim();
     criar.mutate(termo);
@@ -513,29 +543,38 @@ function CadernoPage() {
                   onChange={(e) => setTitulo(e.target.value)}
                   maxLength={160}
                   placeholder="Título da nota"
-                  readOnly={notaExcedente}
+                  readOnly={notaExcedente || fechando}
                   className="mb-3 w-full bg-transparent text-[26px] leading-tight text-[var(--ink)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
                 <textarea
                   value={conteudo}
                   onChange={(e) => setConteudo(e.target.value)}
                   placeholder="Comece a escrever…"
-                  readOnly={notaExcedente}
+                  readOnly={notaExcedente || fechando}
                   className="min-h-[48vh] w-full resize-none bg-transparent text-[15.5px] leading-[1.85] text-[var(--ink-soft)] placeholder:text-[var(--muted)] focus:outline-none"
                 />
 
-                <div className="mt-5 flex justify-end">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={handleExcluirClick}
+                    disabled={fechando}
                     className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
                   >
                     {excluirArmado ? "Confirmar exclusão" : "Excluir nota"}
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => void salvarEFechar()}
+                    disabled={fechando || remover.isPending}
+                    className={BTN_ACAO}
+                  >
+                    {notaExcedente ? "Fechar" : fechando ? "Salvando..." : "Salvar e fechar"}
+                  </button>
                 </div>
                 {/* Existe desfazer de alguns segundos: a copy mostra a rede. */}
                 {excluirArmado && (
-                  <p className="mt-1 text-right text-[12px] text-[var(--muted)]">
+                  <p className="mt-1 text-[12px] text-[var(--muted)]">
                     A nota sai da lista. Dá pra desfazer nos próximos segundos.
                   </p>
                 )}

@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
-import { secaoPorId, secoesDoModulo } from "@/lib/planejamento";
+import { MODULOS_SEM_IA, secaoPorId, secoesDoModulo } from "@/lib/planejamento";
 
 const FEATURE = "planejamento";
 
@@ -43,6 +43,24 @@ export function periodoAtual(agora: Date): string {
   return `${ano}-${mes}`;
 }
 
+/**
+ * Teto de tamanho do rascunho (05/10/2026): o prompt já pede até 600
+ * caracteres, isto é a trava se o modelo passar. Corta no fim da última frase
+ * que cabe, nunca no meio de palavra.
+ */
+export const LIMITE_CARACTERES_RASCUNHO = 700;
+
+export function limitarTamanho(texto: string, max = LIMITE_CARACTERES_RASCUNHO): string {
+  const t = texto.trim();
+  if (t.length <= max) return t;
+  const corte = t.slice(0, max);
+  let fimFrase = -1;
+  for (const m of corte.matchAll(/[.?!]\s/g)) fimFrase = m.index ?? fimFrase;
+  if (fimFrase > max * 0.5) return corte.slice(0, fimFrase + 1).trim();
+  const fimPalavra = corte.lastIndexOf(" ");
+  return `${corte.slice(0, fimPalavra > 0 ? fimPalavra : max).trim()}…`;
+}
+
 export function contextoInsuficiente(
   businessType: string | null | undefined,
   produtosCount: number,
@@ -63,6 +81,7 @@ Regras de voz (obrigatórias, não são sugestão):
 - Tom de conversa de café: direto, concreto, sem hype. Nunca "transforme", "revolucione", "✨", exclamação, positividade forçada.
 - Nunca use travessão (—) nem meia-risca (–) na resposta. Use vírgula, dois pontos ou ponto final. Essa regra não tem exceção.
 - É um RASCUNHO pra ela editar, não uma resposta fechada e perfeita: pode ser mais curto e específico do que genérico e bonito.
+- No máximo 600 caracteres (umas 4 frases curtas). Passou disso, corte o que for genérico.
 - Responda SÓ com o texto do rascunho, sem comentário, sem aspas, sem "aqui está".`;
 
 interface ContextoNegocio {
@@ -139,7 +158,12 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
   .handler(async ({ context, data }): Promise<ResultadoGeracao> => {
     const secaoInfo = secaoPorId(data.secao);
     const pergunta = secaoInfo?.perguntas[data.perguntaIdx];
-    if (!secaoInfo || !pergunta) {
+    if (
+      !secaoInfo ||
+      !pergunta ||
+      pergunta.tipo === "moeda" ||
+      MODULOS_SEM_IA.has(secaoInfo.modulo)
+    ) {
       return { ok: false, motivo: "pergunta_invalida" };
     }
     // A tela já bloqueia o botão com o campo vazio; aqui é a mesma regra no
@@ -222,7 +246,7 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
         tokens_out: resultado.tokensOut,
         sucesso: true,
       } as never);
-      return { ok: true, texto: resultado.texto.trim() };
+      return { ok: true, texto: limitarTamanho(resultado.texto) };
     } catch (erro) {
       await Promise.all([
         supabaseAdmin.rpc(
@@ -243,4 +267,29 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
       ]);
       return { ok: false, motivo: "falha_ia" };
     }
+  });
+
+/**
+ * Quanto da cota de IA do Planejamento ela já usou no mês, pra tela mostrar
+ * a barra e avisar perto do limite (05/10/2026). Só leitura.
+ */
+export const usoIaPlanejamento = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ usado: number; limite: number; plano: string }> => {
+    const [{ data: profile }, { data: uso }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("plano").eq("id", context.userId).maybeSingle(),
+      supabaseAdmin
+        .from("ia_uso" as never)
+        .select("contagem")
+        .eq("user_id", context.userId)
+        .eq("feature", FEATURE)
+        .eq("periodo", periodoAtual(new Date()))
+        .maybeSingle(),
+    ]);
+    const plano = (profile?.plano as string | null) ?? "confere";
+    return {
+      usado: ((uso as { contagem: number } | null)?.contagem ?? 0) as number,
+      limite: configDoPlano(plano).limite,
+      plano,
+    };
   });

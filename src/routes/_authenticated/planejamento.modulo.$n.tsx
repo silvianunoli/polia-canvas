@@ -13,13 +13,15 @@ import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import {
   type Secao,
+  MODULOS_SEM_IA,
   SECOES,
   TOTAL_MODULOS,
   ferramentaDe,
   moduloInfo,
   secoesDoModulo,
 } from "@/lib/planejamento";
-import { gerarRascunhoPlanejamento } from "@/lib/planejamentoIa.functions";
+import { gerarRascunhoPlanejamento, usoIaPlanejamento } from "@/lib/planejamentoIa.functions";
+import { avisoCotaEsgotada, pertoDoLimite } from "@/lib/usoIa";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
@@ -66,6 +68,14 @@ function ModuloPage() {
   const navigate = useNavigate();
 
   const ferramenta = ferramentaDe(n);
+  // Barra de uso da IA (05/10/2026): só nos módulos que têm o botão de IA.
+  const usoIaQuery = useQuery({
+    queryKey: ["uso-ia-planejamento", userId],
+    enabled: !!userId && !MODULOS_SEM_IA.has(n),
+    staleTime: 60_000,
+    queryFn: () => usoIaPlanejamento(),
+  });
+  const usoIa = MODULOS_SEM_IA.has(n) ? undefined : usoIaQuery.data;
   const [desbloqueada, setDesbloqueada] = useState(false);
   const [secaoId, setSecaoId] = useState<string | null>(null);
   const csat = useCsatTrigger("entregavel_concluido", `modulo_${n}`, desbloqueada);
@@ -213,17 +223,46 @@ function ModuloPage() {
           <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             Módulo {n} concluído
           </p>
-          <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">Acabou de nascer a</p>
+          <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">{ferramenta.nasceu}</p>
           <h1 className="font-cabinet mt-1 text-[2.5rem] leading-[1.05] text-[var(--ink)]">
             {ferramenta.nome}
           </h1>
           <p className="mt-3 max-w-[420px] text-[0.9rem] leading-relaxed text-[var(--ink-soft)]">
             {ferramenta.desbloqueioSub}
           </p>
-          <LinkInterno href={ferramenta.rota} className={`${BTN_PRIMARIO} mt-8`}>
-            {ferramenta.abrirLabel}
-            <ArrowRight size={16} aria-hidden="true" />
-          </LinkInterno>
+          {/* Com módulo seguinte, continuar o Planejamento é a ação principal:
+              só com o botão da ferramenta parecia que o Planejamento tinha
+              acabado ali (pedido da Sil, 05/10/2026). */}
+          {n < TOTAL_MODULOS ? (
+            <>
+              <button
+                type="button"
+                onClick={() =>
+                  void navigate({
+                    to: "/planejamento/modulo/$n",
+                    params: { n: String(n + 1) },
+                    search: { secao: undefined },
+                  })
+                }
+                className={`${BTN_PRIMARIO} mt-8`}
+              >
+                Continuar no Módulo {n + 1}
+                <ArrowRight size={16} aria-hidden="true" />
+              </button>
+              <p className="mt-2 text-[0.8rem] text-[var(--muted)]">
+                Faltam {TOTAL_MODULOS - n} {TOTAL_MODULOS - n === 1 ? "módulo" : "módulos"} pra
+                fechar o Planejamento.
+              </p>
+              <LinkInterno href={ferramenta.rota} className={`${BTN_ACAO_CONTORNO} mt-5`}>
+                {ferramenta.abrirLabel}
+              </LinkInterno>
+            </>
+          ) : (
+            <LinkInterno href={ferramenta.rota} className={`${BTN_PRIMARIO} mt-8`}>
+              {ferramenta.abrirLabel}
+              <ArrowRight size={16} aria-hidden="true" />
+            </LinkInterno>
+          )}
           <LinkInterno
             href="/planejamento"
             className="mt-2 inline-flex min-h-11 items-center px-2 text-[0.875rem] font-medium text-[var(--secondary-text)] no-underline hover:underline"
@@ -271,6 +310,8 @@ function ModuloPage() {
           />
         </div>
 
+        {usoIa && <UsoIaBarra usado={usoIa.usado} limite={usoIa.limite} />}
+
         {!secaoAtual ? (
           <div className="space-y-3">
             {[0, 1].map((i) => (
@@ -292,6 +333,8 @@ function ModuloPage() {
             onVoltar={voltarSecao}
             podeVoltar={idx > 0}
             ultima={idx === total - 1}
+            plano={usoIa?.plano ?? "confere"}
+            onGerou={() => void qc.invalidateQueries({ queryKey: ["uso-ia-planejamento", userId] })}
           />
         )}
       </div>
@@ -323,6 +366,8 @@ function SecaoForm({
   onVoltar,
   podeVoltar,
   ultima,
+  plano,
+  onGerou,
 }: {
   secao: Secao;
   indice: number;
@@ -333,7 +378,11 @@ function SecaoForm({
   onVoltar: () => void;
   podeVoltar: boolean;
   ultima: boolean;
+  plano: string;
+  onGerou: () => void;
 }) {
+  // Módulos 4 (só número) e 5 (canais) não têm o botão de IA.
+  const semIa = MODULOS_SEM_IA.has(secao.modulo);
   const [valores, setValores] = useState<string[]>(() =>
     secao.perguntas.map((_, i) => draftsIniciais[i] ?? ""),
   );
@@ -359,10 +408,9 @@ function SecaoForm({
         await onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]);
         // Toast, não só o texto "Salvo" no topo: rolada a página, esse texto
         // some da vista e não dava pra saber se a resposta gravou.
-        if (pendentes.current.size === 0) {
-          setStatus("saved");
-          toastSucesso("Salvo");
-        }
+        // Sem toast aqui: o autosave roda a cada pausa na digitação e o
+        // "Salvo" pipocava toda hora. O toast fica no "Salvar e continuar".
+        if (pendentes.current.size === 0) setStatus("saved");
       } catch (e) {
         console.error("planejamento: falha ao salvar resposta", e);
         // Volta pra fila: o "Salvar e continuar" tenta de novo antes de avançar.
@@ -449,6 +497,7 @@ function SecaoForm({
         definirValor(i, resultado.texto);
         setRascunho((s) => ({ ...s, [i]: resultado.texto }));
         track("planejamento_ia_gerado", { campo: secao.perguntas[i].campo });
+        onGerou();
         // Salva na hora: o campo já aparece preenchido com o rascunho, e sem
         // isto ele só ia pro banco se a usuária clicasse "Usar" — avançando
         // direto (Salvar e continuar) o rascunho sumia sem nunca ser salvo.
@@ -456,6 +505,7 @@ function SecaoForm({
         await salvarUm(i);
       } else if (resultado.motivo === "cota_atingida") {
         setCotaAtingida((s) => ({ ...s, [i]: true }));
+        onGerou();
       } else if (resultado.motivo === "contexto_insuficiente") {
         setContextoInsuf((s) => ({ ...s, [i]: true }));
       } else {
@@ -492,6 +542,7 @@ function SecaoForm({
     try {
       await flush();
       await onConcluir();
+      toastSucesso("Salvo");
     } catch (e) {
       console.error("planejamento: falha ao concluir seção", e);
       toastErro(
@@ -580,15 +631,19 @@ function SecaoForm({
               <div id={`pergunta-${i}-mensagem`} aria-live="polite">
                 {cotaAtingida[i] ? (
                   <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                    Você já usou a sua geração de IA do mês. No Premium dá pra re-gerar quantas
-                    vezes precisar.{" "}
-                    <Link
-                      to="/upgrade"
-                      search={{ rota: "/planejamento", tier: "controle" }}
-                      className="font-medium text-[var(--secondary-text)] no-underline"
-                    >
-                      Conhecer o Premium
-                    </Link>
+                    {avisoCotaEsgotada(plano).texto}{" "}
+                    {avisoCotaEsgotada(plano).upgrade && (
+                      <Link
+                        to="/upgrade"
+                        search={{
+                          rota: "/planejamento",
+                          tier: avisoCotaEsgotada(plano).upgrade!.tier,
+                        }}
+                        className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+                      >
+                        {avisoCotaEsgotada(plano).upgrade!.rotulo}
+                      </Link>
+                    )}
                   </p>
                 ) : contextoInsuf[i] ? (
                   <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
@@ -652,7 +707,7 @@ function SecaoForm({
                       Gerar outro
                     </button>
                   </div>
-                ) : !valores[i]?.trim() && !gerando[i] ? (
+                ) : semIa ? null : !valores[i]?.trim() && !gerando[i] ? (
                   // A IA completa o que a usuária escreveu; com o campo vazio
                   // ela inventava do zero e o texto saía estranho (05/10/2026).
                   <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
@@ -693,6 +748,40 @@ function SecaoForm({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/** "Completar com IA: 12 de 60 neste mês", com aviso perto do limite. */
+function UsoIaBarra({ usado, limite }: { usado: number; limite: number }) {
+  const pct = limite > 0 ? Math.min(100, (usado / limite) * 100) : 100;
+  const restam = Math.max(0, limite - usado);
+  const perto = pertoDoLimite(usado, limite);
+  return (
+    <div className="-mt-4 mb-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[var(--muted)]">
+      <span className="inline-flex items-center gap-1.5">
+        <Sparkles size={12} aria-hidden="true" />
+        IA neste mês: {usado} de {limite}
+      </span>
+      <span
+        className="h-1 w-24 overflow-hidden rounded-full bg-[var(--line)]"
+        role="meter"
+        aria-label="Uso de IA no mês"
+        aria-valuenow={usado}
+        aria-valuemin={0}
+        aria-valuemax={limite}
+      >
+        <span
+          className={`block h-full rounded-full ${restam === 0 ? "bg-[var(--danger)]" : "bg-[var(--secondary)]"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+      {perto && (
+        <span className="text-[var(--ink-soft)]">
+          {restam === 1 ? "Resta 1 uso." : `Restam ${restam} usos.`} Renova no dia 1º.
+        </span>
+      )}
+      {restam === 0 && <span className="text-[var(--danger)]">Os usos deste mês já foram.</span>}
     </div>
   );
 }

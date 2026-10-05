@@ -23,6 +23,13 @@ export interface Pergunta {
   tipo?: "moeda";
 }
 
+/**
+ * Módulos sem o botão de completar com IA (05/10/2026, decisão da Sil): o 4 é
+ * só número (campo "moeda") e o 5 é sobre canais e presença, onde a resposta
+ * tem que vir da rotina dela, não de um texto inventado.
+ */
+export const MODULOS_SEM_IA: ReadonlySet<number> = new Set([4, 5]);
+
 export interface Secao {
   id: string; // "1.1" … "6.5"
   modulo: number;
@@ -56,11 +63,12 @@ export const MODULOS: Modulo[] = [
   {
     n: 4,
     nome: "Quanto vale",
-    subtitulo: "Precificar é respeitar o seu trabalho. E entender o seu negócio.",
+    subtitulo:
+      "Os números de referência do mês. O preço de cada produto você calcula na Calculadora.",
   },
   {
     n: 5,
-    nome: "Como te acharem",
+    nome: "Como os clientes te encontram",
     subtitulo: "Onde você aparece, como você fala, e como as pessoas chegam até a compra.",
   },
   {
@@ -343,7 +351,7 @@ export const SECOES: Secao[] = [
     modulo: 4,
     titulo: "A conta do mês",
     subtitulo:
-      "Dois números de referência: o que você quer receber e o que o negócio custa todo mês. Com a marca, a cliente e o produto já no papel, fica claro o que a marca precisa sustentar.",
+      "Dois números de referência: o que você quer receber e o que o negócio custa todo mês. Dá pra mudar depois, sempre que quiser.",
     // 2 campos: meta_mensal (o que ela quer receber) + custo_fixo (o que sai).
     perguntas: [
       {
@@ -360,61 +368,10 @@ export const SECOES: Secao[] = [
     ],
   },
   {
-    id: "4.1",
-    modulo: 4,
-    titulo: "O que sai por venda",
-    subtitulo:
-      "O custo fixo entrou na conta do mês, logo acima. Aqui é o que sai a cada produto ou atendimento.",
-    perguntas: [
-      {
-        label:
-          "Quanto você gasta por produto ou atendimento? (material, tempo, embalagem, frete, etc.)",
-        campo: "financeiro.custo_unitario",
-      },
-    ],
-  },
-  {
-    id: "4.2",
-    modulo: 4,
-    titulo: "O preço que você cobra",
-    subtitulo: "Um número, e o que faz ele parecer alto demais.",
-    perguntas: [
-      {
-        label: "Qual o preço que você acha que o seu produto ou serviço merece? Por quê?",
-        campo: "financeiro.preco_ideal",
-      },
-      {
-        label: "Tem algum receio de cobrar esse valor? O que te faz hesitar?",
-        campo: "financeiro.preco_ideal",
-      },
-    ],
-  },
-  {
-    id: "4.3",
-    modulo: 4,
-    titulo: "Como o mercado precifica",
-    subtitulo: "Entender o mercado é parte de se posicionar.",
-    perguntas: [
-      {
-        label: "Quanto os seus concorrentes cobram pelo que fazem?",
-        campo: "financeiro.estrategia_preco",
-      },
-      {
-        label: "Você quer ser mais acessível, equivalente ou premium que eles? Por quê?",
-        campo: "financeiro.estrategia_preco",
-      },
-      {
-        label:
-          "O que justifica o preço que você vai cobrar? O que sua cliente está pagando além do produto em si?",
-        campo: "financeiro.estrategia_preco",
-      },
-    ],
-  },
-  {
     id: "4.4",
     modulo: 4,
     titulo: "Sua meta do mês",
-    subtitulo: "Um número claro transforma intenção em foco.",
+    subtitulo: "Três valores de referência pro mês. Dá pra mudar depois, sempre que quiser.",
     // 3 campos: meta_minima / meta_boa / meta_celebracao. meta_boa é a Meta do
     // mês canônica: materializa em `metas` (trigger) e é lida por Painel,
     // Financeiro e a calculadora de Produtos.
@@ -422,13 +379,22 @@ export const SECOES: Secao[] = [
       {
         label: "Quanto você precisaria faturar no próximo mês pra pagar as contas?",
         campo: "financeiro.meta_minima",
+        tipo: "moeda",
       },
-      { label: "Quanto faria esse mês ser considerado um mês bom?", campo: "financeiro.meta_boa" },
-      { label: "Qual valor faria você celebrar?", campo: "financeiro.meta_celebracao" },
+      {
+        label: "Quanto faria esse mês ser considerado um mês bom?",
+        campo: "financeiro.meta_boa",
+        tipo: "moeda",
+      },
+      {
+        label: "Qual valor faria você celebrar?",
+        campo: "financeiro.meta_celebracao",
+        tipo: "moeda",
+      },
     ],
   },
 
-  // ───────── MÓDULO 5 — Como te acharem ─────────
+  // ───────── MÓDULO 5 — Como os clientes te encontram ─────────
   {
     id: "5.1",
     modulo: 5,
@@ -615,6 +581,8 @@ export function secaoPorId(id: string): Secao | undefined {
 // ───────── Ferramentas desbloqueadas ─────────
 export interface FerramentaPlan {
   nome: string;
+  /** "Acabou de nascer o" / "a" / "Acabaram de nascer as": concorda com o nome. */
+  nasceu: string;
   rota: string;
   desbloqueioSub: string;
   abrirLabel: string;
@@ -624,6 +592,7 @@ export interface FerramentaPlan {
 export const FERRAMENTAS: Record<number, FerramentaPlan> = {
   1: {
     nome: "Marca",
+    nasceu: "Acabou de nascer a",
     rota: "/marca",
     desbloqueioSub: "A identidade do seu negócio, escrita por você.",
     abrirLabel: "Ver minha Marca",
@@ -631,6 +600,7 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
   },
   2: {
     nome: "Mapa de Mercado",
+    nasceu: "Acabou de nascer o",
     rota: "/mercado",
     desbloqueioSub: "Quem é a sua cliente, o mercado e o seu lugar nele.",
     abrirLabel: "Abrir meu Mapa de Mercado",
@@ -638,6 +608,7 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
   },
   3: {
     nome: "Catálogo",
+    nasceu: "Acabou de nascer o",
     rota: "/produtos",
     desbloqueioSub: "Seus produtos e a transformação que você entrega.",
     abrirLabel: "Abrir meu catálogo",
@@ -645,13 +616,15 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
   },
   4: {
     nome: "Financeiro",
+    nasceu: "Acabou de nascer o",
     rota: "/financeiro",
-    desbloqueioSub: "Seus custos, seu preço e suas metas do mês.",
+    desbloqueioSub: "Seus custos e as metas do mês, em número.",
     abrirLabel: "Abrir meu financeiro",
-    tags: "custo, preço, metas",
+    tags: "custo fixo, metas do mês",
   },
   5: {
     nome: "Caderno",
+    nasceu: "Acabou de nascer o",
     rota: "/caderno",
     desbloqueioSub: "Seu guia de presença: canais, voz e bio.",
     abrirLabel: "Abrir meu caderno",
@@ -659,6 +632,7 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
   },
   6: {
     nome: "Metas",
+    nasceu: "Acabaram de nascer as",
     rota: "/metas",
     desbloqueioSub: "Onde você quer chegar e o que te leva lá.",
     abrirLabel: "Abrir minhas metas",
@@ -742,9 +716,6 @@ export const CAMPOS_FERRAMENTA: Record<string, string[]> = {
   "/produtos": ["marca.frase_valor", "produto.transformacao"],
   "/financeiro": [
     "financeiro.custo_fixo",
-    "financeiro.custo_unitario",
-    "financeiro.preco_ideal",
-    "financeiro.estrategia_preco",
     "financeiro.meta_minima",
     "financeiro.meta_boa",
     "financeiro.meta_celebracao",

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
   diasDoMes,
+  moduloDoCampo,
+  modulosFaltando,
   montarPromptMes,
   planejamentoIncompleto,
+  textoModulosFaltando,
   precisaLembrarHoje,
   sanearRespostaMes,
 } from "@/lib/planoConteudo.functions";
@@ -68,6 +71,94 @@ describe("planejamentoIncompleto", () => {
         "produto.lista": "z",
       }),
     ).toBe(false);
+  });
+
+  it("resposta só com espaço conta como vazia", () => {
+    expect(
+      planejamentoIncompleto({
+        "marca.missao": "x",
+        "mercado.perfil_cliente": "   ",
+        "produto.lista": "z",
+      }),
+    ).toBe(true);
+  });
+});
+
+describe("moduloDoCampo", () => {
+  it("acha o módulo pela seção que grava o campo (SECOES)", () => {
+    expect(moduloDoCampo("marca.missao")).toBe(1);
+    expect(moduloDoCampo("marca.proposito")).toBe(1);
+    expect(moduloDoCampo("mercado.perfil_cliente")).toBe(2);
+    expect(moduloDoCampo("produto.lista")).toBe(3);
+    expect(moduloDoCampo("caderno.voz")).toBe(5);
+    expect(moduloDoCampo("campo.inexistente")).toBeNull();
+  });
+});
+
+describe("modulosFaltando", () => {
+  it("seções concluídas com mercado.* vazio apontam o Módulo 2, Quem você serve", () => {
+    expect(
+      modulosFaltando({
+        "marca.missao": "x",
+        "mercado.perfil_cliente": "",
+        "mercado.dores": "",
+        "produto.lista": "z",
+      }),
+    ).toEqual([{ n: 2, nome: "Quem você serve" }]);
+  });
+
+  it("lista todos os módulos que faltam, em ordem, sem repetir", () => {
+    expect(modulosFaltando({})).toEqual([
+      { n: 1, nome: "Razão de existir" },
+      { n: 2, nome: "Quem você serve" },
+      { n: 3, nome: "O que você vende" },
+    ]);
+    expect(modulosFaltando({ "mercado.perfil_cliente": "y" })).toEqual([
+      { n: 1, nome: "Razão de existir" },
+      { n: 3, nome: "O que você vende" },
+    ]);
+  });
+
+  it("vazio quando o mínimo está respondido", () => {
+    expect(
+      modulosFaltando({
+        "marca.proposito": "x",
+        "mercado.perfil_cliente": "y",
+        "produto.lista": "z",
+      }),
+    ).toEqual([]);
+  });
+});
+
+describe("textoModulosFaltando", () => {
+  it("um módulo: número e nome, e pra que a resposta serve", () => {
+    expect(textoModulosFaltando([{ n: 2, nome: "Quem você serve" }])).toBe(
+      "Falta preencher o Módulo 2, Quem você serve. A Pólia One usa essas respostas pra montar as ideias de post.",
+    );
+  });
+
+  it("vários módulos: nomeia todos", () => {
+    expect(
+      textoModulosFaltando([
+        { n: 1, nome: "Razão de existir" },
+        { n: 2, nome: "Quem você serve" },
+        { n: 3, nome: "O que você vende" },
+      ]),
+    ).toBe(
+      "Falta preencher os módulos 1 (Razão de existir), 2 (Quem você serve) e 3 (O que você vende). A Pólia One usa essas respostas pra montar as ideias de post.",
+    );
+  });
+
+  it("lista vazia cai no aviso genérico (servidor antigo, sem a lista)", () => {
+    expect(textoModulosFaltando([])).toContain("Responda o básico no Planejamento");
+  });
+
+  it("segue a voz: sem travessão nem exclamação", () => {
+    const t = textoModulosFaltando([
+      { n: 2, nome: "Quem você serve" },
+      { n: 3, nome: "O que você vende" },
+    ]);
+    expect(t).not.toMatch(/[—–!]/);
   });
 });
 

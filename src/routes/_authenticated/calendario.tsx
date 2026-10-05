@@ -167,6 +167,10 @@ function CalendarioPage() {
     enabled: !!userId,
     queryFn: () => statusConexaoGoogle(),
   });
+  // Sem as credenciais do OAuth no servidor, "Conectar" só daria erro: a página
+  // esconde a integração e segue só com o Planner. Enquanto o status carrega,
+  // também fica escondida (evita o botão piscar e sumir).
+  const googleConfigurado = statusGoogleQuery.data?.configurado ?? false;
   const conectado = statusGoogleQuery.data?.conectado ?? false;
   const emailConectado = statusGoogleQuery.data?.email ?? null;
 
@@ -388,16 +392,18 @@ function CalendarioPage() {
           >
             Planner
           </button>
-          <button
-            type="button"
-            onClick={() => conectado && setMostrarGoogle((v) => !v)}
-            disabled={!conectado}
-            aria-pressed={mostrarGoogle}
-            title={!conectado ? "Conecte o Google Calendar pra filtrar por ele" : undefined}
-            className={`${BTN_MIUDO} ${conectado && mostrarGoogle ? "!bg-[var(--secondary)]" : "bg-white"}`}
-          >
-            Google Calendar
-          </button>
+          {googleConfigurado && (
+            <button
+              type="button"
+              onClick={() => conectado && setMostrarGoogle((v) => !v)}
+              disabled={!conectado}
+              aria-pressed={mostrarGoogle}
+              title={!conectado ? "Conecte o Google Calendar pra filtrar por ele" : undefined}
+              className={`${BTN_MIUDO} ${conectado && mostrarGoogle ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            >
+              Google Calendar
+            </button>
+          )}
 
           {mostrarPlanner && quadros.length > 1 && (
             <Select value={quadroFiltro} onValueChange={setQuadroFiltro}>
@@ -421,7 +427,7 @@ function CalendarioPage() {
           )}
 
           <div className="ml-auto">
-            {conectado ? (
+            {!googleConfigurado ? null : conectado ? (
               <button
                 type="button"
                 onClick={() => setConfirmarDesconectar(true)}

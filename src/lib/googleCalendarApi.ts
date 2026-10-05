@@ -15,6 +15,14 @@ function credenciais() {
   return { clientId, clientSecret, redirectUri };
 }
 
+/**
+ * Se as 3 variáveis do OAuth existem no ambiente. Só o booleano sai daqui: a
+ * tela usa pra esconder "Conectar Google Calendar" quando clicar só daria erro.
+ */
+export function googleConfigurado(): boolean {
+  return credenciais() !== null;
+}
+
 export function montarUrlConsentimento(state: string): {
   url: string | null;
   error: string | null;

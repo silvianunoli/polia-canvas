@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
+import { SECOES, moduloInfo } from "@/lib/planejamento";
 
 const FEATURE = "plano_conteudo";
 // Flash, não Pro: um mês são ~30 ideias e o Pro leva ~33s sozinho (medido em
@@ -17,13 +18,64 @@ const TIMEOUT_MS = 80_000;
 const LIMITE_ANUAL = 3; // 1 geração + até 2 re-gerações, teto único (ia_uso)
 
 // Campos mínimos do Planejamento sem os quais a IA não tem o que dizer sobre
-// a marca/público/oferta da Ana — pelo menos esses 3 precisam ter resposta.
+// a marca/público/oferta da Ana. A marca vale com missão OU propósito; os
+// demais precisam ter resposta (texto só de espaço conta como vazio).
 const CAMPOS_ESSENCIAIS = ["mercado.perfil_cliente", "produto.lista"] as const;
+const CAMPOS_MARCA = ["marca.missao", "marca.proposito"] as const;
 
-export function planejamentoIncompleto(campos: Record<string, string | null | undefined>): boolean {
-  const temMarca = !!(campos["marca.missao"] || campos["marca.proposito"]);
-  if (!temMarca) return true;
-  return CAMPOS_ESSENCIAIS.some((c) => !campos[c]);
+type CamposPlanejamento = Record<string, string | null | undefined>;
+
+function preenchido(valor: string | null | undefined): boolean {
+  return !!valor && valor.trim().length > 0;
+}
+
+/** Módulo do Planejamento onde a pergunta que grava esse campo mora (fonte: SECOES). */
+export function moduloDoCampo(campo: string): number | null {
+  return SECOES.find((s) => s.perguntas.some((p) => p.campo === campo))?.modulo ?? null;
+}
+
+export interface ModuloFaltando {
+  n: number;
+  nome: string;
+}
+
+/**
+ * Quais módulos do Planejamento ainda não têm as respostas mínimas pro plano de
+ * conteúdo, em ordem. Existe porque dá pra concluir todas as seções com campo
+ * vazio (aconteceu com mercado.* no Módulo 2), e o aviso genérico de "falta
+ * saber da sua marca" não dizia onde.
+ */
+export function modulosFaltando(campos: CamposPlanejamento): ModuloFaltando[] {
+  const faltando = new Set<number>();
+  if (!CAMPOS_MARCA.some((c) => preenchido(campos[c]))) {
+    const n = moduloDoCampo(CAMPOS_MARCA[0]);
+    if (n) faltando.add(n);
+  }
+  for (const c of CAMPOS_ESSENCIAIS) {
+    if (preenchido(campos[c])) continue;
+    const n = moduloDoCampo(c);
+    if (n) faltando.add(n);
+  }
+  return [...faltando].sort((a, b) => a - b).map((n) => ({ n, nome: moduloInfo(n).nome }));
+}
+
+export function planejamentoIncompleto(campos: CamposPlanejamento): boolean {
+  return modulosFaltando(campos).length > 0;
+}
+
+/** Frase do aviso de bloqueio: diz qual módulo falta, pelo número e pelo nome. */
+export function textoModulosFaltando(modulos: ModuloFaltando[]): string {
+  const uso = "A Pólia One usa essas respostas pra montar as ideias de post.";
+  if (modulos.length === 0) {
+    return "A Pólia One precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui.";
+  }
+  if (modulos.length === 1) {
+    const [m] = modulos;
+    return `Falta preencher o Módulo ${m.n}, ${m.nome}. ${uso}`;
+  }
+  const partes = modulos.map((m) => `${m.n} (${m.nome})`);
+  const lista = `${partes.slice(0, -1).join(", ")} e ${partes[partes.length - 1]}`;
+  return `Falta preencher os módulos ${lista}. ${uso}`;
 }
 
 export function diasDoMes(mes: number, ano: number): number {
@@ -165,13 +217,9 @@ export type ResultadoPlanoConteudo =
   | { ok: true; totalDias: number }
   | {
       ok: false;
-      motivo:
-        | "manutencao"
-        | "teto_atingido"
-        | "falha_ia"
-        | "planejamento_incompleto"
-        | "plano_insuficiente";
-    };
+      motivo: "manutencao" | "teto_atingido" | "falha_ia" | "plano_insuficiente";
+    }
+  | { ok: false; motivo: "planejamento_incompleto"; modulosFaltando: ModuloFaltando[] };
 
 export const gerarPlanoConteudo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -201,8 +249,9 @@ export const gerarPlanoConteudo = createServerFn({ method: "POST" })
       campos[c.campo] = c.valor;
     }
 
-    if (planejamentoIncompleto(campos)) {
-      return { ok: false, motivo: "planejamento_incompleto" };
+    const faltando = modulosFaltando(campos);
+    if (faltando.length > 0) {
+      return { ok: false, motivo: "planejamento_incompleto", modulosFaltando: faltando };
     }
 
     const contexto: ContextoMarca = {

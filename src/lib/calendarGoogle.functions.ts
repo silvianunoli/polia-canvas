@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { registrarEventoSistema } from "@/lib/founder-eventos.server";
 import {
+  googleConfigurado,
   montarUrlConsentimento,
   trocarCodigoPorTokens,
   renovarAccessToken,
@@ -33,8 +34,16 @@ async function lerConexao(userId: string): Promise<ConexaoRow | null> {
 export const statusConexaoGoogle = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    // Sem as credenciais do OAuth no ambiente nada do Google funciona (nem a
+    // renovação do token), então a tela esconde a integração inteira. Volta só
+    // o booleano, nunca o valor das variáveis.
+    if (!googleConfigurado()) return { configurado: false, conectado: false, email: null };
     const conexao = await lerConexao(context.userId);
-    return { conectado: !!conexao?.refresh_token, email: conexao?.email_conectado ?? null };
+    return {
+      configurado: true,
+      conectado: !!conexao?.refresh_token,
+      email: conexao?.email_conectado ?? null,
+    };
   });
 
 export const iniciarConexaoGoogle = createServerFn({ method: "POST" })

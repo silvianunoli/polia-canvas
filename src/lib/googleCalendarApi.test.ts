@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
+  googleConfigurado,
   montarUrlConsentimento,
   trocarCodigoPorTokens,
   renovarAccessToken,
@@ -23,6 +24,25 @@ function setCredenciais(vars: Partial<typeof CREDS_OK> | null) {
   }
   Object.assign(process.env, vars);
 }
+
+describe("googleConfigurado", () => {
+  afterEach(() => setCredenciais(null));
+
+  it("true só com as 3 variáveis do OAuth presentes", () => {
+    setCredenciais(CREDS_OK);
+    expect(googleConfigurado()).toBe(true);
+  });
+
+  it("false sem nenhuma variável ou com parte delas", () => {
+    setCredenciais(null);
+    expect(googleConfigurado()).toBe(false);
+    setCredenciais({
+      GOOGLE_CALENDAR_CLIENT_ID: "client-123",
+      GOOGLE_CALENDAR_CLIENT_SECRET: "secret-abc",
+    });
+    expect(googleConfigurado()).toBe(false);
+  });
+});
 
 describe("montarUrlConsentimento", () => {
   afterEach(() => setCredenciais(null));
@@ -88,7 +108,9 @@ describe("chamadas HTTP ao Google (fetch mockado)", () => {
 
       const { tokens, error } = await trocarCodigoPorTokens("code-invalido");
       expect(tokens).toBeNull();
-      expect(error).toBe("A Pólia One não conseguiu confirmar a conexão com o Google. Tenta de novo.");
+      expect(error).toBe(
+        "A Pólia One não conseguiu confirmar a conexão com o Google. Tenta de novo.",
+      );
     });
 
     it("retorna erro de falha de conexão quando fetch rejeita (rede fora)", async () => {

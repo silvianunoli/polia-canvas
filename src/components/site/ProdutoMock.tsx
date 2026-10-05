@@ -293,7 +293,7 @@ const modulosDoc = [
   { n: 2, nome: "Quem a marca serve", estado: "feito" },
   { n: 3, nome: "O que vende", estado: "feito" },
   { n: 4, nome: "Quanto vale", estado: "atual" },
-  { n: 5, nome: "Como te acharem", estado: "aberto" },
+  { n: 5, nome: "Como os clientes te encontram", estado: "aberto" },
   { n: 6, nome: "Onde a marca vai", estado: "aberto" },
 ];
 
@@ -395,7 +395,7 @@ const modulosFerramenta = [
   { nome: "Quem a marca serve", ferramenta: "Mercado", estado: "feito" },
   { nome: "O que vende", ferramenta: "Catálogo", estado: "feito" },
   { nome: "Quanto vale", ferramenta: "Financeiro", estado: "atual" },
-  { nome: "Como te acharem", ferramenta: "Caderno", estado: "fechado" },
+  { nome: "Como os clientes te encontram", ferramenta: "Caderno", estado: "fechado" },
   { nome: "Onde a marca vai", ferramenta: "Metas", estado: "fechado" },
 ];
 

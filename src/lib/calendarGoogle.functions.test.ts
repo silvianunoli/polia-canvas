@@ -28,6 +28,7 @@ const { registrarEventoSistema } = vi.hoisted(() => ({ registrarEventoSistema: v
 vi.mock("@/lib/founder-eventos.server", () => ({ registrarEventoSistema }));
 
 const api = vi.hoisted(() => ({
+  googleConfigurado: vi.fn(),
   montarUrlConsentimento: vi.fn(),
   trocarCodigoPorTokens: vi.fn(),
   renovarAccessToken: vi.fn(),
@@ -86,12 +87,35 @@ afterEach(() => vi.useRealTimers());
 
 describe("statusConexaoGoogle", () => {
   it("conectado é ter refresh_token, não só linha na tabela", async () => {
+    api.googleConfigurado.mockReturnValue(true);
     conexao(null);
-    expect(await statusFn({ context })).toEqual({ conectado: false, email: null });
+    expect(await statusFn({ context })).toEqual({
+      configurado: true,
+      conectado: false,
+      email: null,
+    });
     conexao({ ...conexaoBase, refresh_token: null });
-    expect(await statusFn({ context })).toEqual({ conectado: false, email: "ana@gmail.com" });
+    expect(await statusFn({ context })).toEqual({
+      configurado: true,
+      conectado: false,
+      email: "ana@gmail.com",
+    });
     conexao(conexaoBase);
-    expect(await statusFn({ context })).toEqual({ conectado: true, email: "ana@gmail.com" });
+    expect(await statusFn({ context })).toEqual({
+      configurado: true,
+      conectado: true,
+      email: "ana@gmail.com",
+    });
+  });
+
+  it("sem credenciais no ambiente: configurado false, sem nem ler o banco", async () => {
+    api.googleConfigurado.mockReturnValue(false);
+    expect(await statusFn({ context })).toEqual({
+      configurado: false,
+      conectado: false,
+      email: null,
+    });
+    expect(from).not.toHaveBeenCalled();
   });
 });
 

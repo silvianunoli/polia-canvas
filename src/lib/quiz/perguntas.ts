@@ -48,7 +48,7 @@ export const TERRITORIOS = [
   },
   {
     id: "acharem",
-    nome: "Como te acharem",
+    nome: "Como os clientes te encontram",
     explicacao:
       "Você posta em toda rede que existe, sem saber de verdade por onde as clientes novas estão chegando até você.",
     conta:

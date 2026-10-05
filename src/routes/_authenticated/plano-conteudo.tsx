@@ -11,7 +11,11 @@ import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
 import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
-import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
+import {
+  gerarPlanoConteudo,
+  textoModulosFaltando,
+  type ModuloFaltando,
+} from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
@@ -73,6 +77,7 @@ function PlanoConteudoPage() {
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [motivo, setMotivo] = useState<string | null>(null);
+  const [faltando, setFaltando] = useState<ModuloFaltando[]>([]);
 
   const planoQuery = useQuery({
     queryKey: ["ia-plano-conteudo", userId, anoAtual],
@@ -99,6 +104,7 @@ function PlanoConteudoPage() {
   const gerar = async () => {
     setErro(null);
     setMotivo(null);
+    setFaltando([]);
     setGerando(true);
     try {
       const resultado = await gerarPlanoConteudo({ data: { ano: anoAtual } });
@@ -111,6 +117,9 @@ function PlanoConteudoPage() {
         await qc.invalidateQueries({ queryKey: ["ia-plano-conteudo", userId, anoAtual] });
       } else {
         setMotivo(resultado.motivo);
+        if (resultado.motivo === "planejamento_incompleto") {
+          setFaltando(resultado.modulosFaltando ?? []);
+        }
         if (resultado.motivo === "falha_ia") {
           setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
         }
@@ -279,11 +288,22 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo="Ainda falta saber da sua marca."
-              texto="A Pólia One precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
+              texto={textoModulosFaltando(faltando)}
               acao={
-                <Link to="/planejamento" className={BTN_ACAO}>
-                  Ir pro Planejamento
-                </Link>
+                faltando.length > 0 ? (
+                  <Link
+                    to="/planejamento/modulo/$n"
+                    params={{ n: String(faltando[0].n) }}
+                    search={{ secao: undefined }}
+                    className={BTN_ACAO}
+                  >
+                    Preencher o Módulo {faltando[0].n}
+                  </Link>
+                ) : (
+                  <Link to="/planejamento" className={BTN_ACAO}>
+                    Ir pro Planejamento
+                  </Link>
+                )
               }
             />
           </div>
