@@ -12,7 +12,7 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -401,8 +401,8 @@ function FinanceiroPage() {
       <div>
         {/* ───────── 1. Cards de resumo ───────── */}
         <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+          <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
               Entradas
             </p>
             <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
@@ -411,8 +411,8 @@ function FinanceiroPage() {
             <p className="mt-1 text-[13px] text-[var(--muted)]">{numEntradasMes} registros</p>
           </div>
 
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+          <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
               Saídas
             </p>
             <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
@@ -423,8 +423,8 @@ function FinanceiroPage() {
             </p>
           </div>
 
-          <div className="group rounded-xl border border-[var(--line)] bg-white p-5 transition-[transform,border-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+          <div className="rounded-xl border border-[var(--line)] bg-white p-5">
+            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
               Sobrou no mês
             </p>
             <p
@@ -440,7 +440,7 @@ function FinanceiroPage() {
 
         {/* ───────── 2. Meta do mês (régua) ───────── */}
         <section className="mt-6 rounded-xl bg-[var(--surface)] p-6 md:p-8">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
             Onde o mês está agora
           </p>
 
@@ -511,22 +511,17 @@ function FinanceiroPage() {
 
         {/* ───────── 3. Ações rápidas ───────── */}
         <section className="mt-6 flex flex-wrap gap-3">
-          <button
-            onClick={() => abrirModal("entrada")}
-            className="rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90"
-          >
+          <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
             + Registrar entrada
           </button>
           <button
+            type="button"
             onClick={() => setModalVendaAberto(true)}
-            className="rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-[var(--ink)] hover:border-[var(--secondary)]"
+            className={BTN_ACAO_CONTORNO}
           >
             + Registrar venda de um produto
           </button>
-          <button
-            onClick={() => abrirModal("saida")}
-            className="rounded-xl border border-[var(--line)] bg-white px-4 py-2.5 text-[var(--ink)] hover:border-[var(--secondary)]"
-          >
+          <button type="button" onClick={() => abrirModal("saida")} className={BTN_ACAO_CONTORNO}>
             + Registrar saída
           </button>
         </section>
@@ -552,11 +547,7 @@ function FinanceiroPage() {
                     type="button"
                     onClick={() => setPeriodo(p.id)}
                     aria-pressed={ativo}
-                    className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
-                      ativo
-                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                        : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                    }`}
+                    className={`${BTN_MIUDO} ${ativo ? "!bg-[var(--secondary)]" : "bg-white"}`}
                   >
                     {p.label}
                   </button>
@@ -578,11 +569,7 @@ function FinanceiroPage() {
                     type="button"
                     onClick={() => setFiltroTipo(t.id)}
                     aria-pressed={ativo}
-                    className={`rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ${
-                      ativo
-                        ? "bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                        : "border border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-                    }`}
+                    className={`${BTN_MIUDO} ${ativo ? "!bg-[var(--secondary)]" : "bg-white"}`}
                   >
                     {t.label}
                   </button>
@@ -597,7 +584,7 @@ function FinanceiroPage() {
                     type="date"
                     value={customDe}
                     onChange={(e) => setCustomDe(e.target.value)}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                   />
                 </label>
                 <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
@@ -606,7 +593,7 @@ function FinanceiroPage() {
                     type="date"
                     value={customAte}
                     onChange={(e) => setCustomAte(e.target.value)}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                   />
                 </label>
               </div>
@@ -851,18 +838,14 @@ function ModalRegistrarVendaProduto({
       description="Cria a entrada no caixa com o preço do catálogo."
       footer={
         <>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
           <button
             type="button"
             onClick={salvar}
             disabled={salvando || !produto}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+            className={BTN_ACAO}
           >
             {salvando ? "Registrando..." : "Registrar venda"}
           </button>
@@ -886,7 +869,7 @@ function ModalRegistrarVendaProduto({
                 value={produtoId}
                 onChange={(e) => setProdutoId(e.target.value)}
                 autoFocus
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
               >
                 <option value="">Escolha um produto</option>
                 {produtos.map((p) => (
@@ -904,7 +887,7 @@ function ModalRegistrarVendaProduto({
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
               />
             </Campo>
           </div>

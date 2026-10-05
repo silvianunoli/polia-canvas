@@ -9,8 +9,9 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
+import { toastErro, toastSucesso } from "@/lib/toast";
 import { registrar } from "@/lib/founder-eventos";
 import {
   custosFixosDoMes,
@@ -183,22 +184,30 @@ function ProjecaoPage() {
     if (Object.keys(erroValidacao).length > 0) return;
     setSalvando(true);
     try {
-      await supabase
+      const { error: erroPerfil } = await supabase
         .from("profiles")
         .update({ pro_labore_desejado: proLaboreDesejado })
         .eq("id", userId!);
+      if (erroPerfil) throw erroPerfil;
       if (metaMes?.id && metaTxt != null && metaAlvo != null) {
-        await supabase
+        const { error: erroMeta } = await supabase
           .from("metas")
           .update({ valor_alvo: metaAlvo, updated_at: new Date().toISOString() })
           .eq("id", metaMes.id);
+        if (erroMeta) throw erroMeta;
       }
+      toastSucesso("Salário e meta salvos.");
       track("projecao_confirmada", { proLaboreDesejado, metaAlvo });
       void registrar("feature_completed", {
         feature: "projecao",
         propriedades: { acao: "confirmada" },
       });
       await qc.invalidateQueries({ queryKey: ["projecao", userId] });
+    } catch (e) {
+      console.error("projecao: falha ao salvar", e);
+      toastErro(
+        "A Pólia One não conseguiu salvar agora. Tenta de novo, os números continuam na tela.",
+      );
     } finally {
       setSalvando(false);
     }
@@ -208,7 +217,7 @@ function ProjecaoPage() {
   if (meta.carregando) {
     return (
       <PaginaLogada eyebrow="Projeção" titulo="Quanto vender pra se pagar.">
-        <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
+        <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       </PaginaLogada>
     );
   }
@@ -238,7 +247,7 @@ function ProjecaoPage() {
     >
       <div>
         {dadosQuery.isLoading ? (
-          <div className="mt-6 h-64 animate-pulse rounded-xl bg-[var(--surface)]" />
+          <div className="mt-6 h-64 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
         ) : dadosQuery.isError ? (
           <div className="mt-6">
             <Vazio
@@ -276,7 +285,7 @@ function ProjecaoPage() {
               titulo="Nenhuma venda está deixando sobra."
               texto="Do jeito que está, cada venda não deixa nada, então não existe número de vendas que se pague. Reveja o preço ou o custo."
               acao={
-                <Link to="/produtos" className={BTN_ACAO}>
+                <Link to="/calculadora" className={BTN_ACAO}>
                   Ir pra calculadora
                 </Link>
               }
@@ -289,7 +298,7 @@ function ProjecaoPage() {
                 Falta cadastrar os seus custos fixos pra saber quanto vender pra se pagar.{" "}
                 <Link
                   to="/financeiro"
-                  className="font-medium text-[var(--secondary-text)] no-underline"
+                  className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                 >
                   Ir pro Financeiro
                 </Link>
@@ -308,14 +317,14 @@ function ProjecaoPage() {
                     número, a tela pede o dado que falta. */}
                 {proLaboreDesejado > 0 ? (
                   <p className="text-[16px] text-[var(--ink)]">
-                    Pra se pagar ({fmtBRL(proLaboreDesejado)} de pró-labore):{" "}
+                    Pra pagar o seu salário ({fmtBRL(proLaboreDesejado)} por mês):{" "}
                     <strong>
                       {projecao!.sePagar.vendas} vendas ({fmtBRL(projecao!.sePagar.faturamento)})
                     </strong>
                   </p>
                 ) : (
                   <p className="text-[16px] text-[var(--ink)]">
-                    Pra se pagar: falta dizer quanto você quer tirar por mês. Preenche o pró-labore
+                    Pra pagar o seu salário: falta dizer quanto você quer tirar por mês. Preenche
                     aqui embaixo que a conta aparece.
                   </p>
                 )}
@@ -331,7 +340,7 @@ function ProjecaoPage() {
                     Sem Meta do mês definida ainda.{" "}
                     <Link
                       to="/metas"
-                      className="font-medium text-[var(--secondary-text)] no-underline"
+                      className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                     >
                       Definir agora
                     </Link>
@@ -349,14 +358,18 @@ function ProjecaoPage() {
                       setCustosFixosTxt(e.target.value);
                       validarCampo("custosFixos", e.target.value);
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none ${
                       erroValidacao.custosFixos
                         ? "border-[var(--danger)]"
-                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary-text)]"
                     }`}
                   />
                 </Campo>
-                <Campo label="Pró-labore desejado (R$)" error={erroValidacao.proLabore}>
+                <Campo
+                  label="Quanto você quer tirar por mês (R$)"
+                  hint="É o seu salário do negócio, o que o contador chama de pró-labore."
+                  error={erroValidacao.proLabore}
+                >
                   <input
                     type="text"
                     inputMode="decimal"
@@ -365,10 +378,10 @@ function ProjecaoPage() {
                       setProLaboreTxt(e.target.value);
                       validarCampo("proLabore", e.target.value);
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none ${
                       erroValidacao.proLabore
                         ? "border-[var(--danger)]"
-                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary-text)]"
                     }`}
                   />
                 </Campo>
@@ -381,10 +394,10 @@ function ProjecaoPage() {
                       setTicketTxt(e.target.value);
                       validarCampo("ticket", e.target.value);
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none ${
                       erroValidacao.ticket
                         ? "border-[var(--danger)]"
-                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary-text)]"
                     }`}
                   />
                 </Campo>
@@ -397,10 +410,10 @@ function ProjecaoPage() {
                       setCustoTxt(e.target.value);
                       validarCampo("custo", e.target.value);
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none ${
                       erroValidacao.custo
                         ? "border-[var(--danger)]"
-                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary-text)]"
                     }`}
                   />
                 </Campo>
@@ -413,34 +426,26 @@ function ProjecaoPage() {
                       setMetaTxt(e.target.value);
                       validarCampo("meta", e.target.value);
                     }}
-                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none ${
+                    className={`w-full rounded-lg border px-3 py-2 text-[14px] text-[var(--ink)] focus:outline-none ${
                       erroValidacao.meta
                         ? "border-[var(--danger)]"
-                        : "border-[var(--line)] focus:border-[var(--secondary)]"
+                        : "border-[var(--line)] focus:border-[var(--secondary-text)]"
                     }`}
                   />
                 </Campo>
               </div>
 
               <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
-                <button
-                  type="button"
-                  onClick={aplicarCenarioPreco}
-                  className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                >
+                <button type="button" onClick={aplicarCenarioPreco} className={BTN_MIUDO}>
                   E se eu cobrasse 10% a mais?
                 </button>
-                <button
-                  type="button"
-                  onClick={aplicarCenarioCusto}
-                  className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] font-medium text-[var(--ink-soft)] hover:bg-[var(--surface)]"
-                >
+                <button type="button" onClick={aplicarCenarioCusto} className={BTN_MIUDO}>
                   E se meu custo caísse 10%?
                 </button>
                 <button
                   type="button"
                   onClick={voltarAoValorReal}
-                  className="rounded-lg px-3 py-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                  className="inline-flex min-h-11 items-center rounded-lg px-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
                 >
                   Voltar ao valor real
                 </button>
@@ -450,9 +455,9 @@ function ProjecaoPage() {
                 type="button"
                 onClick={() => void confirmar()}
                 disabled={salvando || Object.keys(erroValidacao).length > 0}
-                className="mt-5 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
+                className={`${BTN_ACAO} mt-5`}
               >
-                {salvando ? "Salvando..." : "Confirmar pró-labore e meta"}
+                {salvando ? "Salvando..." : "Salvar salário e meta"}
               </button>
             </div>
           </>

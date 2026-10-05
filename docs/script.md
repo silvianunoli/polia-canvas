@@ -62,3 +62,10 @@ Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND
 - Estado em `profiles.dicas_vistas text[]` (migration `20261005180000_profiles_dicas_vistas.sql`), não no localStorage, pra não voltar em outro aparelho. Se a coluna não existir ou a leitura falhar, nada aparece (fail closed).
 - Código: textos e regra pura em `src/lib/dicas.ts` (+ teste), hook `useDicasVistas`, `components/dicas/` (TourBoasVindas com Popover do Radix ancorado em `data-tour`, DicaDaTela, BotaoReverTour) e prop `dica` no `PaginaLogada`, usada só no retorno principal de cada tela (nunca no carregamento nem no portão do Pro).
 - Copy das dicas conferida contra o código de cada tela; 7 textos da proposta foram ajustados porque prometiam o que a tela não faz (Projeção sem "vender o dobro", Raio-x só lê totais, Clientes guarda um pedido por cliente, Painel só acompanha a Meta do mês, Plano de conteúdo gera o ano de uma vez, Calendário não mostra posts, Planner é por projeto).
+
+## 2026-10-05 — Varredura de design system na área logada + Aimer fora do produto
+
+- Botões das 25 telas no padrão de `lib/botoes.ts` (BTN_ACAO/CONTORNO/MIUDO/PRIMARIO); pílula clicável virou forma canônica; alvos de toque de 44px; `role="alert"` nos erros; erro cru do banco virou frase da Pólia (técnico no console).
+- Decisões da Sil aplicadas: sidebar escondida no onboarding; foco dos campos sem a sombra turquesa-clara (reprovava 3:1), borda `--secondary-text` + contorno global; hover removido de elemento não clicável (cards do Financeiro, linha de cliente, chips de canal, "→ Abre agora"); Fraunces itálico de parágrafo virou Inter; rótulo em caixa alta = DM Sans 700 (`font-accent font-bold`); "pró-labore" virou "salário" com texto de apoio na Projeção, que agora avisa sucesso/erro ao salvar.
+- Aimer sai de todo texto visível do produto (revoga exceção de 28/09): IA fala como Pólia One, menu "Assistente", prompts de sistema sem o nome. Registrado no CLAUDE.md.
+- Movimento: balão do tour nasce do item apontado (zoom 95%→100%, 200ms); botões com `transition-colors` voltaram a animar o aperto.

@@ -358,6 +358,16 @@
   }
 }
 
+/* Botão com `transition-colors` perdia a animação do aperto (scale 0.97 da base):
+   o utilitário troca a transition-property e a escala passava a "pular". Fora de
+   layer de propósito, pra ganhar do utilitário; só acrescenta `scale` à lista,
+   duração e curva continuam as do utilitário. */
+button.transition-colors {
+  transition-property:
+    color, background-color, border-color, outline-color, text-decoration-color, fill, stroke,
+    scale;
+}
+
 /* Reduced motion — as classes utilitárias de animação vêm de tw-animate-css
    (zoom-in-95, zoom-out-95, slide-in-from-X, slide-out-to-X, usadas por tooltip,
    select, popover e alert-dialog) e não respeitam prefers-reduced-motion sozinhas.

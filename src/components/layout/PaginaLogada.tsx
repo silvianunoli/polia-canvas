@@ -96,7 +96,7 @@ export function PaginaLogada({
               ao lado do botão no celular, em vez de o botão descer. */}
           <div className="min-w-0 flex-1 basis-[min(100%,18rem)]">
             {eyebrow && (
-              <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+              <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                 {eyebrow}
               </p>
             )}

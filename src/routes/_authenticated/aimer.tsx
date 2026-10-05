@@ -10,10 +10,10 @@ import { registrar } from "@/lib/founder-eventos";
 export const Route = createFileRoute("/_authenticated/aimer")({
   head: () => ({
     meta: [
-      { title: "Aimer · Pólia" },
+      { title: "Assistente · Pólia One" },
       {
         name: "description",
-        content: "Tira dúvida sobre a Pólia e sobre o seu negócio com a Aimer.",
+        content: "Tira dúvida sobre a Pólia One e sobre o seu negócio.",
       },
     ],
   }),
@@ -157,8 +157,8 @@ function AimerPage() {
   return (
     <PaginaLogada
       largura="larga"
-      eyebrow="Aimer"
-      titulo="Converse com a Aimer."
+      eyebrow="Assistente"
+      titulo="Converse com a Pólia One."
       subtitulo="Dúvida de como usar a Pólia, ou do negócio. Ela não inventa número."
       acao={
         mensagens.length > 0 ? (
@@ -174,8 +174,8 @@ function AimerPage() {
             normal, lido por leitor de tela. --muted #6B6B6B sobre --bg
             #F2F0ED dá 4,6:1, passa AA em texto de 14px. */}
         <p className="mt-2 max-w-[64ch] font-sans text-[14px] leading-[1.5] text-[var(--muted)]">
-          A Aimer é gerada por inteligência artificial. Os números vêm dos dados registrados aqui; o
-          texto é escrito pela IA e pode errar. Vale conferir antes de decidir.
+          As respostas são geradas por inteligência artificial. Os números vêm dos dados registrados
+          aqui; o texto é escrito pela IA e pode errar. Vale conferir antes de decidir.
         </p>
         {mensagens.length === 0 ? (
           <div className="mt-5 rounded-2xl border border-[var(--line)] bg-white p-5">
@@ -203,7 +203,7 @@ function AimerPage() {
             className="mt-5 flex-1 space-y-4"
             role="log"
             aria-live="polite"
-            aria-label="Conversa com a Aimer"
+            aria-label="Conversa com a Pólia One"
           >
             {mensagens.map((msg) => (
               <div
@@ -230,7 +230,7 @@ function AimerPage() {
                         msg.autor === "user" ? "text-white/55" : "text-[var(--muted)]"
                       }`}
                     >
-                      {msg.autor === "user" ? "Você" : "Aimer"} ·{" "}
+                      {msg.autor === "user" ? "Você" : "Pólia One"} ·{" "}
                       {msg.hora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                     </p>
                     {msg.autor === "aimer" && !msg.erro && (
@@ -249,7 +249,7 @@ function AimerPage() {
                     <button
                       type="button"
                       onClick={() => tentarDeNovo(ultimaPergunta)}
-                      className="mt-2 text-[13px] font-medium text-[var(--secondary-text)] underline"
+                      className="relative mt-2 text-[13px] font-medium text-[var(--secondary-text)] underline before:absolute before:-inset-3 before:content-['']"
                     >
                       Tentar de novo
                     </button>
@@ -260,7 +260,7 @@ function AimerPage() {
                       <Link
                         to="/upgrade"
                         search={{ rota: "/aimer", tier: "controle" }}
-                        className="mt-2 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
+                        className="relative mt-2 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline before:absolute before:-inset-3 before:content-[''] hover:underline"
                       >
                         Conhecer o Premium
                       </Link>
@@ -272,7 +272,7 @@ function AimerPage() {
               <div className="flex justify-start">
                 <div className="max-w-[80%] rounded-2xl border border-[var(--line)] bg-white p-5">
                   <p className="font-sans text-[14px] text-[var(--muted)]">
-                    A Aimer está pensando…
+                    A Pólia One está pensando…
                   </p>
                 </div>
               </div>
@@ -292,8 +292,8 @@ function AimerPage() {
                 void enviar();
               }
             }}
-            placeholder="Pergunte pra Aimer…"
-            aria-label="Escreva sua pergunta pra Aimer"
+            placeholder="Pergunte pra Pólia One…"
+            aria-label="Escreva sua pergunta pra Pólia One"
             rows={2}
             disabled={enviando || tetoAtingido}
             className="mb-3 w-full resize-none font-sans text-[14px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] disabled:opacity-60"

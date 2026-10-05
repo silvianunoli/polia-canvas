@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_PRIMARIO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
@@ -192,7 +192,7 @@ function ModuloPage() {
     return (
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <div className="mx-auto flex min-h-[70vh] max-w-[520px] flex-col items-center justify-center px-6 py-16 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             Módulo {n} concluído
           </p>
           <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">Acabou de nascer a</p>
@@ -202,16 +202,13 @@ function ModuloPage() {
           <p className="mt-3 max-w-[420px] text-[0.9rem] leading-relaxed text-[var(--ink-soft)]">
             {ferramenta.desbloqueioSub}
           </p>
-          <LinkInterno
-            href={ferramenta.rota}
-            className="mt-8 inline-flex w-full max-w-[320px] items-center justify-center gap-1.5 rounded-full bg-[var(--secondary)] px-6 py-3.5 font-medium text-[var(--secondary-ink)] no-underline transition-opacity hover:opacity-90"
-          >
+          <LinkInterno href={ferramenta.rota} className={`${BTN_PRIMARIO} mt-8`}>
             {ferramenta.abrirLabel}
             <ArrowRight size={16} aria-hidden="true" />
           </LinkInterno>
           <LinkInterno
             href="/planejamento"
-            className="mt-4 text-[0.875rem] text-[var(--muted)] no-underline hover:text-[var(--ink-soft)]"
+            className="mt-2 inline-flex min-h-11 items-center px-2 text-[0.875rem] font-medium text-[var(--secondary-text)] no-underline hover:underline"
           >
             Ver o planejamento
           </LinkInterno>
@@ -261,7 +258,7 @@ function ModuloPage() {
             {[0, 1].map((i) => (
               <div
                 key={i}
-                className="h-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)]"
+                className="h-24 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)] motion-reduce:animate-none"
               />
             ))}
           </div>
@@ -427,13 +424,13 @@ function SecaoForm({
       } else {
         setErroGeracao((s) => ({
           ...s,
-          [i]: "A Aimer não conseguiu gerar o rascunho agora. Tenta de novo.",
+          [i]: "A Pólia One não conseguiu gerar o rascunho agora. Tenta de novo.",
         }));
       }
     } catch {
       setErroGeracao((s) => ({
         ...s,
-        [i]: "A Aimer não conseguiu gerar o rascunho agora. Tenta de novo.",
+        [i]: "A Pólia One não conseguiu gerar o rascunho agora. Tenta de novo.",
       }));
     } finally {
       setGerando((s) => ({ ...s, [i]: false }));
@@ -476,7 +473,7 @@ function SecaoForm({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Seção {indice + 1} de {total}
         </p>
         <span className="text-[11px] text-[var(--muted)]">
@@ -508,11 +505,18 @@ function SecaoForm({
               />
             </label>
           ) : (
-            <label key={i} className="block">
-              <span className="mb-2 block text-[1rem] leading-snug text-[var(--ink)]">
+            // <div> + <label htmlFor>, não <label> envolvendo tudo: os botões da
+            // Aimer e as mensagens moram aqui dentro e entravam no nome acessível
+            // do campo ("Escreva... Peça ajuda à Aimer").
+            <div key={i}>
+              <label
+                htmlFor={`pergunta-${i}`}
+                className="mb-2 block text-[1rem] leading-snug text-[var(--ink)]"
+              >
                 {p.label}
-              </span>
+              </label>
               <textarea
+                id={`pergunta-${i}`}
                 value={valores[i]}
                 onChange={(e) => onChange(i, e.target.value)}
                 disabled={gerando[i]}
@@ -541,7 +545,8 @@ function SecaoForm({
                   </p>
                 ) : contextoInsuf[i] ? (
                   <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                    A Aimer precisa saber o básico do seu negócio antes. Responda o que você vende (
+                    A Pólia One precisa saber o básico do seu negócio antes. Responda o que você
+                    vende (
                     <Link
                       to="/produtos"
                       className="font-medium text-[var(--secondary-text)] no-underline"
@@ -555,7 +560,7 @@ function SecaoForm({
                     >
                       Configurações
                     </Link>
-                    ) e a Aimer rascunha o resto.
+                    ) e a Pólia One rascunha o resto.
                   </p>
                 ) : erroGeracao[i] ? (
                   <p className="mt-2 text-[13px] text-[var(--danger)]">
@@ -563,7 +568,7 @@ function SecaoForm({
                     <button
                       type="button"
                       onClick={() => void gerarComAimer(i)}
-                      className="font-medium underline"
+                      className="inline-flex min-h-11 items-center font-medium underline"
                     >
                       Tentar de novo
                     </button>
@@ -577,21 +582,21 @@ function SecaoForm({
                     <button
                       type="button"
                       onClick={() => usarRascunho(i)}
-                      className="text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                      className="inline-flex min-h-11 items-center px-1 text-[13px] font-semibold text-[var(--secondary-text)] hover:underline"
                     >
                       Usar
                     </button>
                     <button
                       type="button"
                       onClick={() => descartarRascunho(i)}
-                      className="text-[13px] text-[var(--muted)] hover:underline"
+                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline"
                     >
                       Descartar
                     </button>
                     <button
                       type="button"
                       onClick={() => void gerarComAimer(i)}
-                      className="text-[13px] text-[var(--muted)] hover:underline"
+                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline"
                     >
                       Gerar outro
                     </button>
@@ -601,25 +606,22 @@ function SecaoForm({
                     type="button"
                     onClick={() => void gerarComAimer(i)}
                     disabled={gerando[i]}
-                    className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                    className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                   >
                     <Sparkles size={13} aria-hidden="true" />
-                    {gerando[i] ? "A Aimer está escrevendo um rascunho…" : "Peça ajuda à Aimer"}
+                    {gerando[i]
+                      ? "A Pólia One está escrevendo um rascunho…"
+                      : "Peça ajuda à Pólia One"}
                   </button>
                 )}
               </div>
-            </label>
+            </div>
           ),
         )}
       </div>
 
       <div className="mt-8 flex flex-col items-start gap-4">
-        <button
-          type="button"
-          onClick={concluir}
-          disabled={avancando}
-          className="inline-flex w-full max-w-[400px] items-center justify-center gap-1.5 rounded-full bg-[var(--secondary)] px-6 py-3.5 font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <button type="button" onClick={concluir} disabled={avancando} className={BTN_ACAO}>
           {avancando ? "Salvando…" : ultima ? "Concluir módulo" : "Salvar e continuar"}
           <ArrowRight size={16} aria-hidden="true" />
         </button>
@@ -627,7 +629,7 @@ function SecaoForm({
           <button
             type="button"
             onClick={voltar}
-            className="text-[0.875rem] text-[var(--muted)] hover:text-[var(--ink-soft)]"
+            className="inline-flex min-h-11 items-center text-[0.875rem] font-medium text-[var(--secondary-text)] hover:underline"
           >
             ← Seção anterior
           </button>

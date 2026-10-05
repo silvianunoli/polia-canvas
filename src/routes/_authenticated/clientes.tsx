@@ -10,7 +10,7 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar as registrarFounder } from "@/lib/founder-eventos";
@@ -160,11 +160,11 @@ function ClientesPage() {
       acao={
         <div className="flex gap-2">
           {clientes.length > 0 && (
-            <button onClick={exportarCsv} className={BTN_ACAO_CONTORNO}>
+            <button type="button" onClick={exportarCsv} className={BTN_ACAO_CONTORNO}>
               Exportar CSV
             </button>
           )}
-          <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+          <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
             + Adicionar cliente
           </button>
         </div>
@@ -179,7 +179,7 @@ function ClientesPage() {
             titulo="Nenhuma cliente cadastrada ainda."
             texto="Cada cliente guarda o pedido, o valor e o status da entrega. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
             acao={
-              <button onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+              <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
                 Adicionar a primeira cliente
               </button>
             }
@@ -302,7 +302,7 @@ function LinhaCliente({
   const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
 
   return (
-    <div className="mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]">
+    <div className="mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5">
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
           <span className="font-sans text-[16px] font-semibold text-[var(--accent-ink)]">
@@ -347,10 +347,7 @@ function LinhaCliente({
             </Link>
           </span>
         ) : mostrarAcaoRegistrar ? (
-          <button
-            onClick={abrirPopover}
-            className="shrink-0 font-sans text-[14px] text-[var(--ink-soft)] underline decoration-transparent underline-offset-4 transition-colors hover:decoration-[var(--secondary-ink)]"
-          >
+          <button type="button" onClick={abrirPopover} className={`${BTN_MIUDO} shrink-0`}>
             Registrar venda →
           </button>
         ) : null}
@@ -446,7 +443,9 @@ function ModalCliente({
     ).insert(payload);
     setSalvando(false);
     if (error) {
-      setErro((error as { message?: string }).message || "Erro ao salvar.");
+      // Técnico no log, frase da Pólia na tela (mesmo padrão do modal de lançamento).
+      console.error("cliente_criar", error);
+      setErro("A Pólia não conseguiu salvar a cliente agora. Tenta de novo.");
       return;
     }
     track("cliente_criado");
@@ -468,17 +467,10 @@ function ModalCliente({
       title="Adicionar cliente"
       footer={
         <>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
-          <button
-            onClick={salvar}
-            disabled={salvando}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
-          >
+          <button type="button" onClick={salvar} disabled={salvando} className={BTN_ACAO}>
             {salvando ? "Salvando..." : "Salvar"}
           </button>
         </>
@@ -490,7 +482,7 @@ function ModalCliente({
             value={nome}
             onChange={(e) => setNome(e.target.value)}
             autoFocus
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="Ex: Marina Duarte"
           />
         </Campo>
@@ -501,7 +493,7 @@ function ModalCliente({
           <input
             value={contato}
             onChange={(e) => setContato(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="@instagram ou telefone"
           />
         </Campo>
@@ -515,11 +507,8 @@ function ModalCliente({
           <button
             type="button"
             onClick={() => setStatusPedido("")}
-            className={`rounded border px-3 py-1.5 text-[12px] ${
-              statusPedido === ""
-                ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                : "border-[var(--line)] text-[var(--muted)]"
-            }`}
+            aria-pressed={statusPedido === ""}
+            className={`${BTN_MIUDO} ${statusPedido === "" ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             Sem pedido
           </button>
@@ -528,11 +517,8 @@ function ModalCliente({
               key={s}
               type="button"
               onClick={() => setStatusPedido(s)}
-              className={`rounded border px-3 py-1.5 text-[12px] ${
-                statusPedido === s
-                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                  : "border-[var(--line)] text-[var(--muted)]"
-              }`}
+              aria-pressed={statusPedido === s}
+              className={`${BTN_MIUDO} ${statusPedido === s ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {s}
             </button>
@@ -545,7 +531,7 @@ function ModalCliente({
           <select
             value={produtoId}
             onChange={(e) => selecionarProduto(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           >
             <option value="">Sem produto</option>
             {produtos.map((p) => (
@@ -563,7 +549,7 @@ function ModalCliente({
             type="number"
             value={valor}
             onChange={(e) => setValor(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -575,12 +561,16 @@ function ModalCliente({
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
             rows={3}
-            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
 
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

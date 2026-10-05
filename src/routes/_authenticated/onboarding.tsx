@@ -7,6 +7,7 @@ import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
+import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
@@ -122,7 +123,7 @@ function OnboardingPage() {
 
 function StepIndicator({ step }: { step: number }) {
   return (
-    <p className="text-center text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+    <p className="text-center text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
       Passo {step} de 6
     </p>
   );
@@ -175,12 +176,14 @@ function PrimaryCTA({
   disabled?: boolean;
   loading?: boolean;
 }) {
+  // Sem largura fixa: o botão acompanha o rótulo. Com 270px cravados,
+  // "Quero contar da minha marca →" quebrava em duas linhas.
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="mx-auto h-[52px] w-[270px] rounded-xl bg-[var(--secondary)] px-6 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-50"
+      className={`${BTN_PRIMARIO} mx-auto`}
     >
       {children}
     </button>
@@ -295,10 +298,10 @@ function ChoiceCard({
       className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-[border-color,background-color] duration-150 ${
         selected
           ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
-          : "border-[var(--line)] bg-white"
+          : "border-[var(--line)] bg-white [@media(hover:hover)_and_(pointer:fine)]:hover:border-[var(--secondary)]"
       }`}
     >
-      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+      <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
         {tag}
       </span>
       <span className="text-[var(--ink)]" style={{ fontSize: 22, lineHeight: "28px" }}>
@@ -512,7 +515,9 @@ function Step4({
       onSuccess();
     } catch (e) {
       track("onboarding_falhou", { motivo: (e as Error).message || "erro_desconhecido" });
-      setError((e as Error).message || "Algo deu errado. Tenta de novo.");
+      // O texto cru do banco não vai pra tela (vem em inglês, com nome de
+      // coluna); ele já foi pro analytics na linha de cima.
+      setError("A Pólia não conseguiu salvar. Tenta de novo, as respostas continuam aqui.");
     } finally {
       setSaving(false);
     }
@@ -578,7 +583,11 @@ function Step4({
         )}
       </div>
 
-      {error && <p className="text-center text-[14px] text-[var(--danger)]">{error}</p>}
+      {error && (
+        <p role="alert" className="text-center text-[14px] text-[var(--danger)]">
+          {error}
+        </p>
+      )}
 
       <PrimaryCTA onClick={handleSubmit} disabled={saving}>
         {saving ? "Salvando..." : "Continuar →"}
@@ -588,7 +597,7 @@ function Step4({
 }
 
 const CAMPO_CLS =
-  "rounded-lg border border-[var(--line)] bg-white px-4 text-[16px] text-[var(--ink)] outline-none transition-[border-color,box-shadow] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_1px_var(--secondary)]";
+  "rounded-lg border border-[var(--line)] bg-white px-4 text-[16px] text-[var(--ink)] outline-none transition-[border-color,box-shadow] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)]";
 
 function Field({
   label,
@@ -607,7 +616,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+      <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
         {label}
         {required && <span className="ml-1 text-[var(--danger)]">*</span>}
       </span>
@@ -645,7 +654,7 @@ function Toggle({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+      <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
         {label}
       </span>
       <div className="flex flex-wrap gap-2">
@@ -657,11 +666,7 @@ function Toggle({
               type="button"
               onClick={() => onChange(on ? "" : o.v)}
               aria-pressed={on}
-              className={`rounded-full border px-4 py-2 text-[14px] transition-colors ${
-                on
-                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--secondary)]"
-              }`}
+              className={`${BTN_MIUDO} ${on ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {o.label}
             </button>
@@ -718,8 +723,8 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
       // sobra" na própria venda, não um clique genérico de onboarding.
       gtagEvent("ativacao_viu_quanto_sobra", { com_custo: custoNum !== null });
       setSobrou(calcularQuantoSobra({ precoVenda: precoNum, precoCusto: custoNum ?? 0 }));
-    } catch (e) {
-      setError((e as Error).message || "Algo deu errado. Tenta de novo.");
+    } catch {
+      setError("A Pólia não conseguiu salvar o preço. Tenta de novo, os números continuam aqui.");
     } finally {
       setSaving(false);
     }
@@ -749,7 +754,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
 
       <div className="flex w-full max-w-[420px] flex-col gap-5">
         <label className="flex flex-col gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             Preço de venda (R$)
           </span>
           <input
@@ -763,7 +768,7 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
           />
         </label>
         <label className="flex flex-col gap-2">
-          <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             Quanto custa pra você fazer, se souber (R$)
           </span>
           <input
@@ -777,7 +782,11 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
         </label>
       </div>
 
-      {error && <p className="text-center text-[14px] text-[var(--danger)]">{error}</p>}
+      {error && (
+        <p role="alert" className="text-center text-[14px] text-[var(--danger)]">
+          {error}
+        </p>
+      )}
 
       <PrimaryCTA onClick={handleSubmit} disabled={saving}>
         {saving ? "Calculando..." : "Ver quanto sobra →"}
@@ -804,12 +813,11 @@ function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: ()
       <Headline size={56}>Seu planejamento começa agora</Headline>
 
       <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6">
-        <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Módulo 1 de 6
         </p>
         <p className="mt-3 text-[24px] text-[var(--ink)]">Razão de existir</p>
         <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">{desc}</p>
-        <p className="mt-4 text-[13px] text-[var(--secondary-text)]">→ Abre agora</p>
       </div>
 
       <p className="text-center italic text-[var(--ink-soft)]">
@@ -819,11 +827,7 @@ function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: ()
         cada volta encontra mais história por aqui
       </p>
 
-      <button
-        type="button"
-        onClick={onFinish}
-        className="h-[52px] w-full rounded-xl bg-[var(--secondary)] font-medium text-[var(--secondary-ink)] hover:opacity-90"
-      >
+      <button type="button" onClick={onFinish} className={`${BTN_PRIMARIO} w-full`}>
         Começar meu planejamento →
       </button>
     </div>

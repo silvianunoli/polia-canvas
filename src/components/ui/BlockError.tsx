@@ -1,5 +1,7 @@
 import { RotateCw } from "lucide-react";
 
+import { BTN_MIUDO } from "@/lib/botoes";
+
 interface BlockErrorProps {
   message?: string;
   onRetry: () => void;
@@ -13,11 +15,7 @@ export function BlockError({
   return (
     <div className="rounded-xl border border-[var(--line)] bg-white p-6 text-center">
       <p className="text-[14px] text-[var(--ink-soft)]">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[var(--ink)] px-4 py-2 text-[13px] font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--ink)] hover:text-white"
-      >
+      <button type="button" onClick={onRetry} className={`${BTN_MIUDO} mt-3`}>
         <RotateCw size={14} aria-hidden="true" />
         Recarregar
       </button>

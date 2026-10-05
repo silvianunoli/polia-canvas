@@ -100,7 +100,9 @@ function AuthenticatedLayout() {
       <a href="#main-content" className="skip-link">
         Pular para o conteúdo
       </a>
-      <Sidebar />
+      {/* Onboarding é tela cheia, sem barra lateral (decisão da Sil, 05/10/2026):
+          com o menu à vista dava pra sair no meio do fluxo. */}
+      {pathname !== "/onboarding" && <Sidebar />}
       <div className="flex min-w-0 flex-1 flex-col">
         <main id="main-content" tabIndex={-1} className="flex-1">
           <Outlet />
@@ -108,7 +110,7 @@ function AuthenticatedLayout() {
       </div>
       {csatPulso.mostrar && (
         <CsatPrompt
-          pergunta="Como está sendo usar a Pólia?"
+          pergunta="Como está sendo usar a Pólia One?"
           onFechar={csatPulso.fechar}
           onEnviar={csatPulso.enviar}
         />

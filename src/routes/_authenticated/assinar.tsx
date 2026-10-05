@@ -25,8 +25,8 @@ function fmtPreco(v: number) {
 export const Route = createFileRoute("/_authenticated/assinar")({
   head: () => ({
     meta: [
-      { title: "Assine a Pólia" },
-      { name: "description", content: "Escolha seu plano e comece a usar a Pólia." },
+      { title: "Assine a Pólia One" },
+      { name: "description", content: "Escolha seu plano e comece a usar a Pólia One." },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): AssinarSearch => ({
@@ -92,14 +92,14 @@ function AssinarPage() {
   return (
     <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
       <div className="w-full max-w-[1000px]">
-        <p className="mb-2 text-center font-sans text-[10px] font-semibold uppercase tracking-[2px] text-[var(--muted)]">
+        <p className="mb-2 text-center text-[10px] font-accent font-bold uppercase tracking-[2px] text-[var(--muted)]">
           ÚLTIMO PASSO
         </p>
         <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
           Escolha seu plano
         </h1>
-        <p className="mb-8 text-center font-fraunces italic text-[16px] text-[var(--ink-soft)]">
-          o seu negócio já está montado. escolhe o plano, que ele abre na sua conta assim que o
+        <p className="mb-8 text-center font-sans text-[16px] text-[var(--ink-soft)]">
+          O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o
           pagamento entra.
         </p>
 
@@ -167,7 +167,7 @@ function AssinarPage() {
           onSucesso={() => {
             track("assinatura_concluida");
             setClientSecret(null);
-            toastSucesso("Pagamento confirmado! Bem-vinda à Pólia.");
+            toastSucesso("Pagamento confirmado. Bem-vinda à Pólia One.");
             queryClient.invalidateQueries({ queryKey: ["assinatura-status"] });
             navigate({ to: "/painel" });
           }}
@@ -212,13 +212,13 @@ function PlanoCard({
           justamente na linha que a pessoa compara. `invisible` guarda o espaço. */}
       <span
         aria-hidden={!realcado}
-        className={`mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 font-sans text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)] ${
+        className={`mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-accent font-bold uppercase tracking-[1px] text-[var(--secondary-ink)] ${
           realcado ? "" : "invisible"
         }`}
       >
         {destaque ? "Melhor valor" : "Escolhido"}
       </span>
-      <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
+      <p className="text-[13px] font-accent font-bold uppercase tracking-[1px] text-[var(--ink-soft)]">
         {titulo}
       </p>
       <p className="mt-1 font-cabinet text-[32px] leading-none text-[var(--ink)]">{preco}</p>

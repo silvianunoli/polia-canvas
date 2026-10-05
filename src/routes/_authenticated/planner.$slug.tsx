@@ -7,7 +7,7 @@ import { PainelNav } from "@/components/painel/PainelNav";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { Campo } from "@/components/ui/Campo";
-import { BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import {
   ArrowLeft,
   ArrowRight,
@@ -578,7 +578,7 @@ function PlannerBoard() {
           <h1 className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</h1>
           <LinkInterno
             href="/planner"
-            className="text-[14px] text-[var(--secondary-text)] hover:underline"
+            className="inline-flex min-h-11 items-center text-[14px] text-[var(--secondary-text)] hover:underline"
           >
             ← voltar ao Planner
           </LinkInterno>
@@ -595,7 +595,7 @@ function PlannerBoard() {
         <div className="mx-auto max-w-[1400px]">
           <LinkInterno
             href="/planner"
-            className="mb-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)]"
+            className="mb-3 inline-flex min-h-6 items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)]"
           >
             <ArrowLeft size={15} aria-hidden="true" /> Planner
           </LinkInterno>
@@ -614,7 +614,7 @@ function PlannerBoard() {
               type="button"
               onClick={() => setConfirmarApagarQuadro(true)}
               aria-label="Apagar quadro"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--muted)] transition-colors hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
             >
               <Trash2 size={17} aria-hidden="true" />
             </button>
@@ -708,11 +708,11 @@ function PlannerBoard() {
                         }}
                         onBlur={() => salvarNomeColuna(col.id)}
                         aria-label={`Renomear coluna ${nomeColuna(col.id)}`}
-                        className="w-full rounded-md border border-[var(--secondary)] bg-white px-1.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)] outline-none"
+                        className="w-full rounded-md border border-[var(--secondary)] bg-white px-1.5 py-0.5 text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)] outline-none"
                       />
                     ) : (
                       <>
-                        <span className="truncate text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
+                        <span className="truncate text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
                           {nomeColuna(col.id)}
                         </span>
                         <span className="flex shrink-0 items-center gap-1">
@@ -724,7 +724,7 @@ function PlannerBoard() {
                             }}
                             aria-label="Renomear coluna"
                             title="Renomear coluna"
-                            className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-3 before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                            className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-[14px] before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
                           >
                             <Pencil size={12} aria-hidden="true" />
                           </button>
@@ -761,7 +761,7 @@ function PlannerBoard() {
                         maxLength={200}
                         placeholder="Nome do cartão · Enter salva, Esc cancela"
                         aria-label="Nome do cartão"
-                        className="w-full rounded-lg border border-[var(--line)] px-2.5 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                        className="w-full rounded-lg border border-[var(--line)] px-2.5 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                       />
                     </div>
                   )}
@@ -942,7 +942,7 @@ function PlannerBoard() {
                                 }}
                                 title={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Clique pra mudar.`}
                                 aria-label={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Mudar prioridade.`}
-                                className="flex items-center gap-1.5 rounded-full px-1.5 py-0.5 transition-colors hover:bg-[var(--surface)]"
+                                className="relative flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] hover:bg-[var(--surface)]"
                               >
                                 <span
                                   className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -1011,7 +1011,7 @@ function PlannerBoard() {
           <SheetTitle className="sr-only">Detalhe do cartão</SheetTitle>
           {cardEmDetalhe && (
             <>
-              <p className="mb-4 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+              <p className="mb-4 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Cartão
               </p>
               <textarea
@@ -1023,11 +1023,11 @@ function PlannerBoard() {
                 }}
                 placeholder="Título do cartão (obrigatório)"
                 aria-label="Título do cartão"
-                className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary)] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] focus-visible:ring-offset-2"
+                className="w-full resize-none border-0 border-b border-[var(--line)] bg-transparent py-2 text-[22px] leading-snug text-[var(--ink)] outline-none [field-sizing:content] focus:border-[var(--secondary-text)] focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] focus-visible:ring-offset-2"
               />
 
               <div className="mt-5">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Tags
                 </p>
                 {dTags.length > 0 && (
@@ -1067,7 +1067,7 @@ function PlannerBoard() {
                   maxLength={30}
                   aria-label="Nova tag"
                   placeholder="Nova tag · Enter adiciona"
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                 />
               </div>
 
@@ -1078,14 +1078,14 @@ function PlannerBoard() {
                     onChange={(e) => setDDesc(e.target.value)}
                     rows={2}
                     placeholder="O que é esta entrega"
-                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                   />
                 </Campo>
               </div>
 
               <div className="mt-5 flex gap-3">
                 <div className="flex-1">
-                  <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                  <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Início <span className="text-[var(--danger)]">*</span>
                   </p>
                   <Popover open={inicioAberto} onOpenChange={setInicioAberto}>
@@ -1093,7 +1093,7 @@ function PlannerBoard() {
                       <button
                         type="button"
                         aria-label="Data de início"
-                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                       >
                         {dInicio ? fmtDataCompleta(dInicio) : "Selecionar"}
                         <CalendarDays
@@ -1105,7 +1105,7 @@ function PlannerBoard() {
                     </PopoverTrigger>
                     <PopoverContent
                       align="start"
-                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
+                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-[var(--shadow-card-hover)]"
                       style={TOKEN_BRIDGE_V3}
                     >
                       <Calendar
@@ -1121,7 +1121,7 @@ function PlannerBoard() {
                   </Popover>
                 </div>
                 <div className="flex-1">
-                  <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                  <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Fim (prazo) <span className="text-[var(--danger)]">*</span>
                   </p>
                   <Popover open={fimAberto} onOpenChange={setFimAberto}>
@@ -1129,7 +1129,7 @@ function PlannerBoard() {
                       <button
                         type="button"
                         aria-label="Data de fim (prazo)"
-                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                       >
                         {dFim ? fmtDataCompleta(dFim) : "Selecionar"}
                         <CalendarDays
@@ -1141,7 +1141,7 @@ function PlannerBoard() {
                     </PopoverTrigger>
                     <PopoverContent
                       align="start"
-                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-lg"
+                      className="polia-v3 w-auto rounded-xl border border-[var(--line)] bg-white p-0 shadow-[var(--shadow-card-hover)]"
                       style={TOKEN_BRIDGE_V3}
                     >
                       <Calendar
@@ -1172,7 +1172,7 @@ function PlannerBoard() {
                       }}
                       maxLength={5}
                       placeholder="14:00"
-                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                     />
                   </Campo>
                 </div>
@@ -1186,14 +1186,14 @@ function PlannerBoard() {
                       value={dHpd}
                       onChange={(e) => setDHpd(e.target.value)}
                       placeholder="Ex: 2"
-                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                     />
                   </Campo>
                 </div>
               </div>
 
               <div className="mt-5">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Vinculado à meta
                 </p>
                 <Select
@@ -1202,7 +1202,7 @@ function PlannerBoard() {
                 >
                   <SelectTrigger
                     aria-label="Vinculado à meta"
-                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)] focus:ring-0"
                   >
                     <SelectValue placeholder="Nenhuma" />
                   </SelectTrigger>
@@ -1229,19 +1229,19 @@ function PlannerBoard() {
                     onChange={(e) => setDNota(e.target.value)}
                     rows={3}
                     placeholder="Notas soltas durante a execução"
-                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                   />
                 </Campo>
               </div>
 
               <div className="mt-5">
-                <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Coluna
                 </p>
                 <Select value={dColuna} onValueChange={(v) => setDColuna(v as ColId)}>
                   <SelectTrigger
                     aria-label="Coluna"
-                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)] focus:ring-0"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)] focus:ring-0"
                   >
                     <SelectValue />
                   </SelectTrigger>
@@ -1258,18 +1258,14 @@ function PlannerBoard() {
                 </Select>
               </div>
 
-              <div className="mt-8 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={fecharDetalhe}
-                  className="rounded-lg bg-[var(--secondary)] px-4 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-colors hover:opacity-90"
-                >
+              <div className="mt-8 flex flex-wrap items-center justify-between gap-2">
+                <button type="button" onClick={fecharDetalhe} className={BTN_ACAO}>
                   Salvar e fechar
                 </button>
                 <button
                   type="button"
                   onClick={excluirDoDetalhe}
-                  className="rounded-md px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
+                  className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
                 >
                   {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
                 </button>

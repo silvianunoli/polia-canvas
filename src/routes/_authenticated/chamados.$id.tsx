@@ -5,7 +5,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { MessageCircle } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 
@@ -97,9 +97,12 @@ function ChamadoDetalhe() {
 
   if (ticket === null) {
     return (
-      <PaginaLogada eyebrow="Chamados" titulo="Não achei esse chamado.">
+      <PaginaLogada eyebrow="Chamados" titulo="A Pólia não achou esse chamado.">
         <p className="text-[15px] text-[var(--ink-soft)]">
-          <Link to="/chamados" className="text-[var(--secondary-text)] hover:underline">
+          <Link
+            to="/chamados"
+            className="inline-flex min-h-11 items-center text-[var(--secondary-text)] hover:underline"
+          >
             ← Voltar aos chamados
           </Link>
         </p>
@@ -178,9 +181,10 @@ function ChamadoDetalhe() {
           />
           <div className="flex justify-end">
             <button
+              type="button"
               onClick={enviarResposta}
               disabled={!resposta.trim() || enviando}
-              className="rounded-xl bg-[var(--secondary)] px-6 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-50"
+              className={BTN_ACAO}
             >
               {enviando ? "Enviando…" : "Enviar"}
             </button>

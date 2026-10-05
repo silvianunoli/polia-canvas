@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { hojeISODate, num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
 
 /* ============== Modal: adicionar/editar produto ============== */
@@ -86,7 +87,7 @@ export function ModalProduto({
         .eq("id", produtoEdit.id);
       setSalvando(false);
       if (error) {
-        setErro(error.message || "Erro ao salvar.");
+        setErro(error.message || "A Pólia não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
       void registrar("edit_product", { feature: "produtos", propriedades: { tipo } });
@@ -104,7 +105,7 @@ export function ModalProduto({
       } as never);
       setSalvando(false);
       if (error) {
-        setErro(error.message || "Erro ao salvar.");
+        setErro(error.message || "A Pólia não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
       track("produto_criado", { tipo });
@@ -122,16 +123,14 @@ export function ModalProduto({
       title={edit ? "Editar produto" : "Adicionar produto"}
       footer={
         <>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
           <button
+            type="button"
             onClick={salvar}
             disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+            className={BTN_ACAO}
           >
             {salvando ? "Salvando..." : "Salvar produto"}
           </button>
@@ -144,7 +143,7 @@ export function ModalProduto({
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: Camiseta bordada"
             autoFocus
           />
@@ -166,12 +165,10 @@ export function ModalProduto({
           ).map((t) => (
             <button
               key={t.id}
+              type="button"
+              aria-pressed={tipo === t.id}
               onClick={() => setTipo(t.id)}
-              className={`rounded-lg border px-3 py-1.5 text-[13px] ${
-                tipo === t.id
-                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                  : "border-[var(--line)] text-[var(--ink-soft)]"
-              }`}
+              className={`${BTN_MIUDO} ${tipo === t.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {t.label}
             </button>
@@ -185,7 +182,7 @@ export function ModalProduto({
           <input
             value={fotoUrl}
             onChange={(e) => setFotoUrl(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="https://..."
           />
         </Campo>
@@ -199,7 +196,7 @@ export function ModalProduto({
             inputMode="decimal"
             value={precoVenda}
             onChange={(e) => setPrecoVenda(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -213,7 +210,7 @@ export function ModalProduto({
             inputMode="decimal"
             value={precoCusto}
             onChange={(e) => setPrecoCusto(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -225,7 +222,7 @@ export function ModalProduto({
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: algodão pima, tamanho único"
           />
         </Campo>
@@ -237,13 +234,17 @@ export function ModalProduto({
           <input
             value={canal}
             onChange={(e) => setCanal(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: DM do Instagram, link de pagamento"
           />
         </Campo>
       </div>
 
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

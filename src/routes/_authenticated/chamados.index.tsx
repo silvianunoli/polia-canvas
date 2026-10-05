@@ -8,7 +8,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 
@@ -90,9 +90,7 @@ function ChamadosPage() {
     >
       <div>
         {dadosQuery.isLoading ? (
-          <p className="py-16 text-center font-fraunces italic text-[15px] text-[var(--muted)]">
-            carregando…
-          </p>
+          <p className="py-16 text-center font-sans text-[15px] text-[var(--muted)]">Carregando…</p>
         ) : tickets.length === 0 ? (
           <Vazio
             icone={MessagesSquare}
@@ -192,16 +190,14 @@ function ModalNovoChamado({
       title="Abrir chamado"
       footer={
         <>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
           <button
+            type="button"
             onClick={salvar}
             disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+            className={BTN_ACAO}
           >
             {salvando ? "Enviando..." : "Abrir chamado"}
           </button>
@@ -216,7 +212,7 @@ function ModalNovoChamado({
             maxLength={120}
             autoFocus
             placeholder="ex: não consigo exportar meus clientes"
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
@@ -229,7 +225,7 @@ function ModalNovoChamado({
             rows={5}
             maxLength={4000}
             placeholder="conta com o máximo de detalhe que puder"
-            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
@@ -244,7 +240,11 @@ function ModalNovoChamado({
         É urgente: travou algo que preciso agora
       </label>
 
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

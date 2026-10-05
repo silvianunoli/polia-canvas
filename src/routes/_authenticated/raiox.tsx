@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/raiox")({
   head: () => ({
     meta: [
       { title: "Raio-x do mês · Pólia" },
-      { name: "description", content: "A leitura do seu mês, pela Aimer." },
+      { name: "description", content: "A leitura do seu mês, pela Pólia One." },
     ],
   }),
   component: RaioXPage,
@@ -138,7 +138,7 @@ function RaioXPage() {
       <UpgradeGate
         eyebrow="Raio-x do mês"
         titulo="O raio-x do mês é do Pro"
-        feature="A Aimer lê os seus números reais todo mês e devolve o que puxou o resultado e o que fazer diferente."
+        feature="A Pólia One lê os seus números reais todo mês e devolve o que puxou o resultado e o que fazer diferente."
         rota="/raiox"
       />
     );
@@ -154,7 +154,7 @@ function RaioXPage() {
       dica="raiox"
       eyebrow="Raio-x do mês"
       titulo="A leitura do seu mês."
-      subtitulo="A Aimer lê os números do mês fechado e devolve o que puxou o resultado."
+      subtitulo="A Pólia One lê os números do mês fechado e devolve o que puxou o resultado."
     >
       <div>
         {/* Só não existe na tela de upgrade (return acima), que não tem conteúdo de IA. */}
@@ -172,7 +172,7 @@ function RaioXPage() {
               setErro(null);
             }
           }}
-          className="mt-6 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          className="mt-6 w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         >
           {opcoes.map((o) => (
             <option key={`${o.mes}-${o.ano}`} value={`${o.mes}-${o.ano}`}>
@@ -202,7 +202,7 @@ function RaioXPage() {
                     {s.rota && ROTA_LABEL[s.rota] && (
                       <LinkInterno
                         href={`/${s.rota}`}
-                        className="mt-1 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline"
+                        className="mt-1 inline-flex min-h-6 items-center text-[13px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
                       >
                         {ROTA_LABEL[s.rota]} →
                       </LinkInterno>
@@ -215,10 +215,15 @@ function RaioXPage() {
               type="button"
               onClick={() => void gerar(forcarMesAtual)}
               disabled={gerando}
-              className="mt-5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:opacity-50"
+              className="mt-5 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
             >
               {gerando ? "Gerando outro..." : "Gerar outro"}
             </button>
+            {erro && (
+              <p role="alert" className="mt-2 text-[13px] text-[var(--danger)]">
+                {erro}
+              </p>
+            )}
           </div>
         ) : motivo === "mes_nao_fechado" ? (
           <div className="mt-6">
@@ -266,7 +271,7 @@ function RaioXPage() {
             <Vazio
               icone={Sparkles}
               titulo="Nenhum raio-x deste mês ainda."
-              texto="Quando o seu mês tiver receitas e despesas registradas, a Aimer lê pra você o que aconteceu."
+              texto="Quando o seu mês tiver receitas e despesas registradas, a Pólia One lê pra você o que aconteceu."
               acao={
                 <>
                   <button
@@ -275,9 +280,13 @@ function RaioXPage() {
                     disabled={gerando}
                     className={BTN_ACAO}
                   >
-                    {gerando ? "A Pólia está lendo o seu mês..." : "Gerar raio-x"}
+                    {gerando ? "A Pólia One está lendo o seu mês..." : "Gerar raio-x"}
                   </button>
-                  {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+                  {erro && (
+                    <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+                      {erro}
+                    </p>
+                  )}
                 </>
               }
             />

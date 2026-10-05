@@ -10,7 +10,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
 import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { gerarPlanoConteudo } from "@/lib/planoConteudo.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/plano-conteudo")({
   head: () => ({
     meta: [
       { title: "Plano de conteúdo do ano · Pólia" },
-      { name: "description", content: "365 ideias de post pras suas redes, pela Aimer." },
+      { name: "description", content: "365 ideias de post pras suas redes, pela Pólia One." },
     ],
   }),
   component: PlanoConteudoPage,
@@ -112,11 +112,11 @@ function PlanoConteudoPage() {
       } else {
         setMotivo(resultado.motivo);
         if (resultado.motivo === "falha_ia") {
-          setErro("A Aimer não conseguiu montar o seu plano agora. Tenta de novo.");
+          setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
         }
       }
     } catch {
-      setErro("A Aimer não conseguiu montar o seu plano agora. Tenta de novo.");
+      setErro("A Pólia One não conseguiu montar o seu plano agora. Tenta de novo.");
     } finally {
       setGerando(false);
     }
@@ -166,7 +166,7 @@ function PlanoConteudoPage() {
       <UpgradeGate
         eyebrow="Plano de conteúdo"
         titulo="O plano de conteúdo do ano é do Pro"
-        feature="A Aimer monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e do seu público."
+        feature="A Pólia One monta 365 ideias de post pras suas redes, uma por dia, a partir da sua marca e do seu público."
         rota="/plano-conteudo"
       />
     );
@@ -192,7 +192,7 @@ function PlanoConteudoPage() {
             <button
               type="button"
               onClick={() => void marcarPostado(itemDeHoje!, true)}
-              className="ml-4 shrink-0 rounded-lg bg-[var(--secondary)] px-3 py-1.5 text-[13px] font-medium text-[var(--secondary-ink)] hover:opacity-90"
+              className={`${BTN_MIUDO} ml-4 shrink-0 bg-white`}
             >
               Já postei
             </button>
@@ -208,7 +208,7 @@ function PlanoConteudoPage() {
                 <select
                   value={mesAtivo}
                   onChange={(e) => setMesAtivo(Number(e.target.value))}
-                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                 >
                   {MESES.map((nome, i) => (
                     <option key={nome} value={i + 1}>
@@ -245,11 +245,7 @@ function PlanoConteudoPage() {
                       type="button"
                       onClick={() => void marcarPostado(row, !row.postado)}
                       aria-pressed={row.postado}
-                      className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium ${
-                        row.postado
-                          ? "bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                          : "border border-[var(--line)] text-[var(--ink-soft)]"
-                      }`}
+                      className={`${BTN_MIUDO} shrink-0 ${row.postado ? "!bg-[var(--secondary)]" : "bg-white"}`}
                     >
                       <Check size={13} aria-hidden="true" />
                       {row.postado ? "Postado" : "Marcar como postado"}
@@ -260,7 +256,7 @@ function PlanoConteudoPage() {
                       <input
                         defaultValue={row.titulo}
                         onBlur={(e) => void salvarCampo(row, "titulo", e.target.value)}
-                        className="w-full rounded-md border-none bg-transparent p-0 text-[15px] font-medium text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                        className="w-full rounded-md border-none bg-transparent p-0 text-[15px] font-medium text-[var(--ink)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary-text)]"
                       />
                     </Campo>
                   </div>
@@ -270,7 +266,7 @@ function PlanoConteudoPage() {
                         defaultValue={row.ideia}
                         onBlur={(e) => void salvarCampo(row, "ideia", e.target.value)}
                         rows={2}
-                        className="w-full resize-none rounded-md border-none bg-transparent p-0 text-[14px] text-[var(--ink-soft)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary)]"
+                        className="w-full resize-none rounded-md border-none bg-transparent p-0 text-[14px] text-[var(--ink-soft)] focus:outline-none focus:ring-1 focus:ring-[var(--secondary-text)]"
                       />
                     </Campo>
                   </div>
@@ -283,7 +279,7 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo="Ainda falta saber da sua marca."
-              texto="A Aimer precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
+              texto="A Pólia One precisa saber mais sobre a sua marca antes de montar o plano. Responda o básico no Planejamento e volte aqui."
               acao={
                 <Link to="/planejamento" className={BTN_ACAO}>
                   Ir pro Planejamento
@@ -304,7 +300,7 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo={`Nenhum plano de conteúdo pra ${anoAtual} ainda.`}
-              texto={`A Aimer monta 365 ideias de post pra ${anoAtual}, uma por dia, a partir da sua marca, do seu público e do que você vende.`}
+              texto={`A Pólia One monta 365 ideias de post pra ${anoAtual}, uma por dia, a partir da sua marca, do seu público e do que você vende.`}
               acao={
                 <>
                   <button
@@ -313,14 +309,20 @@ function PlanoConteudoPage() {
                     disabled={gerando}
                     className={BTN_ACAO}
                   >
-                    {gerando ? "A Aimer está montando o seu plano..." : "Gerar plano de conteúdo"}
+                    {gerando
+                      ? "A Pólia One está montando o seu plano..."
+                      : "Gerar plano de conteúdo"}
                   </button>
                   {gerando && (
                     <p className="mt-2 text-[12px] text-[var(--muted)]">
                       Isso pode levar um minuto.
                     </p>
                   )}
-                  {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+                  {erro && (
+                    <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+                      {erro}
+                    </p>
+                  )}
                 </>
               }
             />
@@ -332,10 +334,15 @@ function PlanoConteudoPage() {
             type="button"
             onClick={() => void gerar()}
             disabled={gerando}
-            className="mt-6 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:opacity-50"
+            className="mt-6 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
           >
             {gerando ? "Gerando outro..." : "Gerar outro plano"}
           </button>
+        )}
+        {dias.length > 0 && erro && (
+          <p role="alert" className="mt-2 text-[13px] text-[var(--danger)]">
+            {erro}
+          </p>
         )}
       </div>
     </PaginaLogada>

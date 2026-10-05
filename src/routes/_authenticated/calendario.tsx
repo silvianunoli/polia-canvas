@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { BlockError } from "@/components/ui/BlockError";
@@ -371,7 +371,7 @@ function CalendarioPage() {
           <button
             type="button"
             onClick={() => setMes(startOfMonth(new Date()))}
-            className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+            className={BTN_MIUDO}
           >
             Hoje
           </button>
@@ -383,11 +383,7 @@ function CalendarioPage() {
             type="button"
             onClick={() => setMostrarPlanner((v) => !v)}
             aria-pressed={mostrarPlanner}
-            className={`rounded-full border px-3 py-1.5 text-[13px] transition-colors ${
-              mostrarPlanner
-                ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                : "border-[var(--line)] text-[var(--muted)]"
-            }`}
+            className={`${BTN_MIUDO} ${mostrarPlanner ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             Planner
           </button>
@@ -397,13 +393,7 @@ function CalendarioPage() {
             disabled={!conectado}
             aria-pressed={mostrarGoogle}
             title={!conectado ? "Conecte o Google Calendar pra filtrar por ele" : undefined}
-            className={`rounded-full border px-3 py-1.5 text-[13px] transition-colors ${
-              !conectado
-                ? "cursor-not-allowed border-[var(--line)] text-[var(--muted)] opacity-50"
-                : mostrarGoogle
-                  ? "border-[var(--ink-soft)] bg-[var(--surface)] text-[var(--ink)]"
-                  : "border-[var(--line)] text-[var(--muted)]"
-            }`}
+            className={`${BTN_MIUDO} ${conectado && mostrarGoogle ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             Google Calendar
           </button>
@@ -435,7 +425,7 @@ function CalendarioPage() {
                 type="button"
                 onClick={() => setConfirmarDesconectar(true)}
                 disabled={desconectarMutation.isPending}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] text-[var(--muted)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+                className={`${BTN_MIUDO} hover:!border-[var(--danger)] hover:!text-[var(--danger)]`}
               >
                 <Unlink size={14} aria-hidden="true" />
                 {emailConectado ?? "conectado"} · desconectar
@@ -445,7 +435,7 @@ function CalendarioPage() {
                 type="button"
                 onClick={() => conectarMutation.mutate()}
                 disabled={conectarMutation.isPending}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--secondary)] px-3 py-1.5 text-[13px] font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-60"
+                className={BTN_MIUDO}
               >
                 <Link2 size={14} aria-hidden="true" />
                 {conectarMutation.isPending ? "Abrindo..." : "Conectar Google Calendar"}
@@ -464,7 +454,7 @@ function CalendarioPage() {
         )}
 
         {/* Grade mensal */}
-        <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-accent font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
           {DIAS_SEMANA.map((d) => (
             <span key={d}>{d}</span>
           ))}
@@ -614,7 +604,7 @@ function CalendarioPage() {
                         }}
                         placeholder="Nome da tarefa"
                         maxLength={200}
-                        className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary)]"
+                        className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
                       />
                     </Campo>
                     <Select value={novoQuadroId} onValueChange={setNovoQuadroId}>
@@ -636,7 +626,7 @@ function CalendarioPage() {
                       <button
                         type="button"
                         onClick={() => setMostrarComposer(false)}
-                        className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[13px] text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                        className={BTN_ACAO_CONTORNO}
                       >
                         Cancelar
                       </button>
@@ -652,7 +642,7 @@ function CalendarioPage() {
                             dia: diaSelecionado,
                           })
                         }
-                        className="rounded-lg bg-[var(--secondary)] px-3 py-1.5 text-[13px] font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-60"
+                        className={BTN_ACAO}
                       >
                         {criarTarefaMutation.isPending ? "Adicionando..." : "Adicionar"}
                       </button>
@@ -662,7 +652,7 @@ function CalendarioPage() {
                   <button
                     type="button"
                     onClick={abrirComposer}
-                    className="mb-4 inline-flex items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
+                    className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
                   >
                     <Plus size={14} aria-hidden="true" /> Nova tarefa nesse dia
                   </button>
@@ -701,7 +691,7 @@ function CalendarioPage() {
                             {item.horario}
                           </span>
                         )}
-                        <span className="shrink-0 text-[10px] uppercase tracking-[0.1em] text-[var(--muted)]">
+                        <span className="shrink-0 text-[10px] font-accent font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
                           {item.fonte === "google" ? "Google" : "Planner"}
                         </span>
                         {item.href && (

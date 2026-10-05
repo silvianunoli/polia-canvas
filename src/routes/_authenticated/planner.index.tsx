@@ -169,6 +169,7 @@ function PlannerIndex() {
           disabled={cotaAtingida}
           className={BTN_ACAO}
           aria-label="Novo quadro"
+          aria-expanded={criando}
         >
           <Plus size={16} aria-hidden="true" />
           <span className="hidden sm:inline">Novo quadro</span>
@@ -182,7 +183,7 @@ function PlannerIndex() {
             <Link
               to="/upgrade"
               search={{ rota: "/planner", tier: "controle" }}
-              className="font-medium text-[var(--secondary-text)] no-underline"
+              className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
             >
               Assinar o Premium
             </Link>
@@ -206,13 +207,13 @@ function PlannerIndex() {
                 }}
                 maxLength={60}
                 placeholder="Ex: Lançamento de inverno · Feira de artesanato · Conteúdo do mês"
-                className="min-w-[220px] flex-1 rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                className="min-w-[220px] flex-1 rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => criar.mutate()}
                 disabled={!novoNome.trim() || criar.isPending}
-                className="rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:opacity-40"
+                className={BTN_ACAO}
               >
                 Criar
               </button>
@@ -245,9 +246,10 @@ function PlannerIndex() {
               const maior = Math.max(1, ...valores);
               const temCartoes = (contagem.get(q.id) ?? 0) > 0;
               return (
-                <a
+                <Link
                   key={q.id}
-                  href={`/planner/${q.slug}`}
+                  to="/planner/$slug"
+                  params={{ slug: q.slug }}
                   className="group flex flex-col gap-4 rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
                 >
                   <div className="flex items-center justify-between gap-4">
@@ -289,7 +291,7 @@ function PlannerIndex() {
                       ))}
                     </div>
                   )}
-                </a>
+                </Link>
               );
             })}
           </div>

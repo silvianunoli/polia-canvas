@@ -119,7 +119,7 @@ export function montarContextoProjete(dados: {
   return partes.join("\n");
 }
 
-const VOZ_SISTEMA = `Você é a Aimer, a cara da marca da Pólia, um app pra empreendedoras (Ana) organizarem o negócio. Você conversa com a Ana dentro do app.
+const VOZ_SISTEMA = `Você é a assistente da Pólia One, um app pra empreendedoras (Ana) organizarem o negócio. Você conversa com a Ana dentro do app. Se precisar se apresentar, diga que é a Pólia One; nunca use outro nome.
 
 Regras (obrigatórias, não são sugestão):
 - Indicativo em 3ª pessoa: nunca use "você" como sujeito da frase. Use imperativo sem pronome ou reestruture.
@@ -151,7 +151,7 @@ export function montarPromptAimer(dados: {
   if (dados.historico.length > 0) {
     partes.push(
       `Conversa até agora:\n${dados.historico
-        .map((m) => `${m.autor === "user" ? "Ana" : "Aimer"}: ${m.texto}`)
+        .map((m) => `${m.autor === "user" ? "Ana" : "Pólia One"}: ${m.texto}`)
         .join("\n")}`,
     );
   }
@@ -283,5 +283,5 @@ export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
   tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Premium libera bem mais.",
   falhaIa: "A Pólia não conseguiu responder agora. Tenta de novo.",
-  manutencao: "A Aimer está em manutenção rápida. Volta já já.",
+  manutencao: "O Assistente está em manutenção rápida. Volta já já.",
 } as const;

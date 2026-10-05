@@ -11,7 +11,7 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -205,6 +205,7 @@ function MetasPage() {
       subtitulo={`Até ${LIMITE_ATIVAS} metas ativas por vez, pra o foco não se dividir.`}
       acao={
         <button
+          type="button"
           onClick={abrirCriar}
           disabled={limiteAtingido}
           title={
@@ -224,7 +225,11 @@ function MetasPage() {
           </p>
         )}
 
-        {erroAcao && <p className="mt-4 text-[13px] text-[var(--danger)]">{erroAcao}</p>}
+        {erroAcao && (
+          <p role="alert" className="mt-4 text-[13px] text-[var(--danger)]">
+            {erroAcao}
+          </p>
+        )}
 
         {/* ───────── Lista de metas ativas ───────── */}
         <section className="mt-8">
@@ -284,6 +289,7 @@ function MetasPage() {
         {concluidas.length > 0 && (
           <section className="mt-10 border-t border-[var(--line)] pt-6">
             <button
+              type="button"
               onClick={() => setVerConcluidas((v) => !v)}
               aria-expanded={verConcluidas}
               className="-mx-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-[14px] text-[var(--ink-soft)] hover:text-[var(--ink)]"
@@ -311,6 +317,7 @@ function MetasPage() {
                       )}
                     </div>
                     <button
+                      type="button"
                       onClick={() => reabrir(m)}
                       disabled={limiteAtingido}
                       title={
@@ -318,7 +325,7 @@ function MetasPage() {
                           ? "Já tem 3 metas ativas. Conclua ou arquive uma antes de reabrir."
                           : undefined
                       }
-                      className="shrink-0 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                      className="inline-flex min-h-11 shrink-0 items-center text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                     >
                       Reabrir
                     </button>
@@ -501,13 +508,14 @@ function MetaCard({
           ) : null}
         </div>
         <button
+          type="button"
           onClick={clicarConcluir}
-          className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors ${
+          className={`${BTN_MIUDO} shrink-0 ${
             pronta
-              ? "bg-[var(--secondary)] text-[var(--secondary-ink)] hover:opacity-90"
+              ? "!bg-[var(--secondary)]"
               : armada
-                ? "border border-[var(--danger)] text-[var(--danger)] hover:bg-[var(--danger-soft)]"
-                : "border border-[var(--secondary)] text-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
+                ? "!border-[var(--danger)] !text-[var(--danger)]"
+                : "bg-white"
           }`}
         >
           <Check size={15} aria-hidden="true" />
@@ -545,7 +553,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)]"
+        className="min-w-0 flex-1 rounded-md border border-[var(--secondary)] px-2 py-1 text-[17px] text-[var(--ink)]"
       />
     );
   }
@@ -598,7 +606,7 @@ function InlineValor({
           if (e.key === "Enter") commit();
           if (e.key === "Escape") setEditing(false);
         }}
-        className="w-24 rounded-md border border-[var(--secondary)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)] focus:shadow-[0_0_0_3px_var(--secondary-light)]"
+        className="w-24 rounded-md border border-[var(--secondary)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)]"
       />
     );
   }
@@ -664,7 +672,9 @@ function ModalMeta({
         .eq("id", metaEdit.id);
       setSalvando(false);
       if (error) {
-        setErro(error.message || "Erro ao salvar.");
+        // O erro do banco vem em inglês técnico: fica no log, não na tela.
+        console.error("meta_salvar", error);
+        setErro("A Pólia não conseguiu salvar a meta agora. Tenta de novo.");
         return;
       }
       void registrar("edit_goal", { feature: "metas", propriedades: { formato } });
@@ -672,7 +682,9 @@ function ModalMeta({
       const { error } = await supabase.from("metas").insert({ user_id: userId, ...base });
       setSalvando(false);
       if (error) {
-        setErro(error.message || "Erro ao salvar.");
+        // O erro do banco vem em inglês técnico: fica no log, não na tela.
+        console.error("meta_salvar", error);
+        setErro("A Pólia não conseguiu salvar a meta agora. Tenta de novo.");
         return;
       }
       track("meta_criada", { formato });
@@ -690,16 +702,14 @@ function ModalMeta({
       title={edit ? "Editar meta" : "Nova meta"}
       footer={
         <>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
           <button
+            type="button"
             onClick={salvar}
             disabled={salvando || !podeSalvar}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+            className={BTN_ACAO}
           >
             {salvando ? "Salvando…" : edit ? "Salvar" : "Criar meta"}
           </button>
@@ -714,7 +724,7 @@ function ModalMeta({
             onChange={(e) => setTitulo(e.target.value)}
             maxLength={120}
             autoFocus
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: chegar a 30 clientes fixas"
           />
         </Campo>
@@ -734,13 +744,10 @@ function ModalMeta({
           ).map((f) => (
             <button
               key={f.id}
+              type="button"
               onClick={() => setFormato(f.id)}
               aria-pressed={formato === f.id}
-              className={`rounded-lg border px-3 py-1.5 text-[13px] ${
-                formato === f.id
-                  ? "border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                  : "border-[var(--line)] text-[var(--ink-soft)]"
-              }`}
+              className={`${BTN_MIUDO} ${formato === f.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {f.label}
             </button>
@@ -756,7 +763,7 @@ function ModalMeta({
             inputMode="decimal"
             value={alvo}
             onChange={(e) => setAlvo(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -766,7 +773,7 @@ function ModalMeta({
               value={unidade}
               onChange={(e) => setUnidade(e.target.value)}
               maxLength={24}
-              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
               placeholder="clientes, vendas…"
             />
           </Campo>
@@ -781,7 +788,7 @@ function ModalMeta({
             inputMode="decimal"
             value={atual}
             onChange={(e) => setAtual(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -794,12 +801,16 @@ function ModalMeta({
             type="date"
             value={prazo}
             onChange={(e) => setPrazo(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
 
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

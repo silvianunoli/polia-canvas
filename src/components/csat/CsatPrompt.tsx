@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Frown, Meh, Smile, X } from "lucide-react";
 import { toastSucesso } from "@/lib/toast";
 import type { CsatScore } from "@/lib/csat";
+import { BTN_ACAO } from "@/lib/botoes";
 
 const OPCOES: { score: CsatScore; label: string; Icon: typeof Frown }[] = [
   { score: 1, label: "Difícil", Icon: Frown },
@@ -39,12 +40,12 @@ export function CsatPrompt({
   };
 
   return (
-    <div className="polia-v3 fixed bottom-6 right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+    <div className="polia-v3 fixed bottom-6 right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-card-hover)]">
       <button
         type="button"
         onClick={onFechar}
         aria-label="Fechar"
-        className="absolute right-2 top-2 flex min-h-11 min-w-11 items-center justify-center rounded-full text-[var(--muted)] hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)]"
+        className="absolute right-2 top-2 flex min-h-11 min-w-11 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--bg)] hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)]"
       >
         <X size={16} aria-hidden="true" />
       </button>
@@ -58,7 +59,7 @@ export function CsatPrompt({
               key={score}
               type="button"
               onClick={() => void escolher(score)}
-              className="flex flex-1 flex-col items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--line)] py-3 text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)] hover:bg-[var(--bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary)]"
+              className="flex flex-1 flex-col items-center gap-1.5 rounded-[var(--radius-md)] border border-[var(--line)] py-3 text-[var(--ink-soft)] transition-colors hover:border-[var(--secondary)] hover:bg-[var(--bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)]"
             >
               <Icon size={20} aria-hidden="true" />
               <span className="text-[0.75rem]">{label}</span>
@@ -78,14 +79,14 @@ export function CsatPrompt({
               onChange={(e) => setComentario(e.target.value)}
               placeholder="Escreva aqui…"
               disabled={enviando}
-              className="min-h-[64px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-2 text-[0.85rem] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[inset_0_0_0_1px_var(--secondary)] focus:outline-none disabled:opacity-60"
+              className="min-h-[64px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-2 text-[0.85rem] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none disabled:opacity-60"
             />
           </label>
           <button
             type="button"
             onClick={() => void enviar(escolha)}
             disabled={enviando}
-            className="mt-3 w-full rounded-full bg-[var(--secondary)] px-4 py-2.5 text-[0.85rem] font-medium text-[var(--secondary-ink)] transition-opacity hover:opacity-90 disabled:opacity-60"
+            className={`${BTN_ACAO} mt-3 w-full`}
           >
             {enviando ? "Enviando…" : "Enviar"}
           </button>

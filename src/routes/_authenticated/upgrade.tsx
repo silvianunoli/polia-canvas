@@ -2,6 +2,7 @@ import { Lock } from "lucide-react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
+import { BTN_ACAO } from "@/lib/botoes";
 
 interface UpgradeSearch {
   rota?: string;
@@ -38,7 +39,7 @@ const GANHO_POR_ROTA: Record<string, string> = {
   // da página). Nomear o Premium aqui vendia por R$ 29,90 uma tela que só abre
   // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
   "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
-  "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu pró-labore.",
+  "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
   "/plano-conteudo": "O Pro monta as 365 ideias de post do ano a partir da sua marca.",
 };
 
@@ -56,13 +57,13 @@ function UpgradePage() {
         <span className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
           <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
         </span>
-        <p className="font-sans text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
+        <p className="text-[13px] font-accent font-bold uppercase tracking-[1px] text-[var(--ink-soft)]">
           Recurso do plano {tier.titulo}
         </p>
         <h1 className="mt-2 font-cabinet text-[22px] leading-snug text-[var(--ink)]">{ganho}</h1>
         {/* Sem rota conhecida o ganho já é essa frase: não repete embaixo. */}
         {search.rota && GANHO_POR_ROTA[search.rota] && (
-          <p className="mt-2 font-fraunces italic text-[15px] text-[var(--ink-soft)]">
+          <p className="mt-2 font-sans text-[15px] text-[var(--ink-soft)]">
             Assinando o {tier.titulo}, essa tela abre na sua conta na hora.
           </p>
         )}
@@ -79,13 +80,13 @@ function UpgradePage() {
           to="/assinar"
           search={{ plano: tierId }}
           onClick={() => track("upgrade_cta_clicado", { rota: search.rota, tier: tierId })}
-          className="mt-6 flex w-full items-center justify-center rounded-xl bg-[var(--secondary)] px-4 py-3 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] no-underline"
+          className={`${BTN_ACAO} mt-6 w-full`}
         >
           Assinar o {tier.titulo}
         </Link>
         <Link
           to="/painel"
-          className="mt-3 block font-sans text-[13px] text-[var(--muted)] no-underline hover:text-[var(--ink-soft)]"
+          className="mt-3 inline-flex min-h-11 items-center font-sans text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
         >
           Voltar pro Painel
         </Link>

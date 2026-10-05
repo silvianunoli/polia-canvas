@@ -4,6 +4,7 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { Modal } from "@/components/ui/Modal";
 import { Campo } from "@/components/ui/Campo";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -169,18 +170,14 @@ export function ModalLancamento({
       title={edit ? "Editar lançamento" : "Novo lançamento"}
       footer={
         <>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)]"
-          >
+          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
             Cancelar
           </button>
           <button
             type="button"
             onClick={salvar}
             disabled={salvando || !!faltaMsg}
-            className="rounded-xl bg-[var(--secondary)] px-5 py-2 text-[14px] font-medium text-[var(--secondary-ink)] transition-opacity duration-150 hover:opacity-90 disabled:opacity-50"
+            className={BTN_ACAO}
           >
             {salvando ? "Salvando..." : edit ? "Salvar alterações" : "Salvar lançamento"}
           </button>
@@ -227,7 +224,7 @@ export function ModalLancamento({
             onChange={onValorChange}
             placeholder="R$ 0,00"
             autoFocus
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[22px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
@@ -239,7 +236,7 @@ export function ModalLancamento({
             type="date"
             value={data}
             onChange={(e) => setData(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
       </div>
@@ -250,7 +247,7 @@ export function ModalLancamento({
           <input
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: pagamento da Ana"
           />
         </Campo>
@@ -268,11 +265,7 @@ export function ModalLancamento({
               type="button"
               onClick={() => escolherCategoria(c)}
               aria-pressed={categoria === c}
-              className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-                categoria === c
-                  ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-              }`}
+              className={`${BTN_MIUDO} ${categoria === c ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {c}
             </button>
@@ -281,11 +274,7 @@ export function ModalLancamento({
             type="button"
             onClick={() => escolherCategoria(NOVA_CATEGORIA)}
             aria-pressed={novaCategoriaAberta}
-            className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
-              novaCategoriaAberta
-                ? "border-[var(--secondary)] bg-[var(--secondary)] text-[var(--secondary-ink)]"
-                : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:bg-[var(--secondary-light)]"
-            }`}
+            className={`${BTN_MIUDO} ${novaCategoriaAberta ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             {NOVA_CATEGORIA}
           </button>
@@ -299,7 +288,7 @@ export function ModalLancamento({
                 onChange={(e) => setNovaCategoriaTexto(e.target.value)}
                 placeholder="Nome da categoria"
                 maxLength={40}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
               />
             </Campo>
           </div>
@@ -307,7 +296,11 @@ export function ModalLancamento({
       </div>
 
       {faltaMsg && <p className="mt-4 text-[13px] text-[var(--muted)]">{faltaMsg}</p>}
-      {erro && <p className="mt-3 text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
     </Modal>
   );
 }

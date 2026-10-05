@@ -136,7 +136,7 @@ export const FEATURES_GRATIS = [
   "Catálogo de até 5 produtos",
   "Até 3 metas ativas por vez",
   "1 quadro no Planner e 1 nota no Caderno",
-  "Aimer para tirar dúvida, com teto diário",
+  "Assistente pra tirar dúvida, com teto diário",
 ];
 
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout

@@ -6,7 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
@@ -284,6 +284,7 @@ function CadernoPage() {
           type="button"
           onClick={() => criar.mutate(undefined)}
           disabled={criar.isPending || cotaAtingida}
+          aria-label="Nova nota"
           className={BTN_ACAO}
         >
           <Plus size={16} aria-hidden="true" />
@@ -298,7 +299,7 @@ function CadernoPage() {
             <Link
               to="/upgrade"
               search={{ rota: "/caderno", tier: "controle" }}
-              className="font-medium text-[var(--secondary-text)] no-underline"
+              className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
             >
               Assinar o Premium
             </Link>
@@ -322,7 +323,7 @@ function CadernoPage() {
                   onChange={(e) => setBusca(e.target.value)}
                   placeholder="Buscar anotações…"
                   aria-label="Buscar anotações"
-                  className="h-10 w-full rounded-xl border border-[var(--line)] bg-white pl-9 pr-3 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+                  className="h-10 w-full rounded-xl border border-[var(--line)] bg-white pl-9 pr-3 text-[14px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus:outline-none"
                 />
               </div>
             </div>
@@ -460,7 +461,7 @@ function CadernoPage() {
                   <button
                     type="button"
                     onClick={() => selecionar(null)}
-                    className="flex items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)] lg:hidden"
+                    className="flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--muted)] hover:text-[var(--ink)] lg:hidden"
                   >
                     <ArrowLeft size={15} aria-hidden="true" /> voltar
                   </button>
@@ -478,7 +479,7 @@ function CadernoPage() {
                       disabled={notaExcedente}
                       aria-label={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
                       title={selecionada.fixada ? "Desafixar" : "Fixar no topo"}
-                      className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-40 ${
+                      className={`flex h-11 w-11 items-center justify-center rounded-lg transition-colors hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:opacity-40 ${
                         selecionada.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
                       }`}
                     >
@@ -498,7 +499,7 @@ function CadernoPage() {
                     <Link
                       to="/upgrade"
                       search={{ rota: "/caderno", tier: "controle" }}
-                      className="font-medium text-[var(--secondary-text)] no-underline"
+                      className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                     >
                       Assinar o Premium
                     </Link>
@@ -526,7 +527,7 @@ function CadernoPage() {
                   <button
                     type="button"
                     onClick={handleExcluirClick}
-                    className="rounded-lg px-2 py-2 text-[13px] text-[var(--danger)] hover:underline"
+                    className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
                   >
                     {excluirArmado ? "Confirmar exclusão" : "Excluir nota"}
                   </button>

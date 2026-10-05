@@ -3,6 +3,7 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 
 import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { track } from "@/lib/analytics";
+import { BTN_ACAO } from "@/lib/botoes";
 import { PASSOS_TOUR } from "@/lib/dicas";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
@@ -96,10 +97,12 @@ export function TourBoasVindas() {
           }}
           onEscapeKeyDown={() => encerrar("pulado")}
           onInteractOutside={(e) => e.preventDefault()}
-          className="polia-v3 z-50 w-[min(320px,calc(100vw-32px))] rounded-xl border border-[var(--line)] bg-white p-5 text-[var(--ink)] shadow-[var(--shadow-card-hover)] outline-none"
+          // Nasce do item apontado (origin do Radix), 200ms com ease-out forte.
+          // Com "reduzir movimento" o zoom some e fica só o fade (styles.css).
+          className="polia-v3 z-50 w-[min(320px,calc(100vw-32px))] origin-(--radix-popover-content-transform-origin) animate-in fade-in-0 zoom-in-95 rounded-xl border border-[var(--line)] bg-white p-5 text-[var(--ink)] shadow-[var(--shadow-card-hover)] outline-none duration-200 ease-[cubic-bezier(0.23,1,0.32,1)]"
           style={TOKEN_BRIDGE_V3}
         >
-          <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+          <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             {passo + 1} de {PASSOS_TOUR.length}
           </p>
           <h2 id={tituloId} className="font-cabinet mt-2 text-[19px] leading-tight">
@@ -113,7 +116,7 @@ export function TourBoasVindas() {
               <button
                 type="button"
                 onClick={() => encerrar("pulado")}
-                className="min-h-9 rounded-lg px-2 text-[13px] text-[var(--secondary-text)] hover:underline"
+                className="-my-1 min-h-11 rounded-lg px-2 text-[13px] text-[var(--secondary-text)] hover:underline"
               >
                 Pular
               </button>
@@ -122,7 +125,7 @@ export function TourBoasVindas() {
               ref={primarioRef}
               type="button"
               onClick={() => (ultimo ? encerrar("concluido") : avancar())}
-              className="min-h-9 rounded-lg bg-[var(--secondary)] px-4 text-[14px] font-medium text-[var(--secondary-ink)] hover:opacity-90"
+              className={BTN_ACAO}
             >
               {ultimo ? "Quero começar" : "Próximo"}
             </button>

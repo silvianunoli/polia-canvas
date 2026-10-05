@@ -113,7 +113,6 @@ const EXCECOES_TRAVESSAO: readonly Excecao[] = [
 ];
 const EXCECOES_EXCLAMACAO: readonly Excecao[] = [
   ["src/routes/ajuda.tsx", "Recebemos a mensagem!"],
-  ["src/routes/_authenticated/assinar.tsx", "Pagamento confirmado!"],
 ];
 
 describe("regras de marca no texto visível do src", () => {

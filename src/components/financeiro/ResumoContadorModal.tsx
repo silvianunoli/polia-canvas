@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Modal } from "@/components/ui/Modal";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import {
   montarResumoContador,
   linhasCsvResumoContador,
@@ -128,7 +129,7 @@ export function ResumoContadorModal({
             const nova = opcoes.find((o) => o.mes === mes && o.ano === ano);
             if (nova) setSelecionado(nova);
           }}
-          className="mb-5 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          className="mb-5 w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         >
           {opcoes.map((o) => (
             <option key={`${o.mes}-${o.ano}`} value={`${o.mes}-${o.ano}`}>
@@ -146,7 +147,7 @@ export function ResumoContadorModal({
             <button
               type="button"
               onClick={onIrParaFinanceiro}
-              className="mt-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+              className="mt-3 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
             >
               Lançar no Financeiro →
             </button>
@@ -158,7 +159,7 @@ export function ResumoContadorModal({
                 Falta o nome e o CNPJ da empresa no resumo.{" "}
                 <Link
                   to="/configuracoes"
-                  className="font-medium text-[var(--secondary-text)] no-underline"
+                  className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                 >
                   Completar nas Configurações
                 </Link>
@@ -214,17 +215,13 @@ export function ResumoContadorModal({
             )}
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={baixarPdf}
-                className="flex-1 rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90"
-              >
+              <button type="button" onClick={baixarPdf} className={`${BTN_ACAO} flex-1`}>
                 {erro ? "Tentar de novo · PDF" : "Baixar PDF"}
               </button>
               <button
                 type="button"
                 onClick={baixarCsvResumo}
-                className="flex-1 rounded-xl border border-[var(--line)] px-4 py-2.5 font-medium text-[var(--ink)] hover:bg-[var(--surface)]"
+                className={`${BTN_ACAO_CONTORNO} flex-1`}
               >
                 {erro ? "Tentar de novo · CSV" : "Baixar CSV"}
               </button>
@@ -261,7 +258,7 @@ function SecaoLista({
                 <button
                   type="button"
                   onClick={() => onClickItem(it.id)}
-                  className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-0.5 text-left text-[12.5px] text-[var(--muted)] hover:bg-[var(--surface)]"
+                  className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1 text-left text-[12.5px] text-[var(--muted)] hover:bg-[var(--surface)]"
                 >
                   <span className="truncate">{it.esquerda}</span>
                   <span className="shrink-0">{moeda.format(it.valor)}</span>

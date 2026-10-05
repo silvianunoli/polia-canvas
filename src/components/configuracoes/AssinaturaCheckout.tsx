@@ -3,6 +3,7 @@ import { Elements, PaymentElement, useElements, useStripe } from "@stripe/react-
 import { getStripe } from "@/lib/stripeClient";
 import { toastErro } from "@/lib/toast";
 import { Modal } from "@/components/ui/Modal";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 export function AssinaturaCheckout({
   clientSecret,
@@ -20,7 +21,7 @@ export function AssinaturaCheckout({
         if (!aberto) onClose();
       }}
       title="Confirmar pagamento"
-      description="Assinatura da Pólia. O pagamento é processado pelo Stripe."
+      description="Assinatura da Pólia One. O pagamento é processado pelo Stripe."
     >
       <Elements stripe={getStripe()} options={{ clientSecret }}>
         <FormularioPagamento onClose={onClose} onSucesso={onSucesso} />
@@ -67,13 +68,17 @@ function FormularioPagamento({
   return (
     <div>
       <PaymentElement />
-      {erro && <p className="mt-3 font-sans text-[13px] text-[var(--danger)]">{erro}</p>}
+      {erro && (
+        <p role="alert" className="mt-3 font-sans text-[13px] text-[var(--danger)]">
+          {erro}
+        </p>
+      )}
       <div className="mt-6 flex justify-end gap-2">
         <button
           type="button"
           onClick={onClose}
           disabled={confirmando}
-          className="rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--ink)] transition-colors hover:bg-[var(--surface)] disabled:opacity-50"
+          className={BTN_ACAO_CONTORNO}
         >
           Cancelar
         </button>
@@ -86,7 +91,7 @@ function FormularioPagamento({
             });
           }}
           disabled={!stripe || confirmando}
-          className="rounded-xl bg-[var(--secondary)] px-4 py-2 font-sans text-[13px] font-semibold text-[var(--secondary-ink)] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          className={BTN_ACAO}
         >
           {confirmando ? "Confirmando..." : "Confirmar assinatura"}
         </button>

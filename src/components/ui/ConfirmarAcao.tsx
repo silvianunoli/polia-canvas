@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
 interface ConfirmarAcaoProps {
@@ -21,7 +22,8 @@ interface ConfirmarAcaoProps {
   textoCarregando?: string;
   textoCancelar?: string;
   onConfirmar: () => void;
-  /** Se true, o botão de confirmar usa --danger em vez de --secondary. */
+  /** Se true, o confirmar vira contorno com borda e texto --danger (forma de
+   *  BTN_ACAO_CONTORNO), em vez do preenchido turquesa de BTN_ACAO. */
   destrutivo?: boolean;
   /**
    * Desabilita os dois botões enquanto onConfirmar ainda está em andamento —
@@ -69,7 +71,7 @@ export function ConfirmarAcao({
         <AlertDialogFooter>
           <AlertDialogCancel
             disabled={carregando}
-            className="rounded-lg border border-[var(--line)] bg-white text-[var(--ink-soft)] shadow-none hover:bg-[var(--surface)]"
+            className={`${BTN_ACAO_CONTORNO} h-auto bg-white shadow-none hover:bg-white hover:text-[var(--ink)]`}
           >
             {textoCancelar}
           </AlertDialogCancel>
@@ -79,8 +81,8 @@ export function ConfirmarAcao({
             aria-busy={carregando}
             className={
               destrutivo
-                ? "rounded-lg bg-[var(--danger)] text-white shadow-none hover:bg-[var(--danger)] hover:opacity-90"
-                : "rounded-lg bg-[var(--secondary)] text-[var(--secondary-ink)] shadow-none hover:bg-[var(--secondary)] hover:opacity-90"
+                ? `${BTN_ACAO_CONTORNO} h-auto border-[var(--danger)] bg-white text-[var(--danger)] shadow-none hover:bg-[var(--danger-soft)]`
+                : `${BTN_ACAO} h-auto shadow-none hover:bg-[var(--secondary)]`
             }
           >
             <span role="status" aria-live="polite">

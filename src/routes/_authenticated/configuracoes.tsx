@@ -29,6 +29,7 @@ import {
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { FieldError } from "@/components/ui/FieldError";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 
 const ERRO_AUTOSAVE =
   "A Pólia não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
@@ -464,7 +465,7 @@ function ConfiguracoesPage() {
                 onChange={(e) => setNome(e.target.value)}
                 maxLength={80}
                 placeholder="Seu nome"
-                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
               />
             </Campo>
             <Campo label="E-MAIL">
@@ -474,7 +475,7 @@ function ConfiguracoesPage() {
                   <button
                     type="button"
                     onClick={() => setAlterandoEmail(true)}
-                    className="font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
+                    className="inline-flex min-h-11 items-center font-sans text-[13px] text-[var(--secondary-text)] hover:underline"
                   >
                     Trocar e-mail
                   </button>
@@ -488,7 +489,7 @@ function ConfiguracoesPage() {
                       type="email"
                       value={novoEmail}
                       onChange={(e) => setNovoEmail(e.target.value)}
-                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
                     />
                   </Campo>
                   <Campo
@@ -503,11 +504,13 @@ function ConfiguracoesPage() {
                       type="email"
                       value={confirmarEmail}
                       onChange={(e) => setConfirmarEmail(e.target.value)}
-                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+                      className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
                     />
                   </Campo>
                   {emailErro && (
-                    <p className="font-sans text-[var(--danger)] text-[12px]">{emailErro}</p>
+                    <p role="alert" className="font-sans text-[var(--danger)] text-[12px]">
+                      {emailErro}
+                    </p>
                   )}
                   <div className="flex gap-2 justify-end">
                     <button
@@ -518,7 +521,7 @@ function ConfiguracoesPage() {
                         setConfirmarEmail("");
                         setEmailErro(null);
                       }}
-                      className="font-sans text-[13px] text-[var(--ink)] border border-[var(--line)] rounded-xl px-4 py-2 hover:bg-[var(--surface)] transition-colors"
+                      className={BTN_ACAO_CONTORNO}
                     >
                       Cancelar
                     </button>
@@ -526,7 +529,7 @@ function ConfiguracoesPage() {
                       type="button"
                       onClick={alterarEmail}
                       disabled={salvandoEmail || !novoEmail || novoEmail !== confirmarEmail}
-                      className="font-sans text-[13px] font-semibold text-[var(--secondary-ink)] bg-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary)] transition-colors disabled:opacity-40"
+                      className={BTN_ACAO}
                     >
                       {salvandoEmail ? "Enviando..." : "Confirmar troca"}
                     </button>
@@ -534,8 +537,8 @@ function ConfiguracoesPage() {
                 </div>
               )}
               {emailOk && (
-                <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mt-3">
-                  quase lá: confira a caixa de entrada do novo e-mail e clique no link de
+                <p className="font-sans text-[15px] text-[var(--ink-soft)] mt-3">
+                  Quase lá: confira a caixa de entrada do novo e-mail e clique no link de
                   confirmação.
                 </p>
               )}
@@ -557,7 +560,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setNomeNegocio(e.target.value)}
               maxLength={80}
               placeholder="Ex: Ateliê Florescer · Estúdio da Lua · Doces da Rê"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               aparece no topo do seu planejamento
@@ -571,7 +574,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setRazaoSocial(e.target.value)}
               maxLength={120}
               placeholder="Ex: Florescer Confecções e Serviços LTDA"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               usada no cabeçalho do Resumo pro contador (Pro)
@@ -585,7 +588,7 @@ function ConfiguracoesPage() {
               onChange={(e) => setCnpj(e.target.value)}
               maxLength={18}
               placeholder="00.000.000/0000-00"
-              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
             />
           </Campo>
         </Secao>
@@ -614,7 +617,7 @@ function ConfiguracoesPage() {
                   type="button"
                   onClick={() => desconectarGoogleMutation.mutate()}
                   disabled={desconectarGoogleMutation.isPending}
-                  className="font-sans text-[13px] text-[var(--ink-soft)] border border-[var(--line)] rounded-xl px-4 py-2 hover:border-[var(--danger)] hover:text-[var(--danger)] transition-colors disabled:opacity-50"
+                  className={`${BTN_MIUDO} hover:border-[var(--danger)] hover:text-[var(--danger)]`}
                 >
                   {desconectarGoogleMutation.isPending ? "Desconectando..." : "Desconectar"}
                 </button>
@@ -623,7 +626,7 @@ function ConfiguracoesPage() {
                   type="button"
                   onClick={() => conectarGoogleMutation.mutate()}
                   disabled={conectarGoogleMutation.isPending}
-                  className="font-sans text-[13px] text-[var(--secondary-text)] border border-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary-light)] transition-colors disabled:opacity-50"
+                  className={BTN_MIUDO}
                 >
                   {conectarGoogleMutation.isPending ? "Conectando..." : "Conectar"}
                 </button>
@@ -647,11 +650,7 @@ function ConfiguracoesPage() {
               </p>
             </div>
             {!alterandoSenha && (
-              <button
-                type="button"
-                onClick={() => setAlterandoSenha(true)}
-                className="font-sans text-[13px] text-[var(--secondary-text)] border border-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary-light)] transition-colors"
-              >
+              <button type="button" onClick={() => setAlterandoSenha(true)} className={BTN_MIUDO}>
                 Alterar senha
               </button>
             )}
@@ -665,7 +664,7 @@ function ConfiguracoesPage() {
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   minLength={8}
-                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
                 />
               </Campo>
               <Campo
@@ -680,11 +679,13 @@ function ConfiguracoesPage() {
                   type="password"
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}
-                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] transition-[border-color,box-shadow]"
+                  className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
                 />
               </Campo>
               {senhaErro && (
-                <p className="font-sans text-[var(--danger)] text-[12px]">{senhaErro}</p>
+                <p role="alert" className="font-sans text-[var(--danger)] text-[12px]">
+                  {senhaErro}
+                </p>
               )}
               <div className="flex gap-2 justify-end">
                 <button
@@ -695,7 +696,7 @@ function ConfiguracoesPage() {
                     setConfirmarSenha("");
                     setSenhaErro(null);
                   }}
-                  className="font-sans text-[13px] text-[var(--ink)] border border-[var(--line)] rounded-xl px-4 py-2 hover:bg-[var(--surface)] transition-colors"
+                  className={BTN_ACAO_CONTORNO}
                 >
                   Cancelar
                 </button>
@@ -703,7 +704,7 @@ function ConfiguracoesPage() {
                   type="button"
                   onClick={alterarSenha}
                   disabled={novaSenha.length < 8 || novaSenha !== confirmarSenha}
-                  className="font-sans text-[13px] font-semibold text-[var(--secondary-ink)] bg-[var(--secondary)] rounded-xl px-4 py-2 hover:bg-[var(--secondary)] transition-colors disabled:opacity-40"
+                  className={BTN_ACAO}
                 >
                   Salvar nova senha
                 </button>
@@ -711,9 +712,7 @@ function ConfiguracoesPage() {
             </div>
           )}
           {senhaOk && (
-            <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mt-3">
-              senha atualizada.
-            </p>
+            <p className="font-sans text-[15px] text-[var(--ink-soft)] mt-3">Senha atualizada.</p>
           )}
         </Secao>
 
@@ -751,7 +750,7 @@ function ConfiguracoesPage() {
             <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 font-semibold text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
+                  <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 text-[10px] font-accent font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
                     {NOME_PLANO[plano] ?? plano}
                   </span>
                   <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
@@ -779,23 +778,20 @@ function ConfiguracoesPage() {
 
           {!assinaturaQuery.isLoading && !assinatura?.ativa && plano !== "beta" && (
             <>
-              <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
+              <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
                 {plano === "cancelada"
-                  ? "sua assinatura foi cancelada. assine de novo quando quiser."
+                  ? "Sua assinatura foi cancelada. Dá pra assinar de novo quando quiser."
                   : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
               </p>
-              <LinkInterno
-                href="/assinar"
-                className="inline-block rounded-xl bg-[var(--secondary)] px-5 py-2.5 font-sans text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-colors hover:opacity-90"
-              >
+              <LinkInterno href="/assinar" className={BTN_ACAO}>
                 Ver planos
               </LinkInterno>
             </>
           )}
 
           {!assinaturaQuery.isLoading && !assinatura?.ativa && plano === "beta" && (
-            <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)]">
-              plano de lançamento: acesso completo, sem cobrança.
+            <p className="font-sans text-[15px] text-[var(--ink-soft)]">
+              Plano de lançamento: acesso completo, sem cobrança.
             </p>
           )}
 
@@ -808,7 +804,7 @@ function ConfiguracoesPage() {
                 type="button"
                 onClick={abrirPortal}
                 disabled={portalCobrancaMutation.isPending}
-                className="rounded-xl border border-[var(--secondary)] px-4 py-2 font-sans text-[13px] text-[var(--secondary-text)] transition-colors hover:bg-[var(--secondary-light)] disabled:opacity-50"
+                className={BTN_MIUDO}
               >
                 {portalCobrancaMutation.isPending ? "Abrindo..." : "Gerenciar assinatura"}
               </button>
@@ -817,7 +813,7 @@ function ConfiguracoesPage() {
               <button
                 type="button"
                 onClick={() => setConfirmandoCancelamento(true)}
-                className="rounded-xl border border-[var(--line)] px-4 py-2 font-sans text-[13px] text-[var(--ink-soft)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)]"
+                className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
               >
                 Cancelar assinatura
               </button>
@@ -870,23 +866,17 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 7 — AJUDA */}
         <Secao titulo="Ajuda">
-          <p className="font-fraunces italic text-[15px] text-[var(--ink-soft)] mb-4">
-            dúvida rápida, a Ajuda responde. Coisa que precisa de acompanhamento, abre um chamado.
+          <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
+            Dúvida rápida, a Ajuda responde. Coisa que precisa de acompanhamento, abre um chamado.
           </p>
           <div className="flex flex-wrap gap-2">
-            <LinkInterno
-              href="/ajuda#contato"
-              className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
-            >
+            <LinkInterno href="/ajuda#contato" className={BTN_MIUDO}>
               Central de ajuda
             </LinkInterno>
-            <LinkInterno
-              href="/chamados"
-              className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] no-underline transition-colors hover:border-[var(--secondary)]"
-            >
+            <LinkInterno href="/chamados" className={BTN_MIUDO}>
               Seus chamados
             </LinkInterno>
-            <BotaoReverTour className="rounded-xl border border-[var(--line)] bg-white px-4 py-2 font-sans text-[13px] text-[var(--ink)] transition-colors hover:border-[var(--secondary)]" />
+            <BotaoReverTour className={BTN_MIUDO} />
           </div>
         </Secao>
 
@@ -901,7 +891,7 @@ function ConfiguracoesPage() {
             <button
               type="button"
               onClick={() => setExcluindoConta(true)}
-              className="mt-4 rounded-xl border border-[var(--danger)] bg-white px-4 py-2 font-sans text-[13px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger)] hover:text-white"
+              className={`${BTN_MIUDO} mt-4 bg-white !border-[var(--danger)] !text-[var(--danger)]`}
             >
               Excluir conta
             </button>
@@ -926,7 +916,7 @@ function ConfiguracoesPage() {
                     setExcluindoConta(false);
                     setConfirmacaoExclusao("");
                   }}
-                  className="font-sans text-[13px] text-[var(--ink)] border border-[var(--line)] rounded-xl px-4 py-2 hover:bg-white transition-colors"
+                  className={BTN_ACAO_CONTORNO}
                 >
                   Cancelar
                 </button>
@@ -934,7 +924,7 @@ function ConfiguracoesPage() {
                   type="button"
                   onClick={pedirExclusao}
                   disabled={!confirmacaoBate || excluindo}
-                  className="rounded-xl border border-[var(--danger)] bg-white px-4 py-2 font-sans text-[13px] font-medium text-[var(--danger)] transition-colors hover:bg-[var(--danger)] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:text-[var(--danger)]"
+                  className={`${BTN_ACAO_CONTORNO} bg-white !border-[var(--danger)] !text-[var(--danger)]`}
                 >
                   {excluindo ? "Excluindo..." : "Excluir de vez"}
                 </button>
@@ -1040,12 +1030,12 @@ function Campo({
         {associavel ? (
           <label
             htmlFor={id}
-            className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]"
+            className="text-[12px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]"
           >
             {label}
           </label>
         ) : (
-          <span className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+          <span className="text-[12px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
             {label}
           </span>
         )}

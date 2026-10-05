@@ -13,6 +13,7 @@ import {
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
 import { Campo } from "@/components/ui/Campo";
+import { BTN_ACAO } from "@/lib/botoes";
 import { fmt, hojeISODate, num, type Prefill, type Produto } from "./tipos";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
@@ -388,7 +389,7 @@ export function Calculadora({
           <button
             type="button"
             onClick={onCancelarRecalculo}
-            className="shrink-0 font-medium underline hover:opacity-80"
+            className="inline-flex min-h-11 shrink-0 items-center font-medium underline hover:opacity-80"
           >
             Cancelar
           </button>
@@ -407,12 +408,13 @@ export function Calculadora({
           return (
             <button
               key={p.id}
+              type="button"
               id={`calc-tab-${p.id}`}
               role="tab"
               aria-selected={ativo}
               aria-controls={`calc-painel-${p.id}`}
               onClick={() => setPerfil(p.id)}
-              className={`rounded-full px-4 py-2 text-[13px] ${
+              className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
                 ativo
                   ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
                   : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
@@ -424,12 +426,13 @@ export function Calculadora({
         })}
         {ehProjete ? (
           <button
+            type="button"
             id="calc-tab-encomenda"
             role="tab"
             aria-selected={perfil === "encomenda"}
             aria-controls="calc-painel-encomenda"
             onClick={() => setPerfil("encomenda")}
-            className={`rounded-full px-4 py-2 text-[13px] ${
+            className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
               perfil === "encomenda"
                 ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
                 : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
@@ -441,7 +444,7 @@ export function Calculadora({
           <Link
             to="/upgrade"
             search={{ rota: "/calculadora", tier: "projete" }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2 text-[13px] text-[var(--muted)] no-underline hover:border-[var(--secondary)]"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--line)] px-4 py-2 text-[13px] text-[var(--muted)] no-underline hover:border-[var(--secondary)]"
           >
             <Lock size={13} aria-hidden="true" />
             Encomenda (sob medida)
@@ -521,7 +524,7 @@ export function Calculadora({
           )}
 
           <div className="mt-6">
-            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
               Materiais
             </p>
             <div className="mt-3 space-y-2">
@@ -553,38 +556,44 @@ export function Calculadora({
                   { id: novoId(), nome: "", quantidade: "1", custoUnitario: "" },
                 ])
               }
-              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+              className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
             >
               <Plus size={14} aria-hidden="true" />
-              adicionar material
+              Adicionar material
             </button>
           </div>
 
           <GrupoCalc titulo="Seu trabalho">
-            <label className="block">
-              <span className="mb-1 block text-[12px] text-[var(--muted)]">
+            {/* <div> + <label htmlFor>, não <label> envolvendo o botão "usar como
+                padrão": o texto dele entrava no nome acessível do campo. */}
+            <div>
+              <label
+                htmlFor="calc-valor-hora-encomenda"
+                className="mb-1 block text-[12px] text-[var(--muted)]"
+              >
                 Valor da sua hora (R$)
-              </span>
+              </label>
               <input
+                id="calc-valor-hora-encomenda"
                 ref={valorHoraFocusRef}
                 type="number"
                 inputMode="decimal"
                 value={valorHora}
                 onChange={(e) => setValorHora(e.target.value)}
                 disabled={valorHoraPadraoCarregando && !valorHora}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none disabled:bg-[var(--surface)]"
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
                 placeholder={valorHoraPadraoCarregando && !valorHora ? "carregando..." : "0"}
               />
               {ehProjete && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
                 <button
                   type="button"
                   onClick={salvarValorHoraPadrao}
-                  className="mt-1 text-[11px] font-medium text-[var(--secondary-text)] hover:underline"
+                  className="inline-flex min-h-11 items-center text-[12px] font-medium text-[var(--secondary-text)] hover:underline"
                 >
                   {valorHoraSalvo ? "valor-hora padrão salvo" : "usar como meu valor-hora padrão"}
                 </button>
               )}
-            </label>
+            </div>
             <CampoNum label="Horas estimadas" value={horas} onChange={setHoras} />
           </GrupoCalc>
           {encomendaSemValorHora && (
@@ -593,7 +602,7 @@ export function Calculadora({
               <button
                 type="button"
                 onClick={() => valorHoraFocusRef.current?.focus()}
-                className="font-medium underline"
+                className="inline-flex min-h-11 items-center font-medium underline"
               >
                 Definir valor por hora
               </button>
@@ -601,7 +610,7 @@ export function Calculadora({
           )}
 
           <div className="mt-6">
-            <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
               Custos extras
             </p>
             <div className="mt-3 space-y-2">
@@ -621,10 +630,10 @@ export function Calculadora({
               onClick={() =>
                 setItensExtras((lista) => [...lista, { id: novoId(), descricao: "", valor: "" }])
               }
-              className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+              className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
             >
               <Plus size={14} aria-hidden="true" />
-              adicionar custo extra
+              Adicionar custo extra
             </button>
           </div>
 
@@ -648,7 +657,7 @@ export function Calculadora({
       {!encomendaVazia && (
         <>
           <div className="mt-8 rounded-xl bg-[var(--secondary-light)] p-5">
-            <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--secondary-text)]">
+            <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--secondary-text)]">
               Preço sugerido
             </p>
             <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
@@ -735,13 +744,18 @@ export function Calculadora({
             )}
           </div>
 
-          {erro && <p className="mt-4 text-[13px] text-[var(--danger)]">{erro}</p>}
+          {erro && (
+            <p role="alert" className="mt-4 text-[13px] text-[var(--danger)]">
+              {erro}
+            </p>
+          )}
 
           {/* Salvar */}
           <button
+            type="button"
             onClick={salvar}
             disabled={salvando || (salvarBloqueado && !produtoRecalcular)}
-            className="mt-4 rounded-xl border border-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-text)] hover:bg-[var(--secondary-light)] disabled:opacity-50"
+            className={`${BTN_ACAO} mt-4`}
           >
             {salvando
               ? "Salvando..."
@@ -779,7 +793,7 @@ function CampoNum({
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+        className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         placeholder="0"
       />
     </Campo>
@@ -789,7 +803,7 @@ function CampoNum({
 function GrupoCalc({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <div className="mt-6">
-      <p className="text-[10px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+      <p className="text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
         {titulo}
       </p>
       <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
@@ -832,8 +846,9 @@ function LinhaMaterial({
         <input
           value={item.nome}
           onChange={(e) => onChange({ ...item, nome: e.target.value })}
+          aria-label="Nome do material"
           placeholder="Ex: Farinha"
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         />
         <CampoNum
           label="Quantidade"
@@ -887,8 +902,9 @@ function LinhaExtra({
         <input
           value={item.descricao}
           onChange={(e) => onChange({ ...item, descricao: e.target.value })}
+          aria-label="Descrição do custo extra"
           placeholder="Ex: Embalagem especial"
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary)] focus:shadow-[0_0_0_3px_var(--secondary-light)] focus:outline-none"
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         />
         <CampoNum
           label="Valor (R$)"

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/planejamento/")({
       { title: "Planejamento · Pólia" },
       {
         name: "description",
-        content: "A base do negócio, construída no ritmo de quem toca ele.",
+        content: "A base do negócio num documento vivo, que vira preço, lucro e meta.",
       },
     ],
   }),
@@ -580,10 +580,10 @@ function PlanejamentoPage() {
                         <div>
                           {/* O nome do módulo é o rótulo do bloco: sobe pra
                                 <h2> em --ink e o "MÓDULO N" fica como eyebrow. */}
-                          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+                          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                             Módulo {m.n}
                           </p>
-                          <h2 className="mt-1 text-[20px] leading-tight text-[var(--ink)]">
+                          <h2 className="font-cabinet mt-1 text-[20px] leading-tight text-[var(--ink)]">
                             {m.nome}
                           </h2>
                           {temAlgo && (
@@ -646,7 +646,7 @@ function PlanejamentoPage() {
                 vazio para cada um. Dá noção de caminho sem simular conteúdo. */}
           {moduloAtual < TOTAL_MODULOS && (
             <div className="mt-12 border-t border-[var(--line)] pt-8">
-              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
+              <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                 O que vem depois
               </p>
               <ul className="mt-4 flex list-none flex-col">
@@ -701,7 +701,7 @@ function PlanejamentoPage() {
 
 function Rotulo({ campo }: { campo: string }) {
   return (
-    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+    <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
       {CAMPO_LABEL[campo] ?? campo}
     </p>
   );
@@ -819,7 +819,7 @@ function BlocoView({
     if (metasAtivas.length === 0) return null;
     return (
       <div className="mb-8 rounded-2xl bg-[var(--surface)] p-6">
-        <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="mb-4 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Suas metas ativas agora
         </p>
         {metasAtivas.map((m) => (
@@ -929,7 +929,7 @@ function MetaTrack({
 
   return (
     <div className="mb-8 rounded-2xl bg-[var(--surface)] p-6">
-      <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+      <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
         Onde o negócio está agora
       </p>
       <div className="relative mx-1 my-9 h-3.5 rounded-lg border border-[var(--line)] bg-white">
@@ -1002,7 +1002,7 @@ function CanalChips({
   const principalLower = (canalPrincipal ?? "").toLowerCase();
   return (
     <div className="mb-6">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+      <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
         Seus canais
       </p>
       <div className="flex flex-wrap gap-2">
@@ -1014,7 +1014,7 @@ function CanalChips({
               className={`rounded-lg border px-3 py-1.5 text-[13px] transition-colors duration-150 ${
                 prio
                   ? "border-[var(--accent)] bg-[var(--surface-pink)] font-medium text-[var(--accent-ink)]"
-                  : "border-[var(--line)] bg-white text-[var(--ink-soft)] hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
+                  : "border-[var(--line)] bg-white text-[var(--ink-soft)]"
               }`}
             >
               {nome}
@@ -1073,7 +1073,7 @@ function Timeline({ steps }: { steps: { quando: string; texto: string }[] }) {
           className="group relative border-l-2 border-[var(--line)] pl-4 sm:border-l-0 sm:border-t-2 sm:pr-4 sm:pl-0 sm:pt-4"
         >
           <span className="absolute -left-[5px] top-0 h-[10px] w-[10px] rounded-full border-2 border-[var(--muted)] bg-[var(--bg)] transition-colors duration-200 group-hover:border-[var(--secondary)] group-hover:bg-[var(--secondary-light)] sm:-top-[5px] sm:left-0" />
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
             {s.quando}
           </p>
           <p className="mt-1 whitespace-pre-line text-[14px] leading-relaxed text-[var(--ink-soft)]">
@@ -1089,7 +1089,7 @@ function FirstAction({ acao, data }: { acao: string; data?: string }) {
   return (
     <div className="mt-8 flex items-baseline justify-between gap-4 rounded-r-lg border-l-[3px] border-[var(--secondary)] bg-white py-3 pl-4 pr-3">
       <div>
-        <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+        <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Sua primeira ação
         </p>
         <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-[var(--ink-soft)]">

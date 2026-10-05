@@ -139,7 +139,10 @@ function CalculadoraPage() {
       {produtoId && !produtoRecalcular && (
         <p className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
           A Pólia não encontrou esse produto no seu catálogo. A calculadora abre em branco.{" "}
-          <Link to="/produtos" className="font-medium text-[var(--secondary-text)] no-underline">
+          <Link
+            to="/produtos"
+            className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+          >
             Ver meus produtos
           </Link>
         </p>
@@ -152,7 +155,7 @@ function CalculadoraPage() {
           <Link
             to="/assinar"
             search={{ plano: "controle" }}
-            className="font-medium text-[var(--secondary-text)] no-underline"
+            className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
           >
             Assinar o Premium
           </Link>

@@ -39,9 +39,9 @@ export const PASSOS_TOUR: PassoTour[] = [
   {
     alvo: "aimer",
     lado: "right",
-    titulo: "Deu branco? Chama a Aimer",
+    titulo: "Deu branco? Pede ajuda aqui",
     texto:
-      "Ela ajuda a escrever as respostas do Planejamento e tira dúvida sobre o negócio. O texto final continua sendo seu.",
+      "O Assistente ajuda a escrever as respostas do Planejamento e tira dúvida sobre o negócio. O texto final continua sendo seu.",
   },
   {
     alvo: "acao-principal",
@@ -78,7 +78,7 @@ export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
     "Ideia solta, anotação de reunião, aquele insight que chega no banho. Tem lugar pra isso aqui.",
   planner: "Um quadro pra cada projeto, pra lançamento e campanha não morarem só na cabeça.",
   "plano-conteudo":
-    "A Aimer monta um ano de ideias de post a partir do Planejamento, e o post do dia fica em destaque.",
+    "A Pólia One monta um ano de ideias de post a partir do Planejamento, e o post do dia fica em destaque.",
   calendario: "Prazos das tarefas e compromissos do Google Calendar, o mês inteiro numa tela só.",
 };
 

@@ -15,6 +15,7 @@ import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { TourBoasVindas } from "@/components/dicas/TourBoasVindas";
+import { BTN_ACAO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -86,9 +87,6 @@ const SPAN_CLASS: Record<number, string> = {
   12: "col-span-12",
 };
 
-const BOTAO_PRIMARIO =
-  "inline-flex items-center justify-center gap-2 rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform hover:-translate-y-px";
-
 // Quantas tarefas cada grupo mostra antes de mandar pro Planner. Sem teto, uma
 // usuária com 26 atrasadas ganhava um cartão de 1.328px e uma parede vermelha
 // na abertura do painel.
@@ -106,7 +104,7 @@ function upgradeHref(rota: string) {
  */
 function SeloControle() {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--line)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[var(--line)] px-1.5 py-0.5 text-[10px] font-accent font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
       <Lock size={10} aria-hidden="true" />
       no Premium
     </span>
@@ -568,7 +566,7 @@ function PainelPage() {
             <LinkInterno
               href={acaoPrincipal.href}
               data-tour="acao-principal"
-              className={`${BOTAO_PRIMARIO} mt-5`}
+              className={`${BTN_ACAO} mt-5`}
             >
               {acaoPrincipal.texto}
               <span aria-hidden="true">→</span>
@@ -578,7 +576,7 @@ function PainelPage() {
               type="button"
               onClick={() => setRegistroAberto(true)}
               data-tour="acao-principal"
-              className={`${BOTAO_PRIMARIO} mt-5`}
+              className={`${BTN_ACAO} mt-5`}
             >
               {acaoPrincipal.texto}
               <span aria-hidden="true">→</span>
@@ -589,7 +587,7 @@ function PainelPage() {
           <div className="mt-6 max-w-[560px]">
             <p
               id="intencao-dia-rotulo"
-              className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]"
+              className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]"
             >
               {intencaoSalva && !editandoIntencao
                 ? "Intenção de hoje"
@@ -614,7 +612,7 @@ function PainelPage() {
                   }}
                   placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
                   aria-labelledby="intencao-dia-rotulo"
-                  className="h-11 flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary)]"
+                  className="h-11 flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary-text)]"
                 />
                 <button
                   type="button"
@@ -671,7 +669,7 @@ function PainelPage() {
             {/* Linha de contexto */}
             <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--line)] py-4">
               <div className="flex items-center gap-3">
-                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                   Dia no planejamento
                 </span>
                 <span className="font-cabinet rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
@@ -679,7 +677,7 @@ function PainelPage() {
                 </span>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                   Status
                 </span>
                 <span className="text-[15px] text-[var(--ink-soft)]">
@@ -697,7 +695,7 @@ function PainelPage() {
                 </LinkInterno>
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--muted)]">
+                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                   Presença
                 </span>
                 <span className="text-[15px] text-[var(--ink-soft)]">
@@ -714,7 +712,7 @@ function PainelPage() {
             <div className="mt-6">
               <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                  <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Quanto sobrou · mês
                   </TituloCartao>
                   {!financeiroLiberado && <SeloControle />}
@@ -752,7 +750,7 @@ function PainelPage() {
             <div className="mt-6 grid grid-cols-12 gap-4">
               <div className={SPAN_CLASS[4]}>
                 <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
-                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                  <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Receita · mês
                   </TituloCartao>
                   <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
@@ -792,7 +790,7 @@ function PainelPage() {
 
               <div className={SPAN_CLASS[4]}>
                 <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
-                  <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                  <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Pedidos · mês
                   </TituloCartao>
                   <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
@@ -816,7 +814,7 @@ function PainelPage() {
                   className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <TituloCartao className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                       Clientes
                     </TituloCartao>
                     {!clientesLiberado && <SeloControle />}
@@ -1012,7 +1010,7 @@ function PainelPage() {
                   href={destino("/calendario", calendarioLiberado)}
                   className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-white px-5 py-4 text-[14px] text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)]"
                 >
-                  <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
                     Calendário
                   </span>
                   <span>
@@ -1088,7 +1086,7 @@ function GrupoTarefasPainel({
         <LinkInterno
           href={link}
           title={linkTitulo}
-          className={`mb-1 inline-block text-[10px] font-semibold uppercase tracking-[0.14em] no-underline hover:underline ${
+          className={`mb-1 inline-block text-[10px] font-accent font-bold uppercase tracking-[0.14em] no-underline hover:underline ${
             corTitulo ?? "text-[var(--muted)] hover:text-[var(--ink-soft)]"
           }`}
         >
@@ -1096,7 +1094,7 @@ function GrupoTarefasPainel({
         </LinkInterno>
       ) : (
         <p
-          className={`mb-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+          className={`mb-1 text-[10px] font-accent font-bold uppercase tracking-[0.14em] ${
             corTitulo ?? "text-[var(--muted)]"
           }`}
         >

@@ -31,7 +31,7 @@ export function DocumentoFerramenta({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-16 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)]"
+              className="h-16 animate-pulse rounded-[var(--radius-md)] bg-[var(--surface)] motion-reduce:animate-none"
             />
           ))}
         </div>

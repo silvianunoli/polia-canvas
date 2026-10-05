@@ -26,14 +26,14 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
                   700), o mesmo padrão do Rotulo de /planejamento e do Campo de
                   /configuracoes. Continua <h2> pelo sumário da página, com
                   font-accent porque Cabinet Grotesk é só de texto grande. */}
-              <h2 className="font-accent text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+              <h2 className="text-[12px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                 {CAMPO_LABEL[campo] ?? campo}
               </h2>
               {secId && moduloN && (
                 <LinkInterno
                   href={`/planejamento/modulo/${moduloN}?secao=${secId}`}
                   aria-label={`Editar ${CAMPO_LABEL[campo] ?? campo}`}
-                  className="shrink-0 text-[var(--muted)] hover:text-[var(--secondary-text)]"
+                  className="-my-3 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:text-[var(--secondary-text)]"
                 >
                   <Pencil size={14} aria-hidden="true" />
                 </LinkInterno>

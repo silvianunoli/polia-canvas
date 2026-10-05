@@ -62,7 +62,7 @@ const MESES_NOME = [
   "dezembro",
 ];
 
-const VOZ_SISTEMA = `Você é a Aimer, a cara da marca da Pólia, ajudando Ana (empreendedora, pequeno negócio) a nunca ficar sem ideia do que postar.
+const VOZ_SISTEMA = `Você é a assistente da Pólia One, ajudando Ana (empreendedora, pequeno negócio) a nunca ficar sem ideia do que postar.
 
 Regras (obrigatórias):
 - Indicativo em 3ª pessoa: nunca "você" como sujeito. Tom de conversa de café, direto.

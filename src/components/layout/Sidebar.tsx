@@ -39,7 +39,7 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 // o planejamento + as ferramentas de trabalho do dia a dia.
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
-  { to: "/aimer", label: "Aimer", icon: Sparkles },
+  { to: "/aimer", label: "Assistente", icon: Sparkles },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/calculadora", label: "Calculadora", icon: Calculator },
@@ -113,7 +113,7 @@ function Body({
                     type="button"
                     onClick={() => onCollapsedChange(true)}
                     aria-label="Recolher menu"
-                    className="hidden h-7 w-7 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink-soft)] md:flex"
+                    className="-my-2 -mr-2 hidden h-11 w-11 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--bg)] hover:text-[var(--ink-soft)] md:flex"
                   >
                     <ChevronsLeft size={16} aria-hidden="true" />
                   </button>
@@ -192,7 +192,7 @@ function Body({
                 className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
                   active
                     ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
-                    : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                    : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
                 } ${compact ? "justify-center" : ""}`}
               >
                 <Icon size={18} aria-hidden="true" />
@@ -207,7 +207,7 @@ function Body({
                 data-tour={item.to.slice(1)}
                 data-track="nav_bloqueado_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
-                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
+                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--bg)] ${
                   compact ? "justify-center" : ""
                 }`}
               >
@@ -252,7 +252,7 @@ function Body({
             className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
               configAtiva
                 ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
-                : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
+                : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
             } ${compact ? "justify-center" : ""}`}
           >
             <Settings size={18} aria-hidden="true" />
@@ -262,7 +262,7 @@ function Body({
             type="button"
             onClick={signOut}
             data-track="sair_clicado"
-            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-left text-[13px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-left text-[13px] text-[var(--ink-soft)] hover:bg-[var(--bg)] ${compact ? "justify-center" : ""}`}
           >
             <LogOut size={18} aria-hidden="true" />
             <span className={compact ? "sr-only" : undefined}>Sair</span>
@@ -272,7 +272,7 @@ function Body({
               type="button"
               onClick={() => onCollapsedChange(false)}
               aria-label="Expandir menu"
-              className="hidden md:flex min-h-8 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--surface)]"
+              className="hidden md:flex min-h-11 items-center justify-center rounded-lg px-3 text-[var(--muted)] hover:bg-[var(--bg)]"
             >
               <ChevronsRight size={18} aria-hidden="true" />
             </button>
@@ -324,7 +324,7 @@ export function Sidebar() {
             <button
               type="button"
               aria-label="Abrir menu"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-[var(--ink)] hover:bg-[var(--surface)]"
+              className="flex h-11 w-11 items-center justify-center rounded-lg text-[var(--ink)] hover:bg-[var(--bg)]"
             >
               <Menu size={22} aria-hidden="true" />
             </button>

@@ -114,16 +114,12 @@ function ProdutosPage() {
       subtitulo="O que você vende, quanto custa e quanto sobra em cada venda."
     >
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={abrirAdicionar}
-          disabled={cotaAtingida}
-          className="rounded-xl bg-[var(--secondary)] px-4 py-2.5 font-medium text-[var(--secondary-ink)] hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-        >
+        <button type="button" onClick={abrirAdicionar} disabled={cotaAtingida} className={BTN_ACAO}>
           + Adicionar produto
         </button>
         <Link
           to="/calculadora"
-          className="text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+          className="inline-flex min-h-11 items-center text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
         >
           Calcular um preço na Calculadora
         </Link>
@@ -136,7 +132,7 @@ function ProdutosPage() {
           <Link
             to="/assinar"
             search={{ plano: "controle" }}
-            className="font-medium text-[var(--secondary-text)] no-underline"
+            className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
           >
             Assinar o Premium
           </Link>
@@ -244,7 +240,7 @@ function ProdutoCard({
   return (
     <div className="group relative rounded-xl border border-[var(--line)] bg-white p-4">
       {/* Menu de contexto */}
-      <div className="absolute right-1 top-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100">
+      <div className="absolute right-1 top-1 opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100">
         <MenuOpcoes
           itens={[
             { label: "Editar", icone: Pencil, onClick: onEditar, desabilitado: somenteLeitura },

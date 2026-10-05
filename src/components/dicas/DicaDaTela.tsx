@@ -33,7 +33,7 @@ export function DicaDaTela({
       <button
         type="button"
         onClick={() => marcar(chave)}
-        className="-my-1 min-h-9 shrink-0 rounded-lg px-3 text-[13px] font-medium text-[var(--secondary-text)] transition-colors hover:bg-[var(--bg)]"
+        className="-my-2.5 min-h-11 shrink-0 rounded-lg px-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
       >
         Entendi
       </button>
