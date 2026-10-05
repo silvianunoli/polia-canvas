@@ -23,7 +23,7 @@ export interface PassoTour {
   /** Valor do `data-tour` do elemento que o balão aponta. */
   alvo: string;
   /** Lado do alvo em que o balão abre (quando o alvo está visível). */
-  lado: "right" | "bottom";
+  lado: "right" | "bottom" | "top";
   titulo: string;
   texto: string;
 }
@@ -38,10 +38,10 @@ export const PASSOS_TOUR: PassoTour[] = [
   },
   {
     alvo: "aimer",
-    lado: "right",
-    titulo: "Deu branco? Pede ajuda aqui",
+    lado: "top",
+    titulo: "Deu branco? Chama o Assistente",
     texto:
-      "O Assistente ajuda a escrever as respostas do Planejamento e tira dúvida sobre o negócio. O texto final continua sendo seu.",
+      "Esse balão abre o Assistente, em qualquer tela. Ele tira dúvida sobre o negócio e sobre como usar a Pólia One.",
   },
   {
     alvo: "acao-principal",

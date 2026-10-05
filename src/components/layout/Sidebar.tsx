@@ -16,7 +16,6 @@ import {
   LogOut,
   CalendarDays,
   Lock,
-  Sparkles,
   TrendingUp,
   Stethoscope,
   Megaphone,
@@ -38,7 +37,6 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 // o planejamento + as ferramentas de trabalho do dia a dia.
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
-  { to: "/aimer", label: "Assistente", icon: Sparkles },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
   { to: "/calculadora", label: "Calculadora", icon: Calculator },

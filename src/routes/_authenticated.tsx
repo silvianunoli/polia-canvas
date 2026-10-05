@@ -9,6 +9,8 @@ import {
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
+import { AssistenteProvider } from "@/components/assistente/AssistenteContext";
+import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada } from "@/lib/planos";
 
@@ -97,26 +99,29 @@ function AuthenticatedLayout() {
   useEffect(() => montarHeartbeat(), []);
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <a href="#main-content" className="skip-link">
-        Pular para o conteúdo
-      </a>
-      {/* Onboarding é tela cheia, sem barra lateral (decisão da Sil, 05/10/2026):
+    <AssistenteProvider>
+      <div className="flex min-h-screen flex-col md:flex-row">
+        <a href="#main-content" className="skip-link">
+          Pular para o conteúdo
+        </a>
+        {/* Onboarding é tela cheia, sem barra lateral (decisão da Sil, 05/10/2026):
           com o menu à vista dava pra sair no meio do fluxo. */}
-      {pathname !== "/onboarding" && <Sidebar />}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <main id="main-content" tabIndex={-1} className="flex-1">
-          <Outlet />
-        </main>
+        {pathname !== "/onboarding" && <Sidebar />}
+        <div className="flex min-w-0 flex-1 flex-col">
+          <main id="main-content" tabIndex={-1} className="flex-1">
+            <Outlet />
+          </main>
+        </div>
+        <LembretePlanejamento pathname={pathname} />
+        <AssistenteFlutuante pathname={pathname} />
+        {csatPulso.mostrar && (
+          <CsatPrompt
+            pergunta="Como está sendo usar a Pólia One?"
+            onFechar={csatPulso.fechar}
+            onEnviar={csatPulso.enviar}
+          />
+        )}
       </div>
-      <LembretePlanejamento pathname={pathname} />
-      {csatPulso.mostrar && (
-        <CsatPrompt
-          pergunta="Como está sendo usar a Pólia One?"
-          onFechar={csatPulso.fechar}
-          onEnviar={csatPulso.enviar}
-        />
-      )}
-    </div>
+    </AssistenteProvider>
   );
 }

@@ -40,7 +40,7 @@ export function CsatPrompt({
   };
 
   return (
-    <div className="polia-v3 fixed bottom-6 right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-card-hover)]">
+    <div className="polia-v3 fixed bottom-[92px] right-6 z-40 w-[min(340px,calc(100vw-2rem))] rounded-[var(--radius-xl)] border border-[var(--line)] bg-white p-5 shadow-[var(--shadow-card-hover)]">
       <button
         type="button"
         onClick={onFechar}

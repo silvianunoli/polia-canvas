@@ -255,6 +255,10 @@ function RootComponent() {
       )}
       <Toaster
         position="bottom-right"
+        // Acima do balão do Assistente (56px + 24px de margem), que mora no
+        // mesmo canto desde 05/10/2026.
+        offset={{ bottom: 92, right: 24 }}
+        mobileOffset={{ bottom: 88, right: 16 }}
         theme="light"
         toastOptions={{
           classNames: {
