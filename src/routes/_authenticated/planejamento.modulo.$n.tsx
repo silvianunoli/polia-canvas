@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_PRIMARIO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
@@ -568,7 +568,13 @@ function SecaoForm({
                     : undefined
                 }
                 aria-invalid={erroGeracao[i] ? true : undefined}
-                className="min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] border border-[var(--line)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
+                // Rascunho de IA ainda não aceito: borda tracejada turquesa, pra
+                // não parecer texto final dela (pedido da Sil, 05/10/2026).
+                className={`min-h-[96px] w-full resize-y rounded-[var(--radius-sm)] bg-white px-3 py-3 text-[15px] leading-relaxed text-[var(--ink)] focus:border-[var(--secondary-text)] focus:shadow-[inset_0_0_0_1px_var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)] ${
+                  rascunho[i] != null
+                    ? "border-[1.5px] border-dashed border-[var(--secondary-text)]"
+                    : "border border-[var(--line)]"
+                }`}
               />
 
               <div id={`pergunta-${i}-mensagem`} aria-live="polite">
@@ -615,17 +621,21 @@ function SecaoForm({
                     </button>
                   </p>
                 ) : rascunho[i] != null ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-3">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--secondary-light)] px-2.5 py-1 text-[11px] font-medium text-[var(--secondary-text)]">
-                      <Sparkles size={11} aria-hidden="true" />
-                      rascunho de IA
-                    </span>
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <p className="flex w-full items-center gap-1.5 text-[13px] text-[var(--ink-soft)]">
+                      <Sparkles
+                        size={13}
+                        aria-hidden="true"
+                        className="shrink-0 text-[var(--secondary-text)]"
+                      />
+                      Rascunho da Pólia One. Revise, ajuste o que quiser e confirme.
+                    </p>
                     <button
                       type="button"
                       onClick={() => usarRascunho(i)}
-                      className="inline-flex min-h-11 items-center px-1 text-[13px] font-semibold text-[var(--secondary-text)] hover:underline"
+                      className={`${BTN_MIUDO} !bg-[var(--secondary)]`}
                     >
-                      Usar
+                      Usar este rascunho
                     </button>
                     <button
                       type="button"
