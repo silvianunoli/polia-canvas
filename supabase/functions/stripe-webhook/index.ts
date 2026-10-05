@@ -22,12 +22,6 @@ const ADMIN_URL = "https://office.usepolia.com.br";
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// Client separado, apontando pro schema auth: é a forma direta de checar se um
-// e-mail já tem conta sem paginar admin.listUsers(). Service role já ignora RLS.
-const supabaseAuthSchema = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
-  db: { schema: "auth" },
-});
-
 const PRICE_TO_PLANO: Record<string, string> = {};
 // Legado: os primeiros price ids (só "Assinatura", sem plano diferenciado)
 // mapeiam pra "controle" — era o único plano pago que existia até 26/jul.
@@ -205,17 +199,21 @@ async function upsertAssinaturaDaSubscription(
   }
 }
 
+// Busca via função SQL (migration 20261005140000), não por .from("users") no
+// schema auth: a API não garante expor esse schema, e uma busca que falha em
+// silêncio faz quem JÁ tem conta parecer nova. O generateLink de convite então
+// falha com "já cadastrado" e a compra paga fica sem conta ligada (primeira
+// compra real, 05/10/2026). Erro aqui NÃO pode virar "não achei": joga, o
+// webhook devolve 500 e o Stripe reentrega.
 async function buscarUserIdPorEmail(email: string): Promise<string | null> {
-  const { data, error } = await supabaseAuthSchema
-    .from("users")
-    .select("id")
-    .eq("email", email.trim().toLowerCase())
-    .maybeSingle();
+  const { data, error } = await supabaseAdmin.rpc("buscar_user_id_por_email", {
+    p_email: email,
+  });
   if (error) {
     console.error("[stripe-webhook] Erro ao buscar usuária por e-mail:", error);
-    return null;
+    throw new Error(`Falha ao buscar usuária por e-mail: ${error.message}`);
   }
-  return (data as { id: string } | null)?.id ?? null;
+  return (data as string | null) ?? null;
 }
 
 async function enviarViaResend(
@@ -275,6 +273,28 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
     }),
     email,
     "e-mail de ativação",
+  );
+}
+
+// Quem comprou já tinha conta: não há senha pra criar, então o e-mail só
+// confirma a compra e leva pro login. Sem ele, a pessoa pagava e a tela de
+// "compra confirmada" prometia um link que nunca chegava.
+async function enviarEmailCompraContaExistente(email: string) {
+  await enviarViaResend(
+    "Sua compra foi confirmada",
+    `O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail (${email}).\n\n${SITE_URL}/auth/login\n\nSe não lembra a senha, use "Esqueci minha senha" na tela de entrada. Se não foi você quem comprou, responda a este e-mail.`,
+    emailPolia({
+      preheader: "O plano já está ativo na sua conta da Pólia One.",
+      headline: "Sua compra foi confirmada",
+      paragrafos: [
+        "O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail.",
+        'Se não lembra a senha, use "Esqueci minha senha" na tela de entrada.',
+      ],
+      ctaLabel: "Entrar na Pólia",
+      ctaUrl: `${SITE_URL}/auth/login`,
+    }),
+    email,
+    "e-mail de compra em conta existente",
   );
 }
 
@@ -384,6 +404,8 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
     }
     userId = data.user.id;
     await enviarEmailAtivacao(email, data.properties.action_link);
+  } else {
+    await enviarEmailCompraContaExistente(email);
   }
 
   try {

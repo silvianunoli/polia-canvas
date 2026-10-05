@@ -25,8 +25,8 @@ function CompraConfirmadaPage() {
             Compra confirmada.
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-[var(--ink-soft)]">
-            Confira seu e-mail nos próximos minutos: chega um link pra você criar sua senha e entrar
-            na Pólia pela primeira vez.
+            Confira seu e-mail nos próximos minutos: chega a confirmação da compra. Quem ainda não
+            tinha conta recebe também o link para criar a senha e entrar na Pólia pela primeira vez.
           </p>
           <p className="mt-3 text-[14px] text-[var(--muted)]">
             Não achou? Olha a caixa de spam. Se não chegar, escreve pra{" "}
