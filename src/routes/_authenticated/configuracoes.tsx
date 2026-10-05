@@ -154,23 +154,49 @@ function ConfiguracoesPage() {
     onError: () => toastErro("A Pólia não conseguiu desconectar agora."),
   });
 
-  // Portal da Stripe: sessão curta criada no servidor, a gente só redireciona.
-  // Nenhum dado de cartão passa pela Pólia.
+  // Portal da Stripe: sessão curta criada no servidor. Nenhum dado de cartão
+  // passa pela Pólia. Abre em NOVA ABA (pedido da Sil, 05/10/2026), e a aba
+  // nasce vazia no próprio clique: aberta só depois do await, o navegador
+  // trataria como pop-up e bloquearia. Se o bloqueio acontecer mesmo assim,
+  // cai no redirecionamento na mesma aba, que era o comportamento antigo.
+  const abaPortalRef = useRef<Window | null>(null);
+  const fecharAbaPortal = () => {
+    abaPortalRef.current?.close();
+    abaPortalRef.current = null;
+  };
   const portalCobrancaMutation = useMutation({
     mutationFn: () => abrirPortalCobranca(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
+        fecharAbaPortal();
         toastErro(
           res.error ?? "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
         );
         return;
       }
       track("portal_cobranca_aberto");
-      window.location.href = res.url;
+      const aba = abaPortalRef.current;
+      abaPortalRef.current = null;
+      if (aba && !aba.closed) aba.location.href = res.url;
+      else window.location.href = res.url;
     },
-    onError: () =>
-      toastErro("A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo."),
+    onError: () => {
+      fecharAbaPortal();
+      toastErro("A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.");
+    },
   });
+  const abrirPortal = () => {
+    const aba = window.open("", "_blank");
+    if (aba) {
+      // A página da Stripe não precisa (nem deve) alcançar esta aba.
+      aba.opener = null;
+      aba.document.title = "Abrindo a página da Stripe…";
+      aba.document.body.style.fontFamily = "Inter, system-ui, sans-serif";
+      aba.document.body.textContent = "Abrindo a página segura da Stripe…";
+    }
+    abaPortalRef.current = aba;
+    portalCobrancaMutation.mutate();
+  };
 
   const cancelar = async () => {
     setCancelando(true);
@@ -779,11 +805,11 @@ function ConfiguracoesPage() {
             {!assinaturaQuery.isLoading && assinatura?.temCobranca && (
               <button
                 type="button"
-                onClick={() => portalCobrancaMutation.mutate()}
+                onClick={abrirPortal}
                 disabled={portalCobrancaMutation.isPending}
                 className="rounded-xl border border-[var(--secondary)] px-4 py-2 font-sans text-[13px] text-[var(--secondary-text)] transition-colors hover:bg-[var(--secondary-light)] disabled:opacity-50"
               >
-                {portalCobrancaMutation.isPending ? "Abrindo..." : "Atualizar pagamento"}
+                {portalCobrancaMutation.isPending ? "Abrindo..." : "Gerenciar assinatura"}
               </button>
             )}
             {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && (
@@ -833,10 +859,10 @@ function ConfiguracoesPage() {
             )}
           </div>
 
-          {!assinaturaQuery.isLoading && assinatura?.temCobranca && !confirmandoCancelamento && (
+          {!assinaturaQuery.isLoading && assinatura?.temCobranca && (
             <p className="mt-3 max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
-              Trocar o cartão e ver as faturas acontece na página segura da Stripe, com volta pra cá
-              no fim.
+              Trocar o cartão, ver as faturas e mudar entre Premium e Pro acontece na página segura
+              da Stripe, que abre numa nova aba.
             </p>
           )}
         </Secao>
