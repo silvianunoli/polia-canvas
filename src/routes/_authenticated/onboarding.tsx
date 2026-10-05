@@ -6,9 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { gtagEvent } from "@/lib/gtag";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
-import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding · Pólia One" }] }),
@@ -114,9 +112,11 @@ function OnboardingPage() {
               onNext={() => setStep(4)}
             />
           )}
+          {/* O passo "quanto cobra e quanto custa" saiu em 05/10/2026 (decisão
+              da Sil): quase ninguém vende um produto só, e o número entra
+              depois, na Calculadora e em Produtos. */}
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
-          {step === 5 && <Step5Dinheiro state={state} onSuccess={() => setStep(6)} />}
-          {step === 6 && (
+          {step === 5 && (
             <StepFinal tipo={state.business_type} onFinish={() => navigate({ to: "/painel" })} />
           )}
         </div>
@@ -128,13 +128,9 @@ function OnboardingPage() {
 function StepIndicator({ step }: { step: number }) {
   return (
     <p className="text-center text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-      Passo {step} de 6
+      Passo {step} de 5
     </p>
   );
-}
-
-function fmt(v: number) {
-  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }
 
 function LogoPlaceholder() {
@@ -677,126 +673,6 @@ function Toggle({
           );
         })}
       </div>
-    </div>
-  );
-}
-
-/* ---------------- STEP 5 — Quanto cobra e quanto custa ---------------- */
-function tipoProdutoDe(tipo: BusinessType | null): "fisico" | "digital" | "servico" {
-  if (tipo === "produto_digital") return "digital";
-  if (tipo === "servico") return "servico";
-  return "fisico";
-}
-
-function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess: () => void }) {
-  const [preco, setPreco] = useState("");
-  const [custo, setCusto] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sobrou, setSobrou] = useState<number | null>(null);
-
-  const precoNum = parseFloat(preco.replace(",", ".")) || 0;
-  const custoNum = custo.trim() ? parseFloat(custo.replace(",", ".")) || 0 : null;
-
-  async function handleSubmit() {
-    if (precoNum <= 0) {
-      setError("Coloca um preço pra continuar.");
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    try {
-      const { data: sess } = await supabase.auth.getSession();
-      const userId = sess.session?.user.id;
-      if (!userId) throw new Error("Sessão expirou");
-      const nome = state.c1.trim() || state.business_name.trim() || "Meu primeiro produto";
-      const { error: insErr } = await supabase.from("produtos").insert({
-        user_id: userId,
-        nome,
-        tipo: tipoProdutoDe(state.business_type),
-        preco_venda: precoNum,
-        preco_custo: custoNum,
-      });
-      if (insErr) throw insErr;
-      track("onboarding_primeiro_produto", { com_custo: custoNum !== null });
-      void registrar("create_product", {
-        feature: "onboarding",
-        propriedades: { origem: "onboarding", com_custo: custoNum !== null },
-      });
-      // Ativação de verdade pro GA: primeira vez que a usuária vê "quanto
-      // sobra" na própria venda, não um clique genérico de onboarding.
-      gtagEvent("ativacao_viu_quanto_sobra", { com_custo: custoNum !== null });
-      setSobrou(calcularQuantoSobra({ precoVenda: precoNum, precoCusto: custoNum ?? 0 }));
-    } catch {
-      setError(
-        "A Pólia One não conseguiu salvar o preço. Tenta de novo, os números continuam aqui.",
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  if (sobrou !== null) {
-    return (
-      <div className="flex flex-col items-center gap-5 pt-6">
-        <LogoPlaceholder />
-        <Manuscrito>Olha aí o primeiro número no lugar</Manuscrito>
-        <Headline size={56}>Sobram {fmt(sobrou)} por venda</Headline>
-        <Body>Esse é o número que decide se o preço se paga.</Body>
-        <PrimaryCTA onClick={onSuccess}>Continuar →</PrimaryCTA>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-center gap-5 pt-6">
-      <LogoPlaceholder />
-      <Manuscrito>Marca no papel, agora o primeiro número</Manuscrito>
-      <Headline size={56}>Quanto cobra e quanto custa?</Headline>
-      <Body>
-        O preço de {state.c1.trim() || "o que você vende"}. Não precisa ser exato, dá pra ajustar
-        depois.
-      </Body>
-
-      <div className="flex w-full max-w-[420px] flex-col gap-5">
-        <label className="flex flex-col gap-2">
-          <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Preço de venda (R$)
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={preco}
-            onChange={(e) => setPreco(e.target.value)}
-            placeholder="0"
-            autoFocus
-            className={`${CAMPO_CLS} h-14`}
-          />
-        </label>
-        <label className="flex flex-col gap-2">
-          <span className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Quanto custa pra você fazer, se souber (R$)
-          </span>
-          <input
-            type="number"
-            inputMode="decimal"
-            value={custo}
-            onChange={(e) => setCusto(e.target.value)}
-            placeholder="opcional"
-            className={`${CAMPO_CLS} h-14`}
-          />
-        </label>
-      </div>
-
-      {error && (
-        <p role="alert" className="text-center text-[14px] text-[var(--danger)]">
-          {error}
-        </p>
-      )}
-
-      <PrimaryCTA onClick={handleSubmit} disabled={saving}>
-        {saving ? "Calculando..." : "Ver quanto sobra →"}
-      </PrimaryCTA>
     </div>
   );
 }
