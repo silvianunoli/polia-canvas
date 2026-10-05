@@ -1,6 +1,7 @@
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
+import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { supabase } from "@/integrations/supabase/client";
 import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
@@ -9,7 +10,7 @@ import { gtagEvent } from "@/lib/gtag";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
-  head: () => ({ meta: [{ title: "Onboarding · Pólia" }] }),
+  head: () => ({ meta: [{ title: "Onboarding · Pólia One" }] }),
   beforeLoad: async () => {
     if (typeof window === "undefined") return;
     const { data: sess } = await supabase.auth.getSession();
@@ -132,7 +133,7 @@ function fmt(v: number) {
 }
 
 function LogoPlaceholder() {
-  return <p className="text-center font-cabinet text-[27px] text-[var(--ink)]">Pólia</p>;
+  return <PoliaWordmark className="mx-auto h-8 w-auto" />;
 }
 
 function Manuscrito({ children }: { children: React.ReactNode }) {
