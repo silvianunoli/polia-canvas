@@ -187,13 +187,13 @@ function Body({
                 data-track="nav_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
                   active
                     ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
                     : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
                 } ${compact ? "justify-center" : ""}`}
               >
-                <Icon size={20} aria-hidden="true" />
+                <Icon size={18} aria-hidden="true" />
                 <span className={compact ? "sr-only" : undefined}>{item.label}</span>
               </Link>
             ) : (
@@ -204,7 +204,7 @@ function Body({
                 onClick={onNavigate}
                 data-track="nav_bloqueado_clicado"
                 data-track-props={JSON.stringify({ destino: item.to })}
-                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[14px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
+                className={`flex min-h-11 md:min-h-[26px] md:max-h-11 md:flex-[1_1_0] items-center gap-3 rounded-lg px-3 text-[13px] text-[var(--muted)] no-underline transition-colors hover:bg-[var(--surface)] ${
                   compact ? "justify-center" : ""
                 }`}
               >
@@ -215,7 +215,7 @@ function Body({
                   </>
                 ) : (
                   <>
-                    <Icon size={20} aria-hidden="true" />
+                    <Icon size={18} aria-hidden="true" />
                     <span className="flex flex-1 items-center justify-between gap-2">
                       {item.label}
                       <Lock size={14} aria-hidden="true" />
@@ -246,22 +246,22 @@ function Body({
             to="/configuracoes"
             onClick={onNavigate}
             aria-current={configAtiva ? "page" : undefined}
-            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[14px] no-underline transition-colors ${
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
               configAtiva
                 ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
                 : "text-[var(--ink-soft)] hover:bg-[var(--surface)]"
             } ${compact ? "justify-center" : ""}`}
           >
-            <Settings size={20} aria-hidden="true" />
+            <Settings size={18} aria-hidden="true" />
             <span className={compact ? "sr-only" : undefined}>Configurações</span>
           </Link>
           <button
             type="button"
             onClick={signOut}
             data-track="sair_clicado"
-            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-left text-[14px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-left text-[13px] text-[var(--ink-soft)] hover:bg-[var(--surface)] ${compact ? "justify-center" : ""}`}
           >
-            <LogOut size={20} aria-hidden="true" />
+            <LogOut size={18} aria-hidden="true" />
             <span className={compact ? "sr-only" : undefined}>Sair</span>
           </button>
           {compact && (
