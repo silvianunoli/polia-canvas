@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/planner/$slug")({
     return { filtro: valido ? f : undefined };
   },
   head: () => ({
-    meta: [{ title: "Quadro · Pólia" }],
+    meta: [{ title: "Quadro · Pólia One" }],
   }),
   component: PlannerBoard,
 });
@@ -312,7 +312,7 @@ function PlannerBoard() {
       .update({ status, updated_at: new Date().toISOString() })
       .eq("id", id);
     if (error) {
-      toastErro("A Pólia não conseguiu mover o cartão. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu mover o cartão. Tenta de novo.");
       invalidar();
       return;
     }
@@ -323,7 +323,7 @@ function PlannerBoard() {
     updateLocal((l) => l.map((c) => (c.id === id ? { ...c, prioridade } : c)));
     const { error } = await supabase.from("tarefas").update({ prioridade }).eq("id", id);
     if (error) {
-      toastErro("A Pólia não conseguiu mudar a prioridade.");
+      toastErro("A Pólia One não conseguiu mudar a prioridade.");
       invalidar();
     }
   };
@@ -332,7 +332,7 @@ function PlannerBoard() {
     updateLocal((l) => l.filter((c) => c.id !== id));
     const { error } = await supabase.from("tarefas").delete().eq("id", id);
     if (error) {
-      toastErro("A Pólia não conseguiu remover o cartão.");
+      toastErro("A Pólia One não conseguiu remover o cartão.");
       invalidar();
     }
   };
@@ -370,7 +370,7 @@ function PlannerBoard() {
       },
     );
     if (error) {
-      toastErro("A Pólia não conseguiu renomear a coluna.");
+      toastErro("A Pólia One não conseguiu renomear a coluna.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadro-colunas", quadroId] });
@@ -514,7 +514,7 @@ function PlannerBoard() {
       } as never)
       .eq("id", id);
     if (error) {
-      toastErro("A Pólia não conseguiu salvar as alterações do cartão.");
+      toastErro("A Pólia One não conseguiu salvar as alterações do cartão.");
       invalidar();
     }
   };
@@ -549,7 +549,7 @@ function PlannerBoard() {
       prazo: hoje,
     } as never);
     if (error) {
-      toastErro("A Pólia não conseguiu salvar o cartão. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu salvar o cartão. Tenta de novo.");
       return;
     }
     track("tarefa_criada", { status });
@@ -563,7 +563,7 @@ function PlannerBoard() {
     const { error } = await supabase.from("quadros").delete().eq("id", quadroId);
     setConfirmarApagarQuadro(false);
     if (error) {
-      toastErro("A Pólia não conseguiu apagar o quadro. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu apagar o quadro. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["quadros", userId] });

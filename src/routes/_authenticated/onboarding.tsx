@@ -12,8 +12,12 @@ import { calcularQuantoSobra } from "@/lib/precificacao.functions";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
   head: () => ({ meta: [{ title: "Onboarding · Pólia One" }] }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ cause }) => {
     if (typeof window === "undefined") return;
+    // Só na ENTRADA da rota. Com "stay" (o router.invalidate que roda a cada
+    // renovação de login), quem estava nos passos 5 e 6 era jogada pro Painel:
+    // o onboarding_completed vira true já no passo 4.
+    if (cause === "stay") return;
     const { data: sess } = await supabase.auth.getSession();
     if (!sess.session) return;
     const { data } = await supabase
@@ -236,7 +240,7 @@ const BIZ_TYPES: { value: BusinessType; tag: string; title: string; desc: string
     value: "hibrido",
     tag: "Híbrido",
     title: "Mistura das duas coisas",
-    desc: "Vende produto e atende. Junta digital com físico. A Pólia combina os dois.",
+    desc: "Vende produto e atende. Junta digital com físico. A Pólia One combina os dois.",
   },
 ];
 
@@ -320,19 +324,19 @@ const STAGES: { value: BusinessStage; tag: string; title: string; desc: string }
     value: "ideia",
     tag: "Só uma ideia",
     title: "Tô no ponto zero",
-    desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia constrói tudo desde o começo.",
+    desc: "A ideia tá na cabeça. Ainda não vendi nada, não tenho nome, nada. A Pólia One constrói tudo desde o começo.",
   },
   {
     value: "comecei",
     tag: "Já comecei",
     title: "Tô testando, mas tá solto",
-    desc: "Já vendi pra alguém, já tem alguma coisa rodando, mas falta direção. A Pólia organiza o que existe.",
+    desc: "Já vendi pra alguém, já tem alguma coisa rodando, mas falta direção. A Pólia One organiza o que existe.",
   },
   {
     value: "ja_vendo",
     tag: "Já vendo",
     title: "Quero profissionalizar",
-    desc: "Negócio rodando, vendas acontecendo, mas falta sistema. A Pólia te ajuda a sair do improviso.",
+    desc: "Negócio rodando, vendas acontecendo, mas falta sistema. A Pólia One te ajuda a sair do improviso.",
   },
 ];
 
@@ -350,7 +354,7 @@ function Step3({
       <LogoPlaceholder />
       <Manuscrito>Em que momento sua marca está?</Manuscrito>
       <Headline size={64}>Sem pose, só o momento real</Headline>
-      <Body>Sem julgamento. O Planejamento parte de onde a marca está hoje.</Body>
+      <Body>O Planejamento parte de onde a marca está hoje.</Body>
       <div className="grid w-full max-w-[820px] grid-cols-1 gap-4 md:grid-cols-3">
         {STAGES.map((o) => (
           <ChoiceCard
@@ -517,7 +521,7 @@ function Step4({
       track("onboarding_falhou", { motivo: (e as Error).message || "erro_desconhecido" });
       // O texto cru do banco não vai pra tela (vem em inglês, com nome de
       // coluna); ele já foi pro analytics na linha de cima.
-      setError("A Pólia não conseguiu salvar. Tenta de novo, as respostas continuam aqui.");
+      setError("A Pólia One não conseguiu salvar. Tenta de novo, as respostas continuam aqui.");
     } finally {
       setSaving(false);
     }
@@ -724,7 +728,9 @@ function Step5Dinheiro({ state, onSuccess }: { state: OnboardingState; onSuccess
       gtagEvent("ativacao_viu_quanto_sobra", { com_custo: custoNum !== null });
       setSobrou(calcularQuantoSobra({ precoVenda: precoNum, precoCusto: custoNum ?? 0 }));
     } catch {
-      setError("A Pólia não conseguiu salvar o preço. Tenta de novo, os números continuam aqui.");
+      setError(
+        "A Pólia One não conseguiu salvar o preço. Tenta de novo, os números continuam aqui.",
+      );
     } finally {
       setSaving(false);
     }
@@ -821,7 +827,7 @@ function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: ()
       </div>
 
       <p className="text-center italic text-[var(--ink-soft)]">
-        A Pólia não acaba. Ela só fica mais sua.
+        A Pólia One não acaba. Ela só fica mais sua.
       </p>
       <p className="text-center text-[14px] text-[var(--muted)]">
         cada volta encontra mais história por aqui

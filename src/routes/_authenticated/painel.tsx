@@ -20,10 +20,10 @@ import { BTN_ACAO } from "@/lib/botoes";
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
     meta: [
-      { title: "Painel · Pólia" },
+      { title: "Painel · Pólia One" },
       {
         name: "description",
-        content: "Seu painel da Pólia: o próximo módulo, seu dia e o ar do seu negócio.",
+        content: "Seu painel da Pólia One: o próximo módulo, seu dia e o ar do seu negócio.",
       },
     ],
   }),
@@ -501,7 +501,7 @@ function PainelPage() {
         { onConflict: "user_id,data" },
       );
     if (error) {
-      toastErro("A Pólia não conseguiu guardar sua intenção. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu guardar sua intenção. Tenta de novo.");
       return;
     }
     qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
@@ -650,7 +650,7 @@ function PainelPage() {
         {dadosQuery.isError ? (
           <div className="mt-8" role="alert">
             <BlockError
-              message="A Pólia não conseguiu ler os seus números agora. Nada foi perdido, é só a leitura que falhou."
+              message="A Pólia One não conseguiu ler os seus números agora. Nada foi perdido, é só a leitura que falhou."
               onRetry={() => dadosQuery.refetch()}
             />
           </div>
@@ -693,14 +693,6 @@ function PainelPage() {
                 >
                   abrir
                 </LinkInterno>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-                  Presença
-                </span>
-                <span className="text-[15px] text-[var(--ink-soft)]">
-                  {meta.streak} {meta.streak === 1 ? "dia" : "dias"}
-                </span>
               </div>
             </div>
 

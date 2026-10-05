@@ -17,7 +17,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({
     meta: [
-      { title: "Caderno · Pólia" },
+      { title: "Caderno · Pólia One" },
       { name: "description", content: "Suas ideias, anotações e rascunhos · tudo num lugar só." },
     ],
   }),
@@ -152,7 +152,8 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("A Pólia não conseguiu salvar a nota. O texto ainda está na tela."),
+    onError: () =>
+      toastErro("A Pólia One não conseguiu salvar a nota. O texto ainda está na tela."),
     onSuccess: (id) => {
       // Só reflete "salvo" se ainda estivermos na mesma nota (evita closure obsoleta).
       if (idCarregadoRef.current === id) {
@@ -194,7 +195,7 @@ function CadernoPage() {
       if (error) throw error;
       return { id: data?.id as string | undefined, titulo: t };
     },
-    onError: () => toastErro("A Pólia não conseguiu criar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia One não conseguiu criar a nota. Tenta de novo."),
     onSuccess: ({ id, titulo: tituloCriado }) => {
       track("nota_criada");
       invalidar();
@@ -217,7 +218,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("A Pólia não conseguiu fixar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia One não conseguiu fixar a nota. Tenta de novo."),
   });
 
   // Exclusão com soft delete (mantém deleted_at) + toast de 6s com desfazer.
@@ -230,7 +231,7 @@ function CadernoPage() {
       if (error) throw error;
       return id;
     },
-    onError: () => toastErro("A Pólia não conseguiu excluir a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia One não conseguiu excluir a nota. Tenta de novo."),
     onSuccess: (id) => {
       invalidar();
       const nota = notas.find((n) => n.id === id);
@@ -247,7 +248,7 @@ function CadernoPage() {
       if (error) throw error;
     },
     onSuccess: invalidar,
-    onError: () => toastErro("A Pólia não conseguiu restaurar a nota. Tenta de novo."),
+    onError: () => toastErro("A Pólia One não conseguiu restaurar a nota. Tenta de novo."),
   });
 
   function mostrarToast(msg: string, notaId: string) {

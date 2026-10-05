@@ -19,7 +19,7 @@ import { temProjete } from "@/lib/planos";
 export const Route = createFileRoute("/_authenticated/plano-conteudo")({
   head: () => ({
     meta: [
-      { title: "Plano de conteúdo do ano · Pólia" },
+      { title: "Plano de conteúdo do ano · Pólia One" },
       { name: "description", content: "365 ideias de post pras suas redes, pela Pólia One." },
     ],
   }),
@@ -292,7 +292,7 @@ function PlanoConteudoPage() {
             <Vazio
               icone={Sparkles}
               titulo="As gerações do plano deste ano acabaram."
-              texto="Se precisar de outro, abre um chamado que a Pólia resolve."
+              texto="Se precisar de outro, abre um chamado que a Pólia One resolve."
             />
           </div>
         ) : (

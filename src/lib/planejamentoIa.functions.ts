@@ -56,7 +56,7 @@ export function respostaValida(texto: string): boolean {
   return texto.trim().length >= 10;
 }
 
-const VOZ_SISTEMA = `Você escreve rascunhos de campos do Planejamento de marca da Pólia, um app pra empreendedoras (Ana) organizarem o negócio.
+const VOZ_SISTEMA = `Você escreve rascunhos de campos do Planejamento de marca da Pólia One, um app pra empreendedoras (Ana) organizarem o negócio.
 
 Regras de voz (obrigatórias, não são sugestão):
 - Indicativo em 3ª pessoa: nunca use "você" como sujeito da frase. Use imperativo sem pronome ou reestruture.
@@ -75,6 +75,7 @@ interface ContextoNegocio {
 export function montarPrompt(
   perguntaLabel: string,
   ctx: ContextoNegocio,
+  textoAtual = "",
 ): { systemInstruction: string; prompt: string } {
   const partes: string[] = [];
   partes.push(`Pergunta do Planejamento: "${perguntaLabel}"`);
@@ -95,13 +96,28 @@ export function montarPrompt(
         .join("\n")}`,
     );
   }
-  partes.push("Rascunhe a resposta pra essa pergunta específica, coerente com o que já foi dito.");
+  // Desde 05/10/2026 a IA complementa o que a empreendedora escreveu, não
+  // inventa do zero: sem o texto dela o rascunho saía genérico e estranho.
+  if (textoAtual.trim()) {
+    partes.push(
+      `O que a empreendedora já escreveu nessa pergunta (é a base, não descarte):
+${textoAtual.trim()}`,
+    );
+    partes.push(
+      "Complete e organize esse texto: mantenha as ideias, os fatos e a voz dela, desenvolva o que estiver solto e não invente fato que ela não disse.",
+    );
+  } else {
+    partes.push(
+      "Rascunhe a resposta pra essa pergunta específica, coerente com o que já foi dito.",
+    );
+  }
   return { systemInstruction: VOZ_SISTEMA, prompt: partes.join("\n\n") };
 }
 
 const gerarRascunhoInput = z.object({
   secao: z.string(),
   perguntaIdx: z.number().int().min(0),
+  textoAtual: z.string().max(4000).default(""),
 });
 
 export type ResultadoGeracao =
@@ -113,7 +129,8 @@ export type ResultadoGeracao =
         | "contexto_insuficiente"
         | "cota_atingida"
         | "falha_ia"
-        | "pergunta_invalida";
+        | "pergunta_invalida"
+        | "sem_texto";
     };
 
 export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
@@ -124,6 +141,11 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
     const pergunta = secaoInfo?.perguntas[data.perguntaIdx];
     if (!secaoInfo || !pergunta) {
       return { ok: false, motivo: "pergunta_invalida" };
+    }
+    // A tela já bloqueia o botão com o campo vazio; aqui é a mesma regra no
+    // servidor, antes de gastar a cota.
+    if (!data.textoAtual.trim()) {
+      return { ok: false, motivo: "sem_texto" };
     }
 
     const [{ data: profile }, iaLigada, { data: produtos }, { data: camposModulo }] =
@@ -176,12 +198,16 @@ export const gerarRascunhoPlanejamento = createServerFn({ method: "POST" })
       return { ok: false, motivo: "cota_atingida" };
     }
 
-    const { systemInstruction, prompt } = montarPrompt(pergunta.label, {
-      businessType: profile?.business_type ?? null,
-      businessName: profile?.business_name ?? null,
-      produtos: produtosLista,
-      camposModulo: (camposModulo ?? []) as ContextoNegocio["camposModulo"],
-    });
+    const { systemInstruction, prompt } = montarPrompt(
+      pergunta.label,
+      {
+        businessType: profile?.business_type ?? null,
+        businessName: profile?.business_name ?? null,
+        produtos: produtosLista,
+        camposModulo: (camposModulo ?? []) as ContextoNegocio["camposModulo"],
+      },
+      data.textoAtual,
+    );
 
     try {
       const resultado = await gerarTexto({ modelo, systemInstruction, prompt });

@@ -19,7 +19,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
     meta: [
-      { title: "Planejamento · Pólia" },
+      { title: "Planejamento · Pólia One" },
       {
         name: "description",
         content: "A base do negócio num documento vivo, que vira preço, lucro e meta.",
@@ -397,9 +397,12 @@ function PlanejamentoPage() {
 
   const onClickChip = (n: number) => {
     if (moduloCompleto(n)) {
-      document
-        .getElementById(`modulo-${n}`)
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      // Módulo concluído sem nenhuma resposta preenchida não tem trecho no
+      // documento pra rolar: aí o clique abre o módulo pra preencher, em vez
+      // de não fazer nada.
+      const trecho = document.getElementById(`modulo-${n}`);
+      if (trecho) trecho.scrollIntoView({ behavior: "smooth", block: "start" });
+      else irParaModulo(n);
     } else if (n === moduloAtual) {
       irParaModulo(n);
     }

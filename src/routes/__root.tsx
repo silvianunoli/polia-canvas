@@ -258,12 +258,19 @@ function RootComponent() {
         theme="light"
         toastOptions={{
           classNames: {
+            // Fundo colorido por tipo (pedido da Sil, 05/10/2026): no branco o
+            // toast de sucesso e o de erro ficavam iguais de longe. Texto em
+            // tinta nos três pra manter o contraste; a cor fica no fundo,
+            // na borda e no ícone.
             toast: "polia-v3 rounded-lg border font-sans",
-            title: "text-[var(--ink)]",
-            description: "text-[var(--ink-soft)]",
-            success: "!border-[var(--secondary)]",
-            error: "!border-[var(--danger)]",
-            info: "!border-[var(--line)]",
+            title: "!text-[var(--ink)]",
+            description: "!text-[var(--ink-soft)]",
+            success:
+              "!bg-[var(--secondary-light)] !border-[var(--secondary)] [&_[data-icon]]:!text-[var(--secondary-text)]",
+            error:
+              "!bg-[var(--danger-soft)] !border-[var(--danger)] [&_[data-icon]]:!text-[var(--danger)]",
+            info: "!bg-[var(--surface)] !border-[var(--line)]",
+            default: "!bg-[var(--surface)] !border-[var(--line)]",
           },
         }}
       />

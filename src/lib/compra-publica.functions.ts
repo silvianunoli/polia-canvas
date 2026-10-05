@@ -14,7 +14,7 @@ const inputSchema = z.object({
   hp: z.string().optional(),
 });
 
-const ERRO_CHECKOUT = "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.";
+const ERRO_CHECKOUT = "A Pólia One não conseguiu abrir o checkout agora. Tenta de novo.";
 
 // Checkout hospedado do Stripe, sem exigir conta prévia: quem compra aqui
 // ainda não tem login. A conta é criada pelo webhook (checkout.session.completed)

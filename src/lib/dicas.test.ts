@@ -26,8 +26,8 @@ describe("dicas vistas", () => {
 });
 
 describe("conteúdo do tour", () => {
-  it("tem 4 balões, com o Planejamento primeiro", () => {
-    expect(PASSOS_TOUR).toHaveLength(4);
+  it("tem 3 balões, com o Planejamento primeiro", () => {
+    expect(PASSOS_TOUR).toHaveLength(3);
     expect(PASSOS_TOUR[0].alvo).toBe("planejamento");
   });
 

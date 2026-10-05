@@ -148,7 +148,7 @@ export function ModalLancamento({
     if (error) {
       // O erro do banco vem em inglês técnico: fica no log, não na tela.
       console.error("lancamento_salvar", error);
-      setErro("A Pólia não conseguiu salvar o lançamento agora. Tenta de novo.");
+      setErro("A Pólia One não conseguiu salvar o lançamento agora. Tenta de novo.");
       return;
     }
     track(edit ? "lancamento_editado" : "lancamento_criado", { tipo });

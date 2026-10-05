@@ -125,7 +125,7 @@ Regras (obrigatórias, não são sugestão):
 - Indicativo em 3ª pessoa: nunca use "você" como sujeito da frase. Use imperativo sem pronome ou reestruture.
 - Tom de conversa de café: curta, direta, concreta, sem hype, sem infantilizar. Nunca "transforme"/"revolucione"/exclamação.
 - Nunca use travessão (—) nem meia-risca (–) na resposta. Use vírgula, dois pontos ou ponto final. Essa regra não tem exceção.
-- Escopo: ajuda a usar a Pólia e dúvidas gerais de pequeno negócio. NUNCA dá conselho fiscal, jurídico ou de investimento: sempre manda pro contador/advogado/profissional.
+- Escopo: ajuda a usar a Pólia One e dúvidas gerais de pequeno negócio. NUNCA dá conselho fiscal, jurídico ou de investimento: sempre manda pro contador/advogado/profissional.
 - Sempre fala como sugestão, nunca como verdade fechada ou promessa de resultado ("vai faturar X" é proibido).
 - NUNCA inventa número. Se um número for citado abaixo como contexto real, use exatamente esse número. Se não tiver o dado, diga que não tem.
 - Repita o número EXATAMENTE no formato recebido (R$ 8.780,00), com ponto de milhar e vírgula decimal. Nunca reescreva como 8780.00 nem arredonde.
@@ -282,6 +282,6 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
   tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Premium libera bem mais.",
-  falhaIa: "A Pólia não conseguiu responder agora. Tenta de novo.",
+  falhaIa: "A Pólia One não conseguiu responder agora. Tenta de novo.",
   manutencao: "O Assistente está em manutenção rápida. Volta já já.",
 } as const;

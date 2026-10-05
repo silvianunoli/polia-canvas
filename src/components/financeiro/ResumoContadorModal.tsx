@@ -87,7 +87,7 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("A Pólia não conseguiu gerar o arquivo agora. Tenta de novo.");
+      setErro("A Pólia One não conseguiu gerar o arquivo agora. Tenta de novo.");
     }
   };
 
@@ -105,7 +105,7 @@ export function ResumoContadorModal({
         ano: selecionado.ano,
       });
     } catch {
-      setErro("A Pólia não conseguiu gerar o arquivo agora. Tenta de novo.");
+      setErro("A Pólia One não conseguiu gerar o arquivo agora. Tenta de novo.");
     }
   };
 
@@ -204,8 +204,8 @@ export function ResumoContadorModal({
             </div>
 
             <p className="mt-4 text-[11.5px] leading-relaxed text-[var(--muted)]">
-              Resumo gerencial do que você registrou na Pólia. Não substitui as notas fiscais, as
-              guias de imposto e os extratos bancários, que o seu contador também precisa.
+              Resumo gerencial do que você registrou na Pólia One. Não substitui as notas fiscais,
+              as guias de imposto e os extratos bancários, que o seu contador também precisa.
             </p>
 
             {erro && (

@@ -32,7 +32,7 @@ import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 
 const ERRO_AUTOSAVE =
-  "A Pólia não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
+  "A Pólia One não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
 
 const NOME_PLANO: Record<string, string> = {
   beta: "Plano de lançamento",
@@ -54,7 +54,7 @@ function formatarData(iso: string | null): string {
 export const Route = createFileRoute("/_authenticated/configuracoes")({
   head: () => ({
     meta: [
-      { title: "Configurações · Pólia" },
+      { title: "Configurações · Pólia One" },
       { name: "description", content: "Perfil e negócio, do jeito que fizer sentido." },
     ],
   }),
@@ -139,12 +139,12 @@ function ConfiguracoesPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "A Pólia não conseguiu conectar com o Google agora.");
+        toastErro(res.error ?? "A Pólia One não conseguiu conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("A Pólia não conseguiu iniciar a conexão com o Google."),
+    onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o Google."),
   });
 
   const desconectarGoogleMutation = useMutation({
@@ -153,7 +153,7 @@ function ConfiguracoesPage() {
       queryClient.invalidateQueries({ queryKey: ["google-status", userId] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("A Pólia não conseguiu desconectar agora."),
+    onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
   });
 
   // Portal da Stripe: sessão curta criada no servidor. Nenhum dado de cartão
@@ -172,7 +172,8 @@ function ConfiguracoesPage() {
       if (res.error || !res.url) {
         fecharAbaPortal();
         toastErro(
-          res.error ?? "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
+          res.error ??
+            "A Pólia One não conseguiu abrir a página de pagamento agora. Tenta de novo.",
         );
         return;
       }
@@ -184,7 +185,7 @@ function ConfiguracoesPage() {
     },
     onError: () => {
       fecharAbaPortal();
-      toastErro("A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu abrir a página de pagamento agora. Tenta de novo.");
     },
   });
   const abrirPortal = () => {
@@ -206,7 +207,8 @@ function ConfiguracoesPage() {
       const resultado = await cancelarAssinatura();
       if (!resultado.ok) {
         toastErro(
-          resultado.error ?? "A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.",
+          resultado.error ??
+            "A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.",
         );
         return;
       }
@@ -215,7 +217,7 @@ function ConfiguracoesPage() {
       setConfirmandoCancelamento(false);
       invalidarAssinatura();
     } catch {
-      toastErro("A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.");
     } finally {
       setCancelando(false);
     }
@@ -344,7 +346,7 @@ function ConfiguracoesPage() {
       if (campo === "notif_resumo_semanal") setNotifResumo(!valor);
       if (campo === "notif_novidades") setNotifNovidades(!valor);
       if (campo === "notif_dicas") setNotifDicas(!valor);
-      toastErro("A Pólia não conseguiu salvar essa preferência. Tenta de novo em instantes.");
+      toastErro("A Pólia One não conseguiu salvar essa preferência. Tenta de novo em instantes.");
     }
   };
 
@@ -395,7 +397,7 @@ function ConfiguracoesPage() {
         if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
           setEmailErro("Esse e-mail já está em uso por outra conta.");
         } else {
-          setEmailErro("A Pólia não conseguiu trocar o e-mail agora. Tenta de novo.");
+          setEmailErro("A Pólia One não conseguiu trocar o e-mail agora. Tenta de novo.");
         }
         return;
       }
@@ -429,12 +431,16 @@ function ConfiguracoesPage() {
       resultado = await excluirMinhaConta();
     } catch (err) {
       console.error("[Configurações] Falha ao chamar a exclusão de conta:", err);
-      toastErro("A Pólia não conseguiu excluir a conta agora. Confere a internet e tenta de novo.");
+      toastErro(
+        "A Pólia One não conseguiu excluir a conta agora. Confere a internet e tenta de novo.",
+      );
       setExcluindo(false);
       return;
     }
     if (!resultado.ok) {
-      toastErro(resultado.error ?? "A Pólia não conseguiu excluir a conta agora. Tenta de novo.");
+      toastErro(
+        resultado.error ?? "A Pólia One não conseguiu excluir a conta agora. Tenta de novo.",
+      );
       setExcluindo(false);
       return;
     }
@@ -726,7 +732,7 @@ function ConfiguracoesPage() {
               onCheckedChange={(v) => toggleNotif("notif_resumo_semanal", v)}
             />
             <ToggleLinha
-              titulo="Novidades da Pólia"
+              titulo="Novidades da Pólia One"
               descricao="quando algo novo chega no app"
               checked={notifNovidades}
               onCheckedChange={(v) => toggleNotif("notif_novidades", v)}
@@ -851,7 +857,7 @@ function ConfiguracoesPage() {
             {!assinaturaQuery.isLoading && plano !== "beta" && assinatura?.preco && (
               <p className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
                 A nota fiscal da sua assinatura é emitida automaticamente e chega no e-mail
-                cadastrado aqui na Pólia.
+                cadastrado aqui na Pólia One.
               </p>
             )}
           </div>

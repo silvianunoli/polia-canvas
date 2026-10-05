@@ -19,7 +19,7 @@ import { gerarCsv, baixarCsv } from "@/lib/csv";
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
-      { title: "Seus clientes · Pólia" },
+      { title: "Seus clientes · Pólia One" },
       { name: "description", content: "Suas clientes, do primeiro contato ao pós-venda." },
     ],
   }),
@@ -244,7 +244,7 @@ function LinhaCliente({
       .eq("id", cliente.id);
     setSalvandoStatus(false);
     if (error) {
-      toastErro("A Pólia não conseguiu atualizar o status. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu atualizar o status. Tenta de novo.");
       return;
     }
     track("cliente_status_atualizado", { status: novo });
@@ -283,7 +283,7 @@ function LinhaCliente({
       toastErro(
         jaRegistrada
           ? "Essa venda já foi registrada. Atualize a página."
-          : "A Pólia não conseguiu registrar a venda no Financeiro. Tenta de novo.",
+          : "A Pólia One não conseguiu registrar a venda no Financeiro. Tenta de novo.",
       );
       // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
       if (jaRegistrada) onRegistrado();
@@ -448,7 +448,7 @@ function ModalCliente({
     if (error) {
       // Técnico no log, frase da Pólia na tela (mesmo padrão do modal de lançamento).
       console.error("cliente_criar", error);
-      setErro("A Pólia não conseguiu salvar a cliente agora. Tenta de novo.");
+      setErro("A Pólia One não conseguiu salvar a cliente agora. Tenta de novo.");
       return;
     }
     track("cliente_criado");

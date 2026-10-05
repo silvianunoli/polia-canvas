@@ -10,7 +10,7 @@ import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/_authenticated/chamados/$id")({
-  head: () => ({ meta: [{ title: "Chamado · Pólia" }] }),
+  head: () => ({ meta: [{ title: "Chamado · Pólia One" }] }),
   component: ChamadoDetalhe,
 });
 
@@ -73,7 +73,7 @@ function ChamadoDetalhe() {
     });
     setEnviando(false);
     if (error) {
-      toastErro("A Pólia não conseguiu enviar sua mensagem. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu enviar sua mensagem. Tenta de novo.");
       return;
     }
     // Reabre o chamado se já tinha sido marcado como resolvido e a usuária voltou a escrever.
@@ -97,7 +97,7 @@ function ChamadoDetalhe() {
 
   if (ticket === null) {
     return (
-      <PaginaLogada eyebrow="Chamados" titulo="A Pólia não achou esse chamado.">
+      <PaginaLogada eyebrow="Chamados" titulo="A Pólia One não achou esse chamado.">
         <p className="text-[15px] text-[var(--ink-soft)]">
           <Link
             to="/chamados"
@@ -136,7 +136,7 @@ function ChamadoDetalhe() {
             <Vazio
               icone={MessageCircle}
               titulo="Ainda sem resposta por aqui."
-              texto="A Pólia responde em até um dia útil. Se lembrar de mais alguma coisa, escreve abaixo que entra no mesmo chamado."
+              texto="A Pólia One responde em até um dia útil. Se lembrar de mais alguma coisa, escreve abaixo que entra no mesmo chamado."
             />
           </div>
         ) : (

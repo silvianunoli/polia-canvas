@@ -113,7 +113,7 @@ describe("iniciarConexaoGoogle", () => {
     from.mockReturnValueOnce(consulta({ error: { message: "db" } }));
     expect(await iniciar({ context })).toEqual({
       url: null,
-      error: "A Pólia não conseguiu iniciar a conexão. Tenta de novo.",
+      error: "A Pólia One não conseguiu iniciar a conexão. Tenta de novo.",
     });
     expect(api.montarUrlConsentimento).not.toHaveBeenCalled();
   });
@@ -194,7 +194,7 @@ describe("finalizarConexaoGoogle", () => {
     api.buscarEmailConectado.mockResolvedValue(null);
     expect(await finalizar({ data, context })).toEqual({
       ok: false,
-      error: "A Pólia conectou com o Google, mas não conseguiu salvar. Tenta de novo.",
+      error: "A Pólia One conectou com o Google, mas não conseguiu salvar. Tenta de novo.",
     });
   });
 });

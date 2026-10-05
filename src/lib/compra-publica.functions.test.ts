@@ -40,7 +40,7 @@ import { iniciarCompraPublica } from "./compra-publica.functions";
 type Chamavel = (opts?: { data?: unknown }) => Promise<unknown>;
 const comprar = iniciarCompraPublica as unknown as Chamavel;
 
-const ERRO = "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.";
+const ERRO = "A Pólia One não conseguiu abrir o checkout agora. Tenta de novo.";
 const ERRO_ROBO = "Confirma que não é um robô e tenta de novo.";
 const TOKEN = "token-turnstile";
 

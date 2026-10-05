@@ -8,6 +8,7 @@ import {
 } from "@/lib/founder-eventos";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
+import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada } from "@/lib/planos";
 
@@ -108,6 +109,7 @@ function AuthenticatedLayout() {
           <Outlet />
         </main>
       </div>
+      <LembretePlanejamento pathname={pathname} />
       {csatPulso.mostrar && (
         <CsatPrompt
           pergunta="Como está sendo usar a Pólia One?"

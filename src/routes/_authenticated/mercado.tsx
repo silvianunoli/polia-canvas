@@ -11,7 +11,7 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 export const Route = createFileRoute("/_authenticated/mercado")({
   head: () => ({
     meta: [
-      { title: "Mapa de Mercado · Pólia" },
+      { title: "Mapa de Mercado · Pólia One" },
       { name: "description", content: "Quem é a sua cliente, o mercado e o seu lugar nele." },
     ],
   }),

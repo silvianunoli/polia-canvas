@@ -48,6 +48,8 @@ export function useDicasVistas() {
   const vistas = query.isSuccess ? query.data : undefined;
 
   return {
+    /** A lista já chegou (ou falhou): dá pra decidir se o tour vai abrir. */
+    pronto: query.isSuccess || query.isError,
     mostrar: (chave: ChaveDica) => deveMostrar(vistas, chave),
     marcar: (chave: ChaveDica) => gravar((v) => marcarVista(v, chave)),
     esquecer: (chave: ChaveDica) => gravar((v) => esquecerVista(v, chave)),

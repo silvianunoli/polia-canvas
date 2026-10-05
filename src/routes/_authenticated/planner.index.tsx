@@ -15,7 +15,7 @@ import { COTAS_CONFERE } from "@/lib/planos";
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
     meta: [
-      { title: "Planner · Pólia" },
+      { title: "Planner · Pólia One" },
       { name: "description", content: "Planner pra organizar os seus projetos sem se perder." },
     ],
   }),
@@ -151,7 +151,7 @@ function PlannerIndex() {
       if (slug) navigate({ to: "/planner/$slug", params: { slug } });
     },
     onError: () => {
-      toastErro("A Pólia não conseguiu criar o quadro agora. Tenta de novo.");
+      toastErro("A Pólia One não conseguiu criar o quadro agora. Tenta de novo.");
     },
   });
 

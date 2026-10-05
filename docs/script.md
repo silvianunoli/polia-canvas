@@ -69,3 +69,12 @@ Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND
 - Decisões da Sil aplicadas: sidebar escondida no onboarding; foco dos campos sem a sombra turquesa-clara (reprovava 3:1), borda `--secondary-text` + contorno global; hover removido de elemento não clicável (cards do Financeiro, linha de cliente, chips de canal, "→ Abre agora"); Fraunces itálico de parágrafo virou Inter; rótulo em caixa alta = DM Sans 700 (`font-accent font-bold`); "pró-labore" virou "salário" com texto de apoio na Projeção, que agora avisa sucesso/erro ao salvar.
 - Aimer sai de todo texto visível do produto (revoga exceção de 28/09): IA fala como Pólia One, menu "Assistente", prompts de sistema sem o nome. Registrado no CLAUDE.md.
 - Movimento: balão do tour nasce do item apontado (zoom 95%→100%, 200ms); botões com `transition-colors` voltaram a animar o aperto.
+
+## 2026-10-05 — Bugs do Planejamento + Pólia One em todo o produto
+
+- Perda de dados: o rascunho de IA era salvo com o valor antigo (vazio), porque o array novo era montado dentro do updater do setState e o save rodava antes do render. Agora `definirValor` monta fora; upserts de resposta e de seção conferem o erro e mostram toast em vez de "Salvo" falso; a página do módulo usa `key` pelo número (estado não vaza do módulo 1 pro 2).
+- Pulo pro Painel: o `router.invalidate` de cada renovação de login reexecutava o beforeLoad do onboarding, que redireciona quando `onboarding_completed` (vira true no passo 4). Agora só redireciona com `cause !== "stay"`.
+- Clique em módulo concluído sem respostas abre o módulo (antes não fazia nada).
+- IA do Planejamento complementa o texto da usuária (vai no prompt); com campo vazio o botão some e aparece a dica. Servidor recusa `sem_texto` antes de gastar cota.
+- Presença removida da sidebar, do Painel e do tour (3 balões). Toasts com fundo por tipo. Lembrete diário do módulo em andamento (`LembretePlanejamento`, 1x por dia por aparelho, nunca junto do tour).
+- "Pólia" → "Pólia One" nos textos do produto (script com o parser do TS); site público, iscas, remetente de e-mail, cookies e páginas de erro continuam "Pólia".

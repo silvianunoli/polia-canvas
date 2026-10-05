@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
   head: ({ match }) => ({
     meta: [
       {
-        title: `Esse recurso é do ${TIERS_PAGOS[match.search.tier ?? TIER_PADRAO].titulo} · Pólia`,
+        title: `Esse recurso é do ${TIERS_PAGOS[match.search.tier ?? TIER_PADRAO].titulo} · Pólia One`,
       },
     ],
   }),

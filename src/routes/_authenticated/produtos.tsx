@@ -20,7 +20,7 @@ import { fmt, fmtData, TIPO_LABEL, type Produto } from "@/components/produtos/ti
 export const Route = createFileRoute("/_authenticated/produtos")({
   head: () => ({
     meta: [
-      { title: "Produtos · Pólia" },
+      { title: "Produtos · Pólia One" },
       {
         name: "description",
         content: "Seu catálogo de produtos e a calculadora de preço.",

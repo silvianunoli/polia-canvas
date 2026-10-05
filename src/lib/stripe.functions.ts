@@ -162,7 +162,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
         console.error("[Stripe] Falha ao salvar assinatura local:", upsertError);
         return {
           clientSecret: null,
-          error: "A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.",
+          error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
         };
       }
 
@@ -175,7 +175,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       if (!clientSecret) {
         return {
           clientSecret: null,
-          error: "A Pólia não conseguiu preparar o pagamento agora. Tenta de novo.",
+          error: "A Pólia One não conseguiu preparar o pagamento agora. Tenta de novo.",
         };
       }
       return { clientSecret, error: null };
@@ -186,7 +186,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       });
       return {
         clientSecret: null,
-        error: "A Pólia não conseguiu iniciar sua assinatura agora. Tenta de novo.",
+        error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
       };
     }
   });
@@ -245,7 +245,7 @@ export const abrirPortalCobranca = createServerFn({ method: "POST" })
         console.error("[Stripe] Sessão do portal criada sem URL.");
         return {
           url: null,
-          error: "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
+          error: "A Pólia One não conseguiu abrir a página de pagamento agora. Tenta de novo.",
         };
       }
       return { url: session.url, error: null };
@@ -256,7 +256,7 @@ export const abrirPortalCobranca = createServerFn({ method: "POST" })
       });
       return {
         url: null,
-        error: "A Pólia não conseguiu abrir a página de pagamento agora. Tenta de novo.",
+        error: "A Pólia One não conseguiu abrir a página de pagamento agora. Tenta de novo.",
       };
     }
   });
@@ -286,7 +286,7 @@ export const cancelarAssinatura = createServerFn({ method: "POST" })
       console.error("[Stripe] Erro ao cancelar assinatura:", err);
       return {
         ok: false,
-        error: "A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo.",
+        error: "A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.",
       };
     }
   });

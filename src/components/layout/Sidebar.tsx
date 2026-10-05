@@ -9,7 +9,6 @@ import {
   LayoutList,
   Target,
   Notebook,
-  Flame,
   Menu,
   ChevronsLeft,
   ChevronsRight,
@@ -81,21 +80,16 @@ function Body({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const configAtiva = isActive("/configuracoes", pathname) || isActive("/chamados", pathname);
 
-  const streakLabel =
-    meta.streak > 0
-      ? `${meta.streak} ${meta.streak === 1 ? "dia" : "dias"} de presença, com algo registrado na Pólia. Só cresce, nunca zera.`
-      : "Conta os dias com presença e algo registrado na Pólia. Só cresce.";
-
   return (
     <TooltipProvider delayDuration={150}>
       <div className="flex h-full flex-col overflow-y-auto bg-[var(--surface)]">
-        {/* Topo: logo + negócio + presença + avatar */}
+        {/* Topo: logo + negócio + avatar (o contador de presença saiu em 05/10/2026, decisão da Sil) */}
         <div className={`flex flex-col gap-2 px-3 pb-3 pt-4 ${compact ? "items-center" : ""}`}>
           <div className={`flex items-center ${compact ? "justify-center" : "justify-between"}`}>
             <Link
               to="/painel"
               onClick={onNavigate}
-              aria-label="Pólia, ir para o painel"
+              aria-label="Pólia One, ir para o painel"
               className="text-[var(--ink)] no-underline"
             >
               {compact ? (
@@ -129,26 +123,7 @@ function Body({
               {meta.businessName}
             </p>
           )}
-          <div className={`flex items-center gap-2 ${compact ? "flex-col" : "justify-between"}`}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span
-                  className="flex min-h-[28px] items-center gap-1.5 rounded-lg px-1 text-[13px] text-[var(--ink)]"
-                  aria-label={`Presença: ${meta.streak} dias`}
-                  data-tour="presenca"
-                >
-                  <Flame size={18} aria-hidden="true" />
-                  {!compact && (
-                    <span>
-                      {meta.streak} {meta.streak === 1 ? "dia" : "dias"} de presença
-                    </span>
-                  )}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                {streakLabel}
-              </TooltipContent>
-            </Tooltip>
+          <div className={`flex items-center gap-2 ${compact ? "flex-col" : "justify-end"}`}>
             {/* No modo recolhido o avatar (só decorativo) sai pra caber em altura. */}
             {!compact && (
               <span

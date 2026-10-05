@@ -10,7 +10,7 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
-import { toastInfo } from "@/lib/toast";
+import { toastErro, toastSucesso } from "@/lib/toast";
 import {
   type Secao,
   SECOES,
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
       throw redirect({ to: "/planejamento" });
     }
   },
-  component: ModuloPage,
+  component: ModuloRota,
 });
 
 interface DraftRow {
@@ -44,6 +44,14 @@ interface DraftRow {
 interface SecaoRow {
   secao: string;
   concluido: boolean;
+}
+
+// `key` pelo número do módulo: do módulo 1 pro 2 o TanStack reaproveita a
+// mesma instância, e a seção atual e a tela de "módulo concluído" do módulo
+// anterior vazavam pro seguinte (abria seção errada, formulário vazio).
+function ModuloRota() {
+  const { n } = Route.useParams();
+  return <ModuloPage key={n} />;
 }
 
 function ModuloPage() {
@@ -113,12 +121,17 @@ function ModuloPage() {
     });
   }, [secaoAtual, drafts]);
 
+  // Lança em caso de erro: antes o retorno do banco era ignorado e a tela
+  // mostrava "Salvo" mesmo quando a gravação falhava.
   const upsertResposta = useCallback(
     async (perguntaIdx: number, campo: string, resposta: string) => {
       if (!userId || !secaoAtual) return;
-      await (
+      const { error } = await (
         supabase.from("planejamento_respostas" as never) as unknown as {
-          upsert: (v: Record<string, unknown>, o: { onConflict: string }) => Promise<unknown>;
+          upsert: (
+            v: Record<string, unknown>,
+            o: { onConflict: string },
+          ) => Promise<{ error: unknown }>;
         }
       ).upsert(
         {
@@ -132,15 +145,19 @@ function ModuloPage() {
         },
         { onConflict: "user_id,secao,pergunta_idx" },
       );
+      if (error) throw error;
     },
     [userId, secaoAtual, n],
   );
 
   const concluirSecao = useCallback(async () => {
     if (!userId || !secaoAtual) return;
-    await (
+    const { error: erroSecao } = await (
       supabase.from("planejamento_secoes" as never) as unknown as {
-        upsert: (v: Record<string, unknown>, o: { onConflict: string }) => Promise<unknown>;
+        upsert: (
+          v: Record<string, unknown>,
+          o: { onConflict: string },
+        ) => Promise<{ error: unknown }>;
       }
     ).upsert(
       {
@@ -152,6 +169,7 @@ function ModuloPage() {
       },
       { onConflict: "user_id,secao" },
     );
+    if (erroSecao) throw erroSecao;
     track("planejamento_secao_concluida", { modulo: n, secao: secaoAtual.id });
     await qc.invalidateQueries({ queryKey: ["modulo", userId, n] });
     const proxima = secoes[idx + 1];
@@ -339,13 +357,20 @@ function SecaoForm({
       pendentes.current.delete(i);
       try {
         await onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]);
-      } finally {
         // Toast, não só o texto "Salvo" no topo: rolada a página, esse texto
         // some da vista e não dava pra saber se a resposta gravou.
         if (pendentes.current.size === 0) {
           setStatus("saved");
-          toastInfo("Salvo");
+          toastSucesso("Salvo");
         }
+      } catch (e) {
+        console.error("planejamento: falha ao salvar resposta", e);
+        // Volta pra fila: o "Salvar e continuar" tenta de novo antes de avançar.
+        pendentes.current.add(i);
+        setStatus("idle");
+        toastErro(
+          "A Pólia One não conseguiu salvar essa resposta. O texto continua aqui, tenta de novo.",
+        );
       }
     },
     [onUpsert, secao],
@@ -358,9 +383,15 @@ function SecaoForm({
     timers.current = {};
     if (idxs.length === 0) return;
     setStatus("saving");
-    await Promise.all(
-      idxs.map((i) => onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i])),
-    );
+    try {
+      await Promise.all(
+        idxs.map((i) => onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i])),
+      );
+    } catch (e) {
+      idxs.forEach((i) => pendentes.current.add(i));
+      setStatus("idle");
+      throw e;
+    }
     setStatus("saved");
   }, [onUpsert, secao]);
 
@@ -373,17 +404,26 @@ function SecaoForm({
       // eslint-disable-next-line react-hooks/exhaustive-deps
       const idxs = Array.from(pendentes.current);
       Object.values(timers.current).forEach((t) => clearTimeout(t));
-      idxs.forEach((i) => void onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]));
+      idxs.forEach((i) =>
+        onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]).catch((e) =>
+          console.error("planejamento: falha ao salvar ao sair da seção", e),
+        ),
+      );
     };
   }, [onUpsert, secao]);
 
+  // O array novo é montado aqui e não dentro do updater do setState: o
+  // updater só roda no próximo render, e quem salvava logo em seguida
+  // (gerarComAimer) lia o valor antigo e gravava a resposta vazia.
+  const definirValor = (i: number, v: string) => {
+    const c = [...valoresRef.current];
+    c[i] = v;
+    valoresRef.current = c;
+    setValores(c);
+  };
+
   const onChange = (i: number, v: string) => {
-    setValores((prev) => {
-      const c = [...prev];
-      c[i] = v;
-      valoresRef.current = c;
-      return c;
-    });
+    definirValor(i, v);
     // Qualquer edição (inclusive "usar", que rechama isto com o mesmo valor)
     // já basta pra considerar o rascunho aceito e sumir com o selo.
     setRascunho((s) => (s[i] != null ? { ...s, [i]: null } : s));
@@ -398,18 +438,15 @@ function SecaoForm({
     setCotaAtingida((s) => ({ ...s, [i]: false }));
     setContextoInsuf((s) => ({ ...s, [i]: false }));
     setGerando((s) => ({ ...s, [i]: true }));
-    setValorAntesDeGerar((s) => ({ ...s, [i]: valoresRef.current[i] }));
+    // "Gerar outro" parte do texto original dela, não do rascunho anterior.
+    const base = rascunho[i] != null ? (valorAntesDeGerar[i] ?? "") : valoresRef.current[i];
+    if (rascunho[i] == null) setValorAntesDeGerar((s) => ({ ...s, [i]: valoresRef.current[i] }));
     try {
       const resultado = await gerarRascunhoPlanejamento({
-        data: { secao: secao.id, perguntaIdx: i },
+        data: { secao: secao.id, perguntaIdx: i, textoAtual: base ?? "" },
       });
       if (resultado.ok) {
-        setValores((prev) => {
-          const c = [...prev];
-          c[i] = resultado.texto;
-          valoresRef.current = c;
-          return c;
-        });
+        definirValor(i, resultado.texto);
         setRascunho((s) => ({ ...s, [i]: resultado.texto }));
         track("planejamento_ia_gerado", { campo: secao.perguntas[i].campo });
         // Salva na hora: o campo já aparece preenchido com o rascunho, e sem
@@ -441,12 +478,7 @@ function SecaoForm({
 
   const descartarRascunho = (i: number) => {
     const original = valorAntesDeGerar[i] ?? "";
-    setValores((prev) => {
-      const c = [...prev];
-      c[i] = original;
-      valoresRef.current = c;
-      return c;
-    });
+    definirValor(i, original);
     setRascunho((s) => ({ ...s, [i]: null }));
     // O rascunho foi salvo assim que a Aimer gerou (ver gerarComAimer):
     // descartar também precisa gravar a reversão, senão o banco fica com o
@@ -460,14 +492,23 @@ function SecaoForm({
     try {
       await flush();
       await onConcluir();
+    } catch (e) {
+      console.error("planejamento: falha ao concluir seção", e);
+      toastErro(
+        "A Pólia One não conseguiu salvar a seção. As respostas continuam aqui, tenta de novo.",
+      );
     } finally {
       setAvancando(false);
     }
   };
 
   const voltar = async () => {
-    await flush();
-    onVoltar();
+    try {
+      await flush();
+      onVoltar();
+    } catch {
+      toastErro("A Pólia One não conseguiu salvar antes de voltar. Tenta de novo.");
+    }
   };
 
   return (
@@ -601,6 +642,13 @@ function SecaoForm({
                       Gerar outro
                     </button>
                   </div>
+                ) : !valores[i]?.trim() && !gerando[i] ? (
+                  // A IA completa o que a usuária escreveu; com o campo vazio
+                  // ela inventava do zero e o texto saía estranho (05/10/2026).
+                  <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
+                    <Sparkles size={13} aria-hidden="true" />
+                    Escreve um começo, mesmo curto, e a Pólia One ajuda a completar.
+                  </p>
                 ) : (
                   <button
                     type="button"
@@ -610,8 +658,8 @@ function SecaoForm({
                   >
                     <Sparkles size={13} aria-hidden="true" />
                     {gerando[i]
-                      ? "A Pólia One está escrevendo um rascunho…"
-                      : "Peça ajuda à Pólia One"}
+                      ? "A Pólia One está completando o seu texto…"
+                      : "Completar com a Pólia One"}
                   </button>
                 )}
               </div>

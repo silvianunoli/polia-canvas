@@ -29,7 +29,7 @@ import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 export const Route = createFileRoute("/_authenticated/projecao")({
   head: () => ({
     meta: [
-      { title: "Projeção e cenários · Pólia" },
+      { title: "Projeção e cenários · Pólia One" },
       { name: "description", content: "Quantas vendas pra se pagar esse mês." },
     ],
   }),
@@ -227,7 +227,7 @@ function ProjecaoPage() {
       <UpgradeGate
         eyebrow="Projeção"
         titulo="Projeção é do Pro"
-        feature="Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo a partir do que já está na Pólia."
+        feature="Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo a partir do que já está na Pólia One."
         rota="/projecao"
       />
     );
@@ -252,7 +252,7 @@ function ProjecaoPage() {
           <div className="mt-6">
             <Vazio
               icone={AlertTriangle}
-              titulo="A Pólia não conseguiu puxar os seus números agora."
+              titulo="A Pólia One não conseguiu puxar os seus números agora."
               texto="Pode ter sido a conexão. Nada do que já está salvo se perdeu."
               acao={
                 <button
@@ -270,7 +270,7 @@ function ProjecaoPage() {
             <Vazio
               icone={Sparkles}
               titulo="Ainda não dá pra projetar."
-              texto="Pra projetar, a Pólia precisa saber quanto sobra numa venda e quanto custa o seu mês. Comece precificando 1 produto."
+              texto="Pra projetar, a Pólia One precisa saber quanto sobra numa venda e quanto custa o seu mês. Comece precificando 1 produto."
               acao={
                 <Link to="/produtos" className={BTN_ACAO}>
                   Ir pros Produtos

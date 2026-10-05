@@ -52,7 +52,9 @@ function FormularioPagamento({
     });
     setConfirmando(false);
     if (error) {
-      setErro(error.message ?? "A Pólia não conseguiu confirmar o pagamento. Tenta outro cartão.");
+      setErro(
+        error.message ?? "A Pólia One não conseguiu confirmar o pagamento. Tenta outro cartão.",
+      );
       return;
     }
     if (
@@ -87,7 +89,7 @@ function FormularioPagamento({
           onClick={() => {
             confirmar().catch(() => {
               setConfirmando(false);
-              toastErro("A Pólia não conseguiu confirmar o pagamento agora. Tenta de novo.");
+              toastErro("A Pólia One não conseguiu confirmar o pagamento agora. Tenta de novo.");
             });
           }}
           disabled={!stripe || confirmando}

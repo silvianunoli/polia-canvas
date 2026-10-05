@@ -21,7 +21,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 export const Route = createFileRoute("/_authenticated/metas")({
   head: () => ({
     meta: [
-      { title: "Metas · Pólia" },
+      { title: "Metas · Pólia One" },
       { name: "description", content: "Onde a marca quer chegar, e o quanto já andou." },
     ],
   }),
@@ -141,7 +141,7 @@ function MetasPage() {
     onError: (e: unknown) => {
       // O erro do banco vem em inglês técnico: fica no log, não na tela.
       console.error("meta_salvar", e);
-      setErroAcao("A Pólia não conseguiu salvar a meta agora. Tenta de novo, nada se perdeu.");
+      setErroAcao("A Pólia One não conseguiu salvar a meta agora. Tenta de novo, nada se perdeu.");
     },
   });
 
@@ -242,7 +242,7 @@ function MetasPage() {
           ) : metasQuery.isError ? (
             <Vazio
               icone={AlertTriangle}
-              titulo="A Pólia não conseguiu carregar as suas metas."
+              titulo="A Pólia One não conseguiu carregar as suas metas."
               texto="Pode ter sido a conexão. Tenta de novo, nada do que já está salvo se perdeu."
               acao={
                 <button
@@ -674,7 +674,7 @@ function ModalMeta({
       if (error) {
         // O erro do banco vem em inglês técnico: fica no log, não na tela.
         console.error("meta_salvar", error);
-        setErro("A Pólia não conseguiu salvar a meta agora. Tenta de novo.");
+        setErro("A Pólia One não conseguiu salvar a meta agora. Tenta de novo.");
         return;
       }
       void registrar("edit_goal", { feature: "metas", propriedades: { formato } });
@@ -684,7 +684,7 @@ function ModalMeta({
       if (error) {
         // O erro do banco vem em inglês técnico: fica no log, não na tela.
         console.error("meta_salvar", error);
-        setErro("A Pólia não conseguiu salvar a meta agora. Tenta de novo.");
+        setErro("A Pólia One não conseguiu salvar a meta agora. Tenta de novo.");
         return;
       }
       track("meta_criada", { formato });

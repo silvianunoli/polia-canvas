@@ -101,7 +101,7 @@ describe("gerarResumoContadorPdf", () => {
       resumo: resumoVazio(),
     });
     expect(textosEscritos()).toContain("Resumo do mês pro contador");
-    expect(textosEscritos()).toContain("Pólia · setembro de 2026");
+    expect(textosEscritos()).toContain("Pólia One · setembro de 2026");
   });
 
   it("mostra razão social e CNPJ quando existem", () => {

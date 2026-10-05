@@ -372,7 +372,7 @@ export function Calculadora({
       .eq("id", produtoRecalcular.id);
     setSalvando(false);
     if (error) {
-      setErro(error.message || "A Pólia não conseguiu atualizar o preço. Tenta de novo.");
+      setErro(error.message || "A Pólia One não conseguiu atualizar o preço. Tenta de novo.");
       return;
     }
     track("produto_preco_recalculado");

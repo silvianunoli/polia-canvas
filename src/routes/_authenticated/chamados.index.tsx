@@ -15,8 +15,8 @@ import { track } from "@/lib/analytics";
 export const Route = createFileRoute("/_authenticated/chamados/")({
   head: () => ({
     meta: [
-      { title: "Chamados · Pólia" },
-      { name: "description", content: "Suas conversas com o suporte da Pólia." },
+      { title: "Chamados · Pólia One" },
+      { name: "description", content: "Suas conversas com o suporte da Pólia One." },
     ],
   }),
   component: ChamadosPage,
@@ -174,7 +174,7 @@ function ModalNovoChamado({
     });
     setSalvando(false);
     if (error) {
-      setErro(error.message || "A Pólia não conseguiu abrir o chamado. Tenta de novo.");
+      setErro(error.message || "A Pólia One não conseguiu abrir o chamado. Tenta de novo.");
       return;
     }
     track("chamado_aberto", { urgente });

@@ -67,7 +67,7 @@ export const excluirMinhaConta = createServerFn({ method: "POST" })
         return {
           ok: false,
           error:
-            "A Pólia não conseguiu cancelar sua assinatura agora. Tenta de novo em instantes ou escreve pra oi@usepolia.com.br antes de excluir.",
+            "A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo em instantes ou escreve pra oi@usepolia.com.br antes de excluir.",
         };
       }
     }
@@ -83,7 +83,7 @@ export const excluirMinhaConta = createServerFn({ method: "POST" })
       return {
         ok: false,
         error:
-          "A Pólia não conseguiu apagar seus dados agora. Tenta de novo em instantes. Se continuar assim, escreve pra oi@usepolia.com.br que a Pólia apaga pra você.",
+          "A Pólia One não conseguiu apagar seus dados agora. Tenta de novo em instantes. Se continuar assim, escreve pra oi@usepolia.com.br que a Pólia One apaga pra você.",
       };
     }
 
@@ -105,7 +105,7 @@ export const excluirMinhaConta = createServerFn({ method: "POST" })
       return {
         ok: false,
         error:
-          "Seus dados foram apagados, mas o login ainda não saiu do ar. A Pólia termina isso pra você: escreve pra oi@usepolia.com.br que fica resolvido no mesmo dia.",
+          "Seus dados foram apagados, mas o login ainda não saiu do ar. A Pólia One termina isso pra você: escreve pra oi@usepolia.com.br que fica resolvido no mesmo dia.",
       };
     }
 

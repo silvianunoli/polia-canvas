@@ -66,7 +66,7 @@ export function gerarResumoContadorPdf(dados: DadosResumoContadorPdf): void {
   const mesReferencia = format(new Date(dados.ano, dados.mes - 1, 1), "MMMM 'de' yyyy", {
     locale: ptBR,
   });
-  doc.text(`Pólia · ${mesReferencia}`, MARGEM, y);
+  doc.text(`Pólia One · ${mesReferencia}`, MARGEM, y);
   y += 8;
 
   if (dados.razaoSocial || dados.cnpj) {
@@ -134,7 +134,7 @@ export function gerarResumoContadorPdf(dados: DadosResumoContadorPdf): void {
   doc.setFontSize(9);
   doc.setTextColor(130);
   doc.text(
-    "Resumo gerencial do que você registrou na Pólia. Não substitui as notas fiscais, as guias de imposto e os extratos bancários, que o seu contador também precisa.",
+    "Resumo gerencial do que você registrou na Pólia One. Não substitui as notas fiscais, as guias de imposto e os extratos bancários, que o seu contador também precisa.",
     MARGEM,
     y,
     { maxWidth: LARGURA_UTIL },

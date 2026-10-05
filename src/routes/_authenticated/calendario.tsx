@@ -65,7 +65,7 @@ export const Route = createFileRoute("/_authenticated/calendario")({
   }),
   head: () => ({
     meta: [
-      { title: "Calendário · Pólia" },
+      { title: "Calendário · Pólia One" },
       {
         name: "description",
         content:
@@ -190,12 +190,12 @@ function CalendarioPage() {
     mutationFn: () => iniciarConexaoGoogle(),
     onSuccess: (res) => {
       if (res.error || !res.url) {
-        toastErro(res.error ?? "A Pólia não conseguiu conectar com o Google agora.");
+        toastErro(res.error ?? "A Pólia One não conseguiu conectar com o Google agora.");
         return;
       }
       window.location.href = res.url;
     },
-    onError: () => toastErro("A Pólia não conseguiu iniciar a conexão com o Google."),
+    onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o Google."),
   });
 
   const desconectarMutation = useMutation({
@@ -205,7 +205,7 @@ function CalendarioPage() {
       qc.invalidateQueries({ queryKey: ["google-eventos"] });
       toastSucesso("Google Calendar desconectado.");
     },
-    onError: () => toastErro("A Pólia não conseguiu desconectar agora."),
+    onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
   });
 
   const criarTarefaMutation = useMutation({
@@ -235,7 +235,7 @@ function CalendarioPage() {
       setNovoTitulo("");
       toastSucesso("Tarefa criada.");
     },
-    onError: () => toastErro("A Pólia não conseguiu criar a tarefa. Tenta de novo."),
+    onError: () => toastErro("A Pólia One não conseguiu criar a tarefa. Tenta de novo."),
   });
 
   const abrirComposer = () => {
@@ -254,10 +254,11 @@ function CalendarioPage() {
         if (res.ok) {
           track("evento_google_conectado");
           toastSucesso("Google Calendar conectado.");
-        } else toastErro(res.error ?? "A Pólia não conseguiu confirmar a conexão com o Google.");
+        } else
+          toastErro(res.error ?? "A Pólia One não conseguiu confirmar a conexão com o Google.");
         qc.invalidateQueries({ queryKey: ["google-status", userId] });
       })
-      .catch(() => toastErro("A Pólia não conseguiu confirmar a conexão com o Google."))
+      .catch(() => toastErro("A Pólia One não conseguiu confirmar a conexão com o Google."))
       .finally(() => {
         setProcessandoCallback(false);
         navigate({ to: "/calendario", search: {}, replace: true });

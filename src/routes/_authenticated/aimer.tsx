@@ -159,7 +159,7 @@ function AimerPage() {
       largura="larga"
       eyebrow="Assistente"
       titulo="Converse com a Pólia One."
-      subtitulo="Dúvida de como usar a Pólia, ou do negócio. Ela não inventa número."
+      subtitulo="Dúvida de como usar a Pólia One, ou do negócio. Ela não inventa número."
       acao={
         mensagens.length > 0 ? (
           <button type="button" onClick={novaConversa} className={BTN_ACAO_CONTORNO}>
@@ -183,7 +183,7 @@ function AimerPage() {
               <Sparkles size={18} className="text-[var(--secondary-text)]" aria-hidden="true" />
             </span>
             <p className="text-[16px] leading-relaxed text-[var(--ink)]">
-              Pergunte o que quiser sobre como usar a Pólia, ou sobre o negócio.
+              Pergunte o que quiser sobre como usar a Pólia One, ou sobre o negócio.
             </p>
             <div className="mt-3 flex flex-col gap-2">
               {EXEMPLOS.map((ex) => (

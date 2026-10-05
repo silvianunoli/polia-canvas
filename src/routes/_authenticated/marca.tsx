@@ -13,7 +13,7 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 export const Route = createFileRoute("/_authenticated/marca")({
   head: () => ({
     meta: [
-      { title: "Marca · Pólia" },
+      { title: "Marca · Pólia One" },
       { name: "description", content: "A identidade do negócio, escrita por quem o toca." },
     ],
   }),

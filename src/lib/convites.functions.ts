@@ -111,7 +111,7 @@ export const enviarConvite = createServerFn({ method: "POST" })
       contexto: "[Convites]",
     });
     if (!enviado) {
-      throw new Error("A Pólia não conseguiu enviar o convite agora. Tenta de novo.");
+      throw new Error("A Pólia One não conseguiu enviar o convite agora. Tenta de novo.");
     }
 
     const { error } = await supabaseAdmin

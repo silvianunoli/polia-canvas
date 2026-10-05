@@ -50,13 +50,6 @@ export const PASSOS_TOUR: PassoTour[] = [
     texto:
       "O Painel mostra o que faz sentido fazer agora. Conforme o Planejamento anda, os números da marca aparecem nesta tela.",
   },
-  {
-    alvo: "presenca",
-    lado: "right",
-    titulo: "Isso aqui só cresce",
-    texto:
-      "Cada dia com algo registrado na Pólia One conta um dia de presença. E não zera se a semana apertar.",
-  },
 ];
 
 // Cada texto foi conferido contra o que a tela faz de verdade (05/10/2026).

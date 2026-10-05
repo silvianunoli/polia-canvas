@@ -20,7 +20,7 @@ interface CalculadoraSearch {
 export const Route = createFileRoute("/_authenticated/calculadora")({
   head: () => ({
     meta: [
-      { title: "Calculadora de preço · Pólia" },
+      { title: "Calculadora de preço · Pólia One" },
       {
         name: "description",
         content: "Quanto custa, quanto cobrar e quanto sobra em cada venda.",
@@ -138,7 +138,7 @@ function CalculadoraPage() {
     >
       {produtoId && !produtoRecalcular && (
         <p className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-          A Pólia não encontrou esse produto no seu catálogo. A calculadora abre em branco.{" "}
+          A Pólia One não encontrou esse produto no seu catálogo. A calculadora abre em branco.{" "}
           <Link
             to="/produtos"
             className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
