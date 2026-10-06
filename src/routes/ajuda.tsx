@@ -176,6 +176,11 @@ const CATEGORIAS = [
           "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Grátis, sem apagar o Planejamento.",
       },
       {
+        pergunta: "Desistir nos primeiros 7 dias",
+        resposta:
+          "Nos 7 dias seguintes à contratação de um plano pago, mensal ou anual, dá pra desistir sem justificar e receber o valor inteiro de volta. Vale só pra contratação, não pras renovações nem pra troca do Premium pro Pro. É só escrever pra privacidade@usepolia.com.br com o e-mail da conta. A conta volta pro plano Grátis, com tudo guardado, e o estorno sai pelo mesmo meio de pagamento.",
+      },
+      {
         pergunta: "Como funciona a cobrança",
         resposta:
           "Cartão e boleto cobram todo mês ou todo ano, dependendo do ciclo escolhido. Pix só está disponível no plano anual, como pagamento único.",

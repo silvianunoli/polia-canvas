@@ -130,8 +130,11 @@ export const COTAS_CONFERE = {
 
 // O que o plano Grátis inclui. Fica aqui, ao lado dos pagos, pra /planos (público)
 // e /assinar (dentro do app) mostrarem sempre a mesma lista.
+// /marca e /mercado não estão em ROTAS_TIER, então são pagas: a lista avisa
+// (06/10/2026, decisão da Sil) em vez de prometer "Planejamento completo" e
+// mandar a usuária do Grátis pra uma tela de upgrade no fim do Módulo 1.
 export const FEATURES_GRATIS = [
-  "Planejamento completo, os 6 módulos",
+  "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
   "Calculadora de preço",
   "Catálogo de até 5 produtos",
   "Até 3 metas ativas por vez",
@@ -158,6 +161,7 @@ export const TIERS_PAGOS: Record<
     precoAnual: 299,
     features: [
       "Tudo do Grátis, mais:",
+      "Documentos de Marca e Mercado, escritos a partir do Planejamento",
       "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto sobra",
       "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       "Clientes com o status de cada pedido, do orçamento à entrega",

@@ -86,7 +86,7 @@ function PrivacidadePage() {
                 Política de Privacidade
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 16/07/2026 · Alinhada à LGPD (Lei 13.709/2018)
+                Última atualização: 06/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
               </p>
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
                 Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -123,7 +123,7 @@ function PrivacidadePage() {
             <div className={`${LEITURA} ${PROSA}`}>
               <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
-                O controlador dos dados é Silvia Nunoli Soluções Digitais ME, CNPJ
+                O controlador dos dados é Nunoli Soluções Digitais Ltda, CNPJ
                 18.305.925/0001-06, com sede na Rua Kenkiti Shimomoto, São Paulo/SP. Somos nós que
                 decidimos como e por que os dados são tratados.
               </p>
@@ -209,6 +209,14 @@ function PrivacidadePage() {
                   · base: execução de contrato / legítimo interesse.
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">
+                    Gerar texto com a IA da Pólia One
+                  </strong>{" "}
+                  (Assistente, ajuda pra completar o Planejamento e Raio-x do mês) · base: execução
+                  de contrato. Vai para a IA só o pedido da titular e os dados do negócio que aquela
+                  resposta usa.
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">Enviar a newsletter</strong>, com novidades
                   e conteúdo sobre a Pólia · base: consentimento. O cadastro na newsletter é
                   opcional e separado da criação de conta: a titular escolhe ativamente receber, e
@@ -272,6 +280,13 @@ function PrivacidadePage() {
                   <strong className="text-[var(--ink)]">Resend</strong>: envio dos e-mails da conta
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">Google Gemini</strong>: a IA da Pólia One.
+                  Quando a titular usa o Assistente, pede ajuda pra completar um texto do
+                  Planejamento ou recebe o Raio-x do mês, o pedido e os dados do negócio que a
+                  resposta usa são enviados ao Google pra gerar o texto. A Pólia usa a versão paga
+                  da API, em que o Google não usa esse conteúdo pra treinar os modelos dele
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">Google Agenda</strong>: apenas se a titular
                   conectar, para ler os próprios eventos
                 </li>
@@ -320,7 +335,7 @@ function PrivacidadePage() {
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
-                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics e Ads)
+                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics, Ads e Gemini)
                 e Meta (Meta Ads) também podem processar dados fora do Brasil. Nesses casos, a
                 transferência se apoia nas garantias adequadas previstas na LGPD (art. 33), como as
                 cláusulas contratuais e os acordos de tratamento de dados (DPA) desses provedores.

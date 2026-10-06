@@ -116,8 +116,14 @@ function OnboardingPage() {
               da Sil): quase ninguém vende um produto só, e o número entra
               depois, na Calculadora e em Produtos. */}
           {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
+          {/* Termina na Calculadora, não no Painel vazio (06/10/2026): é o
+              valor mais rápido do produto e o caminho que a landing promete. */}
           {step === 5 && (
-            <StepFinal tipo={state.business_type} onFinish={() => navigate({ to: "/painel" })} />
+            <StepFinal
+              tipo={state.business_type}
+              onFinish={() => navigate({ to: "/calculadora" })}
+              onPlanejamento={() => navigate({ to: "/planejamento" })}
+            />
           )}
         </div>
       </div>
@@ -677,40 +683,56 @@ function Toggle({
   );
 }
 
-/* ---------------- STEP 6 ---------------- */
-// O módulo 1 é só marca desde 28/09/2026: a conta do mês foi pro módulo 4.
-const ETAPA1_DESC: Record<BusinessType, string> = {
-  produto_fisico: "Quem está por trás da marca, o que ela produz e de onde vem o que vende.",
-  produto_digital: "Quem está por trás da marca, o que ela ensina e qual problema resolve.",
-  servico: "Quem está por trás da marca, qual problema resolve e como funciona o trabalho.",
-  hibrido: "Quem está por trás da marca e como as duas frentes do negócio se complementam.",
+/* ---------------- STEP 5 ---------------- */
+// O que a Calculadora faz, no idioma de cada tipo de negócio.
+const CALCULADORA_DESC: Record<BusinessType, string> = {
+  produto_fisico:
+    "O custo do material, as taxas da maquininha ou do marketplace e quanto precisa sobrar viram um preço sugerido.",
+  produto_digital:
+    "O custo da plataforma, as taxas de venda e quanto precisa sobrar viram um preço sugerido.",
+  servico:
+    "As horas de trabalho, os custos e quanto precisa sobrar viram o valor a cobrar por hora.",
+  hibrido:
+    "Funciona pro produto e pro serviço: custo, taxas e quanto precisa sobrar viram um preço sugerido.",
 };
 
-function StepFinal({ tipo, onFinish }: { tipo: BusinessType | null; onFinish: () => void }) {
-  const desc = tipo ? ETAPA1_DESC[tipo] : ETAPA1_DESC.produto_fisico;
+function StepFinal({
+  tipo,
+  onFinish,
+  onPlanejamento,
+}: {
+  tipo: BusinessType | null;
+  onFinish: () => void;
+  onPlanejamento: () => void;
+}) {
+  const desc = tipo ? CALCULADORA_DESC[tipo] : CALCULADORA_DESC.produto_fisico;
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Pronto, tá tudo no lugar</Manuscrito>
-      <Headline size={56}>Seu planejamento começa agora</Headline>
+      <Headline size={56}>Agora, o primeiro preço</Headline>
 
       <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6">
         <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-          Módulo 1 de 6
+          Calculadora de preço
         </p>
-        <p className="mt-3 text-[24px] text-[var(--ink)]">Razão de existir</p>
+        <p className="mt-3 text-[24px] text-[var(--ink)]">Quanto cobrar e quanto sobra</p>
         <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">{desc}</p>
       </div>
 
-      <p className="text-center italic text-[var(--ink-soft)]">
-        A Pólia One não acaba. Ela só fica mais sua.
-      </p>
       <p className="text-center text-[14px] text-[var(--muted)]">
-        cada volta encontra mais história por aqui
+        Não depende do Planejamento: um produto já mostra o preço.
       </p>
 
       <button type="button" onClick={onFinish} className={`${BTN_PRIMARIO} w-full`}>
-        Começar meu planejamento →
+        Quero calcular meu primeiro preço →
+      </button>
+      <button
+        type="button"
+        onClick={onPlanejamento}
+        className="inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] text-[var(--secondary-text)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+      >
+        Prefiro começar pelo Planejamento
       </button>
     </div>
   );

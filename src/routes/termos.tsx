@@ -63,7 +63,7 @@ function TermosPage() {
                 Termos de uso
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 16/07/2026
+                Última atualização: 06/10/2026
               </p>
 
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
@@ -72,7 +72,7 @@ function TermosPage() {
                 usuária concorda com o que está aqui.
               </p>
               <p className="mt-4 text-[15px] leading-[1.7] text-[var(--ink-soft)]">
-                A Pólia é operada por Silvia Nunoli Soluções Digitais ME, CNPJ 18.305.925/0001-06,
+                A Pólia é operada por Nunoli Soluções Digitais Ltda, CNPJ 18.305.925/0001-06,
                 com sede na Rua Kenkiti Shimomoto, São Paulo/SP (“Pólia”, “nós”). Contato:{" "}
                 <a href="mailto:oi@usepolia.com.br" className={LINK}>
                   oi@usepolia.com.br
@@ -140,6 +140,13 @@ function TermosPage() {
                   A cobrança é recorrente e renova automaticamente. Ao cancelar, a cobrança para a
                   partir dali. Não há mais nenhuma renovação.
                 </li>
+                <li>
+                  Quem assina um plano pago tem 7 dias, contados da contratação, para desistir e
+                  receber o valor de volta por inteiro (direito de arrependimento, art. 49 do Código
+                  de Defesa do Consumidor). As renovações automáticas e a troca de plano pago (do
+                  Premium para o Pro, por exemplo) não abrem um novo prazo.
+                  Como pedir está na seção 8.
+                </li>
                 <li>Impostos aplicáveis podem incidir conforme a legislação brasileira.</li>
               </ul>
 
@@ -175,6 +182,21 @@ function TermosPage() {
                 O cancelamento pode ser feito quando quiser, direto no aplicativo, sem precisar
                 ligar ou justificar. O acesso continua até o fim do ciclo já pago. Nós podemos
                 encerrar contas que violem estes termos, avisando quando for possível.
+              </p>
+              <p>
+                <strong className="text-[var(--ink)]">Arrependimento em 7 dias.</strong> Nos 7 dias
+                seguintes à contratação de um plano pago, mensal ou anual, a usuária pode desistir
+                sem justificar e recebe de volta o valor integral pago. O prazo vale só para a
+                contratação: as renovações automáticas, mensais ou anuais, e a troca entre planos
+                pagos (do Premium para o Pro, por exemplo) não dão direito a novo arrependimento. O pedido é feito por e-mail para{" "}
+                <a href="mailto:privacidade@usepolia.com.br" className={LINK}>
+                  privacidade@usepolia.com.br
+                </a>
+                , com o e-mail da conta. A assinatura é cancelada, a conta volta para o plano
+                Grátis com os dados guardados, e o valor é devolvido pelo mesmo meio de pagamento.
+                O prazo para o estorno aparecer na fatura depende do cartão ou do banco. Quando o
+                meio de pagamento não permite estorno direto, como o boleto, a Pólia combina a
+                devolução com a usuária por e-mail.
               </p>
 
               <h2 id="garantias">9. Garantias e responsabilidade</h2>

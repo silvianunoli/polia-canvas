@@ -251,7 +251,7 @@ const planos: {
     preco: "R$ 0",
     ciclo: "· para sempre",
     features: [
-      "Os 6 módulos do Planejamento",
+      "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
       "Painel diário",
       "Calculadora de preço",
       "Catálogo de até 5 produtos",
@@ -271,6 +271,7 @@ const planos: {
     ciclo: "/mês",
     abre: "Tudo do Grátis, mais:",
     features: [
+      "Documentos de Marca e Mercado",
       "Catálogo sem limite de produtos",
       "Financeiro com os números que ajudam a decidir o mês",
       "Clientes e pedidos, do orçamento à entrega",
