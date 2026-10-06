@@ -14,7 +14,7 @@
  */
 
 /** Janela com barra de navegador. Usada quando a tela inteira é o argumento. */
-function Janela({
+export function Janela({
   url,
   label,
   children,
@@ -50,7 +50,7 @@ function Janela({
 }
 
 /** Cartão sem barra de navegador, para recortes menores da interface. */
-function Cartela({
+export function Cartela({
   label,
   children,
   className = "",
@@ -70,7 +70,7 @@ function Cartela({
   );
 }
 
-function Label({ children }: { children: React.ReactNode }) {
+export function Label({ children }: { children: React.ReactNode }) {
   return (
     <p className="font-accent text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
       {children}

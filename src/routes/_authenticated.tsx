@@ -14,6 +14,7 @@ import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada } from "@/lib/planos";
 import { precisaCriarSenha } from "@/lib/senha";
+import { gravarOrigemDoOAuth } from "@/lib/gravarOrigemOAuth";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -104,6 +105,10 @@ function AuthenticatedLayout() {
     registrarAberturaDeTela(pathname);
   }, [pathname]);
   useEffect(() => montarHeartbeat(), []);
+  // Cadastro pelo Google vindo de landing de campanha: grava a origem na conta.
+  useEffect(() => {
+    void gravarOrigemDoOAuth();
+  }, []);
 
   return (
     <AssistenteProvider>

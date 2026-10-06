@@ -17,9 +17,25 @@ import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/co
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { senhaCumpreRequisitos } from "@/lib/senha";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
+import {
+  campoDeBusca,
+  guardarOrigemParaOAuth,
+  lerOrigemCampanha,
+  temOrigemCampanha,
+} from "@/lib/origemCampanha";
 
+// origem e utm_* chegam das landings de campanha (/landing-a, /landing-b). Aqui
+// só entram como texto opcional e tolerante (o router faz JSON.parse da URL, e
+// ?utm_content=123 viraria number e derrubaria a rota); a allowlist de verdade
+// é lerOrigemCampanha. E-mail inválido na URL só deixa de pré-preencher.
 const searchSchema = z.object({
-  email: z.string().email().optional(),
+  email: z.string().email().optional().catch(undefined),
+  origem: campoDeBusca,
+  utm_source: campoDeBusca,
+  utm_medium: campoDeBusca,
+  utm_campaign: campoDeBusca,
+  utm_content: campoDeBusca,
+  utm_term: campoDeBusca,
 });
 
 export const Route = createFileRoute("/auth/cadastro")({
@@ -47,7 +63,8 @@ export const Route = createFileRoute("/auth/cadastro")({
 
 function CadastroPage() {
   const navigate = useNavigate();
-  const { email: emailConvite } = Route.useSearch();
+  const { email: emailConvite, ...buscaCampanha } = Route.useSearch();
+  const origemCampanha = lerOrigemCampanha(buscaCampanha);
   const [values, setValues] = useState({ nome: "", email: emailConvite ?? "", senha: "" });
   const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
   const [senhaInvalida, setSenhaInvalida] = useState(false);
@@ -95,7 +112,10 @@ function CadastroPage() {
         password: values.senha,
         options: {
           emailRedirectTo: `${window.location.origin}/onboarding`,
-          data: { full_name: nome },
+          // origem_campanha só entra quando veio de landing com tag válida.
+          data: temOrigemCampanha(origemCampanha)
+            ? { full_name: nome, origem_campanha: origemCampanha }
+            : { full_name: nome },
         },
       });
       if (error) {
@@ -128,10 +148,11 @@ function CadastroPage() {
       track("cadastro_concluido", {
         via_convite: !!emailConvite,
         precisa_verificacao: !data.session,
+        ...origemCampanha,
       });
       void registrar("signup", {
         feature: "conta",
-        propriedades: { metodo: "email", via_convite: !!emailConvite },
+        propriedades: { metodo: "email", via_convite: !!emailConvite, ...origemCampanha },
       });
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
@@ -151,6 +172,9 @@ function CadastroPage() {
   async function handleGoogle() {
     setGoogleLoading(true);
     marcarLoginPendente("google");
+    // O OAuth sai do site e volta em /painel: a origem espera no sessionStorage
+    // da aba e é gravada na conta pelo _authenticated (gravarOrigemDoOAuth).
+    guardarOrigemParaOAuth(origemCampanha);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/painel` },

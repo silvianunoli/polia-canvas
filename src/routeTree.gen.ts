@@ -16,6 +16,8 @@ import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ManualRouteImport } from './routes/manual'
 import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
+import { Route as LandingBRouteImport } from './routes/landing-b'
+import { Route as LandingARouteImport } from './routes/landing-a'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
 import { Route as AjudaRouteImport } from './routes/ajuda'
@@ -91,6 +93,16 @@ const ManualRoute = ManualRouteImport.update({
 const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
   id: '/lista-de-espera',
   path: '/lista-de-espera',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingBRoute = LandingBRouteImport.update({
+  id: '/landing-b',
+  path: '/landing-b',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LandingARoute = LandingARouteImport.update({
+  id: '/landing-a',
+  path: '/landing-a',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DescadastrarRoute = DescadastrarRouteImport.update({
@@ -312,6 +324,8 @@ export interface FileRoutesByFullPath {
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/landing-a': typeof LandingARoute
+  '/landing-b': typeof LandingBRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
@@ -361,6 +375,8 @@ export interface FileRoutesByTo {
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/landing-a': typeof LandingARoute
+  '/landing-b': typeof LandingBRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
@@ -412,6 +428,8 @@ export interface FileRoutesById {
   '/ajuda': typeof AjudaRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
+  '/landing-a': typeof LandingARoute
+  '/landing-b': typeof LandingBRoute
   '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
@@ -463,6 +481,8 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/compra-confirmada'
     | '/descadastrar'
+    | '/landing-a'
+    | '/landing-b'
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
@@ -512,6 +532,8 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/compra-confirmada'
     | '/descadastrar'
+    | '/landing-a'
+    | '/landing-b'
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
@@ -562,6 +584,8 @@ export interface FileRouteTypes {
     | '/ajuda'
     | '/compra-confirmada'
     | '/descadastrar'
+    | '/landing-a'
+    | '/landing-b'
     | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
@@ -613,6 +637,8 @@ export interface RootRouteChildren {
   AjudaRoute: typeof AjudaRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
   DescadastrarRoute: typeof DescadastrarRoute
+  LandingARoute: typeof LandingARoute
+  LandingBRoute: typeof LandingBRoute
   ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   ManualRoute: typeof ManualRoute
   PesquisaRoute: typeof PesquisaRoute
@@ -682,6 +708,20 @@ declare module '@tanstack/react-router' {
       path: '/lista-de-espera'
       fullPath: '/lista-de-espera'
       preLoaderRoute: typeof ListaDeEsperaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing-b': {
+      id: '/landing-b'
+      path: '/landing-b'
+      fullPath: '/landing-b'
+      preLoaderRoute: typeof LandingBRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/landing-a': {
+      id: '/landing-a'
+      path: '/landing-a'
+      fullPath: '/landing-a'
+      preLoaderRoute: typeof LandingARouteImport
       parentRoute: typeof rootRouteImport
     }
     '/descadastrar': {
@@ -1041,6 +1081,8 @@ const rootRouteChildren: RootRouteChildren = {
   AjudaRoute: AjudaRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
   DescadastrarRoute: DescadastrarRoute,
+  LandingARoute: LandingARoute,
+  LandingBRoute: LandingBRoute,
   ListaDeEsperaRoute: ListaDeEsperaRoute,
   ManualRoute: ManualRoute,
   PesquisaRoute: PesquisaRoute,

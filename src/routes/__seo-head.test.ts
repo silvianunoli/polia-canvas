@@ -8,6 +8,8 @@ import { Route as BlogIndexRoute } from "./blog.index";
 import { Route as BlogSlugRoute } from "./blog.$slug";
 import { Route as AjudaRoute } from "./ajuda";
 import { Route as SobreRoute } from "./sobre";
+import { Route as LandingARoute } from "./landing-a";
+import { Route as LandingBRoute } from "./landing-b";
 
 type Head = {
   meta?: Array<Record<string, string>>;
@@ -133,5 +135,20 @@ describe("/sobre", () => {
     expect(pessoa.name).toBe("Sil");
     expect(pessoa.jobTitle).toBe("Fundadora");
     expect(pessoa).not.toHaveProperty("sameAs");
+  });
+});
+
+// Landings de campanha (06/10/2026): fora do índice pra não competir com a home.
+describe.each([
+  ["/landing-a", LandingARoute],
+  ["/landing-b", LandingBRoute],
+])("%s", (caminho, route) => {
+  it("tem robots noindex,follow e canonical pra si mesma", () => {
+    const h = head(route);
+    expect(h.meta).toContainEqual({ name: "robots", content: "noindex, follow" });
+    expect(h.links).toContainEqual({
+      rel: "canonical",
+      href: `https://one.usepolia.com.br${caminho}`,
+    });
   });
 });
