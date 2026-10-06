@@ -128,6 +128,29 @@ async function registrarFalhaWebhook(tipoEvento: string, mensagem: string) {
 
 const STATUS_ATIVOS_FOUNDER = ["active", "trialing"];
 
+// Status em que a assinatura já foi paga ao menos uma vez e dá acesso.
+// "incomplete" (janela de pagamento aberta e não paga) fica de fora: antes de
+// 05/10/2026 o plano era gravado só pelo price id, então abrir o pagamento em
+// /assinar e fechar sem pagar liberava o Premium (QA-01).
+const STATUS_COM_ACESSO = ["active", "trialing", "past_due"];
+
+// Quem nunca pagou (incomplete_expired) volta pro Grátis; quem pagou e parou
+// de pagar (unpaid) fica como cancelada, igual ao customer.subscription.deleted.
+// Só mexe em plano pago: beta e contas liberadas à mão ficam como estão.
+async function rebaixarPlanoSemPagamento(
+  userId: string,
+  status: string,
+  statusAnterior: string | null,
+) {
+  const jaTeveAcesso =
+    status === "unpaid" || (statusAnterior !== null && STATUS_COM_ACESSO.includes(statusAnterior));
+  await supabaseAdmin
+    .from("profiles")
+    .update({ plano: jaTeveAcesso ? "cancelada" : "confere" })
+    .eq("id", userId)
+    .in("plano", ["controle", "projete"]);
+}
+
 async function upsertAssinaturaDaSubscription(
   subscription: Stripe.Subscription,
   stripeEventId: string,
@@ -175,17 +198,50 @@ async function upsertAssinaturaDaSubscription(
       console.error("[stripe-webhook] Sem user_id para vincular a assinatura", subscription.id);
       return;
     }
+    // A linha é uma por usuária. Se ela já aponta pra OUTRA assinatura com
+    // acesso, este evento é de uma assinatura velha (tentativa abandonada que
+    // expirou) ou de uma compra duplicada: não pode sobrescrever a que está
+    // pagando nem mexer no plano.
+    const { data: atual } = await supabaseAdmin
+      .from("assinaturas")
+      .select("stripe_subscription_id, status")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const linhaAtual = atual as { stripe_subscription_id: string | null; status: string } | null;
+    if (
+      linhaAtual?.stripe_subscription_id &&
+      linhaAtual.stripe_subscription_id !== subscription.id &&
+      STATUS_COM_ACESSO.includes(linhaAtual.status)
+    ) {
+      console.error(
+        "[stripe-webhook] Evento de assinatura que não é a vigente da usuária, ignorado:",
+        subscription.id,
+        subscription.status,
+      );
+      if (STATUS_COM_ACESSO.includes(subscription.status)) {
+        void dispararAlerta(
+          "stripe_assinatura_duplicada",
+          "Usuária com duas assinaturas pagando ao mesmo tempo",
+          { userId, vigente: linhaAtual.stripe_subscription_id, nova: subscription.id },
+        );
+      }
+      return;
+    }
     const { error: insertError } = await supabaseAdmin
       .from("assinaturas")
       .upsert({ user_id: userId, ...patch }, { onConflict: "user_id" });
     if (insertError) throw insertError;
   }
 
-  if (priceId && PRICE_TO_PLANO[priceId]) {
-    await supabaseAdmin
-      .from("profiles")
-      .update({ plano: PRICE_TO_PLANO[priceId] })
-      .eq("id", userId);
+  if (STATUS_COM_ACESSO.includes(subscription.status)) {
+    if (priceId && PRICE_TO_PLANO[priceId]) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ plano: PRICE_TO_PLANO[priceId] })
+        .eq("id", userId);
+    }
+  } else if (subscription.status === "incomplete_expired" || subscription.status === "unpaid") {
+    await rebaixarPlanoSemPagamento(userId, subscription.status, statusAnterior);
   }
 
   if (
@@ -383,7 +439,13 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
       type: "invite",
       email,
-      options: { redirectTo: `${SITE_URL}/onboarding` },
+      // O convite só faz login: precisa_criar_senha (mesmo nome de
+      // META_PRECISA_CRIAR_SENHA em src/lib/senha.ts) faz a área logada pedir
+      // nome e senha antes de qualquer outra tela (QA-03).
+      options: {
+        redirectTo: `${SITE_URL}/auth/criar-senha`,
+        data: { precisa_criar_senha: true },
+      },
     });
     if (error || !data.user) {
       console.error("[stripe-webhook] Falha ao criar conta pra compra:", error);
@@ -519,7 +581,23 @@ Deno.serve(async (req) => {
           .select("user_id, current_period_end");
         const userId = data?.[0]?.user_id as string | undefined;
         const currentPeriodEnd = data?.[0]?.current_period_end as string | undefined;
+        // Assinatura que nunca foi paga (tentativa abandonada, cancelada pelo
+        // iniciarAssinatura ao tentar de novo) não vira "cancelada" nem manda
+        // e-mail de cancelamento: a pessoa nunca teve o plano. Desde a correção
+        // do QA-01 o plano pago só é gravado com pagamento confirmado, então é
+        // ele que diz se houve acesso (o status da linha pode já ter chegado
+        // como "canceled" pelo customer.subscription.updated).
+        let tinhaAcesso = false;
         if (userId) {
+          const { data: perfil } = await supabaseAdmin
+            .from("profiles")
+            .select("plano")
+            .eq("id", userId)
+            .maybeSingle();
+          const plano = (perfil as { plano?: string } | null)?.plano ?? "";
+          tinhaAcesso = plano === "controle" || plano === "projete";
+        }
+        if (userId && tinhaAcesso) {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);
           await registrarFounderEvento("subscription_cancelled", userId, event.id, {
             current_period_end: currentPeriodEnd ?? null,
@@ -541,12 +619,18 @@ Deno.serve(async (req) => {
             ? invoice.parent.subscription_details?.subscription
             : null;
         const subscriptionId = typeof subRef === "string" ? subRef : subRef?.id;
-        if (subscriptionId) {
+        // Primeira cobrança recusada (billing_reason subscription_create) é a
+        // pessoa ainda na janela de pagamento, vendo o erro na tela: a
+        // assinatura fica "incomplete" no Stripe e pode tentar outro cartão.
+        // Marcar past_due aqui contava como ativa e travava a nova tentativa
+        // com "Você já tem uma assinatura ativa." (QA-02), além de mandar
+        // "Pagamento recusado" pra quem nunca assinou.
+        if (subscriptionId && invoice.billing_reason !== "subscription_create") {
           const { data } = await supabaseAdmin
             .from("assinaturas")
             .update({ status: "past_due" })
             .eq("stripe_subscription_id", subscriptionId)
-            .neq("status", "canceled")
+            .in("status", ["active", "trialing", "past_due"])
             .select("user_id");
           const userId = data?.[0]?.user_id as string | undefined;
           if (userId) {

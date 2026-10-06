@@ -35,7 +35,20 @@ vi.mock("@/lib/alertas.server", () => ({ dispararAlerta }));
 const { verificarTurnstileServer } = vi.hoisted(() => ({ verificarTurnstileServer: vi.fn() }));
 vi.mock("@/lib/turnstile.server", () => ({ verificarTurnstileServer }));
 
-import { iniciarCompraPublica } from "./compra-publica.functions";
+const { rpc, assinaturaLida } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  assinaturaLida: vi.fn(),
+}));
+vi.mock("@/integrations/supabase/client.server", () => ({
+  supabaseAdmin: {
+    rpc,
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: assinaturaLida }) }),
+    }),
+  },
+}));
+
+import { iniciarCompraPublica, ERRO_JA_ASSINA } from "./compra-publica.functions";
 
 type Chamavel = (opts?: { data?: unknown }) => Promise<unknown>;
 const comprar = iniciarCompraPublica as unknown as Chamavel;
@@ -50,6 +63,10 @@ beforeEach(() => {
   dispararAlerta.mockReset();
   verificarTurnstileServer.mockReset();
   verificarTurnstileServer.mockResolvedValue(true);
+  rpc.mockReset();
+  rpc.mockResolvedValue({ data: null, error: null });
+  assinaturaLida.mockReset();
+  assinaturaLida.mockResolvedValue({ data: null, error: null });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -163,5 +180,58 @@ describe("iniciarCompraPublica: sessão", () => {
       expect.any(String),
       expect.objectContaining({ mensagem: "rate limited" }),
     );
+  });
+});
+
+describe("iniciarCompraPublica: e-mail que já assina (QA-04)", () => {
+  it.each(["active", "trialing", "past_due"])(
+    "assinatura %s: recusa sem criar sessão e sinaliza jaAssina",
+    async (status) => {
+      rpc.mockResolvedValue({ data: "user-1", error: null });
+      assinaturaLida.mockResolvedValue({ data: { status }, error: null });
+      const r = await comprar({
+        data: { email: "ana@exemplo.com", plano: "projete_mensal", turnstileToken: TOKEN },
+      });
+      expect(r).toEqual({ url: null, sessionId: null, error: ERRO_JA_ASSINA, jaAssina: true });
+      expect(rpc).toHaveBeenCalledWith("buscar_user_id_por_email", { p_email: "ana@exemplo.com" });
+      expect(sessionsCreate).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["canceled", "incomplete", "incomplete_expired"])(
+    "assinatura %s não bloqueia a compra",
+    async (status) => {
+      rpc.mockResolvedValue({ data: "user-1", error: null });
+      assinaturaLida.mockResolvedValue({ data: { status }, error: null });
+      sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+      const r = await comprar({
+        data: { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN },
+      });
+      expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+    },
+  );
+
+  it("conta sem assinatura (Grátis) compra normalmente", async () => {
+    rpc.mockResolvedValue({ data: "user-1", error: null });
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({
+      data: { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN },
+    });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+  });
+
+  it("falha na leitura não trava a venda", async () => {
+    rpc.mockResolvedValue({ data: null, error: { message: "timeout" } });
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({
+      data: { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN },
+    });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+  });
+
+  it("sem Turnstile válido nem consulta o banco", async () => {
+    verificarTurnstileServer.mockResolvedValue(false);
+    await comprar({ data: { email: "ana@exemplo.com", plano: "controle_mensal" } });
+    expect(rpc).not.toHaveBeenCalled();
   });
 });

@@ -235,7 +235,11 @@ function RootComponent() {
     if (typeof window === "undefined") return;
     const hash = window.location.hash;
     const linkVencido = hash.includes("otp_expired") || hash.includes("access_denied");
-    if (linkVencido && window.location.pathname !== "/auth/redefinir-senha") {
+    // criar-senha (convite da compra) também trata o próprio caso.
+    const telaTrataSozinha =
+      window.location.pathname === "/auth/redefinir-senha" ||
+      window.location.pathname === "/auth/criar-senha";
+    if (linkVencido && !telaTrataSozinha) {
       router.navigate({ to: "/auth/link-expirado", search: { tipo: "confirmacao" } });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

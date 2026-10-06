@@ -6,7 +6,7 @@ import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthSh
 import { CosmicInput, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
-import { senhaCumpreRequisitos } from "@/lib/senha";
+import { META_PRECISA_CRIAR_SENHA, senhaCumpreRequisitos } from "@/lib/senha";
 
 export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({
@@ -83,7 +83,13 @@ function RedefinirSenhaPage() {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password: senha });
+    // Quem comprou sem conta e perdeu o link de criar senha chega aqui pelo
+    // "Esqueci a senha": tira a marca pra área logada não mandar de volta pra
+    // /auth/criar-senha.
+    const { error } = await supabase.auth.updateUser({
+      password: senha,
+      data: { [META_PRECISA_CRIAR_SENHA]: false },
+    });
     if (error) {
       setLoading(false);
       toastErro("A Pólia não conseguiu salvar agora. Tenta de novo em alguns segundos.");

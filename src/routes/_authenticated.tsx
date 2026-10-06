@@ -13,6 +13,7 @@ import { AssistenteProvider } from "@/components/assistente/AssistenteContext";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada } from "@/lib/planos";
+import { precisaCriarSenha } from "@/lib/senha";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -38,6 +39,12 @@ export const Route = createFileRoute("/_authenticated")({
     const { data } = await supabase.auth.getSession();
     if (data.session) {
       localStorage.setItem(TEVE_SESSAO_KEY, "1");
+
+      // Conta criada pela compra em /planos ainda sem senha: sem isso, ela
+      // usa uma vez e não consegue voltar depois de sair (QA-03).
+      if (precisaCriarSenha(data.session.user.user_metadata)) {
+        throw redirect({ to: "/auth/criar-senha" });
+      }
 
       if (!isentoDeAssinatura(location.pathname)) {
         const { data: profile } = await supabase

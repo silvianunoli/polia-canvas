@@ -3,7 +3,7 @@ import { z } from "zod";
 import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 
 const searchSchema = z.object({
-  tipo: z.enum(["confirmacao", "redefinicao"]).default("redefinicao"),
+  tipo: z.enum(["confirmacao", "redefinicao", "convite"]).default("redefinicao"),
 });
 
 export const Route = createFileRoute("/auth/link-expirado")({
@@ -25,6 +25,16 @@ const COPY = {
       "Links de confirmação valem por 24 horas. Entra com o e-mail e a senha que já criou: a Pólia te dá a opção de reenviar o link na hora.",
     primaryLabel: "Entrar e pedir link",
     primaryHref: "/auth/login",
+  },
+  // Link de "Criar minha senha" do e-mail de compra (conta criada pelo
+  // webhook): quem chega aqui nunca teve senha, então "entra com a senha que
+  // já criou" não serve. O link de redefinir senha cria a primeira também.
+  convite: {
+    title: "Esse link de criar senha expirou.",
+    subtitle:
+      "A compra continua valendo. Pede um link novo com o e-mail da compra: ele serve pra criar a senha pela primeira vez.",
+    primaryLabel: "Pedir um novo link",
+    primaryHref: "/auth/esqueci-senha",
   },
   redefinicao: {
     title: "Esse link de redefinir senha expirou.",

@@ -126,6 +126,18 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
     const stripe = stripeClient();
     const priceId = precoParaPlano(data.plano);
 
+    // Tentativa anterior abandonada (janela de pagamento fechada sem pagar):
+    // cancela antes de abrir outra, senão cada clique deixa uma assinatura
+    // incompleta solta no Stripe. O webhook ignora o cancelamento de quem
+    // nunca pagou (sem e-mail, sem mexer no plano).
+    if (existente?.status === "incomplete" && existente.stripe_subscription_id) {
+      try {
+        await stripe.subscriptions.cancel(existente.stripe_subscription_id);
+      } catch (err) {
+        console.error("[Stripe] Falha ao cancelar tentativa anterior incompleta:", err);
+      }
+    }
+
     try {
       const customerId =
         existente?.stripe_customer_id ??

@@ -23,6 +23,7 @@ import {
 import { gerarRascunhoPlanejamento, usoIaPlanejamento } from "@/lib/planejamentoIa.functions";
 import { avisoCotaEsgotada, pertoDoLimite } from "@/lib/usoIa";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { BlockError } from "@/components/ui/BlockError";
 
 export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -96,12 +97,28 @@ function ModuloPage() {
           .eq("user_id", userId!)
           .eq("modulo", n),
       ]);
+      // Leitura que falha não pode virar formulário vazio: a usuária digitava
+      // por cima e o salvamento apagava o que estava guardado.
+      const erroLeitura =
+        (draftsRes as unknown as { error: unknown }).error ??
+        (secoesRes as unknown as { error: unknown }).error;
+      if (erroLeitura) throw erroLeitura;
       return {
         drafts: ((draftsRes as unknown as { data: DraftRow[] | null }).data ?? []) as DraftRow[],
         secoes: ((secoesRes as unknown as { data: SecaoRow[] | null }).data ?? []) as SecaoRow[],
       };
     },
+    // O formulário lê os valores só quando monta; refazer a leitura ao voltar
+    // pra aba não muda o que está na tela, só arrisca trocar o cache por uma
+    // leitura que saiu antes do último salvamento.
+    refetchOnWindowFocus: false,
+    // Sempre relê ao abrir: o formulário espera essa leitura (leituraFresca).
+    refetchOnMount: "always",
   });
+  // QA-13: ao voltar pro módulo, o cache tinha a versão de antes da edição e o
+  // formulário montava com ela; digitar de novo salvava o texto velho por cima.
+  // O formulário só monta com uma leitura feita nesta visita.
+  const leituraFresca = dadosQuery.isFetchedAfterMount && !dadosQuery.isError;
 
   const drafts = useMemo(() => dadosQuery.data?.drafts ?? [], [dadosQuery.data?.drafts]);
   const concluidas = useMemo(
@@ -156,8 +173,24 @@ function ModuloPage() {
         { onConflict: "user_id,secao,pergunta_idx" },
       );
       if (error) throw error;
+      // Mantém o cache igual ao banco: trocar de seção (ou voltar ao módulo)
+      // monta o formulário a partir dele.
+      const secaoId = secaoAtual.id;
+      qc.setQueryData<{ drafts: DraftRow[]; secoes: SecaoRow[] }>(
+        ["modulo", userId, n],
+        (antes) => {
+          if (!antes) return antes;
+          const outras = antes.drafts.filter(
+            (d) => !(d.secao === secaoId && d.pergunta_idx === perguntaIdx),
+          );
+          return {
+            ...antes,
+            drafts: [...outras, { secao: secaoId, pergunta_idx: perguntaIdx, resposta }],
+          };
+        },
+      );
     },
-    [userId, secaoAtual, n],
+    [userId, secaoAtual, n, qc],
   );
 
   const concluirSecao = useCallback(async () => {
@@ -312,7 +345,12 @@ function ModuloPage() {
 
         {usoIa && <UsoIaBarra usado={usoIa.usado} limite={usoIa.limite} />}
 
-        {!secaoAtual ? (
+        {dadosQuery.isError ? (
+          <BlockError
+            message="A Pólia One não conseguiu abrir as suas respostas agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void dadosQuery.refetch()}
+          />
+        ) : !secaoAtual || !leituraFresca ? (
           <div className="space-y-3">
             {[0, 1].map((i) => (
               <div
@@ -457,6 +495,33 @@ function SecaoForm({
           console.error("planejamento: falha ao salvar ao sair da seção", e),
         ),
       );
+    };
+  }, [onUpsert, secao]);
+
+  // Fechar a aba ou dar F5 no meio da pausa de 1 s perdia o que acabou de ser
+  // digitado. pagehide dispara o salvamento (melhor esforço, vale no celular,
+  // onde beforeunload nem sempre roda); beforeunload pede confirmação no
+  // computador enquanto houver resposta sem salvar.
+  useEffect(() => {
+    const salvarPendentes = () => {
+      const idxs = Array.from(pendentes.current);
+      idxs.forEach((i) =>
+        onUpsert(i, secao.perguntas[i].campo, valoresRef.current[i]).catch((e) =>
+          console.error("planejamento: falha ao salvar ao fechar a página", e),
+        ),
+      );
+    };
+    const avisarAntesDeSair = (e: BeforeUnloadEvent) => {
+      if (pendentes.current.size === 0) return;
+      salvarPendentes();
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("pagehide", salvarPendentes);
+    window.addEventListener("beforeunload", avisarAntesDeSair);
+    return () => {
+      window.removeEventListener("pagehide", salvarPendentes);
+      window.removeEventListener("beforeunload", avisarAntesDeSair);
     };
   }, [onUpsert, secao]);
 

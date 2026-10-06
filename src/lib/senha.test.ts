@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { REQUISITOS, senhaCumpreRequisitos } from "./senha";
+import {
+  META_PRECISA_CRIAR_SENHA,
+  REQUISITOS,
+  precisaCriarSenha,
+  senhaCumpreRequisitos,
+} from "./senha";
 
 describe("REQUISITOS", () => {
   it("são exatamente três: tamanho, número e maiúscula (o guia visual mostra uma barra de 3 segmentos)", () => {
@@ -68,5 +73,20 @@ describe("senhaCumpreRequisitos", () => {
     expect(len.teste("Ab1")).toBe(false);
     expect(num.teste("Abcdefgh")).toBe(false);
     expect(up.teste("abcdefg1")).toBe(false);
+  });
+});
+
+describe("precisaCriarSenha (conta criada pela compra, QA-03)", () => {
+  it("só é verdadeiro com a marca do webhook em true", () => {
+    expect(precisaCriarSenha({ [META_PRECISA_CRIAR_SENHA]: true })).toBe(true);
+    expect(precisaCriarSenha({ [META_PRECISA_CRIAR_SENHA]: false })).toBe(false);
+    expect(precisaCriarSenha({ [META_PRECISA_CRIAR_SENHA]: "true" })).toBe(false);
+    expect(precisaCriarSenha({ full_name: "Ana" })).toBe(false);
+    expect(precisaCriarSenha(undefined)).toBe(false);
+    expect(precisaCriarSenha(null)).toBe(false);
+  });
+
+  it("usa o mesmo nome literal que o webhook grava", () => {
+    expect(META_PRECISA_CRIAR_SENHA).toBe("precisa_criar_senha");
   });
 });

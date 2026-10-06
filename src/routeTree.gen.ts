@@ -30,6 +30,7 @@ import { Route as AuthRedefinirSenhaRouteImport } from './routes/auth/redefinir-
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirado'
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
+import { Route as AuthCriarSenhaRouteImport } from './routes/auth/criar-senha'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedRaioxRouteImport } from './routes/_authenticated/raiox'
@@ -159,6 +160,11 @@ const AuthLinkExpiradoRoute = AuthLinkExpiradoRouteImport.update({
 const AuthEsqueciSenhaRoute = AuthEsqueciSenhaRouteImport.update({
   id: '/auth/esqueci-senha',
   path: '/auth/esqueci-senha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCriarSenhaRoute = AuthCriarSenhaRouteImport.update({
+  id: '/auth/criar-senha',
+  path: '/auth/criar-senha',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCadastroRoute = AuthCadastroRouteImport.update({
@@ -332,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/raiox': typeof AuthenticatedRaioxRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
@@ -380,6 +387,7 @@ export interface FileRoutesByTo {
   '/raiox': typeof AuthenticatedRaioxRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
@@ -430,6 +438,7 @@ export interface FileRoutesById {
   '/_authenticated/raiox': typeof AuthenticatedRaioxRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
   '/auth/cadastro': typeof AuthCadastroRoute
+  '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
     | '/raiox'
     | '/upgrade'
     | '/auth/cadastro'
+    | '/auth/criar-senha'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
     | '/auth/login'
@@ -528,6 +538,7 @@ export interface FileRouteTypes {
     | '/raiox'
     | '/upgrade'
     | '/auth/cadastro'
+    | '/auth/criar-senha'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
     | '/auth/login'
@@ -577,6 +588,7 @@ export interface FileRouteTypes {
     | '/_authenticated/raiox'
     | '/_authenticated/upgrade'
     | '/auth/cadastro'
+    | '/auth/criar-senha'
     | '/auth/esqueci-senha'
     | '/auth/link-expirado'
     | '/auth/login'
@@ -609,6 +621,7 @@ export interface RootRouteChildren {
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
+  AuthCriarSenhaRoute: typeof AuthCriarSenhaRoute
   AuthEsqueciSenhaRoute: typeof AuthEsqueciSenhaRoute
   AuthLinkExpiradoRoute: typeof AuthLinkExpiradoRoute
   AuthLoginRoute: typeof AuthLoginRoute
@@ -767,6 +780,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/esqueci-senha'
       fullPath: '/auth/esqueci-senha'
       preLoaderRoute: typeof AuthEsqueciSenhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/criar-senha': {
+      id: '/auth/criar-senha'
+      path: '/auth/criar-senha'
+      fullPath: '/auth/criar-senha'
+      preLoaderRoute: typeof AuthCriarSenhaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/cadastro': {
@@ -1029,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
   AuthCadastroRoute: AuthCadastroRoute,
+  AuthCriarSenhaRoute: AuthCriarSenhaRoute,
   AuthEsqueciSenhaRoute: AuthEsqueciSenhaRoute,
   AuthLinkExpiradoRoute: AuthLinkExpiradoRoute,
   AuthLoginRoute: AuthLoginRoute,

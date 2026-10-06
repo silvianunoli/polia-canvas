@@ -174,7 +174,9 @@ function ModalNovoChamado({
     });
     setSalvando(false);
     if (error) {
-      setErro(error.message || "A Pólia One não conseguiu abrir o chamado. Tenta de novo.");
+      // Nunca a mensagem crua do banco: vinha em inglês ou técnica.
+      console.error("chamados: falha ao abrir", error);
+      setErro("A Pólia One não conseguiu abrir o chamado. Tenta de novo.");
       return;
     }
     track("chamado_aberto", { urgente });

@@ -71,6 +71,7 @@ function PlanosPage() {
   );
   const [email, setEmail] = useState("");
   const [emailErro, setEmailErro] = useState<string | undefined>();
+  const [jaAssina, setJaAssina] = useState(false);
   // Honeypot: campo invisível fora do fluxo de teclado. Humano nunca preenche.
   const [hp, setHp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -126,8 +127,16 @@ function PlanosPage() {
         window.location.assign(r.url);
         return;
       }
-      track("checkout_falhou", { plano, motivo: "sem_url" });
       turnstile.reset();
+      if ("jaAssina" in r && r.jaAssina) {
+        track("checkout_falhou", { plano, motivo: "ja_assina" });
+        setEmailErro(r.error ?? undefined);
+        setJaAssina(true);
+        emailRef.current?.focus();
+        setLoading(false);
+        return;
+      }
+      track("checkout_falhou", { plano, motivo: "sem_url" });
       toastErro(r.error ?? "A Pólia não conseguiu abrir o checkout agora. Tenta de novo.");
     } catch {
       track("checkout_falhou", { plano, motivo: "excecao_client" });
@@ -316,12 +325,22 @@ function PlanosPage() {
                     onChange={(e) => {
                       setEmail(e.target.value);
                       if (emailErro) setEmailErro(undefined);
+                      if (jaAssina) setJaAssina(false);
                     }}
                     aria-invalid={!!emailErro || undefined}
                     aria-describedby={emailErro ? "email-compra-error" : undefined}
                     className={`${campoBase} ${emailErro ? campoErro : campoOk}`}
                   />
                   <FieldError id="email-compra-error">{emailErro}</FieldError>
+                  {jaAssina && (
+                    <Link
+                      to="/auth/login"
+                      search={{ email: email.trim(), next: "/configuracoes" }}
+                      className="mt-1 inline-block text-[14px] font-semibold text-[var(--secondary-text)] underline underline-offset-2"
+                    >
+                      Entrar na conta
+                    </Link>
+                  )}
                 </div>
 
                 <TurnstileWidget containerRef={turnstile.containerRef} />
