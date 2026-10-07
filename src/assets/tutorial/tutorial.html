@@ -1504,6 +1504,24 @@ const audio = new Audio("/video-tutorial/narracao.mp3");
 audio.preload = "auto";
 let usaAudio = true, interno = { t: 0, ref: 0, rodando: false }, estado = "capa";
 audio.addEventListener("error", () => { if (usaAudio) trocaParaInterno("A narração não carregou. O vídeo segue com legenda."); });
+
+/* O servidor do app entrega o mp3 inteiro, sem atender pedido de trecho (Range).
+   Sem isso o navegador não consegue pular pro meio do áudio e capítulo ou barra
+   de tempo voltam pro começo. Baixar o arquivo inteiro e tocar de um blob
+   resolve: blob sempre deixa pular. Até o blob chegar, toca direto do arquivo. */
+let blobAudio = null;
+if (typeof fetch === "function") fetch(audio.src).then(r => r.ok ? r.blob() : Promise.reject(new Error("audio"))).then(b => {
+  blobAudio = URL.createObjectURL(b);
+  if (estado !== "tocando") trocaParaBlob();
+}).catch(() => {});
+function trocaParaBlob(alvo) {
+  if (!blobAudio || audio.src === blobAudio) return false;
+  const t = alvo ?? (audio.currentTime || 0), tocava = !audio.paused;
+  audio.src = blobAudio;
+  const aplica = () => { try { audio.currentTime = t; } catch (e) {} if (tocava) audio.play().catch(() => {}); };
+  if (audio.readyState >= 1) aplica(); else audio.addEventListener("loadedmetadata", aplica, { once: true });
+  return true;
+}
 function trocaParaInterno(msg) {
   const t = usaAudio ? (audio.currentTime || 0) : interno.t;
   usaAudio = false; interno.t = t; interno.ref = performance.now();
@@ -1515,7 +1533,7 @@ function agora() {
 }
 function irPara(t) {
   t = Math.max(0, Math.min(TOTAL, t));
-  if (usaAudio) { try { audio.currentTime = t; } catch (e) {} }
+  if (usaAudio && !trocaParaBlob(t)) { try { audio.currentTime = t; } catch (e) {} }
   interno.t = t; interno.ref = performance.now();
   render(t); atualizaUI(t);
 }
