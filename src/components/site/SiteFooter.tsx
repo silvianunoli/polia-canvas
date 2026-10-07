@@ -49,7 +49,7 @@ export function SiteFooter({ semMargemTopo = false }: { semMargemTopo?: boolean 
           <span>
             Desenvolvido por{" "}
             <a
-              href="https://servicos.usepolia.com.br/"
+              href="https://lab.usepolia.com.br/"
               className="underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px] transition-colors hover:text-[var(--bg)]"
             >
               Pólia Lab

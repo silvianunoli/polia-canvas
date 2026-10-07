@@ -691,7 +691,7 @@ function ListaEsperaPage() {
           <span>
             Desenvolvido por{" "}
             <a
-              href="https://servicos.usepolia.com.br/"
+              href="https://lab.usepolia.com.br/"
               className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
             >
               Hub Pólia Soluções Digitais
