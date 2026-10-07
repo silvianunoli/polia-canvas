@@ -17,6 +17,7 @@ import {
 import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { senhaCumpreRequisitos } from "@/lib/senha";
+import { emailJaTemConta } from "@/lib/signup";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 import {
   campoDeBusca,
@@ -119,29 +120,30 @@ function CadastroPage() {
             : { full_name: nome },
         },
       });
+      if (emailJaTemConta(data, error)) {
+        track("cadastro_falhou", { motivo: "email_ja_cadastrado" });
+        setErrors({
+          email: (
+            <>
+              Esse e-mail já tem conta.{" "}
+              <Link
+                to="/auth/login"
+                search={{ email }}
+                className="text-[var(--danger)] underline underline-offset-2"
+              >
+                Entrar
+              </Link>
+            </>
+          ),
+        });
+        emailRef.current?.focus();
+        return;
+      }
       if (error) {
-        if (/already/i.test(error.message) || /registered/i.test(error.message)) {
-          track("cadastro_falhou", { motivo: "email_ja_cadastrado" });
-          setErrors({
-            email: (
-              <>
-                Esse e-mail já tem conta.{" "}
-                <Link
-                  to="/auth/login"
-                  search={{ email }}
-                  className="text-[var(--danger)] underline underline-offset-2"
-                >
-                  Entrar
-                </Link>
-              </>
-            ),
-          });
-        } else {
-          track("cadastro_falhou", { motivo: "erro_signup" });
-          toastErro(
-            "A Pólia não conseguiu criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
-          );
-        }
+        track("cadastro_falhou", { motivo: "erro_signup" });
+        toastErro(
+          "A Pólia não conseguiu criar a conta agora. Tenta de novo, o que você preencheu continua aqui.",
+        );
         return;
       }
       // O convite é marcado como usado no servidor (trigger AFTER INSERT em
