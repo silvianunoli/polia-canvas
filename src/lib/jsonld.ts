@@ -33,11 +33,16 @@ export function jsonLdFaq(perguntas: ReadonlyArray<PerguntaFrequente>): object {
   };
 }
 
-/** Organization sem `@context`, pra usar aninhado (`publisher`, `worksFor`) sem repetir o contexto. */
+/**
+ * Organization sem `@context`, pra usar aninhado (`publisher`, `worksFor`) sem repetir o contexto.
+ * Razão social e CNPJ estão escritos no rodapé de toda página e no bloco "A empresa" de /sobre.
+ */
 function organizacaoRef(): object {
   return {
     "@type": "Organization",
     name: NOME,
+    legalName: "Nunoli Soluções Digitais Ltda",
+    taxID: "18.305.925/0001-06",
     url: HOST_CANONICO,
     logo: urlCanonica("/polia-one-light.svg"),
   };

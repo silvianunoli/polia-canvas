@@ -41,6 +41,11 @@ describe("jsonLdOrganization e jsonLdWebSite", () => {
     expect(org.name).toBe("Pólia");
     expect(org.url).toBe("https://one.usepolia.com.br");
     expect(org.logo).toBe("https://one.usepolia.com.br/polia-one-light.svg");
+    // Os mesmos dados do rodapé (07/10/2026).
+    expect(org).toMatchObject({
+      legalName: "Nunoli Soluções Digitais Ltda",
+      taxID: "18.305.925/0001-06",
+    });
 
     const site = jsonLdWebSite() as { url: string; name: string };
     expect(site.name).toBe("Pólia");

@@ -111,9 +111,7 @@ const EXCECOES_TRAVESSAO: readonly Excecao[] = [
   ["src/components/DiagnosticPanel.tsx", "—"],
   ["src/routes/termos.tsx", "A cobrança é recorrente e renova automaticamente"],
 ];
-const EXCECOES_EXCLAMACAO: readonly Excecao[] = [
-  ["src/routes/ajuda.tsx", "Recebemos a mensagem!"],
-];
+const EXCECOES_EXCLAMACAO: readonly Excecao[] = [["src/routes/ajuda.tsx", "Recebemos a mensagem!"]];
 
 describe("regras de marca no texto visível do src", () => {
   it("varreu o código de verdade (sanidade da varredura)", () => {
@@ -171,9 +169,11 @@ describe("regras de marca no texto visível do src", () => {
 });
 
 describe("planos visíveis", () => {
-  // Fonte real dos nomes de plano (CLAUDE.md da raiz): a home.
+  // Fonte real dos nomes de plano (CLAUDE.md da raiz): a home. Desde 07/10/2026
+  // a home monta a PaginaMarcaB, então o texto visível dela mora nos dois arquivos.
   it("a home oferece Grátis, Premium e Pro", () => {
-    const home = TEXTOS.filter((t) => t.arquivo === "src/routes/index.tsx").map((t) => t.texto);
+    const arquivosDaHome = ["src/routes/index.tsx", "src/components/landing/PaginaMarcaB.tsx"];
+    const home = TEXTOS.filter((t) => arquivosDaHome.includes(t.arquivo)).map((t) => t.texto);
     for (const nome of ["Grátis", "Premium", "Pro"]) {
       expect(
         home.some((t) => new RegExp(`\\b${nome}\\b`).test(t)),

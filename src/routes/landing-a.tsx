@@ -233,6 +233,12 @@ const perguntas = [
       "Não. O preço vem de conta: custo, taxas e quanto precisa sobrar. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
   },
   {
+    // Termos, seção 8 (06/10/2026): só na contratação, não na renovação.
+    pergunta: "E se eu assinar e me arrepender?",
+    resposta:
+      "Nos primeiros 7 dias depois de assinar, dá pra desistir sem explicar o motivo, e o valor volta inteiro. Vale pro mensal e pro anual. O pedido é feito pelo e-mail privacidade@usepolia.com.br, a partir do e-mail da conta.",
+  },
+  {
     pergunta: "E se eu cancelar um plano pago?",
     resposta:
       "O plano vale até o fim do período pago. Depois a conta volta pro Grátis, com tudo guardado.",
