@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from "react";
 
 import { track } from "@/lib/analytics";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
-import { TUTORIAL_HTML, htmlEmbutido, lerMensagemTutorial } from "@/lib/tutorial";
+import { htmlEmbutido, lerMensagemTutorial } from "@/lib/tutorial";
 
 /**
  * O tutorial narrado num iframe, usado na tela do app (/como-usar) e na página
- * pública (/tutorial). O vídeo é um HTML estático (ver lib/tutorial.ts); ele
- * entra por srcDoc em vez de src porque o servidor de arquivos do Worker troca
- * "/x.html" por "/x" com redirect, e o fetch segue o redirect sozinho. O
- * iframe avisa a própria altura por postMessage, pra a página rolar inteira em
- * vez de ter rolagem dentro do vídeo.
+ * pública (/tutorial). O HTML do vídeo entra no código como texto (import
+ * "?raw" num chunk separado, só baixado quando a tela abre) e vai pro iframe
+ * por srcDoc. Ele NÃO mora em public/: com run_worker_first, um .html solto lá
+ * voltava 404 em produção (07/10/2026). O iframe avisa a própria altura por
+ * postMessage, pra a página rolar inteira em vez de ter rolagem dentro do vídeo.
  */
 export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
   const [html, setHtml] = useState<string | null>(null);
@@ -22,13 +22,9 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
   useEffect(() => {
     let vivo = true;
     setErro(false);
-    fetch(TUTORIAL_HTML)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
-      })
-      .then((t) => {
-        if (vivo) setHtml(htmlEmbutido(t));
+    import("@/assets/tutorial/tutorial.html?raw")
+      .then((m) => {
+        if (vivo) setHtml(htmlEmbutido(m.default));
       })
       .catch(() => {
         if (vivo) setErro(true);

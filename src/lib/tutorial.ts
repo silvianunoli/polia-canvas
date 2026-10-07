@@ -1,15 +1,14 @@
 // Tutorial narrado "A Pólia One por dentro" (07/10/2026, pedido da Sil).
 //
-// O vídeo é um HTML estático em public/video-tutorial/ (motion com a narração
-// da Roberta), gerado a partir de Desktop/Novo Projeto/polia-one-tutorial por
-// `gerar_versao_app.py`. Mexeu no tutorial lá, roda o script e o app pega a
+// O vídeo é um HTML em src/assets/tutorial/ (motion com a narração da Roberta;
+// o áudio fica em public/video-tutorial/), gerado a partir de
+// Desktop/Novo Projeto/polia-one-tutorial por `gerar_versao_app.py`. Mexeu no tutorial lá, roda o script e o app pega a
 // versão nova. As telas /como-usar (app) e /tutorial (pública) carregam esse
 // HTML num iframe (components/tutorial/PlayerTutorial.tsx); o convite do
 // primeiro acesso mora em components/dicas/ConviteTutorial.tsx.
 
 /** Tela do tutorial dentro do app. A página pública, sem login, é /tutorial. */
 export const TUTORIAL_ROTA = "/como-usar";
-export const TUTORIAL_HTML = "/video-tutorial/tutorial.html";
 
 /** Telas onde o convite não abre: fluxo de entrada, upgrade e o próprio tutorial. */
 const SEM_CONVITE = ["/onboarding", "/assinar", "/upgrade", TUTORIAL_ROTA];
