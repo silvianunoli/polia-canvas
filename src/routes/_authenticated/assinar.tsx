@@ -6,7 +6,15 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib/stripe.functions";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
-import { ehBeta, tierDoPlano, FEATURES_GRATIS, TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { gtagEvent } from "@/lib/gtag";
+import {
+  ehBeta,
+  tierDoPlano,
+  valorDoPlano,
+  FEATURES_GRATIS,
+  TIERS_PAGOS,
+  type TierPago,
+} from "@/lib/planos";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 type TierId = TierPago;
@@ -66,6 +74,7 @@ function AssinarPage() {
   const [ciclo, setCiclo] = useState<CicloId>("mensal");
   const [planoIniciando, setPlanoIniciando] = useState<PlanoAssinatura | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [planoNoCheckout, setPlanoNoCheckout] = useState<PlanoAssinatura | null>(null);
 
   const assinar = async (tier: TierId) => {
     const plano: PlanoAssinatura = `${tier}_${ciclo}`;
@@ -81,6 +90,7 @@ function AssinarPage() {
         return;
       }
       track("assinatura_iniciada", { plano });
+      setPlanoNoCheckout(plano);
       setClientSecret(resultado.clientSecret);
     } catch {
       track("assinatura_falhou", { plano, motivo: "excecao_client" });
@@ -167,6 +177,15 @@ function AssinarPage() {
           onClose={() => setClientSecret(null)}
           onSucesso={() => {
             track("assinatura_concluida");
+            // Conversão de compra pro GA4/Google Ads (FUN-09).
+            const valor = valorDoPlano(planoNoCheckout);
+            if (valor !== null) {
+              gtagEvent("purchase", {
+                value: valor,
+                currency: "BRL",
+                items: [{ item_id: planoNoCheckout, item_name: planoNoCheckout, price: valor, quantity: 1 }],
+              });
+            }
             setClientSecret(null);
             toastSucesso("Pagamento confirmado. Bem-vinda à Pólia One.");
             queryClient.invalidateQueries({ queryKey: ["assinatura-status"] });

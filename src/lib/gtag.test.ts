@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 type Mod = typeof import("./gtag");
 
+// O dataLayer guarda objetos `arguments`; pra comparar, vira array.
+const entrada = (i: number) => Array.from(window.dataLayer!.at(i) as ArrayLike<unknown>);
+
 async function carregarModulo(measurementId?: string): Promise<Mod> {
   vi.resetModules();
   if (measurementId === undefined) vi.stubEnv("VITE_GA_MEASUREMENT_ID", "");
@@ -38,10 +41,21 @@ describe("gtag", () => {
       expect(script!.async).toBe(true);
 
       expect(window.dataLayer).toHaveLength(2);
-      const [js, config] = window.dataLayer as unknown[][];
+      const [js, config] = [entrada(0), entrada(1)];
       expect(js[0]).toBe("js");
       expect(js[1]).toBeInstanceOf(Date);
       expect(config).toEqual(["config", "G-TESTE"]);
+    });
+
+    // Array comum no dataLayer é ignorado pelo gtag.js: nada chegava ao GA4.
+    it("empurra objeto arguments, não array", async () => {
+      const { carregarGtag, gtagEvent } = await carregarModulo("G-TESTE");
+      carregarGtag("G-TESTE");
+      gtagEvent("sign_up");
+      for (const item of window.dataLayer!) {
+        expect(Array.isArray(item)).toBe(false);
+        expect(Object.prototype.toString.call(item)).toBe("[object Arguments]");
+      }
     });
 
     // O efeito de consentimento pode chamar de novo ao mudar o banner.
@@ -65,14 +79,14 @@ describe("gtag", () => {
       const { carregarGtag, gtagEvent } = await carregarModulo("G-TESTE");
       carregarGtag("G-TESTE");
       gtagEvent("ativacao", { plano: "premium" });
-      expect(window.dataLayer!.at(-1)).toEqual(["event", "ativacao", { plano: "premium" }]);
+      expect(entrada(-1)).toEqual(["event", "ativacao", { plano: "premium" }]);
     });
 
     it("propriedades ausentes viram objeto vazio", async () => {
       const { gtagEvent } = await carregarModulo("G-TESTE");
       window.dataLayer = [];
       gtagEvent("x");
-      expect(window.dataLayer[0]).toEqual(["event", "x", {}]);
+      expect(entrada(0)).toEqual(["event", "x", {}]);
     });
 
     it("não explode sem window (SSR)", async () => {

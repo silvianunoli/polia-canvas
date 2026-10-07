@@ -152,7 +152,8 @@ describe("iniciarCompraPublica: sessão", () => {
         mode: "subscription",
         // trim do Zod: espaço em volta não vira e-mail diferente no Stripe.
         customer_email: "ana@exemplo.com",
-        success_url: "https://one.usepolia.com.br/compra-confirmada",
+        success_url:
+          "https://one.usepolia.com.br/compra-confirmada?plano=controle_mensal&session_id={CHECKOUT_SESSION_ID}",
         // Quem desiste volta pra tela de escolha de plano, não pra um âncora da home.
         cancel_url: "https://one.usepolia.com.br/planos",
         allow_promotion_codes: true,

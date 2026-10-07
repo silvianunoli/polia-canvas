@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { valorDoPlano } from "./planos";
 import {
   ehBeta,
   ehRotaProjete,
@@ -143,5 +144,20 @@ describe("ehBeta", () => {
     expect(ehBeta("beta")).toBe(true);
     expect(ehBeta("Beta")).toBe(false);
     expect(ehBeta(undefined)).toBe(false);
+  });
+});
+
+describe("valorDoPlano", () => {
+  it("devolve o preço cobrado de cada plano pago", () => {
+    expect(valorDoPlano("controle_mensal")).toBe(29.9);
+    expect(valorDoPlano("controle_anual")).toBe(299);
+    expect(valorDoPlano("projete_mensal")).toBe(47.9);
+    expect(valorDoPlano("projete_anual")).toBe(479);
+  });
+
+  it("chave desconhecida ou vazia volta null", () => {
+    expect(valorDoPlano("confere")).toBeNull();
+    expect(valorDoPlano("controle_semanal")).toBeNull();
+    expect(valorDoPlano(undefined)).toBeNull();
   });
 });

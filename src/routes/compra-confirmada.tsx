@@ -1,11 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Mail } from "lucide-react";
+import { gtagEvent } from "@/lib/gtag";
+import { valorDoPlano } from "@/lib/planos";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import { BTN_CONTORNO } from "@/components/site/Editorial";
 
+type CompraConfirmadaSearch = { plano?: string; session_id?: string };
+
 export const Route = createFileRoute("/compra-confirmada")({
+  validateSearch: (search: Record<string, unknown>): CompraConfirmadaSearch => ({
+    plano: typeof search.plano === "string" ? search.plano : undefined,
+    session_id: typeof search.session_id === "string" ? search.session_id : undefined,
+  }),
   head: () => ({
     meta: [{ title: "Compra confirmada · Pólia" }, { name: "robots", content: "noindex" }],
   }),
@@ -13,6 +22,22 @@ export const Route = createFileRoute("/compra-confirmada")({
 });
 
 function CompraConfirmadaPage() {
+  const { plano, session_id } = Route.useSearch();
+
+  // Conversão de compra pro GA4/Google Ads (FUN-09). O Stripe só manda pra cá
+  // com o pagamento aprovado; o transaction_id faz o GA4 ignorar a mesma compra
+  // contada de novo num recarregar da página.
+  useEffect(() => {
+    const valor = valorDoPlano(plano);
+    if (valor === null || !session_id) return;
+    gtagEvent("purchase", {
+      transaction_id: session_id,
+      value: valor,
+      currency: "BRL",
+      items: [{ item_id: plano, item_name: plano, price: valor, quantity: 1 }],
+    });
+  }, [plano, session_id]);
+
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />

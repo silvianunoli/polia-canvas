@@ -6,6 +6,7 @@ import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
+import { gtagEvent } from "@/lib/gtag";
 import {
   AuthShell,
   AuthButton,
@@ -154,6 +155,8 @@ function CadastroPage() {
         feature: "conta",
         propriedades: { metodo: "email", via_convite: !!emailConvite, ...origemCampanha },
       });
+      // Conversão principal do Google Ads (FUN-09), importada do GA4.
+      gtagEvent("sign_up", { method: "email" });
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {

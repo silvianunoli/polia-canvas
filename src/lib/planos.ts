@@ -182,3 +182,13 @@ export const TIERS_PAGOS: Record<
     ],
   },
 };
+
+// Valor cobrado por chave de plano ("controle_mensal" etc.), pro evento
+// purchase do GA4. Chave desconhecida volta null em vez de inventar valor.
+export function valorDoPlano(plano: string | null | undefined): number | null {
+  const [tier, ciclo] = (plano ?? "").split("_");
+  if (tier !== "controle" && tier !== "projete") return null;
+  if (ciclo === "mensal") return TIERS_PAGOS[tier].precoMensal;
+  if (ciclo === "anual") return TIERS_PAGOS[tier].precoAnual;
+  return null;
+}

@@ -6,6 +6,7 @@ import {
   montarHeartbeat,
   registrarAberturaDeTela,
 } from "@/lib/founder-eventos";
+import { gtagEvent } from "@/lib/gtag";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
@@ -101,7 +102,10 @@ function AuthenticatedLayout() {
   // Instrumentação do Founder Dashboard: cada tela da área logada vira um
   // feature_opened; o heartbeat mede a duração da sessão.
   useEffect(() => {
-    void consumirLoginPendente();
+    void consumirLoginPendente().then((evento) => {
+      // Cadastro pelo Google também conta como conversão no GA4 (FUN-09).
+      if (evento === "signup") gtagEvent("sign_up", { method: "google" });
+    });
     registrarAberturaDeTela(pathname);
   }, [pathname]);
   useEffect(() => montarHeartbeat(), []);

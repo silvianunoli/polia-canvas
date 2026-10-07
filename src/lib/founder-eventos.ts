@@ -176,9 +176,11 @@ export function montarHeartbeat(): () => void {
     void registrar("heartbeat");
   }, HEARTBEAT_MS);
 
+  // Espera o sessao_fim entrar na fila antes do flush com keepalive: com os
+  // dois em paralelo o flush rodava com a fila vazia e o evento ficava pro
+  // timer de 5 s, que a aba fechando quase nunca deixa disparar (FND-03).
   const aoSair = () => {
-    void registrar("sessao_fim");
-    void flush(true);
+    void registrarEAguardar("sessao_fim");
   };
   window.addEventListener("pagehide", aoSair);
 
@@ -199,14 +201,16 @@ export function marcarLoginPendente(metodo: "google"): void {
   sessionStorage.setItem(LOGIN_PENDENTE_KEY, metodo);
 }
 
-export async function consumirLoginPendente(): Promise<void> {
-  if (!noBrowser()) return;
+// Devolve o que decidiu (ou null) pra quem chama poder avisar o GA4 também.
+export async function consumirLoginPendente(): Promise<"signup" | "login" | null> {
+  if (!noBrowser()) return null;
   const metodo = sessionStorage.getItem(LOGIN_PENDENTE_KEY);
-  if (!metodo) return;
+  if (!metodo) return null;
   sessionStorage.removeItem(LOGIN_PENDENTE_KEY);
   const session = await sessaoSupabase();
-  if (!session) return;
+  if (!session) return null;
   const criadoHa = Date.now() - new Date(session.user.created_at).getTime();
-  const evento: EventoFounder = criadoHa < 2 * 60 * 1000 ? "signup" : "login";
+  const evento = criadoHa < 2 * 60 * 1000 ? "signup" : "login";
   void registrar(evento, { feature: "conta", propriedades: { metodo } });
+  return evento;
 }

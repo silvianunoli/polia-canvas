@@ -216,7 +216,7 @@ describe("montarHeartbeat", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("no pagehide despacha com keepalive o que já estava na fila", async () => {
+  it("no pagehide despacha com keepalive o que já estava na fila, junto do sessao_fim", async () => {
     const desmontar = mod.montarHeartbeat();
     await mod.registrar("edit_goal");
     window.dispatchEvent(new Event("pagehide"));
@@ -224,16 +224,13 @@ describe("montarHeartbeat", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][1].keepalive).toBe(true);
-    expect(corpoDaChamada().map((l) => l.evento)).toEqual(["edit_goal"]);
+    expect(corpoDaChamada().map((l) => l.evento)).toEqual(["edit_goal", "sessao_fim"]);
     desmontar();
   });
 
-  // BUG REAL (não corrigido aqui): em aoSair, `void registrar("sessao_fim")`
-  // suspende no await de getSession antes de empurrar na fila, e o
-  // `void flush(true)` logo abaixo roda com a fila ainda vazia. O sessao_fim
-  // só entra na fila depois e fica esperando o timer de 5 s sem keepalive,
-  // que a aba fechando quase nunca deixa disparar.
-  it.fails("no pagehide o sessao_fim sai no mesmo POST com keepalive", async () => {
+  // FND-03: o flush rodava antes do sessao_fim entrar na fila e o evento
+  // ficava pro timer de 5 s sem keepalive, que a aba fechando não espera.
+  it("no pagehide o sessao_fim sai no mesmo POST com keepalive", async () => {
     const desmontar = mod.montarHeartbeat();
     window.dispatchEvent(new Event("pagehide"));
     await vi.advanceTimersByTimeAsync(0);
