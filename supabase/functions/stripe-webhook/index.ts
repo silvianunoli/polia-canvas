@@ -23,12 +23,8 @@ const ADMIN_URL = "https://office.usepolia.com.br";
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 const PRICE_TO_PLANO: Record<string, string> = {};
-// Legado: os primeiros price ids (só "Assinatura", sem plano diferenciado)
-// mapeiam pra "controle" — era o único plano pago que existia até 26/jul.
-const PRICE_LEGADO_MENSAL = Deno.env.get("STRIPE_PRICE_ID_MENSAL");
-const PRICE_LEGADO_ANUAL = Deno.env.get("STRIPE_PRICE_ID_ANUAL");
-if (PRICE_LEGADO_MENSAL) PRICE_TO_PLANO[PRICE_LEGADO_MENSAL] = "controle";
-if (PRICE_LEGADO_ANUAL) PRICE_TO_PLANO[PRICE_LEGADO_ANUAL] = "controle";
+// O par legado (STRIPE_PRICE_ID_MENSAL/ANUAL, da conta Stripe antiga) saiu em
+// 07/10/2026 (PAY-21): nenhuma assinatura usava, e a conta nova só tem os 4 abaixo.
 
 const PRICE_CONTROLE_MENSAL = Deno.env.get("STRIPE_PRICE_ID_CONTROLE_MENSAL");
 const PRICE_CONTROLE_ANUAL = Deno.env.get("STRIPE_PRICE_ID_CONTROLE_ANUAL");
@@ -442,7 +438,11 @@ async function enviarEmailRenovacao(
 // (ex.: já tinha convite) ou cria uma nova + manda o link de ativação. Em
 // qualquer um dos casos, grava o user_id nos metadados do Customer no Stripe —
 // upsertAssinaturaDaSubscription já sabe ler esse metadado como fallback.
-async function resolverContaDaCompra(email: string, customerId: string): Promise<string | null> {
+async function resolverContaDaCompra(
+  email: string,
+  customerId: string,
+  origem: Record<string, string>,
+): Promise<string | null> {
   const existente = await buscarUserIdPorEmail(email);
   let userId = existente;
 
@@ -467,9 +467,14 @@ async function resolverContaDaCompra(email: string, customerId: string): Promise
       // O convite só faz login: precisa_criar_senha (mesmo nome de
       // META_PRECISA_CRIAR_SENHA em src/lib/senha.ts) faz a área logada pedir
       // nome e senha antes de qualquer outra tela (QA-03).
+      // origem_campanha (FUN-07): mesmo campo que o cadastro Grátis grava,
+      // pra conta nascida da compra também dizer de qual landing veio.
       options: {
         redirectTo: `${SITE_URL}/auth/criar-senha`,
-        data: { precisa_criar_senha: true },
+        data: {
+          precisa_criar_senha: true,
+          ...(Object.keys(origem).length > 0 ? { origem_campanha: origem } : {}),
+        },
       },
     });
     if (error || !data.user) {
@@ -573,7 +578,11 @@ Deno.serve(async (req) => {
           break;
         }
 
-        const userId = await resolverContaDaCompra(email, customerId);
+        const userId = await resolverContaDaCompra(
+          email,
+          customerId,
+          origemDaSessao(session.metadata),
+        );
         if (!userId) {
           await registrarEventoAnalytics("checkout_falhou", session.id, {
             motivo: "erro_criar_conta",

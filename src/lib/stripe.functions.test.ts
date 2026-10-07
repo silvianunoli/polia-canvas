@@ -8,8 +8,6 @@ vi.hoisted(() => {
   process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL = "price_controle_anual";
   process.env.STRIPE_PRICE_ID_PROJETE_MENSAL = "price_projete_mensal";
   process.env.STRIPE_PRICE_ID_PROJETE_ANUAL = "price_projete_anual";
-  delete process.env.STRIPE_PRICE_ID_MENSAL;
-  delete process.env.STRIPE_PRICE_ID_ANUAL;
 });
 
 // createServerFn vira um builder de mentira: guarda o validador e devolve o
@@ -315,7 +313,9 @@ describe("statusAssinatura", () => {
     expect(r.preco).toBeNull();
   });
 
-  it("reconhece o price id legado de antes de 26/jul (R$ 29,00)", async () => {
+  // PAY-21: o par legado saiu do código; mesmo com o secret antigo ainda
+  // definido, o price id dele não vira preço.
+  it("ignora o price id legado de antes de 26/jul", async () => {
     process.env.STRIPE_PRICE_ID_MENSAL = "price_legado_mensal";
     try {
       from.mockReturnValueOnce(
@@ -324,7 +324,7 @@ describe("statusAssinatura", () => {
         }),
       );
       const r = (await status({ context })) as { preco: unknown };
-      expect(r.preco).toEqual({ valorCentavos: 2900, intervalo: "month", tier: "controle" });
+      expect(r.preco).toBeNull();
     } finally {
       delete process.env.STRIPE_PRICE_ID_MENSAL;
     }

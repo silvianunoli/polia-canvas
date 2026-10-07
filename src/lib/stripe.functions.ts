@@ -94,17 +94,6 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
     intervalo: "year",
     tier: "projete",
   });
-  // Legado: price ids de antes de 26/jul, quando só existia um plano pago.
-  add(process.env.STRIPE_PRICE_ID_MENSAL, {
-    valorCentavos: 2900,
-    intervalo: "month",
-    tier: "controle",
-  });
-  add(process.env.STRIPE_PRICE_ID_ANUAL, {
-    valorCentavos: 29000,
-    intervalo: "year",
-    tier: "controle",
-  });
   return priceId ? (mapa[priceId] ?? null) : null;
 }
 
