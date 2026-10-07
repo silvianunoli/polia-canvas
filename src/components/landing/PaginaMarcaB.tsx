@@ -591,7 +591,7 @@ export function PaginaMarcaB({
             </ul>
           </Reveal>
           <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
-            Não achou o seu? Se tem custo, preço e cliente, a conta é a mesma.
+            Não achou o seu? Se tem custo, preço e cliente, a Pólia One é pra você.
           </p>
         </Secao>
 
