@@ -14,6 +14,7 @@ import {
   ChevronsRight,
   Settings,
   LogOut,
+  PlayCircle,
   CalendarDays,
   Lock,
   TrendingUp,
@@ -77,6 +78,7 @@ function Body({
   const meta = useUserMeta();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const configAtiva = isActive("/configuracoes", pathname) || isActive("/chamados", pathname);
+  const tutorialAtivo = isActive("/como-usar", pathname);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -218,6 +220,20 @@ function Body({
 
         {/* Rodapé: config, sair e, no modo recolhido, o botão de expandir */}
         <div className="flex flex-col gap-0.5 border-t border-[var(--line)] px-2 py-2">
+          {/* Tutorial narrado (07/10/2026): fica sempre à mão pra quando bater a dúvida. */}
+          <Link
+            to="/como-usar"
+            onClick={onNavigate}
+            aria-current={tutorialAtivo ? "page" : undefined}
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
+              tutorialAtivo
+                ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
+            } ${compact ? "justify-center" : ""}`}
+          >
+            <PlayCircle size={18} aria-hidden="true" />
+            <span className={compact ? "sr-only" : undefined}>Tutorial</span>
+          </Link>
           <Link
             to="/configuracoes"
             onClick={onNavigate}

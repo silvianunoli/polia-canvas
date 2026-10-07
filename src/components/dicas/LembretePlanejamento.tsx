@@ -9,6 +9,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { dataLocal, deveLembrarHoje, progressoPlanejamento } from "@/lib/lembretePlanejamento";
+import { conviteFoiAberto } from "@/lib/tutorial";
 
 const chaveDoDia = (userId: string) => `polia:lembrete-planejamento:${userId}`;
 
@@ -68,6 +69,8 @@ export function LembretePlanejamento({ pathname }: { pathname: string }) {
   useEffect(() => {
     if (!userId || !pronto || foraDeContexto || !progresso || aberto) return;
     if (mostrar("tour")) return; // primeiro dia: quem apresenta é o tour
+    // Convite do tutorial pendente ou aberto nesta visita: um modal por entrada.
+    if (mostrar("tutorial") || conviteFoiAberto()) return;
     if (!deveLembrarHoje(lerUltimo(userId), dataLocal(new Date()))) return;
     gravarHoje(userId);
     setAberto(true);

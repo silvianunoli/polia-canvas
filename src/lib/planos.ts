@@ -75,6 +75,7 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/calculadora", tier: "confere" },
   { prefixo: "/planner", tier: "confere" }, // cotada
   { prefixo: "/caderno", tier: "confere" }, // cotada
+  { prefixo: "/como-usar", tier: "confere" }, // tutorial narrado: todo plano assiste
   { prefixo: "/raiox", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Resumo/Encomenda
   { prefixo: "/plano-conteudo", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/projecao", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x

@@ -10,6 +10,7 @@ import { Route as AjudaRoute } from "./ajuda";
 import { Route as SobreRoute } from "./sobre";
 import { Route as LandingARoute } from "./landing-a";
 import { Route as LandingBRoute } from "./landing-b";
+import { Route as TutorialRoute } from "./tutorial";
 
 type Head = {
   meta?: Array<Record<string, string>>;
@@ -150,5 +151,16 @@ describe.each([
       rel: "canonical",
       href: `https://one.usepolia.com.br${caminho}`,
     });
+  });
+});
+
+describe("/tutorial", () => {
+  it("é pública e indexável, com canonical próprio", () => {
+    const h = head(TutorialRoute);
+    expect(h.links).toContainEqual({
+      rel: "canonical",
+      href: "https://one.usepolia.com.br/tutorial",
+    });
+    expect(h.meta?.some((m) => m.name === "robots")).toBe(false);
   });
 });

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -45,6 +46,7 @@ import { Route as AuthenticatedMercadoRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMarcaRouteImport } from './routes/_authenticated/marca'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedComoUsarRouteImport } from './routes/_authenticated/como-usar'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
@@ -59,6 +61,11 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 
+const TutorialRoute = TutorialRouteImport.update({
+  id: '/tutorial',
+  path: '/tutorial',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -240,6 +247,11 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedComoUsarRoute = AuthenticatedComoUsarRouteImport.update({
+  id: '/como-usar',
+  path: '/como-usar',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -326,12 +338,14 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/tutorial': typeof TutorialRoute
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/como-usar': typeof AuthenticatedComoUsarRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -376,12 +390,14 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/tutorial': typeof TutorialRoute
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
+  '/como-usar': typeof AuthenticatedComoUsarRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -428,12 +444,14 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
+  '/tutorial': typeof TutorialRoute
   '/_authenticated/aimer': typeof AuthenticatedAimerRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
+  '/_authenticated/como-usar': typeof AuthenticatedComoUsarRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/marca': typeof AuthenticatedMarcaRoute
@@ -480,12 +498,14 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/tutorial'
     | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calculadora'
     | '/calendario'
     | '/clientes'
+    | '/como-usar'
     | '/configuracoes'
     | '/financeiro'
     | '/marca'
@@ -530,12 +550,14 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/tutorial'
     | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calculadora'
     | '/calendario'
     | '/clientes'
+    | '/como-usar'
     | '/configuracoes'
     | '/financeiro'
     | '/marca'
@@ -581,12 +603,14 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
+    | '/tutorial'
     | '/_authenticated/aimer'
     | '/_authenticated/assinar'
     | '/_authenticated/caderno'
     | '/_authenticated/calculadora'
     | '/_authenticated/calendario'
     | '/_authenticated/clientes'
+    | '/_authenticated/como-usar'
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
     | '/_authenticated/marca'
@@ -633,6 +657,7 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
+  TutorialRoute: typeof TutorialRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthCriarSenhaRoute: typeof AuthCriarSenhaRoute
   AuthEsqueciSenhaRoute: typeof AuthEsqueciSenhaRoute
@@ -648,6 +673,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tutorial': {
+      id: '/tutorial'
+      path: '/tutorial'
+      fullPath: '/tutorial'
+      preLoaderRoute: typeof TutorialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -900,6 +932,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/como-usar': {
+      id: '/_authenticated/como-usar'
+      path: '/como-usar'
+      fullPath: '/como-usar'
+      preLoaderRoute: typeof AuthenticatedComoUsarRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
       path: '/clientes'
@@ -1001,6 +1040,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
+  AuthenticatedComoUsarRoute: typeof AuthenticatedComoUsarRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedMarcaRoute: typeof AuthenticatedMarcaRoute
@@ -1029,6 +1069,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
+  AuthenticatedComoUsarRoute: AuthenticatedComoUsarRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedMarcaRoute: AuthenticatedMarcaRoute,
@@ -1069,6 +1110,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
+  TutorialRoute: TutorialRoute,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthCriarSenhaRoute: AuthCriarSenhaRoute,
   AuthEsqueciSenhaRoute: AuthEsqueciSenhaRoute,

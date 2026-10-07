@@ -93,6 +93,13 @@ export function ConversaAssistente({
                 </button>
               ))}
             </div>
+            <Link
+              to="/como-usar"
+              className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              Prefere ver? O tutorial mostra cada tela em 5 minutos
+              <span aria-hidden="true">→</span>
+            </Link>
           </div>
         ) : (
           <div

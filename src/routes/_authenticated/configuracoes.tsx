@@ -890,6 +890,9 @@ function ConfiguracoesPage() {
             <LinkInterno href="/chamados" className={BTN_MIUDO}>
               Seus chamados
             </LinkInterno>
+            <LinkInterno href="/como-usar" className={BTN_MIUDO}>
+              Assistir o tutorial
+            </LinkInterno>
             <BotaoReverTour className={BTN_MIUDO} />
           </div>
         </Secao>

@@ -17,7 +17,8 @@ export type ChaveDicaTela =
   | "plano-conteudo"
   | "calendario";
 
-export type ChaveDica = "tour" | ChaveDicaTela;
+// "tutorial" = convite do tutorial narrado no primeiro acesso (ver lib/tutorial.ts).
+export type ChaveDica = "tour" | "tutorial" | ChaveDicaTela;
 
 export interface PassoTour {
   /** Valor do `data-tour` do elemento que o balão aponta. */

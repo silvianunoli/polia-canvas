@@ -34,7 +34,9 @@ const ANCORA_CENTRO = {
  */
 export function TourBoasVindas() {
   const { mostrar, marcar } = useDicasVistas();
-  const ativo = mostrar("tour");
+  // Espera a resposta do convite do tutorial narrado: dois convites ao mesmo
+  // tempo na primeira entrada é demais (ver ConviteTutorial).
+  const ativo = mostrar("tour") && !mostrar("tutorial");
   const [passo, setPasso] = useState(0);
   const [alvo, setAlvo] = useState<HTMLElement | null>(null);
   const [pronto, setPronto] = useState(false);

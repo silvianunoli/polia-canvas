@@ -10,6 +10,7 @@ import { gtagEvent } from "@/lib/gtag";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
+import { ConviteTutorial } from "@/components/dicas/ConviteTutorial";
 import { AssistenteProvider } from "@/components/assistente/AssistenteContext";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
@@ -128,6 +129,7 @@ function AuthenticatedLayout() {
             <Outlet />
           </main>
         </div>
+        <ConviteTutorial pathname={pathname} />
         <LembretePlanejamento pathname={pathname} />
         <AssistenteFlutuante pathname={pathname} />
         {csatPulso.mostrar && (
