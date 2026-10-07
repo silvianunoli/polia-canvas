@@ -1,14 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { ArrowRight } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { linkCanonico, urlCanonica, HOST_CANONICO } from "@/lib/seo";
 import { jsonLdBreadcrumb, tagJsonLd } from "@/lib/jsonld";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
-import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
+import { Reveal } from "@/components/site/Reveal";
+import { BotaoCadastro, CORPO, Rotulo, Secao } from "@/components/landing/BlocosLanding";
+import { ChamadaBlog, FotoSil, ManchetePost, SumarioPosts } from "@/components/site/BlogBlocos";
 import type { Tables } from "@/integrations/supabase/types";
+
+const TITULO = "Blog da Pólia · Preço, marca e o que sobra no fim do mês";
+const DESCRICAO =
+  "Textos curtos pra quem vende produto ou serviço: por que a cliente compra de você, quanto cobrar, quanto sobra e o que fazer primeiro. Escritos pela Sil.";
 
 export const Route = createFileRoute("/blog/")({
   // A busca mora no loader (e não num useEffect) pra que o HTML servido já
@@ -23,26 +27,18 @@ export const Route = createFileRoute("/blog/")({
     if (error) {
       console.error("blog_posts_listar", error);
       // Devolve a falha como dado em vez de lançar: a tela de erro do /blog
-      // mora dentro da própria página (cabeçalho, hero e cartão de aviso), e
-      // um errorComponent trocaria esse layout.
+      // mora dentro da própria página (cabeçalho, hero e aviso), e um
+      // errorComponent trocaria esse layout.
       return { posts: [] as Post[], erro: true };
     }
     return { posts: (data as Post[]) ?? [], erro: false };
   },
   head: () => ({
     meta: [
-      { title: "Blog da Pólia · Pra quem toca a marca" },
-      {
-        name: "description",
-        content:
-          "Textos pra quem toca o próprio negócio decidir com mais clareza: preço, desconto, compra, venda e o que sobra no fim do mês.",
-      },
-      { property: "og:title", content: "Blog da Pólia · Pra quem toca a marca" },
-      {
-        property: "og:description",
-        content:
-          "Textos sobre as decisões que quem toca o próprio negócio precisa tomar, sem hack e sem promessa de faturamento.",
-      },
+      { title: TITULO },
+      { name: "description", content: DESCRICAO },
+      { property: "og:title", content: TITULO },
+      { property: "og:description", content: DESCRICAO },
     ],
     links: [linkCanonico("/blog")],
     scripts: [
@@ -62,39 +58,25 @@ type Post = Pick<
   "id" | "slug" | "titulo" | "resumo" | "categoria" | "publicado_em" | "capa_url" | "tempo_leitura"
 >;
 
-// Rotação de cor de fundo do card quando o post não tem capa (peach/turquesa/rosa
-// alternados, sempre como fundo, nunca como texto).
-const CAPAS = ["var(--secondary)", "var(--accent)", "var(--surface-pink)"];
+// Copy e layout de 07/10/2026 (COPY-BLOG-POLIA-ONE.md): sumário de revista no
+// lugar da grade de cards. Sem capa não aparece bloco colorido vazio; o título
+// grande faz o papel da imagem.
 
-// Cartão de post: borda de linha, canto 2xl, hover discreto. Sem sombra.
-const CARTAO =
-  "overflow-hidden rounded-2xl border border-[var(--line)] bg-white no-underline transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
+const FILTRO =
+  "min-h-[44px] rounded-full border px-4 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
+const FILTRO_ATIVO = "border-[var(--ink)] bg-[var(--ink)] text-[var(--bg)]";
+const FILTRO_INATIVO =
+  "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]";
 
-// Data curta pro cartão da listagem ("12 set"). Mesmo campo (`publicado_em`) que
-// blog.$slug.tsx usa pra data completa do post individual.
-function dataCurta(publicadoEm: string | null): string {
-  if (!publicadoEm) return "";
-  const partes = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "short" }).formatToParts(
-    new Date(publicadoEm),
+function Aviso({ titulo, children }: { titulo: string; children?: ReactNode }) {
+  return (
+    <Reveal>
+      <div className="border-t border-[var(--line)] py-8">
+        <p className="text-[20px] font-bold tracking-[-0.02em] text-[var(--ink)]">{titulo}</p>
+        {children}
+      </div>
+    </Reveal>
   );
-  const dia = partes.find((p) => p.type === "day")?.value;
-  const mes = partes.find((p) => p.type === "month")?.value.replace(".", "");
-  return dia && mes ? `${dia} ${mes}` : "";
-}
-
-function CoverBlock({ post, index }: { post: Post; index: number }) {
-  if (post.capa_url) {
-    return (
-      <img
-        src={post.capa_url}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        className="aspect-video w-full object-cover"
-      />
-    );
-  }
-  return <div className="aspect-video" style={{ background: CAPAS[index % CAPAS.length] }} />;
 }
 
 function BlogList() {
@@ -112,240 +94,116 @@ function BlogList() {
     ? posts.filter((p) => p.categoria === categoriaAtiva)
     : posts;
 
-  const [destaque, ...resto] = postsFiltrados;
+  const [manchete, ...resto] = postsFiltrados;
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <SiteHeader />
 
       <main id="conteudo">
-        {/* HERO */}
-        <section className="pb-[clamp(32px,4vw,48px)] pt-[clamp(48px,7vw,96px)]">
-          <div className={CONTAINER}>
-            <Reveal>
-              <Eyebrow>Blog</Eyebrow>
-            </Reveal>
-            <h1 className="mt-4 max-w-[16ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-              Pra quem toca a marca.
-            </h1>
-            <Reveal delay={0.1}>
-              <p className="mt-6 max-w-[60ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                Sem hack de faturamento, sem promessa de seis dígitos. Textos sobre as decisões que
-                parecem pequenas até chegar a hora de tomar: preço, desconto, compra, venda, o
-                dinheiro que entra e o que sobra.
+        {/* HERO: h1 e texto fora do Reveal, visíveis no HTML do servidor. */}
+        <Secao className="!pb-[clamp(32px,4vw,48px)] !pt-[clamp(40px,5vw,64px)]">
+          <div className="grid grid-cols-1 items-end gap-x-[clamp(32px,5vw,64px)] gap-y-8 md:grid-cols-[8fr_3fr]">
+            <div>
+              <Rotulo>Blog da Pólia</Rotulo>
+              <h1 className="mt-4 max-w-[20ch] text-[clamp(32px,4.4vw,56px)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
+                O que ninguém explica sobre cobrar pela própria marca.
+              </h1>
+              <p className={`mt-6 ${CORPO}`}>
+                Textos curtos sobre as decisões do dia a dia de quem vende:{" "}
+                <b className="font-semibold text-[var(--ink)]">por que a cliente compra de você</b>,
+                quanto cobrar, quanto sobra e o que fazer primeiro. Escritos pela Sil, que passou
+                oito anos fazendo essa conta no próprio negócio.
               </p>
-            </Reveal>
+            </div>
+            <Link
+              to="/sobre"
+              className="group flex items-center gap-4 no-underline md:flex-col md:items-start"
+            >
+              <FotoSil tamanho={96} />
+              <span>
+                <span className="block font-semibold text-[var(--ink)]">Escrito pela Sil</span>
+                <span className="block text-[14px] text-[var(--secondary-text)] underline decoration-1 underline-offset-4 group-hover:decoration-2">
+                  fundadora da Pólia
+                </span>
+              </span>
+            </Link>
+          </div>
 
-            {categorias.length > 0 && (
-              <Reveal delay={0.15} className="mt-8 flex flex-wrap gap-2">
+          {/* Filtro só faz sentido com duas categorias ou mais. */}
+          {categorias.length >= 2 && (
+            <div
+              className="mt-10 flex flex-wrap gap-2"
+              role="group"
+              aria-label="Filtrar por assunto"
+            >
+              <button
+                type="button"
+                onClick={() => setCategoriaAtiva(null)}
+                aria-pressed={categoriaAtiva === null}
+                className={`${FILTRO} ${categoriaAtiva === null ? FILTRO_ATIVO : FILTRO_INATIVO}`}
+              >
+                Todos
+              </button>
+              {categorias.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategoriaAtiva(cat)}
+                  aria-pressed={categoriaAtiva === cat}
+                  className={`${FILTRO} ${categoriaAtiva === cat ? FILTRO_ATIVO : FILTRO_INATIVO}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </Secao>
+
+        <Secao className="!pt-0">
+          {erro ? (
+            <Aviso titulo="Não deu pra carregar os textos agora.">
+              <p className={`mt-2 ${CORPO}`}>Recarregar a página costuma resolver.</p>
+            </Aviso>
+          ) : postsFiltrados.length === 0 ? (
+            posts.length === 0 ? (
+              <Aviso titulo="Os primeiros textos estão sendo escritos.">
+                <p className={`mt-2 ${CORPO}`}>
+                  Enquanto isso, a Pólia One já mostra quanto sobra em cada venda.
+                </p>
+                <div className="mt-6">
+                  <BotaoCadastro busca={{ origem: "blog" }} contexto="blog_vazio" />
+                </div>
+              </Aviso>
+            ) : (
+              <Aviso titulo="Essa categoria ainda não tem texto.">
                 <button
                   type="button"
                   onClick={() => setCategoriaAtiva(null)}
-                  aria-pressed={categoriaAtiva === null}
-                  className={`rounded-full border px-4 py-3 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
-                    categoriaAtiva === null
-                      ? "border-[var(--ink)] bg-[var(--ink)] text-white"
-                      : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
-                  }`}
+                  className="mt-4 inline-flex min-h-[44px] items-center text-[16px] font-semibold text-[var(--secondary-text)] underline decoration-1 underline-offset-4 hover:decoration-2"
                 >
-                  Todos os posts
+                  Ver todos os textos
                 </button>
-                {categorias.map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setCategoriaAtiva(cat)}
-                    aria-pressed={categoriaAtiva === cat}
-                    className={`rounded-full border px-4 py-3 text-[14px] font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] ${
-                      categoriaAtiva === cat
-                        ? "border-[var(--ink)] bg-[var(--ink)] text-white"
-                        : "border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--ink)] hover:text-[var(--ink)]"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </Reveal>
-            )}
-          </div>
-        </section>
-
-        {/* O estado de carregamento saiu junto com o useEffect: com o loader,
-            a primeira renderização já chega com os posts resolvidos. */}
-        {erro ? (
-          <section className="pb-[clamp(48px,6vw,72px)]">
-            <div className={CONTAINER}>
-              <Reveal>
-                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-                  <p className="font-semibold">Não deu pra carregar os textos agora.</p>
-                  <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-                    Recarregar a página costuma resolver.
-                  </p>
-                </div>
-              </Reveal>
-            </div>
-          </section>
-        ) : postsFiltrados.length === 0 ? (
-          <section className="pb-[clamp(48px,6vw,72px)]">
-            <div className={CONTAINER}>
-              <Reveal>
-                <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-                  {/* O estado vazio é o que a visitante encontra enquanto o blog
-                      não tem post: precisa de saída dentro do próprio cartão. */}
-                  {posts.length === 0 ? (
-                    <>
-                      <p className="font-semibold">
-                        O blog está sendo escrito. Ainda não tem texto publicado.
-                      </p>
-                      <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
-                        O que a Pólia faz já dá pra ver funcionando: quanto sobra em cada venda e se
-                        o mês fechou no azul.
-                      </p>
-                      <div className="mt-6 flex flex-wrap gap-3">
-                        <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
-                          Ver os planos
-                          <span aria-hidden="true">→</span>
-                        </Link>
-                        <Link to="/sobre" className={BTN_CONTORNO}>
-                          Conhecer a Pólia
-                        </Link>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold">Essa categoria ainda não tem texto.</p>
-                      <div className="mt-6">
-                        <button
-                          type="button"
-                          onClick={() => setCategoriaAtiva(null)}
-                          className={BTN_CONTORNO}
-                        >
-                          Ver todos os posts
-                        </button>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </Reveal>
-            </div>
-          </section>
-        ) : (
-          <>
-            {/* DESTAQUE */}
-            <section className="pb-[clamp(32px,4vw,48px)]">
-              <div className={CONTAINER}>
-                <Reveal>
-                  <Link
-                    to="/blog/$slug"
-                    params={{ slug: destaque.slug }}
-                    className={`${CARTAO} grid grid-cols-1 md:grid-cols-[1.1fr_0.9fr]`}
-                  >
-                    <div className="md:h-full md:min-h-[320px] [&>*]:h-full [&>img]:md:h-full">
-                      <CoverBlock post={destaque} index={0} />
-                    </div>
-                    <div className="flex flex-col gap-3 p-[clamp(24px,3vw,40px)]">
-                      {destaque.categoria && <Eyebrow>{destaque.categoria}</Eyebrow>}
-                      <h2 className="max-w-[20ch] text-[clamp(1.6rem,3vw,2.2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
-                        {destaque.titulo}
-                      </h2>
-                      {destaque.resumo && (
-                        <p className="max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                          {destaque.resumo}
-                        </p>
-                      )}
-                      <p className="text-[13px] text-[var(--ink-soft)]">
-                        Por Sil
-                        {dataCurta(destaque.publicado_em)
-                          ? ` · ${dataCurta(destaque.publicado_em)}`
-                          : ""}
-                        {destaque.tempo_leitura
-                          ? ` · ${destaque.tempo_leitura} min de leitura`
-                          : ""}
-                      </p>
-                      <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[15px] font-semibold">
-                        Ler o texto
-                        <ArrowRight size={16} aria-hidden="true" />
-                      </span>
-                    </div>
-                  </Link>
-                </Reveal>
+              </Aviso>
+            )
+          ) : (
+            <>
+              <div className="border-t border-[var(--line)] pt-10">
+                <ManchetePost post={manchete} />
               </div>
-            </section>
-
-            {/* GRADE */}
-            {resto.length > 0 && (
-              <section className="pb-[clamp(48px,6vw,72px)]">
-                <div className={CONTAINER}>
-                  <Reveal>
-                    <Eyebrow>Mais textos</Eyebrow>
-                  </Reveal>
-                  <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-                    {resto.map((post, i) => (
-                      <RevealItem key={post.id} className="h-full">
-                        <Link
-                          to="/blog/$slug"
-                          params={{ slug: post.slug }}
-                          className={`${CARTAO} flex h-full flex-col`}
-                        >
-                          <CoverBlock post={post} index={i + 1} />
-                          <div className="flex flex-1 flex-col gap-2 p-6">
-                            {post.categoria && <Eyebrow>{post.categoria}</Eyebrow>}
-                            <h3 className="text-[19px] font-bold leading-[1.25] tracking-[-0.01em] text-balance">
-                              {post.titulo}
-                            </h3>
-                            {post.resumo && (
-                              <p className="text-[14px] leading-[1.6] text-[var(--ink-soft)]">
-                                {post.resumo}
-                              </p>
-                            )}
-                            <p className="text-[13px] text-[var(--ink-soft)]">
-                              Por Sil
-                              {dataCurta(post.publicado_em)
-                                ? ` · ${dataCurta(post.publicado_em)}`
-                                : ""}
-                              {post.tempo_leitura ? ` · ${post.tempo_leitura} min` : ""}
-                            </p>
-                            <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[14px] font-semibold">
-                              Ler o texto
-                              <ArrowRight size={14} aria-hidden="true" />
-                            </span>
-                          </div>
-                        </Link>
-                      </RevealItem>
-                    ))}
-                  </RevealGroup>
+              {resto.length > 0 && (
+                <div className="mt-16">
+                  <Rotulo>Mais textos</Rotulo>
+                  <div className="mt-4">
+                    <SumarioPosts posts={resto} />
+                  </div>
                 </div>
-              </section>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </Secao>
 
-        {/* CAPTURA */}
-        <section className={SECAO}>
-          <div className={CONTAINER}>
-            <Reveal>
-              <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface-pink)] p-[clamp(28px,4vw,56px)]">
-                <Eyebrow>Pólia</Eyebrow>
-                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.7rem,3.2vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Ver quanto sobra em cada venda leva menos tempo que ler um texto.
-                </h2>
-                <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                  Uma marca construída com clareza, decisão por decisão. O plano Grátis não pede
-                  cartão, e os planos pagos podem ser cancelados em um clique.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
-                    Ver os planos
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                  <Link to="/sobre" className={BTN_CONTORNO}>
-                    Conhecer a Pólia
-                  </Link>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
+        <ChamadaBlog />
       </main>
 
       <SiteFooter semMargemTopo />

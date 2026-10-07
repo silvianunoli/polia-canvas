@@ -1,13 +1,14 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { renderBlogMarkdown } from "@/lib/blogRenderMarkdown";
 import { linkCanonico, urlCanonica, HOST_CANONICO } from "@/lib/seo";
 import { jsonLdBlogPosting, jsonLdBreadcrumb, tagJsonLd } from "@/lib/jsonld";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
-import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
+import { CONTAINER, SECAO, BTN_PRIMARIO, Eyebrow } from "@/components/site/Editorial";
+import { Rotulo } from "@/components/landing/BlocosLanding";
+import { AssinaturaSil, ChamadaBlog, SumarioPosts } from "@/components/site/BlogBlocos";
 import type { ReactNode } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -27,11 +28,8 @@ type PostRow = Pick<
 
 type RelatedPost = Pick<
   Tables<"blog_posts">,
-  "id" | "slug" | "titulo" | "categoria" | "capa_url" | "tempo_leitura"
+  "id" | "slug" | "titulo" | "categoria" | "capa_url" | "tempo_leitura" | "publicado_em"
 >;
-
-// Mesma rotação de cor do card sem capa usada em /blog.
-const CAPAS = ["var(--secondary)", "var(--accent)", "var(--surface-pink)"];
 
 // Coluna de leitura: 68ch, corpo 18px, entrelinha folgada.
 const PROSA = [
@@ -52,14 +50,11 @@ const PROSA = [
   "[&_.blog-embed_iframe]:aspect-video [&_.blog-embed_iframe]:w-full [&_.blog-embed_iframe]:border-0",
 ].join(" ");
 
-const CARTAO =
-  "overflow-hidden rounded-2xl border border-[var(--line)] bg-white no-underline transition-[transform,border-color] duration-200 hover:-translate-y-1 hover:border-[var(--secondary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]";
-
 // Sem resumo cadastrado a description caía em "Pólia blog." e o og:description
 // em string vazia: o link circulava no WhatsApp sem nada que fizesse clicar.
 const DESCRICAO_PADRAO =
   "Texto de quem toca o próprio negócio sobre as decisões que dá pra tomar com mais clareza.";
-const TITULO_PADRAO = "Blog da Pólia · Pra quem toca a marca";
+const TITULO_PADRAO = "Blog da Pólia · Preço, marca e o que sobra no fim do mês";
 
 /** Tela curta de aviso do blog, com as saídas que o estado de erro não tinha. */
 function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; acao?: ReactNode }) {
@@ -68,22 +63,17 @@ function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; aca
       <SiteHeader />
       <main id="conteudo" className={SECAO}>
         <div className={CONTAINER}>
-          <div className="rounded-2xl border border-[var(--line)] bg-white p-8">
-            <p className="font-semibold">{titulo}</p>
+          <div className="border-t border-[var(--line)] pt-8">
+            <p className="text-[20px] font-bold tracking-[-0.02em]">{titulo}</p>
             <p className="mt-2 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
               {corpo}
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
+              {/* Quem chegou por link quebrado quer outro texto, não um plano. */}
               {acao ?? (
-                <>
-                  <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
-                    Ver os planos
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                  <Link to="/sobre" className={BTN_CONTORNO}>
-                    Conhecer a Pólia
-                  </Link>
-                </>
+                <Link to="/blog" className={BTN_PRIMARIO}>
+                  Ver todos os textos
+                </Link>
               )}
             </div>
           </div>
@@ -106,15 +96,22 @@ export const Route = createFileRoute("/blog/$slug")({
       .maybeSingle<PostRow>();
     if (!post) throw notFound();
 
-    const { data: related } = await supabase
+    // Pega os 9 mais recentes e põe os da mesma categoria na frente: com poucos
+    // textos no ar, filtrar só pela categoria deixaria a lista vazia.
+    const { data: recentes } = await supabase
       .from("blog_posts")
-      .select("id, slug, titulo, categoria, capa_url, tempo_leitura")
+      .select("id, slug, titulo, categoria, capa_url, tempo_leitura, publicado_em")
       .eq("publicado", true)
       .neq("id", post.id)
       .order("publicado_em", { ascending: false })
-      .limit(3);
+      .limit(9);
+    const lista = (recentes as RelatedPost[] | null) ?? [];
+    const related = [
+      ...lista.filter((r) => r.categoria === post.categoria),
+      ...lista.filter((r) => r.categoria !== post.categoria),
+    ].slice(0, 3);
 
-    return { post, related: (related as RelatedPost[] | null) ?? [] };
+    return { post, related };
   },
   head: ({ loaderData, params }) => {
     const post = loaderData?.post;
@@ -122,7 +119,7 @@ export const Route = createFileRoute("/blog/$slug")({
 
     return {
       meta: [
-        { title: post?.titulo ? `${post.titulo} · Blog · Pólia` : TITULO_PADRAO },
+        { title: post?.titulo ? `${post.titulo} · Blog da Pólia` : TITULO_PADRAO },
         { name: "description", content: post?.resumo || DESCRICAO_PADRAO },
         { property: "og:title", content: post?.titulo ?? TITULO_PADRAO },
         { property: "og:description", content: post?.resumo || DESCRICAO_PADRAO },
@@ -160,7 +157,7 @@ export const Route = createFileRoute("/blog/$slug")({
   notFoundComponent: () => (
     <BlogAviso
       titulo="Esse texto não está aqui."
-      corpo="Ou o link veio quebrado, ou o texto saiu do ar. Acontece."
+      corpo="Ou o link veio quebrado, ou o texto saiu do ar."
     />
   ),
   errorComponent: () => (
@@ -187,44 +184,6 @@ export const Route = createFileRoute("/blog/$slug")({
   ),
 });
 
-function RelatedCover({ post, index }: { post: RelatedPost; index: number }) {
-  if (post.capa_url) {
-    return (
-      <img
-        src={post.capa_url}
-        alt=""
-        loading="lazy"
-        decoding="async"
-        className="aspect-video w-full object-cover"
-      />
-    );
-  }
-  return (
-    <div
-      className="flex aspect-video items-start p-3"
-      style={{ background: CAPAS[index % CAPAS.length] }}
-    >
-      {post.categoria && (
-        <span className="font-accent inline-flex rounded-lg bg-[var(--bg)] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.14em] text-[var(--ink-soft)]">
-          {post.categoria}
-        </span>
-      )}
-    </div>
-  );
-}
-
-/** Bloco de assinatura da autora, repetido no topo e no pé do texto. */
-function Assinatura({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-4">
-      <div className="font-cabinet flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-[var(--accent)] text-[22px] text-[var(--accent-ink)]">
-        S
-      </div>
-      <div>{children}</div>
-    </div>
-  );
-}
-
 function BlogPost() {
   const { post, related } = Route.useLoaderData();
   const html = renderBlogMarkdown(post.conteudo_md);
@@ -242,139 +201,92 @@ function BlogPost() {
       <SiteHeader />
 
       <main id="conteudo">
+        {/* Topo sem Reveal: título, resumo e assinatura chegam visíveis no HTML do
+            servidor (antes o resumo só aparecia depois da animação). */}
         <article className="pb-[clamp(48px,6vw,72px)] pt-[clamp(32px,5vw,64px)]">
           <div className={`${CONTAINER} max-w-[68ch]`}>
             <Link
               to="/blog"
-              className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--secondary-text)] no-underline hover:underline"
+              className="inline-flex min-h-[44px] items-center gap-1.5 text-[14px] font-semibold text-[var(--secondary-text)] no-underline hover:underline"
             >
               <ArrowLeft size={15} aria-hidden="true" />
               Voltar pro blog
             </Link>
 
-            <div className="mt-8">
-              <Reveal>
-                <Eyebrow>{post.categoria ?? "Blog"}</Eyebrow>
-              </Reveal>
+            <div className="mt-6">
+              <Rotulo>{post.categoria ?? "Blog da Pólia"}</Rotulo>
               <h1 className="mt-4 text-[clamp(2.1rem,4.6vw,3.2rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
                 {post.titulo}
               </h1>
               {post.resumo && (
-                <Reveal delay={0.1}>
-                  <p className="mt-5 text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
-                    {post.resumo}
-                  </p>
-                </Reveal>
+                <p className="mt-5 text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
+                  {post.resumo}
+                </p>
               )}
 
               <div className="mt-8">
-                <Assinatura>
+                <AssinaturaSil>
                   <p className="font-semibold">Sil</p>
                   <p className="text-[14px] text-[var(--ink-soft)]">
                     {dataPublicada}
                     {dataPublicada && post.tempo_leitura ? " · " : ""}
                     {post.tempo_leitura ? `${post.tempo_leitura} min de leitura` : ""}
                   </p>
-                </Assinatura>
+                </AssinaturaSil>
               </div>
             </div>
           </div>
 
-          <Reveal delay={0.1} y={28} className={`${CONTAINER} max-w-[68ch]`}>
-            {post.capa_url ? (
+          {/* Capa só quando é foto de verdade. Sem capa, o texto começa direto:
+              o bloco colorido vazio que ficava aqui ocupava quase uma tela. */}
+          {post.capa_url ? (
+            <div className={`${CONTAINER} max-w-[68ch]`}>
               <img
                 src={post.capa_url}
                 alt=""
                 aria-hidden="true"
-                className="my-[clamp(32px,5vw,56px)] aspect-[16/7] w-full rounded-2xl border border-[var(--line)] object-cover"
+                className="mt-[clamp(32px,5vw,56px)] aspect-[16/7] w-full rounded-xl object-cover"
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
               />
-            ) : (
-              <div
-                className="my-[clamp(32px,5vw,56px)] aspect-[16/7] w-full rounded-2xl border border-[var(--line)]"
-                style={{ background: CAPAS[0] }}
-                aria-hidden="true"
-              />
-            )}
-          </Reveal>
+            </div>
+          ) : null}
 
-          <div className={`${CONTAINER} max-w-[68ch]`}>
+          <div className={`${CONTAINER} mt-[clamp(32px,5vw,56px)] max-w-[68ch]`}>
             {/* Corpo editorial assinado: renderizado como veio do CMS. */}
             <div className={PROSA} dangerouslySetInnerHTML={{ __html: html }} />
 
             <hr className="my-[clamp(40px,5vw,56px)] h-px border-0 bg-[var(--line)]" />
 
-            <Assinatura>
-              <p className="font-semibold">Por Sil</p>
-              <p className="max-w-[52ch] text-[14px] leading-[1.6] text-[var(--ink-soft)]">
-                Por quem toca o próprio negócio e pensa nessas decisões todo dia.
+            <AssinaturaSil tamanho={64}>
+              <p className="font-semibold">Sil, fundadora da Pólia</p>
+              <p className="mt-1 max-w-[52ch] text-[15px] leading-[1.6] text-[var(--ink-soft)]">
+                Foram oito anos tocando marca própria, da papelaria ao caderno feito à mão, antes de
+                entender quanto daquilo era lucro. A Pólia One nasceu dessa conta.
               </p>
-            </Assinatura>
+              <Link
+                to="/sobre"
+                className="mt-1 inline-flex min-h-[44px] items-center text-[15px] font-semibold text-[var(--secondary-text)] underline decoration-1 underline-offset-4 hover:decoration-2"
+              >
+                Ler a história inteira
+              </Link>
+            </AssinaturaSil>
           </div>
         </article>
 
+        <ChamadaBlog categoria={post.categoria} />
+
         {related.length > 0 && (
-          <section className="pb-[clamp(48px,6vw,72px)]">
-            <div className={CONTAINER}>
-              <Reveal>
-                <Eyebrow>Pra continuar</Eyebrow>
-              </Reveal>
-              <RevealGroup className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
-                {related.map((r, i) => (
-                  <RevealItem key={r.id} className="h-full">
-                    <Link
-                      to="/blog/$slug"
-                      params={{ slug: r.slug }}
-                      className={`${CARTAO} flex h-full flex-col`}
-                    >
-                      <RelatedCover post={r} index={i + 1} />
-                      <div className="flex flex-1 flex-col gap-2 p-6">
-                        <h3 className="text-[19px] font-bold leading-[1.25] tracking-[-0.01em] text-balance">
-                          {r.titulo}
-                        </h3>
-                        {r.tempo_leitura && (
-                          <p className="text-[13px] text-[var(--ink-soft)]">
-                            {r.tempo_leitura} min de leitura
-                          </p>
-                        )}
-                        <span className="mt-auto inline-flex items-center gap-1.5 pt-2 text-[14px] font-semibold">
-                          Ler o texto
-                          <ArrowRight size={14} aria-hidden="true" />
-                        </span>
-                      </div>
-                    </Link>
-                  </RevealItem>
-                ))}
-              </RevealGroup>
+          <section className={SECAO}>
+            <div className={`${CONTAINER} max-w-[880px]`}>
+              <Eyebrow>Pra continuar</Eyebrow>
+              <div className="mt-4">
+                <SumarioPosts posts={related} resumo={false} />
+              </div>
             </div>
           </section>
         )}
-
-        <section className={SECAO}>
-          <div className={CONTAINER}>
-            <Reveal>
-              <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface-pink)] p-[clamp(28px,4vw,56px)]">
-                <Eyebrow>Pólia</Eyebrow>
-                <h2 className="mt-4 max-w-[22ch] text-[clamp(1.7rem,3.2vw,2.4rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Do texto pra prática.
-                </h2>
-                <p className="mt-4 max-w-[52ch] leading-[1.6] text-[var(--ink-soft)]">
-                  Pensar sobre isso é um passo. Ver o número da sua própria venda é o seguinte: a
-                  Pólia mostra quanto sobra e ajuda a decidir sem chute. O plano Grátis não pede
-                  cartão.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
-                    Quero ver se dá lucro.
-                    <span aria-hidden="true">→</span>
-                  </Link>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
       </main>
 
       <SiteFooter semMargemTopo />
