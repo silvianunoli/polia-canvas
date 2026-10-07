@@ -416,62 +416,56 @@ function CadernoPage() {
                     .trim();
                   return (
                     <li key={n.id}>
+                      {/* Fixar e abrir são dois botões irmãos (ONE-69): antes o pino ficava dentro
+                          do card role="button", interativo dentro de interativo. O ::after do botão
+                          de abrir cobre o card inteiro, então clicar em qualquer ponto continua
+                          abrindo a nota; o pino fica por cima com z-10. */}
                       <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => selecionar(n.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            selecionar(n.id);
-                          }
-                        }}
-                        aria-pressed={ativa}
-                        className={`block w-full cursor-pointer rounded-xl border bg-white p-4 text-left transition-colors ${
+                        className={`relative flex items-start gap-2 rounded-xl border bg-white p-4 transition-colors ${
                           ativa
                             ? "border-[var(--secondary)]"
                             : "border-[var(--line)] hover:border-[var(--secondary)]"
                         }`}
                       >
-                        <div className="flex items-start gap-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              fixar.mutate(n);
-                            }}
-                            aria-label={n.fixada ? "Desafixar" : "Fixar no topo"}
-                            title={n.fixada ? "Desafixar" : "Fixar no topo"}
-                            className={`relative mt-0.5 shrink-0 before:absolute before:-inset-[14px] before:content-[''] ${
-                              n.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
-                            }`}
-                          >
-                            <Pin
-                              size={13}
-                              aria-hidden="true"
-                              fill={n.fixada ? "currentColor" : "none"}
-                            />
-                          </button>
-                          <div className="min-w-0 flex-1">
-                            <p className="flex items-center gap-1.5 truncate text-[16px] text-[var(--ink)]">
-                              {destacar(n.titulo.trim() || "sem título", termo)}
-                              {idsExcedentes.has(n.id) && (
-                                <Lock
-                                  size={12}
-                                  className="shrink-0 text-[var(--muted)]"
-                                  aria-hidden="true"
-                                />
-                              )}
-                            </p>
-                            <p className="mt-0.5 line-clamp-2 text-[12.5px] leading-snug text-[var(--muted)]">
-                              {idsExcedentes.has(n.id)
-                                ? "somente leitura · acima da cota do plano Grátis"
-                                : preview
-                                  ? destacar(preview, termo)
-                                  : "nota vazia"}
-                            </p>
-                          </div>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={() => fixar.mutate(n)}
+                          aria-label={n.fixada ? "Desafixar" : "Fixar no topo"}
+                          title={n.fixada ? "Desafixar" : "Fixar no topo"}
+                          className={`relative z-10 mt-0.5 shrink-0 before:absolute before:-inset-[14px] before:content-[''] ${
+                            n.fixada ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
+                          }`}
+                        >
+                          <Pin
+                            size={13}
+                            aria-hidden="true"
+                            fill={n.fixada ? "currentColor" : "none"}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selecionar(n.id)}
+                          aria-pressed={ativa}
+                          className="min-w-0 flex-1 cursor-pointer text-left after:absolute after:inset-0 after:rounded-xl after:content-['']"
+                        >
+                          <span className="flex items-center gap-1.5 truncate text-[16px] text-[var(--ink)]">
+                            {destacar(n.titulo.trim() || "sem título", termo)}
+                            {idsExcedentes.has(n.id) && (
+                              <Lock
+                                size={12}
+                                className="shrink-0 text-[var(--muted)]"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </span>
+                          <span className="mt-0.5 line-clamp-2 block text-[12.5px] leading-snug text-[var(--muted)]">
+                            {idsExcedentes.has(n.id)
+                              ? "somente leitura · acima da cota do plano Grátis"
+                              : preview
+                                ? destacar(preview, termo)
+                                : "nota vazia"}
+                          </span>
+                        </button>
                       </div>
                     </li>
                   );

@@ -55,13 +55,6 @@ export function fmtData(iso: string) {
   )}/${d.getFullYear()}`;
 }
 
-export function hojeISODate() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 export function num(s: string) {
   const v = parseFloat(s.replace(",", "."));
   return Number.isFinite(v) ? v : 0;

@@ -76,7 +76,7 @@ function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; aca
             <div className="mt-6 flex flex-wrap gap-3">
               {acao ?? (
                 <>
-                  <Link to="/planos" className={BTN_PRIMARIO}>
+                  <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
                     Ver os planos
                     <span aria-hidden="true">→</span>
                   </Link>
@@ -366,7 +366,7 @@ function BlogPost() {
                   cartão.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
-                  <Link to="/planos" className={BTN_PRIMARIO}>
+                  <Link to="/planos" search={{ origem: "blog" }} className={BTN_PRIMARIO}>
                     Quero ver se dá lucro.
                     <span aria-hidden="true">→</span>
                   </Link>

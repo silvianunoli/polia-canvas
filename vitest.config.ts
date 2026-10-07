@@ -16,6 +16,10 @@ export default defineConfig({
     globals: true,
     css: false,
     setupFiles: ["./vitest.setup.ts"],
+    // Com várias sessões abertas na máquina, o padrão (um worker por núcleo)
+    // estourava "Failed to start forks worker" e pulava arquivos (HIG-20).
+    // Com 2 workers os 1000+ testes passam sempre, em ~2 min.
+    maxWorkers: 2,
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],

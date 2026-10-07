@@ -83,8 +83,7 @@ function ClientesPage() {
     queryKey: ["clientes-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [profileRes, clientesRes, produtosRes] = await Promise.all([
-        supabase.from("profiles").select("full_name, streak").eq("id", userId!).maybeSingle(),
+      const [clientesRes, produtosRes] = await Promise.all([
         (
           supabase.from("clientes" as never) as unknown as {
             select: (s: string) => {
@@ -106,18 +105,14 @@ function ClientesPage() {
         supabase.from("produtos").select("id, nome").eq("user_id", userId!),
       ]);
       return {
-        profile: profileRes.data as { full_name: string | null; streak: number | null } | null,
         clientes: ((clientesRes as { data: Cliente[] | null }).data ?? []) as Cliente[],
         produtos: (produtosRes.data ?? []) as Produto[],
       };
     },
   });
 
-  const profile = dadosQuery.data?.profile;
   const clientes = dadosQuery.data?.clientes ?? [];
   const produtos = dadosQuery.data?.produtos ?? [];
-  const initial = (profile?.full_name?.charAt(0) || "P").toUpperCase();
-  const streak = profile?.streak ?? 0;
 
   const nomeProduto = (produtoId: string | null) => {
     if (!produtoId) return "sem produto";

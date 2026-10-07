@@ -15,7 +15,6 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ManualRouteImport } from './routes/manual'
-import { Route as ListaDeEsperaRouteImport } from './routes/lista-de-espera'
 import { Route as LandingBRouteImport } from './routes/landing-b'
 import { Route as LandingARouteImport } from './routes/landing-a'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
@@ -88,11 +87,6 @@ const PesquisaRoute = PesquisaRouteImport.update({
 const ManualRoute = ManualRouteImport.update({
   id: '/manual',
   path: '/manual',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ListaDeEsperaRoute = ListaDeEsperaRouteImport.update({
-  id: '/lista-de-espera',
-  path: '/lista-de-espera',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LandingBRoute = LandingBRouteImport.update({
@@ -326,7 +320,6 @@ export interface FileRoutesByFullPath {
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
   '/landing-b': typeof LandingBRoute
-  '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
@@ -377,7 +370,6 @@ export interface FileRoutesByTo {
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
   '/landing-b': typeof LandingBRoute
-  '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
@@ -430,7 +422,6 @@ export interface FileRoutesById {
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
   '/landing-b': typeof LandingBRoute
-  '/lista-de-espera': typeof ListaDeEsperaRoute
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
@@ -483,7 +474,6 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/landing-a'
     | '/landing-b'
-    | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
     | '/planos'
@@ -534,7 +524,6 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/landing-a'
     | '/landing-b'
-    | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
     | '/planos'
@@ -586,7 +575,6 @@ export interface FileRouteTypes {
     | '/descadastrar'
     | '/landing-a'
     | '/landing-b'
-    | '/lista-de-espera'
     | '/manual'
     | '/pesquisa'
     | '/planos'
@@ -639,7 +627,6 @@ export interface RootRouteChildren {
   DescadastrarRoute: typeof DescadastrarRoute
   LandingARoute: typeof LandingARoute
   LandingBRoute: typeof LandingBRoute
-  ListaDeEsperaRoute: typeof ListaDeEsperaRoute
   ManualRoute: typeof ManualRoute
   PesquisaRoute: typeof PesquisaRoute
   PlanosRoute: typeof PlanosRoute
@@ -701,13 +688,6 @@ declare module '@tanstack/react-router' {
       path: '/manual'
       fullPath: '/manual'
       preLoaderRoute: typeof ManualRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lista-de-espera': {
-      id: '/lista-de-espera'
-      path: '/lista-de-espera'
-      fullPath: '/lista-de-espera'
-      preLoaderRoute: typeof ListaDeEsperaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/landing-b': {
@@ -1083,7 +1063,6 @@ const rootRouteChildren: RootRouteChildren = {
   DescadastrarRoute: DescadastrarRoute,
   LandingARoute: LandingARoute,
   LandingBRoute: LandingBRoute,
-  ListaDeEsperaRoute: ListaDeEsperaRoute,
   ManualRoute: ManualRoute,
   PesquisaRoute: PesquisaRoute,
   PlanosRoute: PlanosRoute,

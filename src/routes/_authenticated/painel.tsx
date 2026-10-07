@@ -801,10 +801,7 @@ function PainelPage() {
               </div>
 
               <div className={SPAN_CLASS[4]}>
-                <LinkInterno
-                  href={destino("/clientes", clientesLiberado)}
-                  className="group block rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5 no-underline transition-[transform,border-color,box-shadow] duration-200 hover:-translate-y-[3px] hover:border-[var(--secondary)] hover:shadow-[var(--shadow-card-hover)]"
-                >
+                <CartaoFinanceiro href={destino("/clientes", clientesLiberado)}>
                   <div className="flex items-start justify-between gap-3">
                     <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                       Clientes
@@ -828,7 +825,7 @@ function PainelPage() {
                       </>
                     )}
                   </p>
-                </LinkInterno>
+                </CartaoFinanceiro>
               </div>
 
               {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os

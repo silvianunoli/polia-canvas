@@ -94,13 +94,9 @@ const proxPrioridade = (v: string | null) => {
 
 // Tags: livres, incluídas/excluídas por cartão (sem lista pré-estabelecida).
 // Cor por hash do texto — mesma tag sempre cai na mesma cor, sem precisar cadastrar nada.
-const PALETA_TAGS = [
-  "var(--secondary)",
-  "var(--accent)",
-  "var(--cat-vendas)",
-  "var(--cat-admin)",
-  "var(--secondary-light)",
-];
+// Rodízio só com cores sem significado. --cat-* ficam pra categoria real:
+// uma tag livre como "Aniversário" não pode cair na cor de Vendas (UX-10).
+const PALETA_TAGS = ["var(--secondary)", "var(--accent)", "var(--secondary-light)"];
 function corDaTag(tag: string): string {
   let h = 0;
   for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;

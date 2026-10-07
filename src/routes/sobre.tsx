@@ -421,6 +421,7 @@ function SobrePage() {
               </div>
               <Link
                 to="/planos"
+                search={{ origem: "sobre" }}
                 className="inline-flex min-h-[44px] items-center text-[16px] font-semibold text-[var(--secondary-text)] underline decoration-1 underline-offset-4 hover:decoration-2 max-md:justify-center"
               >
                 Ver os planos

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { hojeISO } from "@/lib/data.functions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, ChevronDown, CalendarDays, Target, AlertTriangle } from "lucide-react";
@@ -69,13 +70,6 @@ function progressoPct(m: Meta) {
   const alvo = m.valor_alvo ?? 0;
   if (alvo <= 0) return 0;
   return Math.min(100, Math.round((m.valor_atual / alvo) * 100));
-}
-
-function hojeISODate() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-    d.getDate(),
-  ).padStart(2, "0")}`;
 }
 
 function prazoCurto(prazo: string) {
@@ -415,7 +409,7 @@ function MetaCard({
   const pct = progressoPct(meta);
   const pronta = pct >= 100;
   const alvo = meta.valor_alvo ?? 0;
-  const vencido = !!meta.prazo && meta.prazo < hojeISODate();
+  const vencido = !!meta.prazo && meta.prazo < hojeISO();
 
   const reduceMotion = usePrefersReducedMotion();
   const [barraEntrou, setBarraEntrou] = useState(reduceMotion);

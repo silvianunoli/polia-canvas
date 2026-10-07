@@ -1,4 +1,4 @@
-import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
@@ -8,7 +8,16 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 
+// O passo mora na URL (?passo=3) desde 07/10/2026 (ONE-23): o voltar do
+// navegador recua um passo em vez de sair do fluxo.
+type OnboardingSearch = { passo?: number };
+const ULTIMO_PASSO = 5;
+
 export const Route = createFileRoute("/_authenticated/onboarding")({
+  validateSearch: (search: Record<string, unknown>): OnboardingSearch => {
+    const n = Number(search.passo);
+    return Number.isInteger(n) && n >= 2 && n <= ULTIMO_PASSO ? { passo: n } : {};
+  },
   head: () => ({ meta: [{ title: "Onboarding · Pólia One" }] }),
   beforeLoad: async ({ cause }) => {
     if (typeof window === "undefined") return;
@@ -51,8 +60,20 @@ interface OnboardingState {
   hs: string; // híbrido: o que recebe na frente serviço
 }
 
+// As respostas vivem só na memória da tela. Se a URL pede um passo cujas
+// respostas anteriores não existem (recarregou no meio, colou o link), volta
+// pro primeiro passo que falta responder.
+function passoPossivel(pedido: number, state: OnboardingState, salvo: boolean): number {
+  if (pedido >= 3 && !state.business_type) return 2;
+  if (pedido >= 4 && !state.business_stage) return 3;
+  if (pedido >= 5 && !salvo) return 4;
+  return pedido;
+}
+
 function OnboardingPage() {
-  const [step, setStep] = useState(1);
+  const { passo } = Route.useSearch();
+  const router = useRouter();
+  const [salvo, setSalvo] = useState(false);
   const [state, setState] = useState<OnboardingState>({
     business_type: null,
     business_stage: null,
@@ -64,6 +85,28 @@ function OnboardingPage() {
     hs: "",
   });
   const navigate = useNavigate();
+  const step = passoPossivel(passo ?? 1, state, salvo);
+
+  useEffect(() => {
+    if (step !== (passo ?? 1)) {
+      void navigate({ to: "/onboarding", search: step > 1 ? { passo: step } : {}, replace: true });
+    }
+  }, [step, passo, navigate]);
+
+  const setStep = (n: number) => {
+    void navigate({ to: "/onboarding", search: n > 1 ? { passo: n } : {} });
+  };
+  // Mesmo efeito do voltar do navegador quando dá; se a aba abriu direto num
+  // passo (sem histórico), troca o passo sem empilhar entrada nova.
+  const voltar = () => {
+    if (router.history.canGoBack()) router.history.back();
+    else
+      void navigate({
+        to: "/onboarding",
+        search: step - 1 > 1 ? { passo: step - 1 } : {},
+        replace: true,
+      });
+  };
 
   // Best-effort, silencioso: se falhar, não atrapalha o onboarding. A função
   // só marca a conta como notificada quando o e-mail sai de verdade, então um
@@ -76,13 +119,13 @@ function OnboardingPage() {
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
       <div className="w-full px-5 pb-10 pt-6">
         {step > 1 && <StepIndicator step={step} />}
-        {/* Só até o passo 4: a partir do 5 as respostas já foram gravadas, e
-            voltar reenviaria o formulário do passo 4. */}
-        {step >= 2 && step <= 4 && (
+        {/* O passo 4 grava com upsert, então voltar da tela final e salvar de
+            novo só atualiza o perfil, não duplica nada. */}
+        {step >= 2 && (
           <div className="mx-auto mt-2 w-full max-w-[900px]">
             <button
               type="button"
-              onClick={() => setStep((s) => s - 1)}
+              onClick={voltar}
               className="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-[14px] text-[var(--secondary-text)] hover:underline"
             >
               <span aria-hidden="true">←</span> Voltar
@@ -115,7 +158,17 @@ function OnboardingPage() {
           {/* O passo "quanto cobra e quanto custa" saiu em 05/10/2026 (decisão
               da Sil): quase ninguém vende um produto só, e o número entra
               depois, na Calculadora e em Produtos. */}
-          {step === 4 && <Step4 state={state} setState={setState} onSuccess={() => setStep(5)} />}
+          {step === 4 && (
+            <Step4
+              state={state}
+              setState={setState}
+              jaSalvo={salvo}
+              onSuccess={() => {
+                setSalvo(true);
+                setStep(5);
+              }}
+            />
+          )}
           {/* Termina na Calculadora, não no Painel vazio (06/10/2026): é o
               valor mais rápido do produto e o caminho que a landing promete. */}
           {step === 5 && (
@@ -301,7 +354,7 @@ function ChoiceCard({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      className={`flex min-h-[170px] flex-col gap-[10px] rounded-[14px] border p-[22px] text-left transition-[border-color,background-color] duration-150 ${
+      className={`flex min-h-[170px] flex-col gap-3 rounded-2xl border p-6 text-left transition-[border-color,background-color] duration-150 ${
         selected
           ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
           : "border-[var(--line)] bg-white [@media(hover:hover)_and_(pointer:fine)]:hover:border-[var(--secondary)]"
@@ -456,10 +509,13 @@ const STEP4: Record<
 function Step4({
   state,
   setState,
+  jaSalvo,
   onSuccess,
 }: {
   state: OnboardingState;
   setState: React.Dispatch<React.SetStateAction<OnboardingState>>;
+  /** Voltou da tela final pra corrigir: salva de novo, mas não conta de novo. */
+  jaSalvo: boolean;
   onSuccess: () => void;
 }) {
   const [saving, setSaving] = useState(false);
@@ -510,13 +566,15 @@ function Step4({
         { onConflict: "id" },
       );
       if (upErr) throw upErr;
-      track("onboarding_concluido", { tipo_negocio: state.business_type });
-      void registrar("onboarding_completed", {
-        feature: "onboarding",
-        propriedades: { tipo_negocio: state.business_type },
-      });
-      if (state.business_name.trim()) {
-        void registrar("business_created", { feature: "onboarding" });
+      if (!jaSalvo) {
+        track("onboarding_concluido", { tipo_negocio: state.business_type });
+        void registrar("onboarding_completed", {
+          feature: "onboarding",
+          propriedades: { tipo_negocio: state.business_type },
+        });
+        if (state.business_name.trim()) {
+          void registrar("business_created", { feature: "onboarding" });
+        }
       }
       onSuccess();
     } catch (e) {

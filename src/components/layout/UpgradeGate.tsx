@@ -21,14 +21,23 @@ export function UpgradeGate({ eyebrow, titulo, feature, rota }: UpgradeGateProps
   return (
     <PaginaLogada eyebrow={eyebrow} titulo={titulo}>
       <div className="rounded-xl border border-[var(--line)] bg-white p-6 md:p-8">
-        <span className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
-          <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
-        </span>
+        <SeloCadeado />
         <p className="max-w-[52ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">{feature}</p>
         <Link to="/upgrade" search={{ rota, tier: "projete" }} className={`${BTN_ACAO} mt-6`}>
           Conhecer o Pro
         </Link>
       </div>
     </PaginaLogada>
+  );
+}
+
+/** Cadeado em círculo das telas de bloqueio; a /upgrade usa o mesmo (UX-10). */
+export function SeloCadeado({ className = "mb-4" }: { className?: string }) {
+  return (
+    <span
+      className={`${className} flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]`}
+    >
+      <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
+    </span>
   );
 }

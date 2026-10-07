@@ -183,7 +183,14 @@ function AssinarPage() {
               gtagEvent("purchase", {
                 value: valor,
                 currency: "BRL",
-                items: [{ item_id: planoNoCheckout, item_name: planoNoCheckout, price: valor, quantity: 1 }],
+                items: [
+                  {
+                    item_id: planoNoCheckout,
+                    item_name: planoNoCheckout,
+                    price: valor,
+                    quantity: 1,
+                  },
+                ],
               });
             }
             setClientSecret(null);

@@ -1,12 +1,14 @@
 import { useState } from "react";
+import { hojeISO } from "@/lib/data.functions";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
+import { gtagEvent } from "@/lib/gtag";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
-import { hojeISODate, num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
+import { num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
 
 /* ============== Modal: adicionar/editar produto ============== */
 export function ModalProduto({
@@ -75,7 +77,7 @@ export function ModalProduto({
           ? produtoEdit.historico_precos
           : [];
         update.historico_precos = [
-          { preco: Number(produtoEdit.preco_venda), data: hojeISODate() },
+          { preco: Number(produtoEdit.preco_venda), data: hojeISO() },
           ...atual,
         ] as unknown as Json;
         update.preco_atualizado_em = new Date().toISOString();
@@ -112,6 +114,7 @@ export function ModalProduto({
       }
       track("produto_criado", { tipo });
       void registrar("create_product", { feature: "produtos", propriedades: { tipo } });
+      if (prefill?.calculadora_breakdown) void avisarAtivacaoNoGA(userId, precoCustoNum !== null);
     }
     onSaved();
   };
@@ -249,4 +252,16 @@ export function ModalProduto({
       )}
     </Modal>
   );
+}
+
+// Ativação no GA4 (ONE-65): o primeiro produto salvo a partir da Calculadora é
+// o momento em que ela viu quanto sobra. Saiu do onboarding com o passo de
+// preço (ONE-50) e volta aqui. Conta depois do insert: 1 produto = o primeiro.
+async function avisarAtivacaoNoGA(userId: string, comCusto: boolean) {
+  const { count, error } = await supabase
+    .from("produtos")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId);
+  if (error || count !== 1) return;
+  gtagEvent("ativacao_viu_quanto_sobra", { com_custo: comCusto });
 }

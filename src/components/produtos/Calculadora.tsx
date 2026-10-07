@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { hojeISO } from "@/lib/data.functions";
 import { Link } from "@tanstack/react-router";
 import { Lock, Copy, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import {
 } from "@/lib/precificacao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
-import { fmt, hojeISODate, num, type Prefill, type Produto } from "./tipos";
+import { fmt, num, type Prefill, type Produto } from "./tipos";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
 
@@ -361,7 +362,7 @@ export function Calculadora({
         ? produtoRecalcular.historico_precos
         : [];
       update.historico_precos = [
-        { preco: Number(produtoRecalcular.preco_venda), data: hojeISODate() },
+        { preco: Number(produtoRecalcular.preco_venda), data: hojeISO() },
         ...atual,
       ] as unknown as Json;
       update.preco_atualizado_em = new Date().toISOString();
@@ -378,6 +379,29 @@ export function Calculadora({
     }
     track("produto_preco_recalculado");
     onAtualizado?.();
+  };
+
+  const abasDisponiveis: PerfilCalc[] = ehProjete
+    ? ["produto", "servico", "encomenda"]
+    : ["produto", "servico"];
+  const aoTeclarNasAbas = (e: KeyboardEvent<HTMLDivElement>) => {
+    const atual = abasDisponiveis.indexOf(perfil);
+    const ultimo = abasDisponiveis.length - 1;
+    const proximo =
+      e.key === "ArrowRight"
+        ? (atual + 1) % abasDisponiveis.length
+        : e.key === "ArrowLeft"
+          ? (atual - 1 + abasDisponiveis.length) % abasDisponiveis.length
+          : e.key === "Home"
+            ? 0
+            : e.key === "End"
+              ? ultimo
+              : null;
+    if (proximo === null) return;
+    e.preventDefault();
+    const aba = abasDisponiveis[proximo];
+    setPerfil(aba);
+    document.getElementById(`calc-tab-${aba}`)?.focus();
   };
 
   return (
@@ -397,51 +421,63 @@ export function Calculadora({
         </div>
       )}
 
-      {/* Seletor de perfil */}
-      <div role="tablist" aria-label="Perfil da calculadora" className="flex flex-wrap gap-2">
-        {(
-          [
-            { id: "produto", label: "Produto (físico/digital)" },
-            { id: "servico", label: "Serviço (por hora)" },
-          ] as { id: PerfilCalc; label: string }[]
-        ).map((p) => {
-          const ativo = perfil === p.id;
-          return (
+      {/* Seletor de perfil. Padrão ARIA de abas (ONE-68): só a aba ativa entra no
+          Tab, as setas trocam de aba, e o link travado do Encomenda fica fora do
+          tablist (link não é aba). */}
+      <div className="flex flex-wrap gap-2">
+        <div
+          role="tablist"
+          aria-label="Perfil da calculadora"
+          className="flex flex-wrap gap-2"
+          onKeyDown={aoTeclarNasAbas}
+        >
+          {(
+            [
+              { id: "produto", label: "Produto (físico/digital)" },
+              { id: "servico", label: "Serviço (por hora)" },
+            ] as { id: PerfilCalc; label: string }[]
+          ).map((p) => {
+            const ativo = perfil === p.id;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                id={`calc-tab-${p.id}`}
+                role="tab"
+                aria-selected={ativo}
+                tabIndex={ativo ? 0 : -1}
+                aria-controls={`calc-painel-${p.id}`}
+                onClick={() => setPerfil(p.id)}
+                className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
+                  ativo
+                    ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                    : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+                }`}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+          {ehProjete ? (
             <button
-              key={p.id}
               type="button"
-              id={`calc-tab-${p.id}`}
+              id="calc-tab-encomenda"
               role="tab"
-              aria-selected={ativo}
-              aria-controls={`calc-painel-${p.id}`}
-              onClick={() => setPerfil(p.id)}
+              aria-selected={perfil === "encomenda"}
+              tabIndex={perfil === "encomenda" ? 0 : -1}
+              aria-controls="calc-painel-encomenda"
+              onClick={() => setPerfil("encomenda")}
               className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
-                ativo
+                perfil === "encomenda"
                   ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
                   : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
               }`}
             >
-              {p.label}
+              Encomenda (sob medida)
             </button>
-          );
-        })}
-        {ehProjete ? (
-          <button
-            type="button"
-            id="calc-tab-encomenda"
-            role="tab"
-            aria-selected={perfil === "encomenda"}
-            aria-controls="calc-painel-encomenda"
-            onClick={() => setPerfil("encomenda")}
-            className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
-              perfil === "encomenda"
-                ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
-            }`}
-          >
-            Encomenda (sob medida)
-          </button>
-        ) : (
+          ) : null}
+        </div>
+        {!ehProjete && (
           <Link
             to="/upgrade"
             search={{ rota: "/calculadora", tier: "projete" }}

@@ -1,8 +1,8 @@
-import { Lock } from "lucide-react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
 import { BTN_ACAO } from "@/lib/botoes";
+import { SeloCadeado } from "@/components/layout/UpgradeGate";
 
 interface UpgradeSearch {
   rota?: string;
@@ -55,9 +55,7 @@ function UpgradePage() {
   return (
     <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
       <div className="w-full max-w-[440px] rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
-        <span className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface)]">
-          <Lock size={20} className="text-[var(--ink-soft)]" aria-hidden="true" />
-        </span>
+        <SeloCadeado className="mx-auto mb-4" />
         <p className="text-[13px] font-accent font-bold uppercase tracking-[1px] text-[var(--ink-soft)]">
           Recurso do plano {tier.titulo}
         </p>

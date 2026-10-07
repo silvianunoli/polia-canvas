@@ -95,7 +95,7 @@ function Casca({ children }: { children: ReactNode }) {
       <header className="border-b border-[var(--line)]">
         <div className={`${CONTAINER} flex items-center py-5`}>
           <Link
-            to="/lista-de-espera"
+            to="/"
             aria-label="Pólia"
             className={`rounded-lg text-[var(--ink)] no-underline ${FOCO_SUAVE}`}
           >
@@ -119,12 +119,13 @@ function Casca({ children }: { children: ReactNode }) {
   );
 }
 
-/** Link de saída pra lista de espera, repetido nas telas de fim de fluxo. */
-function LinkListaEspera() {
+/** Link de saída pros planos, repetido nas telas de fim de fluxo. A lista de
+ * espera saiu do ar em 07/10/2026 (FUN-04/FUN-08): o cadastro está aberto. */
+function LinkPlanos() {
   return (
     <div className="mt-6">
-      <Link to="/lista-de-espera" className={BTN_CONTORNO}>
-        Entrar na lista de espera
+      <Link to="/planos" search={{ origem: "pesquisa" }} className={BTN_CONTORNO}>
+        Conhecer os planos
       </Link>
     </div>
   );
@@ -545,7 +546,7 @@ function TelaFim() {
         <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
           Cada resposta ajuda a Pólia a nascer do jeito certo pra quem toca a própria marca sozinha.
         </p>
-        <LinkListaEspera />
+        <LinkPlanos />
       </div>
     </Reveal>
   );
@@ -689,9 +690,9 @@ function PesquisaPage() {
               A pesquisa está fechada por enquanto.
             </h1>
             <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
-              Obrigada pelo interesse. Enquanto isso, dá pra entrar na lista de espera.
+              Obrigada pelo interesse. Enquanto isso, a Pólia One já está aberta, com plano Grátis.
             </p>
-            <LinkListaEspera />
+            <LinkPlanos />
           </div>
         </Reveal>
       </Casca>
@@ -708,9 +709,9 @@ function PesquisaPage() {
               A resposta já entrou. Obrigada de novo.
             </h1>
             <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
-              Não precisa responder outra vez. Dá pra acompanhar o lançamento na lista de espera.
+              Não precisa responder outra vez. A Pólia One já está aberta, com plano Grátis.
             </p>
-            <LinkListaEspera />
+            <LinkPlanos />
           </div>
         </Reveal>
       </Casca>
