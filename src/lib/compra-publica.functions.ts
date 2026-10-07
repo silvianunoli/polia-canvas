@@ -5,6 +5,7 @@ import { dispararAlerta } from "@/lib/alertas.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
+import { lerOrigemCampanha, temOrigemCampanha } from "@/lib/origemCampanha";
 
 const inputSchema = z.object({
   email: z.string().trim().email().max(255),
@@ -13,6 +14,10 @@ const inputSchema = z.object({
   turnstileToken: z.string().optional(),
   // Honeypot: campo invisível que só um bot preenche.
   hp: z.string().optional(),
+  // Origem de campanha (landing + UTMs) que a /planos recebeu na URL. Chega
+  // como objeto solto de propósito: quem filtra é lerOrigemCampanha no handler,
+  // que descarta o que não passa na allowlist em vez de derrubar a compra.
+  origemCampanha: z.record(z.string(), z.unknown()).optional().catch(undefined),
 });
 
 const ERRO_CHECKOUT = "A Pólia One não conseguiu abrir o checkout agora. Tenta de novo.";
@@ -74,6 +79,10 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
 
     const stripe = stripeClient();
     const priceId = precoParaPlano(data.plano);
+    // Revalidada aqui, no servidor: o navegador não é fonte confiável do que
+    // vai parar nos metadados do Stripe.
+    const origem = lerOrigemCampanha(data.origemCampanha ?? {});
+    const comOrigem = temOrigemCampanha(origem);
 
     try {
       const session = await stripe.checkout.sessions.create({
@@ -85,8 +94,11 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         allow_promotion_codes: true,
         // metadata.plano vai junto no evento do webhook (checkout.session.completed),
         // e session.id correlaciona o checkout_iniciado (client) com o
-        // checkout_concluido/falhou (server) no funil de tagueamento.
-        metadata: { plano: data.plano },
+        // checkout_concluido/falhou (server) no funil de tagueamento. A origem
+        // (landing + UTMs) vai junto quando existe, pra saber qual landing vendeu;
+        // na assinatura ela fica visível no painel do Stripe.
+        metadata: { plano: data.plano, ...origem },
+        ...(comOrigem ? { subscription_data: { metadata: { ...origem } } } : {}),
       });
 
       if (!session.url) {

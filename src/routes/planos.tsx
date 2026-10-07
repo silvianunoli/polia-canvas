@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { linkCanonico } from "@/lib/seo";
 import { FEATURES_GRATIS, TIERS_PAGOS, type TierPago } from "@/lib/planos";
 import { iniciarCompraPublica } from "@/lib/compra-publica.functions";
+import { campoDeBusca, lerOrigemCampanha, temOrigemCampanha } from "@/lib/origemCampanha";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -23,14 +24,22 @@ const PLANO_DA_URL: Record<"premium" | "pro", TierPago> = {
   pro: "projete",
 };
 
-interface PlanosSearch {
-  plano?: "premium" | "pro";
-}
+// origem e utm_* chegam do "Quero o Premium/Pro" das landings de campanha
+// (/landing-a, /landing-b), pra compra carregar a landing de onde veio até o
+// Stripe. Mesmo esquema tolerante do /auth/cadastro: nada aqui derruba a rota,
+// e a allowlist de verdade é lerOrigemCampanha (repetida no servidor).
+const searchSchema = z.object({
+  plano: z.enum(["premium", "pro"]).optional().catch(undefined),
+  origem: campoDeBusca,
+  utm_source: campoDeBusca,
+  utm_medium: campoDeBusca,
+  utm_campaign: campoDeBusca,
+  utm_content: campoDeBusca,
+  utm_term: campoDeBusca,
+});
 
 export const Route = createFileRoute("/planos")({
-  validateSearch: (search: Record<string, unknown>): PlanosSearch => ({
-    plano: search.plano === "premium" || search.plano === "pro" ? search.plano : undefined,
-  }),
+  validateSearch: (search) => searchSchema.parse(search),
   head: () => ({
     meta: [
       { title: "Planos · Pólia" },
@@ -63,6 +72,9 @@ const campoErro = "border-[var(--danger)] focus:border-[var(--danger)]";
 
 function PlanosPage() {
   const search = Route.useSearch();
+  const origemCampanha = useMemo(() => lerOrigemCampanha(search), [search]);
+  // Só pro analytics: o checkout recebe o objeto inteiro e revalida.
+  const origemTrack = temOrigemCampanha(origemCampanha) ? origemCampanha : {};
   const [ciclo, setCiclo] = useState<Ciclo>("mensal");
   // O Premium já vem escolhido: o formulário de pagamento sempre tem um plano
   // de verdade na frente, e o Turnstile monta uma vez só.
@@ -84,7 +96,7 @@ function PlanosPage() {
 
   function escolher(id: TierPago) {
     setEscolhido(id);
-    track("planos_plano_escolhido", { plano: `${id}_${ciclo}` });
+    track("planos_plano_escolhido", { plano: `${id}_${ciclo}`, ...origemTrack });
     document.getElementById("pagamento")?.scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => emailRef.current?.focus({ preventScroll: true }), 500);
   }
@@ -119,10 +131,20 @@ function PlanosPage() {
     setLoading(true);
     try {
       const r = await iniciarCompraPublica({
-        data: { email: valorEmail, plano, turnstileToken: turnstile.token, hp },
+        data: {
+          email: valorEmail,
+          plano,
+          turnstileToken: turnstile.token,
+          hp,
+          ...(temOrigemCampanha(origemCampanha) ? { origemCampanha } : {}),
+        },
       });
       if (r.url) {
-        track("checkout_iniciado", { plano, session_id: r.sessionId ?? undefined });
+        track("checkout_iniciado", {
+          plano,
+          session_id: r.sessionId ?? undefined,
+          ...origemTrack,
+        });
         // Redireciona e deixa o loading ligado: a página vai embora.
         window.location.assign(r.url);
         return;

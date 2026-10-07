@@ -80,6 +80,31 @@ async function registrarEventoAnalytics(
   }
 }
 
+// Origem de campanha (landing + UTMs) que o checkout público grava nos
+// metadados da sessão. Cópia da allowlist de src/lib/origemCampanha.ts: esta
+// função roda em Deno e não importa o código do app. Só as chaves conhecidas,
+// e o valor fora do padrão é descartado. Nada aqui interfere na compra: sem
+// origem válida, o evento só sai sem ela.
+const CHAVES_ORIGEM = [
+  "origem",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_content",
+  "utm_term",
+] as const;
+const VALOR_ORIGEM_VALIDO = /^[\p{L}\p{N} ._\-/|+]{1,100}$/u;
+
+function origemDaSessao(metadata: Stripe.Metadata | null | undefined): Record<string, string> {
+  const saida: Record<string, string> = {};
+  if (!metadata) return saida;
+  for (const chave of CHAVES_ORIGEM) {
+    const v = metadata[chave]?.trim();
+    if (v && VALOR_ORIGEM_VALIDO.test(v)) saida[chave] = v;
+  }
+  return saida;
+}
+
 // Eventos de assinatura pro Founder Dashboard (founder_eventos, origem webhook).
 // sessao_id é derivado do id do evento Stripe (uuid v5-like): determinístico,
 // então a reentrega do mesmo evento não gera sessão nova.
@@ -564,6 +589,7 @@ Deno.serve(async (req) => {
         await upsertAssinaturaDaSubscription(subscription, event.id);
         await registrarEventoAnalytics("checkout_concluido", session.id, {
           plano: session.metadata?.plano ?? null,
+          ...origemDaSessao(session.metadata),
         });
         break;
       }

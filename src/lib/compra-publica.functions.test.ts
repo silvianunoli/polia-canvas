@@ -183,6 +183,59 @@ describe("iniciarCompraPublica: sessão", () => {
   });
 });
 
+describe("iniciarCompraPublica: origem de campanha", () => {
+  const base = { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN };
+
+  it("sem origem, a sessão sai igual à de antes (sem subscription_data)", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    await comprar({ data: base });
+    const args = sessionsCreate.mock.calls[0][0];
+    expect(args.metadata).toEqual({ plano: "controle_mensal" });
+    expect(args).not.toHaveProperty("subscription_data");
+  });
+
+  it("grava landing e UTMs válidas na sessão e na assinatura", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const origemCampanha = {
+      origem: "landing-a",
+      utm_source: "meta",
+      utm_campaign: "Abertura | Orçamento",
+      utm_content: "120212345678901234",
+    };
+    await comprar({ data: { ...base, origemCampanha } });
+    const args = sessionsCreate.mock.calls[0][0];
+    expect(args.metadata).toEqual({ plano: "controle_mensal", ...origemCampanha });
+    expect(args.subscription_data).toEqual({ metadata: origemCampanha });
+  });
+
+  it("descarta valor fora da allowlist e chave desconhecida, sem travar a compra", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({
+      data: {
+        ...base,
+        origemCampanha: {
+          origem: "<script>alert(1)</script>",
+          utm_source: "meta",
+          plano: "projete_anual",
+          email: "outra@exemplo.com",
+        },
+      },
+    });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+    const args = sessionsCreate.mock.calls[0][0];
+    // plano vindo da origem não sobrescreve o plano escolhido.
+    expect(args.metadata).toEqual({ plano: "controle_mensal", utm_source: "meta" });
+    expect(args.subscription_data).toEqual({ metadata: { utm_source: "meta" } });
+  });
+
+  it("origem em formato errado é ignorada, não derruba a validação", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({ data: { ...base, origemCampanha: "landing-a" } });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+    expect(sessionsCreate.mock.calls[0][0].metadata).toEqual({ plano: "controle_mensal" });
+  });
+});
+
 describe("iniciarCompraPublica: e-mail que já assina (QA-04)", () => {
   it.each(["active", "trialing", "past_due"])(
     "assinatura %s: recusa sem criar sessão e sinaliza jaAssina",

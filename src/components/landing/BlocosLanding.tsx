@@ -659,7 +659,10 @@ export function PlanosLanding({
                 ) : (
                   <Link
                     to="/planos"
-                    search={{ plano: p.nome === "Premium" ? "premium" : "pro" }}
+                    // A origem e as UTMs seguem até o Stripe, igual o botão do
+                    // Grátis leva até o cadastro: sem isso não dá pra saber
+                    // qual landing vendeu.
+                    search={{ ...busca, plano: p.nome === "Premium" ? "premium" : "pro" }}
                     data-track="plano_cta_clicado"
                     data-track-props={JSON.stringify({
                       plano: p.nome,
