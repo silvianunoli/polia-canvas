@@ -287,7 +287,15 @@ export function FontePesquisa({ children }: { children: ReactNode }) {
  * proporção certa, sem 404 no tráfego pago. Ao subir uma foto nova, incluir o
  * nome aqui (lista em PROMPTS-FOTOS-LANDINGS.md, na raiz do workspace).
  */
-const FOTOS_DISPONIVEIS = new Set<string>(["quemfez-sil-retrato"]);
+const FOTOS_DISPONIVEIS = new Set<string>([
+  "hero-orcamento-celular",
+  "problema-caderno-contas",
+  "mecanismo-maos-aquarela",
+  "praquem-bancada-pedidos",
+  "ctafinal-celular-pedido",
+  "a-cena-encomenda-lembrancinhas",
+  "quemfez-sil-retrato",
+]);
 
 export function FotoLanding({
   nome,
