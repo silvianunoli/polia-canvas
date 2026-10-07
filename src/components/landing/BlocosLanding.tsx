@@ -516,8 +516,8 @@ export function ComoFuncionaPassos({ passos }: { passos: Passo[] }) {
             className="border-t border-[var(--line)] py-8 md:min-h-[38vh]"
           >
             <div
-              className={`transition-colors duration-200 md:border-l-[3px] md:pl-6 ${
-                ativo === i ? "md:border-[var(--secondary)]" : "md:border-transparent"
+              className={`transition-colors duration-200 md:rounded-xl md:p-6 ${
+                ativo === i ? "md:bg-[var(--surface)]" : ""
               }`}
             >
               <p className="font-cabinet text-[40px] font-bold leading-none tracking-[-0.02em] text-[var(--ink)]">

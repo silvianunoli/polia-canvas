@@ -34,10 +34,10 @@ export const Route = createFileRoute("/ajuda")({
       {
         name: "description",
         content:
-          "Central de ajuda da Pólia. Respostas curtas e diretas, e um canal pra falar com a gente.",
+          "Central de ajuda da Pólia. Respostas curtas e diretas, e um canal pra falar com a Pólia.",
       },
       { property: "og:title", content: "Ajuda · Pólia" },
-      { property: "og:description", content: "Travou em alguma coisa? A gente explica." },
+      { property: "og:description", content: "Travou em alguma coisa? A Pólia explica." },
     ],
     links: [linkCanonico("/ajuda")],
     // Gerado a partir do mesmo array `CATEGORIAS` que renderiza a UI logo
@@ -347,7 +347,7 @@ function AjudaPage() {
             <Reveal>
               <Eyebrow>Ajuda</Eyebrow>
               <h1 className="mt-4 max-w-[20ch] text-[clamp(2.4rem,5.4vw,4rem)] font-bold leading-[1.06] tracking-[-0.02em] text-balance">
-                Travou em alguma coisa? A gente explica.
+                Travou em alguma coisa? A Pólia explica.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
@@ -404,8 +404,8 @@ function AjudaPage() {
 
             {categoriasFiltradas.length === 0 ? (
               <p className="mt-[clamp(32px,4vw,40px)] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                Nada encontrado pra “{busca.trim()}”. Escreve pra gente aqui embaixo que a gente
-                responde.
+                Nada encontrado pra “{busca.trim()}”. Escreve no formulário aqui embaixo que a
+                Pólia responde.
               </p>
             ) : (
               <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">
@@ -461,7 +461,7 @@ function AjudaPage() {
               </h2>
               <p className="mt-6 max-w-[60ch] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
                 Se uma resposta precisa de dez passos e três termos que você nunca ouviu falar,
-                alguma coisa está errada. A gente explica cada coisa do jeito mais direto possível,
+                alguma coisa está errada. A Pólia explica cada coisa do jeito mais direto possível,
                 porque entender o negócio também faz parte de cuidar dele.
               </p>
             </Reveal>
@@ -474,7 +474,7 @@ function AjudaPage() {
             <Reveal>
               <div className="rounded-2xl bg-[var(--secondary)] p-8 md:p-12">
                 <h2 className="max-w-[20ch] text-[clamp(1.6rem,3vw,2.4rem)] font-bold leading-[1.15] tracking-[-0.02em] text-[var(--secondary-ink)] text-balance">
-                  Não encontrou? Fala com a gente.
+                  Não encontrou? Fala com a Pólia.
                 </h2>
                 <p className="mt-4 max-w-[54ch] text-[16px] leading-[1.65] text-[var(--secondary-ink)]">
                   Escreve no formulário aqui embaixo. A Pólia lê e responde cada mensagem.
@@ -497,7 +497,7 @@ function AjudaPage() {
               <Reveal>
                 <Eyebrow>Contato</Eyebrow>
                 <h2 className="mt-4 max-w-[22ch] text-[clamp(1.9rem,3.6vw,2.9rem)] font-bold leading-[1.12] tracking-[-0.02em] text-balance">
-                  Não encontrou o que precisava? Escreve pra gente.
+                  Não encontrou o que precisava? Escreve pra Pólia.
                 </h2>
 
                 <hr className="my-8 border-t border-[var(--line)]" />
@@ -591,7 +591,7 @@ function AjudaPage() {
                               if (errors.nome) setErrors((er) => ({ ...er, nome: undefined }));
                             }}
                             maxLength={120}
-                            placeholder="Como a gente te chama"
+                            placeholder="Como prefere ser chamada"
                             aria-invalid={!!errors.nome || undefined}
                             aria-describedby={errors.nome ? "nome-error" : undefined}
                             className={campoClasse(!!errors.nome)}

@@ -43,7 +43,7 @@ const PROSA = [
   "[&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:mt-3 [&_li]:leading-[1.7]",
   "[&_strong]:font-semibold [&_strong]:text-[var(--ink)]",
   "[&_a]:text-[var(--ink)] [&_a]:underline [&_a]:decoration-[var(--secondary)] [&_a]:decoration-2 [&_a]:underline-offset-[3px]",
-  "[&_blockquote]:my-10 [&_blockquote]:border-l-[3px] [&_blockquote]:border-[var(--secondary)] [&_blockquote]:pl-6",
+  "[&_blockquote]:my-10 [&_blockquote]:rounded-xl [&_blockquote]:bg-[var(--surface)] [&_blockquote]:px-6 [&_blockquote]:py-5",
   "[&_blockquote_p]:text-[clamp(1.25rem,2.2vw,1.6rem)] [&_blockquote_p]:font-medium [&_blockquote_p]:leading-[1.3] [&_blockquote_p]:text-[var(--ink)]",
   "[&_img]:w-full [&_img]:rounded-2xl [&_img]:border [&_img]:border-[var(--line)]",
   "[&_hr]:my-10 [&_hr]:h-px [&_hr]:border-0 [&_hr]:bg-[var(--line)]",

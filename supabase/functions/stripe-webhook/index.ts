@@ -378,7 +378,7 @@ async function enviarEmailCompraContaExistente(email: string) {
 async function enviarEmailPagamentoRecusado(email: string) {
   await enviarViaResend(
     "Pagamento recusado",
-    `Atualize a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nA cobrança da sua assinatura na Pólia One não funcionou.\n\nAlguma dúvida? Fale com a gente: ${SITE_URL}/ajuda`,
+    `Atualize a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nA cobrança da sua assinatura na Pólia One não funcionou.\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: "A cobrança da sua assinatura não funcionou.",
       headline: "Pagamento recusado",
@@ -398,7 +398,7 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
     : "Seu acesso à Pólia One continua até o fim do período já pago.";
   await enviarViaResend(
     "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fale com a gente: ${SITE_URL}/ajuda`,
+    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: paragrafo1,
       headline: "Assinatura cancelada",
@@ -421,7 +421,7 @@ async function enviarEmailRenovacao(
     : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia One.`;
   await enviarViaResend(
     "Sua assinatura renova em breve",
-    `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a gente: ${SITE_URL}/ajuda`,
+    `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: paragrafo,
       headline: "Renovação chegando",

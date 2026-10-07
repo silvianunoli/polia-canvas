@@ -15,7 +15,7 @@ import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { TourBoasVindas } from "@/components/dicas/TourBoasVindas";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -685,13 +685,13 @@ function PainelPage() {
                     ? "Planejamento concluído"
                     : `Módulo ${moduloAtual} · ${etapaInfo.nome}`}
                 </span>
-                {/* Era um "ver" da mesma cor do texto e sem sublinhado, colado na
-                frase: lia como "Planejamento concluído ver". */}
-                <LinkInterno
-                  href="/planejamento"
-                  className="inline-flex min-h-6 items-center text-[14px] text-[var(--secondary-text)] underline-offset-2 hover:underline"
-                >
-                  abrir
+                {/* ONE-11 (07/10/2026): era um "abrir" discreto e a Sil não achava
+                o caminho de volta pro Planejamento. Virou botão com o verbo
+                certo. A ação principal do Painel continua sendo registrar
+                entrada e saída (COPY-04); este é o caminho secundário. */}
+                <LinkInterno href="/planejamento" className={BTN_MIUDO}>
+                  {jornadaFinalizada ? "Rever o Planejamento" : "Continuar o Planejamento"}
+                  <span aria-hidden="true">→</span>
                 </LinkInterno>
               </div>
             </div>

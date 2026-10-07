@@ -150,10 +150,10 @@ export function MockPainel({ className }: { className?: string }) {
             {navPainel.map((item, i) => (
               <span
                 key={item}
-                className={`border-l-[3px] py-1.5 pl-2.5 text-[11.5px] ${
+                className={`rounded-md px-2.5 py-1.5 text-[11.5px] ${
                   i === 0
-                    ? "border-[var(--secondary)] bg-[var(--bg)] font-semibold text-[var(--ink)]"
-                    : "border-transparent text-[var(--ink-soft)]"
+                    ? "bg-[var(--bg)] font-semibold text-[var(--ink)]"
+                    : "text-[var(--ink-soft)]"
                 }`}
               >
                 {item}

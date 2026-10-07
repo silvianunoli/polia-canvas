@@ -103,15 +103,17 @@ export function SiteHeader({ semLogin = false }: { semLogin?: boolean } = {}) {
                 >
                   Entrar
                 </Link>
+                {/* DEC-16 (07/10/2026): o cabeçalho leva direto pro cadastro
+                    Grátis, como a copy da home pedia. A origem segue até a
+                    conta (FUN-06), igual às landings. */}
                 <Link
-                  to="/planos"
-                  // Origem do clique até a compra (FUN-06), igual às landings.
+                  to="/auth/cadastro"
                   search={{ origem: "cabecalho" }}
                   data-track="cadastro_cta_clicado"
                   data-track-props='{"contexto":"header"}'
                   className="inline-flex items-center justify-center rounded-xl border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] px-5 py-2.5 text-[14px] font-semibold text-[var(--secondary-ink)] no-underline transition-transform duration-150 ease-out active:scale-[0.97] [@media(hover:hover)_and_(pointer:fine)]:hover:-translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
                 >
-                  Ver planos
+                  Quero começar grátis
                 </Link>
                 <button
                   type="button"

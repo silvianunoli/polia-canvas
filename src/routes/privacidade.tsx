@@ -378,7 +378,7 @@ function PrivacidadePage() {
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a href="mailto:privacidade@usepolia.com.br" className={BTN_PRIMARIO}>
-                  Falar com a gente
+                  Falar com a Pólia
                 </a>
                 <Link to="/termos" className={BTN_CONTORNO}>
                   Ler os Termos de uso

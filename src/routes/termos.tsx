@@ -244,7 +244,7 @@ function TermosPage() {
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a href="mailto:oi@usepolia.com.br" className={BTN_PRIMARIO}>
-                  Falar com a gente
+                  Falar com a Pólia
                 </a>
                 <Link to="/privacidade" className={BTN_CONTORNO}>
                   Ler a Política de Privacidade

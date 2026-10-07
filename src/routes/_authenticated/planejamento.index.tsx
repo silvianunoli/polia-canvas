@@ -743,7 +743,7 @@ function BlocoView({
          a Aimer também gera parágrafos longos aqui (ex: Propósito), e nesse
          tamanho de fonte um texto de vários parágrafos ficava grande demais pra
          ler. */
-      <div className="mb-8 border-l-[3px] border-[var(--secondary)] pl-6">
+      <div className="mb-8 rounded-xl bg-[var(--surface)] px-6 py-5">
         <Rotulo campo={bloco.c} />
         <p className="mt-1 max-w-[64ch] whitespace-pre-line text-[18px] leading-[1.6] text-[var(--ink)]">
           {v}
