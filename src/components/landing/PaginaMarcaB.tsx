@@ -135,6 +135,27 @@ const praQuemSim = [
   "Ainda não vende, mas quer começar com o preço feito na conta.",
 ];
 
+/**
+ * Tipos de negócio (pedido da Sil em 07/10/2026): parte dos nichos do banco de
+ * ideias (src/lib/bancoIdeias) mais comida de balcão e saúde, com os exemplos que
+ * ela citou. Não importa de lá pra não levar as 480 ideias pro pacote da home.
+ * Nove itens: 3 colunas no desktop fecham sem sobra.
+ */
+const tiposDeNegocio = [
+  {
+    nome: "Comida",
+    exemplos: "confeitaria, lanchonete, hamburgueria, restaurante, marmita",
+  },
+  { nome: "Beleza e estética", exemplos: "nail design, estética em geral, sobrancelha, cabelo" },
+  { nome: "Saúde", exemplos: "dentistas, psicólogas, nutricionistas, fisioterapeutas" },
+  { nome: "Artesanato", exemplos: "cerâmica, crochê, bordado, velas" },
+  { nome: "Papelaria e presentes", exemplos: "cadernos, agendas, convites, lembrancinhas" },
+  { nome: "Moda e acessórios", exemplos: "roupas, bijuterias, bolsas, brechó" },
+  { nome: "Cosméticos", exemplos: "sabonetes, skincare, maquiagem" },
+  { nome: "Serviços criativos", exemplos: "social media, design, fotografia" },
+  { nome: "Produto digital", exemplos: "cursos, ebooks, templates" },
+];
+
 const praQuemNao = [
   "Você procura uma fórmula pra enriquecer rápido.",
   "A sua empresa já tem uma estrutura de gestão completa, com sistema e equipe cuidando do financeiro.",
@@ -548,6 +569,22 @@ export function PaginaMarcaB({
           <div className="mt-12">
             <Rotulo>Pra quem é</Rotulo>
             <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
+            {/* Lista com linha de 1px, sem cartão: oito caixinhas iguais teriam cara de template. */}
+            <ul className="grid list-none grid-cols-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
+              {tiposDeNegocio.map((t) => (
+                <li key={t.nome} className="border-t border-[var(--line)] py-5">
+                  <p className="font-cabinet text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[var(--ink)]">
+                    {t.nome}
+                  </p>
+                  <p className="mt-1 text-[15px] leading-[1.5] text-[var(--ink-soft)]">
+                    {t.exemplos}
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <p className={`mt-4 mb-12 ${CORPO}`}>
+              Não achou o seu? Se tem custo, preço e cliente, a conta é a mesma.
+            </p>
             <ParaQuem sim={praQuemSim} nao={praQuemNao} />
           </div>
           <FraseAncora className="mt-10">

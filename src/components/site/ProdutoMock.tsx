@@ -339,7 +339,7 @@ export function MockPlanejamento({ className }: { className?: string }) {
             Calmo, próximo, sem pressa. Fala de processo, não de promoção.
           </p>
         </Cartao>
-        <div className="col-span-12 rounded-xl border border-[var(--line)] border-l-[3px] border-l-[var(--secondary)] bg-white p-3.5">
+        <div className="col-span-12 rounded-xl border border-[var(--line)] bg-white p-3.5">
           <Label>Cliente que a marca serve</Label>
           <p className="mt-1.5 text-[12px] leading-[1.6] text-[var(--ink-soft)]">
             Mulheres de 28 a 45 anos que decoram a casa devagar, peça por peça. Compram presente com

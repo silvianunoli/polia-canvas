@@ -1101,7 +1101,7 @@ function Timeline({ steps }: { steps: { quando: string; texto: string }[] }) {
 
 function FirstAction({ acao, data }: { acao: string; data?: string }) {
   return (
-    <div className="mt-8 flex items-baseline justify-between gap-4 rounded-r-lg border-l-[3px] border-[var(--secondary)] bg-white py-3 pl-4 pr-3">
+    <div className="mt-8 flex items-baseline justify-between gap-4 rounded-lg border border-[var(--line)] bg-white px-4 py-3">
       <div>
         <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Sua primeira ação

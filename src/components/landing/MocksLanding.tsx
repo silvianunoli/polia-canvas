@@ -135,9 +135,9 @@ export function MockDescontoHero({ className }: { className?: string }) {
 /* ──────────────────────── Mecanismo (landing B) ──────────────────────── */
 
 const nosFluxo = [
-  { rotulo: "Planejamento", texto: "Por que a sua marca existe", abre: true },
-  { rotulo: "Calculadora", texto: "R$ 49 · sobram R$ 19,60", abre: false },
-  { rotulo: "Painel", texto: "Falta R$ 430 para bater a meta do mês", abre: false },
+  { rotulo: "Planejamento", texto: "Por que a sua marca existe" },
+  { rotulo: "Calculadora", texto: "R$ 49 · sobram R$ 19,60" },
+  { rotulo: "Painel", texto: "Falta R$ 430 para bater a meta do mês" },
 ];
 
 /** Marca → preço → mês: as três telas ligadas, com os nós entrando em sequência. */
@@ -170,11 +170,8 @@ export function MockFluxoMarcaPrecoMes({ className = "" }: { className?: string 
               },
             }}
           >
-            <div
-              className={`w-full rounded-xl border border-[var(--line)] bg-white p-4 ${
-                no.abre ? "border-l-[3px] border-l-[var(--accent)]" : ""
-              }`}
-            >
+            {/* Sem faixa colorida na lateral do cartão (decisão da Sil, 07/10/2026). */}
+            <div className="w-full rounded-xl border border-[var(--line)] bg-white p-4">
               <Label>{no.rotulo}</Label>
               <p className="mt-1.5 text-[15px] font-semibold leading-[1.35] text-[var(--ink)]">
                 {no.texto}

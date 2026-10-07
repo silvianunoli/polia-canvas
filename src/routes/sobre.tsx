@@ -356,7 +356,7 @@ function SobrePage() {
             </ol>
           </div>
 
-          <p className="font-fraunces mt-12 max-w-[40ch] border-l-2 border-[var(--accent)] pl-6 text-[28px] italic leading-[1.4] text-[var(--ink)] max-md:text-[22px]">
+          <p className="font-fraunces mt-12 max-w-[40ch] text-[28px] italic leading-[1.4] text-[var(--ink)] max-md:text-[22px]">
             Quando a marca fica clara, o dinheiro para de escapar.
           </p>
         </Secao>
