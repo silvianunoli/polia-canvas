@@ -174,7 +174,7 @@ export function Secao({
   className = "",
 }: {
   children: ReactNode;
-  fundo?: "bg" | "surface" | "secondary-light" | "secondary";
+  fundo?: "bg" | "surface" | "surface-pink" | "secondary-light" | "secondary";
   respiro?: boolean;
   id?: string;
   secaoRef?: RefObject<HTMLElement | null>;
@@ -183,6 +183,7 @@ export function Secao({
   const cor = {
     bg: "bg-[var(--bg)]",
     surface: "bg-[var(--surface)]",
+    "surface-pink": "bg-[var(--surface-pink)]",
     "secondary-light": "bg-[var(--secondary-light)]",
     secondary: "bg-[var(--secondary)]",
   }[fundo];

@@ -136,24 +136,40 @@ const praQuemSim = [
 ];
 
 /**
- * Tipos de negócio (pedido da Sil em 07/10/2026): parte dos nichos do banco de
- * ideias (src/lib/bancoIdeias) mais comida de balcão e saúde, com os exemplos que
- * ela citou. Não importa de lá pra não levar as 480 ideias pro pacote da home.
- * Nove itens: 3 colunas no desktop fecham sem sobra.
+ * Pra que negócio (pedido da Sil em 07/10/2026): o nome do negócio como a dona
+ * chama o próprio, em etiqueta solta. Cobre os nichos do banco de ideias
+ * (src/lib/bancoIdeias) mais comida de balcão e saúde, que ela pediu. Não importa
+ * de lá pra não levar as 480 ideias pro pacote da home.
  */
-const tiposDeNegocio = [
-  {
-    nome: "Comida",
-    exemplos: "confeitaria, lanchonete, hamburgueria, restaurante, marmita",
-  },
-  { nome: "Beleza e estética", exemplos: "nail design, estética em geral, sobrancelha, cabelo" },
-  { nome: "Saúde", exemplos: "dentistas, psicólogas, nutricionistas, fisioterapeutas" },
-  { nome: "Artesanato", exemplos: "cerâmica, crochê, bordado, velas" },
-  { nome: "Papelaria e presentes", exemplos: "cadernos, agendas, convites, lembrancinhas" },
-  { nome: "Moda e acessórios", exemplos: "roupas, bijuterias, bolsas, brechó" },
-  { nome: "Cosméticos", exemplos: "sabonetes, skincare, maquiagem" },
-  { nome: "Serviços criativos", exemplos: "social media, design, fotografia" },
-  { nome: "Produto digital", exemplos: "cursos, ebooks, templates" },
+const negocios = [
+  "Confeitaria",
+  "Lanchonete",
+  "Hamburgueria",
+  "Restaurante",
+  "Marmita",
+  "Nail design",
+  "Estética",
+  "Sobrancelha",
+  "Salão de beleza",
+  "Dentista",
+  "Psicóloga",
+  "Nutricionista",
+  "Fisioterapeuta",
+  "Cerâmica",
+  "Crochê",
+  "Bordado",
+  "Velas",
+  "Papelaria",
+  "Lembrancinhas",
+  "Moda",
+  "Bijuterias",
+  "Brechó",
+  "Cosméticos naturais",
+  "Social media",
+  "Design",
+  "Fotografia",
+  "Cursos online",
+  "Templates",
 ];
 
 const praQuemNao = [
@@ -558,6 +574,27 @@ export function PaginaMarcaB({
           </div>
         </Secao>
 
+        {/* B9b · PRA QUE NEGÓCIO: seção própria pra não espremer o "pra quem é". */}
+        <Secao fundo="surface-pink">
+          <Rotulo>Pra que negócio</Rotulo>
+          <h2 className={`mt-4 ${H2}`}>De confeitaria a consultório.</h2>
+          <Reveal className="mt-10">
+            <ul className="flex list-none flex-wrap gap-3">
+              {negocios.map((n) => (
+                <li
+                  key={n}
+                  className="rounded-full bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
+                >
+                  {n}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
+            Não achou o seu? Se tem custo, preço e cliente, a conta é a mesma.
+          </p>
+        </Secao>
+
         {/* B10 · PRA QUEM É */}
         <Secao>
           <FotoLanding
@@ -569,22 +606,6 @@ export function PaginaMarcaB({
           <div className="mt-12">
             <Rotulo>Pra quem é</Rotulo>
             <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
-            {/* Lista com linha de 1px, sem cartão: oito caixinhas iguais teriam cara de template. */}
-            <ul className="grid list-none grid-cols-1 gap-x-8 sm:grid-cols-2 lg:grid-cols-3">
-              {tiposDeNegocio.map((t) => (
-                <li key={t.nome} className="border-t border-[var(--line)] py-5">
-                  <p className="font-cabinet text-[18px] font-bold leading-[1.25] tracking-[-0.02em] text-[var(--ink)]">
-                    {t.nome}
-                  </p>
-                  <p className="mt-1 text-[15px] leading-[1.5] text-[var(--ink-soft)]">
-                    {t.exemplos}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            <p className={`mt-4 mb-12 ${CORPO}`}>
-              Não achou o seu? Se tem custo, preço e cliente, a conta é a mesma.
-            </p>
             <ParaQuem sim={praQuemSim} nao={praQuemNao} />
           </div>
           <FraseAncora className="mt-10">
