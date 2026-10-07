@@ -18,6 +18,8 @@ import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/co
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { senhaCumpreRequisitos } from "@/lib/senha";
 import { emailJaTemConta } from "@/lib/signup";
+import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
+import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 import {
   campoDeBusca,
@@ -71,6 +73,7 @@ function CadastroPage() {
   const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
   const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);
+  const captcha = useCaptcha();
   const [googleLoading, setGoogleLoading] = useState(false);
   const nomeRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -114,6 +117,7 @@ function CadastroPage() {
         password: values.senha,
         options: {
           emailRedirectTo: `${window.location.origin}/onboarding`,
+          captchaToken: tokenCaptcha(captcha.token),
           // origem_campanha só entra quando veio de landing com tag válida.
           data: temOrigemCampanha(origemCampanha)
             ? { full_name: nome, origem_campanha: origemCampanha }
@@ -137,6 +141,11 @@ function CadastroPage() {
           ),
         });
         emailRef.current?.focus();
+        return;
+      }
+      if (ehErroDeCaptcha(error)) {
+        track("cadastro_falhou", { motivo: "captcha" });
+        toastErro(MSG_CAPTCHA);
         return;
       }
       if (error) {
@@ -171,6 +180,8 @@ function CadastroPage() {
       );
     } finally {
       setLoading(false);
+      // Token do Turnstile é de uso único: cada tentativa pede um novo.
+      captcha.resetar();
     }
   }
 
@@ -242,6 +253,7 @@ function CadastroPage() {
           <PasswordRequirements id="senha-requisitos" password={values.senha} />
         </div>
 
+        <TurnstileCampo captcha={captcha} />
         <div className="mt-1">
           <AuthButton type="submit" fullWidth loading={loading}>
             {loading ? (

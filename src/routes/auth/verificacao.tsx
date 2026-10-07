@@ -5,6 +5,8 @@ import { z } from "zod";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, SerifHeadline } from "@/components/cosmic/AuthShell";
+import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
+import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -36,6 +38,7 @@ function VerificacaoPage() {
   const navigate = useNavigate();
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
+  const captcha = useCaptcha();
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -57,9 +60,16 @@ function VerificacaoPage() {
   async function handleResend() {
     if (!email || cooldown > 0) return;
     setResending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { captchaToken: tokenCaptcha(captcha.token) },
+    });
     setResending(false);
-    if (error) {
+    captcha.resetar();
+    if (ehErroDeCaptcha(error)) {
+      toastErro(MSG_CAPTCHA);
+    } else if (error) {
       toastErro("A Pólia não conseguiu reenviar agora. Tenta de novo em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
@@ -96,6 +106,9 @@ function VerificacaoPage() {
                 : "Reenviar o link"}
           </button>
         </p>
+        <div className="mt-2 flex justify-center">
+          <TurnstileCampo captcha={captcha} />
+        </div>
 
         <p className="mt-4 text-center text-[14px] text-[var(--muted)]">
           <Link

@@ -4,6 +4,7 @@ import { Mail, Check } from "lucide-react";
 import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { CosmicInput } from "@/components/cosmic/CosmicInput";
 import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
+import { TurnstileCampo } from "@/components/TurnstileCampo";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 export const Route = createFileRoute("/auth/esqueci-senha")({
@@ -23,8 +24,18 @@ export const Route = createFileRoute("/auth/esqueci-senha")({
 });
 
 function EsqueciSenhaPage() {
-  const { email, setEmail, error, setError, loading, sent, cooldown, handleSubmit, handleResend } =
-    useRecuperarSenha();
+  const {
+    email,
+    setEmail,
+    error,
+    setError,
+    loading,
+    sent,
+    cooldown,
+    handleSubmit,
+    handleResend,
+    captcha,
+  } = useRecuperarSenha();
   const reduce = usePrefersReducedMotion();
   const [shown, setShown] = useState(true);
   const primeiraRenderizacao = useRef(true);
@@ -76,6 +87,7 @@ function EsqueciSenhaPage() {
                 reserveErrorSpace
                 disabled={loading}
               />
+              <TurnstileCampo captcha={captcha} />
               <div className="mt-1">
                 <AuthButton type="submit" fullWidth loading={loading}>
                   {loading ? (
@@ -118,6 +130,7 @@ function EsqueciSenhaPage() {
             >
               {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
             </button>
+            <TurnstileCampo captcha={captcha} />
             <Link to="/auth/login" className="mt-4 py-2 px-1 text-[14px] text-[var(--muted)]">
               Voltar pra entrada
             </Link>

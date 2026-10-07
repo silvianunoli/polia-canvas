@@ -13,6 +13,8 @@ import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 import { ERROR_COPY } from "@/lib/errorCopy";
+import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
+import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -68,6 +70,7 @@ function LoginPage() {
   const [loginErro, setLoginErro] = useState<string | null>(null);
   const [unverified, setUnverified] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const captcha = useCaptcha();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -130,7 +133,13 @@ function LoginPage() {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: values.email.trim(),
         password: values.senha,
+        options: { captchaToken: tokenCaptcha(captcha.token) },
       });
+      // Captcha recusado não é senha errada: não conta tentativa (FUN-03).
+      if (ehErroDeCaptcha(error)) {
+        setLoginErro(MSG_CAPTCHA);
+        return;
+      }
       if (error) {
         if (/confirm/i.test(error.message) || /verified/i.test(error.message)) {
           setUnverified(values.email.trim());
@@ -162,6 +171,8 @@ function LoginPage() {
       );
     } finally {
       setLoading(false);
+      // Token do Turnstile é de uso único: cada tentativa pede um novo.
+      captcha.resetar();
     }
   }
 
@@ -185,9 +196,16 @@ function LoginPage() {
   async function handleResend() {
     if (!unverified || resendCooldown > 0) return;
     setResending(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email: unverified });
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: unverified,
+      options: { captchaToken: tokenCaptcha(captcha.token) },
+    });
     setResending(false);
-    if (error) {
+    captcha.resetar();
+    if (ehErroDeCaptcha(error)) {
+      toastErro(MSG_CAPTCHA);
+    } else if (error) {
       toastErro("A Pólia não conseguiu reenviar agora. Tenta em alguns segundos.");
     } else {
       toastSucesso("Link reenviado. Confere seu e-mail (e o spam).");
@@ -288,6 +306,7 @@ function LoginPage() {
               </p>
             )}
 
+            <TurnstileCampo captcha={captcha} />
             <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
               {lockoutCooldown > 0 ? (
                 `Tenta de novo em ${lockoutCooldown}s`
@@ -344,6 +363,7 @@ function LoginPage() {
               reserveErrorSpace
               disabled={recuperar.loading}
             />
+            <TurnstileCampo captcha={recuperar.captcha} />
             <AuthButton type="submit" fullWidth loading={recuperar.loading}>
               {recuperar.loading ? (
                 "Enviando..."
@@ -377,6 +397,7 @@ function LoginPage() {
               ? `Pode pedir outro em ${recuperar.cooldown}s`
               : "Não chegou? Pedir de novo"}
           </button>
+          <TurnstileCampo captcha={recuperar.captcha} />
           <button
             type="button"
             onClick={() => selecionarModo("entrar")}
