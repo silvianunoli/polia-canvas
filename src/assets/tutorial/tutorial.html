@@ -46,6 +46,8 @@
 @font-face { font-family: "Anzylna"; src: url("/fonts/Anzylna-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
 
 * { box-sizing: border-box; }
+/* o botão de play da capa some com el.hidden; sem isto o display:flex dele vencia o [hidden] */
+[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body); margin: 0; }
 .pagina { max-width: 1240px; margin: 0 auto; padding-inline: 24px; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 20px; }
 .topo { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 32px; }
@@ -56,6 +58,7 @@ body { background: var(--bg); color: var(--ink); font-family: var(--font-body); 
 html.embed .topo { display: none; }
 html.embed .pagina { max-width: none; padding-inline: 0; padding-block: 0 8px; }
 html.embed body { background: transparent; }
+html.embed, html.embed body { overflow: hidden; }
 /* ── Palco ── */
 .palco { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--ink); }
 .palco:fullscreen { border-radius: 0; width: min(100vw, 177.78vh); height: auto; margin: auto; }
@@ -1603,7 +1606,9 @@ requestAnimationFrame(laco);
 
 /* ── Dentro do app: altura e eventos pro iframe pai ── */
 const avisarApp = msg => { try { if (window.parent !== window) window.parent.postMessage(msg, "*"); } catch (e) {} };
-new ResizeObserver(() => avisarApp({ tipo: "polia-tutorial-altura", altura: Math.ceil(document.body.getBoundingClientRect().height) })).observe(document.body);
+const alturaConteudo = () => Math.ceil(document.querySelector(".pagina").getBoundingClientRect().bottom + window.scrollY) + 4;
+new ResizeObserver(() => avisarApp({ tipo: "polia-tutorial-altura", altura: alturaConteudo() })).observe(document.body);
+window.addEventListener("load", () => avisarApp({ tipo: "polia-tutorial-altura", altura: alturaConteudo() }));
 let jaTocou = false;
 audio.addEventListener("play", () => { if (!jaTocou) { jaTocou = true; avisarApp({ tipo: "polia-tutorial-evento", evento: "play" }); } });
 audio.addEventListener("ended", () => avisarApp({ tipo: "polia-tutorial-evento", evento: "fim" }));
