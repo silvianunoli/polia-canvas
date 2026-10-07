@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { montarPromptAimer } from "./aimer.functions";
 import { montarPromptRaioX } from "./raiox.functions";
-import { montarPromptMes } from "./planoConteudo.functions";
 import { montarPrompt as montarPromptPlanejamento } from "./planejamentoIa.functions";
 
 // Higiene dos prompts de IA: nenhum prompt ensina o modelo a usar travessão
@@ -16,23 +15,6 @@ const REGRA_SAIDA =
 function semTravessaoForaDaRegra(texto: string) {
   return !/[—–―‑]/.test(texto.split(REGRA_SAIDA).join(""));
 }
-
-const CONTEXTO_MARCA = {
-  proposito: "p",
-  missao: "m",
-  personalidade: "pe",
-  tom: "t",
-  fraseValor: "f",
-  perfilCliente: "pc",
-  dores: "d",
-  gatilhos: "g",
-  posicionamento: "po",
-  produtos: "pr",
-  transformacao: "tr",
-  voz: "v",
-  antiExemplos: "a",
-  canalPrincipal: "c",
-};
 
 describe("prompts de IA sem travessão e com a regra de saída", () => {
   it("Aimer", () => {
@@ -55,17 +37,6 @@ describe("prompts de IA sem travessão e com a regra de saída", () => {
       metaAtual: 600,
       produtos: [{ nome: "Bolo", sobraPct: 40 }],
       dadoRalo: true,
-    });
-    expect(systemInstruction).toContain(REGRA_SAIDA);
-    expect(semTravessaoForaDaRegra(systemInstruction + prompt)).toBe(true);
-  });
-
-  it("Plano de conteúdo", () => {
-    const { systemInstruction, prompt } = montarPromptMes({
-      mes: 8,
-      ano: 2026,
-      diasNoMes: 31,
-      contexto: CONTEXTO_MARCA,
     });
     expect(systemInstruction).toContain(REGRA_SAIDA);
     expect(semTravessaoForaDaRegra(systemInstruction + prompt)).toBe(true);

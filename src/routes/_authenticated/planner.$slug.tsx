@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { PainelNav } from "@/components/painel/PainelNav";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { Campo } from "@/components/ui/Campo";
@@ -573,7 +572,6 @@ function PlannerBoard() {
   if (!quadroQuery.isLoading && !quadroQuery.data) {
     return (
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-        <PainelNav navActive="/planner" />
         <main className="mx-auto max-w-[600px] px-6 py-20 text-center">
           <h1 className="font-cabinet mb-4 text-[24px] text-[var(--ink)]">Quadro não encontrado</h1>
           <LinkInterno
@@ -589,8 +587,6 @@ function PlannerBoard() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <PainelNav navActive="/planner" />
-
       <section className="px-6 pb-5 pt-8 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <LinkInterno

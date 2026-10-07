@@ -39,8 +39,10 @@ export const TIPO_LABEL: Record<string, string> = {
   servico: "Serviço",
 };
 
+// Dinheiro sempre com duas casas: sem isso o toLocaleString mostrava
+// "R$ 44,1" (ONE-74).
 export function fmt(v: number) {
-  return `R$ ${v.toLocaleString("pt-BR")}`;
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 export function fmtData(iso: string) {

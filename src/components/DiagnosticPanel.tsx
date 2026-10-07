@@ -128,7 +128,7 @@ export function DiagnosticPanel() {
                   : `erro${serverCode ? ` (${serverCode})` : ""}`}
             </div>
             <div style={{ opacity: 0.8 }}>
-              Última verificação: {lastCheck ? lastCheck.toLocaleTimeString() : "—"}
+              Última verificação: {lastCheck ? lastCheck.toLocaleTimeString() : "ainda não"}
             </div>
             <div style={{ opacity: 0.8 }}>
               Última renderização: {renderedAt.toLocaleTimeString()}

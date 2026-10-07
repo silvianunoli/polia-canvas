@@ -87,7 +87,8 @@ export function ModalProduto({
         .eq("id", produtoEdit.id);
       setSalvando(false);
       if (error) {
-        setErro(error.message || "A Pólia One não conseguiu salvar o produto. Tenta de novo.");
+        console.error("produto_salvar", error);
+        setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
       void registrar("edit_product", { feature: "produtos", propriedades: { tipo } });
@@ -105,7 +106,8 @@ export function ModalProduto({
       } as never);
       setSalvando(false);
       if (error) {
-        setErro(error.message || "A Pólia One não conseguiu salvar o produto. Tenta de novo.");
+        console.error("produto_salvar", error);
+        setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
       track("produto_criado", { tipo });

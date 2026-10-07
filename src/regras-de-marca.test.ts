@@ -106,11 +106,9 @@ function procurar(
   return achados;
 }
 
-// Dívida de copy conhecida em 22/09/2026. Corrigir e apagar daqui.
-const EXCECOES_TRAVESSAO: readonly Excecao[] = [
-  ["src/components/DiagnosticPanel.tsx", "—"],
-  ["src/routes/termos.tsx", "A cobrança é recorrente e renova automaticamente"],
-];
+// Dívida de copy conhecida em 22/09/2026, zerada em 07/10/2026 (VOC-07).
+// "Recebemos a mensagem!" fica de propósito: exceção aprovada pela Sil (COPY-11).
+const EXCECOES_TRAVESSAO: readonly Excecao[] = [];
 const EXCECOES_EXCLAMACAO: readonly Excecao[] = [["src/routes/ajuda.tsx", "Recebemos a mensagem!"]];
 
 describe("regras de marca no texto visível do src", () => {

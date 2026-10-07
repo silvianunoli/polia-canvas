@@ -363,7 +363,15 @@ function ConfiguracoesPage() {
     }
     const { error } = await supabase.auth.updateUser({ password: novaSenha });
     if (error) {
-      setSenhaErro(error.message);
+      // A mensagem do Supabase vem em inglês e técnica; nunca vai crua pra tela.
+      console.error("senha_alterar", error);
+      setSenhaErro(
+        error.code === "same_password"
+          ? "a senha nova precisa ser diferente da atual."
+          : error.code === "weak_password"
+            ? "essa senha é fácil de adivinhar. Tenta uma mais longa, misturando letras e números."
+            : "a Pólia One não conseguiu trocar a senha. Tenta de novo em instantes.",
+      );
       return;
     }
     setSenhaOk(true);

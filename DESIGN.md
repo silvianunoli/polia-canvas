@@ -42,13 +42,13 @@ Base neutra de pedra + turquesa como ação. Regra de contraste: pêssego e turq
 | `--line` | #E6E6E6 | bordas/divisórias |
 | `--ink` | #0A0A0A | texto principal (tinta) |
 | `--ink-soft` | #2C2C2C | texto secundário |
-| `--muted` | #767676 | metadado, texto apagado. **Reprova AA sobre `--bg`, `--surface` e `--surface-pink`: só texto grande.** Ver seção 11 |
+| `--muted` | #6B6B6B | metadado, texto apagado. Passa AA sobre `--bg` e `--surface`; **sobre `--surface-pink` ainda reprova: lá, só texto grande.** Ver seção 11 |
 | `--accent` | #F3B9A9 | pêssego, fundo/borda/gráfico, NUNCA texto |
 | `--accent-ink` | #2C2C2C | texto sobre `--accent` |
 | `--secondary` | #7CCBCD | turquesa, ação principal (fundo de botão/banner) |
 | `--secondary-light` | #BFE9EB | turquesa clara, fundo de destaque leve |
 | `--secondary-ink` | #0A0A0A | texto sobre `--secondary` |
-| `--secondary-text` | #2C7E80 | turquesa escura, TEXTO de link/CTA. **Reprova AA sobre `--bg` e `--secondary-light`.** Ver seção 11 |
+| `--secondary-text` | #24696B | turquesa escura, TEXTO de link/CTA. Passa AA sobre `--bg` e `--secondary-light`. Ver seção 11 |
 | `--highlight` | #FFC629 | amarelo, indicador pontual, no máximo um por tela |
 | `--highlight-ink` | #0A0A0A | texto sobre `--highlight` |
 | `--danger` | #C0392B | vermelho-tijolo, erro, ação destrutiva (AA em fundo claro) |
@@ -148,7 +148,7 @@ Piso implementado e a manter:
 - Navegação por teclado e label em todo campo; `FieldError` ligado por `aria-describedby`.
 - Toda nova tela mantém foco visível, navegação por teclado e contraste real conferido — **não** "contraste AA garantido" como promessa geral (ver por quê abaixo).
 
-**A promessa correta não é "todos os tokens garantem WCAG AA".** Dois tokens reprovam AA em texto pequeno nos fundos reais do produto — `--muted` e `--secondary-text` (medição completa no anexo, §18). Enquanto eles não forem corrigidos (escurecer perto de `#6B6B6B` e `#24696B`, ou restringir a texto grande), **peça nova usa `--ink` ou `--ink-soft` pra texto pequeno**, nunca `--muted` nem `--secondary-text` fora de texto grande (≥24px, ou ≥18,66px bold).
+**A promessa correta não é "todos os tokens garantem WCAG AA".** Em ago/2026 `--muted` e `--secondary-text` foram escurecidos pra `#6B6B6B` e `#24696B` e passaram a valer AA em texto pequeno sobre `--bg`, `--surface` e `--secondary-light` (medição no anexo, §18). Sobra uma exceção: **`--muted` sobre `--surface-pink` reprova (4,03:1)**; ali, texto pequeno usa `--ink` ou `--ink-soft`.
 
 ## 12. Logo
 
@@ -229,13 +229,13 @@ Este arquivo não pode criar cor, raio ou espaçamento que contradiga o CSS, nem
 
 | par | contraste | AA texto pequeno (4,5:1) |
 |---|---|---|
-| `--muted` #767676 sobre `--bg` #F2F0ED | 3,99:1 | reprova |
-| `--muted` sobre `--surface` #F9EFEE | 4,03:1 | reprova |
-| `--muted` sobre `--surface-pink` #F6DAD4 | 3,44:1 | reprova |
-| `--secondary-text` #2C7E80 sobre `--bg` | 4,19:1 | reprova |
-| `--secondary-text` sobre `--secondary-light` #BFE9EB | 3,65:1 | reprova |
+| `--muted` #6B6B6B sobre `--bg` #F2F0ED | 4,69:1 | passa |
+| `--muted` sobre `--surface` #F9EFEE | 4,72:1 | passa |
+| `--muted` sobre `--surface-pink` #F6DAD4 | 4,03:1 | reprova |
+| `--secondary-text` #24696B sobre `--bg` | 5,58:1 | passa |
+| `--secondary-text` sobre `--secondary-light` #BFE9EB | 4,86:1 | passa |
 
-Passam com folga: `--ink` sobre qualquer fundo claro (15:1 a 17,5:1), `--ink-soft` sobre `--secondary-light` (10,7:1) e sobre `--accent` (8,2:1), `--ink` sobre `--highlight` (12,6:1) e sobre `--secondary` (10,6:1). Em texto grande (≥24px, ou ≥18,66px bold) o piso é 3:1 e os dois tokens passam — o problema é metadado, label e link em tamanho de corpo.
+Passam com folga: `--ink` sobre qualquer fundo claro (15:1 a 17,5:1), `--ink-soft` sobre `--secondary-light` (10,7:1) e sobre `--accent` (8,2:1), `--ink` sobre `--highlight` (12,6:1) e sobre `--secondary` (10,6:1). Em texto grande (≥24px, ou ≥18,66px bold) o piso é 3:1 e todos passam. Valores refeitos em 07/10/2026 com os tokens corrigidos (antes da correção de ago/2026 os dois reprovavam sobre `--bg`).
 
 **Cobertura da identidade (verificado em 2026-07-30).** `.polia-v3` aparece 86 vezes em 50 arquivos de `src/`, cobrindo todas as rotas públicas e as 22 telas logadas. As rotas de `auth/` herdam de `AuthShell`. **Exceção conhecida:** `src/routes/auth/link-expirado.tsx` não tem `polia-v3` nem importa `AuthShell` — é a única rota renderizável fora do escopo da identidade. Corrigir.
 
