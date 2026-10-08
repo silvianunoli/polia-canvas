@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
 import { BTN_ACAO } from "@/lib/botoes";
 import { SeloCadeado } from "@/components/layout/UpgradeGate";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { abrirTrocaDePlano } from "@/lib/stripe.functions";
+import { toastErro } from "@/lib/toast";
 
 interface UpgradeSearch {
   rota?: string;
@@ -52,6 +56,30 @@ function UpgradePage() {
     (search.rota ? GANHO_POR_ROTA[search.rota] : undefined) ??
     `Assinando o ${tier.titulo}, essa tela abre na sua conta na hora.`;
 
+  // Quem já é Premium e quer o Pro não passa pelo /assinar (só serve pro
+  // Grátis): troca o plano da assinatura que já existe, no portal do Stripe,
+  // que cobra só a diferença (QA-06).
+  const meta = useUserMeta();
+  const trocaDePlano = tierId === "projete" && meta.plano === "controle";
+  const [abrindo, setAbrindo] = useState(false);
+  const mudarProPro = async () => {
+    setAbrindo(true);
+    track("upgrade_cta_clicado", { rota: search.rota, tier: tierId, troca: true });
+    try {
+      const r = await abrirTrocaDePlano();
+      if (r.url) {
+        window.location.assign(r.url);
+        return;
+      }
+      toastErro(
+        r.error ?? "A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.",
+      );
+    } catch {
+      toastErro("A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.");
+    }
+    setAbrindo(false);
+  };
+
   return (
     <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
       <div className="w-full max-w-[440px] rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
@@ -75,14 +103,35 @@ function UpgradePage() {
           ))}
         </ul>
 
-        <Link
-          to="/assinar"
-          search={{ plano: tierId }}
-          onClick={() => track("upgrade_cta_clicado", { rota: search.rota, tier: tierId })}
-          className={`${BTN_ACAO} mt-6 w-full`}
-        >
-          Assinar o {tier.titulo}
-        </Link>
+        {meta.carregando ? (
+          <button type="button" disabled className={`${BTN_ACAO} mt-6 w-full`}>
+            Carregando...
+          </button>
+        ) : trocaDePlano ? (
+          <>
+            <button
+              type="button"
+              onClick={mudarProPro}
+              disabled={abrindo}
+              aria-busy={abrindo || undefined}
+              className={`${BTN_ACAO} mt-6 w-full`}
+            >
+              {abrindo ? "Abrindo..." : "Mudar pro Pro"}
+            </button>
+            <p className="mt-3 font-sans text-[13px] leading-snug text-[var(--muted)]">
+              A troca é feita na página de pagamento, que cobra só a diferença do mês.
+            </p>
+          </>
+        ) : (
+          <Link
+            to="/assinar"
+            search={{ plano: tierId }}
+            onClick={() => track("upgrade_cta_clicado", { rota: search.rota, tier: tierId })}
+            className={`${BTN_ACAO} mt-6 w-full`}
+          >
+            Assinar o {tier.titulo}
+          </Link>
+        )}
         <Link
           to="/painel"
           className="mt-3 inline-flex min-h-11 items-center font-sans text-[13px] text-[var(--secondary-text)] no-underline hover:underline"

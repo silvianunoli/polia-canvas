@@ -262,6 +262,63 @@ export const abrirPortalCobranca = createServerFn({ method: "POST" })
     }
   });
 
+// QA-06 (08/10/2026): quem já é Premium e clica em "Assinar o Pro" caía no
+// /assinar, que só serve pra quem está no Grátis, e era mandada pro Painel.
+// Trocar de plano numa assinatura que já existe é no portal do Stripe, que
+// cobra só a diferença (configuração conferida no PAY-20). Abre o portal já
+// na tela de troca de plano; se esse atalho falhar, abre o portal comum.
+export const abrirTrocaDePlano = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const assinatura = await lerAssinatura(context.userId);
+    if (
+      !assinatura?.stripe_customer_id ||
+      !assinatura.stripe_subscription_id ||
+      !STATUS_ATIVOS.has(assinatura.status)
+    ) {
+      return {
+        url: null,
+        error: "A Pólia One não encontrou uma assinatura ativa pra trocar de plano.",
+      };
+    }
+    const stripe = stripeClient();
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: assinatura.stripe_customer_id,
+        return_url: `${SITE_URL}/painel`,
+        locale: "pt-BR",
+        flow_data: {
+          type: "subscription_update",
+          subscription_update: { subscription: assinatura.stripe_subscription_id },
+          after_completion: {
+            type: "redirect",
+            redirect: { return_url: `${SITE_URL}/painel` },
+          },
+        },
+      });
+      if (session.url) return { url: session.url, error: null };
+    } catch (err) {
+      console.error("[Stripe] Atalho de troca de plano falhou, abrindo portal comum:", err);
+      void dispararAlerta("portal_troca_plano_erro", "Atalho de troca de plano do portal falhou", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
+    }
+    try {
+      const session = await stripe.billingPortal.sessions.create({
+        customer: assinatura.stripe_customer_id,
+        return_url: `${SITE_URL}/painel`,
+        locale: "pt-BR",
+      });
+      if (session.url) return { url: session.url, error: null };
+    } catch (err) {
+      console.error("[Stripe] Erro ao abrir portal pra troca de plano:", err);
+    }
+    return {
+      url: null,
+      error: "A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.",
+    };
+  });
+
 export const cancelarAssinatura = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

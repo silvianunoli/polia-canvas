@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_authenticated/assinar")({
   validateSearch: (search: Record<string, unknown>): AssinarSearch => ({
     plano: search.plano === "controle" || search.plano === "projete" ? search.plano : undefined,
   }),
-  beforeLoad: async () => {
+  beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
     const { data: sess } = await supabase.auth.getSession();
     if (!sess.session) return;
@@ -56,6 +56,12 @@ export const Route = createFileRoute("/_authenticated/assinar")({
     // `assinaturas.status`: conta beta não tem linha em `assinaturas`, mas já
     // tem acesso completo e não devia ver o paywall.
     const plano = (profile as { plano?: string | null } | null)?.plano;
+    // Premium pedindo o Pro: a troca de plano mora no /upgrade (portal do
+    // Stripe), não aqui. Antes ia pro Painel e parecia que o botão não fazia
+    // nada (QA-06).
+    if (plano === "controle" && search.plano === "projete") {
+      throw redirect({ to: "/upgrade", search: { tier: "projete" } });
+    }
     const jaTemAcessoPago = ehBeta(plano) || tierDoPlano(plano) === "controle";
     if (jaTemAcessoPago) throw redirect({ to: "/painel" });
   },
