@@ -111,7 +111,15 @@ export const COTAS_CONFERE = {
   produtos: 5,
   planner: 1,
   caderno: 1,
+  // Cartões de quadro do Planner (tarefas com quadro_id), somando todos os
+  // quadros. Decisão da Sil em 07/10/2026; o banco trava igual
+  // (assert_cota_cartoes, migration 20261008210000).
+  cartoes: 100,
 } as const;
+
+/** Mensagem do limite de cartões, igual na tela e no erro do banco. */
+export const MSG_LIMITE_CARTOES =
+  "O plano Grátis guarda até 100 cartões no Planner. Pra criar mais, assine o Premium.";
 
 // O teto de 3 metas ativas NÃO entra aqui de propósito. Ele não é cota de
 // plano: é regra de foco, vale igual pro plano Grátis, pro Premium e pro Pro

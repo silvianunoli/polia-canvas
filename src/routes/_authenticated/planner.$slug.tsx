@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { COTAS_CONFERE } from "@/lib/planos";
+import { COTAS_CONFERE, MSG_LIMITE_CARTOES } from "@/lib/planos";
 import { idsAcimaDaCota } from "@/lib/cotaExcedente";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
@@ -236,6 +236,23 @@ function PlannerBoard() {
     return idsAcimaDaCota(quadrosCotaQuery.data, COTAS_CONFERE.planner).has(quadroId);
   }, [ehConfere, quadroId, quadrosCotaQuery.data]);
 
+  // Limite de cartões do Grátis: conta os cartões de todos os quadros dela,
+  // igual ao gatilho assert_cota_cartoes no banco.
+  const cartoesCotaQuery = useQuery({
+    queryKey: ["cartoes-cota", userId],
+    enabled: !!userId && ehConfere,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("tarefas")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .not("quadro_id", "is", null);
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
+  const limiteCartoesAtingido = ehConfere && (cartoesCotaQuery.data ?? 0) >= COTAS_CONFERE.cartoes;
+
   const colunasQuery = useQuery({
     queryKey: ["quadro-colunas", quadroId],
     enabled: !!quadroId,
@@ -362,6 +379,7 @@ function PlannerBoard() {
       toastErro("A Pólia One não conseguiu remover o cartão.");
       invalidar();
     }
+    void qc.invalidateQueries({ queryKey: ["cartoes-cota", userId] });
   };
 
   const concluirComTransicao = (id: string) => {
@@ -570,6 +588,10 @@ function PlannerBoard() {
   const criar = async (status: string) => {
     const titulo = novoTitulo.trim();
     if (!titulo || !userId || !quadroId || somenteLeitura || criandoCartaoRef.current) return;
+    if (limiteCartoesAtingido) {
+      toastErro(MSG_LIMITE_CARTOES);
+      return;
+    }
     criandoCartaoRef.current = true;
     const hoje = hojeISO();
     let error: unknown;
@@ -588,10 +610,18 @@ function PlannerBoard() {
     }
     if (error) {
       criandoCartaoRef.current = false;
-      toastErro("A Pólia One não conseguiu salvar o cartão. Tenta de novo.");
+      // Limite do Grátis recusado pelo banco (outra aba, contagem desatualizada).
+      const msg = (error as { message?: string } | null)?.message ?? "";
+      toastErro(
+        /limite do plano Grátis/i.test(msg)
+          ? MSG_LIMITE_CARTOES
+          : "A Pólia One não conseguiu salvar o cartão. Tenta de novo.",
+      );
+      void qc.invalidateQueries({ queryKey: ["cartoes-cota", userId] });
       return;
     }
     track("tarefa_criada", { status });
+    void qc.invalidateQueries({ queryKey: ["cartoes-cota", userId] });
     setNovoTitulo("");
     setComposerCol(null);
     invalidar();
@@ -666,6 +696,23 @@ function PlannerBoard() {
                 Esse quadro passou do limite do plano Grátis. Dá pra ver tudo; pra editar, assine o
                 Premium.
               </span>
+              <Link
+                to="/upgrade"
+                search={{ rota: "/planner", tier: "controle" }}
+                className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] no-underline hover:underline"
+              >
+                Assinar o Premium
+              </Link>
+            </div>
+          )}
+
+          {limiteCartoesAtingido && !somenteLeitura && (
+            <div
+              role="status"
+              className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[13px] text-[var(--ink-soft)]"
+            >
+              <Lock size={14} className="shrink-0" aria-hidden="true" />
+              <span>{MSG_LIMITE_CARTOES}</span>
               <Link
                 to="/upgrade"
                 search={{ rota: "/planner", tier: "controle" }}

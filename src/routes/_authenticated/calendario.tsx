@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { MSG_LIMITE_CARTOES } from "@/lib/planos";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -251,7 +252,13 @@ function CalendarioPage() {
       setNovoTitulo("");
       toastSucesso("Tarefa criada.");
     },
-    onError: () => toastErro("A Pólia One não conseguiu criar a tarefa. Tenta de novo."),
+    // Limite de 100 cartões do Grátis (assert_cota_cartoes) vem como erro do banco.
+    onError: (e) =>
+      toastErro(
+        /limite do plano Grátis/i.test((e as { message?: string } | null)?.message ?? "")
+          ? MSG_LIMITE_CARTOES
+          : "A Pólia One não conseguiu criar a tarefa. Tenta de novo.",
+      ),
   });
 
   const abrirComposer = () => {
