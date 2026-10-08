@@ -1,6 +1,21 @@
 import Stripe from "npm:stripe@22.3.0";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { emailPolia } from "../_shared/email-polia.ts";
+import {
+  STATUS_ATIVOS_FOUNDER,
+  STATUS_COM_ACESSO,
+  acaoDoPlano,
+  cancelamentoAgendado,
+  cancelamentoEncerraAcesso,
+  cancelamentoFoiAgendadoNesteEvento,
+  formatarDataBR,
+  mascararEmail,
+  normalizarEmail,
+  origemDaSessao,
+  semEmails,
+} from "../_shared/stripeWebhookRegras.ts";
+import { proximaTentativaEm } from "../_shared/reenvioEmail.ts";
+import { montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
 
 // Stripe manda o corpo assinado (sem JWT de usuária) — esta função fica com
 // verify_jwt = false e valida a autenticidade pela assinatura HMAC do próprio
@@ -76,31 +91,6 @@ async function registrarEventoAnalytics(
   }
 }
 
-// Origem de campanha (landing + UTMs) que o checkout público grava nos
-// metadados da sessão. Cópia da allowlist de src/lib/origemCampanha.ts: esta
-// função roda em Deno e não importa o código do app. Só as chaves conhecidas,
-// e o valor fora do padrão é descartado. Nada aqui interfere na compra: sem
-// origem válida, o evento só sai sem ela.
-const CHAVES_ORIGEM = [
-  "origem",
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_content",
-  "utm_term",
-] as const;
-const VALOR_ORIGEM_VALIDO = /^[\p{L}\p{N} ._\-/|+]{1,100}$/u;
-
-function origemDaSessao(metadata: Stripe.Metadata | null | undefined): Record<string, string> {
-  const saida: Record<string, string> = {};
-  if (!metadata) return saida;
-  for (const chave of CHAVES_ORIGEM) {
-    const v = metadata[chave]?.trim();
-    if (v && VALOR_ORIGEM_VALIDO.test(v)) saida[chave] = v;
-  }
-  return saida;
-}
-
 // Eventos de assinatura pro Founder Dashboard (founder_eventos, origem webhook).
 // sessao_id é derivado do id do evento Stripe (uuid v5-like): determinístico,
 // então a reentrega do mesmo evento não gera sessão nova.
@@ -147,62 +137,15 @@ async function registrarFalhaWebhook(tipoEvento: string, mensagem: string) {
   }
 }
 
-const STATUS_ATIVOS_FOUNDER = ["active", "trialing"];
-
-// Status em que a assinatura já foi paga ao menos uma vez e dá acesso.
-// "incomplete" (janela de pagamento aberta e não paga) fica de fora: antes de
-// 05/10/2026 o plano era gravado só pelo price id, então abrir o pagamento em
-// /assinar e fechar sem pagar liberava o Premium (QA-01).
-const STATUS_COM_ACESSO = ["active", "trialing", "past_due"];
-
-// Cancelamento marcado pro fim do período. O cancelarAssinatura do app usa
-// cancel_at_period_end; o portal do Stripe pode marcar por cancel_at. Os dois
-// contam.
-function cancelamentoAgendado(
-  s: Pick<Stripe.Subscription, "cancel_at_period_end" | "cancel_at">,
-): boolean {
-  return s.cancel_at_period_end === true || (s.cancel_at ?? null) !== null;
-}
-
-// Este evento é a VIRADA pra "cancelamento agendado"? Remonta o estado de antes
-// com previous_attributes (o Stripe só manda ali o que mudou). Sem esses
-// campos em previous_attributes, este evento não mexeu no cancelamento.
-function cancelamentoFoiAgendadoNesteEvento(
-  payload: Stripe.Subscription,
-  anteriores: Partial<Stripe.Subscription> | undefined,
-): boolean {
-  if (!anteriores) return false;
-  const mudouPeriodo = "cancel_at_period_end" in anteriores;
-  const mudouData = "cancel_at" in anteriores;
-  if (!mudouPeriodo && !mudouData) return false;
-  const antes = {
-    cancel_at_period_end: mudouPeriodo
-      ? (anteriores.cancel_at_period_end ?? false)
-      : payload.cancel_at_period_end,
-    cancel_at: mudouData ? (anteriores.cancel_at ?? null) : payload.cancel_at,
-  };
-  return !cancelamentoAgendado(antes) && cancelamentoAgendado(payload);
-}
-
 // Até quando o acesso vai, já formatado no fuso de Brasília.
 function fimDoAcesso(s: Stripe.Subscription): string | null {
   const fim = s.cancel_at ?? s.items.data[0]?.current_period_end ?? null;
   return fim ? formatarDataBR(new Date(fim * 1000)) : null;
 }
 
-// Quem pagou e parou de pagar (unpaid) fica como cancelada, igual ao
-// customer.subscription.deleted. Quem nunca pagou (incomplete_expired) não
-// mexe no plano: desde o QA-01 o plano pago só abre com pagamento, então o que
-// ela tem não veio desta assinatura. Antes ia pra "confere" e derrubava o
-// Premium/Pro liberado à mão de quem abria o checkout e desistia (PAY-30).
-async function rebaixarPlanoSemPagamento(
-  userId: string,
-  status: string,
-  statusAnterior: string | null,
-) {
-  const jaTeveAcesso =
-    status === "unpaid" || (statusAnterior !== null && STATUS_COM_ACESSO.includes(statusAnterior));
-  if (!jaTeveAcesso) return;
+// Pagou um dia e parou: vira "cancelada" (a decisão é acaoDoPlano, em
+// _shared/stripeWebhookRegras.ts). Só mexe em plano pago.
+async function marcarPlanoCancelado(userId: string) {
   await supabaseAdmin
     .from("profiles")
     .update({ plano: "cancelada" })
@@ -401,7 +344,8 @@ async function upsertAssinaturaDaSubscription(
     if (insertError) throw insertError;
   }
 
-  if (STATUS_COM_ACESSO.includes(subscription.status)) {
+  const acao = acaoDoPlano(subscription.status, statusAnterior);
+  if (acao === "liberar") {
     const planoDoPreco = priceId ? PRICE_TO_PLANO[priceId] : undefined;
     if (!planoDoPreco) {
       // Preço fora do mapa (secret STRIPE_PRICE_ID_* faltando ou preço novo
@@ -421,8 +365,8 @@ async function upsertAssinaturaDaSubscription(
       .eq("id", userId);
     // Sem plano gravado ela pagou e segue no Grátis: erro aqui também reentrega.
     if (erroPlano) throw erroPlano;
-  } else if (subscription.status === "incomplete_expired" || subscription.status === "unpaid") {
-    await rebaixarPlanoSemPagamento(userId, subscription.status, statusAnterior);
+  } else if (acao === "cancelada") {
+    await marcarPlanoCancelado(userId);
   }
 
   if (
@@ -454,51 +398,69 @@ async function buscarUserIdPorEmail(email: string): Promise<string | null> {
   return (data as string | null) ?? null;
 }
 
-// "ana.souza@gmail.com" -> "an***@gmail.com". O alerta vai pro Telegram: dá
-// pra achar a compra no Stripe pelo começo do e-mail sem expor o endereço.
-function mascararEmail(email: string): string {
-  const [local, dominio] = email.split("@");
-  if (!dominio) return "***";
-  return `${local.slice(0, 2)}***@${dominio}`;
+// PAY-27: e-mail que não saiu entra na fila (emails_pendentes) e a função
+// reenviar-emails tenta de novo (intervalos em _shared/reenvioEmail.ts). O de
+// ativação guarda regenerar_ativacao: o link do convite expira, então no
+// reenvio sai um link novo em vez do velho. Falha ao enfileirar não pode
+// derrubar o webhook: o alerta já avisou.
+async function enfileirarReenvio(
+  to: string,
+  subject: string,
+  text: string,
+  html: string,
+  contexto: string,
+  motivo: string,
+  regenerarAtivacao: boolean,
+): Promise<void> {
+  try {
+    const { error } = await supabaseAdmin.from("emails_pendentes").insert({
+      destinatario: to,
+      assunto: subject,
+      texto: text,
+      html,
+      contexto,
+      regenerar_ativacao: regenerarAtivacao,
+      tentativas: 1,
+      proxima_tentativa: proximaTentativaEm(1, new Date())?.toISOString(),
+      ultimo_erro: semEmails(motivo),
+    });
+    if (error) console.error("[stripe-webhook] Falha ao enfileirar reenvio:", error);
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao enfileirar reenvio:", err);
+  }
 }
 
-// E-mail de quem comprou sempre minúsculo e sem espaço (08/10/2026): o hook de
-// cadastro procura o convite por lower(trim(email)) com igualdade exata, então
-// "Ana@..." gravado cru em convites_cadastro bloqueava a conta da compra paga.
-function normalizarEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
-// Data dos e-mails no fuso de Brasília. Sem timeZone, o Deno formata em UTC e
-// uma assinatura que vence às 22h do dia 9 aparecia como "10/10".
-function formatarDataBR(data: Date): string {
-  return data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
-}
-
-// Mensagem de erro do Resend pode repetir o endereço: troca qualquer e-mail
-// por [email] antes de mandar pro alerta.
-function semEmails(texto: string): string {
-  return texto.replace(/[^\s@"'<>]+@[^\s@"'<>]+/g, "[email]").slice(0, 200);
-}
-
-// QA-38: devolve se o e-mail saiu. Antes a falha (inclusive chave ausente) só
-// ia pro console.error e ninguém ficava sabendo que a cliente não recebeu o
-// e-mail. Agora toda falha dispara o alerta stripe_webhook_email_falhou.
-// Não reenvia sozinha: a fila de reenvio é o próximo passo.
+// QA-38: devolve se o e-mail saiu. Toda falha dispara o alerta
+// stripe_webhook_email_falhou e, desde o PAY-27, entra na fila de reenvio.
 async function enviarViaResend(
   subject: string,
   text: string,
   html: string,
   to: string,
   contexto: string,
+  opcoes: { regenerarAtivacao?: boolean } = {},
 ): Promise<boolean> {
-  const avisarFalha = (motivo: string, detalhe?: string) =>
-    dispararAlerta("stripe_webhook_email_falhou", `E-mail do Stripe não saiu: ${contexto}`, {
-      email: mascararEmail(to),
-      qual: contexto,
-      motivo,
-      ...(detalhe ? { detalhe: semEmails(detalhe) } : {}),
-    });
+  const avisarFalha = async (motivo: string, detalhe?: string) => {
+    await dispararAlerta(
+      "stripe_webhook_email_falhou",
+      `E-mail do Stripe não saiu: ${contexto} (vai pra fila de reenvio)`,
+      {
+        email: mascararEmail(to),
+        qual: contexto,
+        motivo,
+        ...(detalhe ? { detalhe: semEmails(detalhe) } : {}),
+      },
+    );
+    await enfileirarReenvio(
+      to,
+      subject,
+      text,
+      html,
+      contexto,
+      detalhe ? `${motivo}: ${detalhe}` : motivo,
+      opcoes.regenerarAtivacao === true,
+    );
+  };
 
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
@@ -545,22 +507,10 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 }
 
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
-  return await enviarViaResend(
-    "Sua compra foi confirmada",
-    `Agora falta criar sua senha para entrar na Pólia One pela primeira vez.\n\n${linkAtivacao}\n\nEsse link vale por pouco tempo. Se não foi você quem comprou, ignore este e-mail.`,
-    emailPolia({
-      preheader: "Agora falta criar sua senha para entrar na Pólia One.",
-      headline: "Sua compra foi confirmada",
-      paragrafos: [
-        "Agora falta criar sua senha para entrar na Pólia One pela primeira vez.",
-        "Esse link vale por pouco tempo. Se não foi você quem comprou, ignore este e-mail.",
-      ],
-      ctaLabel: "Criar minha senha",
-      ctaUrl: linkAtivacao,
-    }),
-    email,
-    "e-mail de ativação",
-  );
+  const { assunto, texto, html } = montarEmailAtivacao(linkAtivacao);
+  return await enviarViaResend(assunto, texto, html, email, "e-mail de ativação", {
+    regenerarAtivacao: true,
+  });
 }
 
 // Quem comprou já tinha conta: não há senha pra criar, então o e-mail só
@@ -1033,9 +983,12 @@ Deno.serve(async (req) => {
             .eq("id", userId)
             .maybeSingle();
           const plano = (perfil as { plano?: string } | null)?.plano ?? "";
-          tinhaAcesso =
+          // Só consulta as faturas quando o plano é pago (é a única leitura
+          // extra ao Stripe e quase todo deleted é de tentativa abandonada).
+          const pago =
             (plano === "controle" || plano === "projete") &&
             (await assinaturaFoiPaga(subscription.id));
+          tinhaAcesso = cancelamentoEncerraAcesso(plano, pago);
         }
         if (userId && tinhaAcesso) {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);

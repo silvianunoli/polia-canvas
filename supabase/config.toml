@@ -5,7 +5,8 @@ project_id = "egzwkyqpkexgrhbxwcvb"
 #   segredo compartilhado em header: alertas-criticos (ALERTAS_SECRET),
 #     raiox-mensal-cron (RAIOX_CRON_SECRET), social-publisher /
 #     social-metricas / social-token-renovar (SOCIAL_CRON_SECRET),
-#     founder-monitor (FOUNDER_MONITOR_SECRET ou JWT de admin conferido no código)
+#     founder-monitor (FOUNDER_MONITOR_SECRET ou JWT de admin conferido no código),
+#     reenviar-emails (segredo só no Vault, conferido por RPC; PAY-27)
 #   assinatura do provedor: stripe-webhook (HMAC do Stripe)
 #   token de verificação da Meta: ig-webhook (bot desativado, só responde o desafio)
 #   JWT conferido no código (auth.getUser + is_admin): social-ia
@@ -37,4 +38,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.social-ia]
+verify_jwt = false
+
+[functions.reenviar-emails]
 verify_jwt = false
