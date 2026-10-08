@@ -735,7 +735,7 @@ export function Calculadora({
               Preço sugerido
             </p>
             <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
-              {fmt(round2(calc.precoSugerido))}
+              {calc.invalido ? "—" : fmt(round2(calc.precoSugerido))}
             </p>
             {calc.invalido && (
               <p className="mt-2 text-[13px] text-[var(--danger)]">
@@ -790,8 +790,16 @@ export function Calculadora({
                   <LinhaCalc label="Piso (sem prejuízo)" valor={fmt(round2(encomendaCalc.piso))} />
                 </>
               )}
-              <LinhaCalc label="Taxas e impostos" valor={fmt(round2(calc.taxasReais))} />
-              <LinhaCalc label="Seu lucro" valor={fmt(round2(calc.lucroReais))} />
+              {/* Com 100% ou mais o preço cai pro custo (calcularPrecoSugerido) e
+                  taxa e lucro saíam calculados sobre esse preço de mentira. */}
+              <LinhaCalc
+                label="Taxas e impostos"
+                valor={calc.invalido ? "—" : fmt(round2(calc.taxasReais))}
+              />
+              <LinhaCalc
+                label="Seu lucro"
+                valor={calc.invalido ? "—" : fmt(round2(calc.lucroReais))}
+              />
             </div>
             {vendasParaMetaBoa !== null && (
               <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
@@ -808,7 +816,7 @@ export function Calculadora({
               value={desconto}
               onChange={setDesconto}
             />
-            {simulacaoDesconto && (
+            {simulacaoDesconto && !calc.invalido && (
               <p
                 className={`mt-3 text-[13px] ${
                   simulacaoDesconto.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"

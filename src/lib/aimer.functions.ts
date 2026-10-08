@@ -198,10 +198,19 @@ export function montarPromptAimer(dados: {
   pergunta: string;
   historico: { autor: "user" | "aimer"; texto: string }[];
   contextoProjete: string | null;
+  /** false quando o plano não manda os números pra IA (Grátis e Premium). */
+  planoLeNumeros?: boolean;
 }): { systemInstruction: string; prompt: string } {
   const partes: string[] = [];
   if (dados.contextoProjete) {
     partes.push(`Números reais do negócio da Ana este mês:\n${dados.contextoProjete}`);
+  } else if (dados.planoLeNumeros === false) {
+    // Teste de 08/10/2026: conta Premium com R$ 1.384,56 lançados ouviu "ainda
+    // não tem nenhum lançamento". Fora do Pro os números nem chegam aqui, então
+    // a IA não pode afirmar que eles não existem.
+    partes.push(
+      "Os números do mês da Ana não chegam até esta conversa no plano dela. Nunca diga que ela não registrou nada nem cite valores. Se a pergunta depender de números, mande olhar o Painel e o Financeiro do app, que mostram entradas, saídas e quanto sobrou, e diga com naturalidade que no Pro a Pólia One lê esses números junto na conversa.",
+    );
   } else {
     partes.push(
       "A Ana ainda não tem nenhum lançamento financeiro registrado este mês. Se a pergunta dela depender de números, diga isso com naturalidade e sugira registrar no Financeiro do app.",
@@ -333,6 +342,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
       pergunta: data.pergunta,
       historico: data.historico,
       contextoProjete,
+      planoLeNumeros: temProjete(profile?.plano),
     });
 
     try {

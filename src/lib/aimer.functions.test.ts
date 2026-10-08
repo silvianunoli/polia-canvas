@@ -259,6 +259,17 @@ describe("montarPromptAimer", () => {
     expect(prompt).toContain("ainda não tem nenhum lançamento");
   });
 
+  it("fora do Pro não afirma que a conta não tem lançamento", () => {
+    const { prompt } = montarPromptAimer({
+      pergunta: "por que sobrou pouco?",
+      historico: [],
+      contextoProjete: null,
+      planoLeNumeros: false,
+    });
+    expect(prompt).not.toContain("ainda não tem nenhum lançamento");
+    expect(prompt).toContain("Painel e o Financeiro");
+  });
+
   it("inclui os números reais quando há contexto Projete, e nunca inventa", () => {
     const { prompt, systemInstruction } = montarPromptAimer({
       pergunta: "quanto sobrou esse mês?",

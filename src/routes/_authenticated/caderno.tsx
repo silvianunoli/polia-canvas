@@ -229,6 +229,9 @@ function CadernoPage() {
       if (error) throw error;
       return { id: data?.id as string | undefined, titulo: t };
     },
+    // "Nova nota" logo depois de digitar: a nota nova abre e cancela o debounce
+    // da anterior, e o texto dos últimos 0,8 s sumia (visto no teste de 08/10).
+    onMutate: () => gravarPendenteRef.current(),
     onError: () => toastErro("A Pólia One não conseguiu criar a nota. Tenta de novo."),
     onSuccess: ({ id, titulo: tituloCriado }) => {
       track("nota_criada");

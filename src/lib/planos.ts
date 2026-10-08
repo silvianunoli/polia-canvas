@@ -156,7 +156,7 @@ export const FEATURES_GRATIS = [
   "Calculadora de preço",
   "Catálogo de até 5 produtos",
   "Até 3 metas ativas por vez",
-  "1 quadro no Planner e 1 nota no Caderno",
+  "1 quadro no Planner (até 100 cartões) e 1 nota no Caderno",
   "Assistente pra tirar dúvida, com teto diário",
 ];
 

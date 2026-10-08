@@ -42,7 +42,12 @@ export const TIPO_LABEL: Record<string, string> = {
 // Dinheiro sempre com duas casas: sem isso o toLocaleString mostrava
 // "R$ 44,1" (ONE-74).
 export function fmt(v: number) {
-  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  // Sinal antes do símbolo ("-R$ 2,91"), igual a formatarReais; antes saía "R$ -2,91".
+  const corpo = Math.abs(v).toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${v < 0 && corpo !== "0,00" ? "-" : ""}R$ ${corpo}`;
 }
 
 export function fmtData(iso: string) {

@@ -219,7 +219,10 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
           items: [{ price: priceId }],
           payment_behavior: "default_incomplete",
           payment_settings: { save_default_payment_method: "on_subscription" },
-          expand: ["latest_invoice"],
+          // confirmation_secret só volta quando é pedido pelo caminho inteiro.
+          // Com ["latest_invoice"] ele vinha vazio e todo checkout do app parava
+          // em "não conseguiu preparar o pagamento" (teste de 08/10/2026).
+          expand: ["latest_invoice.confirmation_secret"],
         },
         {
           // A assinatura anterior entra na chave: clique duplo (mesma linha

@@ -185,6 +185,8 @@ describe("iniciarAssinatura", () => {
         customer: "cus_novo",
         items: [{ price: "price_projete_anual" }],
         payment_behavior: "default_incomplete",
+        // Sem o caminho inteiro o Stripe não devolve o confirmation_secret.
+        expand: ["latest_invoice.confirmation_secret"],
       }),
       { idempotencyKey: expect.stringMatching(/^polia-assinatura-u-1-projete_anual-nenhuma-\d+$/) },
     );
