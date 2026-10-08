@@ -35,8 +35,12 @@ const api = vi.hoisted(() => ({
   buscarEmailConectado: vi.fn(),
   listarEventosGoogle: vi.fn(),
   revogarToken: vi.fn(),
+  concedeuAgenda: vi.fn(),
 }));
-vi.mock("./googleCalendarApi", () => api);
+vi.mock("./googleCalendarApi", () => ({
+  ...api,
+  MSG_SEM_PERMISSAO_AGENDA: "MSG_SEM_PERMISSAO_AGENDA",
+}));
 
 import {
   statusConexaoGoogle,
@@ -80,6 +84,11 @@ beforeEach(() => {
   from.mockReset();
   registrarEventoSistema.mockReset();
   for (const fn of Object.values(api)) fn.mockReset();
+  // Sem o campo scope nos tokens dos testes, a agenda conta como concedida
+  // (mesma regra da função de verdade).
+  api.concedeuAgenda.mockImplementation(
+    (scope?: string) => scope == null || scope.includes("calendar.readonly"),
+  );
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
