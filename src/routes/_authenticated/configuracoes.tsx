@@ -13,6 +13,9 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { registrar, registrarEAguardar } from "@/lib/founder-eventos";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toastErro, toastSucesso } from "@/lib/toast";
+import { cnpjValido, formatarCnpj } from "@/lib/cnpj";
+import { hrefUpgrade, rotaLiberada } from "@/lib/planos";
+import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -109,6 +112,7 @@ function ConfiguracoesPage() {
   const [cnpj, setCnpj] = useState("");
   const [razaoSocialSalvo, setRazaoSocialSalvo] = useState(false);
   const [cnpjSalvo, setCnpjSalvo] = useState(false);
+  const [erroCnpj, setErroCnpj] = useState<string | null>(null);
 
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
@@ -350,9 +354,18 @@ function ConfiguracoesPage() {
     if (cnpj === persistidoRef.current.cnpj) return;
     if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
     cnpjTimer.current = setTimeout(async () => {
-      const { error } = await supabase.from("profiles").update({ cnpj }).eq("id", userId);
+      // CNPJ errado ia pro cabeçalho do Resumo pro contador (ONE-102). Vazio
+      // pode: quem não tem CNPJ apaga o campo.
+      if (cnpj.trim() && !cnpjValido(cnpj)) {
+        setErroCnpj("Confere o CNPJ: são 14 números, e estes não fecham.");
+        return;
+      }
+      setErroCnpj(null);
+      const valor = cnpj.trim() ? formatarCnpj(cnpj) : "";
+      const { error } = await supabase.from("profiles").update({ cnpj: valor }).eq("id", userId);
       if (error) return toastErro(ERRO_AUTOSAVE);
-      persistidoRef.current.cnpj = cnpj;
+      persistidoRef.current.cnpj = valor;
+      if (valor !== cnpj) setCnpj(valor);
       setCnpjSalvo(true);
       setTimeout(() => setCnpjSalvo(false), 1600);
     }, 600);
@@ -660,11 +673,15 @@ function ConfiguracoesPage() {
             </p>
           </Campo>
 
-          <Campo label="CNPJ" saved={cnpjSalvo}>
+          <Campo label="CNPJ" saved={cnpjSalvo} error={erroCnpj ?? undefined}>
             <input
               type="text"
+              inputMode="numeric"
               value={cnpj}
-              onChange={(e) => setCnpj(e.target.value)}
+              onChange={(e) => {
+                setCnpj(e.target.value);
+                if (erroCnpj) setErroCnpj(null);
+              }}
               maxLength={18}
               placeholder="00.000.000/0000-00"
               className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
@@ -689,7 +706,16 @@ function ConfiguracoesPage() {
                     : "veja seus compromissos no Calendário"}
                 </p>
               </div>
-              {statusGoogleQuery.isLoading ? (
+              {/* O Calendário é do Premium: no Grátis o "Conectar" levava a uma
+                  agenda que ela não abre (ONE-102). Quem já conectou segue
+                  podendo desconectar. */}
+              {!googleConectado &&
+              profileQuery.data &&
+              !rotaLiberada("/calendario", profileQuery.data.plano) ? (
+                <LinkInterno href={hrefUpgrade("/calendario")} className={BTN_MIUDO}>
+                  <Lock size={13} aria-hidden="true" /> Abre no Premium
+                </LinkInterno>
+              ) : statusGoogleQuery.isLoading ? (
                 <span className="text-[var(--muted)] text-[12px]">carregando...</span>
               ) : googleConectado ? (
                 <button
@@ -1164,6 +1190,9 @@ function Campo({
         )}
         {saved !== undefined && (
           <span
+            // Invisível, o "salvo" ainda era lido pelo leitor de tela em todo
+            // campo, até nos vazios (ONE-102).
+            aria-hidden={!saved}
             className={`font-sans text-[12px] text-[var(--muted)] normal-case tracking-normal font-normal transition-opacity duration-200 ${
               saved ? "opacity-100" : "opacity-0"
             }`}

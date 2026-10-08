@@ -75,7 +75,7 @@ function ProjecaoPage() {
       // filtra no banco e lê inteiro, página por página (QA-24/QA-29). Antes
       // lia tudo sem paginar e o PostgREST cortava em 1.000 linhas.
       const mes = intervaloDoMes(anoAtual, mesAtual);
-      const [lancamentosMes, prodRes, metaRes, perfilRes] = await Promise.all([
+      const [lancamentosMes, prodRes, metaRes, perfilRes, planejamentoRes] = await Promise.all([
         lerTodasAsPaginas<LancamentoResumo>((de, ate) =>
           supabase
             .from("lancamentos")
@@ -99,6 +99,15 @@ function ProjecaoPage() {
           .gt("preco_venda", 0),
         buscarMetaDoMes(supabase, userId!),
         supabase.from("profiles").select("pro_labore_desejado").eq("id", userId!).maybeSingle(),
+        // "Quanto você quer receber por mês" do Módulo 4 é o mesmo salário: sem
+        // salário salvo aqui, ele é o ponto de partida (ONE-102). Leitura
+        // opcional: se falhar, o campo só começa vazio, como antes.
+        supabase
+          .from("planejamento_campos" as never)
+          .select("valor")
+          .eq("user_id", userId!)
+          .eq("campo", "financeiro.meta_mensal")
+          .maybeSingle(),
       ]);
       // Antes os erros destas leituras eram ignorados: produto ou meta que não
       // carregou virava "sem produto" / "sem meta" calado. Agora cai na tela
@@ -123,6 +132,11 @@ function ProjecaoPage() {
         proLaboreSalvo:
           (perfilRes.data as { pro_labore_desejado: number | null } | null)?.pro_labore_desejado ??
           null,
+        proLaboreDoPlanejamento: (() => {
+          const texto = (planejamentoRes.data as { valor?: string } | null)?.valor ?? "";
+          const n = lerValorReais(texto);
+          return n != null && !Number.isNaN(n) && n > 0 ? n : null;
+        })(),
       };
     },
   });
@@ -148,8 +162,10 @@ function ProjecaoPage() {
   const proLaboreBase = useMemo(() => {
     const lancado = proLaboreJaLancado(lancamentos, mesAtual, anoAtual);
     if (lancado > 0) return lancado;
-    return dados?.proLaboreSalvo ?? null;
-  }, [lancamentos, mesAtual, anoAtual, dados?.proLaboreSalvo]);
+    const salvo = dados?.proLaboreSalvo ?? null;
+    if (salvo != null && salvo > 0) return salvo;
+    return dados?.proLaboreDoPlanejamento ?? salvo;
+  }, [lancamentos, mesAtual, anoAtual, dados?.proLaboreSalvo, dados?.proLaboreDoPlanejamento]);
   const ticketBase = useMemo(() => ticketMedio(produtos), [produtos]);
   const custoBase = useMemo(() => custoMedio(produtos), [produtos]);
   const taxasBase = useMemo(() => mediaTaxas(produtos), [produtos]);

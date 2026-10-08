@@ -717,7 +717,7 @@ function MetaCard({
             </p>
           ) : (
             <p className="mt-1 text-[12px] text-[var(--muted)]">
-              Vem das entradas do Financeiro deste mês, as mesmas que o Painel soma.
+              Vem das entradas registradas neste mês, as mesmas que o Painel soma.
             </p>
           ))}
 
@@ -1099,7 +1099,7 @@ function ModalMeta({
           label="Valor atual, hoje"
           hint={
             ehDoMes
-              ? "Vem das entradas do Financeiro deste mês. A Pólia One soma sozinha, não precisa digitar."
+              ? "Vem das entradas registradas neste mês. A Pólia One soma sozinha, não precisa digitar."
               : undefined
           }
         >

@@ -209,7 +209,7 @@ export function montarPromptAimer(dados: {
     // não tem nenhum lançamento". Fora do Pro os números nem chegam aqui, então
     // a IA não pode afirmar que eles não existem.
     partes.push(
-      "Os números do mês da Ana não chegam até esta conversa no plano dela. Nunca diga que ela não registrou nada nem cite valores. Se a pergunta depender de números, mande olhar o Painel e o Financeiro do app, que mostram entradas, saídas e quanto sobrou, e diga com naturalidade que no Pro a Pólia One lê esses números junto na conversa.",
+      "Os números do mês da Ana não chegam até esta conversa no plano dela. Nunca diga que ela não registrou nada nem cite valores. Se a pergunta depender de números, mande olhar o Painel do app, que mostra entradas, saídas e quanto sobrou, e diga com naturalidade que no Pro a Pólia One lê esses números junto na conversa.",
     );
   } else {
     partes.push(

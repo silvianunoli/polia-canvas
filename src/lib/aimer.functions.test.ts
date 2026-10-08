@@ -267,7 +267,7 @@ describe("montarPromptAimer", () => {
       planoLeNumeros: false,
     });
     expect(prompt).not.toContain("ainda não tem nenhum lançamento");
-    expect(prompt).toContain("Painel e o Financeiro");
+    expect(prompt).toContain("mande olhar o Painel do app");
   });
 
   it("inclui os números reais quando há contexto Projete, e nunca inventa", () => {

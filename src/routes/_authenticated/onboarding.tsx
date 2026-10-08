@@ -8,6 +8,7 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 import { BotaoSair } from "@/components/cosmic/SairDaConta";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 // O passo mora na URL (?passo=3) desde 07/10/2026 (ONE-23): o voltar do
 // navegador recua um passo em vez de sair do fluxo.
@@ -86,28 +87,81 @@ function passoPossivel(
   return pedido;
 }
 
+// Rascunho do onboarding na sessão da aba (ONE-101): F5 no meio, ou o celular
+// recarregando o app ao voltar de outro app, apagava as respostas e mandava pro
+// primeiro passo que faltava. Fica preso ao id da conta pra não vazar entre
+// contas na mesma aba, e sai quando o onboarding é salvo.
+const RASCUNHO_ONBOARDING = "polia-onboarding-rascunho";
+const ESTADO_VAZIO: OnboardingState = {
+  business_type: null,
+  business_stage: null,
+  business_name: "",
+  c1: "",
+  c2: "",
+  toggle: "",
+  hp: "",
+  hs: "",
+};
+
+function lerRascunhoOnboarding(uid: string): OnboardingState | null {
+  try {
+    const raw = window.sessionStorage.getItem(RASCUNHO_ONBOARDING);
+    if (!raw) return null;
+    const salvo = JSON.parse(raw) as { uid?: string; state?: Partial<OnboardingState> };
+    if (salvo.uid !== uid || !salvo.state) return null;
+    return { ...ESTADO_VAZIO, ...salvo.state };
+  } catch {
+    return null;
+  }
+}
+
+function gravarRascunhoOnboarding(uid: string, state: OnboardingState | null) {
+  try {
+    if (state) window.sessionStorage.setItem(RASCUNHO_ONBOARDING, JSON.stringify({ uid, state }));
+    else window.sessionStorage.removeItem(RASCUNHO_ONBOARDING);
+  } catch {
+    // Sem sessionStorage (aba privada, bloqueio): segue só em memória, como antes.
+  }
+}
+
 function OnboardingPage() {
   const { passo } = Route.useSearch();
   const router = useRouter();
   const [salvo, setSalvo] = useState(false);
-  const [state, setState] = useState<OnboardingState>({
-    business_type: null,
-    business_stage: null,
-    business_name: "",
-    c1: "",
-    c2: "",
-    toggle: "",
-    hp: "",
-    hs: "",
-  });
+  const [state, setState] = useState<OnboardingState>(ESTADO_VAZIO);
+  const { user, loading: carregandoSessao } = useSupabaseSession();
+  const uid = user?.id;
+  // Só decide pra qual passo mandar depois de tentar restaurar o rascunho.
+  const [restaurado, setRestaurado] = useState(false);
   const navigate = useNavigate();
   // Lido uma vez, na entrada: o router.invalidate da renovação de login roda o
   // beforeLoad de novo com "stay", que não repete a leitura do perfil.
   const ctx = Route.useRouteContext();
   const [concluidoAntes] = useState(() => ctx.concluidoAntes ?? null);
-  const step = passoPossivel(passo ?? 1, state, salvo, !!concluidoAntes);
+  // Antes de restaurar, mostra o passo pedido (vazio) em vez de redirecionar:
+  // o rascunho ainda pode trazer as respostas que esse passo precisa.
+  const step = restaurado
+    ? passoPossivel(passo ?? 1, state, salvo, !!concluidoAntes)
+    : (passo ?? 1);
 
   useEffect(() => {
+    if (restaurado) return;
+    if (uid) {
+      const rascunho = lerRascunhoOnboarding(uid);
+      if (rascunho) setState(rascunho);
+      setRestaurado(true);
+    } else if (!carregandoSessao) {
+      setRestaurado(true);
+    }
+  }, [uid, carregandoSessao, restaurado]);
+
+  useEffect(() => {
+    if (!uid || !restaurado || salvo) return;
+    gravarRascunhoOnboarding(uid, state);
+  }, [uid, restaurado, salvo, state]);
+
+  useEffect(() => {
+    if (!restaurado) return;
     // Quem já tinha concluído e saiu da tela final (voltar do navegador) não
     // refaz o onboarding: as respostas antigas não estão na memória e salvar
     // de novo apagaria o nome do negócio.
@@ -118,7 +172,7 @@ function OnboardingPage() {
     if (step !== (passo ?? 1)) {
       void navigate({ to: "/onboarding", search: step > 1 ? { passo: step } : {}, replace: true });
     }
-  }, [step, passo, navigate, concluidoAntes, salvo]);
+  }, [step, passo, navigate, concluidoAntes, salvo, restaurado]);
 
   const setStep = (n: number) => {
     void navigate({ to: "/onboarding", search: n > 1 ? { passo: n } : {} });
@@ -199,6 +253,7 @@ function OnboardingPage() {
               jaSalvo={salvo}
               onSuccess={() => {
                 setSalvo(true);
+                if (uid) gravarRascunhoOnboarding(uid, null);
                 setStep(5);
               }}
             />
@@ -300,7 +355,7 @@ function Step1({ onNext }: { onNext: () => void }) {
         <Body>Sem curso e sem teoria solta, é direção do começo ao fim.</Body>
       </div>
       <PrimaryCTA onClick={onNext}>Quero contar da minha marca →</PrimaryCTA>
-      <p className="text-center text-[14px] text-[var(--muted)]">Leva só 3 minutinhos</p>
+      <p className="text-center text-[14px] text-[var(--muted)]">Leva uns 3 minutos</p>
     </div>
   );
 }
@@ -310,8 +365,8 @@ const BIZ_TYPES: { value: BusinessType; tag: string; title: string; desc: string
   {
     value: "produto_fisico",
     tag: "Produto Físico",
-    title: "Algo que vai pelo correio",
-    desc: "Roupa, comida, joia, cosmético, artesanato. Tem estoque, tem envio.",
+    title: "Algo que se pega na mão",
+    desc: "Roupa, comida, joia, cosmético, artesanato. Tem estoque, entrega ou envio.",
   },
   {
     value: "produto_digital",
@@ -627,7 +682,8 @@ function Step4({
       <Manuscrito>Agora vem a parte mais sua</Manuscrito>
       <Headline size={56}>O que sua marca vende e o que entrega?</Headline>
       <p className="text-center text-[14px] text-[var(--muted)]">
-        Pode ser breve. Dá pra ajustar depois.
+        Tudo aqui é opcional e pode ser breve. O nome do negócio dá pra mudar depois, em
+        Configurações.
       </p>
 
       <div className="flex w-full max-w-[480px] flex-col gap-5">

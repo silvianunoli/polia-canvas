@@ -138,7 +138,7 @@ export const SECOES: Secao[] = [
     perguntas: [
       {
         label:
-          "Liste de 3 a 5 coisas que guiam cada decisão do seu negócio. O que você nunca abre mão?",
+          "Liste de 3 a 5 coisas que guiam cada decisão do seu negócio. De que você nunca abre mão?",
         campo: "marca.valores",
       },
       {
@@ -190,7 +190,7 @@ export const SECOES: Secao[] = [
       },
       {
         label:
-          "Que marcas ela gosta? Que pessoas ela segue? O que ela compra sem pensar duas vezes?",
+          "De que marcas ela gosta? Que pessoas ela segue? O que ela compra sem pensar duas vezes?",
         campo: "mercado.perfil_cliente",
       },
     ],
@@ -267,7 +267,8 @@ export const SECOES: Secao[] = [
     subtitulo: "Por que você e não outra.",
     perguntas: [
       {
-        label: "Em 2 frases: quem você ajuda, qual transformação entrega, e o que te diferencia.",
+        label:
+          "Em 2 frases: quem você ajuda, o que muda pra ela depois de comprar e o que te diferencia.",
         campo: "mercado.posicionamento",
       },
       {
@@ -299,7 +300,7 @@ export const SECOES: Secao[] = [
   {
     id: "3.2",
     modulo: 3,
-    titulo: "A transformação que você entrega",
+    titulo: "O que muda pra ela",
     subtitulo: "Não o produto: o que muda na vida dela.",
     perguntas: [
       {
@@ -331,7 +332,7 @@ export const SECOES: Secao[] = [
     subtitulo: "Uma frase que resume tudo.",
     perguntas: [
       {
-        label: "Em 1 frase: o que você vende, pra quem, e qual transformação entrega.",
+        label: "Em 1 frase: o que você vende, pra quem e o que muda pra ela.",
         campo: "marca.frase_valor",
       },
       {
@@ -500,7 +501,11 @@ export const SECOES: Secao[] = [
           "Qual seria o cenário ideal pro seu negócio em 1 ano? Seja específica: quanto você fatura, quantas clientes tem, onde você está, o que mudou na sua rotina.",
         campo: "metas.visao_1ano",
       },
-      { label: "Em 3 anos, como você imagina esse negócio?", campo: "metas.visao_3anos" },
+      {
+        label:
+          "No Módulo 1 você escreveu como quer a marca daqui a 3 anos. O que precisa acontecer até lá?",
+        campo: "metas.visao_3anos",
+      },
     ],
   },
   {
@@ -655,9 +660,9 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
     nome: "Catálogo",
     nasceu: "Acabou de nascer o",
     rota: "/produtos",
-    desbloqueioSub: "Seus produtos e a transformação que você entrega.",
+    desbloqueioSub: "Seus produtos e o que muda pra quem compra.",
     abrirLabel: "Abrir meu catálogo",
-    tags: "produtos, transformação, frase de valor",
+    tags: "produtos, o que muda pra ela, frase de valor",
   },
   4: {
     nome: "Financeiro",
@@ -744,7 +749,7 @@ export const CAMPO_LABEL: Record<string, string> = {
   "marca.fronteiras": "O que você é e o que não é",
   "marca.frase_valor": "Frase de valor",
   "produto.lista": "O que você vende",
-  "produto.transformacao": "A transformação que você entrega",
+  "produto.transformacao": "O que muda pra ela",
   "mercado.perfil_cliente": "Quem é a sua cliente",
   "mercado.dores": "Dores",
   "mercado.sonhos": "Sonhos",

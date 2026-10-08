@@ -10,8 +10,14 @@
 /** Tela do tutorial dentro do app. A página pública, sem login, é /tutorial. */
 export const TUTORIAL_ROTA = "/como-usar";
 
-/** Telas onde o convite não abre: fluxo de entrada, upgrade e o próprio tutorial. */
-const SEM_CONVITE = ["/onboarding", "/assinar", "/upgrade", TUTORIAL_ROTA];
+/**
+ * Telas onde o convite não abre: fluxo de entrada, upgrade, o próprio tutorial
+ * e a Calculadora. O onboarding termina em "Quero calcular meu primeiro preço" e
+ * cai na Calculadora; o convite de 5 minutos por cima, junto com a dica da
+ * tela, interrompia justo quem pediu pra calcular (ONE-101). Ele abre na tela
+ * seguinte.
+ */
+const SEM_CONVITE = ["/onboarding", "/assinar", "/upgrade", TUTORIAL_ROTA, "/calculadora"];
 
 export function rotaAceitaConvite(pathname: string): boolean {
   return !SEM_CONVITE.some((r) => pathname === r || pathname.startsWith(r + "/"));

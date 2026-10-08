@@ -43,6 +43,7 @@ import {
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BlockError } from "@/components/ui/BlockError";
 import { COTAS_CONFERE, ehBeta, tierDoPlano } from "@/lib/planos";
+import { lerValorReais } from "@/lib/projecao.functions";
 
 // Linhas da lista de produtos (as duas perguntas da seção 3.1 alimentam o
 // catálogo) passam da cota do Grátis? Só avisa: a cota é aplicada no banco.
@@ -68,6 +69,18 @@ export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
     if (!Number.isInteger(n) || n < 1 || n > TOTAL_MODULOS) {
       throw redirect({ to: "/planejamento" });
     }
+  },
+  // Sem head a aba ficava só "Pólia" (ONE-102); as outras telas têm "X · Pólia One".
+  head: ({ params }) => {
+    const n = Number(params.n);
+    const nome = Number.isInteger(n) && n >= 1 && n <= TOTAL_MODULOS ? moduloInfo(n).nome : null;
+    return {
+      meta: [
+        {
+          title: nome ? `Módulo ${n}, ${nome} · Pólia One` : "Planejamento · Pólia One",
+        },
+      ],
+    };
   },
   component: ModuloRota,
 });
@@ -141,6 +154,9 @@ function ModuloPage() {
   });
   const usoIa = MODULOS_SEM_IA.has(n) ? undefined : usoIaQuery.data;
   const [desbloqueada, setDesbloqueada] = useState(false);
+  // Todas as seções de todos os módulos concluídas nesta conclusão (ONE-102):
+  // antes o fim do Planejamento era igual ao fim de um módulo qualquer.
+  const [planejamentoCompleto, setPlanejamentoCompleto] = useState(false);
   const [secaoId, setSecaoId] = useState<string | null>(null);
   const csat = useCsatTrigger("entregavel_concluido", `modulo_${n}`, desbloqueada);
 
@@ -399,7 +415,10 @@ function ModuloPage() {
         .select("secao", { count: "exact", head: true })
         .eq("user_id", userId!)
         .eq("concluido", true);
-      if ((count ?? 0) >= SECOES.length) track("planejamento_completo");
+      if ((count ?? 0) >= SECOES.length) {
+        track("planejamento_completo");
+        setPlanejamentoCompleto(true);
+      }
       qc.invalidateQueries({ queryKey: ["planejamento-mapa", userId] });
       setDesbloqueada(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0 });
@@ -420,8 +439,14 @@ function ModuloPage() {
       <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
         <div className="mx-auto flex min-h-[70vh] max-w-[520px] flex-col items-center justify-center px-6 py-16 text-center">
           <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-            Módulo {n} concluído
+            {planejamentoCompleto ? "Planejamento completo" : `Módulo ${n} concluído`}
           </p>
+          {planejamentoCompleto && (
+            <p className="mt-3 max-w-[420px] text-[0.95rem] leading-relaxed text-[var(--ink-soft)]">
+              Os 6 módulos estão no documento da marca. Agora a primeira venda registrada no Painel
+              já mostra quanto entrou e quanto falta pra meta.
+            </p>
+          )}
           <p className="mt-4 text-[1rem] text-[var(--ink-soft)]">{ferramenta.nasceu}</p>
           <h1 className="font-cabinet mt-1 text-[2.5rem] leading-[1.05] text-[var(--ink)]">
             {ferramenta.nome}
@@ -468,6 +493,11 @@ function ModuloPage() {
               {!acessoFerramenta.liberada && <Lock size={16} aria-hidden="true" />}
               {acessoFerramenta.rotulo}
               <ArrowRight size={16} aria-hidden="true" />
+            </LinkInterno>
+          )}
+          {planejamentoCompleto && (
+            <LinkInterno href="/painel" className={`${BTN_ACAO_CONTORNO} mt-3`}>
+              Ir pro Painel
             </LinkInterno>
           )}
           <LinkInterno
@@ -571,6 +601,7 @@ function ModuloPage() {
             podeVoltar={idx > 0}
             ultima={idx === total - 1}
             plano={usoIa?.plano ?? "confere"}
+            iaEsgotada={!!usoIa && usoIa.usado >= usoIa.limite}
             onGerou={() => void qc.invalidateQueries({ queryKey: ["uso-ia-planejamento", userId] })}
           />
         )}
@@ -624,6 +655,68 @@ function ModuloTrancado({ n, concluidas }: { n: number; concluidas: ReadonlySet<
   );
 }
 
+/** Mínimo, mês bom e celebrar (seção 4.4, nessa ordem) fora de ordem crescente? */
+function metasForaDeOrdem(valores: string[]): boolean {
+  const [minimo, bom, celebrar] = valores.slice(0, 3).map((v) => lerValorReais(v ?? ""));
+  const ok = (x: number | null): x is number => x != null && !Number.isNaN(x) && x > 0;
+  return (ok(minimo) && ok(bom) && minimo > bom) || (ok(bom) && ok(celebrar) && bom > celebrar);
+}
+
+/**
+ * Usar / Descartar / Gerar outro do rascunho da IA. Fica de pé também quando
+ * aparece o aviso de limite ou de erro (ONE-100): sem o Descartar, o texto
+ * original dela não voltava. Sem onGerarOutro, o "Gerar outro" some.
+ */
+function ControlesRascunho({
+  gerando,
+  onUsar,
+  onDescartar,
+  onGerarOutro,
+}: {
+  gerando: boolean;
+  onUsar: () => void;
+  onDescartar: () => void;
+  onGerarOutro?: () => void;
+}) {
+  return (
+    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+      <p className="flex w-full items-center gap-1.5 text-[13px] text-[var(--ink-soft)]">
+        <Sparkles size={13} aria-hidden="true" className="shrink-0 text-[var(--secondary-text)]" />
+        Rascunho da Pólia One. Revise, ajuste o que quiser e confirme.
+      </p>
+      {/* Durante a geração os três ficam desabilitados: "Gerar outro"
+          clicável gastava a cota de novo, e usar/descartar no meio
+          era sobrescrito pelo rascunho que ainda estava chegando. */}
+      <button
+        type="button"
+        onClick={onUsar}
+        disabled={gerando}
+        className={`${BTN_MIUDO} !bg-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60`}
+      >
+        Usar este rascunho
+      </button>
+      <button
+        type="button"
+        onClick={onDescartar}
+        disabled={gerando}
+        className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+      >
+        Descartar
+      </button>
+      {onGerarOutro && (
+        <button
+          type="button"
+          onClick={onGerarOutro}
+          disabled={gerando}
+          className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+        >
+          {gerando ? "Gerando outro…" : "Gerar outro"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 // Máscara de moeda: ver src/lib/planejamentoMoeda.ts (QA-15). O número é lido
 // como reais ("3000" = R$ 3.000,00), não mais como centavos.
 
@@ -641,6 +734,7 @@ function SecaoForm({
   podeVoltar,
   ultima,
   plano,
+  iaEsgotada,
   onGerou,
 }: {
   secao: Secao;
@@ -661,6 +755,8 @@ function SecaoForm({
   podeVoltar: boolean;
   ultima: boolean;
   plano: string;
+  /** Os usos de IA do mês já acabaram (barra do topo). */
+  iaEsgotada: boolean;
   onGerou: () => void;
 }) {
   // Módulos 4 (só número) e 5 (canais) não têm o botão de IA.
@@ -1053,7 +1149,9 @@ function SecaoForm({
     try {
       await flush();
       await onConcluir();
-      toastSucesso("Salvo");
+      // id fixo: seção atrás de seção, o "Salvo" novo troca o anterior em vez
+      // de empilhar (eram 10 na tela no fim do Módulo 3, ONE-102).
+      toastSucesso("Salvo", { id: "planejamento-salvo" });
     } catch (e) {
       if (e instanceof ConflitoAberto) {
         avisoConflitoAberto();
@@ -1194,21 +1292,32 @@ function SecaoForm({
 
               <div id={`pergunta-${i}-mensagem`} aria-live="polite">
                 {cotaAtingida[i] ? (
-                  <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
-                    {avisoCotaEsgotada(plano).texto}{" "}
-                    {avisoCotaEsgotada(plano).upgrade && (
-                      <Link
-                        to="/upgrade"
-                        search={{
-                          rota: "/planejamento",
-                          tier: avisoCotaEsgotada(plano).upgrade!.tier,
-                        }}
-                        className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
-                      >
-                        {avisoCotaEsgotada(plano).upgrade!.rotulo}
-                      </Link>
+                  <>
+                    <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                      {avisoCotaEsgotada(plano).texto}{" "}
+                      {avisoCotaEsgotada(plano).upgrade && (
+                        <Link
+                          to="/upgrade"
+                          search={{
+                            rota: "/planejamento",
+                            tier: avisoCotaEsgotada(plano).upgrade!.tier,
+                          }}
+                          className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+                        >
+                          {avisoCotaEsgotada(plano).upgrade!.rotulo}
+                        </Link>
+                      )}
+                    </p>
+                    {/* ONE-100: o aviso de limite tomava o lugar do Usar/Descartar
+                        e o texto original dela não voltava mais. */}
+                    {rascunho[i] != null && (
+                      <ControlesRascunho
+                        gerando={!!gerando[i]}
+                        onUsar={() => usarRascunho(i)}
+                        onDescartar={() => descartarRascunho(i)}
+                      />
                     )}
-                  </p>
+                  </>
                 ) : contextoInsuf[i] ? (
                   <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
                     A Pólia One precisa saber o básico do seu negócio antes. Responda o que você
@@ -1229,58 +1338,39 @@ function SecaoForm({
                     ) e a Pólia One rascunha o resto.
                   </p>
                 ) : erroGeracao[i] ? (
-                  <p className="mt-2 text-[13px] text-[var(--danger)]">
-                    {erroGeracao[i]}{" "}
-                    <button
-                      type="button"
-                      onClick={() => void gerarComAimer(i)}
-                      disabled={gerando[i]}
-                      className="inline-flex min-h-11 items-center font-medium underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-                    >
-                      Tentar de novo
-                    </button>
-                  </p>
-                ) : rascunho[i] != null ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <p className="flex w-full items-center gap-1.5 text-[13px] text-[var(--ink-soft)]">
-                      <Sparkles
-                        size={13}
-                        aria-hidden="true"
-                        className="shrink-0 text-[var(--secondary-text)]"
-                      />
-                      Rascunho da Pólia One. Revise, ajuste o que quiser e confirme.
+                  <>
+                    <p className="mt-2 text-[13px] text-[var(--danger)]">
+                      {erroGeracao[i]}{" "}
+                      <button
+                        type="button"
+                        onClick={() => void gerarComAimer(i)}
+                        disabled={gerando[i]}
+                        className="inline-flex min-h-11 items-center font-medium underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                      >
+                        Tentar de novo
+                      </button>
                     </p>
-                    {/* Durante a geração os três ficam desabilitados: "Gerar outro"
-                        clicável gastava a cota de novo, e usar/descartar no meio
-                        era sobrescrito pelo rascunho que ainda estava chegando. */}
-                    <button
-                      type="button"
-                      onClick={() => usarRascunho(i)}
-                      disabled={gerando[i]}
-                      className={`${BTN_MIUDO} !bg-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60`}
-                    >
-                      Usar este rascunho
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => descartarRascunho(i)}
-                      disabled={gerando[i]}
-                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-                    >
-                      Descartar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void gerarComAimer(i)}
-                      disabled={gerando[i]}
-                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-                    >
-                      {gerando[i] ? "Gerando outro…" : "Gerar outro"}
-                    </button>
-                  </div>
-                ) : semIa ? null : !valores[i]?.trim() && !gerando[i] ? (
+                    {rascunho[i] != null && (
+                      <ControlesRascunho
+                        gerando={!!gerando[i]}
+                        onUsar={() => usarRascunho(i)}
+                        onDescartar={() => descartarRascunho(i)}
+                      />
+                    )}
+                  </>
+                ) : rascunho[i] != null ? (
+                  <ControlesRascunho
+                    gerando={!!gerando[i]}
+                    onUsar={() => usarRascunho(i)}
+                    onDescartar={() => descartarRascunho(i)}
+                    onGerarOutro={iaEsgotada ? undefined : () => void gerarComAimer(i)}
+                  />
+                ) : semIa ? null : iaEsgotada && !gerando[i] ? null : !valores[i]?.trim() &&
+                  !gerando[i] ? (
                   // A IA completa o que a usuária escreveu; com o campo vazio
                   // ela inventava do zero e o texto saía estranho (05/10/2026).
+                  // Com a IA do mês esgotada, nem a promessa nem o botão aparecem:
+                  // o topo da página já diz que os usos acabaram (ONE-102).
                   <p className="mt-2 inline-flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
                     <Sparkles size={13} aria-hidden="true" />
                     Escreve um começo, mesmo curto, e a Pólia One ajuda a completar.
@@ -1303,6 +1393,15 @@ function SecaoForm({
           ),
         )}
       </div>
+
+      {secao.id === "4.4" && metasForaDeOrdem(valores) && (
+        // ONE-102: mínimo R$ 4.000, mês bom R$ 3.000 e celebrar R$ 2.000 passava
+        // calado e virava Meta do mês e régua do Financeiro ao contrário.
+        <p className="mt-6 text-[13px] leading-relaxed text-[var(--ink-soft)]">
+          Vale conferir a ordem: o mínimo pra pagar as contas costuma ser o menor dos três, e o
+          valor de celebrar, o maior.
+        </p>
+      )}
 
       <div className="mt-8 flex flex-col items-start gap-4">
         {semResposta && (

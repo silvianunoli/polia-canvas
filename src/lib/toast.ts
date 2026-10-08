@@ -4,11 +4,17 @@ interface ToastOpts {
   action?: { label: string; onClick: () => void };
   /** Pra toast com "Desfazer", que precisa ficar mais que o padrão. */
   duracaoMs?: number;
+  /** Toast com o mesmo id troca o anterior em vez de empilhar. */
+  id?: string;
 }
 
 /** Some sozinho em ~4s. Pra feedback passageiro que não exige decisão. */
 export function toastSucesso(mensagem: string, opts?: ToastOpts) {
-  return toast.success(mensagem, { duration: opts?.duracaoMs ?? 4000, action: opts?.action });
+  return toast.success(mensagem, {
+    duration: opts?.duracaoMs ?? 4000,
+    action: opts?.action,
+    id: opts?.id,
+  });
 }
 
 /** Some sozinho em ~4s. Pra feedback neutro (copiado, desfeito, aviso leve). */

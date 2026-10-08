@@ -10,9 +10,12 @@ describe("convite do tutorial", () => {
     expect(rotaAceitaConvite("/como-usar")).toBe(false);
   });
 
-  it("abre na primeira tela da área logada, seja qual for", () => {
+  it("não abre na Calculadora, onde o onboarding termina (ONE-101)", () => {
+    expect(rotaAceitaConvite("/calculadora")).toBe(false);
+  });
+
+  it("abre na primeira tela seguinte da área logada", () => {
     expect(rotaAceitaConvite("/painel")).toBe(true);
-    expect(rotaAceitaConvite("/calculadora")).toBe(true);
     expect(rotaAceitaConvite("/planejamento/modulo/1")).toBe(true);
   });
 

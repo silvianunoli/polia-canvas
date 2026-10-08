@@ -94,8 +94,14 @@ export function ModalLancamento({
   const [descricao, setDescricao] = useState(lancamentoEdit?.descricao ?? prefill?.desc ?? "");
   // Chip marcado e "+ nova categoria" num estado só: as duas escolhas se
   // excluem (regra em categoriaLancamento.ts, QA-28).
+  // Entrada nova já vem como venda (ONE-102): sem categoria, a venda
+  // registrada não contava em "Pedidos · mês" no Painel. Dá pra trocar.
+  const categoriaPadrao = (t: RegistrarTipo) => (t === "entrada" ? CATEGORIAS_DE_VENDA[0] : "");
   const [selecao, setSelecao] = useState<SelecaoCategoria>(() => ({
-    categoria: lancamentoEdit?.categoria ?? prefill?.categoria ?? "",
+    categoria:
+      lancamentoEdit?.categoria ??
+      prefill?.categoria ??
+      (lancamentoEdit ? "" : categoriaPadrao(tipoInicial)),
     novaAberta: false,
     novaTexto: "",
   }));
@@ -122,8 +128,8 @@ export function ModalLancamento({
 
   const trocarTipo = (t: RegistrarTipo) => {
     setTipo(t);
-    // categorias dependem do tipo; limpa ao trocar
-    setSelecao({ categoria: "", novaAberta: false, novaTexto: "" });
+    // categorias dependem do tipo; volta pro padrão do tipo ao trocar
+    setSelecao({ categoria: edit ? "" : categoriaPadrao(t), novaAberta: false, novaTexto: "" });
   };
 
   const escolherCategoria = (c: string) => {
