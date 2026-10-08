@@ -36,12 +36,13 @@ export function conviteFoiAberto() {
 export type MensagemTutorial =
   | { tipo: "altura"; altura: number }
   | { tipo: "evento"; evento: "play" | "fim" }
+  | { tipo: "cheia"; ativo: boolean }
   | null;
 
 /** Lê o que o iframe do vídeo mandou por postMessage; qualquer outra coisa vira null. */
 export function lerMensagemTutorial(dado: unknown): MensagemTutorial {
   if (!dado || typeof dado !== "object") return null;
-  const m = dado as { tipo?: unknown; altura?: unknown; evento?: unknown };
+  const m = dado as { tipo?: unknown; altura?: unknown; evento?: unknown; ativo?: unknown };
   if (m.tipo === "polia-tutorial-altura") {
     const h = m.altura;
     if (typeof h !== "number" || !Number.isFinite(h) || h < 200 || h > 6000) return null;
@@ -49,6 +50,11 @@ export function lerMensagemTutorial(dado: unknown): MensagemTutorial {
   }
   if (m.tipo === "polia-tutorial-evento" && (m.evento === "play" || m.evento === "fim")) {
     return { tipo: "evento", evento: m.evento };
+  }
+  // Tela cheia própria do vídeo (quando o navegador recusa a de verdade, como no
+  // iPhone): o app abre o iframe por cima da tela toda.
+  if (m.tipo === "polia-tutorial-cheia" && typeof m.ativo === "boolean") {
+    return { tipo: "cheia", ativo: m.ativo };
   }
   return null;
 }

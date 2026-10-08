@@ -43,6 +43,11 @@ describe("vídeo embutido", () => {
       evento: "play",
     });
     expect(lerMensagemTutorial({ tipo: "polia-tutorial-evento", evento: "hack" })).toBeNull();
+    expect(lerMensagemTutorial({ tipo: "polia-tutorial-cheia", ativo: true })).toEqual({
+      tipo: "cheia",
+      ativo: true,
+    });
+    expect(lerMensagemTutorial({ tipo: "polia-tutorial-cheia", ativo: "sim" })).toBeNull();
     expect(lerMensagemTutorial("oi")).toBeNull();
     expect(lerMensagemTutorial(null)).toBeNull();
   });

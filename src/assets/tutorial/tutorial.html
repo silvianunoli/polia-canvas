@@ -61,7 +61,15 @@ html.embed body { background: transparent; }
 html.embed, html.embed body { overflow: hidden; }
 /* ── Palco ── */
 .palco { position: relative; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: var(--ink); }
-.palco:fullscreen { border-radius: 0; width: min(100vw, 177.78vh); height: auto; margin: auto; }
+/* Tela cheia: a do navegador (documento inteiro) ou a própria, quando o navegador
+   recusa (iPhone não deixa um site pôr nada além de <video> em tela cheia).
+   Nos dois casos o palco ocupa a tela e os controles ficam fixos embaixo. */
+html.cheia, html.cheia body { overflow: hidden; }
+html.cheia .palco { position: fixed; left: 0; right: 0; top: 0; bottom: var(--alt-ctrl, 120px); width: auto; max-width: none; aspect-ratio: auto; border-radius: 0; z-index: 90; }
+html.cheia .controles { position: fixed; left: 0; right: 0; bottom: 0; z-index: 91; background: var(--ink); padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+html.cheia .tempo { color: var(--bg); }
+.girar { display: none; }
+@media (orientation: portrait) { html.cheia .girar { display: block; flex-basis: 100%; grid-column: 1 / -1; margin: 0; font-size: 13px; color: var(--line); } }
 #canvas { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; transform-origin: 0 0; background: var(--ink); color: var(--bg); overflow: hidden; font-family: var(--font-body); }
 #canvas.salto, #canvas.salto * { transition: none !important; }
 
@@ -610,11 +618,21 @@ html.embed, html.embed body { overflow: hidden; }
 .cap small { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
 .cap.atual { background: var(--secondary-light); border-color: var(--secondary); color: var(--ink); }
 .nota-rodape { font-size: 13px; color: var(--muted); margin: 0; }
+/* Celular: controles compactos colados no vídeo e capítulos numa faixa só */
 @media (max-width: 640px) {
-  .pagina { padding-inline: 16px; padding-block: 24px 40px; }
-  .dir { margin-left: 0; }
+  .pagina { padding-inline: 16px; padding-block: 24px 40px; gap: 12px; }
+  .controles { display: grid; grid-template-columns: auto 1fr auto; gap: 8px 10px; align-items: center; }
   .cbtn span.txt { display: none; }
-  .cbtn.prim span.txt { display: inline; }
+  .cbtn { width: 44px; min-width: 44px; padding: 0; justify-content: center; }
+  #b-play { grid-column: 1; grid-row: 1; }
+  .linha-t { grid-column: 2; grid-row: 1; flex: none; }
+  .tempo { grid-column: 3; grid-row: 1; min-width: 0; font-size: 13px; }
+  #b-reini { grid-column: 1; grid-row: 2; }
+  .dir { grid-column: 2 / 4; grid-row: 2; margin-left: 0; justify-content: flex-end; flex-wrap: nowrap; }
+  .caps { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+  .caps::-webkit-scrollbar { display: none; }
+  .caps li { flex: none; }
+  .nota-rodape { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-vis], [data-vis].on, .lin-wrap { transition: opacity .2s linear, visibility 0s; transform: none !important; }
@@ -1301,18 +1319,19 @@ html.embed, html.embed body { overflow: hidden; }
   </div>
 
   <div class="controles" role="group" aria-label="Controles do vídeo">
-    <button type="button" class="cbtn prim" id="b-play"><svg><use href="#i-play"/></svg><span class="txt">Assistir</span></button>
-    <button type="button" class="cbtn" id="b-reini"><svg><use href="#i-reini"/></svg><span class="txt">Reiniciar</span></button>
+    <button type="button" class="cbtn prim" id="b-play" aria-label="Assistir"><svg><use href="#i-play"/></svg><span class="txt">Assistir</span></button>
+    <button type="button" class="cbtn" id="b-reini" aria-label="Reiniciar"><svg><use href="#i-reini"/></svg><span class="txt">Reiniciar</span></button>
     <span class="tempo" id="tempo">0:00 / 5:17</span>
     <div class="linha-t">
       <input type="range" id="scrub" min="0" max="100" step="0.05" value="0" aria-label="Posição no vídeo">
       <div class="marcas" id="marcas"></div>
     </div>
     <div class="dir">
-      <button type="button" class="cbtn" id="b-leg" aria-pressed="true"><svg><use href="#i-cc"/></svg><span class="txt">Legenda</span></button>
-      <button type="button" class="cbtn" id="b-som" aria-pressed="true"><svg><use href="#i-som"/></svg><span class="txt">Som</span></button>
-      <button type="button" class="cbtn" id="b-cheia"><svg><use href="#i-cheia"/></svg><span class="txt">Tela cheia</span></button>
+      <button type="button" class="cbtn" id="b-leg" aria-pressed="true" aria-label="Legenda"><svg><use href="#i-cc"/></svg><span class="txt">Legenda</span></button>
+      <button type="button" class="cbtn" id="b-som" aria-pressed="true" aria-label="Som"><svg><use href="#i-som"/></svg><span class="txt">Som</span></button>
+      <button type="button" class="cbtn" id="b-cheia" aria-label="Tela cheia"><svg><use href="#i-cheia"/></svg><span class="txt">Tela cheia</span></button>
     </div>
+    <p class="girar">Gire o celular pra ver maior.</p>
   </div>
   <ol class="caps" id="caps" aria-label="Capítulos"></ol>
   <p class="nota-rodape" id="nota">Espaço pausa e continua. Setas voltam ou avançam 5 segundos.</p>
@@ -1496,7 +1515,10 @@ function render(t) {
   for (const n of NAVS) n.classList.toggle("ativo", n.id === "nav-" + na);
   desenhaCursor(s, lt);
   desenhaLegenda(s, lt);
-  if (s !== ultimaCena) { ultimaCena = s; caps.forEach((b, i) => b.classList.toggle("atual", i === s)); }
+  if (s !== ultimaCena) {
+    ultimaCena = s; caps.forEach((b, i) => b.classList.toggle("atual", i === s));
+    if (lista.scrollWidth > lista.clientWidth + 4 && lista.scrollTo) lista.scrollTo({ left: Math.max(0, caps[s].parentElement.offsetLeft - 16), behavior: "smooth" });
+  }
 }
 
 /* ── Relógio: o áudio manda; sem áudio, um relógio interno segue igual ── */
@@ -1567,7 +1589,9 @@ const mmss = t => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart
 function atualizaBotao() {
   const toca = estado === "tocando";
   bPlay.querySelector("use").setAttribute("href", toca ? "#i-pausa" : "#i-play");
-  bPlay.querySelector(".txt").textContent = toca ? "Pausar" : estado === "pausado" ? "Continuar" : "Assistir";
+  const rotulo = toca ? "Pausar" : estado === "pausado" ? "Continuar" : "Assistir";
+  bPlay.querySelector(".txt").textContent = rotulo;
+  bPlay.setAttribute("aria-label", rotulo);
 }
 let arrastando = false;
 function atualizaUI(t) {
@@ -1583,11 +1607,45 @@ const bLeg = document.getElementById("b-leg");
 bLeg.addEventListener("click", () => { const on = bLeg.getAttribute("aria-pressed") !== "true"; bLeg.setAttribute("aria-pressed", on); canvas.classList.toggle("sem-legenda", !on); });
 const bSom = document.getElementById("b-som");
 bSom.addEventListener("click", () => { const on = bSom.getAttribute("aria-pressed") !== "true"; bSom.setAttribute("aria-pressed", on); audio.muted = !on; });
-document.getElementById("b-cheia").addEventListener("click", () => {
-  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-  else if (palco.requestFullscreen) palco.requestFullscreen().catch(() => {});
+/* ── Tela cheia ── */
+function avisarPai(msg) { try { if (window.parent !== window) window.parent.postMessage(msg, "*"); } catch (e) {} }
+const bCheia = document.getElementById("b-cheia"), raiz = document.documentElement;
+let cheiaReal = false;
+function marcaCheia(on) {
+  const r = on ? "Sair da tela cheia" : "Tela cheia";
+  bCheia.querySelector(".txt").textContent = r; bCheia.setAttribute("aria-label", r);
+}
+function ajustaCtrl() { raiz.style.setProperty("--alt-ctrl", document.querySelector(".controles").offsetHeight + "px"); }
+function entrarCheia(real) {
+  cheiaReal = real; raiz.classList.add("cheia"); ajustaCtrl(); marcaCheia(true);
+  if (!real) avisarPai({ tipo: "polia-tutorial-cheia", ativo: true });
+}
+function sairCheia() {
+  const eraPropria = !cheiaReal;
+  raiz.classList.remove("cheia"); cheiaReal = false; marcaCheia(false);
+  if (eraPropria) avisarPai({ tipo: "polia-tutorial-cheia", ativo: false });
+}
+bCheia.addEventListener("click", () => {
+  if (raiz.classList.contains("cheia")) {
+    const fs = document.fullscreenElement || document.webkitFullscreenElement;
+    if (fs) { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {} }
+    sairCheia(); return;
+  }
+  const pede = raiz.requestFullscreen || raiz.webkitRequestFullscreen;
+  if (!pede || document.fullscreenEnabled === false) { entrarCheia(false); return; }
+  try {
+    Promise.resolve(pede.call(raiz)).then(() => {
+      entrarCheia(true);
+      try { screen.orientation.lock("landscape").catch(() => {}); } catch (e) {}
+    }, () => entrarCheia(false));
+  } catch (e) { entrarCheia(false); }
 });
+const aoMudarFs = () => { if (cheiaReal && !(document.fullscreenElement || document.webkitFullscreenElement)) sairCheia(); };
+document.addEventListener("fullscreenchange", aoMudarFs);
+document.addEventListener("webkitfullscreenchange", aoMudarFs);
+window.addEventListener("resize", () => { if (raiz.classList.contains("cheia")) ajustaCtrl(); });
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && raiz.classList.contains("cheia") && !cheiaReal) { sairCheia(); return; }
   if (e.target.closest("button, input")) return;
   if (e.key === " " || e.key === "k") { e.preventDefault(); estado === "tocando" ? pausar() : tocar(); }
   else if (e.key === "ArrowRight") irPara(agora() + 5);
@@ -1604,7 +1662,10 @@ const caps = C.map((c, i) => {
 });
 
 /* ── Escala do palco ── */
-function escala() { canvas.style.transform = `scale(${palco.clientWidth / 1920})`; }
+function escala() {
+  const w = palco.clientWidth, h = palco.clientHeight || w * 9 / 16, k = Math.min(w / 1920, h / 1080);
+  canvas.style.transform = `translate(${(w - 1920 * k) / 2}px, ${(h - 1080 * k) / 2}px) scale(${k})`;
+}
 new ResizeObserver(escala).observe(palco); escala();
 
 /* ── Laço ── */
@@ -1623,7 +1684,7 @@ inicia();
 requestAnimationFrame(laco);
 
 /* ── Dentro do app: altura e eventos pro iframe pai ── */
-const avisarApp = msg => { try { if (window.parent !== window) window.parent.postMessage(msg, "*"); } catch (e) {} };
+const avisarApp = avisarPai;
 const alturaConteudo = () => Math.ceil(document.querySelector(".pagina").getBoundingClientRect().bottom + window.scrollY) + 4;
 new ResizeObserver(() => avisarApp({ tipo: "polia-tutorial-altura", altura: alturaConteudo() })).observe(document.body);
 window.addEventListener("load", () => avisarApp({ tipo: "polia-tutorial-altura", altura: alturaConteudo() }));

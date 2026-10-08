@@ -17,6 +17,7 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
   const [altura, setAltura] = useState<number | null>(null);
+  const [cheia, setCheia] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
       const msg = lerMensagemTutorial(e.data);
       if (!msg) return;
       if (msg.tipo === "altura") setAltura(msg.altura);
+      else if (msg.tipo === "cheia") setCheia(msg.ativo);
       else
         void track(msg.evento === "play" ? "tutorial_play" : "tutorial_assistido_ate_o_fim", {
           origem,
@@ -48,6 +50,16 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
     window.addEventListener("message", aoReceber);
     return () => window.removeEventListener("message", aoReceber);
   }, [origem]);
+
+  // Na tela cheia própria a página de fora não rola por baixo do vídeo.
+  useEffect(() => {
+    if (!cheia) return;
+    const antes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = antes;
+    };
+  }, [cheia]);
 
   if (erro) {
     return (
@@ -87,7 +99,20 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
       allow="autoplay; fullscreen"
       allowFullScreen
       className="block w-full border-0"
-      style={altura ? { height: altura } : { aspectRatio: "16 / 11" }}
+      style={
+        cheia
+          ? {
+              position: "fixed",
+              inset: 0,
+              width: "100vw",
+              height: "100dvh",
+              zIndex: 2147483000,
+              background: "var(--ink)",
+            }
+          : altura
+            ? { height: altura }
+            : { aspectRatio: "16 / 11" }
+      }
     />
   );
 }
