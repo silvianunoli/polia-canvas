@@ -13,6 +13,8 @@
 // entra com id que não colide (foi assim que "1.0" nasceu), nunca empurrando os
 // vizinhos. A ORDEM de exibição vem da ordem deste array, não do valor do id.
 
+import { TIERS_PAGOS, hrefUpgrade, recursoLiberado, tierPagoDaRota } from "@/lib/planos";
+
 export const TOTAL_MODULOS = 6;
 
 export interface Pergunta {
@@ -685,6 +687,49 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
 
 export function ferramentaDe(n: number): FerramentaPlan {
   return FERRAMENTAS[Math.min(Math.max(n, 1), TOTAL_MODULOS)];
+}
+
+export interface AcessoFerramenta {
+  liberada: boolean;
+  /** Pra onde o botão leva: a ferramenta, ou o /upgrade com o plano certo. */
+  href: string;
+  /** Texto do botão. Fechada: "... no Premium", pra ninguém clicar às cegas. */
+  rotulo: string;
+  /** Uma linha explicando que é paga. Vazio quando liberada. */
+  aviso: string;
+  /** Nome visível do plano que abre a ferramenta ("Premium"); null quando liberada. */
+  tituloPlano: string | null;
+}
+
+/**
+ * O que a tela mostra pra ferramenta de um módulo (fim do módulo e documento
+ * do Planejamento). Marca, Mapa de Mercado e Financeiro são do Premium: no
+ * Grátis o botão comemorava a ferramenta e caía no paywall sem aviso.
+ * `carregando`: plano ainda não chegou; conta como liberada, porque cadeado
+ * piscando pra quem paga é pior que um clique que o guard da rota segura.
+ */
+export function acessoDaFerramenta(
+  ferramenta: Pick<FerramentaPlan, "rota" | "abrirLabel">,
+  plano: string | null | undefined,
+  carregando = false,
+): AcessoFerramenta {
+  if (carregando || recursoLiberado(ferramenta.rota, plano)) {
+    return {
+      liberada: true,
+      href: ferramenta.rota,
+      rotulo: ferramenta.abrirLabel,
+      aviso: "",
+      tituloPlano: null,
+    };
+  }
+  const titulo = TIERS_PAGOS[tierPagoDaRota(ferramenta.rota)].titulo;
+  return {
+    liberada: false,
+    href: hrefUpgrade(ferramenta.rota),
+    rotulo: `${ferramenta.abrirLabel} no ${titulo}`,
+    aviso: `Abre no plano ${titulo}. As respostas deste módulo já ficam guardadas.`,
+    tituloPlano: titulo,
+  };
 }
 
 // Rótulo amigável de cada campo, pros documentos das ferramentas e do /completo.

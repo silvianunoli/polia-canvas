@@ -359,7 +359,8 @@ function TelaPergunta({
   );
 }
 
-// ── Tela: contato (lista de espera) ─────────────────────────────────────────
+// ── Tela: contato (novidades por e-mail; grava na tabela lista_espera, que a
+// página /lista-de-espera deixou de usar em 07/10/2026) ─────────────────────
 function TelaContato({
   onEnviar,
   onPular,
@@ -389,7 +390,7 @@ function TelaContato({
     }
     setErrors({});
     if (!ts.token) {
-      toastErro("Confirma que não é um robô pra receber o aviso.");
+      toastErro("Confirma que não é um robô pra receber as novidades.");
       return;
     }
     setEnviando(true);
@@ -403,13 +404,25 @@ function TelaContato({
   return (
     <Reveal>
       <div className={CARTAO}>
-        <Eyebrow>Lista de espera</Eyebrow>
+        <Eyebrow>Novidades por e-mail</Eyebrow>
         <h2 className="mt-4 text-[clamp(1.5rem,3vw,2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
-          Quando a Pólia abrir, o aviso chega por e-mail.
+          A Pólia One já está aberta. As novidades chegam por e-mail.
         </h2>
         <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
-          Deixa nome e e-mail aqui embaixo. Só o aviso do lançamento, nada de spam.
+          Deixa nome e e-mail aqui embaixo pra receber o que sai de novo na Pólia, sem spam. Quem
+          quiser entrar agora tem o plano Grátis, sem cartão.
         </p>
+        <div className="mt-4">
+          <Link
+            to="/auth/cadastro"
+            search={{ origem: "pesquisa" }}
+            data-track="cadastro_cta_clicado"
+            data-track-props='{"contexto":"pesquisa_contato"}'
+            className={`inline-flex min-h-[44px] items-center text-[16px] font-semibold text-[var(--secondary-text)] underline decoration-1 underline-offset-4 hover:decoration-2 ${FOCO_SUAVE}`}
+          >
+            Quero começar grátis
+          </Link>
+        </div>
 
         <form onSubmit={enviar} className="mt-6 grid gap-4" noValidate>
           <input
@@ -480,7 +493,7 @@ function TelaContato({
               className={`mt-[2px] h-[18px] w-[18px] flex-none rounded accent-[var(--secondary)] ${FOCO_SUAVE}`}
             />
             <span>
-              Pode me avisar por e-mail e aceito os{" "}
+              Quero receber as novidades por e-mail e aceito os{" "}
               <Link
                 to="/termos"
                 className="text-[var(--ink)] underline decoration-[var(--secondary)] decoration-2 underline-offset-[3px]"
@@ -499,7 +512,7 @@ function TelaContato({
           </label>
           {errors.aceite && (
             <p className="text-[13px] text-[var(--danger)]">
-              Falta marcar essa caixa pra eu poder avisar.
+              Falta marcar essa caixa pra Pólia poder mandar as novidades.
             </p>
           )}
 
@@ -515,7 +528,7 @@ function TelaContato({
             disabled={enviando}
             className={`${BTN_PRIMARIO} ${BTN_DESABILITADO} w-full`}
           >
-            {enviando ? "Enviando…" : "Quero ser avisada"}
+            {enviando ? "Enviando…" : "Quero receber as novidades"}
           </button>
           <button
             type="button"
@@ -544,7 +557,8 @@ function TelaFim() {
           Pronto. Obrigada por dividir isso.
         </h2>
         <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
-          Cada resposta ajuda a Pólia a nascer do jeito certo pra quem toca a própria marca sozinha.
+          Cada resposta orienta o que a Pólia constrói a seguir pra quem toca a própria marca. A
+          Pólia One já está aberta, com plano Grátis.
         </p>
         <LinkPlanos />
       </div>

@@ -1,11 +1,12 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { TIERS_PAGOS, ehBeta, temProjete, tierDoPlano, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
 import { BTN_ACAO } from "@/lib/botoes";
 import { SeloCadeado } from "@/components/layout/UpgradeGate";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { abrirTrocaDePlano } from "@/lib/stripe.functions";
+import { abrirTrocaDePlano, statusAssinatura } from "@/lib/stripe.functions";
 import { toastErro } from "@/lib/toast";
 
 interface UpgradeSearch {
@@ -36,6 +37,9 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
 // O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
 const GANHO_POR_ROTA: Record<string, string> = {
   "/financeiro": "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto sobrou no mês.",
+  // Botão "Resumo pro contador" do Financeiro: a tela já abre no Premium, o
+  // que é do Pro é o resumo (08/10/2026).
+  "/financeiro/resumo": "O Pro monta o resumo do mês pro contador, em PDF e CSV.",
   "/produtos": "O Premium solta o limite: cada produto com o custo, o preço e quanto sobra.",
   "/calculadora":
     "O Pro abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
@@ -44,23 +48,63 @@ const GANHO_POR_ROTA: Record<string, string> = {
   // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
   "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
   "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
+  // O banco tem 60 ideias por nicho, que se repetem ao longo do ano: não
+  // prometer "uma ideia nova por dia" (08/10/2026).
   "/plano-conteudo":
-    "O Pro sugere uma ideia de post por dia, o ano inteiro, pro seu tipo de negócio.",
+    "O Pro monta o plano de conteúdo do ano: 60 ideias do seu nicho espalhadas pelos dias, uma por dia.",
+  // Rotas pagas que caíam no fallback genérico (08/10/2026).
+  "/marca": "O Premium escreve o documento da sua Marca a partir do que o Planejamento já sabe.",
+  "/mercado": "O Premium monta o Mapa de Mercado a partir das respostas do Planejamento.",
+  "/calendario": "O Premium abre o Calendário, com a agenda do Google junto.",
+  "/clientes": "O Premium mostra cada cliente com o status do pedido, da espera à entrega.",
+  // Telas com cota no Grátis: a tela abre, o que o Premium muda é o limite.
+  "/caderno": "O Premium tira o limite do Caderno: notas sem teto.",
+  "/planner": "O Premium tira o limite do Planner: quadros sem teto.",
+  "/aimer": "O Premium aumenta o teto diário do Assistente.",
 };
+
+// Telas que abrem no Grátis com limite. Sem frase própria, o fallback não
+// pode dizer "essa tela abre": ela já está aberta, o que muda é o limite
+// ("aumenta", não "tira": a IA do Planejamento tem teto até no Pro).
+const ROTAS_COM_COTA = ["/caderno", "/planner", "/produtos", "/planejamento", "/aimer"];
 
 function UpgradePage() {
   const search = Route.useSearch();
   const tierId: TierPago = search.tier ?? TIER_PADRAO;
   const tier = TIERS_PAGOS[tierId];
+  const rotaComCota = !!search.rota && ROTAS_COM_COTA.some((r) => search.rota!.startsWith(r));
   const ganho =
     (search.rota ? GANHO_POR_ROTA[search.rota] : undefined) ??
-    `Assinando o ${tier.titulo}, essa tela abre na sua conta na hora.`;
+    (rotaComCota
+      ? `O ${tier.titulo} aumenta o limite.`
+      : `Assinando o ${tier.titulo}, essa tela abre na sua conta na hora.`);
 
   // Quem já é Premium e quer o Pro não passa pelo /assinar (só serve pro
   // Grátis): troca o plano da assinatura que já existe, no portal do Stripe,
   // que cobra só a diferença (QA-06).
   const meta = useUserMeta();
-  const trocaDePlano = tierId === "projete" && meta.plano === "controle";
+  // Troca no portal só existe pra quem tem assinatura ativa no Stripe. Premium
+  // liberado pela Pólia (convite, sem cobrança) compra o Pro pelo checkout
+  // normal do /assinar (08/10/2026).
+  const queroProSendoPremium = tierId === "projete" && meta.plano === "controle";
+  const assinaturaQuery = useQuery({
+    queryKey: ["assinatura-status"],
+    queryFn: () => statusAssinatura(),
+    enabled: queroProSendoPremium,
+  });
+  const trocaDePlano = queroProSendoPremium && !!assinaturaQuery.data?.ativa;
+  const carregandoPlano = meta.carregando || (queroProSendoPremium && assinaturaQuery.isLoading);
+  // Sem saber se ela tem assinatura ativa, o link pro /assinar virava
+  // pingue-pongue (/assinar lê assinaturas e devolve pra cá). Mostra o erro com
+  // "Tentar de novo" em vez do link (08/10/2026).
+  const erroAssinatura = queroProSendoPremium && assinaturaQuery.isError;
+  // O plano dela já cobre o tier pedido (ex.: Premium chegando em
+  // /upgrade?tier=controle pelo teto do Assistente). Não vende o que ela tem.
+  const jaCobre =
+    !meta.carregando &&
+    (tierId === "projete"
+      ? temProjete(meta.plano)
+      : ehBeta(meta.plano) || tierDoPlano(meta.plano) === "controle");
   const [abrindo, setAbrindo] = useState(false);
   const mudarProPro = async () => {
     setAbrindo(true);
@@ -80,6 +124,21 @@ function UpgradePage() {
     setAbrindo(false);
   };
 
+  if (jaCobre) {
+    return (
+      <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
+        <div className="w-full max-w-[440px] rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
+          <h1 className="font-cabinet text-[22px] leading-snug text-[var(--ink)]">
+            Isso já está no seu plano.
+          </h1>
+          <Link to="/painel" className={`${BTN_ACAO} mt-6 w-full`}>
+            Ir pro Painel
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
       <div className="w-full max-w-[440px] rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
@@ -91,7 +150,7 @@ function UpgradePage() {
         {/* Sem rota conhecida o ganho já é essa frase: não repete embaixo. */}
         {search.rota && GANHO_POR_ROTA[search.rota] && (
           <p className="mt-2 font-sans text-[15px] text-[var(--ink-soft)]">
-            Assinando o {tier.titulo}, essa tela abre na sua conta na hora.
+            Assinando o {tier.titulo}, isso abre na sua conta na hora.
           </p>
         )}
 
@@ -103,10 +162,25 @@ function UpgradePage() {
           ))}
         </ul>
 
-        {meta.carregando ? (
+        {carregandoPlano ? (
           <button type="button" disabled className={`${BTN_ACAO} mt-6 w-full`}>
             Carregando...
           </button>
+        ) : erroAssinatura ? (
+          <div className="mt-6">
+            <p role="alert" className="font-sans text-[14px] text-[var(--danger)]">
+              A Pólia One não conseguiu conferir a sua assinatura agora.
+            </p>
+            <button
+              type="button"
+              onClick={() => void assinaturaQuery.refetch()}
+              disabled={assinaturaQuery.isFetching}
+              aria-busy={assinaturaQuery.isFetching || undefined}
+              className={`${BTN_ACAO} mt-3 w-full`}
+            >
+              {assinaturaQuery.isFetching ? "Conferindo..." : "Tentar de novo"}
+            </button>
+          </div>
         ) : trocaDePlano ? (
           <>
             <button

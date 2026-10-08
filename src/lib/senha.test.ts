@@ -1,7 +1,9 @@
 import { describe, it, expect } from "vitest";
 import {
   META_PRECISA_CRIAR_SENHA,
+  MSG_REQUISITOS_SENHA,
   REQUISITOS,
+  mensagemErroNovaSenha,
   precisaCriarSenha,
   senhaCumpreRequisitos,
 } from "./senha";
@@ -88,5 +90,50 @@ describe("precisaCriarSenha (conta criada pela compra, QA-03)", () => {
 
   it("usa o mesmo nome literal que o webhook grava", () => {
     expect(META_PRECISA_CRIAR_SENHA).toBe("precisa_criar_senha");
+  });
+});
+
+describe("mensagemErroNovaSenha", () => {
+  it("same_password vira mensagem própria", () => {
+    expect(mensagemErroNovaSenha({ code: "same_password", message: "x" })).toBe(
+      "A senha nova precisa ser diferente da atual.",
+    );
+  });
+
+  it("reconhece same_password só pela mensagem do Supabase (sem code)", () => {
+    expect(
+      mensagemErroNovaSenha({
+        message: "New password should be different from the old password.",
+      }),
+    ).toMatch(/diferente da atual/);
+  });
+
+  it("weak_password explica o que fazer", () => {
+    expect(mensagemErroNovaSenha({ code: "weak_password", message: "x" })).toMatch(
+      /^Essa senha é fácil de adivinhar/,
+    );
+  });
+
+  it("reauthentication_needed pede entrada recente", () => {
+    expect(mensagemErroNovaSenha({ code: "reauthentication_needed" })).toMatch(/entrada recente/);
+  });
+
+  it("erro sem saída do lado dela devolve null (a tela usa o tenta de novo)", () => {
+    expect(mensagemErroNovaSenha({ code: "unexpected_failure", message: "boom" })).toBeNull();
+    expect(mensagemErroNovaSenha(null)).toBeNull();
+    expect(mensagemErroNovaSenha(undefined)).toBeNull();
+  });
+
+  it("toda mensagem começa com maiúscula, sem exclamação nem travessão", () => {
+    const msgs = [
+      mensagemErroNovaSenha({ code: "same_password" }),
+      mensagemErroNovaSenha({ code: "weak_password" }),
+      mensagemErroNovaSenha({ code: "reauthentication_needed" }),
+      MSG_REQUISITOS_SENHA,
+    ];
+    for (const m of msgs) {
+      expect(m).toMatch(/^[A-ZÀ-Ú]/);
+      expect(m).not.toMatch(/[!—–]/);
+    }
   });
 });

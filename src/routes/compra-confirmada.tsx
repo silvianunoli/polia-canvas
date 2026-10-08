@@ -6,7 +6,8 @@ import { valorDoPlano } from "@/lib/planos";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
-import { BTN_CONTORNO } from "@/components/site/Editorial";
+import { BTN_CONTORNO, BTN_PRIMARIO } from "@/components/site/Editorial";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 type CompraConfirmadaSearch = { plano?: string; session_id?: string };
 
@@ -23,6 +24,9 @@ export const Route = createFileRoute("/compra-confirmada")({
 
 function CompraConfirmadaPage() {
   const { plano, session_id } = Route.useSearch();
+  // Quem comprou já logada (ex.: tinha conta e entrou antes) vai direto pro
+  // Painel em vez de voltar pra home (08/10/2026).
+  const { user } = useSupabaseSession();
 
   // Conversão de compra pro GA4/Google Ads (FUN-09). O Stripe só manda pra cá
   // com o pagamento aprovado; o transaction_id faz o GA4 ignorar a mesma compra
@@ -60,9 +64,15 @@ function CompraConfirmadaPage() {
             </a>
             .
           </p>
-          <Link to="/" className={`${BTN_CONTORNO} mt-8`}>
-            Voltar ao início
-          </Link>
+          {user ? (
+            <Link to="/painel" className={`${BTN_PRIMARIO} mt-8`}>
+              Ir pro Painel
+            </Link>
+          ) : (
+            <Link to="/" className={`${BTN_CONTORNO} mt-8`}>
+              Voltar ao início
+            </Link>
+          )}
         </Reveal>
       </main>
       <SiteFooter />

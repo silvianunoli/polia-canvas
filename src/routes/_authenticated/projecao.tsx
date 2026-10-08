@@ -405,6 +405,7 @@ function ProjecaoPage() {
                       Sem Meta do mês definida ainda.{" "}
                       <Link
                         to="/metas"
+                        search={{ criar: "meta-do-mes" }}
                         className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                       >
                         Definir agora

@@ -1,7 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { BTN_PRIMARIO, BTN_CONTORNO, BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "./botoes";
+import {
+  BTN_PRIMARIO,
+  BTN_CONTORNO,
+  BTN_ACAO,
+  BTN_ACAO_CONTORNO,
+  BTN_MIUDO,
+  BTN_MIUDO_ACAO,
+} from "./botoes";
 
-const TODOS = { BTN_PRIMARIO, BTN_CONTORNO, BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO };
+const TODOS = {
+  BTN_PRIMARIO,
+  BTN_CONTORNO,
+  BTN_ACAO,
+  BTN_ACAO_CONTORNO,
+  BTN_MIUDO,
+  BTN_MIUDO_ACAO,
+};
+
+describe("BTN_MIUDO_ACAO", () => {
+  // Ação principal dentro de cartão precisa do alvo de toque de 44px.
+  it("é o miúdo com altura mínima de 44px", () => {
+    expect(BTN_MIUDO_ACAO.startsWith(BTN_MIUDO)).toBe(true);
+    expect(BTN_MIUDO_ACAO).toContain("min-h-11");
+  });
+});
 
 describe("formas canônicas de botão", () => {
   // A auditoria de 13/08/2026 achou três formas convivendo; a única que a

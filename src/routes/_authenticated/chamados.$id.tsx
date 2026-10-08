@@ -9,6 +9,7 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { rotuloStatusChamado } from "@/lib/chamados";
+import { BlockError } from "@/components/ui/BlockError";
 
 export const Route = createFileRoute("/_authenticated/chamados/$id")({
   head: () => ({ meta: [{ title: "Chamado · Pólia One" }] }),
@@ -40,9 +41,13 @@ function ChamadoDetalhe() {
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
   const [resposta, setResposta] = useState("");
   const [enviando, setEnviando] = useState(false);
+  // Leitura que falhou. Antes o erro era ignorado: a primeira carga virava
+  // "não achou esse chamado" e a releitura ao voltar pra aba apagava as
+  // mensagens da tela.
+  const [erroLeitura, setErroLeitura] = useState(false);
 
   const carregar = async () => {
-    const [{ data: t }, { data: msgs }] = await Promise.all([
+    const [ticketRes, msgsRes] = await Promise.all([
       supabase
         .from("tickets")
         .select("id, title, body, status, created_at")
@@ -54,8 +59,15 @@ function ChamadoDetalhe() {
         .eq("ticket_id", id)
         .order("created_at", { ascending: true }),
     ]);
-    setTicket((t as Ticket | null) ?? null);
-    setMensagens((msgs as Mensagem[] | null) ?? []);
+    if (ticketRes.error || msgsRes.error) {
+      console.error("chamado_ler", ticketRes.error ?? msgsRes.error);
+      // Numa releitura (o chamado já está na tela), mantém o que já foi lido.
+      setErroLeitura(true);
+      return;
+    }
+    setErroLeitura(false);
+    setTicket((ticketRes.data as Ticket | null) ?? null);
+    setMensagens((msgsRes.data as Mensagem[] | null) ?? []);
   };
 
   useEffect(() => {
@@ -103,6 +115,19 @@ function ChamadoDetalhe() {
     await carregar();
   };
 
+  if (ticket === undefined && erroLeitura) {
+    return (
+      <PaginaLogada eyebrow="Chamado" titulo="O chamado não carregou agora.">
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu ler esse chamado agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void carregar()}
+          />
+        </div>
+      </PaginaLogada>
+    );
+  }
+
   if (ticket === undefined) {
     return (
       <PaginaLogada eyebrow="Chamado" titulo="Carregando…">
@@ -148,6 +173,15 @@ function ChamadoDetalhe() {
         {/* Chamado recém-aberto não tinha resposta nenhuma e o espaço entre o
             corpo e a caixa de texto ficava mudo. Sem botão de propósito: a
             ação é o textarea logo abaixo. */}
+        {erroLeitura && (
+          <div className="mt-6" role="alert">
+            <BlockError
+              message="A Pólia One não conseguiu atualizar as mensagens agora. O que já estava aqui continua igual."
+              onRetry={() => void carregar()}
+            />
+          </div>
+        )}
+
         {mensagens.length === 0 ? (
           <div className="mt-6">
             <Vazio
@@ -208,7 +242,7 @@ function ChamadoDetalhe() {
           </div>
           {ticket.status === "resolvido" && (
             <p className="mt-3 font-sans text-[12px] text-[var(--muted)]">
-              esse chamado já foi resolvido. Escrever aqui reabre ele.
+              Esse chamado já foi resolvido. Escrever aqui reabre ele.
             </p>
           )}
         </div>

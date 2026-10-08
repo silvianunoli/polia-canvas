@@ -8,9 +8,11 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { Vazio } from "@/components/layout/Vazio";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
-import { hojeISO, ehMesAtual, mesAnoDe } from "@/lib/data.functions";
+import { hojeISO, mesAnoDe } from "@/lib/data.functions";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { numerosDoMes } from "@/lib/numerosDoMes";
+import { formatarReais, percentualDe } from "@/lib/formatarReais";
 import { rotaLiberada } from "@/lib/planos";
 import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
@@ -49,8 +51,19 @@ function startOfWeek(d: Date) {
   return s;
 }
 
-function fmtBRL(v: number) {
-  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+// Formatador único (08/10/2026): o antigo arredondava pra inteiro, então
+// R$ 44,10 virava "R$ 44" e -0,40 virava "R$ -0".
+const fmtBRL = formatarReais;
+
+/**
+ * Leitura paginada no formato { data, error } do supabase-js, pra entrar no
+ * mesmo Promise.all e na mesma checagem de falha das outras leituras.
+ */
+function comoResultado<T>(p: Promise<T[]>): Promise<{ data: T[] | null; error: unknown }> {
+  return p.then(
+    (data) => ({ data, error: null as unknown }),
+    (error: unknown) => ({ data: null, error }),
+  );
 }
 
 function ordinal(n: number) {
@@ -229,6 +242,7 @@ function PainelPage() {
         clientesRes,
         quadrosRes,
         tarefasRes,
+        concluidasSemanaRes,
         intencaoRes,
       ] = await Promise.all([
         supabase.from("profiles").select("created_at").eq("id", userId!).maybeSingle(),
@@ -250,31 +264,66 @@ function PainelPage() {
         // Só o mês corrente, e lido inteiro (QA-24): sem filtro, o PostgREST
         // cortava em 1.000 linhas e os totais do mês ficavam errados sem aviso.
         // Tudo o que o Painel e o RegistroDoMes mostram é do mês corrente.
-        lerTodasAsPaginas<LancRow>((de, ate) =>
-          supabase
-            .from("lancamentos")
-            .select("id, tipo, valor, data, descricao, categoria, created_at")
-            .eq("user_id", userId!)
-            .gte("data", mesCorrente.inicio)
-            .lt("data", mesCorrente.fimExclusivo)
-            .order("data", { ascending: false })
-            .order("id", { ascending: true })
-            .range(de, ate)
-            .then((r) => ({ data: r.data as unknown as LancRow[] | null, error: r.error })),
-        ).then(
-          (data) => ({ data, error: null as unknown }),
-          (error: unknown) => ({ data: null, error }),
+        comoResultado(
+          lerTodasAsPaginas<LancRow>((de, ate) =>
+            supabase
+              .from("lancamentos")
+              .select("id, tipo, valor, data, descricao, categoria, created_at")
+              .eq("user_id", userId!)
+              .gte("data", mesCorrente.inicio)
+              .lt("data", mesCorrente.fimExclusivo)
+              .order("data", { ascending: false })
+              .order("id", { ascending: true })
+              .range(de, ate)
+              .then((r) => ({ data: r.data as unknown as LancRow[] | null, error: r.error })),
+          ),
         ),
-        supabase
-          .from("clientes" as never)
-          .select("status_pedido")
-          .eq("user_id", userId!),
+        // Clientes lidas inteiras (QA-24): acima de 1.000 o PostgREST cortava
+        // em silêncio e a contagem do cartão ficava errada.
+        comoResultado(
+          lerTodasAsPaginas<ClienteRow>((de, ate) =>
+            supabase
+              .from("clientes")
+              .select("status_pedido")
+              .eq("user_id", userId!)
+              .order("id", { ascending: true })
+              .range(de, ate)
+              .then((r) => ({ data: r.data as unknown as ClienteRow[] | null, error: r.error })),
+          ),
+        ),
         supabase.from("quadros").select("id, nome, slug").eq("user_id", userId!),
-        supabase
-          .from("tarefas")
-          .select("id, titulo, status, quadro_id, prazo, horario, created_at, updated_at")
-          .eq("user_id", userId!)
-          .order("created_at", { ascending: false }),
+        // Tarefas com prazo na janela que o cartão usa (atrasadas, hoje e os
+        // próximos 7 dias), lidas inteiras. Antes vinham TODAS, sem filtro e
+        // sem paginação, ordenadas pela criação: acima de 1.000 tarefas, uma
+        // tarefa antiga com prazo hoje caía fora do corte e sumia do Painel.
+        comoResultado(
+          lerTodasAsPaginas<TarefaRow>((de, ate) =>
+            supabase
+              .from("tarefas")
+              .select("id, titulo, status, quadro_id, prazo, horario, created_at, updated_at")
+              .eq("user_id", userId!)
+              .not("quadro_id", "is", null)
+              .lte("prazo", addDias(hoje, 7))
+              .order("id", { ascending: true })
+              .range(de, ate)
+              .then((r) => ({ data: r.data as unknown as TarefaRow[] | null, error: r.error })),
+          ),
+        ),
+        // Concluídas desta semana, pro gráfico "Sua semana de trabalho". Conta
+        // pelo dia da conclusão (updated_at), por isso o filtro é nele.
+        comoResultado(
+          lerTodasAsPaginas<TarefaRow>((de, ate) =>
+            supabase
+              .from("tarefas")
+              .select("id, titulo, status, quadro_id, prazo, horario, created_at, updated_at")
+              .eq("user_id", userId!)
+              .eq("status", "concluido")
+              .gte("updated_at", startOfWeek(new Date()).toISOString())
+              .order("id", { ascending: true })
+              .range(de, ate)
+              .then((r) => ({ data: r.data as unknown as TarefaRow[] | null, error: r.error })),
+          ),
+        ),
         supabase
           .from("intencoes_dia" as never)
           .select("texto")
@@ -292,6 +341,7 @@ function PainelPage() {
         clientesRes,
         quadrosRes,
         tarefasRes,
+        concluidasSemanaRes,
         intencaoRes,
       ].find((r) => (r as { error: unknown }).error);
       if (falha) throw (falha as { error: unknown }).error;
@@ -301,10 +351,10 @@ function PainelPage() {
         campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
         metaMesAlvo: (metaMesRes.data as { valor_alvo: number | null } | null)?.valor_alvo ?? 0,
         lancamentos: (lancRes.data ?? []) as unknown as LancRow[],
-        clientes: ((clientesRes as unknown as { data: ClienteRow[] | null }).data ??
-          []) as ClienteRow[],
+        clientes: (clientesRes.data ?? []) as ClienteRow[],
         quadros: (quadrosRes.data ?? []) as unknown as QuadroRow[],
-        tarefas: (tarefasRes.data ?? []) as unknown as TarefaRow[],
+        tarefas: (tarefasRes.data ?? []) as TarefaRow[],
+        concluidasSemana: (concluidasSemanaRes.data ?? []) as TarefaRow[],
         intencao:
           (intencaoRes as unknown as { data: { texto: string } | null }).data?.texto ?? null,
       };
@@ -327,10 +377,12 @@ function PainelPage() {
   const jornadaFinalizada = moduloAtual > TOTAL_MODULOS;
   const etapaInfo = moduloInfo(jornadaFinalizada ? TOTAL_MODULOS : moduloAtual);
 
+  // Dia do cadastro é o 1º dia (08/10/2026): antes era floor com mínimo 1, e
+  // o 1º e o 2º dia apareciam os dois como "1º".
   const diasDesdeCadastro = useMemo(() => {
     const c = dados?.createdAt;
     if (!c) return 1;
-    return Math.max(1, Math.floor((Date.now() - new Date(c).getTime()) / 86400000));
+    return Math.max(1, Math.floor((Date.now() - new Date(c).getTime()) / 86400000) + 1);
   }, [dados?.createdAt]);
 
   const campoValor = useMemo(() => {
@@ -354,21 +406,19 @@ function PainelPage() {
   // ── Métricas reais do mês corrente (calculado no cliente pra não divergir na hidratação SSR) ──
   const [clientReady, setClientReady] = useState(false);
   useEffect(() => setClientReady(true), []);
-  const { receitaMes, pedidosMes, lucroMes } = useMemo(() => {
-    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, lucroMes: 0 };
-    let receita = 0;
-    let saida = 0;
-    let pedidos = 0;
-    for (const l of dados?.lancamentos ?? []) {
-      if (!l.data || !ehMesAtual(l.data)) continue;
-      if (l.tipo === "entrada") {
-        receita += Number(l.valor);
-        pedidos += 1;
-      } else if (l.tipo === "saida") {
-        saida += Number(l.valor);
-      }
-    }
-    return { receitaMes: receita, pedidosMes: pedidos, lucroMes: receita - saida };
+  // Mesma conta do Financeiro e do "atual" da Meta do mês em Metas
+  // (numerosDoMes). "Pedidos" conta só entrada marcada como venda (Venda de
+  // produto, Prestação de serviço): aporte, reembolso e "Outros" não são pedido.
+  const { receitaMes, pedidosMes, entradasMes, lucroMes } = useMemo(() => {
+    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, entradasMes: 0, lucroMes: 0 };
+    const { ano, mes } = mesAnoDe(hojeISO());
+    const n = numerosDoMes(dados?.lancamentos ?? [], ano, mes);
+    return {
+      receitaMes: n.entradas,
+      pedidosMes: n.vendas,
+      entradasMes: n.registrosDeEntrada,
+      lucroMes: n.sobra,
+    };
   }, [dados?.lancamentos, clientReady]);
 
   const clientes = dados?.clientes ?? [];
@@ -550,7 +600,7 @@ function PainelPage() {
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     const ini = startOfWeek(hoje);
-    const tarefas = dados?.tarefas ?? [];
+    const tarefas = dados?.concluidasSemana ?? [];
     return Array.from({ length: 7 }).map((_, i) => {
       const d = new Date(ini);
       d.setDate(ini.getDate() + i);
@@ -572,7 +622,7 @@ function PainelPage() {
         isFuturo: d.getTime() > hoje.getTime(),
       };
     });
-  }, [dados?.tarefas, clientReady]);
+  }, [dados?.concluidasSemana, clientReady]);
   const maxSemana = Math.max(1, ...dias.map((d) => d.tarefas));
   const semanaVazia = dias.every((d) => d.tarefas === 0);
 
@@ -755,7 +805,7 @@ function PainelPage() {
                 </p>
                 <p className="mt-2 text-[13px] text-[var(--muted)]">
                   {receitaMes > 0
-                    ? `${Math.max(0, Math.round((lucroMes / receitaMes) * 100))}% de tudo que entrou`
+                    ? `${percentualDe(lucroMes, receitaMes)}% de tudo que entrou`
                     : "registre entradas e saídas pra ver"}
                   {financeiroLiberado ? (
                     <>
@@ -767,7 +817,7 @@ function PainelPage() {
                       {" "}
                       ·{" "}
                       <span className="text-[var(--ink-soft)]">
-                        no Premium, o histórico fica completo e dá pra corrigir lançamento
+                        no Premium, o Financeiro guarda o histórico de todos os meses
                       </span>
                     </>
                   )}
@@ -826,7 +876,13 @@ function PainelPage() {
                     {pedidosMes}
                   </p>
                   <p className="mt-2 text-[13px] text-[var(--muted)]">
-                    {pedidosMes > 0 ? "vendas registradas" : "nenhuma ainda"}
+                    {pedidosMes > 0
+                      ? pedidosMes === 1
+                        ? "venda ou serviço registrado"
+                        : "vendas e serviços registrados"
+                      : entradasMes > 0
+                        ? "nenhuma entrada marcada como venda ou serviço"
+                        : "nenhuma ainda"}
                     {financeiroLiberado && (
                       <>
                         {" "}
@@ -1069,6 +1125,7 @@ function PainelPage() {
           prefill={null}
           lancamentoEdit={null}
           historico={dados?.lancamentos ?? []}
+          somenteMesCorrente={!financeiroLiberado}
           onClose={() => setRegistroAberto(false)}
           onSaved={() => {
             setRegistroAberto(false);

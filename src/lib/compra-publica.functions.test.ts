@@ -20,14 +20,15 @@ vi.mock("@tanstack/react-start", () => ({
   },
 }));
 
-const { sessionsCreate, precoParaPlano } = vi.hoisted(() => ({
-  sessionsCreate: vi.fn(),
-  precoParaPlano: vi.fn((plano: string) => `price_${plano}`),
-}));
-vi.mock("@/lib/stripe.functions", () => ({
-  stripeClient: () => ({ checkout: { sessions: { create: sessionsCreate } } }),
-  precoParaPlano,
-}));
+const { sessionsCreate, precoParaPlano, customersList, subscriptionsList, stripeClient } =
+  vi.hoisted(() => ({
+    sessionsCreate: vi.fn(),
+    precoParaPlano: vi.fn((plano: string) => `price_${plano}`),
+    customersList: vi.fn(),
+    subscriptionsList: vi.fn(),
+    stripeClient: vi.fn(),
+  }));
+vi.mock("@/lib/stripe.functions", () => ({ stripeClient, precoParaPlano }));
 
 const { dispararAlerta } = vi.hoisted(() => ({ dispararAlerta: vi.fn() }));
 vi.mock("@/lib/alertas.server", () => ({ dispararAlerta }));
@@ -67,6 +68,16 @@ beforeEach(() => {
   rpc.mockResolvedValue({ data: null, error: null });
   assinaturaLida.mockReset();
   assinaturaLida.mockResolvedValue({ data: null, error: null });
+  customersList.mockReset();
+  customersList.mockResolvedValue({ data: [] });
+  subscriptionsList.mockReset();
+  subscriptionsList.mockResolvedValue({ data: [] });
+  stripeClient.mockReset();
+  stripeClient.mockImplementation(() => ({
+    checkout: { sessions: { create: sessionsCreate } },
+    customers: { list: customersList },
+    subscriptions: { list: subscriptionsList },
+  }));
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
@@ -154,8 +165,8 @@ describe("iniciarCompraPublica: sessão", () => {
         customer_email: "ana@exemplo.com",
         success_url:
           "https://one.usepolia.com.br/compra-confirmada?plano=controle_mensal&session_id={CHECKOUT_SESSION_ID}",
-        // Quem desiste volta pra tela de escolha de plano, não pra um âncora da home.
-        cancel_url: "https://one.usepolia.com.br/planos",
+        // Quem desiste volta pra /planos com o mesmo plano e ciclo escolhidos.
+        cancel_url: "https://one.usepolia.com.br/planos?plano=premium&ciclo=mensal",
         allow_promotion_codes: true,
       }),
     );
@@ -287,5 +298,102 @@ describe("iniciarCompraPublica: e-mail que já assina (QA-04)", () => {
     verificarTurnstileServer.mockResolvedValue(false);
     await comprar({ data: { email: "ana@exemplo.com", plano: "controle_mensal" } });
     expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("iniciarCompraPublica: e-mail minúsculo (hook de convite compara lower)", () => {
+  it("manda o e-mail minúsculo e sem espaço pro banco, pro Stripe e pro checkout", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    await comprar({
+      data: { email: "  Ana.Souza@Exemplo.COM ", plano: "controle_mensal", turnstileToken: TOKEN },
+    });
+    expect(rpc).toHaveBeenCalledWith("buscar_user_id_por_email", {
+      p_email: "ana.souza@exemplo.com",
+    });
+    expect(customersList).toHaveBeenCalledWith({ email: "ana.souza@exemplo.com", limit: 10 });
+    expect(sessionsCreate.mock.calls[0][0].customer_email).toBe("ana.souza@exemplo.com");
+  });
+});
+
+describe("iniciarCompraPublica: compra duplicada com webhook atrasado", () => {
+  const base = { email: "ana@exemplo.com", plano: "projete_mensal", turnstileToken: TOKEN };
+
+  it.each(["active", "trialing", "past_due"])(
+    "banco sem assinatura, mas o Stripe já tem uma %s: recusa sem criar sessão",
+    async (status) => {
+      customersList.mockResolvedValue({ data: [{ id: "cus_a" }, { id: "cus_b" }] });
+      subscriptionsList
+        .mockResolvedValueOnce({ data: [{ status: "canceled" }] })
+        .mockResolvedValueOnce({ data: [{ status }] });
+      const r = await comprar({ data: base });
+      expect(r).toEqual({ url: null, sessionId: null, error: ERRO_JA_ASSINA, jaAssina: true });
+      expect(subscriptionsList).toHaveBeenCalledWith({
+        customer: "cus_b",
+        status: "all",
+        limit: 20,
+      });
+      expect(sessionsCreate).not.toHaveBeenCalled();
+    },
+  );
+
+  it("no Stripe só assinatura sem acesso: compra normalmente", async () => {
+    customersList.mockResolvedValue({ data: [{ id: "cus_a" }] });
+    subscriptionsList.mockResolvedValue({
+      data: [{ status: "canceled" }, { status: "incomplete_expired" }],
+    });
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({ data: base });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+  });
+
+  it("falha na consulta ao Stripe não trava a venda (o webhook desfaz a duplicada)", async () => {
+    customersList.mockRejectedValue(new Error("stripe fora"));
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    const r = await comprar({ data: base });
+    expect(r).toEqual({ url: "https://checkout/1", sessionId: "cs_1", error: null });
+  });
+
+  it("banco já diz que assina: nem consulta o Stripe", async () => {
+    rpc.mockResolvedValue({ data: "user-1", error: null });
+    assinaturaLida.mockResolvedValue({ data: { status: "active" }, error: null });
+    await comprar({ data: base });
+    expect(customersList).not.toHaveBeenCalled();
+  });
+});
+
+describe("iniciarCompraPublica: volta do Stripe e configuração", () => {
+  it("cancel_url devolve plano, ciclo e origem de campanha pra /planos", async () => {
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    await comprar({
+      data: {
+        email: "ana@exemplo.com",
+        plano: "projete_anual",
+        turnstileToken: TOKEN,
+        origemCampanha: { origem: "landing-a", utm_source: "meta" },
+      },
+    });
+    const url = new URL(sessionsCreate.mock.calls[0][0].cancel_url);
+    expect(url.pathname).toBe("/planos");
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      plano: "pro",
+      ciclo: "anual",
+      origem: "landing-a",
+      utm_source: "meta",
+    });
+  });
+
+  it("Stripe sem configuração vira a mensagem da Pólia One e alerta, não erro técnico", async () => {
+    stripeClient.mockImplementation(() => {
+      throw new Error("Missing STRIPE_SECRET_KEY environment variable.");
+    });
+    const r = await comprar({
+      data: { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN },
+    });
+    expect(r).toEqual({ url: null, sessionId: null, error: ERRO });
+    expect(dispararAlerta).toHaveBeenCalledWith(
+      "checkout_erro",
+      expect.any(String),
+      expect.objectContaining({ mensagem: expect.stringContaining("STRIPE_SECRET_KEY") }),
+    );
   });
 });

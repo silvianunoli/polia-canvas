@@ -6,6 +6,9 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { COTAS_CONFERE, MSG_LIMITE_CARTOES } from "@/lib/planos";
 import { idsAcimaDaCota } from "@/lib/cotaExcedente";
+import { ehPlanoGratis } from "@/lib/planoGratis";
+import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { BlockError } from "@/components/ui/BlockError";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { Campo } from "@/components/ui/Campo";
@@ -199,12 +202,15 @@ function PlannerBoard() {
     queryKey: ["quadro", userId, slug],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("quadros")
         .select("id, nome, slug")
         .eq("user_id", userId!)
         .eq("slug", slug)
         .maybeSingle();
+      // Leitura que falha não é "Quadro não encontrado": a tela diria que o
+      // quadro não existe quando só a leitura caiu.
+      if (error) throw error;
       return data;
     },
   });
@@ -218,7 +224,8 @@ function PlannerBoard() {
   // Enquanto o perfil carrega, plano cai no padrão "confere": espera, senão quem
   // paga via a faixa piscar.
   const userMeta = useUserMeta();
-  const ehConfere = !userMeta.carregando && userMeta.plano === "confere";
+  // Cancelada conta como Grátis, igual à trava de rota (ehPlanoGratis).
+  const ehConfere = ehPlanoGratis(userMeta);
   const quadrosCotaQuery = useQuery({
     queryKey: ["quadros-cota", userId],
     enabled: !!userId && ehConfere,
@@ -275,14 +282,21 @@ function PlannerBoard() {
     queryKey: ["quadro-tarefas", quadroId],
     enabled: !!quadroId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("tarefas")
-        .select(
-          "id, titulo, descricao, status, prioridade, prazo, data_inicio, horario, horas_por_dia, meta_id, notas_execucao, created_at, tags",
-        )
-        .eq("quadro_id", quadroId!)
-        .order("created_at", { ascending: false });
-      return (data ?? []) as unknown as Card[];
+      // Lida inteira, página por página (QA-24): acima de 1.000 cartões o
+      // PostgREST cortava em silêncio. Erro sobe e a tela mostra o BlockError
+      // em vez de um quadro vazio.
+      return lerTodasAsPaginas<Card>((de, ate) =>
+        supabase
+          .from("tarefas")
+          .select(
+            "id, titulo, descricao, status, prioridade, prazo, data_inicio, horario, horas_por_dia, meta_id, notas_execucao, created_at, tags",
+          )
+          .eq("quadro_id", quadroId!)
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: true })
+          .range(de, ate)
+          .then((r) => ({ data: r.data as unknown as Card[] | null, error: r.error })),
+      );
     },
   });
 
@@ -627,17 +641,42 @@ function PlannerBoard() {
     invalidar();
   };
 
+  const [apagandoQuadro, setApagandoQuadro] = useState(false);
   const apagarQuadro = async () => {
     if (!quadroId) return;
+    setApagandoQuadro(true);
     const { error } = await supabase.from("quadros").delete().eq("id", quadroId);
-    setConfirmarApagarQuadro(false);
+    setApagandoQuadro(false);
     if (error) {
+      // O diálogo continua aberto pra tentar de novo.
       toastErro("A Pólia One não conseguiu apagar o quadro. Tenta de novo.");
       return;
     }
+    setConfirmarApagarQuadro(false);
     qc.invalidateQueries({ queryKey: ["quadros", userId] });
     navigate({ to: "/planner" });
   };
+
+  if (quadroQuery.isError) {
+    return (
+      <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
+        <main className="mx-auto max-w-[600px] px-6 py-20">
+          <div role="alert">
+            <BlockError
+              message="A Pólia One não conseguiu abrir esse quadro agora. Nada foi perdido, é só a leitura que falhou."
+              onRetry={() => void quadroQuery.refetch()}
+            />
+          </div>
+          <LinkInterno
+            href="/planner"
+            className="mt-4 inline-flex min-h-11 items-center text-[14px] text-[var(--secondary-text)] hover:underline"
+          >
+            ← voltar ao Planner
+          </LinkInterno>
+        </main>
+      </div>
+    );
+  }
 
   if (!quadroQuery.isLoading && !quadroQuery.data) {
     return (
@@ -767,364 +806,381 @@ function PlannerBoard() {
         </div>
       </section>
 
-      {/* Kanban — 6 colunas com scroll horizontal. O scroll fica DENTRO do container
-          mx-auto max-w-1400, senão o overflow rompe o centralizado e desalinha do cabeçalho. */}
-      <section className="px-6 pb-16 md:px-10">
-        <div className="mx-auto max-w-[1400px] overflow-x-auto">
-          <div className="flex min-w-max gap-4 pb-1">
-            {COLUNAS_BASE.map((col) => {
-              const listaTotal = cards.filter((c) => colunaDoCard(c.status) === col.id);
-              const lista = shown.filter((c) => colunaDoCard(c.status) === col.id);
-              const ativa = overCol === col.id;
-              const renomeando = renomeandoCol === col.id;
-              return (
-                <div
-                  key={col.id}
-                  onDragOver={(e) => {
-                    if (somenteLeitura) return;
-                    e.preventDefault();
-                    setOverCol(col.id);
-                  }}
-                  onDragLeave={() => setOverCol((c) => (c === col.id ? null : c))}
-                  onDrop={() => {
-                    if (draggedId) {
-                      mover(draggedId, col.id);
-                      setDraggedId(null);
-                      setOverCol(null);
-                    }
-                  }}
-                  className={`flex w-[280px] shrink-0 flex-col rounded-xl border p-3 transition-colors ${
-                    ativa
-                      ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
-                      : "border-[var(--line)] bg-[var(--surface)]"
-                  }`}
-                >
-                  <div className="group/col mb-3 flex items-center justify-between gap-1.5">
-                    {renomeando ? (
-                      <input
-                        autoFocus
-                        defaultValue={nomeColuna(col.id)}
-                        onChange={(e) => setNomeRename(e.target.value)}
-                        onFocus={(e) => setNomeRename(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") salvarNomeColuna(col.id);
-                          if (e.key === "Escape") setRenomeandoCol(null);
-                        }}
-                        onBlur={() => salvarNomeColuna(col.id)}
-                        aria-label={`Renomear coluna ${nomeColuna(col.id)}`}
-                        className="w-full rounded-md border border-[var(--secondary)] bg-white px-1.5 py-0.5 text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)] outline-none"
-                      />
-                    ) : (
-                      <>
-                        <span className="truncate text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
-                          {nomeColuna(col.id)}
-                        </span>
-                        <span className="flex shrink-0 items-center gap-1">
-                          {!somenteLeitura && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setNomeRename(nomeColuna(col.id));
-                                setRenomeandoCol(col.id);
-                              }}
-                              aria-label="Renomear coluna"
-                              title="Renomear coluna"
-                              className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-[14px] before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
-                            >
-                              <Pencil size={12} aria-hidden="true" />
-                            </button>
-                          )}
-                          <span className="rounded-md border border-[var(--line)] bg-white px-1.5 py-0.5 text-[11px] text-[var(--muted)]">
-                            {lista.length}
-                          </span>
-                          {!somenteLeitura && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setComposerCol(col.id);
-                                setNovoTitulo("");
-                              }}
-                              aria-label={`Adicionar cartão em ${nomeColuna(col.id)}`}
-                              className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-white hover:text-[var(--secondary-text)]"
-                            >
-                              <Plus size={16} aria-hidden="true" />
-                            </button>
-                          )}
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  {composerCol === col.id && !somenteLeitura && (
-                    <div className="mb-3 rounded-xl border border-[var(--line)] bg-white p-2.5">
-                      <input
-                        type="text"
-                        autoFocus
-                        value={novoTitulo}
-                        onChange={(e) => {
-                          criandoCartaoRef.current = false;
-                          setNovoTitulo(e.target.value);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") void criar(col.id);
-                          if (e.key === "Escape") setComposerCol(null);
-                        }}
-                        maxLength={200}
-                        placeholder="Nome do cartão · Enter salva, Esc cancela"
-                        aria-label="Nome do cartão"
-                        className="w-full rounded-lg border border-[var(--line)] px-2.5 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-2.5">
-                    {lista.length === 0 && composerCol !== col.id ? (
-                      /* "arraste um cartão pra cá" não existe no celular: não há
-                         drag. O estado vazio precisa de um botão que faça a
-                         mesma coisa que o + do cabeçalho da coluna. */
-                      listaTotal.length ? (
-                        <Vazio
-                          denso
-                          titulo="Nada neste período."
-                          texto="Tem cartão nesta coluna, mas fora do período filtrado."
-                          acao={
-                            <button
-                              type="button"
-                              onClick={() => setFiltro("all")}
-                              className={BTN_MIUDO}
-                            >
-                              Ver tudo
-                            </button>
-                          }
+      {cardsQuery.isError ? (
+        <section className="px-6 pb-16 md:px-10">
+          <div className="mx-auto max-w-[1400px]" role="alert">
+            <BlockError
+              message="A Pólia One não conseguiu ler os cartões desse quadro agora. Nada foi perdido, é só a leitura que falhou."
+              onRetry={() => void cardsQuery.refetch()}
+            />
+          </div>
+        </section>
+      ) : (
+        /* Kanban — 6 colunas com scroll horizontal. O scroll fica DENTRO do container
+          mx-auto max-w-1400, senão o overflow rompe o centralizado e desalinha do cabeçalho. */
+        <section className="px-6 pb-16 md:px-10">
+          <div className="mx-auto max-w-[1400px] overflow-x-auto">
+            <div className="flex min-w-max gap-4 pb-1">
+              {COLUNAS_BASE.map((col) => {
+                const listaTotal = cards.filter((c) => colunaDoCard(c.status) === col.id);
+                const lista = shown.filter((c) => colunaDoCard(c.status) === col.id);
+                const ativa = overCol === col.id;
+                const renomeando = renomeandoCol === col.id;
+                return (
+                  <div
+                    key={col.id}
+                    onDragOver={(e) => {
+                      if (somenteLeitura) return;
+                      e.preventDefault();
+                      setOverCol(col.id);
+                    }}
+                    onDragLeave={() => setOverCol((c) => (c === col.id ? null : c))}
+                    onDrop={() => {
+                      if (draggedId) {
+                        mover(draggedId, col.id);
+                        setDraggedId(null);
+                        setOverCol(null);
+                      }
+                    }}
+                    className={`flex w-[280px] shrink-0 flex-col rounded-xl border p-3 transition-colors ${
+                      ativa
+                        ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
+                        : "border-[var(--line)] bg-[var(--surface)]"
+                    }`}
+                  >
+                    <div className="group/col mb-3 flex items-center justify-between gap-1.5">
+                      {renomeando ? (
+                        <input
+                          autoFocus
+                          defaultValue={nomeColuna(col.id)}
+                          onChange={(e) => setNomeRename(e.target.value)}
+                          onFocus={(e) => setNomeRename(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") salvarNomeColuna(col.id);
+                            if (e.key === "Escape") setRenomeandoCol(null);
+                          }}
+                          onBlur={() => salvarNomeColuna(col.id)}
+                          aria-label={`Renomear coluna ${nomeColuna(col.id)}`}
+                          className="w-full rounded-md border border-[var(--secondary)] bg-white px-1.5 py-0.5 text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)] outline-none"
                         />
                       ) : (
-                        <Vazio
-                          denso
-                          titulo="Coluna vazia."
-                          texto={
-                            somenteLeitura
-                              ? "Nenhum cartão nesta coluna."
-                              : "O primeiro cartão pode nascer aqui mesmo."
-                          }
-                          acao={
-                            somenteLeitura ? undefined : (
+                        <>
+                          <span className="truncate text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--ink-soft)]">
+                            {nomeColuna(col.id)}
+                          </span>
+                          <span className="flex shrink-0 items-center gap-1">
+                            {!somenteLeitura && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setNomeRename(nomeColuna(col.id));
+                                  setRenomeandoCol(col.id);
+                                }}
+                                aria-label="Renomear coluna"
+                                title="Renomear coluna"
+                                className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-[14px] before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                              >
+                                <Pencil size={12} aria-hidden="true" />
+                              </button>
+                            )}
+                            <span className="rounded-md border border-[var(--line)] bg-white px-1.5 py-0.5 text-[11px] text-[var(--muted)]">
+                              {lista.length}
+                            </span>
+                            {!somenteLeitura && (
                               <button
                                 type="button"
                                 onClick={() => {
                                   setComposerCol(col.id);
                                   setNovoTitulo("");
                                 }}
+                                aria-label={`Adicionar cartão em ${nomeColuna(col.id)}`}
+                                className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-white hover:text-[var(--secondary-text)]"
+                              >
+                                <Plus size={16} aria-hidden="true" />
+                              </button>
+                            )}
+                          </span>
+                        </>
+                      )}
+                    </div>
+
+                    {composerCol === col.id && !somenteLeitura && (
+                      <div className="mb-3 rounded-xl border border-[var(--line)] bg-white p-2.5">
+                        <input
+                          type="text"
+                          autoFocus
+                          value={novoTitulo}
+                          onChange={(e) => {
+                            criandoCartaoRef.current = false;
+                            setNovoTitulo(e.target.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") void criar(col.id);
+                            if (e.key === "Escape") setComposerCol(null);
+                          }}
+                          maxLength={200}
+                          placeholder="Nome do cartão · Enter salva, Esc cancela"
+                          aria-label="Nome do cartão"
+                          className="w-full rounded-lg border border-[var(--line)] px-2.5 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-2.5">
+                      {lista.length === 0 && composerCol !== col.id ? (
+                        /* "arraste um cartão pra cá" não existe no celular: não há
+                         drag. O estado vazio precisa de um botão que faça a
+                         mesma coisa que o + do cabeçalho da coluna. */
+                        listaTotal.length ? (
+                          <Vazio
+                            denso
+                            titulo="Nada neste período."
+                            texto="Tem cartão nesta coluna, mas fora do período filtrado."
+                            acao={
+                              <button
+                                type="button"
+                                onClick={() => setFiltro("all")}
                                 className={BTN_MIUDO}
                               >
-                                <Plus size={14} aria-hidden="true" />
-                                Novo cartão
+                                Ver tudo
                               </button>
-                            )
-                          }
-                        />
-                      )
-                    ) : (
-                      lista.map((c) => {
-                        const late = vencido(c);
-                        const saindo = leavingIds.has(c.id);
-                        const concluido = colunaDoCard(c.status) === "concluido";
-                        const meta = metaTitulo(c.meta_id);
-                        return (
-                          <article
-                            key={c.id}
-                            draggable={!somenteLeitura}
-                            onDragStart={() => {
-                              if (!somenteLeitura) setDraggedId(c.id);
-                            }}
-                            onDragEnd={() => {
-                              setDraggedId(null);
-                              setOverCol(null);
-                            }}
-                            onClick={() => abrirDetalhe(c)}
-                            tabIndex={0}
-                            role="button"
-                            aria-label={`Abrir cartão: ${c.titulo}`}
-                            onKeyDown={(e) => {
-                              // Só reage quando o próprio cartão está focado — os 4 botões
-                              // internos (concluir, prioridade, avançar, remover) também
-                              // recebem Enter/Espaço, e o keydown deles borbulha até aqui
-                              // mesmo com stopPropagation no onClick (evento diferente).
-                              if (e.target !== e.currentTarget) return;
-                              if (e.key === "Enter") {
-                                abrirDetalhe(c);
-                              } else if (e.key === " ") {
-                                e.preventDefault();
-                                abrirDetalhe(c);
-                              }
-                            }}
-                            className={`group rounded-xl border border-[var(--line)] bg-white p-3 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                              somenteLeitura
-                                ? "cursor-pointer"
-                                : "cursor-grab active:cursor-grabbing"
-                            }`}
-                            style={
-                              saindo ? { opacity: 0, transform: "translateX(12px)" } : undefined
                             }
-                          >
-                            {c.tags.length > 0 && (
-                              <div className="mb-1.5 flex flex-wrap gap-1">
-                                {c.tags.map((tag) => (
-                                  <span
-                                    key={tag}
-                                    className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]"
-                                  >
-                                    <span
-                                      className="h-1.5 w-1.5 shrink-0 rounded-full"
-                                      style={{ background: corDaTag(tag) }}
-                                      aria-hidden="true"
-                                    />
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                            <div className="mb-2 flex items-start gap-2">
-                              <button
-                                type="button"
-                                role="checkbox"
-                                aria-checked={concluido}
-                                aria-label={
-                                  concluido ? "Marcar como não concluído" : "Marcar como concluído"
-                                }
-                                disabled={somenteLeitura}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (somenteLeitura) return;
-                                  if (concluido) {
-                                    mover(c.id, "hoje");
-                                    return;
-                                  }
-                                  setConfirmarId(c.id);
-                                }}
-                                className={`relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-[14px] before:content-[''] disabled:cursor-not-allowed ${
-                                  concluido
-                                    ? "border-[var(--secondary)] bg-[var(--secondary)]"
-                                    : "border-[var(--muted)] hover:border-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
-                                }`}
-                              />
-                              <p
-                                className={`text-[14px] leading-snug ${
-                                  concluido
-                                    ? "text-[var(--muted)] line-through"
-                                    : "text-[var(--ink)]"
-                                }`}
-                              >
-                                {c.titulo}
-                              </p>
-                            </div>
-
-                            {/* Chips: período, horário, horas/dia, meta vinculada */}
-                            {(c.data_inicio || c.prazo || c.horario || c.horas_por_dia || meta) && (
-                              <div className="mb-2 flex flex-wrap gap-1">
-                                {c.data_inicio && c.prazo && (
-                                  <span
-                                    className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] ${
-                                      late
-                                        ? "border border-[var(--danger)] text-[var(--danger)]"
-                                        : "bg-[var(--surface)] text-[var(--ink-soft)]"
-                                    }`}
-                                  >
-                                    <CalendarDays size={11} aria-hidden="true" />
-                                    {c.data_inicio === c.prazo
-                                      ? `prazo ${fmtDDMM(c.prazo)}`
-                                      : `${fmtDDMM(c.data_inicio)} a ${fmtDDMM(c.prazo)}`}
-                                    {late ? " · vencido" : ""}
-                                  </span>
-                                )}
-                                {c.horario && (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
-                                    <Clock size={11} aria-hidden="true" />
-                                    {c.horario}
-                                  </span>
-                                )}
-                                {c.horas_por_dia != null && (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
-                                    <Clock size={11} aria-hidden="true" />
-                                    {c.horas_por_dia}h/dia
-                                  </span>
-                                )}
-                                {meta && (
-                                  <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
-                                    <Target size={11} className="shrink-0" aria-hidden="true" />
-                                    <span className="truncate">{meta}</span>
-                                  </span>
-                                )}
-                              </div>
-                            )}
-
-                            <div className="flex items-center gap-2">
-                              {/* Prioridade — clique cicla */}
-                              <button
-                                type="button"
-                                disabled={somenteLeitura}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  mudarPrioridade(c.id, proxPrioridade(c.prioridade));
-                                }}
-                                title={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Clique pra mudar.`}
-                                aria-label={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Mudar prioridade.`}
-                                className="relative flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                              >
-                                <span
-                                  className="h-2.5 w-2.5 shrink-0 rounded-full"
-                                  style={{ background: corPrioridade(c.prioridade) }}
-                                  aria-hidden="true"
-                                />
-                                <span
-                                  aria-hidden="true"
-                                  className="text-[11px] leading-none text-[var(--muted)]"
+                          />
+                        ) : (
+                          <Vazio
+                            denso
+                            titulo="Coluna vazia."
+                            texto={
+                              somenteLeitura
+                                ? "Nenhum cartão nesta coluna."
+                                : "O primeiro cartão pode nascer aqui mesmo."
+                            }
+                            acao={
+                              somenteLeitura ? undefined : (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setComposerCol(col.id);
+                                    setNovoTitulo("");
+                                  }}
+                                  className={BTN_MIUDO}
                                 >
-                                  {rotuloPrioridade(c.prioridade) ?? "Prioridade"}
-                                </span>
-                              </button>
+                                  <Plus size={14} aria-hidden="true" />
+                                  Novo cartão
+                                </button>
+                              )
+                            }
+                          />
+                        )
+                      ) : (
+                        lista.map((c) => {
+                          const late = vencido(c);
+                          const saindo = leavingIds.has(c.id);
+                          const concluido = colunaDoCard(c.status) === "concluido";
+                          const meta = metaTitulo(c.meta_id);
+                          return (
+                            <article
+                              key={c.id}
+                              draggable={!somenteLeitura}
+                              onDragStart={() => {
+                                if (!somenteLeitura) setDraggedId(c.id);
+                              }}
+                              onDragEnd={() => {
+                                setDraggedId(null);
+                                setOverCol(null);
+                              }}
+                              onClick={() => abrirDetalhe(c)}
+                              tabIndex={0}
+                              role="button"
+                              aria-label={`Abrir cartão: ${c.titulo}`}
+                              onKeyDown={(e) => {
+                                // Só reage quando o próprio cartão está focado — os 4 botões
+                                // internos (concluir, prioridade, avançar, remover) também
+                                // recebem Enter/Espaço, e o keydown deles borbulha até aqui
+                                // mesmo com stopPropagation no onClick (evento diferente).
+                                if (e.target !== e.currentTarget) return;
+                                if (e.key === "Enter") {
+                                  abrirDetalhe(c);
+                                } else if (e.key === " ") {
+                                  e.preventDefault();
+                                  abrirDetalhe(c);
+                                }
+                              }}
+                              className={`group rounded-xl border border-[var(--line)] bg-white p-3 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                                somenteLeitura
+                                  ? "cursor-pointer"
+                                  : "cursor-grab active:cursor-grabbing"
+                              }`}
+                              style={
+                                saindo ? { opacity: 0, transform: "translateX(12px)" } : undefined
+                              }
+                            >
+                              {c.tags.length > 0 && (
+                                <div className="mb-1.5 flex flex-wrap gap-1">
+                                  {c.tags.map((tag) => (
+                                    <span
+                                      key={tag}
+                                      className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]"
+                                    >
+                                      <span
+                                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                                        style={{ background: corDaTag(tag) }}
+                                        aria-hidden="true"
+                                      />
+                                      {tag}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <div className="mb-2 flex items-start gap-2">
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={concluido}
+                                  aria-label={
+                                    concluido
+                                      ? "Marcar como não concluído"
+                                      : "Marcar como concluído"
+                                  }
+                                  disabled={somenteLeitura}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (somenteLeitura) return;
+                                    if (concluido) {
+                                      mover(c.id, "hoje");
+                                      return;
+                                    }
+                                    setConfirmarId(c.id);
+                                  }}
+                                  className={`relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-[14px] before:content-[''] disabled:cursor-not-allowed ${
+                                    concluido
+                                      ? "border-[var(--secondary)] bg-[var(--secondary)]"
+                                      : "border-[var(--muted)] hover:border-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
+                                  }`}
+                                />
+                                <p
+                                  className={`text-[14px] leading-snug ${
+                                    concluido
+                                      ? "text-[var(--muted)] line-through"
+                                      : "text-[var(--ink)]"
+                                  }`}
+                                >
+                                  {c.titulo}
+                                </p>
+                              </div>
 
-                              {!somenteLeitura && (
-                                <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
-                                  {col.id !== "concluido" && (
+                              {/* Chips: período, horário, horas/dia, meta vinculada */}
+                              {(c.data_inicio ||
+                                c.prazo ||
+                                c.horario ||
+                                c.horas_por_dia ||
+                                meta) && (
+                                <div className="mb-2 flex flex-wrap gap-1">
+                                  {c.data_inicio && c.prazo && (
+                                    <span
+                                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] ${
+                                        late
+                                          ? "border border-[var(--danger)] text-[var(--danger)]"
+                                          : "bg-[var(--surface)] text-[var(--ink-soft)]"
+                                      }`}
+                                    >
+                                      <CalendarDays size={11} aria-hidden="true" />
+                                      {c.data_inicio === c.prazo
+                                        ? `prazo ${fmtDDMM(c.prazo)}`
+                                        : `${fmtDDMM(c.data_inicio)} a ${fmtDDMM(c.prazo)}`}
+                                      {late ? " · vencido" : ""}
+                                    </span>
+                                  )}
+                                  {c.horario && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
+                                      <Clock size={11} aria-hidden="true" />
+                                      {c.horario}
+                                    </span>
+                                  )}
+                                  {c.horas_por_dia != null && (
+                                    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
+                                      <Clock size={11} aria-hidden="true" />
+                                      {c.horas_por_dia}h/dia
+                                    </span>
+                                  )}
+                                  {meta && (
+                                    <span className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--surface)] px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
+                                      <Target size={11} className="shrink-0" aria-hidden="true" />
+                                      <span className="truncate">{meta}</span>
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              <div className="flex items-center gap-2">
+                                {/* Prioridade — clique cicla */}
+                                <button
+                                  type="button"
+                                  disabled={somenteLeitura}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    mudarPrioridade(c.id, proxPrioridade(c.prioridade));
+                                  }}
+                                  title={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Clique pra mudar.`}
+                                  aria-label={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Mudar prioridade.`}
+                                  className="relative flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                                >
+                                  <span
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                                    style={{ background: corPrioridade(c.prioridade) }}
+                                    aria-hidden="true"
+                                  />
+                                  <span
+                                    aria-hidden="true"
+                                    className="text-[11px] leading-none text-[var(--muted)]"
+                                  >
+                                    {rotuloPrioridade(c.prioridade) ?? "Prioridade"}
+                                  </span>
+                                </button>
+
+                                {!somenteLeitura && (
+                                  <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+                                    {col.id !== "concluido" && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          mover(c.id, PROXIMA[col.id]);
+                                        }}
+                                        aria-label="Avançar"
+                                        title="Avançar"
+                                        className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--secondary-light)]"
+                                      >
+                                        <ArrowRight size={14} aria-hidden="true" />
+                                      </button>
+                                    )}
                                     <button
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        mover(c.id, PROXIMA[col.id]);
+                                        setApagarCardId(c.id);
                                       }}
-                                      aria-label="Avançar"
-                                      title="Avançar"
-                                      className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--secondary-light)]"
+                                      aria-label="Remover cartão"
+                                      title="Remover"
+                                      className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                                     >
-                                      <ArrowRight size={14} aria-hidden="true" />
+                                      <Trash2 size={13} aria-hidden="true" />
                                     </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setApagarCardId(c.id);
-                                    }}
-                                    aria-label="Remover cartão"
-                                    title="Remover"
-                                    className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                                  >
-                                    <Trash2 size={13} aria-hidden="true" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </article>
-                        );
-                      })
-                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </article>
+                          );
+                        })
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Painel de detalhe do cartão — Sheet do Radix cuida de foco preso, Esc
           e nome acessível; o overlay some junto (antes era feito à mão aqui). */}
@@ -1468,8 +1524,10 @@ function PlannerBoard() {
         titulo="Apagar este quadro?"
         descricao="O quadro e todos os cartões dele somem de vez. Não dá pra desfazer."
         textoConfirmar="Apagar quadro"
+        textoCarregando="Apagando…"
         destrutivo
-        onConfirmar={() => void apagarQuadro()}
+        carregando={apagandoQuadro}
+        onConfirmar={apagarQuadro}
       />
     </div>
   );

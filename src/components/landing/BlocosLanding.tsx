@@ -672,6 +672,10 @@ export function PlanosLanding({
                     // Grátis leva até o cadastro: sem isso não dá pra saber
                     // qual landing vendeu.
                     search={{ ...busca, plano: p.nome === "Premium" ? "premium" : "pro" }}
+                    // Direto pro formulário de pagamento (section#pagamento em
+                    // src/routes/planos.tsx): o plano já vem escolhido pela URL,
+                    // cair no topo obrigava a escolher de novo.
+                    hash="pagamento"
                     data-track="plano_cta_clicado"
                     data-track-props={JSON.stringify({
                       plano: p.nome,

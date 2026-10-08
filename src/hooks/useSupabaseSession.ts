@@ -36,20 +36,27 @@ export function useSupabaseSession() {
 }
 
 /**
- * After login, decide where to send the user:
- * - to /onboarding if profile.onboarding_completed is false (or missing)
- * - to /painel otherwise
+ * Depois de entrar, decide o destino:
+ * - /onboarding quando o perfil diz que o onboarding não terminou (ou o perfil
+ *   ainda não existe, conta nova)
+ * - /painel quando terminou
+ *
+ * Erro de leitura NÃO é "onboarding pendente": quem já usa a Pólia caía no
+ * onboarding por um soluço de rede. Tenta de novo uma vez; se falhar de novo,
+ * vai pro /painel (o guard da área logada confere de novo lá).
  */
 export async function resolvePostLoginPath(userId: string): Promise<string> {
-  try {
-    const { data } = await supabase
-      .from("profiles")
-      .select("onboarding_completed")
-      .eq("id", userId)
-      .maybeSingle();
-    if (data?.onboarding_completed) return "/painel";
-    return "/onboarding";
-  } catch {
-    return "/onboarding";
+  for (let tentativa = 0; tentativa < 2; tentativa++) {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!error) return data?.onboarding_completed ? "/painel" : "/onboarding";
+    } catch {
+      // cai pra próxima tentativa
+    }
   }
+  return "/painel";
 }

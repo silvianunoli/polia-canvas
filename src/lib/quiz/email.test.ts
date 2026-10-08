@@ -15,23 +15,39 @@ function montar(args: { faixa?: (typeof FAIXAS)[number]; territorio?: Territorio
 }
 
 describe("e-mail do diagnóstico", () => {
-  // Título e assunto pararam de variar por faixa na revisão de 16/09/2026
-  // (segunda passada): uma frase calma serve pras 24 combinações sem precisar
-  // de título chamativo pra cada uma. `faixa` segue recebida (decide o
-  // território fraco em quiz.functions.ts) mas não entra mais na copy.
+  // Assunto fixo e sem "quase pronto": o diagnóstico já vai no corpo (08/10/2026).
   it("leva assunto fixo, igual em toda faixa", () => {
-    expect(montar({ faixa: FAIXAS[0] }).subject).toBe("Seu diagnóstico está quase pronto");
-    expect(montar({ faixa: FAIXAS[1] }).subject).toBe("Seu diagnóstico está quase pronto");
+    expect(montar({ faixa: FAIXAS[0] }).subject).toBe("Seu diagnóstico");
+    expect(montar({ faixa: FAIXAS[3] }).subject).toBe("Seu diagnóstico");
   });
 
-  it("entrega abertura fixa, território e a conta", () => {
+  // A abertura fixa de 16/09 elogiava até a pior faixa. Agora ela é a da
+  // própria faixa, igual à tela de resultado.
+  it("abre pela faixa, sem o elogio fixo, e entrega território e a conta", () => {
+    for (const f of FAIXAS) {
+      const { text, html } = montar({ faixa: f });
+      expect(text).toContain(f.nome);
+      expect(text).toContain(f.resumo);
+      expect(html).toContain(f.resumo);
+      expect(text).not.toContain("Você já resolveu boa parte");
+      expect(text).not.toContain("quase pronto");
+    }
     const { text } = montar();
-    expect(text).toContain(
-      "Você já resolveu boa parte das decisões importantes do negócio com números.",
-    );
     expect(text).toContain(territorio.nome);
     expect(text).toContain(territorio.explicacao);
     expect(text).toContain(territorio.conta);
+  });
+
+  // O quiz terminava só no Instagram. O botão do e-mail leva pro cadastro
+  // Grátis com origem=quiz; o Instagram continua como link de texto.
+  it("leva o cadastro grátis no botão e o Instagram no texto", () => {
+    const { text, html } = montar();
+    const cadastro = "https://one.usepolia.com.br/auth/cadastro?origem=quiz";
+    expect(text).toContain(`Quero começar grátis: ${cadastro}`);
+    expect(html).toContain(`href="${cadastro}"`);
+    expect(html).toContain("Quero começar grátis");
+    expect(text).toContain("https://www.instagram.com/hub.polia/");
+    expect(html).toContain('href="https://www.instagram.com/hub.polia/"');
   });
 
   // O gate promete "você sai quando quiser". O link do rodapé é o cumprimento

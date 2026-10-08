@@ -6,6 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { COTAS_CONFERE, temProjete } from "@/lib/planos";
+import { ehPlanoGratis } from "@/lib/planoGratis";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
@@ -42,7 +43,9 @@ function CalculadoraPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const meta = useUserMeta();
-  const ehConfere = meta.plano === "confere";
+  // Cancelada conta como Grátis e o cadeado espera o perfil carregar
+  // (antes piscava pra quem paga).
+  const ehConfere = ehPlanoGratis(meta);
   const ehProjete = temProjete(meta.plano);
 
   const [prefill, setPrefill] = useState<Prefill | null>(null);

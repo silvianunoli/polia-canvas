@@ -232,16 +232,31 @@ function RootComponent() {
   // erro no hash da URL (não dá pro servidor ver, só o client). O link de
   // confirmação aponta pro /onboarding — redefinir-senha.tsx já trata o caso
   // dela mesma, então aqui só cobre o resto (a confirmação de cadastro).
+  //
+  // Link vencido chega como error=access_denied&error_code=otp_expired. Só
+  // access_denied, sem otp_expired, é outra coisa: ela desistiu na tela do
+  // Google. Isso não é link expirado: volta pra entrada com aviso neutro.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const hash = window.location.hash;
-    const linkVencido = hash.includes("otp_expired") || hash.includes("access_denied");
+    const query = window.location.search;
+    const linkVencido = hash.includes("otp_expired");
+    const acessoNegado =
+      !linkVencido &&
+      (hash.includes("error=access_denied") || query.includes("error=access_denied"));
     // criar-senha (convite da compra) também trata o próprio caso.
     const telaTrataSozinha =
       window.location.pathname === "/auth/redefinir-senha" ||
       window.location.pathname === "/auth/criar-senha";
-    if (linkVencido && !telaTrataSozinha) {
+    if (telaTrataSozinha) return;
+    if (linkVencido) {
       router.navigate({ to: "/auth/link-expirado", search: { tipo: "confirmacao" } });
+    } else if (acessoNegado) {
+      router.navigate({
+        to: "/auth/login",
+        search: { motivo: "entrada-cancelada" },
+        replace: true,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

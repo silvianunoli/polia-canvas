@@ -15,6 +15,12 @@ describe("montarSitemap", () => {
     expect(xml).not.toContain("<lastmod>");
   });
 
+  // /tutorial é público, com canonical próprio, e estava fora do sitemap.
+  it("lista o /tutorial", () => {
+    expect(CAMINHOS_ESTATICOS).toContain("/tutorial");
+    expect(montarSitemap([])).toContain("<loc>https://one.usepolia.com.br/tutorial</loc>");
+  });
+
   it("nunca aponta pro subdomínio workers.dev", () => {
     const xml = montarSitemap([{ slug: "preco-no-chute", publicado_em: "2026-08-01T12:00:00Z" }]);
 

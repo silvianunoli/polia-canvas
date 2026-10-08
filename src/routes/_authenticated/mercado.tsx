@@ -7,6 +7,7 @@ import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { BlockError } from "@/components/ui/BlockError";
 
 export const Route = createFileRoute("/_authenticated/mercado")({
   head: () => ({
@@ -39,15 +40,24 @@ function MercadoPage() {
         </LinkInterno>
       }
     >
-      <DocumentoFerramenta
-        carregando={camposQuery.isLoading}
-        temAlgo={temAlgo}
-        mapa={mapa}
-        campos={campos}
-        moduloN={2}
-        tituloVazio="Seu mapa de mercado ainda não está escrito."
-        textoVazio="Seu mapa de mercado é construído no Módulo 2 do Planejamento: quem é a sua cliente, dores, sonhos e concorrência. Comece por lá."
-      />
+      {camposQuery.isError ? (
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu ler o seu mapa de mercado agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void camposQuery.refetch()}
+          />
+        </div>
+      ) : (
+        <DocumentoFerramenta
+          carregando={camposQuery.isLoading}
+          temAlgo={temAlgo}
+          mapa={mapa}
+          campos={campos}
+          moduloN={2}
+          tituloVazio="Seu mapa de mercado ainda não está escrito."
+          textoVazio="Seu mapa de mercado é construído no Módulo 2 do Planejamento: quem é a sua cliente, dores, sonhos e concorrência. Comece por lá."
+        />
+      )}
     </PaginaLogada>
   );
 }

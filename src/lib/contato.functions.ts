@@ -29,10 +29,11 @@ export const enviarContato = createServerFn({ method: "POST" })
       return { ok: false };
     }
 
+    const telefone = normalizarTelefone(data.telefone);
     const { error } = await supabaseAdmin.from("contatos").insert({
       nome: data.nome,
       email: data.email,
-      telefone: normalizarTelefone(data.telefone),
+      telefone,
       assunto: data.assunto,
       mensagem: data.mensagem,
     });
@@ -43,17 +44,24 @@ export const enviarContato = createServerFn({ method: "POST" })
 
     // Notificação por e-mail é best-effort: o contato já está salvo e visível
     // no painel admin mesmo se o Resend falhar, então não derrubamos a resposta.
+    // O WhatsApp vai no e-mail também: sem ele a Sil só via o número abrindo o
+    // admin. Número quebrado já voltou nulo de normalizarTelefone e some daqui.
+    const linhaWhatsapp = telefone ? `WhatsApp: ${telefone}` : null;
     await enviarEmailResend({
       to: ["oi@usepolia.com.br"],
       replyTo: data.email,
       subject: `[Contato] ${data.assunto} · ${data.nome}`,
-      text: `${data.mensagem}\n\n--\n${data.nome} <${data.email}>`,
+      text: `${data.mensagem}\n\n--\n${data.nome} <${data.email}>${linhaWhatsapp ? `\n${linhaWhatsapp}` : ""}`,
       html: emailPolia({
         preheader: escapeHtml(`${data.assunto} · ${data.nome}`),
         headline: escapeHtml(data.assunto),
         paragrafos: [
           escapeHtml(data.mensagem).replace(/\n/g, "<br />"),
           `${escapeHtml(data.nome)} &lt;${escapeHtml(data.email)}&gt;`,
+          // telefone já é só dígitos (normalizarTelefone), seguro pro href.
+          ...(telefone
+            ? [`WhatsApp: <a href="https://wa.me/${telefone}">${escapeHtml(telefone)}</a>`]
+            : []),
         ],
       }),
       contexto: "[Contato]",

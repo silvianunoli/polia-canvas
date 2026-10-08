@@ -11,6 +11,10 @@ export function useCamposPlanejamento(userId?: string) {
         .from("planejamento_campos" as never)
         .select("campo, valor")
         .eq("user_id", userId!);
+      // Leitura que falha não pode virar "ainda não está escrita" em /marca e
+      // /mercado (08/10/2026): o erro sobe e a tela mostra o BlockError.
+      const erro = (res as unknown as { error?: unknown }).error;
+      if (erro) throw erro;
       const rows =
         (res as unknown as { data: { campo: string; valor: string | null }[] | null }).data ?? [];
       const m = new Map<string, string>();

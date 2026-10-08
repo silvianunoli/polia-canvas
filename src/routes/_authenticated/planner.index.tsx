@@ -12,6 +12,9 @@ import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { idsAcimaDaCota } from "@/lib/cotaExcedente";
+import { ehPlanoGratis } from "@/lib/planoGratis";
+import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { BlockError } from "@/components/ui/BlockError";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
@@ -61,19 +64,23 @@ function PlannerIndex() {
   const navigate = useNavigate();
   const meta = useUserMeta();
   // Enquanto o perfil carrega, plano cai no padrão "confere": sem esperar, quem
-  // paga via o cadeado piscar nos quadros extras.
-  const ehConfere = !meta.carregando && meta.plano === "confere";
+  // paga via o cadeado piscar nos quadros extras. Cancelada conta como Grátis,
+  // igual à trava de rota (ehPlanoGratis).
+  const ehConfere = ehPlanoGratis(meta);
 
   const quadrosQuery = useQuery({
     queryKey: ["quadros", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("quadros")
         .select("id, nome, slug, ordem, created_at")
         .eq("user_id", userId!)
         .order("ordem", { ascending: true })
         .order("created_at", { ascending: true });
+      // Leitura que falha não pode virar "Nenhum quadro ainda": a cota
+      // contaria zero e o botão de criar ignoraria o limite do Grátis.
+      if (error) throw error;
       return (data ?? []) as Quadro[];
     },
   });
@@ -82,11 +89,17 @@ function PlannerIndex() {
     queryKey: ["quadros-contagem", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("tarefas")
-        .select("quadro_id, status")
-        .eq("user_id", userId!)
-        .not("quadro_id", "is", null);
+      // Lida inteira (QA-24): acima de 1.000 cartões a contagem saía cortada.
+      const data = await lerTodasAsPaginas<{ quadro_id: string | null; status: string | null }>(
+        (de, ate) =>
+          supabase
+            .from("tarefas")
+            .select("quadro_id, status")
+            .eq("user_id", userId!)
+            .not("quadro_id", "is", null)
+            .order("id", { ascending: true })
+            .range(de, ate),
+      );
       const m = new Map<string, number>();
       const porStatus = new Map<string, Map<string, number>>();
       for (const t of data ?? []) {
@@ -163,7 +176,7 @@ function PlannerIndex() {
     },
   });
   const criarUmaVez = () => {
-    if (enviandoRef.current || !novoNome.trim()) return;
+    if (enviandoRef.current || !novoNome.trim() || cotaAtingida || !quadrosQuery.isSuccess) return;
     enviandoRef.current = true;
     criar.mutate();
   };
@@ -179,7 +192,8 @@ function PlannerIndex() {
         <button
           type="button"
           onClick={() => setCriando((v) => !v)}
-          disabled={cotaAtingida}
+          // Sem a lista lida não dá pra saber a cota: espera a leitura.
+          disabled={cotaAtingida || !quadrosQuery.isSuccess}
           className={BTN_ACAO}
           aria-label="Novo quadro"
           aria-expanded={criando}
@@ -239,6 +253,13 @@ function PlannerIndex() {
             {[0, 1].map((i) => (
               <div key={i} className="h-[88px] animate-pulse rounded-xl bg-[var(--surface)]" />
             ))}
+          </div>
+        ) : quadrosQuery.isError ? (
+          <div className="mt-8" role="alert">
+            <BlockError
+              message="A Pólia One não conseguiu ler os seus quadros agora. Nada foi perdido, é só a leitura que falhou."
+              onRetry={() => void quadrosQuery.refetch()}
+            />
           </div>
         ) : quadros.length === 0 ? (
           <Vazio

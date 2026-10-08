@@ -96,10 +96,14 @@ describe("resolvePostLoginPath", () => {
     vi.clearAllMocks();
   });
 
-  function mockProfileQuery(data: { onboarding_completed: boolean } | null, throwError = false) {
+  function mockProfileQuery(
+    data: { onboarding_completed: boolean } | null,
+    throwError = false,
+    error: { message: string } | null = null,
+  ) {
     maybeSingleMock.mockImplementation(async () => {
       if (throwError) throw new Error("falha de rede");
-      return { data };
+      return { data, error };
     });
     fromMock.mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -123,8 +127,25 @@ describe("resolvePostLoginPath", () => {
     expect(await resolvePostLoginPath("user-1")).toBe("/onboarding");
   });
 
-  it("retorna /onboarding (fail-safe) quando a query lança exceção", async () => {
+  // Erro de leitura não manda quem já usa a Pólia pro onboarding (achado 7).
+  it("quando a query lança exceção duas vezes, vai pro /painel, nunca pro onboarding", async () => {
     mockProfileQuery(null, true);
+    expect(await resolvePostLoginPath("user-1")).toBe("/painel");
+    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("quando o Supabase devolve error (sem lançar), também vai pro /painel", async () => {
+    mockProfileQuery(null, false, { message: "JWT expired" });
+    expect(await resolvePostLoginPath("user-1")).toBe("/painel");
+    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("a segunda tentativa vale quando a primeira falha", async () => {
+    mockProfileQuery({ onboarding_completed: false });
+    maybeSingleMock.mockImplementationOnce(async () => {
+      throw new Error("soluço de rede");
+    });
     expect(await resolvePostLoginPath("user-1")).toBe("/onboarding");
+    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
   });
 });

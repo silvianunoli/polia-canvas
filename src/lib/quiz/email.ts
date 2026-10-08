@@ -14,6 +14,10 @@ import { escapeHtml, emailPolia } from "@/lib/email-template";
 import type { Faixa, Territorio } from "./perguntas";
 
 const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
+// Mesmo destino do botão da tela de resultado (src/routes/quiz.index.tsx), com
+// a origem marcada pra o cadastro saber que veio do quiz.
+export const CADASTRO_QUIZ_URL = "https://one.usepolia.com.br/auth/cadastro?origem=quiz";
+export const CTA_CADASTRO_QUIZ = "Quero começar grátis";
 
 export interface EmailDiagnostico {
   subject: string;
@@ -33,23 +37,24 @@ export function montarEmailDiagnostico({
    *  sem cumprimento. */
   descadastroUrl: string;
 }): EmailDiagnostico {
-  // Título e abertura fixos (revisão de copy de 16/09/2026, segunda passada):
-  // o título deixou de variar por faixa -- uma frase calma serve pras 24
-  // combinações sem precisar de um título chamativo pra cada uma. `faixa`
-  // segue recebido (é o que decide o território fraco lá em quiz.functions.ts)
-  // mas não entra mais na copy do e-mail.
-  const TITULO = "Seu diagnóstico está quase pronto";
-  const aberturaL1 = "Você já resolveu boa parte das decisões importantes do negócio com números.";
-  const aberturaL2 =
-    "Mas tem uma coisa que ainda precisa ficar mais clara: o que sua marca faz e por que alguém deveria escolher você.";
+  // Título fixo, abertura por faixa (08/10/2026). A abertura fixa de 16/09
+  // elogiava ("você já resolveu boa parte das decisões...") até quem caiu em
+  // "No chute total", e o assunto dizia "quase pronto" com o diagnóstico já no
+  // corpo. Agora a abertura é a mesma da tela de resultado: o nome da faixa e o
+  // resumo dela, que constatam sem humilhar (PRD §5).
+  const TITULO = "Seu diagnóstico";
+  const resultadoLabel = "Seu resultado:";
   const ondeLabel = "No seu caso, esse é o ponto que apareceu no diagnóstico:";
   const contaLabel = "O que fazer agora";
+  const ponte =
+    "A Pólia One organiza a marca, o preço e a meta do mês num lugar só, a partir do Planejamento. O plano Grátis abre sem cartão.";
+  const instagramTexto = "Mais conta de preço e de marca no Instagram:";
 
   const text = [
     TITULO,
     "",
-    aberturaL1,
-    aberturaL2,
+    `${resultadoLabel} ${faixa.nome}`,
+    faixa.resumo,
     "",
     `${ondeLabel} ${territorio.nome}`,
     territorio.explicacao,
@@ -57,25 +62,32 @@ export function montarEmailDiagnostico({
     contaLabel,
     territorio.conta,
     "",
-    `Seguir @hub.polia: ${INSTAGRAM_URL}`,
+    ponte,
+    `${CTA_CADASTRO_QUIZ}: ${CADASTRO_QUIZ_URL}`,
+    "",
+    `${instagramTexto} Seguir @hub.polia: ${INSTAGRAM_URL}`,
     "",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
 
   const html = emailPolia({
-    preheader: `Uma coisa já ficou clara. Agora falta fechar ${territorio.nome}.`,
+    preheader: escapeHtml(`${faixa.nome}. O ponto pra olhar primeiro: ${territorio.nome}.`),
     headline: escapeHtml(TITULO),
     paragrafos: [
-      escapeHtml(aberturaL1),
-      escapeHtml(aberturaL2),
+      `<strong>${escapeHtml(resultadoLabel)}</strong> ${escapeHtml(faixa.nome)}`,
+      escapeHtml(faixa.resumo),
       `<strong>${escapeHtml(ondeLabel)}</strong> ${escapeHtml(territorio.nome)}`,
       escapeHtml(territorio.explicacao),
+      // A casca só tem um botão e ele vem depois da caixa pêssego, então o
+      // Instagram entra como link de texto antes dela.
+      `${escapeHtml(instagramTexto)} <a href="${INSTAGRAM_URL}" style="color:#0A0A0A;text-decoration:underline;">Seguir @hub.polia</a>`,
+      escapeHtml(ponte),
     ],
     // Mesma caixa pêssego da tela de resultado: quem abre o e-mail reconhece
     // o que acabou de ver.
     destaque: { rotulo: escapeHtml(contaLabel), texto: escapeHtml(territorio.conta) },
-    ctaLabel: "Seguir @hub.polia",
-    ctaUrl: INSTAGRAM_URL,
+    ctaLabel: CTA_CADASTRO_QUIZ,
+    ctaUrl: CADASTRO_QUIZ_URL,
     descadastroUrl,
   });
 

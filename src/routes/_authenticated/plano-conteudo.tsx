@@ -9,7 +9,8 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { NICHOS } from "@/lib/bancoIdeias";
 import { montarPlanoConteudoDoBanco } from "@/lib/planoConteudoBanco.functions";
 import { track } from "@/lib/analytics";
@@ -24,7 +25,9 @@ export const Route = createFileRoute("/_authenticated/plano-conteudo")({
       { title: "Plano de conteúdo do ano · Pólia One" },
       {
         name: "description",
-        content: "Uma ideia de post por dia, pronta pro seu tipo de negócio.",
+        // O banco tem 60 ideias por nicho que se repetem ao longo do ano: a
+        // copy não promete 365 ideias diferentes (08/10/2026).
+        content: "60 ideias do seu nicho espalhadas pelo ano, uma por dia.",
       },
     ],
   }),
@@ -76,6 +79,9 @@ function PlanoConteudoPage() {
   const [erro, setErro] = useState<string | null>(null);
   const [nichos, setNichos] = useState<string[]>([]);
   const [trocando, setTrocando] = useState(false);
+  // Refazer apaga e recria os dias de hoje em diante (montarPlanoConteudoDoBanco),
+  // levando junto o que ela editou nesses dias: pede confirmação antes.
+  const [confirmarRefazer, setConfirmarRefazer] = useState(false);
 
   const planoQuery = useQuery({
     queryKey: ["ia-plano-conteudo", userId, anoAtual],
@@ -161,7 +167,7 @@ function PlanoConteudoPage() {
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={() => void gerar()}
+          onClick={() => (dias.length > 0 ? setConfirmarRefazer(true) : void gerar())}
           disabled={gerando || nichos.length === 0}
           className={BTN_ACAO}
         >
@@ -225,7 +231,7 @@ function PlanoConteudoPage() {
   // Só barra depois de saber o plano de verdade — ver `carregando` em useUserMeta.
   if (meta.carregando) {
     return (
-      <PaginaLogada eyebrow="Plano de conteúdo" titulo="Uma ideia de post pra cada dia do ano.">
+      <PaginaLogada eyebrow="Plano de conteúdo" titulo="60 ideias do seu nicho, uma por dia.">
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
       </PaginaLogada>
     );
@@ -236,7 +242,7 @@ function PlanoConteudoPage() {
       <UpgradeGate
         eyebrow="Plano de conteúdo"
         titulo="O plano de conteúdo do ano é do Pro"
-        feature="A Pólia One sugere uma ideia de post por dia, o ano inteiro, pronta pro seu tipo de negócio."
+        feature="A Pólia One espalha 60 ideias de post do seu nicho pelo ano, uma por dia, prontas pra ajustar pra sua marca."
         rota="/plano-conteudo"
       />
     );
@@ -247,8 +253,8 @@ function PlanoConteudoPage() {
       dica="plano-conteudo"
       largura="larga"
       eyebrow="Plano de conteúdo"
-      titulo="Uma ideia de post pra cada dia do ano."
-      subtitulo="Ideias de post prontas pro seu tipo de negócio, uma por dia. Cada uma dá pra ajustar pra sua marca."
+      titulo="60 ideias do seu nicho, uma por dia."
+      subtitulo="As ideias do seu tipo de negócio espalhadas pelo ano, uma por dia. Cada uma dá pra ajustar pra sua marca."
     >
       <div>
         {trocando && dias.length > 0 && <div className="mt-2">{escolhaDeNicho}</div>}
@@ -261,7 +267,7 @@ function PlanoConteudoPage() {
             <button
               type="button"
               onClick={() => void marcarPostado(itemDeHoje!, true)}
-              className={`${BTN_MIUDO} ml-4 shrink-0 bg-white`}
+              className={`${BTN_MIUDO_ACAO} ml-4 shrink-0 bg-white`}
             >
               Já postei
             </button>
@@ -331,7 +337,7 @@ function PlanoConteudoPage() {
                       type="button"
                       onClick={() => void marcarPostado(row, !row.postado)}
                       aria-pressed={row.postado}
-                      className={`${BTN_MIUDO} shrink-0 ${row.postado ? "!bg-[var(--secondary)]" : "bg-white"}`}
+                      className={`${BTN_MIUDO_ACAO} shrink-0 ${row.postado ? "!bg-[var(--secondary)]" : "bg-white"}`}
                     >
                       <Check size={13} aria-hidden="true" />
                       {row.postado ? "Postado" : "Marcar como postado"}
@@ -378,6 +384,21 @@ function PlanoConteudoPage() {
           </button>
         )}
       </div>
+
+      <ConfirmarAcao
+        open={confirmarRefazer}
+        onOpenChange={setConfirmarRefazer}
+        titulo="Refazer o plano de hoje em diante?"
+        descricao="Os posts de hoje até o fim do ano são trocados pelas ideias do novo tipo de negócio, inclusive os que você editou ou marcou como postado hoje. Os dias que já passaram ficam como estão."
+        textoConfirmar="Refazer o plano"
+        textoCarregando="Montando…"
+        textoCancelar="Manter o plano"
+        carregando={gerando}
+        onConfirmar={async () => {
+          await gerar();
+          setConfirmarRefazer(false);
+        }}
+      />
     </PaginaLogada>
   );
 }

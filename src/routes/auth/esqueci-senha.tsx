@@ -35,6 +35,7 @@ function EsqueciSenhaPage() {
     handleSubmit,
     handleResend,
     captcha,
+    captchaPronto,
   } = useRecuperarSenha();
   const reduce = usePrefersReducedMotion();
   const [shown, setShown] = useState(true);
@@ -120,15 +121,21 @@ function EsqueciSenhaPage() {
               <br />a Pólia manda o link.
             </h1>
             <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
-              Confira a caixa de entrada (e o spam). O link vale por 1 hora.
+              Confira a caixa de entrada (e o spam). O link vale por pouco tempo.
             </p>
             <button
               type="button"
               onClick={handleResend}
-              disabled={cooldown > 0 || loading}
-              className="mt-5 py-2 px-1 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+              disabled={cooldown > 0 || loading || !captchaPronto}
+              className="mt-5 inline-flex min-h-11 items-center px-1 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
             >
-              {cooldown > 0 ? `Pode pedir outro em ${cooldown}s` : "Não chegou? Pedir de novo"}
+              {cooldown > 0
+                ? `Pode pedir outro em ${cooldown}s`
+                : loading
+                  ? "Enviando..."
+                  : !captchaPronto
+                    ? "Conferindo..."
+                    : "Não chegou? Pedir de novo"}
             </button>
             <TurnstileCampo captcha={captcha} />
             <Link to="/auth/login" className="mt-4 py-2 px-1 text-[14px] text-[var(--muted)]">

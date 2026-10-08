@@ -35,7 +35,7 @@ vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth:
 
 const stripeMock = vi.hoisted(() => ({
   customers: { create: vi.fn() },
-  subscriptions: { create: vi.fn(), update: vi.fn() },
+  subscriptions: { create: vi.fn(), update: vi.fn(), retrieve: vi.fn(), cancel: vi.fn() },
   billingPortal: { sessions: { create: vi.fn() } },
 }));
 vi.mock("stripe", () => ({
@@ -90,6 +90,8 @@ beforeEach(() => {
   stripeMock.customers.create.mockReset();
   stripeMock.subscriptions.create.mockReset();
   stripeMock.subscriptions.update.mockReset();
+  stripeMock.subscriptions.retrieve.mockReset();
+  stripeMock.subscriptions.cancel.mockReset();
   stripeMock.billingPortal.sessions.create.mockReset();
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -174,16 +176,17 @@ describe("iniciarAssinatura", () => {
 
     const r = await iniciar({ data: { plano: "projete_anual" }, context });
 
-    expect(stripeMock.customers.create).toHaveBeenCalledWith({
-      email: "ana@exemplo.com",
-      metadata: { user_id: "u-1" },
-    });
+    expect(stripeMock.customers.create).toHaveBeenCalledWith(
+      { email: "ana@exemplo.com", metadata: { user_id: "u-1" } },
+      { idempotencyKey: expect.stringMatching(/^polia-cliente-u-1-\d+$/) },
+    );
     expect(stripeMock.subscriptions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         customer: "cus_novo",
         items: [{ price: "price_projete_anual" }],
         payment_behavior: "default_incomplete",
       }),
+      { idempotencyKey: expect.stringMatching(/^polia-assinatura-u-1-projete_anual-nenhuma-\d+$/) },
     );
     expect(upsert.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -211,6 +214,7 @@ describe("iniciarAssinatura", () => {
     expect(stripeMock.customers.create).not.toHaveBeenCalled();
     expect(stripeMock.subscriptions.create).toHaveBeenCalledWith(
       expect.objectContaining({ customer: "cus_velho" }),
+      expect.objectContaining({ idempotencyKey: expect.any(String) }),
     );
   });
 
@@ -257,6 +261,163 @@ describe("iniciarAssinatura", () => {
       expect.any(String),
       expect.objectContaining({ mensagem: "card_declined" }),
     );
+  });
+
+  // DINHEIRO (08/10/2026): o "incomplete" local pode estar velho (webhook
+  // atrasado). Cancelar sem conferir no Stripe derrubava assinatura paga.
+  describe("tentativa anterior marcada como incompleta no banco", () => {
+    const linhaIncompleta = {
+      data: {
+        stripe_customer_id: "cus_1",
+        stripe_subscription_id: "sub_velha",
+        status: "incomplete",
+        price_id: "price_controle_mensal",
+        current_period_end: null,
+        cancel_at_period_end: false,
+      },
+    };
+
+    it.each(["active", "trialing", "past_due"])(
+      "no Stripe já está %s: NÃO cancela, não cria outra e espelha a linha local",
+      async (st) => {
+        from.mockReturnValueOnce(consulta(linhaIncompleta));
+        const update = consulta({ error: null });
+        from.mockReturnValueOnce(update);
+        stripeMock.subscriptions.retrieve.mockResolvedValue({
+          id: "sub_velha",
+          status: st,
+          cancel_at_period_end: false,
+          items: {
+            data: [{ current_period_end: 1_800_000_000, price: { id: "price_controle_mensal" } }],
+          },
+        });
+
+        const r = await iniciar({ data: { plano: "controle_mensal" }, context });
+
+        expect(r).toEqual({
+          clientSecret: null,
+          error: "A Pólia One já encontrou uma assinatura ativa nessa conta.",
+        });
+        expect(stripeMock.subscriptions.retrieve).toHaveBeenCalledWith("sub_velha");
+        expect(stripeMock.subscriptions.cancel).not.toHaveBeenCalled();
+        expect(stripeMock.subscriptions.create).not.toHaveBeenCalled();
+        expect(update.update).toHaveBeenCalledWith(
+          expect.objectContaining({ status: st, price_id: "price_controle_mensal" }),
+        );
+        expect(update.eq).toHaveBeenCalledWith("user_id", "u-1");
+      },
+    );
+
+    it("no Stripe ainda incompleta: cancela e abre outra com chave nova", async () => {
+      from.mockReturnValueOnce(consulta(linhaIncompleta));
+      from.mockReturnValueOnce(consulta({ error: null }));
+      stripeMock.subscriptions.retrieve.mockResolvedValue({ id: "sub_velha", status: "incomplete" });
+      stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
+
+      const r = await iniciar({ data: { plano: "controle_mensal" }, context });
+
+      expect(stripeMock.subscriptions.cancel).toHaveBeenCalledWith("sub_velha");
+      expect(stripeMock.subscriptions.create).toHaveBeenCalledWith(
+        expect.objectContaining({ customer: "cus_1" }),
+        {
+          idempotencyKey: expect.stringMatching(
+            /^polia-assinatura-u-1-controle_mensal-sub_velha-\d+$/,
+          ),
+        },
+      );
+      expect(r).toEqual({ clientSecret: "pi_secret", error: null });
+    });
+
+    it("no Stripe já expirou: não cancela e abre outra", async () => {
+      from.mockReturnValueOnce(consulta(linhaIncompleta));
+      from.mockReturnValueOnce(consulta({ error: null }));
+      stripeMock.subscriptions.retrieve.mockResolvedValue({
+        id: "sub_velha",
+        status: "incomplete_expired",
+      });
+      stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
+
+      const r = await iniciar({ data: { plano: "controle_mensal" }, context });
+      expect(stripeMock.subscriptions.cancel).not.toHaveBeenCalled();
+      expect(r).toEqual({ clientSecret: "pi_secret", error: null });
+    });
+
+    it("não existe mais no Stripe (404): segue sem cancelar", async () => {
+      from.mockReturnValueOnce(consulta(linhaIncompleta));
+      from.mockReturnValueOnce(consulta({ error: null }));
+      stripeMock.subscriptions.retrieve.mockRejectedValue(
+        Object.assign(new Error("No such subscription"), {
+          code: "resource_missing",
+          statusCode: 404,
+        }),
+      );
+      stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
+
+      const r = await iniciar({ data: { plano: "controle_mensal" }, context });
+      expect(stripeMock.subscriptions.cancel).not.toHaveBeenCalled();
+      expect(r).toEqual({ clientSecret: "pi_secret", error: null });
+    });
+
+    it("falha ao ler no Stripe: não cancela, não cria, devolve erro e alerta", async () => {
+      from.mockReturnValueOnce(consulta(linhaIncompleta));
+      stripeMock.subscriptions.retrieve.mockRejectedValue(new Error("timeout"));
+
+      const r = await iniciar({ data: { plano: "controle_mensal" }, context });
+      expect(r).toEqual({
+        clientSecret: null,
+        error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
+      });
+      expect(stripeMock.subscriptions.cancel).not.toHaveBeenCalled();
+      expect(stripeMock.subscriptions.create).not.toHaveBeenCalled();
+      expect(dispararAlerta).toHaveBeenCalledWith(
+        "checkout_erro",
+        expect.any(String),
+        expect.objectContaining({ mensagem: "timeout" }),
+      );
+    });
+  });
+
+  it("clique duplo: as duas chamadas usam a mesma chave de idempotência", async () => {
+    for (let i = 0; i < 2; i++) {
+      from.mockReturnValueOnce(consulta({ data: null }));
+      from.mockReturnValueOnce(consulta({ error: null }));
+    }
+    stripeMock.customers.create.mockResolvedValue({ id: "cus_novo" });
+    stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
+
+    await iniciar({ data: { plano: "controle_mensal" }, context });
+    await iniciar({ data: { plano: "controle_mensal" }, context });
+
+    const [c1, c2] = stripeMock.customers.create.mock.calls;
+    expect(c1[1].idempotencyKey).toBe(c2[1].idempotencyKey);
+    const [s1, s2] = stripeMock.subscriptions.create.mock.calls;
+    expect(s1[1].idempotencyKey).toBe(s2[1].idempotencyKey);
+    expect(s1[1].idempotencyKey).toMatch(/^polia-assinatura-u-1-controle_mensal-nenhuma-\d+$/);
+  });
+
+  it("sem STRIPE_SECRET_KEY devolve a mensagem da Pólia One, não erro técnico", async () => {
+    vi.resetModules();
+    const salvo = process.env.STRIPE_SECRET_KEY;
+    delete process.env.STRIPE_SECRET_KEY;
+    try {
+      const mod = await import("./stripe.functions");
+      from.mockReturnValueOnce(consulta({ data: null }));
+      const r = await (mod.iniciarAssinatura as unknown as Chamavel)({
+        data: { plano: "controle_mensal" },
+        context,
+      });
+      expect(r).toEqual({
+        clientSecret: null,
+        error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
+      });
+      expect(dispararAlerta).toHaveBeenCalledWith(
+        "checkout_erro",
+        expect.any(String),
+        expect.objectContaining({ mensagem: expect.stringContaining("STRIPE_SECRET_KEY") }),
+      );
+    } finally {
+      process.env.STRIPE_SECRET_KEY = salvo;
+    }
   });
 });
 
@@ -336,7 +497,7 @@ describe("abrirPortalCobranca", () => {
     from.mockReturnValueOnce(consulta({ data: null }));
     expect(await portal({ context })).toEqual({
       url: null,
-      error: "Não encontramos uma cobrança sua pra gerenciar.",
+      error: "A Pólia One não encontrou uma cobrança sua pra gerenciar.",
     });
     expect(stripeMock.billingPortal.sessions.create).not.toHaveBeenCalled();
   });

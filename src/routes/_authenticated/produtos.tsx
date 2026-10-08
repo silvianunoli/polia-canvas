@@ -10,6 +10,10 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { COTAS_CONFERE } from "@/lib/planos";
+import { ehPlanoGratis } from "@/lib/planoGratis";
+import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
+import { toastErro } from "@/lib/toast";
+import { BlockError } from "@/components/ui/BlockError";
 import { sobraDoProduto, taxasDoBreakdown } from "@/lib/precificacao.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
@@ -36,7 +40,10 @@ function ProdutosPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const meta = useUserMeta();
-  const ehConfere = meta.plano === "confere";
+  // Grátis do jeito que a trava de rota entende (cancelada conta) e só depois
+  // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
+  const ehConfere = ehPlanoGratis(meta);
+  const linkModulo3 = useLinkDoModulo(3);
 
   // ── Modal ──
   const [modalAberto, setModalAberto] = useState(false);
@@ -48,7 +55,7 @@ function ProdutosPage() {
     queryKey: ["produtos", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("produtos")
         .select(
           "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
@@ -56,6 +63,9 @@ function ProdutosPage() {
         .eq("user_id", userId!)
         .eq("arquivado", false)
         .order("created_at", { ascending: false });
+      // Leitura que falha não pode virar "Nenhum produto ainda" (e zerar a
+      // conta da cota, liberando o botão de adicionar).
+      if (error) throw error;
       return (data ?? []) as unknown as Produto[];
     },
   });
@@ -91,11 +101,33 @@ function ProdutosPage() {
   const confirmarArquivar = async () => {
     if (!produtoParaArquivar) return;
     setArquivando(true);
-    await supabase.from("produtos").update({ arquivado: true }).eq("id", produtoParaArquivar.id);
+    const { error } = await supabase
+      .from("produtos")
+      .update({ arquivado: true })
+      .eq("id", produtoParaArquivar.id);
     setArquivando(false);
+    if (error) {
+      // Antes o erro era ignorado e o diálogo fechava como se tivesse arquivado.
+      console.error("produto_arquivar", error);
+      toastErro("A Pólia One não conseguiu arquivar o produto. Tenta de novo.");
+      return;
+    }
     setProdutoParaArquivar(null);
     qc.invalidateQueries({ queryKey: ["produtos", userId] });
   };
+
+  if (produtosQuery.isError) {
+    return (
+      <PaginaLogada largura="larga" eyebrow="Produtos" titulo="Seus produtos.">
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu ler os seus produtos agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void produtosQuery.refetch()}
+          />
+        </div>
+      </PaginaLogada>
+    );
+  }
 
   if (produtosQuery.isLoading) {
     return (
@@ -146,10 +178,28 @@ function ProdutosPage() {
             titulo="Nenhum produto ainda."
             texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
             acao={
-              <LinkInterno href="/planejamento/modulo/3" className={BTN_ACAO}>
-                Configurar pelo Planejamento
-                <span aria-hidden="true">→</span>
-              </LinkInterno>
+              // A ação do vazio é a da própria tela; o Planejamento é caminho
+              // secundário e só aponta pro Módulo 3 quando ele está liberado.
+              <>
+                <button
+                  type="button"
+                  onClick={abrirAdicionar}
+                  disabled={cotaAtingida}
+                  className={BTN_ACAO}
+                >
+                  + Adicionar produto
+                </button>
+                <p className="mt-3 text-[12px] text-[var(--muted)]">
+                  ou deixe o{" "}
+                  <LinkInterno
+                    href={linkModulo3.href}
+                    className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                  >
+                    {linkModulo3.liberado ? "Módulo 3 do Planejamento →" : "Planejamento →"}
+                  </LinkInterno>{" "}
+                  criar os primeiros
+                </p>
+              </>
             }
           />
         </div>
@@ -191,6 +241,7 @@ function ProdutosPage() {
         titulo={`Arquivar "${produtoParaArquivar?.nome ?? ""}"?`}
         descricao="Sai do seu catálogo, mas continua guardado. Não é o mesmo que apagar."
         textoConfirmar="Arquivar"
+        textoCarregando="Arquivando…"
         onConfirmar={confirmarArquivar}
         carregando={arquivando}
       />

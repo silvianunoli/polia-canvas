@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
@@ -16,6 +17,7 @@ import {
   MODULOS_SEM_IA,
   SECOES,
   TOTAL_MODULOS,
+  acessoDaFerramenta,
   ferramentaDe,
   moduloAtualDe,
   moduloInfo,
@@ -110,6 +112,11 @@ function ModuloPage() {
   const navigate = useNavigate();
 
   const ferramenta = ferramentaDe(n);
+  const meta = useUserMeta();
+  // Marca, Mapa de Mercado e Financeiro são do Premium: a tela de fim de módulo
+  // comemorava a ferramenta e o botão caía no paywall sem aviso. Enquanto o
+  // plano carrega, nada de cadeado (quem paga não pode ver a trava piscar).
+  const acessoFerramenta = acessoDaFerramenta(ferramenta, meta.plano, meta.carregando);
   // Barra de uso da IA (05/10/2026): só nos módulos que têm o botão de IA.
   const usoIaQuery = useQuery({
     queryKey: ["uso-ia-planejamento", userId],
@@ -407,6 +414,11 @@ function ModuloPage() {
           <p className="mt-3 max-w-[420px] text-[0.9rem] leading-relaxed text-[var(--ink-soft)]">
             {ferramenta.desbloqueioSub}
           </p>
+          {!acessoFerramenta.liberada && (
+            <p className="mt-2 max-w-[420px] text-[0.875rem] leading-relaxed text-[var(--ink-soft)]">
+              {acessoFerramenta.aviso}
+            </p>
+          )}
           {/* Com módulo seguinte, continuar o Planejamento é a ação principal:
               só com o botão da ferramenta parecia que o Planejamento tinha
               acabado ali (pedido da Sil, 05/10/2026). */}
@@ -430,13 +442,15 @@ function ModuloPage() {
                 Faltam {TOTAL_MODULOS - n} {TOTAL_MODULOS - n === 1 ? "módulo" : "módulos"} pra
                 fechar o Planejamento.
               </p>
-              <LinkInterno href={ferramenta.rota} className={`${BTN_ACAO_CONTORNO} mt-5`}>
-                {ferramenta.abrirLabel}
+              <LinkInterno href={acessoFerramenta.href} className={`${BTN_ACAO_CONTORNO} mt-5`}>
+                {!acessoFerramenta.liberada && <Lock size={15} aria-hidden="true" />}
+                {acessoFerramenta.rotulo}
               </LinkInterno>
             </>
           ) : (
-            <LinkInterno href={ferramenta.rota} className={`${BTN_PRIMARIO} mt-8`}>
-              {ferramenta.abrirLabel}
+            <LinkInterno href={acessoFerramenta.href} className={`${BTN_PRIMARIO} mt-8`}>
+              {!acessoFerramenta.liberada && <Lock size={16} aria-hidden="true" />}
+              {acessoFerramenta.rotulo}
               <ArrowRight size={16} aria-hidden="true" />
             </LinkInterno>
           )}
@@ -719,6 +733,10 @@ function SecaoForm({
   const [rascunho, setRascunho] = useState<Record<number, string | null>>({});
   const [valorAntesDeGerar, setValorAntesDeGerar] = useState<Record<number, string>>({});
   const [gerando, setGerando] = useState<Record<number, boolean>>({});
+  // Trava síncrona por campo: o estado `gerando` só muda no próximo render, e um
+  // clique duplo em "Gerar outro" ou "Tentar de novo" disparava duas gerações
+  // (duas cobranças na cota de IA do mês).
+  const gerandoRef = useRef<Set<number>>(new Set());
   const [erroGeracao, setErroGeracao] = useState<Record<number, string | null>>({});
   const [cotaAtingida, setCotaAtingida] = useState<Record<number, boolean>>({});
   const [contextoInsuf, setContextoInsuf] = useState<Record<number, boolean>>({});
@@ -888,6 +906,8 @@ function SecaoForm({
   };
 
   const gerarComAimer = async (i: number) => {
+    if (gerandoRef.current.has(i)) return;
+    gerandoRef.current.add(i);
     setErroGeracao((s) => ({ ...s, [i]: null }));
     setCotaAtingida((s) => ({ ...s, [i]: false }));
     setContextoInsuf((s) => ({ ...s, [i]: false }));
@@ -926,6 +946,7 @@ function SecaoForm({
         [i]: "A Pólia One não conseguiu gerar o rascunho agora. Tenta de novo.",
       }));
     } finally {
+      gerandoRef.current.delete(i);
       setGerando((s) => ({ ...s, [i]: false }));
     }
   };
@@ -1185,7 +1206,8 @@ function SecaoForm({
                     <button
                       type="button"
                       onClick={() => void gerarComAimer(i)}
-                      className="inline-flex min-h-11 items-center font-medium underline"
+                      disabled={gerando[i]}
+                      className="inline-flex min-h-11 items-center font-medium underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                     >
                       Tentar de novo
                     </button>
@@ -1200,26 +1222,32 @@ function SecaoForm({
                       />
                       Rascunho da Pólia One. Revise, ajuste o que quiser e confirme.
                     </p>
+                    {/* Durante a geração os três ficam desabilitados: "Gerar outro"
+                        clicável gastava a cota de novo, e usar/descartar no meio
+                        era sobrescrito pelo rascunho que ainda estava chegando. */}
                     <button
                       type="button"
                       onClick={() => usarRascunho(i)}
-                      className={`${BTN_MIUDO} !bg-[var(--secondary)]`}
+                      disabled={gerando[i]}
+                      className={`${BTN_MIUDO} !bg-[var(--secondary)] disabled:cursor-not-allowed disabled:opacity-60`}
                     >
                       Usar este rascunho
                     </button>
                     <button
                       type="button"
                       onClick={() => descartarRascunho(i)}
-                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline"
+                      disabled={gerando[i]}
+                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                     >
                       Descartar
                     </button>
                     <button
                       type="button"
                       onClick={() => void gerarComAimer(i)}
-                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline"
+                      disabled={gerando[i]}
+                      className="inline-flex min-h-11 items-center px-1 text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
                     >
-                      Gerar outro
+                      {gerando[i] ? "Gerando outro…" : "Gerar outro"}
                     </button>
                   </div>
                 ) : semIa ? null : !valores[i]?.trim() && !gerando[i] ? (

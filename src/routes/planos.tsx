@@ -30,6 +30,9 @@ const PLANO_DA_URL: Record<"premium" | "pro", TierPago> = {
 // e a allowlist de verdade é lerOrigemCampanha (repetida no servidor).
 const searchSchema = z.object({
   plano: z.enum(["premium", "pro"]).optional().catch(undefined),
+  // A landing tem toggle Mensal/Anual: o link chega com ?ciclo= e a tela já
+  // abre no ciclo pedido. O cancel_url do Stripe também devolve com ele.
+  ciclo: z.enum(["mensal", "anual"]).optional().catch(undefined),
   origem: campoDeBusca,
   utm_source: campoDeBusca,
   utm_medium: campoDeBusca,
@@ -75,7 +78,7 @@ function PlanosPage() {
   const origemCampanha = useMemo(() => lerOrigemCampanha(search), [search]);
   // Só pro analytics: o checkout recebe o objeto inteiro e revalida.
   const origemTrack = temOrigemCampanha(origemCampanha) ? origemCampanha : {};
-  const [ciclo, setCiclo] = useState<Ciclo>("mensal");
+  const [ciclo, setCiclo] = useState<Ciclo>(search.ciclo ?? "mensal");
   // O Premium já vem escolhido: o formulário de pagamento sempre tem um plano
   // de verdade na frente, e o Turnstile monta uma vez só.
   const [escolhido, setEscolhido] = useState<TierPago>(
@@ -91,6 +94,11 @@ function PlanosPage() {
   const emailRef = useRef<HTMLInputElement>(null);
 
   const tier = TIERS_PAGOS[escolhido];
+  // Só mostra a confirmação quando o e-mail tem cara de e-mail completo.
+  const emailDigitado = email.trim().toLowerCase();
+  const emailParaConfirmar = z.string().email().safeParse(emailDigitado).success
+    ? emailDigitado
+    : null;
   const valor = ciclo === "mensal" ? tier.precoMensal : tier.precoAnual;
   const periodo = ciclo === "mensal" ? "por mês" : "por ano";
 
@@ -364,6 +372,20 @@ function PlanosPage() {
                     </Link>
                   )}
                 </div>
+
+                {/* E-mail digitado errado vira compra paga sem acesso: o link de
+                    entrada vai pro endereço errado. A frase mostra, perto do
+                    botão, pra onde o acesso vai (08/10/2026). */}
+                {emailParaConfirmar && (
+                  <p
+                    aria-live="polite"
+                    className="rounded-xl bg-[var(--surface)] px-4 py-3 text-[15px] leading-[1.5] text-[var(--ink)]"
+                  >
+                    A Pólia vai mandar o acesso pra{" "}
+                    <strong className="break-all font-semibold">{emailParaConfirmar}</strong>. Confere
+                    se está certo.
+                  </p>
+                )}
 
                 <TurnstileWidget containerRef={turnstile.containerRef} />
 

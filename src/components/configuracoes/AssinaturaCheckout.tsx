@@ -9,10 +9,17 @@ export function AssinaturaCheckout({
   clientSecret,
   onClose,
   onSucesso,
+  returnUrl,
 }: {
   clientSecret: string;
   onClose: () => void;
   onSucesso: () => void;
+  /**
+   * Pra onde o Stripe devolve quando o meio de pagamento exige sair do site
+   * (redirect). Sem ele, um meio desses fazia o confirmPayment falhar com
+   * "return_url is required". Cartão (com ou sem 3DS) não usa: fica no modal.
+   */
+  returnUrl?: string;
 }) {
   return (
     <Modal
@@ -24,7 +31,7 @@ export function AssinaturaCheckout({
       description="Assinatura da Pólia One. O pagamento é processado pelo Stripe."
     >
       <Elements stripe={getStripe()} options={{ clientSecret }}>
-        <FormularioPagamento onClose={onClose} onSucesso={onSucesso} />
+        <FormularioPagamento onClose={onClose} onSucesso={onSucesso} returnUrl={returnUrl} />
       </Elements>
     </Modal>
   );
@@ -33,9 +40,11 @@ export function AssinaturaCheckout({
 function FormularioPagamento({
   onClose,
   onSucesso,
+  returnUrl,
 }: {
   onClose: () => void;
   onSucesso: () => void;
+  returnUrl?: string;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -48,6 +57,9 @@ function FormularioPagamento({
     setConfirmando(true);
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
+      // "if_required": cartão confirma aqui mesmo; só meio com redirecionamento
+      // sai pro return_url (e volta pro /assinar, que conclui a ativação).
+      ...(returnUrl ? { confirmParams: { return_url: returnUrl } } : {}),
       redirect: "if_required",
     });
     setConfirmando(false);

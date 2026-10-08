@@ -3,6 +3,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { CAMPO_LABEL, SECOES, secaoPorId } from "@/lib/planejamento";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
 
 function secaoDoCampo(campo: string): string | undefined {
   return SECOES.find((s) => s.perguntas.some((p) => p.campo === campo))?.id;
@@ -51,6 +52,8 @@ export function CamposDoc({ mapa, campos }: { mapa: Map<string, string>; campos:
 
 /**
  * Estado "ferramenta ainda não desbloqueada" — nunca bloqueia acesso, só orienta.
+ * O botão só aponta pro módulo quando ele está liberado (08/10/2026): antes
+ * levava direto a um módulo trancado pra quem ainda estava no começo.
  * Casca fina do `Vazio` canônico: era o quinto desenho de estado vazio do produto
  * (centralizado, sem título, sem ícone, com a saída como link solto).
  */
@@ -63,14 +66,21 @@ export function FerramentaVazia({
   titulo?: string;
   texto?: string;
 }) {
+  const link = useLinkDoModulo(moduloN);
   return (
     <Vazio
       icone={FileText}
       titulo={titulo ?? `Essa ferramenta é escrita no Módulo ${moduloN}.`}
-      texto={texto ?? "É de lá que ela sai pronta."}
+      texto={
+        <>
+          {texto ?? "É de lá que ela sai pronta."}
+          {!link.liberado &&
+            ` O Módulo ${moduloN} abre depois dos anteriores, e o Planejamento mostra onde você está.`}
+        </>
+      }
       acao={
-        <LinkInterno href={`/planejamento/modulo/${moduloN}`} className={BTN_ACAO}>
-          Ir pro Módulo {moduloN}
+        <LinkInterno href={link.href} className={BTN_ACAO}>
+          {link.liberado ? `Ir pro Módulo ${moduloN}` : "Abrir o Planejamento"}
           <span aria-hidden="true">→</span>
         </LinkInterno>
       }

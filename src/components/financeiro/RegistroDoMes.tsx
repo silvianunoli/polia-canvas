@@ -3,7 +3,8 @@ import { Plus, Trash2, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_MIUDO } from "@/lib/botoes";
+import { BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { formatarReais } from "@/lib/formatarReais";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { hojeISO, ehMesAtual } from "@/lib/data.functions";
@@ -28,9 +29,7 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
  * o cartão de métrica linkando pra tela completa, que faz tudo isso e mais.
  */
 
-function fmtValor(v: number) {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
+const fmtValor = formatarReais;
 
 function fmtDataCurta(iso: string) {
   const [, m, d] = iso.split("-").map(Number);
@@ -111,7 +110,7 @@ export function RegistroDoMes({
             </p>
           </div>
         </div>
-        <button type="button" onClick={abrirCriar} className={BTN_MIUDO}>
+        <button type="button" onClick={abrirCriar} className={BTN_MIUDO_ACAO}>
           <Plus size={14} aria-hidden="true" />
           Registrar
         </button>
@@ -169,10 +168,11 @@ export function RegistroDoMes({
       )}
 
       {/* O que ainda é do Premium, dito sem rodeio: o registro abriu, a tela
-          de gestão do dinheiro não. */}
+          de gestão do dinheiro não. O resumo pro contador saiu desta lista em
+          08/10/2026: ele é do Pro, não do Premium. */}
       <p className="mt-4 border-t border-[var(--line)] pt-3 text-[12px] leading-relaxed text-[var(--muted)]">
-        O Premium abre o Financeiro inteiro: todos os meses, filtro por período, a régua do mínimo
-        pra fechar as contas e o resumo pro contador.{" "}
+        O Premium abre o Financeiro inteiro: todos os meses, filtro por período e a régua do mínimo
+        pra fechar as contas.{" "}
         <LinkInterno
           href="/upgrade?rota=%2Ffinanceiro&tier=controle"
           className="text-[var(--secondary-text)] underline-offset-2 hover:underline"
@@ -189,6 +189,7 @@ export function RegistroDoMes({
           prefill={null}
           lancamentoEdit={lancamentoEdit}
           historico={lancamentos}
+          somenteMesCorrente
           onClose={() => setModalAberto(false)}
           onSaved={() => {
             setModalAberto(false);
@@ -205,7 +206,8 @@ export function RegistroDoMes({
         textoConfirmar="Excluir"
         destrutivo
         carregando={excluindo}
-        onConfirmar={() => void confirmarExcluir()}
+        textoCarregando="Excluindo…"
+        onConfirmar={confirmarExcluir}
       />
     </div>
   );

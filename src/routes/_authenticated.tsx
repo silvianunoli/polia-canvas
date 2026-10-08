@@ -14,7 +14,7 @@ import { ConviteTutorial } from "@/components/dicas/ConviteTutorial";
 import { AssistenteProvider } from "@/components/assistente/AssistenteContext";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
-import { rotaLiberada } from "@/lib/planos";
+import { rotaLiberada, tierPagoDaRota } from "@/lib/planos";
 import { precisaCriarSenha } from "@/lib/senha";
 import { gravarOrigemDoOAuth } from "@/lib/gravarOrigemOAuth";
 
@@ -50,11 +50,17 @@ export const Route = createFileRoute("/_authenticated")({
       }
 
       if (!isentoDeAssinatura(location.pathname)) {
-        const { data: profile } = await supabase
+        const { data: profile, error: erroPerfil } = await supabase
           .from("profiles")
           .select("onboarding_completed, plano")
           .eq("id", data.session.user.id)
           .maybeSingle();
+
+        // Leitura que falhou não é "perfil sem onboarding" nem "plano Grátis":
+        // mandar pro /onboarding ou pro /upgrade por erro de rede jogava quem
+        // paga num fluxo errado. Deixa passar; a tela trata a própria leitura e
+        // o direito real continua imposto por RLS (ver nota acima).
+        if (erroPerfil) return;
 
         if (!profile?.onboarding_completed) {
           throw redirect({ to: "/onboarding" });
@@ -64,12 +70,13 @@ export const Route = createFileRoute("/_authenticated")({
         // Stripe já grava 'cancelada' no cancelamento — não precisa de uma
         // segunda leitura em `assinaturas` aqui).
         if (!rotaLiberada(location.pathname, profile.plano)) {
-          // rotaLiberada só devolve false quando a rota exige tier "controle"
-          // (rota "confere" nunca é bloqueada) — "controle" é sempre o plano
-          // certo pra nomear aqui.
+          // O plano a nomear na tela de upgrade é o que a ROTA exige, não um
+          // fixo: /raiox, /projecao e /plano-conteudo são do Pro. Com "controle"
+          // fixo, a usuária do Grátis via "Recurso do plano Premium", assinava
+          // o Premium e continuava barrada pelo portão Pro de dentro da página.
           throw redirect({
             to: "/upgrade",
-            search: { rota: location.pathname, tier: "controle" },
+            search: { rota: location.pathname, tier: tierPagoDaRota(location.pathname) },
           });
         }
       }

@@ -175,10 +175,10 @@ const planos: PlanoLanding[] = [
     anual: precoBR(premium.precoAnual),
     itens: [
       "Catálogo sem limite, cada produto com custo, preço e quanto sobra",
-      "Clientes com o status de cada pedido, do orçamento à entrega",
+      "Clientes com o status de cada pedido, da espera à entrega",
       "Financeiro com os três números que decidem o mês",
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Planner sem limite, com a agenda do Google junto",
+      "Planner sem limite, e o Calendário com a agenda do Google junto",
     ],
   },
   {
@@ -191,7 +191,7 @@ const planos: PlanoLanding[] = [
       "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
       "Raio-x do mês: o que puxou o resultado e o que muda no mês seguinte",
       "Resumo do mês pro contador, em PDF e CSV",
-      "Plano de conteúdo do ano, uma ideia de post por dia",
+      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
     ],
   },
 ];

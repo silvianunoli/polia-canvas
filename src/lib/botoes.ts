@@ -35,3 +35,10 @@ export const BTN_ACAO_CONTORNO = `${BASE} ${MEDIO} ${CONTORNO}`;
 
 /** Ação miúda dentro de cartão, linha de lista ou barra de filtro. */
 export const BTN_MIUDO = `${BASE} ${PEQUENO} ${CONTORNO}`;
+/**
+ * Mesma cara do miúdo, com alvo de toque de 44px. Pra ação principal que mora
+ * dentro de cartão ou linha ("Registrar", "Registrar venda", "Concluir", "Já
+ * postei"): o miúdo tem ~35px de altura, abaixo do piso de toque do projeto.
+ * O miúdo continua existindo pra filtro e chip, onde a fileira densa pesa mais.
+ */
+export const BTN_MIUDO_ACAO = `${BTN_MIUDO} min-h-11`;

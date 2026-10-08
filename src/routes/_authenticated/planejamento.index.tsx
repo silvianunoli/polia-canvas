@@ -8,6 +8,7 @@ import {
   CAMPO_LABEL,
   MODULOS,
   TOTAL_MODULOS,
+  acessoDaFerramenta,
   ferramentaDe,
   moduloAtualDe,
   moduloCompleto as moduloCompletoDe,
@@ -18,6 +19,15 @@ import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { BlockError } from "@/components/ui/BlockError";
+import { Lock } from "lucide-react";
+import { hrefUpgrade, recursoLiberado, TIERS_PAGOS, tierPagoDaRota } from "@/lib/planos";
+import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
+import { fmt } from "@/components/produtos/tipos";
+import { TITULO_META_DO_MES } from "@/lib/metaDoMes";
+import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { hojeISO, mesAnoDe } from "@/lib/data.functions";
 
 export const Route = createFileRoute("/_authenticated/planejamento/")({
   head: () => ({
@@ -46,6 +56,7 @@ interface ProdutoRow {
   canal: string | null;
   preco_venda: number;
   preco_custo: number | null;
+  calculadora_breakdown: CalculadoraBreakdown | null;
 }
 interface MetaRow {
   titulo: string;
@@ -275,6 +286,11 @@ function PlanejamentoPage() {
     queryKey: ["planejamento-mapa", userId],
     enabled: !!userId,
     queryFn: async () => {
+      // Só as entradas do mês corrente, lidas inteiras (QA-24): sem filtro, o
+      // PostgREST corta em 1.000 linhas e a receita do mês saía errada sem aviso.
+      // Mês no fuso do navegador, o mesmo que o Painel usa.
+      const { ano, mes } = mesAnoDe(hojeISO());
+      const mesCorrente = intervaloDoMes(ano, mes);
       const [profileRes, secoesRes, camposRes, produtosRes, metasRes, lancRes] = await Promise.all([
         supabase
           .from("profiles")
@@ -291,7 +307,7 @@ function PlanejamentoPage() {
           .eq("user_id", userId!),
         supabase
           .from("produtos")
-          .select("nome, tipo, canal, preco_venda, preco_custo")
+          .select("nome, tipo, canal, preco_venda, preco_custo, calculadora_breakdown")
           .eq("user_id", userId!)
           .eq("arquivado", false),
         supabase
@@ -299,8 +315,29 @@ function PlanejamentoPage() {
           .select("titulo, valor_atual, valor_alvo, formato")
           .eq("user_id", userId!)
           .eq("status", "ativa"),
-        supabase.from("lancamentos").select("tipo, valor, data").eq("user_id", userId!),
+        lerTodasAsPaginas<LancRow>((de, ate) =>
+          supabase
+            .from("lancamentos")
+            .select("id, tipo, valor, data")
+            .eq("user_id", userId!)
+            .eq("tipo", "entrada")
+            .gte("data", mesCorrente.inicio)
+            .lt("data", mesCorrente.fimExclusivo)
+            .order("data", { ascending: true })
+            .order("id", { ascending: true })
+            .range(de, ate)
+            .then((r) => ({ data: r.data as unknown as LancRow[] | null, error: r.error })),
+        ).then(
+          (data) => ({ data, error: null as unknown }),
+          (error: unknown) => ({ data: null, error }),
+        ),
       ]);
+      // Leitura que falha não pode virar "Começar o Módulo 1" pra quem já
+      // preencheu, nem R$ 0 na meta: lança e a tela mostra o erro.
+      const falha = [profileRes, secoesRes, camposRes, produtosRes, metasRes, lancRes].find(
+        (r) => (r as { error: unknown }).error,
+      );
+      if (falha) throw (falha as { error: unknown }).error;
       return {
         profile: profileRes.data as {
           full_name: string | null;
@@ -319,10 +356,7 @@ function PlanejamentoPage() {
   const profile = dadosQuery.data?.profile;
   const businessName = profile?.business_name?.trim() || "";
   const produtos = dadosQuery.data?.produtos ?? [];
-  const metasAtivas = useMemo(
-    () => (dadosQuery.data?.metas ?? []).slice(0, 3),
-    [dadosQuery.data?.metas],
-  );
+  const meta = useUserMeta();
 
   // Receita do mês corrente (calculado no cliente pra não divergir na hidratação SSR).
   const [clientReady, setClientReady] = useState(false);
@@ -341,6 +375,17 @@ function PlanejamentoPage() {
     }
     return receita;
   }, [dadosQuery.data?.lancamentos, clientReady]);
+
+  // A Meta do mês anda pelas entradas do mês, como no Painel e no Financeiro.
+  // O valor_atual gravado na linha é digitado (ou velho), e a mesma meta
+  // aparecia com progresso diferente em cada tela.
+  const metasAtivas = useMemo(
+    () =>
+      (dadosQuery.data?.metas ?? [])
+        .slice(0, 3)
+        .map((m) => (m.titulo === TITULO_META_DO_MES ? { ...m, valor_atual: receitaMes } : m)),
+    [dadosQuery.data?.metas, receitaMes],
+  );
 
   const concluidas = useMemo(
     () => new Set((dadosQuery.data?.secoes ?? []).filter((s) => s.concluido).map((s) => s.secao)),
@@ -419,285 +464,326 @@ function PlanejamentoPage() {
       eyebrow="Planejamento"
       titulo={businessName || "A base do seu negócio."}
     >
-      <div>
-        <div className="mb-8">
-          <div>
-            {/* Progresso global: sem isso, a única forma de saber quanto falta
-                era somar os chips com o olho. */}
-            <div className="flex max-w-[280px] items-center gap-3">
-              <div
-                className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--line)]"
-                role="progressbar"
-                aria-valuenow={concluidosCount}
-                aria-valuemin={0}
-                aria-valuemax={TOTAL_MODULOS}
-                aria-label={`${concluidosCount} de ${TOTAL_MODULOS} módulos concluídos`}
-              >
-                <span
-                  className="block h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
-                  style={{ transform: `scaleX(${concluidosCount / TOTAL_MODULOS})` }}
-                />
-              </div>
-              <span className="shrink-0 text-[13px] text-[var(--ink-soft)]">
-                {concluidosCount} de {TOTAL_MODULOS}
-              </span>
-            </div>
-
-            {/* A ação principal da tela. Antes ela não existia: continuar era
-                rolar até o módulo atual, embaixo dos já concluídos. */}
-            {moduloAtual <= TOTAL_MODULOS && (
-              <button
-                type="button"
-                onClick={() => irParaModulo(moduloAtual)}
-                className={`${BTN_ACAO} mt-4`}
-              >
-                {secoesFeitasModuloAtual > 0 ? "Continuar" : "Começar"} o Módulo {moduloAtual}
-                <span aria-hidden="true">→</span>
-              </button>
-            )}
-          </div>
+      {dadosQuery.isError ? (
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu abrir o seu Planejamento agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void dadosQuery.refetch()}
+          />
         </div>
+      ) : !dadosQuery.isSuccess ? (
+        // Sem isto, enquanto carregava a tela dizia "Começar o Módulo 1" pra
+        // quem já tinha preenchido tudo.
+        <div className="space-y-4" aria-busy="true" aria-label="Carregando o Planejamento">
+          {[24, 56, 200].map((h) => (
+            <div
+              key={h}
+              className="animate-pulse rounded-xl border border-[var(--line)] bg-white motion-reduce:animate-none"
+              style={{ height: h }}
+            />
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div className="mb-8">
+            <div>
+              {/* Progresso global: sem isso, a única forma de saber quanto falta
+                era somar os chips com o olho. */}
+              <div className="flex max-w-[280px] items-center gap-3">
+                <div
+                  className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--line)]"
+                  role="progressbar"
+                  aria-valuenow={concluidosCount}
+                  aria-valuemin={0}
+                  aria-valuemax={TOTAL_MODULOS}
+                  aria-label={`${concluidosCount} de ${TOTAL_MODULOS} módulos concluídos`}
+                >
+                  <span
+                    className="block h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+                    style={{ transform: `scaleX(${concluidosCount / TOTAL_MODULOS})` }}
+                  />
+                </div>
+                <span className="shrink-0 text-[13px] text-[var(--ink-soft)]">
+                  {concluidosCount} de {TOTAL_MODULOS}
+                </span>
+              </div>
 
-        <FadeIn key="documento">
-          {/* Faixa dos 6 módulos. Fica sticky e sangra pras laterais com
+              {/* A ação principal da tela. Antes ela não existia: continuar era
+                rolar até o módulo atual, embaixo dos já concluídos. */}
+              {moduloAtual <= TOTAL_MODULOS && (
+                <button
+                  type="button"
+                  onClick={() => irParaModulo(moduloAtual)}
+                  className={`${BTN_ACAO} mt-4`}
+                >
+                  {secoesFeitasModuloAtual > 0 ? "Continuar" : "Começar"} o Módulo {moduloAtual}
+                  <span aria-hidden="true">→</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <FadeIn key="documento">
+            {/* Faixa dos 6 módulos. Fica sticky e sangra pras laterais com
                 margem negativa, pra borda e fundo cobrirem o container inteiro
                 enquanto o conteúdo passa por baixo. */}
-          <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
-            <div className="py-3">
-              <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2">
-                {MODULOS.map((m) => {
-                  const secoes = secoesDoModulo(m.n);
-                  const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
-                  const completo = moduloCompleto(m.n);
-                  const atual = m.n === moduloAtual;
-                  const emAndamento = atual && feitas > 0;
-                  const clicavel = moduloLiberado(m.n, concluidas);
-                  const bloqueado = !clicavel;
-                  const Icone = MODULO_ICONE[m.n];
-                  return (
-                    <button
-                      key={m.n}
-                      type="button"
-                      onClick={() => onClickChip(m.n)}
-                      disabled={!clicavel}
-                      title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
-                      aria-label={
-                        bloqueado
-                          ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
-                          : `Módulo ${m.n}: ${m.nome}`
-                      }
-                      className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
-                        clicavel
-                          ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
-                          : "cursor-not-allowed"
-                      } ${
-                        /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
+            <div className="sticky top-14 z-10 -mx-6 border-y border-[var(--line)] bg-[var(--bg)] px-6 md:-mx-10 md:top-0 md:px-10">
+              <div className="py-3">
+                <div className="flex gap-3 overflow-x-auto md:justify-between md:gap-2">
+                  {MODULOS.map((m) => {
+                    const secoes = secoesDoModulo(m.n);
+                    const feitas = secoes.filter((s) => concluidas.has(s.id)).length;
+                    const completo = moduloCompleto(m.n);
+                    const atual = m.n === moduloAtual;
+                    const emAndamento = atual && feitas > 0;
+                    const clicavel = moduloLiberado(m.n, concluidas);
+                    const bloqueado = !clicavel;
+                    const Icone = MODULO_ICONE[m.n];
+                    return (
+                      <button
+                        key={m.n}
+                        type="button"
+                        onClick={() => onClickChip(m.n)}
+                        disabled={!clicavel}
+                        title={bloqueado ? `Abre depois do Módulo ${m.n - 1}` : undefined}
+                        aria-label={
+                          bloqueado
+                            ? `Módulo ${m.n}: ${m.nome}. Abre depois do Módulo ${m.n - 1}`
+                            : `Módulo ${m.n}: ${m.nome}`
+                        }
+                        className={`flex w-[124px] shrink-0 flex-col items-center gap-1.5 rounded-lg px-2 py-1 text-center transition-[transform,background] duration-200 md:w-auto md:flex-1 ${
+                          clicavel
+                            ? "cursor-pointer hover:-translate-y-0.5 hover:bg-white"
+                            : "cursor-not-allowed"
+                        } ${
+                          /* Borda, não `ring`: o contêiner da faixa é overflow-x-auto,
                            e overflow num eixo faz o outro virar auto também, o que
                            recortava o anel (ele é desenhado FORA da caixa) e deixava
                            só os cantos à mostra. Borda vive dentro da caixa. */
-                        m.n === activeMod
-                          ? "border border-[var(--secondary)]"
-                          : clicavel
-                            ? "border border-transparent hover:border-[var(--line)]"
-                            : "border border-transparent"
-                      }`}
-                      style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
-                    >
-                      {completo ? (
-                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
-                          <Icone size={13} className="text-white" aria-hidden="true" />
-                        </span>
-                      ) : (
-                        <span
-                          className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
-                          style={{
-                            border: emAndamento
-                              ? "2px solid var(--secondary)"
-                              : "1px solid var(--line)",
-                          }}
-                        >
-                          <span
-                            className={`font-cabinet text-[12px] ${
-                              emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
-                            }`}
-                          >
-                            {m.n}
-                          </span>
-                        </span>
-                      )}
-                      <span
-                        className={`text-[0.8125rem] leading-tight ${
                           m.n === activeMod
-                            ? "font-semibold text-[var(--secondary-text)]"
-                            : completo || emAndamento
-                              ? "font-medium text-[var(--ink)]"
-                              : bloqueado
-                                ? "text-[var(--muted)]"
-                                : "text-[var(--ink-soft)]"
+                            ? "border border-[var(--secondary)]"
+                            : clicavel
+                              ? "border border-transparent hover:border-[var(--line)]"
+                              : "border border-transparent"
                         }`}
+                        style={{ transitionTimingFunction: "cubic-bezier(0.22,1,0.36,1)" }}
                       >
-                        {m.nome}
-                      </span>
-                      {/* Só o módulo em andamento mostra status. Concluído já se
+                        {completo ? (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--ink)]">
+                            <Icone size={13} className="text-white" aria-hidden="true" />
+                          </span>
+                        ) : (
+                          <span
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--bg)]"
+                            style={{
+                              border: emAndamento
+                                ? "2px solid var(--secondary)"
+                                : "1px solid var(--line)",
+                            }}
+                          >
+                            <span
+                              className={`font-cabinet text-[12px] ${
+                                emAndamento ? "text-[var(--secondary-text)]" : "text-[var(--muted)]"
+                              }`}
+                            >
+                              {m.n}
+                            </span>
+                          </span>
+                        )}
+                        <span
+                          className={`text-[0.8125rem] leading-tight ${
+                            m.n === activeMod
+                              ? "font-semibold text-[var(--secondary-text)]"
+                              : completo || emAndamento
+                                ? "font-medium text-[var(--ink)]"
+                                : bloqueado
+                                  ? "text-[var(--muted)]"
+                                  : "text-[var(--ink-soft)]"
+                          }`}
+                        >
+                          {m.nome}
+                        </span>
+                        {/* Só o módulo em andamento mostra status. Concluído já se
                           distingue pelo ícone preenchido, e repetir "concluído"
                           em até 5 chips só engorda a faixa. */}
-                      {emAndamento ? (
-                        <span className="text-[11px] text-[var(--secondary-text)]">
-                          seção {feitas} de {secoes.length}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
+                        {emAndamento ? (
+                          <span className="text-[11px] text-[var(--secondary-text)]">
+                            seção {feitas} de {secoes.length}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Outputs dos módulos */}
-          <div className="mt-10 space-y-10">
-            {/* Só o que já tem conteúdo e o módulo atual entram por extenso. Os
+            {/* Outputs dos módulos */}
+            <div className="mt-10 space-y-10">
+              {/* Só o que já tem conteúdo e o módulo atual entram por extenso. Os
                   futuros iam por extenso também, e pra quem começa a tela virava
                   seis blocos repetindo "está em branco". */}
-            {MODULOS.filter((m) => m.n <= moduloAtual).map((m) => {
-              const ferramenta = ferramentaDe(m.n);
-              const temAlgo =
-                camposDoLayout(m.n).some((c) => valorDe.has(c)) ||
-                (m.n === 3 && produtos.length > 0) ||
-                (m.n === 6 && metasAtivas.length > 0);
-              const proximo = m.n === moduloAtual;
-              const Icone = MODULO_ICONE[m.n];
-              return (
-                <Reveal key={m.n}>
-                  <section
-                    id={`modulo-${m.n}`}
-                    className="group scroll-mt-24 border-t border-[var(--line)] pt-8"
-                  >
-                    {/* Header do módulo */}
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white transition-[background] duration-200 group-hover:bg-[var(--secondary-light)]">
-                          <Icone size={20} className="text-[var(--ink)]" aria-hidden="true" />
-                        </span>
-                        <div>
-                          {/* O nome do módulo é o rótulo do bloco: sobe pra
+              {MODULOS.filter((m) => m.n <= moduloAtual).map((m) => {
+                const ferramenta = ferramentaDe(m.n);
+                const acesso = acessoDaFerramenta(ferramenta, meta.plano, meta.carregando);
+                const temAlgo =
+                  camposDoLayout(m.n).some((c) => valorDe.has(c)) ||
+                  (m.n === 3 && produtos.length > 0) ||
+                  (m.n === 6 && metasAtivas.length > 0);
+                const proximo = m.n === moduloAtual;
+                const Icone = MODULO_ICONE[m.n];
+                return (
+                  <Reveal key={m.n}>
+                    <section
+                      id={`modulo-${m.n}`}
+                      className="group scroll-mt-24 border-t border-[var(--line)] pt-8"
+                    >
+                      {/* Header do módulo */}
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white transition-[background] duration-200 group-hover:bg-[var(--secondary-light)]">
+                            <Icone size={20} className="text-[var(--ink)]" aria-hidden="true" />
+                          </span>
+                          <div>
+                            {/* O nome do módulo é o rótulo do bloco: sobe pra
                                 <h2> em --ink e o "MÓDULO N" fica como eyebrow. */}
-                          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                            Módulo {m.n}
-                          </p>
-                          <h2 className="font-cabinet mt-1 text-[20px] leading-tight text-[var(--ink)]">
-                            {m.nome}
-                          </h2>
-                          {temAlgo && (
-                            <LinkInterno href={ferramenta.rota} className={`${BTN_MIUDO} mt-2`}>
-                              {ferramenta.nome}
-                              <span aria-hidden="true">→</span>
-                            </LinkInterno>
-                          )}
+                            <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                              Módulo {m.n}
+                            </p>
+                            <h2 className="font-cabinet mt-1 text-[20px] leading-tight text-[var(--ink)]">
+                              {m.nome}
+                            </h2>
+                            {temAlgo && (
+                              <LinkInterno href={acesso.href} className={`${BTN_MIUDO} mt-2`}>
+                                {/* Ferramenta paga no Grátis: cadeado e o plano no
+                                  rótulo, em vez de um link que cai no paywall. */}
+                                {!acesso.liberada && <Lock size={13} aria-hidden="true" />}
+                                {acesso.liberada
+                                  ? ferramenta.nome
+                                  : `${ferramenta.nome} no ${acesso.tituloPlano}`}
+                                <span aria-hidden="true">→</span>
+                              </LinkInterno>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      {temAlgo && (
-                        <LinkInterno
-                          href={`/planejamento/modulo/${m.n}`}
-                          className={`${BTN_MIUDO} shrink-0`}
-                        >
-                          Editar
-                          <span aria-hidden="true">→</span>
-                        </LinkInterno>
-                      )}
-                    </div>
-
-                    {temAlgo ? (
-                      <div className="mt-5">
-                        {(LAYOUT[m.n] ?? []).map((b, i) => (
-                          <BlocoView
-                            key={i}
-                            bloco={b}
-                            val={val}
-                            produtos={produtos}
-                            metasAtivas={metasAtivas}
-                            receitaMes={receitaMes}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-4">
-                        <p className="text-[0.9rem] text-[var(--ink-soft)]">
-                          {proximo
-                            ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
-                            : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
-                        </p>
-                        {/* Concluído mas vazio (respostas perdidas ou puladas):
-                            atalho pra preencher, igual ao do próximo módulo. */}
-                        {(proximo || moduloCompleto(m.n)) && (
+                        {temAlgo && (
                           <LinkInterno
                             href={`/planejamento/modulo/${m.n}`}
-                            className={`${BTN_ACAO} mt-3`}
+                            className={`${BTN_MIUDO} shrink-0`}
                           >
-                            {proximo ? "Começar" : "Preencher"} o Módulo {m.n}
+                            Editar
                             <span aria-hidden="true">→</span>
                           </LinkInterno>
                         )}
                       </div>
-                    )}
-                  </section>
-                </Reveal>
-              );
-            })}
-          </div>
 
-          {/* O que vem depois: uma linha por módulo, em vez de um bloco de
+                      {temAlgo ? (
+                        <div className="mt-5">
+                          {(LAYOUT[m.n] ?? []).map((b, i) => (
+                            <BlocoView
+                              key={i}
+                              bloco={b}
+                              val={val}
+                              produtos={produtos}
+                              metasAtivas={metasAtivas}
+                              receitaMes={receitaMes}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-4">
+                          <p className="text-[0.9rem] text-[var(--ink-soft)]">
+                            {proximo
+                              ? "É por aqui que o negócio ganha forma. Leva uns vinte minutos."
+                              : "Nada preenchido neste módulo ainda. Responde que o resultado aparece aqui."}
+                          </p>
+                          {/* Concluído mas vazio (respostas perdidas ou puladas):
+                            atalho pra preencher, igual ao do próximo módulo. */}
+                          {(proximo || moduloCompleto(m.n)) && (
+                            <LinkInterno
+                              href={`/planejamento/modulo/${m.n}`}
+                              className={`${BTN_ACAO} mt-3`}
+                            >
+                              {proximo ? "Começar" : "Preencher"} o Módulo {m.n}
+                              <span aria-hidden="true">→</span>
+                            </LinkInterno>
+                          )}
+                        </div>
+                      )}
+                    </section>
+                  </Reveal>
+                );
+              })}
+            </div>
+
+            {/* O que vem depois: uma linha por módulo, em vez de um bloco de
                 vazio para cada um. Dá noção de caminho sem simular conteúdo. */}
-          {moduloAtual < TOTAL_MODULOS && (
-            <div className="mt-12 border-t border-[var(--line)] pt-8">
-              <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                O que vem depois
-              </p>
-              <ul className="mt-4 flex list-none flex-col">
-                {MODULOS.filter((m) => m.n > moduloAtual).map((m) => {
-                  const Icone = MODULO_ICONE[m.n];
-                  return (
-                    <li
-                      key={m.n}
-                      className="flex items-center gap-3 border-b border-[var(--line)] py-3 last:border-b-0"
-                    >
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)]">
-                        <Icone size={14} className="text-[var(--muted)]" aria-hidden="true" />
-                      </span>
-                      <span className="text-[14px] text-[var(--ink-soft)]">
-                        Módulo {m.n} · {m.nome}
-                      </span>
-                      <span className="ml-auto shrink-0 text-[12px] text-[var(--muted)]">
-                        abre depois do {m.n - 1}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-
-          {moduloAtual > TOTAL_MODULOS && (
-            <div className="mt-12 rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
-              <p className="text-[1.25rem] leading-snug text-[var(--ink)]">
-                Seu planejamento está completo.
-              </p>
-              <p className="mt-1 text-[0.9rem] text-[var(--ink-soft)]">Agora coloca em prática.</p>
-              <div className="mt-5 flex flex-wrap justify-center gap-2">
-                {[
-                  { rota: "/produtos", nome: "Abrir o Catálogo" },
-                  { rota: "/financeiro", nome: "Abrir o Financeiro" },
-                  { rota: "/metas", nome: "Abrir as Metas" },
-                ].map((f) => (
-                  <LinkInterno key={f.rota} href={f.rota} className={BTN_MIUDO}>
-                    {f.nome}
-                    <span aria-hidden="true">→</span>
-                  </LinkInterno>
-                ))}
+            {moduloAtual < TOTAL_MODULOS && (
+              <div className="mt-12 border-t border-[var(--line)] pt-8">
+                <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                  O que vem depois
+                </p>
+                <ul className="mt-4 flex list-none flex-col">
+                  {MODULOS.filter((m) => m.n > moduloAtual).map((m) => {
+                    const Icone = MODULO_ICONE[m.n];
+                    return (
+                      <li
+                        key={m.n}
+                        className="flex items-center gap-3 border-b border-[var(--line)] py-3 last:border-b-0"
+                      >
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)]">
+                          <Icone size={14} className="text-[var(--muted)]" aria-hidden="true" />
+                        </span>
+                        <span className="text-[14px] text-[var(--ink-soft)]">
+                          Módulo {m.n} · {m.nome}
+                        </span>
+                        <span className="ml-auto shrink-0 text-[12px] text-[var(--muted)]">
+                          abre depois do {m.n - 1}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
-            </div>
-          )}
-        </FadeIn>
-      </div>
+            )}
+
+            {moduloAtual > TOTAL_MODULOS && (
+              <div className="mt-12 rounded-2xl border border-[var(--line)] bg-white p-8 text-center">
+                <p className="text-[1.25rem] leading-snug text-[var(--ink)]">
+                  Seu planejamento está completo.
+                </p>
+                <p className="mt-1 text-[0.9rem] text-[var(--ink-soft)]">
+                  Agora coloca em prática.
+                </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2">
+                  {[
+                    { rota: "/produtos", nome: "Abrir o Catálogo" },
+                    { rota: "/financeiro", nome: "Abrir o Financeiro" },
+                    { rota: "/metas", nome: "Abrir as Metas" },
+                  ].map((f) => {
+                    // O Financeiro é do Premium: no Grátis o botão ganha cadeado
+                    // e leva pro upgrade, em vez de cair no paywall sem aviso.
+                    const liberado = meta.carregando || recursoLiberado(f.rota, meta.plano);
+                    return (
+                      <LinkInterno
+                        key={f.rota}
+                        href={liberado ? f.rota : hrefUpgrade(f.rota)}
+                        className={BTN_MIUDO}
+                      >
+                        {!liberado && <Lock size={13} aria-hidden="true" />}
+                        {liberado
+                          ? f.nome
+                          : `${f.nome} no ${TIERS_PAGOS[tierPagoDaRota(f.rota)].titulo}`}
+                        <span aria-hidden="true">→</span>
+                      </LinkInterno>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </FadeIn>
+        </div>
+      )}
     </PaginaLogada>
   );
 }
@@ -868,11 +954,14 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
   const reduce = usePrefersReducedMotion();
   const shown = useEntrada();
   const cheio = shown || reduce;
-  const custo = produto.preco_custo ?? 0;
-  const margem =
-    produto.preco_venda > 0
-      ? Math.max(0, Math.round(((produto.preco_venda - custo) / produto.preco_venda) * 100))
-      : 0;
+  const precoVenda = Number(produto.preco_venda);
+  // Mesma conta do card de /produtos: custo vazio não vira 0 ("sobram 100%"),
+  // prejuízo aparece como prejuízo (não "0%") e taxa/imposto do breakdown entram.
+  const sobra = sobraDoProduto({
+    precoVenda,
+    precoCusto: produto.preco_custo != null ? Number(produto.preco_custo) : null,
+    breakdown: produto.calculadora_breakdown,
+  });
   const recorrente = /assinatura/i.test(produto.canal ?? "");
   return (
     /* Produto é item comparável, então aqui vale o oposto do bento: mesma
@@ -887,18 +976,39 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
         {produto.canal ? ` · ${produto.canal}` : ""}
       </p>
       <p className="font-cabinet mt-auto pt-4 text-[24px] text-[var(--ink)]">
-        R$ {produto.preco_venda.toLocaleString("pt-BR")}
-        {recorrente && <span className="text-[14px] text-[var(--muted)]">/mês</span>}
+        {precoVenda > 0 ? (
+          <>
+            {fmt(precoVenda)}
+            {recorrente && <span className="text-[14px] text-[var(--muted)]">/mês</span>}
+          </>
+        ) : (
+          <span className="text-[14px] text-[var(--muted)]">preço a definir</span>
+        )}
       </p>
-      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
-        <div
-          className="h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
-          style={{ transform: `scaleX(${cheio ? margem / 100 : 0})` }}
-        />
-      </div>
-      <p className="mt-1.5 text-[12px] text-[var(--muted)]">
-        custo R$ {custo.toLocaleString("pt-BR")} · sobram {margem}%
-      </p>
+      {/* Sem preço não há conta; sem custo, nem barra nem porcentagem. */}
+      {precoVenda > 0 && (
+        <>
+          {sobra && (
+            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
+              <div
+                className="h-full w-full origin-left rounded-full bg-[var(--secondary)] transition-transform duration-200 motion-reduce:transition-none"
+                style={{ transform: `scaleX(${cheio ? sobra.pctBarra / 100 : 0})` }}
+              />
+            </div>
+          )}
+          <p
+            className={`mt-1.5 text-[12px] ${
+              sobra?.prejuizo ? "text-[var(--danger)]" : "text-[var(--muted)]"
+            }`}
+          >
+            {sobra == null
+              ? "sem custo cadastrado · cadastre o custo pra saber quanto sobra"
+              : sobra.prejuizo
+                ? `custo ${fmt(Number(produto.preco_custo))} · prejuízo de ${fmt(-sobra.valor)} por venda`
+                : `custo ${fmt(Number(produto.preco_custo))} · sobram ${sobra.pct}%`}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -976,7 +1086,7 @@ function MetaTrack({
           className="absolute top-6 -translate-x-1/2 whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)]"
           style={{ left: `${pct(agora)}%` }}
         >
-          R$ {agora.toLocaleString("pt-BR")} agora
+          {fmt(agora)} agora
         </span>
       </div>
       <div className={`grid grid-cols-1 gap-3 ${GRID_COLS_SM[marcas.length] ?? "sm:grid-cols-3"}`}>
@@ -1058,8 +1168,7 @@ function GoalRow({
   const shown = useEntrada();
   const cheio = shown || reduce;
   const pct = alvo > 0 ? Math.min(100, Math.round((atual / alvo) * 100)) : 0;
-  const fmt = (v: number) =>
-    formato === "moeda" ? `R$ ${v.toLocaleString("pt-BR")}` : v.toLocaleString("pt-BR");
+  const formatar = (v: number) => (formato === "moeda" ? fmt(v) : v.toLocaleString("pt-BR"));
   return (
     <div className="mb-4 flex items-center gap-4 last:mb-0">
       <span className="w-[130px] shrink-0 text-[14px] text-[var(--ink-soft)] sm:w-[220px]">
@@ -1072,7 +1181,7 @@ function GoalRow({
         />
       </span>
       <span className="w-[110px] shrink-0 text-right text-[13px] tabular-nums text-[var(--ink-soft)]">
-        {fmt(atual)} de {fmt(alvo)}
+        {formatar(atual)} de {formatar(alvo)}
       </span>
     </div>
   );

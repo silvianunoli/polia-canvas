@@ -126,17 +126,17 @@ const CATEGORIAS = [
       {
         pergunta: "Adicionar um cliente",
         resposta:
-          "No módulo Clientes, clique em novo cliente e preencha os dados de contato. Depois é só vincular os produtos ou serviços que essa pessoa comprou.",
+          "Clientes é do plano Premium. No módulo, clique em adicionar cliente e preencha o contato, o produto ou serviço pedido, o valor e o status do pedido.",
       },
       {
-        pergunta: "Acompanhar quem está chegando",
+        pergunta: "Acompanhar os pedidos",
         resposta:
-          "A lista de Clientes mostra todo mundo cadastrado, com o status de cada um. Dá pra ver de relance quem já comprou e quem ainda está em conversa.",
+          "No plano Premium, a lista de Clientes mostra cada pedido com o status dele: Em espera, Em produção, Entregue ou Atrasado. Dá pra ver de relance o que está parado, o que está saindo e o que já foi entregue.",
       },
       {
         pergunta: "Exportar a minha lista",
         resposta:
-          "Direto no módulo Clientes tem a opção de exportar a lista completa em planilha, pra quem precisa levar esse dado pra outro lugar.",
+          "No módulo Clientes, do plano Premium, o botão Exportar CSV baixa a lista completa em planilha, pra quem precisa levar esse dado pra outro lugar.",
       },
     ],
   },
@@ -147,17 +147,17 @@ const CATEGORIAS = [
       {
         pergunta: "Registrar uma venda",
         resposta:
-          "Marque a entrega no módulo Clientes: quando o produto ou serviço sai, a venda entra sozinha no Financeiro. Não precisa lançar de novo em outro lugar.",
+          "No plano Grátis, a venda entra pelo Painel, em registrar entrada: uma linha por venda. No Premium, dá pra lançar direto no Financeiro, ou marcar o pedido como Entregue em Clientes e registrar a venda no Financeiro com um clique, sem digitar de novo.",
       },
       {
         pergunta: "Entender o resumo do mês",
         resposta:
-          "O Financeiro mostra entradas, saídas e o que sobrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
+          "No plano Grátis, o Painel mostra o que entrou e o que saiu no mês. No Premium, o Financeiro mostra entradas, saídas e o que sobrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
       },
       {
         pergunta: "De onde vêm esses valores",
         resposta:
-          "Todo valor no Financeiro e no Painel nasce de uma venda registrada em Clientes ou de um preço definido em Produtos. Nada ali é estimativa solta.",
+          "Do que foi registrado. Cada entrada e saída do Painel e do Financeiro é lançada à mão ou vem de uma venda registrada a partir de um pedido entregue em Clientes. As referências do mês vêm do Planejamento. Nada ali é estimativa solta.",
       },
     ],
   },
@@ -183,7 +183,7 @@ const CATEGORIAS = [
       {
         pergunta: "Como funciona a cobrança",
         resposta:
-          "Cartão e boleto cobram todo mês ou todo ano, dependendo do ciclo escolhido. Pix só está disponível no plano anual, como pagamento único.",
+          "Os planos pagos são assinatura, no cartão (ou no Apple Pay, quando o aparelho tem). A cobrança se repete todo mês ou todo ano, conforme o ciclo escolhido na hora de assinar. O plano Grátis não pede cartão.",
       },
     ],
   },
@@ -354,7 +354,7 @@ function AjudaPage() {
               <p className="mt-6 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
                 Respostas curtas e diretas pra entender a Pólia e seguir com o negócio, sem tutorial
                 de dez minutos pra descobrir onde clicar. Não encontrou o que precisava? Fala com a
-                gente.
+                Pólia.
               </p>
               <form
                 role="search"
@@ -534,7 +534,7 @@ function AjudaPage() {
                         Tempo de resposta
                       </p>
                       <p className="mt-2 text-[var(--ink-soft)]">
-                        Respondemos em até 24 horas úteis.
+                        A Pólia responde em até 24 horas úteis.
                       </p>
                     </div>
                   </div>
@@ -725,7 +725,8 @@ function AjudaPage() {
                 </h2>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
                   A Pólia começa ajudando você a reconhecer o que a marca realmente vale, e a cobrar
-                  de acordo. No plano Grátis, você já pode começar, sem cartão de crédito.
+                  de acordo. O plano Grátis já abre o Planejamento e a calculadora de preço, sem
+                  cartão de crédito.
                 </p>
                 <div className="mt-8">
                   <Link

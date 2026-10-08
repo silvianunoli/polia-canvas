@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,7 +22,19 @@ type CicloId = "mensal" | "anual";
 
 interface AssinarSearch {
   plano?: TierId;
+  // "onboarding": veio do fim do onboarding e vê o "ÚLTIMO PASSO". Quem chega
+  // da /upgrade no meio do uso ou com a conta cancelada vê um título neutro.
+  de?: "onboarding";
+  // Volta do Stripe depois de um meio de pagamento com redirecionamento
+  // (confirmParams.return_url do AssinaturaCheckout). O Stripe acrescenta
+  // redirect_status=succeeded|processing|failed.
+  redirect_status?: string;
 }
+
+// Status em que a conta já tem o plano pago gravado (ver webhook).
+const PLANOS_PAGOS = ["controle", "projete"];
+const ESPERA_PLANO_MS = 20_000;
+const INTERVALO_PLANO_MS = 1_000;
 
 const TIERS = TIERS_PAGOS;
 
@@ -39,6 +51,9 @@ export const Route = createFileRoute("/_authenticated/assinar")({
   }),
   validateSearch: (search: Record<string, unknown>): AssinarSearch => ({
     plano: search.plano === "controle" || search.plano === "projete" ? search.plano : undefined,
+    de: search.de === "onboarding" ? "onboarding" : undefined,
+    redirect_status:
+      typeof search.redirect_status === "string" ? search.redirect_status : undefined,
   }),
   beforeLoad: async ({ search }) => {
     if (typeof window === "undefined") return;
@@ -60,7 +75,17 @@ export const Route = createFileRoute("/_authenticated/assinar")({
     // Stripe), não aqui. Antes ia pro Painel e parecia que o botão não fazia
     // nada (QA-06).
     if (plano === "controle" && search.plano === "projete") {
-      throw redirect({ to: "/upgrade", search: { tier: "projete" } });
+      // Com assinatura ativa, a troca é no portal (via /upgrade). Premium
+      // liberado pela Pólia, sem assinatura no Stripe, compra o Pro aqui.
+      const { data: assinatura } = await supabase
+        .from("assinaturas" as never)
+        .select("status")
+        .eq("user_id", sess.session.user.id)
+        .maybeSingle();
+      const status = (assinatura as { status: string } | null)?.status;
+      const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
+      if (ativa) throw redirect({ to: "/upgrade", search: { tier: "projete" } });
+      return;
     }
     const jaTemAcessoPago = ehBeta(plano) || tierDoPlano(plano) === "controle";
     if (jaTemAcessoPago) throw redirect({ to: "/painel" });
@@ -81,6 +106,76 @@ function AssinarPage() {
   const [planoIniciando, setPlanoIniciando] = useState<PlanoAssinatura | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [planoNoCheckout, setPlanoNoCheckout] = useState<PlanoAssinatura | null>(null);
+  const [ativando, setAtivando] = useState(false);
+  const desmontou = useRef(false);
+  useEffect(() => {
+    // Volta pra false na remontagem do StrictMode (dev), senão a espera parava.
+    desmontou.current = false;
+    return () => {
+      desmontou.current = true;
+    };
+  }, []);
+
+  // Depois do pagamento, quem libera o plano é o webhook do Stripe, que chega
+  // segundos depois. Antes a tela ia direto pro Painel com o useUserMeta ainda
+  // em cache (Grátis, staleTime 60s) e os cadeados não abriam por até 1 minuto
+  // (08/10/2026). Agora espera profiles.plano virar pago (até 20s), invalida o
+  // cache e só então vai pro Painel.
+  const ativarPlano = useCallback(
+    async (tierComprado: TierId | null) => {
+      setAtivando(true);
+      const liberou = (plano: string | null | undefined) => {
+        if (!plano || !PLANOS_PAGOS.includes(plano)) return false;
+        // Comprou o Pro: o Premium que ela já tinha não conta como liberado.
+        return tierComprado !== "projete" || plano === "projete";
+      };
+      const limite = Date.now() + ESPERA_PLANO_MS;
+      let pronto = false;
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const userId = sess.session?.user.id;
+        while (userId && !desmontou.current && Date.now() < limite) {
+          const { data } = await supabase
+            .from("profiles")
+            .select("plano")
+            .eq("id", userId)
+            .maybeSingle();
+          if (liberou((data as { plano?: string | null } | null)?.plano)) {
+            pronto = true;
+            break;
+          }
+          await new Promise((r) => window.setTimeout(r, INTERVALO_PLANO_MS));
+        }
+      } catch {
+        // Leitura falhou: o pagamento já entrou, segue pro Painel com o aviso.
+      }
+      if (desmontou.current) return;
+      // Prefixo ["user-meta"] pega a chave ["user-meta", userId] do useUserMeta.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["user-meta"] }),
+        queryClient.invalidateQueries({ queryKey: ["assinatura-status"] }),
+      ]);
+      if (pronto) toastSucesso("Pagamento confirmado. Bem-vinda à Pólia One.");
+      else toastSucesso("O pagamento entrou. O plano libera em instantes.");
+      navigate({ to: "/painel" });
+    },
+    [navigate, queryClient],
+  );
+
+  // Volta de um meio de pagamento com redirecionamento (return_url): mesmo
+  // caminho de ativação. "failed" fica na tela, pra tentar de novo.
+  const statusRetorno = search.redirect_status;
+  const retornoTratado = useRef(false);
+  useEffect(() => {
+    if (retornoTratado.current) return;
+    if (statusRetorno === "succeeded" || statusRetorno === "processing") {
+      retornoTratado.current = true;
+      void ativarPlano(search.plano ?? null);
+    } else if (statusRetorno === "failed") {
+      retornoTratado.current = true;
+      toastErro("O pagamento não foi confirmado. Tenta de novo ou usa outro cartão.");
+    }
+  }, [statusRetorno, search.plano, ativarPlano]);
 
   const assinar = async (tier: TierId) => {
     const plano: PlanoAssinatura = `${tier}_${ciclo}`;
@@ -106,18 +201,42 @@ function AssinarPage() {
     }
   };
 
+  if (ativando) {
+    return (
+      <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
+        <div role="status" aria-live="polite" className="max-w-[420px] text-center">
+          <h1 className="font-cabinet text-[28px] leading-tight text-[var(--ink)]">
+            Ativando o plano...
+          </h1>
+          <p className="mt-3 font-sans text-[15px] text-[var(--ink-soft)]">
+            O pagamento entrou. A Pólia One está liberando o plano na sua conta, leva só alguns
+            segundos.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // "ÚLTIMO PASSO / O seu negócio já está montado" só faz sentido no fim do
+  // onboarding. Quem chega da /upgrade no meio do uso ou com a conta cancelada
+  // vê um título neutro (08/10/2026).
+  const vemDoOnboarding = search.de === "onboarding";
+
   return (
     <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
       <div className="w-full max-w-[1000px]">
-        <p className="mb-2 text-center text-[10px] font-accent font-bold uppercase tracking-[2px] text-[var(--muted)]">
-          ÚLTIMO PASSO
-        </p>
+        {vemDoOnboarding && (
+          <p className="mb-2 text-center text-[10px] font-accent font-bold uppercase tracking-[2px] text-[var(--muted)]">
+            ÚLTIMO PASSO
+          </p>
+        )}
         <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
           Escolha seu plano
         </h1>
         <p className="mb-8 text-center font-sans text-[16px] text-[var(--ink-soft)]">
-          O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o
-          pagamento entra.
+          {vemDoOnboarding
+            ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
+            : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
         </p>
 
         {/* Ciclo mensal/anual */}
@@ -200,10 +319,15 @@ function AssinarPage() {
               });
             }
             setClientSecret(null);
-            toastSucesso("Pagamento confirmado. Bem-vinda à Pólia One.");
-            queryClient.invalidateQueries({ queryKey: ["assinatura-status"] });
-            navigate({ to: "/painel" });
+            // Espera o webhook liberar o plano antes de ir pro Painel (ver
+            // ativarPlano). O tier vem da chave do plano: "projete_anual" -> "projete".
+            void ativarPlano(planoNoCheckout ? (planoNoCheckout.split("_")[0] as TierId) : null);
           }}
+          returnUrl={
+            typeof window !== "undefined" && planoNoCheckout
+              ? `${window.location.origin}/assinar?plano=${planoNoCheckout.split("_")[0]}`
+              : undefined
+          }
         />
       )}
     </div>

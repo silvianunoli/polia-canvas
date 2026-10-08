@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, SerifHeadline } from "@/components/cosmic/AuthShell";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
+import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
+import { sessaoEhDoEmail } from "@/lib/signup";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -39,6 +41,7 @@ function VerificacaoPage() {
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
   const captcha = useCaptcha();
+  const captchaPronto = useCaptchaPronto(captcha);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -46,19 +49,22 @@ function VerificacaoPage() {
     return () => clearTimeout(t);
   }, [cooldown]);
 
+  // Confirmou o e-mail em outra aba: esta segue sozinha. Só com a sessão de
+  // QUEM está nesta tela: com A logada no mesmo navegador, voltar pra aba
+  // dispara SIGNED_IN com a sessão de A, e a tela levava B pra conta de A.
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) {
+      if (event === "SIGNED_IN" && session && sessaoEhDoEmail(session.user.email, email)) {
         navigate({ to: "/onboarding" });
       }
     });
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, email]);
 
   async function handleResend() {
-    if (!email || cooldown > 0) return;
+    if (!email || cooldown > 0 || !captchaPronto) return;
     setResending(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -96,14 +102,16 @@ function VerificacaoPage() {
           <button
             type="button"
             onClick={handleResend}
-            disabled={!email || cooldown > 0 || resending}
-            className="py-2 px-1 text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+            disabled={!email || cooldown > 0 || resending || !captchaPronto}
+            className="inline-flex min-h-11 items-center px-1 text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
           >
             {cooldown > 0
               ? `Pode pedir outro em ${cooldown}s`
               : resending
                 ? "Enviando..."
-                : "Reenviar o link"}
+                : email && !captchaPronto
+                  ? "Conferindo..."
+                  : "Reenviar o link"}
           </button>
         </p>
         <div className="mt-2 flex justify-center">

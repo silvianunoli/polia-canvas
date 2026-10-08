@@ -99,6 +99,25 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
 
 const STATUS_ATIVOS = new Set(["active", "past_due", "trialing"]);
 
+export const ERRO_INICIAR_ASSINATURA =
+  "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.";
+export const ERRO_JA_TEM_ASSINATURA_NO_STRIPE =
+  "A Pólia One já encontrou uma assinatura ativa nessa conta.";
+
+// Janela das chaves de idempotência (10 min): dois cliques seguidos no mesmo
+// plano caem na mesma chave e o Stripe devolve o MESMO customer/assinatura em
+// vez de criar dois (PAY 08/10/2026).
+const JANELA_IDEMPOTENCIA_MS = 10 * 60 * 1000;
+function janelaIdempotencia(): number {
+  return Math.floor(Date.now() / JANELA_IDEMPOTENCIA_MS);
+}
+
+// Erro 404 do Stripe ("No such subscription"): a assinatura não existe mais lá.
+function ehRecursoInexistente(err: unknown): boolean {
+  const e = err as { code?: string; statusCode?: number } | null;
+  return e?.code === "resource_missing" || e?.statusCode === 404;
+}
+
 const iniciarAssinaturaInput = z.object({
   plano: z.enum(["controle_mensal", "controle_anual", "projete_mensal", "projete_anual"]),
 });
@@ -112,38 +131,106 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       return { clientSecret: null, error: "Você já tem uma assinatura ativa." };
     }
 
-    const stripe = stripeClient();
-    const priceId = precoParaPlano(data.plano);
-
-    // Tentativa anterior abandonada (janela de pagamento fechada sem pagar):
-    // cancela antes de abrir outra, senão cada clique deixa uma assinatura
-    // incompleta solta no Stripe. O webhook ignora o cancelamento de quem
-    // nunca pagou (sem e-mail, sem mexer no plano).
-    if (existente?.status === "incomplete" && existente.stripe_subscription_id) {
-      try {
-        await stripe.subscriptions.cancel(existente.stripe_subscription_id);
-      } catch (err) {
-        console.error("[Stripe] Falha ao cancelar tentativa anterior incompleta:", err);
-      }
-    }
-
+    // stripeClient()/precoParaPlano() jogam quando falta segredo no ambiente.
+    // Dentro do try a usuária vê a mensagem da Pólia One (não o erro técnico) e
+    // o alerta checkout_erro avisa que é configuração.
     try {
+      const stripe = stripeClient();
+      const priceId = precoParaPlano(data.plano);
+
+      // Tentativa anterior abandonada (janela de pagamento fechada sem pagar):
+      // cancela antes de abrir outra, senão cada clique deixa uma assinatura
+      // incompleta solta no Stripe. O webhook ignora o cancelamento de quem
+      // nunca pagou (sem e-mail, sem mexer no plano).
+      //
+      // DINHEIRO (08/10/2026): o "incomplete" é o status LOCAL, que só muda
+      // quando o webhook chega. Se ela pagou e o webhook atrasou, cancelar aqui
+      // derrubava uma assinatura paga. Agora confere no Stripe antes: só cancela
+      // o que lá ainda está sem pagamento.
+      if (existente?.status === "incomplete" && existente.stripe_subscription_id) {
+        let statusNoStripe: string | null = null;
+        try {
+          const anterior = await stripe.subscriptions.retrieve(existente.stripe_subscription_id);
+          statusNoStripe = anterior.status;
+          if (STATUS_ATIVOS.has(anterior.status)) {
+            // Já pagou: não cancela nem abre outra. Espelha o estado real na
+            // linha local (o webhook confirma o plano quando chegar; se ele
+            // não chegar, a linha já não deixa abrir uma segunda cobrança).
+            const item = anterior.items.data[0];
+            const { error: erroEspelho } = await supabaseAdmin
+              .from("assinaturas" as never)
+              .update({
+                status: anterior.status,
+                price_id: item?.price?.id ?? existente.price_id,
+                current_period_end: item
+                  ? new Date(item.current_period_end * 1000).toISOString()
+                  : existente.current_period_end,
+                cancel_at_period_end: anterior.cancel_at_period_end,
+              } as never)
+              .eq("user_id", context.userId);
+            if (erroEspelho) {
+              console.error("[Stripe] Falha ao espelhar assinatura já paga:", erroEspelho);
+            }
+            void dispararAlerta(
+              "checkout_assinatura_paga_sem_webhook",
+              "Assinatura paga no Stripe ainda marcada como incompleta no banco",
+              { userId: context.userId, assinatura: anterior.id, status: anterior.status },
+            );
+            return { clientSecret: null, error: ERRO_JA_TEM_ASSINATURA_NO_STRIPE };
+          }
+        } catch (err) {
+          if (!ehRecursoInexistente(err)) {
+            // Sem saber o estado real, não cancela (pode estar paga) e não abre
+            // outra (pode virar cobrança dupla). Ela tenta de novo.
+            console.error("[Stripe] Falha ao conferir a tentativa anterior:", err);
+            void dispararAlerta("checkout_erro", "Erro ao conferir assinatura anterior (checkout)", {
+              mensagem: err instanceof Error ? err.message : String(err),
+            });
+            return { clientSecret: null, error: ERRO_INICIAR_ASSINATURA };
+          }
+          // Não existe mais no Stripe: nada a cancelar, segue.
+        }
+        if (statusNoStripe === "incomplete") {
+          try {
+            await stripe.subscriptions.cancel(existente.stripe_subscription_id);
+          } catch (err) {
+            console.error("[Stripe] Falha ao cancelar tentativa anterior incompleta:", err);
+          }
+        }
+      }
+
+      const janela = janelaIdempotencia();
       const customerId =
         existente?.stripe_customer_id ??
         (
-          await stripe.customers.create({
-            email: typeof context.claims.email === "string" ? context.claims.email : undefined,
-            metadata: { user_id: context.userId },
-          })
+          await stripe.customers.create(
+            {
+              email: typeof context.claims.email === "string" ? context.claims.email : undefined,
+              metadata: { user_id: context.userId },
+            },
+            // Sem o plano na chave: trocar de plano no meio não cria 2 customers.
+            { idempotencyKey: `polia-cliente-${context.userId}-${janela}` },
+          )
         ).id;
 
-      const subscription = await stripe.subscriptions.create({
-        customer: customerId,
-        items: [{ price: priceId }],
-        payment_behavior: "default_incomplete",
-        payment_settings: { save_default_payment_method: "on_subscription" },
-        expand: ["latest_invoice"],
-      });
+      const subscription = await stripe.subscriptions.create(
+        {
+          customer: customerId,
+          items: [{ price: priceId }],
+          payment_behavior: "default_incomplete",
+          payment_settings: { save_default_payment_method: "on_subscription" },
+          expand: ["latest_invoice"],
+        },
+        {
+          // A assinatura anterior entra na chave: clique duplo (mesma linha
+          // lida) reaproveita a mesma; fechar o pagamento e tentar de novo
+          // (linha já aponta pra tentativa cancelada acima) gera chave nova.
+          // Sem isso, o Stripe devolveria a tentativa recém-cancelada.
+          idempotencyKey: `polia-assinatura-${context.userId}-${data.plano}-${
+            existente?.stripe_subscription_id ?? "nenhuma"
+          }-${janela}`,
+        },
+      );
 
       const { error: upsertError } = await supabaseAdmin.from("assinaturas" as never).upsert(
         {
@@ -161,10 +248,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       );
       if (upsertError) {
         console.error("[Stripe] Falha ao salvar assinatura local:", upsertError);
-        return {
-          clientSecret: null,
-          error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
-        };
+        return { clientSecret: null, error: ERRO_INICIAR_ASSINATURA };
       }
 
       const invoice = subscription.latest_invoice;
@@ -185,10 +269,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       void dispararAlerta("checkout_erro", "Erro ao criar assinatura (checkout)", {
         mensagem: err instanceof Error ? err.message : String(err),
       });
-      return {
-        clientSecret: null,
-        error: "A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.",
-      };
+      return { clientSecret: null, error: ERRO_INICIAR_ASSINATURA };
     }
   });
 
@@ -232,7 +313,7 @@ export const abrirPortalCobranca = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const assinatura = await lerAssinatura(context.userId);
     if (!assinatura?.stripe_customer_id) {
-      return { url: null, error: "Não encontramos uma cobrança sua pra gerenciar." };
+      return { url: null, error: "A Pólia One não encontrou uma cobrança sua pra gerenciar." };
     }
 
     try {
@@ -281,7 +362,20 @@ export const abrirTrocaDePlano = createServerFn({ method: "POST" })
         error: "A Pólia One não encontrou uma assinatura ativa pra trocar de plano.",
       };
     }
-    const stripe = stripeClient();
+    const erroTroca = {
+      url: null,
+      error: "A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.",
+    };
+    // Fora do try, a falta de STRIPE_SECRET_KEY subia como erro técnico pra tela.
+    let stripe: Stripe;
+    try {
+      stripe = stripeClient();
+    } catch (err) {
+      void dispararAlerta("portal_troca_plano_erro", "Stripe sem configuração na troca de plano", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
+      return erroTroca;
+    }
     try {
       const session = await stripe.billingPortal.sessions.create({
         customer: assinatura.stripe_customer_id,
@@ -313,10 +407,7 @@ export const abrirTrocaDePlano = createServerFn({ method: "POST" })
     } catch (err) {
       console.error("[Stripe] Erro ao abrir portal pra troca de plano:", err);
     }
-    return {
-      url: null,
-      error: "A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.",
-    };
+    return erroTroca;
   });
 
 export const cancelarAssinatura = createServerFn({ method: "POST" })

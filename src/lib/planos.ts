@@ -49,6 +49,15 @@ export function tierPagoDaRota(pathname: string): TierPago {
 }
 
 /**
+ * Link da tela de upgrade já com o plano que a rota exige (Pro pra Raio-x,
+ * Projeção e Plano de conteúdo; Premium pro resto). Com "controle" fixo, a
+ * usuária do Grátis via "Recurso do plano Premium" numa tela do Pro.
+ */
+export function hrefUpgrade(rota: string): string {
+  return `/upgrade?rota=${encodeURIComponent(rota)}&tier=${tierPagoDaRota(rota)}`;
+}
+
+/**
  * Direito de USO da tela, não só de entrar nela: soma a trava de rota (tier) com
  * o portão Pro de dentro da página. É o que a navegação deve consultar pra
  * decidir se mostra cadeado — `rotaLiberada` sozinha diz que /raiox está livre
@@ -173,8 +182,8 @@ export const TIERS_PAGOS: Record<
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
       "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto sobra",
       "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
-      "Clientes com o status de cada pedido, do orçamento à entrega",
-      "Quadros ilimitados no Planner",
+      "Clientes com o status de cada pedido, da espera à entrega",
+      "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",
     ],
     destaque: true,
   },
@@ -186,7 +195,8 @@ export const TIERS_PAGOS: Record<
       "Tudo do Premium, mais:",
       "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
       "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Plano de conteúdo do ano: uma ideia de post por dia, pronta pro seu tipo de negócio",
+      "Calculadora de encomenda sob medida",
+      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
       "Resumo do mês pro contador, em PDF e CSV",
     ],
   },

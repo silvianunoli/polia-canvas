@@ -17,8 +17,9 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
-import { fmt as fmtCentavos } from "@/components/produtos/tipos";
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
+import { formatarReais, percentualDe } from "@/lib/formatarReais";
+import { numerosDoMes } from "@/lib/numerosDoMes";
 import { temProjete } from "@/lib/planos";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
@@ -73,11 +74,10 @@ interface MetaMesRow {
 }
 
 // Valor redondo sem centavos ("R$ 3.000", cabe nos cards de 32px); com
-// centavos, sempre duas casas: antes um mês com R$ 44,10 aparecia "R$ 44,1".
-function fmt(v: number) {
-  const casas = Number.isInteger(Math.round(v * 100) / 100) ? 0 : 2;
-  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: 2 })}`;
-}
+// centavos, sempre duas casas. Formatador único do app desde 08/10/2026
+// (o Painel arredondava pra inteiro e mostrava outro número pro mesmo mês).
+const fmt = formatarReais;
+const fmtCentavos = formatarReais;
 
 function fmtData(iso: string) {
   // iso = "YYYY-MM-DD"
@@ -214,17 +214,12 @@ function FinanceiroPage() {
   const initial = (user?.user_metadata?.full_name ?? user?.email ?? "P").charAt(0).toUpperCase();
 
   // ── Computado: mês corrente ──
-  const { entradas, saidas } = useMemo(() => {
-    if (!clientReady) return { entradas: 0, saidas: 0 };
-    let e = 0;
-    let s = 0;
-    for (const l of lancamentos) {
-      if (!l.data || !ehMesAtual(l.data)) continue;
-      if (l.tipo === "entrada") e += Number(l.valor);
-      else if (l.tipo === "saida") s += Number(l.valor);
-    }
-    return { entradas: e, saidas: s };
-  }, [lancamentos, clientReady]);
+  // Mesma conta do Painel e do "atual" da Meta do mês em Metas (numerosDoMes).
+  const { entradas, saidas, numEntradasMes } = useMemo(() => {
+    if (!clientReady) return { entradas: 0, saidas: 0, numEntradasMes: 0 };
+    const n = numerosDoMes(lancamentos, anoAtual, mesAtual);
+    return { entradas: n.entradas, saidas: n.saidas, numEntradasMes: n.registrosDeEntrada };
+  }, [lancamentos, clientReady, anoAtual, mesAtual]);
 
   const lucro = entradas - saidas;
 
@@ -232,8 +227,6 @@ function FinanceiroPage() {
     if (!clientReady) return [];
     return lancamentos.filter((l) => l.data && ehMesAtual(l.data));
   }, [lancamentos, clientReady]);
-
-  const numEntradasMes = lancamentosMes.filter((l) => l.tipo === "entrada").length;
 
   const maiorSaidaCategoria = useMemo(() => {
     let maior: Lancamento | null = null;
@@ -244,7 +237,8 @@ function FinanceiroPage() {
     return maior?.categoria || (maior ? "Outros" : null);
   }, [lancamentosMes]);
 
-  const margemPct = entradas > 0 ? Math.round((lucro / entradas) * 100) : 0;
+  // Mesma regra do Painel: mês que gastou mais do que entrou mostra o negativo.
+  const margemPct = percentualDe(lucro, entradas);
 
   // ── Marcas da régua (leitura, vêm do Módulo 4 do Planejamento) ──
   // "mês bom" (financeiro.meta_boa) não entra aqui: é a própria Meta do mês,
@@ -396,7 +390,7 @@ function FinanceiroPage() {
         ) : (
           <Link
             to="/upgrade"
-            search={{ rota: "/financeiro", tier: "projete" }}
+            search={{ rota: "/financeiro/resumo", tier: "projete" }}
             className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
           >
             <Lock size={14} aria-hidden="true" />
@@ -415,7 +409,11 @@ function FinanceiroPage() {
             <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
               {fmt(entradas)}
             </p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">{numEntradasMes} registros</p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">
+              {numEntradasMes === 0
+                ? "nenhuma entrada ainda"
+                : `${numEntradasMes} ${numEntradasMes === 1 ? "registro" : "registros"}`}
+            </p>
           </div>
 
           <div className="rounded-xl border border-[var(--line)] bg-white p-5">
@@ -454,8 +452,13 @@ function FinanceiroPage() {
           {metaAlvo <= 0 ? (
             <p className="mt-6 text-[14px] text-[var(--ink-soft)]">
               Ainda sem Meta do mês ativa.{" "}
-              <LinkInterno href="/metas" className="text-[var(--secondary-text)] hover:underline">
-                Criar em Metas →
+              {/* A régua acha a meta pelo nome exato "Meta do mês": o link abre
+                  em Metas o atalho que já cria com esse nome e em R$. */}
+              <LinkInterno
+                href="/metas?criar=meta-do-mes"
+                className="inline-flex min-h-11 items-center text-[var(--secondary-text)] hover:underline"
+              >
+                Criar a Meta do mês →
               </LinkInterno>
             </p>
           ) : (
@@ -466,7 +469,7 @@ function FinanceiroPage() {
               aria-valuemin={0}
               aria-valuemax={100}
               aria-label="Progresso da Meta do mês"
-              aria-valuetext={`${fmt(Math.round(entradas))} de ${fmt(metaAlvo)}, ${Math.round(metaPct)}% da meta`}
+              aria-valuetext={`${fmt(entradas)} de ${fmt(metaAlvo)}, ${Math.round(metaPct)}% da meta`}
             >
               {/* O corte fica só no preenchimento: no trilho, cortava os rótulos
                   das marcas e o selo de "entraram até aqui", que moram fora dele. */}
@@ -505,7 +508,7 @@ function FinanceiroPage() {
                 }`}
                 style={{ left: `${Math.min(100, metaPct)}%` }}
               >
-                {fmt(Math.round(entradas))} entraram até aqui
+                {fmt(entradas)} entraram até aqui
               </span>
             </div>
           )}
@@ -706,7 +709,8 @@ function FinanceiroPage() {
         textoConfirmar="Excluir"
         destrutivo
         carregando={excluindoLancamento}
-        onConfirmar={() => void confirmarExcluirLancamento()}
+        textoCarregando="Excluindo…"
+        onConfirmar={confirmarExcluirLancamento}
       />
     </PaginaLogada>
   );
@@ -788,12 +792,14 @@ function ModalRegistrarVendaProduto({
   const produtosQuery = useQuery({
     queryKey: ["produtos-venda-rapida", userId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("produtos")
         .select("id, nome, preco_venda, preco_custo, calculadora_breakdown")
         .eq("user_id", userId)
         .eq("arquivado", false)
         .order("nome");
+      // Leitura que falha não pode virar "Ainda não tem produto no catálogo".
+      if (error) throw error;
       return (data ?? []) as unknown as ProdutoVenda[];
     },
   });
@@ -814,7 +820,7 @@ function ModalRegistrarVendaProduto({
     : null;
 
   const salvar = async () => {
-    if (!produto || semPreco) return;
+    if (!produto || semPreco || !data) return;
     setSalvando(true);
     setErro(null);
     const { error } = await supabase.from("lancamentos").insert({
@@ -859,7 +865,7 @@ function ModalRegistrarVendaProduto({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando || !produto || semPreco}
+            disabled={salvando || !produto || semPreco || !data}
             className={BTN_ACAO}
           >
             {salvando ? "Registrando..." : "Registrar venda"}
@@ -869,6 +875,13 @@ function ModalRegistrarVendaProduto({
     >
       {produtosQuery.isLoading ? (
         <p className="py-6 text-center text-[14px] text-[var(--muted)]">Carregando produtos…</p>
+      ) : produtosQuery.isError ? (
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu ler os seus produtos agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void produtosQuery.refetch()}
+          />
+        </div>
       ) : produtos.length === 0 ? (
         <p className="py-6 text-[14px] text-[var(--ink-soft)]">
           Ainda não tem produto no catálogo.{" "}
@@ -897,7 +910,7 @@ function ModalRegistrarVendaProduto({
           </div>
 
           <div className="mb-4">
-            <Campo label="Data">
+            <Campo label="Data" required error={!data ? "Falta a data" : undefined}>
               <input
                 type="date"
                 value={data}

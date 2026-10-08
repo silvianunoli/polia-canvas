@@ -14,9 +14,13 @@ export const requireSupabaseAuth = createMiddleware({ type: "function" }).server
         ...(!SUPABASE_URL ? ["SUPABASE_URL"] : []),
         ...(!SUPABASE_PUBLISHABLE_KEY ? ["SUPABASE_PUBLISHABLE_KEY"] : []),
       ];
-      const message = `Missing Supabase environment variable(s): ${missing.join(", ")}. Connect Supabase in Lovable Cloud.`;
-      console.error(`[Supabase] ${message}`);
-      throw new Error(message);
+      // Detalhe técnico só no log do servidor. Pra tela vai frase neutra em
+      // pt-BR: o texto antigo ("Connect Supabase in Lovable Cloud") vazava
+      // em inglês pra usuária.
+      console.error(
+        `[Supabase] Variável de ambiente ausente no servidor: ${missing.join(", ")}.`,
+      );
+      throw new Error("A Pólia One não conseguiu confirmar a sua sessão. Entra de novo.");
     }
 
     const request = getRequest();

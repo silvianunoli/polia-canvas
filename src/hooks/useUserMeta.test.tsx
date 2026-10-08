@@ -53,9 +53,15 @@ interface MockData {
   } | null;
   tarefas?: { status: string; updated_at: string }[];
   presencas?: { data: string }[];
+  profileError?: { message: string } | null;
 }
 
-function setupSupabaseMocks({ profile = null, tarefas = [], presencas = [] }: MockData = {}) {
+function setupSupabaseMocks({
+  profile = null,
+  tarefas = [],
+  presencas = [],
+  profileError = null,
+}: MockData = {}) {
   onAuthStateChangeMock.mockImplementation(() => ({
     data: { subscription: { unsubscribe: vi.fn() } },
   }));
@@ -64,7 +70,7 @@ function setupSupabaseMocks({ profile = null, tarefas = [], presencas = [] }: Mo
   const upsertMock = vi.fn(() => Promise.resolve({ error: null }));
 
   fromMock.mockImplementation((table: string) => {
-    if (table === "profiles") return chainWithMaybeSingle({ data: profile });
+    if (table === "profiles") return chainWithMaybeSingle({ data: profile, error: profileError });
     if (table === "tarefas") return chainResolvingTo({ data: tarefas });
     if (table === "presencas") {
       // presencas serve duas finalidades no hook: upsert (registrar presença de
@@ -105,6 +111,7 @@ describe("useUserMeta", () => {
       // precisa esperar `carregando` virar false, senão mostra o portão do
       // Projete pra quem já paga o Projete.
       carregando: true,
+      erro: false,
     });
 
     // drena a query pendente, senão ela resolve depois do fim do teste e vaza
@@ -141,6 +148,17 @@ describe("useUserMeta", () => {
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
     await waitFor(() => expect(result.current.plano).toBe("controle"));
+  });
+
+  // Regressão: leitura do perfil que falhava devolvia plano "confere" com
+  // carregando false, e quem paga via cadeado e o portão do Pro por 60s.
+  it("falha na leitura do perfil não rebaixa o plano: segue carregando e expõe erro", async () => {
+    setupSupabaseMocks({ profileError: { message: "rede caiu" } });
+    const { result } = renderHook(() => useUserMeta(), { wrapper });
+
+    await waitFor(() => expect(result.current.erro).toBe(true));
+    expect(result.current.carregando).toBe(true);
+    expect(result.current.plano).toBe("confere");
   });
 
   it("businessName vira null quando vazio ou só espaços em branco", async () => {

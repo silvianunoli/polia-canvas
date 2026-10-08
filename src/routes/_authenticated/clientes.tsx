@@ -10,12 +10,14 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar as registrarFounder } from "@/lib/founder-eventos";
 import { gerarCsv, baixarCsv } from "@/lib/csv";
 import { dataISOLocal, hojeISO } from "@/lib/data.functions";
+import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { formatarReais } from "@/lib/formatarReais";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -48,9 +50,15 @@ interface Produto {
   nome: string;
 }
 
+// Formatador único de dinheiro (08/10/2026): mesma escrita do Painel e do Financeiro.
 function formatarValorBRL(valor: number | null) {
   if (valor === null || valor === undefined) return null;
-  return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return formatarReais(Number(valor));
+}
+
+/** Venda sem valor lançava uma entrada de R$ 0 no Financeiro. */
+function temValorDeVenda(valor: number | null) {
+  return valor != null && Number(valor) > 0;
 }
 
 function formatarDataCurta(iso: string) {
@@ -86,33 +94,26 @@ function ClientesPage() {
     queryKey: ["clientes-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [clientesRes, produtosRes] = await Promise.all([
-        (
-          supabase.from("clientes" as never) as unknown as {
-            select: (s: string) => {
-              eq: (
-                c: string,
-                v: string,
-              ) => {
-                order: (
-                  c: string,
-                  o: { ascending: boolean },
-                ) => Promise<{ data: Cliente[] | null; error: unknown }>;
-              };
-            };
-          }
-        )
-          .select("*")
-          .eq("user_id", userId!)
-          .order("created_at", { ascending: false }),
+      const [clientes, produtosRes] = await Promise.all([
+        // Lida inteira, página por página (QA-24): acima de 1.000 clientes o
+        // PostgREST cortava a lista em silêncio. Erro sobe pelo lerTodasAsPaginas.
+        lerTodasAsPaginas<Cliente>((de, ate) =>
+          supabase
+            .from("clientes")
+            .select("*")
+            .eq("user_id", userId!)
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: true })
+            .range(de, ate)
+            .then((r) => ({ data: r.data as unknown as Cliente[] | null, error: r.error })),
+        ),
         supabase.from("produtos").select("id, nome").eq("user_id", userId!),
       ]);
       // Leitura que falha não pode virar "Nenhuma cliente cadastrada ainda"
       // (07/10/2026): lança, e a tela mostra o estado de erro com nova tentativa.
-      if (clientesRes.error) throw clientesRes.error;
       if (produtosRes.error) throw produtosRes.error;
       return {
-        clientes: (clientesRes.data ?? []) as Cliente[],
+        clientes,
         produtos: (produtosRes.data ?? []) as Produto[],
       };
     },
@@ -323,6 +324,7 @@ function LinhaCliente({
   };
 
   const registrar = async () => {
+    if (!temValorDeVenda(cliente.valor)) return;
     setRegistrando(true);
     // RPC transacional: insere o lançamento e marca a cliente numa só transação. Se o update
     // falhar, o insert faz rollback — sem lançamento órfão que levasse a registro DUPLICADO.
@@ -341,7 +343,10 @@ function LinhaCliente({
           : "A Pólia One não conseguiu registrar a venda no Financeiro. Tenta de novo.",
       );
       // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
-      if (jaRegistrada) onRegistrado();
+      if (jaRegistrada) {
+        setPopAberto(false);
+        onRegistrado();
+      }
       return;
     }
     track("venda_registrada");
@@ -355,10 +360,43 @@ function LinhaCliente({
   };
 
   const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
+  const semValor = !temValorDeVenda(cliente.valor);
+
+  // A ação de venda mora numa linha própria no celular: em 375px, selo +
+  // "Registrar venda →" + menu não cabiam ao lado do nome e estouravam a linha.
+  const acaoVenda = cliente.venda_registrada ? (
+    <span className="font-sans text-[13px] text-[var(--ink-soft)]">
+      Registrada ·{" "}
+      <Link
+        to="/financeiro"
+        className="inline-flex min-h-11 items-center text-[var(--secondary-text)] hover:underline"
+      >
+        ver no Financeiro
+      </Link>
+    </span>
+  ) : mostrarAcaoRegistrar ? (
+    semValor ? (
+      // Sem valor, registrar lançaria R$ 0 no caixa: o caminho é pôr o valor.
+      <span className="font-sans text-[13px] text-[var(--ink-soft)]">
+        Coloque o valor da venda pra registrar ·{" "}
+        <button
+          type="button"
+          onClick={onEditar}
+          className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+        >
+          Editar cliente
+        </button>
+      </span>
+    ) : (
+      <button type="button" onClick={abrirPopover} className={`${BTN_MIUDO_ACAO} w-full sm:w-auto`}>
+        Registrar venda →
+      </button>
+    )
+  ) : null;
 
   return (
-    <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-white p-5">
-      <div className="flex min-w-0 items-center gap-4">
+    <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--line)] bg-white p-5 sm:flex-nowrap">
+      <div className="order-1 flex min-w-0 flex-1 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
           <span className="font-sans text-[16px] font-semibold text-[var(--accent-ink)]">
             {cliente.nome.charAt(0).toUpperCase()}
@@ -378,7 +416,10 @@ function LinhaCliente({
           </p>
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-3">
+      {acaoVenda && (
+        <div className="order-3 w-full sm:order-2 sm:w-auto sm:shrink-0">{acaoVenda}</div>
+      )}
+      <div className="order-2 flex shrink-0 items-center gap-3 sm:order-3">
         <MenuOpcoes
           ariaLabel={`Alterar status do pedido. Status atual: ${cliente.status_pedido ?? "sem pedido"}.`}
           trigger={
@@ -394,21 +435,6 @@ function LinhaCliente({
             desabilitado: salvandoStatus,
           }))}
         />
-        {cliente.venda_registrada ? (
-          <span className="shrink-0 font-sans text-[13px] text-[var(--ink-soft)]">
-            Registrada ·{" "}
-            <Link
-              to="/financeiro"
-              className="inline-flex min-h-6 items-center text-[var(--secondary-text)] hover:underline"
-            >
-              ver no Financeiro
-            </Link>
-          </span>
-        ) : mostrarAcaoRegistrar ? (
-          <button type="button" onClick={abrirPopover} className={`${BTN_MIUDO} shrink-0`}>
-            Registrar venda →
-          </button>
-        ) : null}
         <MenuOpcoes
           ariaLabel={`Opções da cliente ${cliente.nome}`}
           itens={[
@@ -649,7 +675,7 @@ function ModalCliente({
             )}
             {produtos.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nome} · R$ {Number(p.preco_venda).toLocaleString("pt-BR")}
+                {p.nome} · {formatarReais(Number(p.preco_venda))}
               </option>
             ))}
           </select>

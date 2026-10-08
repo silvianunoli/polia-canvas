@@ -57,9 +57,21 @@ function isActive(itemTo: string, pathname: string) {
   return pathname === itemTo || pathname.startsWith(itemTo + "/");
 }
 
+// Mesma chave de TEVE_SESSAO_KEY em routes/_authenticated.tsx (literal aqui pra
+// não importar o arquivo da rota, que importa este componente). Saída por
+// vontade própria não é expiração: sem limpar a flag, a próxima pessoa que
+// abrisse o app neste navegador via "Sua sessão expirou".
+const TEVE_SESSAO_KEY = "polia-teve-sessao";
+
 async function signOut() {
   await registrarEAguardar("logout", { feature: "conta" });
   await supabase.auth.signOut();
+  try {
+    localStorage.removeItem(TEVE_SESSAO_KEY);
+  } catch {
+    // localStorage indisponível (modo privado restrito): o pior caso é o aviso
+    // de sessão expirada aparecer uma vez, nada quebra.
+  }
   window.location.href = "/auth/login";
 }
 
@@ -153,7 +165,11 @@ function Body({
             // barradas por um portão dentro da página. Com a checagem antiga a
             // usuária do Premium via esses três itens SEM cadeado e só
             // descobria que eram pagos depois de clicar.
-            const liberado = recursoLiberado(item.to, meta.plano);
+            //
+            // Enquanto o plano não chegou (ou a leitura falhou), "confere" é
+            // chute: sem cadeado, senão quem paga via o cadeado piscar em toda
+            // abertura. O guard da rota continua barrando quem não tem acesso.
+            const liberado = meta.carregando || recursoLiberado(item.to, meta.plano);
             const tierNecessario = tierPagoDaRota(item.to);
             const content = liberado ? (
               <Link

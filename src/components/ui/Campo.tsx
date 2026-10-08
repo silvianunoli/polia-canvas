@@ -50,10 +50,14 @@ export function Campo({ label, id, htmlFor, error, hint, required, children }: C
   const resolvedId = htmlFor ?? id ?? generatedId;
   const errorId = `${resolvedId}-erro`;
   const hintId = `${resolvedId}-dica`;
-  const describedBy =
-    [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
-
   const podeClonar = !htmlFor && isValidElement(children);
+  // O aria-describedby que o filho já trazia entra junto, não é sobrescrito
+  // (08/10/2026): o aviso "cliente-valor-aviso" de Clientes sumia do leitor
+  // de tela porque o clone trocava o atributo pelo da dica/erro.
+  const doFilho = podeClonar ? children.props["aria-describedby"] : undefined;
+  const describedBy =
+    [doFilho, hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
+
   const campo = podeClonar
     ? cloneElement(children, {
         id: resolvedId,

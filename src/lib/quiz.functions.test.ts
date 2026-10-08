@@ -122,6 +122,18 @@ describe("gravarLeadQuiz: gates", () => {
 describe("gravarLeadQuiz: gravação e diagnóstico", () => {
   beforeEach(() => verificarTurnstileServer.mockResolvedValue(true));
 
+  it("não reinscreve quem se descadastrou nem manda o e-mail pra ela (LGPD)", async () => {
+    const q = consulta({
+      data: { descadastro_token: TOKEN, descadastrado_em: "2026-10-01T00:00:00Z" },
+      error: null,
+    });
+    from.mockReturnValueOnce(q);
+    expect(await gravar({ data: valido })).toEqual({ ok: true });
+    const [payload] = q.upsert.mock.calls[0];
+    expect(payload).not.toHaveProperty("descadastrado_em");
+    expect(enviarEmailResend).not.toHaveBeenCalled();
+  });
+
   it("recalcula faixa/pontos no servidor, faz upsert por e-mail e manda o diagnóstico", async () => {
     const q = consulta({ data: { descadastro_token: TOKEN }, error: null });
     from.mockReturnValueOnce(q);
@@ -142,7 +154,6 @@ describe("gravarLeadQuiz: gravação e diagnóstico", () => {
         origem: "instagram_bio",
         consentimento: true,
         consent_texto: CONSENT_TEXTO,
-        descadastrado_em: null,
         telefone: "5511987654321",
       }),
     );

@@ -116,9 +116,11 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
     // conflito, o Postgres só sobrescreve as colunas listadas, então a data da
     // primeira captura e o token do link já enviado sobrevivem.
     //
-    // descadastrado_em volta a null: quem refez o quiz marcou o consentimento
-    // de novo, na tela, agora. Isso é consentimento novo e explícito, e é o
-    // único caminho de volta pra quem já tinha saído.
+    // descadastrado_em fica de fora (LGPD, 08/10/2026): qualquer pessoa pode
+    // digitar o e-mail de outra no quiz, então o formulário público não pode
+    // reinscrever quem saiu. O caminho de volta é o "reinscrever" da página de
+    // descadastro, que exige o token do próprio e-mail. Mesmo critério do
+    // manual (manual.functions.ts).
     const { data: linha, error } = await supabaseAdmin
       .from("quiz_leads")
       .upsert(
@@ -131,7 +133,6 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
           origem: data.origem ?? "instagram_bio",
           consentimento: true,
           consent_texto: CONSENT_TEXTO,
-          descadastrado_em: null,
           // Só entra no payload quando veio preenchido: o campo é opcional, e
           // num upsert um `telefone: null` apagaria o número que ela já tinha
           // deixado numa passagem anterior.
@@ -140,7 +141,7 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
         },
         { onConflict: "email" },
       )
-      .select("descadastro_token")
+      .select("descadastro_token, descadastrado_em")
       .single();
 
     if (error || !linha) {
@@ -156,6 +157,8 @@ export const gravarLeadQuiz = createServerFn({ method: "POST" })
     //
     // Refazer o quiz manda de novo, e isso é intencional: respostas novas,
     // diagnóstico novo. O Turnstile no gate é o que segura repetição em massa.
+    // Quem se descadastrou vê o resultado na tela, mas o e-mail não sai.
+    if ((linha as { descadastrado_em?: string | null }).descadastrado_em) return { ok: true };
     const descadastroUrl = `${SITE_URL}/descadastrar?t=${linha.descadastro_token}`;
     const email = montarEmailDiagnostico({
       faixa,

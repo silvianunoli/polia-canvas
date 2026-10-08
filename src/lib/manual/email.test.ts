@@ -37,6 +37,17 @@ describe("e-mail de entrega do manual", () => {
     expect(html).toContain("usepolia.com.br");
   });
 
+  // O apex usepolia.com.br é o biolink: /ajuda lá dá 404. Todo link de site no
+  // e-mail tem que apontar pro one.
+  it("aponta a Ajuda pro one.usepolia.com.br, nunca pro apex", () => {
+    const { text, html } = montar();
+    expect(text).toContain("https://one.usepolia.com.br/ajuda");
+    expect(html).toContain("https://one.usepolia.com.br/ajuda");
+    for (const parte of [text, html]) {
+      expect(parte).not.toMatch(/https:\/\/usepolia\.com\.br\/ajuda/);
+    }
+  });
+
   // Copy final de 16/09/2026, revisada de novo no mesmo dia (auditoria dos 12
   // transacionais): a citação de campanha ("Grandes marcas não começam
   // grandes...") já tinha saído por soar tagline, não entrega do material.

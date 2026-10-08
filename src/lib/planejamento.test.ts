@@ -15,7 +15,9 @@ import {
   moduloLiberado,
   modulosQueFaltamAntes,
   textoModulosQueFaltam,
+  acessoDaFerramenta,
 } from "./planejamento";
+import { hrefUpgrade } from "./planos";
 
 const idsDosModulos = (...ns: number[]) =>
   new Set(ns.flatMap((n) => secoesDoModulo(n).map((s) => s.id)));
@@ -211,5 +213,55 @@ describe("marca antes do dinheiro", () => {
   it("a ordem do array bate com a ordem dos módulos (nenhuma seção fora do lugar)", () => {
     const modulos = SECOES.map((s) => s.modulo);
     expect(modulos).toEqual([...modulos].sort((a, b) => a - b));
+  });
+});
+
+describe("hrefUpgrade", () => {
+  it("leva o plano que a rota exige, não um Premium fixo", () => {
+    expect(hrefUpgrade("/raiox")).toBe("/upgrade?rota=%2Fraiox&tier=projete");
+    expect(hrefUpgrade("/financeiro")).toBe("/upgrade?rota=%2Ffinanceiro&tier=controle");
+  });
+});
+
+describe("acessoDaFerramenta", () => {
+  it("no Grátis, Marca, Mapa de Mercado e Financeiro levam pro upgrade do Premium com cadeado", () => {
+    for (const n of [1, 2, 4]) {
+      const f = ferramentaDe(n);
+      const a = acessoDaFerramenta(f, "confere");
+      expect(a.liberada).toBe(false);
+      expect(a.href).toBe(hrefUpgrade(f.rota));
+      expect(a.rotulo).toBe(`${f.abrirLabel} no Premium`);
+      expect(a.tituloPlano).toBe("Premium");
+      expect(a.aviso).not.toMatch(/[—–!]/);
+    }
+  });
+
+  it("cancelada conta como Grátis", () => {
+    expect(acessoDaFerramenta(ferramentaDe(4), "cancelada").liberada).toBe(false);
+  });
+
+  it("no Grátis, Catálogo, Caderno e Metas abrem direto", () => {
+    for (const n of [3, 5, 6]) {
+      const f = ferramentaDe(n);
+      expect(acessoDaFerramenta(f, "confere")).toEqual({
+        liberada: true,
+        href: f.rota,
+        rotulo: f.abrirLabel,
+        aviso: "",
+        tituloPlano: null,
+      });
+    }
+  });
+
+  it("Premium, Pro e beta abrem todas", () => {
+    for (const plano of ["controle", "projete", "beta"]) {
+      for (let n = 1; n <= TOTAL_MODULOS; n++) {
+        expect(acessoDaFerramenta(ferramentaDe(n), plano).liberada).toBe(true);
+      }
+    }
+  });
+
+  it("enquanto o plano carrega, nada de cadeado", () => {
+    expect(acessoDaFerramenta(ferramentaDe(1), "confere", true).liberada).toBe(true);
   });
 });

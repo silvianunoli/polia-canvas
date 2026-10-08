@@ -4,6 +4,7 @@ import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
 import { useCaptcha } from "@/components/TurnstileCampo";
+import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
 
 const schema = z.object({
   email: z.string().trim().email("E-mail inválido. Confere o @.").max(255),
@@ -22,6 +23,8 @@ export function useRecuperarSenha() {
   const [cooldown, setCooldown] = useState(0);
   // Anti-robô (FUN-03): a tela desenha <TurnstileCampo captcha={captcha} />.
   const captcha = useCaptcha();
+  // "Pedir de novo" logo depois de um envio saía com o token já gasto.
+  const captchaPronto = useCaptchaPronto(captcha);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -64,7 +67,7 @@ export function useRecuperarSenha() {
   }
 
   async function handleResend() {
-    if (!sent || cooldown > 0) return;
+    if (!sent || cooldown > 0 || !captchaPronto) return;
     setLoading(true);
     const ok = await sendLink(sent);
     setLoading(false);
@@ -90,5 +93,6 @@ export function useRecuperarSenha() {
     handleResend,
     reset,
     captcha,
+    captchaPronto,
   };
 }

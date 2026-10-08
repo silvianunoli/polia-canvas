@@ -59,8 +59,11 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
     // conflito o Postgres só sobrescreve as colunas listadas, então a data da
     // primeira captura e os links já enviados por e-mail sobrevivem.
     //
-    // descadastrado_em volta a null: quem pediu de novo marcou o consentimento
-    // outra vez, agora. É consentimento novo e explícito.
+    // descadastrado_em TAMBÉM fica de fora (LGPD, 08/10/2026): o formulário é
+    // público e não prova que quem digitou é a dona do e-mail. Antes ele voltava
+    // a null e qualquer pessoa reinscrevia o e-mail de outra que tinha pedido
+    // pra sair. Quem se descadastrou continua descadastrada: o lead é
+    // registrado, o PDF baixa na tela, mas nenhum e-mail sai pra ela.
     const { data: linha, error } = await supabaseAdmin
       .from("manual_leads")
       .upsert(
@@ -69,7 +72,6 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
           origem: data.origem ?? "instagram_bio",
           consentimento: true,
           consent_texto: CONSENT_TEXTO_MANUAL,
-          descadastrado_em: null,
           // Só entra no payload quando veio preenchido: o campo é opcional, e
           // num upsert um `telefone: null` apagaria o número que ela já tinha
           // deixado numa passagem anterior.
@@ -80,7 +82,7 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
         },
         { onConflict: "email" },
       )
-      .select("download_token, descadastro_token")
+      .select("download_token, descadastro_token, descadastrado_em")
       .single();
 
     if (error || !linha) {
@@ -94,16 +96,20 @@ export const gravarLeadManual = createServerFn({ method: "POST" })
     // O e-mail é a cópia que fica guardada, então sai aqui, na hora.
     // Best-effort de propósito: o lead JÁ está gravado e o download automático
     // da tela não depende do Resend. Falha fica no log e em erros_app.
-    const email = montarEmailManual({ downloadUrl, descadastroUrl });
-    await enviarEmailResend({
-      to: [data.email],
-      subject: email.subject,
-      text: email.text,
-      html: email.html,
-      replyTo: "oi@usepolia.com.br",
-      headers: { "List-Unsubscribe": `<${descadastroUrl}>` },
-      contexto: "[Manual]",
-    });
+    // Descadastrada não recebe: o pedido dela de sair vale mais que o
+    // formulário, que qualquer um pode preencher com o e-mail dela.
+    if (!linha.descadastrado_em) {
+      const email = montarEmailManual({ downloadUrl, descadastroUrl });
+      await enviarEmailResend({
+        to: [data.email],
+        subject: email.subject,
+        text: email.text,
+        html: email.html,
+        replyTo: "oi@usepolia.com.br",
+        headers: { "List-Unsubscribe": `<${descadastroUrl}>` },
+        contexto: "[Manual]",
+      });
+    }
 
     // eventId só existe pra lead novo de verdade (nunca no honeypot, nunca em
     // falha, nunca em reenvio de e-mail já cadastrado): é o gatilho pro Meta

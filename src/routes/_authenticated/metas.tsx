@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { hojeISO } from "@/lib/data.functions";
-import { createFileRoute } from "@tanstack/react-router";
+import { hojeISO, mesAnoAtual } from "@/lib/data.functions";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Check, ChevronDown, CalendarDays, Target, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +12,7 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
@@ -20,8 +20,19 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { TITULO_META_DO_MES, metaDoMesConta } from "@/lib/metaDoMes";
 import { progressoPct } from "@/lib/metas";
+import { somarEntradasDoMes } from "@/lib/numerosDoMes";
+import { formatarReais } from "@/lib/formatarReais";
+import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
+
+interface MetasSearch {
+  /** "meta-do-mes": abre direto o atalho que cria a Meta do mês (vem do Financeiro e da Projeção). */
+  criar?: "meta-do-mes";
+}
 
 export const Route = createFileRoute("/_authenticated/metas")({
+  validateSearch: (search: Record<string, unknown>): MetasSearch => ({
+    criar: search.criar === "meta-do-mes" ? "meta-do-mes" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Metas · Pólia One" },
@@ -61,9 +72,11 @@ function num(s: string) {
   return Number.isFinite(v) ? v : 0;
 }
 
+// Dinheiro pelo formatador único (antes saía "R$ 44,1"); quantidade segue
+// com até duas casas, sem zero sobrando.
 function valorFmt(formato: string, v: number) {
-  const n = v.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
-  return formato === "moeda" ? `R$ ${n}` : n;
+  if (formato === "moeda") return formatarReais(v);
+  return v.toLocaleString("pt-BR", { maximumFractionDigits: 2 });
 }
 
 function sufixoUnidade(m: Meta) {
@@ -93,9 +106,14 @@ function MetasPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
+  const search = Route.useSearch();
+  const navigate = useNavigate();
+  const linkModulo6 = useLinkDoModulo(6);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [metaEdit, setMetaEdit] = useState<Meta | null>(null);
+  // Atalho "Criar a Meta do mês": o modal nasce com o nome exato e em R$.
+  const [presetMetaDoMes, setPresetMetaDoMes] = useState(false);
   const [verConcluidas, setVerConcluidas] = useState(false);
   const [erroAcao, setErroAcao] = useState<string | null>(null);
   const [metaArquivar, setMetaArquivar] = useState<Meta | null>(null);
@@ -128,6 +146,23 @@ function MetasPage() {
   const metaDoMesJaExiste = (idIgnorado?: string) =>
     metas.some((m) => m.id !== idIgnorado && ehMetaDoMes(m) && metaDoMesConta(m.status));
 
+  // O "atual" da Meta do mês é a soma das entradas do mês corrente, a mesma
+  // conta do Painel e do Financeiro (08/10/2026). Antes esta tela mostrava o
+  // valor_atual digitado à mão, e a mesma meta tinha três progressos.
+  const temMetaDoMesAtiva = ativas.some(ehMetaDoMes);
+  const [{ ano: anoCorrente, mes: mesCorrente }] = useState(() => mesAnoAtual());
+  const entradasMesQuery = useQuery({
+    queryKey: ["metas-entradas-mes", userId, anoCorrente, mesCorrente],
+    enabled: !!userId && temMetaDoMesAtiva,
+    queryFn: () => somarEntradasDoMes(supabase, userId!, anoCorrente, mesCorrente),
+  });
+  const valorDoMes: ValorDoMes = {
+    carregando: entradasMesQuery.isLoading,
+    erro: entradasMesQuery.isError,
+    valor: entradasMesQuery.data ?? 0,
+    tentarDeNovo: () => void entradasMesQuery.refetch(),
+  };
+
   const invalidar = () => qc.invalidateQueries({ queryKey: ["metas", userId] });
 
   const atualizar = useMutation({
@@ -150,6 +185,8 @@ function MetasPage() {
   });
 
   const concluir = (m: Meta) => {
+    // Na Meta do mês o "atual" vem das entradas: concluir não grava valor.
+    const doMes = ehMetaDoMes(m);
     track("meta_concluida");
     void registrar("feature_completed", {
       feature: "metas",
@@ -161,7 +198,7 @@ function MetasPage() {
         status: "concluida",
         concluida_em: new Date().toISOString(),
         progresso: 100,
-        ...(m.valor_alvo != null ? { valor_atual: m.valor_alvo } : {}),
+        ...(m.valor_alvo != null && !doMes ? { valor_atual: m.valor_alvo } : {}),
       },
     });
     toastInfo(`Meta concluída: ${m.titulo}`, {
@@ -227,13 +264,42 @@ function MetasPage() {
   const abrirCriar = () => {
     if (limiteAtingido) return;
     setMetaEdit(null);
+    setPresetMetaDoMes(false);
+    setModalAberto(true);
+  };
+
+  const abrirCriarMetaDoMes = () => {
+    if (limiteAtingido || metaDoMesJaExiste()) return;
+    setMetaEdit(null);
+    setPresetMetaDoMes(true);
     setModalAberto(true);
   };
 
   const abrirEditar = (m: Meta) => {
     setMetaEdit(m);
+    setPresetMetaDoMes(false);
     setModalAberto(true);
   };
+
+  // ?criar=meta-do-mes (link "Criar a Meta do mês" do Financeiro e da
+  // Projeção): abre o atalho uma vez, depois de saber quais metas já existem,
+  // e limpa a URL pra um F5 não abrir de novo.
+  const criarPedido = search.criar;
+  const listaPronta = metasQuery.isSuccess;
+  useEffect(() => {
+    if (criarPedido !== "meta-do-mes" || !listaPronta) return;
+    if (!metaDoMesJaExiste()) {
+      if (limiteAtingido) {
+        setErroAcao(
+          `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma pra criar a Meta do mês.`,
+        );
+      } else {
+        abrirCriarMetaDoMes();
+      }
+    }
+    void navigate({ to: "/metas", search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criarPedido, listaPronta]);
 
   return (
     <PaginaLogada
@@ -273,6 +339,36 @@ function MetasPage() {
           </p>
         )}
 
+        {/* ───────── Atalho: Meta do mês ───────── */}
+        {/* Painel, Financeiro, Calculadora e Projeção acham essa meta pelo nome
+            exato. Criada à mão com outro nome ("meta de outubro"), nenhuma tela
+            a enxerga; o atalho já nasce com o nome certo e em R$. */}
+        {metasQuery.isSuccess && !metaDoMesJaExiste() && (
+          <section className="mt-6 rounded-xl bg-[var(--surface)] p-5">
+            <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+              Meta do mês
+            </p>
+            <p className="mt-2 max-w-[60ch] text-[14px] text-[var(--ink-soft)]">
+              Ainda não tem Meta do mês. É o valor em R$ que o mês precisa trazer, e o Painel e o
+              Financeiro acompanham somando as entradas registradas.
+            </p>
+            <button
+              type="button"
+              onClick={abrirCriarMetaDoMes}
+              disabled={limiteAtingido}
+              className={`${BTN_ACAO_CONTORNO} mt-4 bg-white`}
+            >
+              <Target size={15} aria-hidden="true" />
+              Criar a Meta do mês
+            </button>
+            {limiteAtingido && (
+              <p className="mt-2 text-[12px] text-[var(--muted)]">
+                Conclua ou arquive uma meta ativa antes de criar a Meta do mês.
+              </p>
+            )}
+          </section>
+        )}
+
         {/* ───────── Lista de metas ativas ───────── */}
         <section className="mt-8">
           {metasQuery.isLoading ? (
@@ -302,10 +398,28 @@ function MetasPage() {
               titulo="Nenhuma meta ainda."
               texto={`Defina até ${LIMITE_ATIVAS} para manter o foco no que importa.`}
               acao={
-                <LinkInterno href="/planejamento/modulo/6" className={BTN_ACAO}>
-                  Definir pelo Planejamento
-                  <span aria-hidden="true">→</span>
-                </LinkInterno>
+                // A ação do vazio é a da própria tela. O Planejamento é caminho
+                // secundário e só aponta pro Módulo 6 quando ele está liberado
+                // (antes o botão principal levava a um módulo trancado).
+                <>
+                  <button
+                    type="button"
+                    onClick={abrirCriar}
+                    disabled={limiteAtingido}
+                    className={BTN_ACAO}
+                  >
+                    <Plus size={16} aria-hidden="true" /> Nova meta
+                  </button>
+                  <p className="mt-3 text-[12px] text-[var(--muted)]">
+                    ou defina pelo{" "}
+                    <LinkInterno
+                      href={linkModulo6.href}
+                      className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                    >
+                      {linkModulo6.liberado ? "Módulo 6 do Planejamento →" : "Planejamento →"}
+                    </LinkInterno>
+                  </p>
+                </>
               }
             />
           ) : (
@@ -314,6 +428,7 @@ function MetasPage() {
                 <MetaCard
                   key={m.id}
                   meta={m}
+                  valorDoMes={ehMetaDoMes(m) ? valorDoMes : undefined}
                   onEditar={() => abrirEditar(m)}
                   onArquivar={() => arquivar(m)}
                   onConcluir={() => concluir(m)}
@@ -428,6 +543,7 @@ function MetasPage() {
         <ModalMeta
           userId={userId}
           metaEdit={metaEdit}
+          presetMetaDoMes={presetMetaDoMes}
           metaDoMesJaExiste={metaDoMesJaExiste(metaEdit?.id)}
           onClose={() => setModalAberto(false)}
           onSaved={() => {
@@ -487,8 +603,16 @@ function ConcluidasLista({ children }: { children: ReactNode }) {
 }
 
 /* ============== Card de meta ativa ============== */
+interface ValorDoMes {
+  carregando: boolean;
+  erro: boolean;
+  valor: number;
+  tentarDeNovo: () => void;
+}
+
 function MetaCard({
   meta,
+  valorDoMes,
   onEditar,
   onArquivar,
   onConcluir,
@@ -496,6 +620,8 @@ function MetaCard({
   onSalvarAtual,
 }: {
   meta: Meta;
+  /** Só na Meta do mês: o "atual" é a soma das entradas do mês, não o digitado. */
+  valorDoMes?: ValorDoMes;
   onEditar: () => void;
   onArquivar: () => void;
   onConcluir: () => void;
@@ -503,7 +629,12 @@ function MetaCard({
   onSalvarAtual: (valor: number) => void;
 }) {
   const [armada, setArmada] = useState(false);
-  const pct = progressoPct(meta);
+  const atual = valorDoMes ? valorDoMes.valor : meta.valor_atual;
+  const pct = valorDoMes
+    ? valorDoMes.carregando || valorDoMes.erro
+      ? 0
+      : progressoPct({ valor_atual: atual, valor_alvo: meta.valor_alvo })
+    : progressoPct(meta);
   const pronta = pct >= 100;
   const alvo = meta.valor_alvo ?? 0;
   const vencido = !!meta.prazo && meta.prazo < hojeISO();
@@ -559,13 +690,36 @@ function MetaCard({
       {/* Progresso atual / alvo */}
       <div className="mt-3">
         <p className="text-[14px] text-[var(--ink-soft)]">
-          <InlineValor value={meta.valor_atual} formato={meta.formato} onCommit={onSalvarAtual} />
+          {valorDoMes ? (
+            <span className="font-medium text-[var(--ink)]">
+              {valorDoMes.carregando ? "…" : valorDoMes.erro ? "?" : formatarReais(atual)}
+            </span>
+          ) : (
+            <InlineValor value={meta.valor_atual} formato={meta.formato} onCommit={onSalvarAtual} />
+          )}
           <span className="text-[var(--muted)]"> de </span>
           <span className="font-medium text-[var(--ink)]">
-            {valorFmt(meta.formato, alvo)}
-            {sufixoUnidade(meta)}
+            {valorDoMes ? formatarReais(alvo) : valorFmt(meta.formato, alvo)}
+            {valorDoMes ? "" : sufixoUnidade(meta)}
           </span>
         </p>
+        {valorDoMes &&
+          (valorDoMes.erro ? (
+            <p role="alert" className="mt-1 text-[12px] text-[var(--danger)]">
+              A Pólia One não conseguiu somar as entradas do mês agora.{" "}
+              <button
+                type="button"
+                onClick={valorDoMes.tentarDeNovo}
+                className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] underline-offset-2 hover:underline"
+              >
+                Tentar de novo
+              </button>
+            </p>
+          ) : (
+            <p className="mt-1 text-[12px] text-[var(--muted)]">
+              Vem das entradas do Financeiro deste mês, as mesmas que o Painel soma.
+            </p>
+          ))}
 
         {/* Barra fina */}
         <div className="mt-2 flex items-center gap-3">
@@ -612,7 +766,7 @@ function MetaCard({
         <button
           type="button"
           onClick={clicarConcluir}
-          className={`${BTN_MIUDO} shrink-0 ${
+          className={`${BTN_MIUDO_ACAO} shrink-0 ${
             pronta
               ? "!bg-[var(--secondary)]"
               : armada
@@ -748,12 +902,15 @@ function InlineValor({
 function ModalMeta({
   userId,
   metaEdit,
+  presetMetaDoMes = false,
   metaDoMesJaExiste,
   onClose,
   onSaved,
 }: {
   userId: string;
   metaEdit: Meta | null;
+  /** Atalho "Criar a Meta do mês": nasce com o nome exato, travado, e em R$. */
+  presetMetaDoMes?: boolean;
   /** Já há outra Meta do mês valendo, fora a que está em edição. */
   metaDoMesJaExiste: boolean;
   onClose: () => void;
@@ -761,8 +918,13 @@ function ModalMeta({
 }) {
   const edit = !!metaEdit;
 
-  const [titulo, setTitulo] = useState(metaEdit?.titulo ?? "");
-  const [formato, setFormato] = useState<Formato>((metaEdit?.formato as Formato) ?? "numero");
+  const criandoMetaDoMes = !metaEdit && presetMetaDoMes;
+  const [titulo, setTitulo] = useState(
+    metaEdit?.titulo ?? (criandoMetaDoMes ? TITULO_META_DO_MES : ""),
+  );
+  const [formatoEscolhido, setFormato] = useState<Formato>(
+    (metaEdit?.formato as Formato) ?? (criandoMetaDoMes ? "moeda" : "numero"),
+  );
   const [unidade, setUnidade] = useState(metaEdit?.unidade ?? "");
   const [alvo, setAlvo] = useState(metaEdit?.valor_alvo != null ? String(metaEdit.valor_alvo) : "");
   const [atual, setAtual] = useState(
@@ -775,8 +937,12 @@ function ModalMeta({
   const alvoNum = num(alvo);
   // A Meta do mês não troca de nome (5 telas a acham pelo título) e não ganha
   // gêmea: duas com o mesmo nome deixavam os números sem saber qual usar.
-  const tituloTravado = !!metaEdit && ehMetaDoMes(metaEdit);
+  const tituloTravado = (!!metaEdit && ehMetaDoMes(metaEdit)) || criandoMetaDoMes;
   const tituloDuplicaMetaDoMes = titulo.trim() === TITULO_META_DO_MES && metaDoMesJaExiste;
+  // A Meta do mês é sempre em R$ e o "atual" dela vem das entradas do mês:
+  // não se escolhe formato nem se digita valor atual.
+  const ehDoMes = titulo.trim() === TITULO_META_DO_MES;
+  const formato: Formato = ehDoMes ? "moeda" : formatoEscolhido;
   const podeSalvar = titulo.trim().length > 0 && alvoNum > 0 && !tituloDuplicaMetaDoMes;
 
   const salvar = async () => {
@@ -789,7 +955,7 @@ function ModalMeta({
       formato,
       unidade: formato === "numero" && unidade.trim() ? unidade.trim() : null,
       valor_alvo: alvoNum,
-      valor_atual: atual.trim() ? num(atual) : 0,
+      valor_atual: ehDoMes ? (metaEdit?.valor_atual ?? 0) : atual.trim() ? num(atual) : 0,
       prazo: prazo || null,
     };
 
@@ -827,7 +993,7 @@ function ModalMeta({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={edit ? "Editar meta" : "Nova meta"}
+      title={edit ? "Editar meta" : criandoMetaDoMes ? "Criar a Meta do mês" : "Nova meta"}
       footer={
         <>
           <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
@@ -890,12 +1056,16 @@ function ModalMeta({
               type="button"
               onClick={() => setFormato(f.id)}
               aria-pressed={formato === f.id}
+              disabled={ehDoMes}
               className={`${BTN_MIUDO} ${formato === f.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
             >
               {f.label}
             </button>
           ))}
         </div>
+        {ehDoMes && (
+          <p className="mt-1 text-[12px] text-[var(--muted)]">A Meta do mês é sempre em R$.</p>
+        )}
       </div>
 
       {/* Alvo + (unidade) */}
@@ -925,14 +1095,22 @@ function ModalMeta({
 
       {/* Atual */}
       <div className="mb-4">
-        <Campo label="Valor atual, hoje">
+        <Campo
+          label="Valor atual, hoje"
+          hint={
+            ehDoMes
+              ? "Vem das entradas do Financeiro deste mês. A Pólia One soma sozinha, não precisa digitar."
+              : undefined
+          }
+        >
           <input
             type="number"
             inputMode="decimal"
-            value={atual}
+            value={ehDoMes ? "" : atual}
             onChange={(e) => setAtual(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-            placeholder="0"
+            readOnly={ehDoMes}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none read-only:bg-[var(--surface)] read-only:text-[var(--ink-soft)]"
+            placeholder={ehDoMes ? "soma das entradas do mês" : "0"}
           />
         </Campo>
       </div>

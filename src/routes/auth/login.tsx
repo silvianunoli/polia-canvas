@@ -14,12 +14,17 @@ import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 import { ERROR_COPY } from "@/lib/errorCopy";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
+import { classificarErroLogin, MSG_LOGIN_LIMITE, MSG_LOGIN_REDE } from "@/lib/signup";
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
+import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
+import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
   next: z.string().optional(),
-  motivo: z.enum(["sessao-expirada"]).optional(),
+  // entrada-cancelada: voltou do Google sem concluir (desistiu na tela de
+  // escolher conta). Vem do __root, que lê o erro access_denied da URL.
+  motivo: z.enum(["sessao-expirada", "entrada-cancelada"]).optional(),
 });
 
 // Só aceita destino relativo (começa com "/") — bloqueia redirect pra domínio
@@ -71,6 +76,8 @@ function LoginPage() {
   const [unverified, setUnverified] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const captcha = useCaptcha();
+  // "Reenviar o link" logo depois do erro saía com o token já gasto.
+  const captchaPronto = useCaptchaPronto(captcha);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -141,7 +148,14 @@ function LoginPage() {
         return;
       }
       if (error) {
-        if (/confirm/i.test(error.message) || /verified/i.test(error.message)) {
+        const motivo = classificarErroLogin(error);
+        // Rede caída e limite do servidor também não são senha errada: antes
+        // viravam "não conferem" e contavam pro bloqueio de 60s.
+        if (motivo === "rede") {
+          setLoginErro(MSG_LOGIN_REDE);
+        } else if (motivo === "limite") {
+          setLoginErro(MSG_LOGIN_LIMITE);
+        } else if (motivo === "email_nao_confirmado") {
           setUnverified(values.email.trim());
         } else {
           const proximaTentativa = tentativas + 1;
@@ -194,7 +208,7 @@ function LoginPage() {
   }
 
   async function handleResend() {
-    if (!unverified || resendCooldown > 0) return;
+    if (!unverified || resendCooldown > 0 || !captchaPronto) return;
     setResending(true);
     const { error } = await supabase.auth.resend({
       type: "signup",
@@ -230,7 +244,18 @@ function LoginPage() {
             Entra com o e-mail e a senha da sua conta Pólia.
           </p>
 
-          {search.motivo === "sessao-expirada" ? (
+          <AvisoSessaoAberta />
+
+          {search.motivo === "entrada-cancelada" ? (
+            <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
+              <p className="text-[14px] font-semibold text-[var(--ink)]">
+                A entrada com o Google não terminou.
+              </p>
+              <p className="mt-1 text-[13px] text-[var(--ink-soft)]">
+                Dá pra tentar de novo com o Google ou entrar com e-mail e senha.
+              </p>
+            </div>
+          ) : search.motivo === "sessao-expirada" ? (
             <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--surface)] p-4">
               <p className="text-[14px] font-semibold text-[var(--ink)]">
                 {ERROR_COPY["sessao-expirada"].title}
@@ -294,14 +319,16 @@ function LoginPage() {
                 <button
                   type="button"
                   onClick={handleResend}
-                  disabled={resending || resendCooldown > 0}
-                  className="text-[var(--secondary-text)] underline underline-offset-2 disabled:opacity-60"
+                  disabled={resending || resendCooldown > 0 || !captchaPronto}
+                  className="inline-flex min-h-11 items-center text-[var(--secondary-text)] underline underline-offset-2 disabled:opacity-60"
                 >
                   {resending
                     ? "Enviando..."
                     : resendCooldown > 0
                       ? `Pode pedir outro em ${resendCooldown}s`
-                      : "Reenviar o link"}
+                      : !captchaPronto
+                        ? "Conferindo..."
+                        : "Reenviar o link"}
                 </button>
               </p>
             )}
@@ -385,17 +412,21 @@ function LoginPage() {
             <br />a Pólia manda o link.
           </h2>
           <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
-            Confira a caixa de entrada (e o spam). O link vale por 1 hora.
+            Confira a caixa de entrada (e o spam). O link vale por pouco tempo.
           </p>
           <button
             type="button"
             onClick={recuperar.handleResend}
-            disabled={recuperar.cooldown > 0 || recuperar.loading}
-            className="mt-5 text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
+            disabled={recuperar.cooldown > 0 || recuperar.loading || !recuperar.captchaPronto}
+            className="mt-5 inline-flex min-h-11 items-center text-[13.5px] text-[var(--ink-soft)] underline underline-offset-2 disabled:text-[var(--muted)] disabled:no-underline"
           >
             {recuperar.cooldown > 0
               ? `Pode pedir outro em ${recuperar.cooldown}s`
-              : "Não chegou? Pedir de novo"}
+              : recuperar.loading
+                ? "Enviando..."
+                : !recuperar.captchaPronto
+                  ? "Conferindo..."
+                  : "Não chegou? Pedir de novo"}
           </button>
           <TurnstileCampo captcha={recuperar.captcha} />
           <button

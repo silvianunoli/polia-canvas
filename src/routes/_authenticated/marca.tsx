@@ -9,6 +9,7 @@ import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { BlockError } from "@/components/ui/BlockError";
 
 export const Route = createFileRoute("/_authenticated/marca")({
   head: () => ({
@@ -57,15 +58,24 @@ function MarcaPage() {
         </LinkInterno>
       }
     >
-      <DocumentoFerramenta
-        carregando={camposQuery.isLoading}
-        temAlgo={temAlgo}
-        mapa={mapa}
-        campos={campos}
-        moduloN={1}
-        tituloVazio="Sua marca ainda não está escrita."
-        textoVazio="Sua marca é construída no Módulo 1 do Planejamento: propósito, missão, valores e voz. Comece por lá."
-      />
+      {camposQuery.isError ? (
+        <div role="alert">
+          <BlockError
+            message="A Pólia One não conseguiu ler a sua marca agora. Nada foi perdido, é só a leitura que falhou."
+            onRetry={() => void camposQuery.refetch()}
+          />
+        </div>
+      ) : (
+        <DocumentoFerramenta
+          carregando={camposQuery.isLoading}
+          temAlgo={temAlgo}
+          mapa={mapa}
+          campos={campos}
+          moduloN={1}
+          tituloVazio="Sua marca ainda não está escrita."
+          textoVazio="Sua marca é construída no Módulo 1 do Planejamento: propósito, missão, valores e voz. Comece por lá."
+        />
+      )}
     </PaginaLogada>
   );
 }

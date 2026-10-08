@@ -16,6 +16,7 @@ import {
 } from "@/components/cosmic/AuthShell";
 import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
+import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
 import { senhaCumpreRequisitos } from "@/lib/senha";
 import { emailJaTemConta } from "@/lib/signup";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
@@ -137,6 +138,7 @@ function CadastroPage() {
               >
                 Entrar
               </Link>
+              . Se a conta foi criada com o Google, é só entrar com o Google.
             </>
           ),
         });
@@ -205,6 +207,7 @@ function CadastroPage() {
     <AuthShell>
       <SerifHeadline size={28}>Vamos começar.</SerifHeadline>
       <SubText>Sua conta em menos de um minuto.</SubText>
+      <AvisoSessaoAberta />
 
       <form onSubmit={handleSubmit} className="mt-5 flex flex-col gap-3" noValidate>
         <CosmicInput

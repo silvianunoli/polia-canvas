@@ -8,6 +8,7 @@ import { temProjete } from "@/lib/planos";
 import { moedaParaPrompt } from "@/lib/moeda";
 import { hojeEmBrasilia, mesAnoEmBrasilia } from "@/lib/data.functions";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { LIMITE_DIARIO_ASSISTENTE } from "@/lib/usoIa";
 
 const FEATURE = "aimer";
 const MODELO_FLASH = "gemini-flash-latest";
@@ -19,12 +20,13 @@ interface ConfigPlano {
 }
 
 // Grátis e Premium no Flash (diferença chave vs. Planejamento, onde só o
-// Grátis é Flash); só Pro no Pro, junto com o modo data-aware.
+// Grátis é Flash); só Pro no Pro, junto com o modo data-aware. Os tetos moram
+// em usoIa.ts porque a mensagem de teto (no cliente) cita os números.
 const CONFIG_POR_PLANO: Record<string, ConfigPlano> = {
-  confere: { modelo: MODELO_FLASH, limite: 5 },
-  controle: { modelo: MODELO_FLASH, limite: 30 },
-  projete: { modelo: MODELO_PRO, limite: 100 },
-  beta: { modelo: MODELO_PRO, limite: 100 },
+  confere: { modelo: MODELO_FLASH, limite: LIMITE_DIARIO_ASSISTENTE.confere },
+  controle: { modelo: MODELO_FLASH, limite: LIMITE_DIARIO_ASSISTENTE.controle },
+  projete: { modelo: MODELO_PRO, limite: LIMITE_DIARIO_ASSISTENTE.projete },
+  beta: { modelo: MODELO_PRO, limite: LIMITE_DIARIO_ASSISTENTE.beta },
 };
 
 export function configDoPlano(plano: string | null | undefined): ConfigPlano {
@@ -216,17 +218,46 @@ export function montarPromptAimer(dados: {
   return { systemInstruction: VOZ_SISTEMA, prompt: partes.join("\n\n") };
 }
 
-const perguntarInput = z.object({
-  pergunta: z.string().min(1).max(2000),
+/** Teto de caracteres por mensagem, na pergunta e em cada item do histórico. */
+export const MAX_CARACTERES_MENSAGEM = 2000;
+export const MAX_ITENS_HISTORICO = 10;
+
+// O histórico vem do cliente: sem teto por mensagem, dava pra mandar 10 textos
+// de qualquer tamanho direto pro prompt (custo e injeção sem freio).
+export const perguntarInput = z.object({
+  pergunta: z.string().min(1).max(MAX_CARACTERES_MENSAGEM),
   historico: z
-    .array(z.object({ autor: z.enum(["user", "aimer"]), texto: z.string() }))
-    .max(10)
+    .array(
+      z.object({
+        autor: z.enum(["user", "aimer"]),
+        texto: z.string().max(MAX_CARACTERES_MENSAGEM),
+      }),
+    )
+    .max(MAX_ITENS_HISTORICO)
     .default([]),
 });
 
+/**
+ * O filtro de escopo olha a pergunta E o que a usuária escreveu antes no
+ * histórico. Só a pergunta deixava passar o desvio em duas partes: o pedido
+ * fiscal ou o "ignore suas instruções" ia no histórico (que o cliente monta) e
+ * a pergunta vinha inocente. As falas da Pólia One não entram: a recusa
+ * canônica cita "contador ou advogado" e travaria a conversa inteira.
+ */
+export function conversaForaDeEscopo(
+  pergunta: string,
+  historico: { autor: "user" | "aimer"; texto: string }[],
+): boolean {
+  if (foraDeEscopo(pergunta)) return true;
+  return historico.some((m) => m.autor === "user" && foraDeEscopo(m.texto));
+}
+
 export type ResultadoAimer =
   | { ok: true; texto: string }
-  | { ok: false; motivo: "manutencao" | "teto_atingido" | "falha_ia" | "fora_de_escopo" };
+  | { ok: false; motivo: "manutencao" | "falha_ia" | "fora_de_escopo" }
+  // O plano volta junto pra mensagem de teto oferecer o degrau certo (Grátis vê
+  // o Premium, Premium vê o Pro, Pro e beta não veem oferta).
+  | { ok: false; motivo: "teto_atingido"; plano: string };
 
 const MENSAGEM_FORA_DE_ESCOPO =
   "Isso é com o seu contador ou advogado. A Pólia One ajuda com preço, quanto sobra e a sua meta.";
@@ -235,7 +266,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => perguntarInput.parse(input))
   .handler(async ({ context, data }): Promise<ResultadoAimer> => {
-    if (foraDeEscopo(data.pergunta)) {
+    if (conversaForaDeEscopo(data.pergunta, data.historico)) {
       return { ok: false, motivo: "fora_de_escopo" };
     }
 
@@ -279,7 +310,9 @@ export const perguntarAimer = createServerFn({ method: "POST" })
         saidas,
         resultado,
         metaAlvo: meta?.valor_alvo ?? null,
-        metaAtual: meta?.valor_atual ?? null,
+        // O "atingido" da Meta do mês são as entradas do mês, igual ao Painel,
+        // ao Financeiro e a Metas (08/10/2026); valor_atual não é mais usado.
+        metaAtual: meta ? entradas : null,
       });
     }
 
@@ -293,7 +326,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
       } as never,
     );
     if (!liberado) {
-      return { ok: false, motivo: "teto_atingido" };
+      return { ok: false, motivo: "teto_atingido", plano: profile?.plano ?? "confere" };
     }
 
     const { systemInstruction, prompt } = montarPromptAimer({
@@ -342,7 +375,8 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 
 export const MENSAGENS_CANONICAS = {
   foraDeEscopo: MENSAGEM_FORA_DE_ESCOPO,
-  tetoAtingido: "As perguntas de hoje já acabaram. Amanhã tem mais, ou o Premium libera bem mais.",
+  // O teto diário não tem mensagem fixa: depende do plano (avisoTetoAssistente
+  // em usoIa.ts).
   falhaIa: "A Pólia One não conseguiu responder agora. Tenta de novo.",
   manutencao: "O Assistente está em manutenção rápida. Volta já já.",
 } as const;

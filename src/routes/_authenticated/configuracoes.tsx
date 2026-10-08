@@ -30,6 +30,8 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { PasswordRequirements } from "@/components/cosmic/CosmicInput";
+import { MSG_REQUISITOS_SENHA, mensagemErroNovaSenha, senhaCumpreRequisitos } from "@/lib/senha";
 
 const ERRO_AUTOSAVE =
   "A Pólia One não conseguiu salvar agora. O que você digitou continua no campo, tenta de novo em instantes.";
@@ -76,13 +78,16 @@ function ConfiguracoesPage() {
     queryKey: ["configuracoes-profile", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select(
           "full_name, business_name, business_type, razao_social, cnpj, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
         )
         .eq("id", userId!)
         .maybeSingle();
+      // Erro engolido deixava o formulário vazio e o autosave desligado, sem
+      // aviso nenhum: ela digitava e nada era salvo. Agora vira estado de erro.
+      if (error) throw error;
       return data;
     },
   });
@@ -234,6 +239,7 @@ function ConfiguracoesPage() {
   const [confirmarSenha, setConfirmarSenha] = useState("");
   const [senhaErro, setSenhaErro] = useState<string | null>(null);
   const [senhaOk, setSenhaOk] = useState(false);
+  const [salvandoSenha, setSalvandoSenha] = useState(false);
 
   const [alterandoEmail, setAlterandoEmail] = useState(false);
   const [novoEmail, setNovoEmail] = useState("");
@@ -381,24 +387,31 @@ function ConfiguracoesPage() {
   const alterarSenha = async () => {
     setSenhaErro(null);
     setSenhaOk(false);
-    if (novaSenha.length < 8) {
-      setSenhaErro("a senha precisa ter pelo menos 8 caracteres.");
+    // Mesma régua do cadastro e da redefinição (antes aqui era só 8 caracteres).
+    if (!senhaCumpreRequisitos(novaSenha)) {
+      setSenhaErro(MSG_REQUISITOS_SENHA);
       return;
     }
     if (novaSenha !== confirmarSenha) {
-      setSenhaErro("as senhas não coincidem.");
+      setSenhaErro("As senhas não coincidem.");
       return;
     }
-    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    setSalvandoSenha(true);
+    let error: Awaited<ReturnType<typeof supabase.auth.updateUser>>["error"] = null;
+    try {
+      ({ error } = await supabase.auth.updateUser({ password: novaSenha }));
+    } catch {
+      setSenhaErro("A Pólia One não conseguiu trocar a senha. Confere a internet e tenta de novo.");
+      return;
+    } finally {
+      setSalvandoSenha(false);
+    }
     if (error) {
       // A mensagem do Supabase vem em inglês e técnica; nunca vai crua pra tela.
       console.error("senha_alterar", error);
       setSenhaErro(
-        error.code === "same_password"
-          ? "a senha nova precisa ser diferente da atual."
-          : error.code === "weak_password"
-            ? "essa senha é fácil de adivinhar. Tenta uma mais longa, misturando letras e números."
-            : "a Pólia One não conseguiu trocar a senha. Tenta de novo em instantes.",
+        mensagemErroNovaSenha(error) ??
+          "A Pólia One não conseguiu trocar a senha. Tenta de novo em instantes.",
       );
       return;
     }
@@ -427,7 +440,12 @@ function ConfiguracoesPage() {
     }
     setSalvandoEmail(true);
     try {
-      const { error } = await supabase.auth.updateUser({ email: parsed.data });
+      // Os links de confirmação (no e-mail atual e no novo) voltam pra cá, não
+      // pra home.
+      const { error } = await supabase.auth.updateUser(
+        { email: parsed.data },
+        { emailRedirectTo: `${window.location.origin}/configuracoes` },
+      );
       if (error) {
         const msg = error.message.toLowerCase();
         if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
@@ -499,6 +517,25 @@ function ConfiguracoesPage() {
       <div>
         {/* SEÇÃO 1 — PERFIL */}
         <Secao titulo="Seu perfil">
+          {profileQuery.isError && (
+            <div
+              role="alert"
+              className="mb-5 rounded-xl border border-[var(--line)] bg-[var(--danger-soft)] p-4"
+            >
+              <p className="font-sans text-[14px] text-[var(--ink)]">
+                A Pólia One não conseguiu carregar o seu perfil. Enquanto não carregar, o que for
+                digitado aqui não é salvo.
+              </p>
+              <button
+                type="button"
+                onClick={() => void profileQuery.refetch()}
+                disabled={profileQuery.isFetching}
+                className={`${BTN_MIUDO} mt-3`}
+              >
+                {profileQuery.isFetching ? "Tentando..." : "Tentar de novo"}
+              </button>
+            </div>
+          )}
           <div className="space-y-5">
             <Campo label="SEU NOME" saved={nomeSalvo}>
               <input
@@ -538,7 +575,7 @@ function ConfiguracoesPage() {
                     label="CONFIRMAR NOVO E-MAIL"
                     error={
                       novoEmail && confirmarEmail && novoEmail !== confirmarEmail
-                        ? "os e-mails não coincidem"
+                        ? "Os e-mails não coincidem."
                         : undefined
                     }
                   >
@@ -579,14 +616,14 @@ function ConfiguracoesPage() {
                 </div>
               )}
               {emailOk && (
-                <p className="font-sans text-[15px] text-[var(--ink-soft)] mt-3">
-                  Quase lá: confira a caixa de entrada do novo e-mail e clique no link de
-                  confirmação.
+                <p role="status" className="font-sans text-[15px] text-[var(--ink-soft)] mt-3">
+                  Chega um link no e-mail atual e outro no novo; a troca vale depois de confirmar os
+                  dois.
                 </p>
               )}
               {!alterandoEmail && !emailOk && (
                 <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
-                  a troca só vale depois de confirmar pelo link enviado ao novo e-mail
+                  A troca só vale depois de confirmar os links no e-mail atual e no novo.
                 </p>
               )}
             </Campo>
@@ -703,17 +740,20 @@ function ConfiguracoesPage() {
               <Campo label="NOVA SENHA">
                 <input
                   type="password"
+                  autoComplete="new-password"
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
                   minLength={8}
+                  aria-describedby="config-senha-requisitos"
                   className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
                 />
+                <PasswordRequirements id="config-senha-requisitos" password={novaSenha} />
               </Campo>
               <Campo
                 label="CONFIRMAR NOVA SENHA"
                 error={
                   novaSenha && confirmarSenha && novaSenha !== confirmarSenha
-                    ? "as senhas não coincidem"
+                    ? "As senhas não coincidem."
                     : undefined
                 }
               >
@@ -745,10 +785,14 @@ function ConfiguracoesPage() {
                 <button
                   type="button"
                   onClick={alterarSenha}
-                  disabled={novaSenha.length < 8 || novaSenha !== confirmarSenha}
+                  disabled={
+                    salvandoSenha ||
+                    !senhaCumpreRequisitos(novaSenha) ||
+                    novaSenha !== confirmarSenha
+                  }
                   className={BTN_ACAO}
                 >
-                  Salvar nova senha
+                  {salvandoSenha ? "Salvando..." : "Salvar nova senha"}
                 </button>
               </div>
             </div>
@@ -818,18 +862,42 @@ function ConfiguracoesPage() {
             </div>
           )}
 
-          {!assinaturaCarregando && !assinatura?.ativa && plano !== null && plano !== "beta" && (
-            <>
-              <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
-                {plano === "cancelada"
-                  ? "Sua assinatura foi cancelada. Dá pra assinar de novo quando quiser."
-                  : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
-              </p>
-              <LinkInterno href="/assinar" className={BTN_ACAO}>
-                Ver planos
-              </LinkInterno>
-            </>
-          )}
+          {/* Premium ou Pro liberado pela Pólia (convite), sem assinatura no
+              Stripe: antes caía no texto do Grátis (08/10/2026). */}
+          {!assinaturaCarregando &&
+            !assinatura?.ativa &&
+            (plano === "controle" || plano === "projete") && (
+              <>
+                <p className="mb-4 font-sans text-[15px] text-[var(--ink-soft)]">
+                  {plano === "controle"
+                    ? "Plano Premium liberado pela Pólia, sem cobrança. O Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."
+                    : "Plano Pro liberado pela Pólia, sem cobrança."}
+                </p>
+                {plano === "controle" && (
+                  <LinkInterno href="/upgrade?tier=projete" className={BTN_ACAO}>
+                    Conhecer o Pro
+                  </LinkInterno>
+                )}
+              </>
+            )}
+
+          {!assinaturaCarregando &&
+            !assinatura?.ativa &&
+            plano !== null &&
+            plano !== "beta" &&
+            plano !== "controle" &&
+            plano !== "projete" && (
+              <>
+                <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
+                  {plano === "cancelada"
+                    ? "Sua assinatura foi cancelada. Dá pra assinar de novo quando quiser."
+                    : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
+                </p>
+                <LinkInterno href="/assinar" className={BTN_ACAO}>
+                  Ver planos
+                </LinkInterno>
+              </>
+            )}
 
           {!assinaturaCarregando && !assinatura?.ativa && plano === "beta" && (
             <p className="font-sans text-[15px] text-[var(--ink-soft)]">
@@ -1061,7 +1129,17 @@ function Campo({
           }>,
           {
             id,
-            "aria-describedby": error ? errorId : undefined,
+            // Soma ao describedby que o campo já tinha (ex.: requisitos da
+            // senha), em vez de apagar.
+            "aria-describedby":
+              [
+                error ? errorId : null,
+                (primeiroFilho as ReactElement<{ "aria-describedby"?: string }>).props[
+                  "aria-describedby"
+                ],
+              ]
+                .filter(Boolean)
+                .join(" ") || undefined,
             "aria-invalid": error ? true : undefined,
           },
         ),

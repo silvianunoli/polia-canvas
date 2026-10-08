@@ -61,7 +61,8 @@ export function montarEmailManual({
     "",
     "Pólia One",
     TAGLINE_MANUAL,
-    "Alguma dúvida? A Ajuda da Pólia responde: https://usepolia.com.br/ajuda",
+    // one.usepolia.com.br: o apex usepolia.com.br é o biolink e /ajuda lá dá 404.
+    "Alguma dúvida? A Ajuda da Pólia responde: https://one.usepolia.com.br/ajuda",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
 

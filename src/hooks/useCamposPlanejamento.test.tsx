@@ -72,4 +72,12 @@ describe("useCamposPlanejamento", () => {
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(new Map());
   });
+
+  // Erro de leitura não pode virar "ainda não está escrita" em /marca e /mercado.
+  it("erro de leitura vira estado de erro, não Map vazio", async () => {
+    eqMock.mockResolvedValue({ data: null, error: { message: "falhou" } });
+    const { result } = renderHook(() => useCamposPlanejamento("u1"), { wrapper });
+    await waitFor(() => expect(result.current.isError).toBe(true));
+    expect(result.current.data).toBeUndefined();
+  });
 });

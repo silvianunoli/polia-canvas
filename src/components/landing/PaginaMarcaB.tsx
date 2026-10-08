@@ -203,8 +203,8 @@ const planos: PlanoLanding[] = [
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
       "Catálogo sem limite, cada produto com custo, preço e quanto sobra",
       "Financeiro com os três números que decidem o mês",
-      "Clientes com o status de cada pedido, do orçamento à entrega",
-      "Planner sem limite, com a agenda do Google junto",
+      "Clientes com o status de cada pedido, da espera à entrega",
+      "Planner sem limite, e o Calendário com a agenda do Google junto",
     ],
   },
   {
@@ -217,7 +217,7 @@ const planos: PlanoLanding[] = [
       "Raio-x do mês: o que puxou o resultado e o que muda no mês seguinte",
       "Calculadora de encomenda sob medida",
       "Resumo do mês pro contador, em PDF e CSV",
-      "Plano de conteúdo do ano, uma ideia de post por dia",
+      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
     ],
   },
 ];

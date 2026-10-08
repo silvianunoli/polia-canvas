@@ -8,6 +8,7 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { categoriaParaSalvar, clicarCategoria, type SelecaoCategoria } from "./categoriaLancamento";
 import { CATEGORIA_INSUMOS } from "@/lib/projecao.functions";
 import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
+import { CATEGORIAS_DE_VENDA, dataNoMesDe, limitesDoMes } from "@/lib/numerosDoMes";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -37,7 +38,8 @@ export interface Lancamento {
 }
 
 // Semente padrão pra usuárias novas; some assim que o histórico real tiver categorias.
-const CATEGORIAS_ENTRADA = ["Venda de produto", "Prestação de serviço", "Outros"];
+// As duas de venda são as mesmas que o Painel conta em "Pedidos · mês".
+const CATEGORIAS_ENTRADA = [...CATEGORIAS_DE_VENDA, "Outros"];
 // Insumos e Pró-labore vêm das mesmas constantes que a Projeção usa pra tirar
 // essas saídas dos custos fixos: renomear aqui sem renomear lá voltaria a
 // contar insumo duas vezes no ponto de empate.
@@ -57,6 +59,7 @@ export function ModalLancamento({
   prefill,
   lancamentoEdit,
   historico,
+  somenteMesCorrente = false,
   onClose,
   onSaved,
 }: {
@@ -66,6 +69,13 @@ export function ModalLancamento({
   prefill: { valor?: number; desc?: string; categoria?: string } | null;
   lancamentoEdit: Lancamento | null;
   historico: Lancamento[];
+  /**
+   * Plano Grátis (sem a tela /financeiro): a data fica presa ao mês de
+   * `dataPadrao`. O Painel e o cartão "Entrou e saiu este mês" só mostram o
+   * mês corrente, então um lançamento com data de outro mês sumia da tela
+   * pra sempre, sem jeito de corrigir nem de excluir.
+   */
+  somenteMesCorrente?: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -134,8 +144,18 @@ export function ModalLancamento({
 
   const categoriaFinal = categoriaParaSalvar(selecao);
 
+  const limites = somenteMesCorrente && dataPadrao ? limitesDoMes(dataPadrao) : null;
+  const dataForaDoMes = !!limites && !!data && !dataNoMesDe(data, dataPadrao);
+
   // Descrição e categoria são opcionais: dá pra registrar só o valor em 2 toques.
-  const faltaMsg = !cents ? "Falta o valor" : "";
+  // Data vazia (o campo nativo deixa apagar) caía no erro genérico do banco.
+  const faltaMsg = !cents
+    ? "Falta o valor"
+    : !data
+      ? "Falta a data"
+      : dataForaDoMes
+        ? "Escolha uma data deste mês"
+        : "";
 
   const salvar = async () => {
     if (faltaMsg) return;
@@ -239,11 +259,21 @@ export function ModalLancamento({
 
       {/* Data */}
       <div className="mb-4">
-        <Campo label="Data">
+        <Campo
+          label="Data"
+          required
+          hint={
+            limites
+              ? "No plano Grátis o registro é do mês corrente, que é o que o Painel mostra. Os outros meses ficam no Financeiro do Premium."
+              : undefined
+          }
+        >
           <input
             type="date"
             value={data}
             onChange={(e) => setData(e.target.value)}
+            min={limites?.min}
+            max={limites?.max}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>

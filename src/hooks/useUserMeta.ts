@@ -17,8 +17,16 @@ export interface UserMeta {
    * padrão "confere" durante o carregamento: sem esta flag, as telas do Pro
    * (Raio-x, Projeção, Plano de conteúdo) mostravam o portão "isso é do Pro"
    * por um instante PARA QUEM JÁ PAGA o Pro, em toda abertura.
+   *
+   * Continua `true` quando a leitura do perfil FALHOU e ainda não há dado bom:
+   * erro nunca vira "confere" (quem paga via cadeado e portão do Pro por 60s).
    */
   carregando: boolean;
+  /**
+   * `true` quando a última leitura do perfil falhou e não há dado bom em cache.
+   * Pra quem quiser trocar o "carregando" por um aviso com "Tentar de novo".
+   */
+  erro: boolean;
 }
 
 /**
@@ -58,21 +66,28 @@ export function useUserMeta() {
       desde.setDate(desde.getDate() - 365);
       const desdeKey = dataISOLocal(desde);
 
-      const [{ data: profile }, { data: tarefas }, { data: presencas }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("full_name, is_admin, business_name, plano")
-          .eq("id", userId!)
-          .maybeSingle(),
-        supabase
-          .from("tarefas")
-          .select("status, updated_at")
-          .eq("user_id", userId!)
-          .eq("status", "concluido")
-          .gte("updated_at", desdeKey)
-          .limit(400),
-        supabase.from("presencas").select("data").eq("user_id", userId!).gte("data", desdeKey),
-      ]);
+      const [{ data: profile, error: erroPerfil }, { data: tarefas }, { data: presencas }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("full_name, is_admin, business_name, plano")
+            .eq("id", userId!)
+            .maybeSingle(),
+          supabase
+            .from("tarefas")
+            .select("status, updated_at")
+            .eq("user_id", userId!)
+            .eq("status", "concluido")
+            .gte("updated_at", desdeKey)
+            .limit(400),
+          supabase.from("presencas").select("data").eq("user_id", userId!).gte("data", desdeKey),
+        ]);
+
+      // Sem o perfil não dá pra saber o plano. Lança em vez de cair em "confere":
+      // o React Query tenta de novo e, se já havia dado bom, ele continua valendo.
+      // Tarefas/presenças só alimentam a contagem de presença: falha nelas não
+      // rebaixa ninguém, então não derruba a leitura.
+      if (erroPerfil) throw erroPerfil;
 
       const full =
         (profile?.full_name as string | undefined) ??
@@ -106,22 +121,27 @@ export function useUserMeta() {
         avatarUrl: null,
         plano: (profile?.plano as string | undefined) ?? "confere",
         carregando: false,
+        erro: false,
       };
     },
   });
 
-  return (
-    query.data ?? {
-      initial: "P",
-      displayName: "você",
-      businessName: null,
-      isAdmin: false,
-      streak: 0,
-      avatarUrl: null,
-      plano: "confere",
-      // Enquanto não chegou o perfil, "confere" é um chute — quem consome
-      // precisa saber disso antes de barrar alguém.
-      carregando: true,
-    }
-  );
+  // Dado bom em cache vence erro de refetch: o React Query mantém `data` quando
+  // uma releitura falha, então o plano de quem paga nunca cai por instabilidade.
+  if (query.data) return query.data;
+
+  return {
+    initial: "P",
+    displayName: "você",
+    businessName: null,
+    isAdmin: false,
+    streak: 0,
+    avatarUrl: null,
+    plano: "confere",
+    // Enquanto não chegou o perfil, "confere" é um chute — quem consome
+    // precisa saber disso antes de barrar alguém. Também vale quando a
+    // leitura falhou: erro não é "confere".
+    carregando: true,
+    erro: query.isError,
+  };
 }

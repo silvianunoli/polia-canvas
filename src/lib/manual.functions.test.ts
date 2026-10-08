@@ -121,12 +121,13 @@ describe("gravarLeadManual: gravação", () => {
         origem: "instagram_bio",
         consentimento: true,
         consent_texto: CONSENT_TEXTO_MANUAL,
-        descadastrado_em: null,
         telefone: "5521987654321",
       }),
     );
     expect(payload).not.toHaveProperty("download_token");
     expect(payload).not.toHaveProperty("descadastro_token");
+    // Formulário público nunca reativa quem se descadastrou (LGPD).
+    expect(payload).not.toHaveProperty("descadastrado_em");
 
     expect(r.ok).toBe(true);
     expect(r.downloadUrl).toBe(`https://one.usepolia.com.br/manual/baixar?t=${DOWNLOAD}`);
@@ -154,6 +155,25 @@ describe("gravarLeadManual: gravação", () => {
     expect(r.ok).toBe(true);
     expect(r.eventId).toBeUndefined();
     expect(enviarEmailResend).toHaveBeenCalledTimes(1);
+  });
+
+  it("e-mail descadastrado: registra o lead sem reativar e não manda e-mail", async () => {
+    const up = cenario(
+      { email: "ana@exemplo.com" },
+      {
+        data: {
+          download_token: DOWNLOAD,
+          descadastro_token: DESCADASTRO,
+          descadastrado_em: "2026-09-20T10:00:00Z",
+        },
+        error: null,
+      },
+    );
+    const r = (await gravar({ data: valido })) as { ok: boolean; downloadUrl: string };
+    expect(up.upsert.mock.calls[0][0]).not.toHaveProperty("descadastrado_em");
+    expect(r.ok).toBe(true);
+    expect(r.downloadUrl).toBe(`https://one.usepolia.com.br/manual/baixar?t=${DOWNLOAD}`);
+    expect(enviarEmailResend).not.toHaveBeenCalled();
   });
 
   it("telefone inválido fica fora do payload em vez de apagar o anterior", async () => {

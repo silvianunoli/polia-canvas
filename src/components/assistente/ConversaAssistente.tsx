@@ -3,7 +3,6 @@ import { Link } from "@tanstack/react-router";
 import { Copy, Sparkles } from "lucide-react";
 
 import { BTN_ACAO } from "@/lib/botoes";
-import { MENSAGENS_CANONICAS } from "@/lib/aimer.functions";
 import { useAssistente } from "./AssistenteContext";
 
 const EXEMPLOS = [
@@ -155,17 +154,17 @@ export function ConversaAssistente({
                       Tentar de novo
                     </button>
                   )}
-                  {tetoAtingido &&
-                    msg.autor === "aimer" &&
-                    msg.texto === MENSAGENS_CANONICAS.tetoAtingido && (
-                      <Link
-                        to="/upgrade"
-                        search={{ rota: "/aimer", tier: "controle" }}
-                        className="relative mt-2 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline before:absolute before:-inset-3 before:content-[''] hover:underline"
-                      >
-                        Conhecer o Premium
-                      </Link>
-                    )}
+                  {/* O degrau oferecido vem do plano (avisoTetoAssistente): Grátis
+                      vê o Premium, Premium vê o Pro, Pro e beta não veem link. */}
+                  {tetoAtingido && msg.autor === "aimer" && msg.upgrade && (
+                    <Link
+                      to="/upgrade"
+                      search={{ rota: "/aimer", tier: msg.upgrade.tier }}
+                      className="relative mt-2 inline-block text-[13px] font-medium text-[var(--secondary-text)] no-underline before:absolute before:-inset-3 before:content-[''] hover:underline"
+                    >
+                      {msg.upgrade.rotulo}
+                    </Link>
+                  )}
                 </div>
               </div>
             ))}

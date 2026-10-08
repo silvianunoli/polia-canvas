@@ -7,6 +7,7 @@ import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
+import { BotaoSair } from "@/components/cosmic/SairDaConta";
 
 // O passo mora na URL (?passo=3) desde 07/10/2026 (ONE-23): o voltar do
 // navegador recua um passo em vez de sair do fluxo.
@@ -19,33 +20,41 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
     return Number.isInteger(n) && n >= 2 && n <= ULTIMO_PASSO ? { passo: n } : {};
   },
   head: () => ({ meta: [{ title: "Onboarding · Pólia One" }] }),
-  beforeLoad: async ({ cause }) => {
-    if (typeof window === "undefined") return;
+  beforeLoad: async ({ cause, search }): Promise<OnboardingContexto> => {
+    if (typeof window === "undefined") return {};
     // Só na ENTRADA da rota. Com "stay" (o router.invalidate que roda a cada
-    // renovação de login), quem estava nos passos 5 e 6 era jogada pro Painel:
-    // o onboarding_completed vira true já no passo 4.
-    if (cause === "stay") return;
+    // renovação de login), quem estava no passo 5 era jogada pro Painel: o
+    // onboarding_completed vira true já no passo 4.
+    if (cause === "stay") return {};
     const { data: sess } = await supabase.auth.getSession();
-    if (!sess.session) return;
-    const { data } = await supabase
+    if (!sess.session) return {};
+    const { data, error } = await supabase
       .from("profiles")
-      .select("onboarding_completed")
+      .select("onboarding_completed, business_type")
       .eq("id", sess.session.user.id)
       .maybeSingle();
-    if (!data?.onboarding_completed) return;
-    const { data: assinatura } = await supabase
-      .from("assinaturas" as never)
-      .select("status")
-      .eq("user_id", sess.session.user.id)
-      .maybeSingle();
-    const status = (assinatura as { status: string } | null)?.status;
-    const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
-    throw redirect({ to: ativa ? "/painel" : "/assinar" });
+    if (error || !data?.onboarding_completed) return {};
+    // Já concluiu. Recarregar a tela final ou voltar da Calculadora pelo
+    // navegador cai em ?passo=5: mostra a tela final de novo. Antes ia pro
+    // /assinar ("escolha seu plano"), como se precisasse pagar pra seguir;
+    // o plano Grátis existe e o Painel é dele também.
+    if (search.passo === ULTIMO_PASSO) {
+      return { concluidoAntes: { tipo: tipoDeNegocio(data.business_type) } };
+    }
+    throw redirect({ to: "/painel" });
   },
   component: OnboardingPage,
 });
 
+type OnboardingContexto = { concluidoAntes?: { tipo: BusinessType | null } };
+
 type BusinessType = "produto_fisico" | "produto_digital" | "servico" | "hibrido";
+
+function tipoDeNegocio(v: unknown): BusinessType | null {
+  return v === "produto_fisico" || v === "produto_digital" || v === "servico" || v === "hibrido"
+    ? v
+    : null;
+}
 type BusinessStage = "ideia" | "comecei" | "ja_vendo";
 
 interface OnboardingState {
@@ -63,7 +72,14 @@ interface OnboardingState {
 // As respostas vivem só na memória da tela. Se a URL pede um passo cujas
 // respostas anteriores não existem (recarregou no meio, colou o link), volta
 // pro primeiro passo que falta responder.
-function passoPossivel(pedido: number, state: OnboardingState, salvo: boolean): number {
+function passoPossivel(
+  pedido: number,
+  state: OnboardingState,
+  salvo: boolean,
+  concluidoAntes = false,
+): number {
+  // Onboarding já concluído (em outra visita): a tela final vale sozinha.
+  if (concluidoAntes && pedido === ULTIMO_PASSO) return pedido;
   if (pedido >= 3 && !state.business_type) return 2;
   if (pedido >= 4 && !state.business_stage) return 3;
   if (pedido >= 5 && !salvo) return 4;
@@ -85,13 +101,24 @@ function OnboardingPage() {
     hs: "",
   });
   const navigate = useNavigate();
-  const step = passoPossivel(passo ?? 1, state, salvo);
+  // Lido uma vez, na entrada: o router.invalidate da renovação de login roda o
+  // beforeLoad de novo com "stay", que não repete a leitura do perfil.
+  const ctx = Route.useRouteContext();
+  const [concluidoAntes] = useState(() => ctx.concluidoAntes ?? null);
+  const step = passoPossivel(passo ?? 1, state, salvo, !!concluidoAntes);
 
   useEffect(() => {
+    // Quem já tinha concluído e saiu da tela final (voltar do navegador) não
+    // refaz o onboarding: as respostas antigas não estão na memória e salvar
+    // de novo apagaria o nome do negócio.
+    if (concluidoAntes && !salvo && (passo ?? 1) !== ULTIMO_PASSO) {
+      void navigate({ to: "/painel", replace: true });
+      return;
+    }
     if (step !== (passo ?? 1)) {
       void navigate({ to: "/onboarding", search: step > 1 ? { passo: step } : {}, replace: true });
     }
-  }, [step, passo, navigate]);
+  }, [step, passo, navigate, concluidoAntes, salvo]);
 
   const setStep = (n: number) => {
     void navigate({ to: "/onboarding", search: n > 1 ? { passo: n } : {} });
@@ -118,10 +145,17 @@ function OnboardingPage() {
   return (
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
       <div className="w-full px-5 pb-10 pt-6">
+        {/* Porta de saída: toda a área logada manda pra cá enquanto o
+            onboarding não termina, e a tela não tem barra lateral. Sem isto,
+            quem entrou com a conta Google errada ficava presa. */}
+        <div className="mx-auto -mt-2 mb-2 flex w-full max-w-[900px] justify-end">
+          <BotaoSair />
+        </div>
         {step > 1 && <StepIndicator step={step} />}
         {/* O passo 4 grava com upsert, então voltar da tela final e salvar de
-            novo só atualiza o perfil, não duplica nada. */}
-        {step >= 2 && (
+            novo só atualiza o perfil, não duplica nada. Quem já tinha
+            concluído antes não vê o Voltar: os passos anteriores estão vazios. */}
+        {step >= 2 && !(concluidoAntes && !salvo) && (
           <div className="mx-auto mt-2 w-full max-w-[900px]">
             <button
               type="button"
@@ -173,7 +207,7 @@ function OnboardingPage() {
               valor mais rápido do produto e o caminho que a landing promete. */}
           {step === 5 && (
             <StepFinal
-              tipo={state.business_type}
+              tipo={state.business_type ?? concluidoAntes?.tipo ?? null}
               onFinish={() => navigate({ to: "/calculadora" })}
               onPlanejamento={() => navigate({ to: "/planejamento" })}
             />

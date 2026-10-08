@@ -6,7 +6,12 @@ import { AuthShell, AuthButton, SerifHeadline } from "@/components/cosmic/AuthSh
 import { CosmicInput, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
-import { META_PRECISA_CRIAR_SENHA, senhaCumpreRequisitos } from "@/lib/senha";
+import {
+  META_PRECISA_CRIAR_SENHA,
+  MSG_REQUISITOS_SENHA,
+  mensagemErroNovaSenha,
+  senhaCumpreRequisitos,
+} from "@/lib/senha";
 
 export const Route = createFileRoute("/auth/redefinir-senha")({
   head: () => ({
@@ -73,7 +78,7 @@ function RedefinirSenhaPage() {
     // Mesma régua do cadastro (senhaCumpreRequisitos): a regra é dita antes,
     // não descoberta errando.
     if (!senhaCumpreRequisitos(senha)) {
-      setErro("A senha precisa de 8 caracteres, com pelo menos 1 número e 1 letra maiúscula.");
+      setErro(MSG_REQUISITOS_SENHA);
       senhaRef.current?.focus();
       return;
     }
@@ -92,6 +97,14 @@ function RedefinirSenhaPage() {
     });
     if (error) {
       setLoading(false);
+      // Senha igual à antiga ou fraca demais: "tenta de novo" não resolvia
+      // nunca. A mensagem vai pro campo, que é onde ela corrige.
+      const doCampo = mensagemErroNovaSenha(error);
+      if (doCampo) {
+        setErro(doCampo);
+        setTimeout(() => senhaRef.current?.focus(), 50);
+        return;
+      }
       toastErro("A Pólia não conseguiu salvar agora. Tenta de novo em alguns segundos.");
       return;
     }

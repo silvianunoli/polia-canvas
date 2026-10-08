@@ -6,7 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { AuthShell, AuthButton, SerifHeadline, SubText } from "@/components/cosmic/AuthShell";
 import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
-import { META_PRECISA_CRIAR_SENHA, senhaCumpreRequisitos } from "@/lib/senha";
+import {
+  META_PRECISA_CRIAR_SENHA,
+  mensagemErroNovaSenha,
+  senhaCumpreRequisitos,
+} from "@/lib/senha";
+import { BotaoSair } from "@/components/cosmic/SairDaConta";
 
 // Primeira entrada de quem comprou em /planos sem ter conta. O e-mail "Sua
 // compra foi confirmada" traz um convite do Supabase que só faz login; sem
@@ -32,6 +37,9 @@ function CriarSenhaPage() {
   const [confirma, setConfirma] = useState("");
   const [nomeErro, setNomeErro] = useState<string | undefined>(undefined);
   const [senhaInvalida, setSenhaInvalida] = useState(false);
+  // Recusa do servidor (senha fraca demais, por exemplo): o checklist de
+  // requisitos não explica, então a mensagem aparece embaixo do campo.
+  const [senhaErro, setSenhaErro] = useState<string | undefined>(undefined);
   const [confirmaErro, setConfirmaErro] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const caps = useCapsLockWarning();
@@ -110,6 +118,12 @@ function CriarSenhaPage() {
     });
     if (error) {
       setLoading(false);
+      const doCampo = mensagemErroNovaSenha(error);
+      if (doCampo) {
+        setSenhaErro(doCampo);
+        setTimeout(() => senhaRef.current?.focus(), 50);
+        return;
+      }
       toastErro("A Pólia não conseguiu salvar a senha agora. Tenta de novo em alguns segundos.");
       return;
     }
@@ -127,6 +141,11 @@ function CriarSenhaPage() {
 
   return (
     <AuthShell maxWidth={420}>
+      {/* Porta de saída: o guard da área logada manda pra cá enquanto a senha
+          não existe, então sem isto quem abriu o convite errado ficava presa. */}
+      <div className="-mt-2 mb-1 flex justify-end">
+        <BotaoSair />
+      </div>
       <SerifHeadline size={26}>Falta só a sua senha.</SerifHeadline>
       <SubText>
         {email
@@ -163,10 +182,12 @@ function CriarSenhaPage() {
             onChange={(e) => {
               setSenha(e.target.value);
               setSenhaInvalida(false);
+              if (senhaErro) setSenhaErro(undefined);
             }}
             onKeyUp={caps.onKeyUp}
             invalid={senhaInvalida}
-            aria-describedby="senha-requisitos"
+            error={senhaErro}
+            aria-describedby={senhaErro ? "senha-error senha-requisitos" : "senha-requisitos"}
             disabled={loading}
           />
           <CapsLockHint ligado={caps.ligado} />

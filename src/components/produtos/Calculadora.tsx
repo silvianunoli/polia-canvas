@@ -5,6 +5,7 @@ import { Lock, Copy, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
+import { toastErro } from "@/lib/toast";
 import {
   calcularQuantoSobra,
   calcularPrecoSugerido,
@@ -112,6 +113,7 @@ export function Calculadora({
   const [impostosE, setImpostosE] = useState(() => v("impostosE"));
   const [quantoSobraPct, setQuantoSobraPct] = useState(() => v("quantoSobraPct"));
   const [valorHoraSalvo, setValorHoraSalvo] = useState(false);
+  const [salvandoValorHora, setSalvandoValorHora] = useState(false);
   const valorHoraFocusRef = useRef<HTMLInputElement>(null);
 
   // Preenche o valor-hora com o padrão salvo assim que ele carrega, só se o
@@ -124,12 +126,20 @@ export function Calculadora({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valorHoraPadrao]);
 
+  // Antes o erro era ignorado e a tela dizia "salvo" do mesmo jeito.
   const salvarValorHoraPadrao = async () => {
-    if (!userId || num(valorHora) <= 0) return;
-    await supabase
+    if (!userId || num(valorHora) <= 0 || salvandoValorHora) return;
+    setSalvandoValorHora(true);
+    const { error } = await supabase
       .from("profiles")
       .update({ valor_hora_padrao: num(valorHora) })
       .eq("id", userId);
+    setSalvandoValorHora(false);
+    if (error) {
+      console.error("valor_hora_padrao_salvar", error);
+      toastErro("A Pólia One não conseguiu salvar o valor-hora padrão. Tenta de novo.");
+      return;
+    }
     setValorHoraSalvo(true);
     setTimeout(() => setValorHoraSalvo(false), 1600);
   };
@@ -646,10 +656,15 @@ export function Calculadora({
               {ehProjete && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
                 <button
                   type="button"
-                  onClick={salvarValorHoraPadrao}
-                  className="inline-flex min-h-11 items-center text-[12px] font-medium text-[var(--secondary-text)] hover:underline"
+                  onClick={() => void salvarValorHoraPadrao()}
+                  disabled={salvandoValorHora}
+                  className="inline-flex min-h-11 items-center text-[12px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-wait disabled:opacity-60"
                 >
-                  {valorHoraSalvo ? "valor-hora padrão salvo" : "usar como meu valor-hora padrão"}
+                  {salvandoValorHora
+                    ? "salvando..."
+                    : valorHoraSalvo
+                      ? "valor-hora padrão salvo"
+                      : "usar como meu valor-hora padrão"}
                 </button>
               )}
             </div>

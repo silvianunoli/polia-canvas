@@ -21,6 +21,7 @@ export const CAMINHOS_ESTATICOS = [
   "/quiz",
   "/manual",
   "/planos",
+  "/tutorial",
   "/termos",
   "/privacidade",
 ] as const;

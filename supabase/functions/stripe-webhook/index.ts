@@ -155,6 +155,41 @@ const STATUS_ATIVOS_FOUNDER = ["active", "trialing"];
 // /assinar e fechar sem pagar liberava o Premium (QA-01).
 const STATUS_COM_ACESSO = ["active", "trialing", "past_due"];
 
+// Cancelamento marcado pro fim do período. O cancelarAssinatura do app usa
+// cancel_at_period_end; o portal do Stripe pode marcar por cancel_at. Os dois
+// contam.
+function cancelamentoAgendado(
+  s: Pick<Stripe.Subscription, "cancel_at_period_end" | "cancel_at">,
+): boolean {
+  return s.cancel_at_period_end === true || (s.cancel_at ?? null) !== null;
+}
+
+// Este evento é a VIRADA pra "cancelamento agendado"? Remonta o estado de antes
+// com previous_attributes (o Stripe só manda ali o que mudou). Sem esses
+// campos em previous_attributes, este evento não mexeu no cancelamento.
+function cancelamentoFoiAgendadoNesteEvento(
+  payload: Stripe.Subscription,
+  anteriores: Partial<Stripe.Subscription> | undefined,
+): boolean {
+  if (!anteriores) return false;
+  const mudouPeriodo = "cancel_at_period_end" in anteriores;
+  const mudouData = "cancel_at" in anteriores;
+  if (!mudouPeriodo && !mudouData) return false;
+  const antes = {
+    cancel_at_period_end: mudouPeriodo
+      ? (anteriores.cancel_at_period_end ?? false)
+      : payload.cancel_at_period_end,
+    cancel_at: mudouData ? (anteriores.cancel_at ?? null) : payload.cancel_at,
+  };
+  return !cancelamentoAgendado(antes) && cancelamentoAgendado(payload);
+}
+
+// Até quando o acesso vai, já formatado no fuso de Brasília.
+function fimDoAcesso(s: Stripe.Subscription): string | null {
+  const fim = s.cancel_at ?? s.items.data[0]?.current_period_end ?? null;
+  return fim ? formatarDataBR(new Date(fim * 1000)) : null;
+}
+
 // Quem nunca pagou (incomplete_expired) volta pro Grátis; quem pagou e parou
 // de pagar (unpaid) fica como cancelada, igual ao customer.subscription.deleted.
 // Só mexe em plano pago: beta e contas liberadas à mão ficam como estão.
@@ -172,10 +207,105 @@ async function rebaixarPlanoSemPagamento(
     .in("plano", ["controle", "projete"]);
 }
 
+const msgErro = (err: unknown) => (err instanceof Error ? err.message : String(err)).slice(0, 200);
+
+// Estorna o que foi pago na última fatura da assinatura duplicada. Seguro pra
+// reentrega e pra eventos simultâneos da mesma assinatura: pula pagamento que
+// já tem estorno e usa chave de idempotência por pagamento. Devolve um resumo
+// pro alerta. Pode jogar: quem chama trata.
+async function estornarUltimaFatura(subscription: Stripe.Subscription): Promise<string> {
+  const invoiceId =
+    typeof subscription.latest_invoice === "string"
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id;
+  if (!invoiceId) return "sem fatura pra estornar";
+
+  // Nas versões novas da API a Invoice não traz mais payment_intent/charge
+  // direto: o pagamento mora em invoicePayments.
+  const pagamentos = await stripe.invoicePayments.list({
+    invoice: invoiceId,
+    status: "paid",
+    limit: 10,
+  });
+  const feitos: string[] = [];
+  for (const pagamento of pagamentos.data) {
+    const pi = pagamento.payment.payment_intent;
+    const ch = pagamento.payment.charge;
+    const paymentIntent = typeof pi === "string" ? pi : pi?.id;
+    const charge = typeof ch === "string" ? ch : ch?.id;
+    if (!paymentIntent && !charge) continue;
+    const alvo = paymentIntent ? { payment_intent: paymentIntent } : { charge: charge! };
+
+    const existentes = await stripe.refunds.list({ ...alvo, limit: 10 });
+    if (existentes.data.some((r) => r.status !== "failed" && r.status !== "canceled")) {
+      feitos.push(`já estava estornado (${paymentIntent ?? charge})`);
+      continue;
+    }
+    const estorno = await stripe.refunds.create(
+      {
+        ...alvo,
+        reason: "duplicate",
+        metadata: { motivo: "compra_duplicada", assinatura: subscription.id },
+      },
+      { idempotencyKey: `polia-estorno-duplicada-${paymentIntent ?? charge}` },
+    );
+    feitos.push(`${estorno.id} (${estorno.status}, ${estorno.amount / 100} ${estorno.currency})`);
+  }
+  return feitos.length > 0 ? feitos.join("; ") : "nada pago nessa fatura ainda";
+}
+
+// Compra duplicada (08/10/2026): a mesma pessoa ficou com duas assinaturas com
+// acesso (ex.: comprou de novo na /planos antes do webhook da 1ª chegar). Antes
+// só ia um alerta e a 2ª seguia cobrando todo mês. Agora a que NÃO está
+// gravada como vigente é cancelada na hora e a fatura paga dela é estornada.
+// Nunca joga: falha em qualquer parte vira alerta pra resolver à mão, e o
+// resto do evento segue.
+async function desfazerAssinaturaDuplicada(
+  subscription: Stripe.Subscription,
+  userId: string,
+  vigente: string,
+): Promise<void> {
+  let cancelada = "não tentado";
+  let estorno = "não tentado";
+  let deuCerto = true;
+  try {
+    await stripe.subscriptions.cancel(subscription.id);
+    cancelada = "sim";
+  } catch (err) {
+    deuCerto = false;
+    cancelada = `falhou: ${msgErro(err)}`;
+    console.error("[stripe-webhook] Falha ao cancelar assinatura duplicada:", subscription.id, err);
+  }
+  try {
+    estorno = await estornarUltimaFatura(subscription);
+  } catch (err) {
+    deuCerto = false;
+    estorno = `falhou: ${msgErro(err)}`;
+    console.error("[stripe-webhook] Falha ao estornar assinatura duplicada:", subscription.id, err);
+  }
+  await dispararAlerta(
+    "stripe_assinatura_duplicada",
+    deuCerto
+      ? "Compra duplicada desfeita: a assinatura nova foi cancelada e estornada"
+      : "Compra duplicada: parte do desfazer falhou, conferir no Stripe",
+    { userId, vigente, duplicada: subscription.id, cancelada, estorno },
+  );
+}
+
+interface ResultadoUpsert {
+  userId: string | null;
+  // Esta assinatura era uma compra duplicada e foi desfeita: quem chama não
+  // manda e-mail de compra confirmada nem de cancelamento por ela.
+  duplicada: boolean;
+}
+
 async function upsertAssinaturaDaSubscription(
   subscription: Stripe.Subscription,
   stripeEventId: string,
-) {
+  // Quem chama já sabe a dona (checkout.session.completed). Sem isso, se o
+  // customers.update do user_id falhava, a compra paga ficava sem plano.
+  userIdConhecido?: string,
+): Promise<ResultadoUpsert> {
   const item = subscription.items.data[0];
   const priceId = item?.price.id ?? null;
   const customerId =
@@ -213,11 +343,14 @@ async function upsertAssinaturaDaSubscription(
   if (!userId) {
     // Fallback: webhook chegou antes do upsert inicial (ou a linha nunca foi
     // criada). Busca o user_id nos metadados do Customer (gravados na criação).
-    const customer = await stripe.customers.retrieve(customerId);
-    userId = !customer.deleted ? (customer.metadata?.user_id as string | undefined) : undefined;
+    userId = userIdConhecido;
+    if (!userId) {
+      const customer = await stripe.customers.retrieve(customerId);
+      userId = !customer.deleted ? (customer.metadata?.user_id as string | undefined) : undefined;
+    }
     if (!userId) {
       console.error("[stripe-webhook] Sem user_id para vincular a assinatura", subscription.id);
-      return;
+      return { userId: null, duplicada: false };
     }
     // A linha é uma por usuária. Se ela já aponta pra OUTRA assinatura com
     // acesso, este evento é de uma assinatura velha (tentativa abandonada que
@@ -240,13 +373,12 @@ async function upsertAssinaturaDaSubscription(
         subscription.status,
       );
       if (STATUS_COM_ACESSO.includes(subscription.status)) {
-        void dispararAlerta(
-          "stripe_assinatura_duplicada",
-          "Usuária com duas assinaturas pagando ao mesmo tempo",
-          { userId, vigente: linhaAtual.stripe_subscription_id, nova: subscription.id },
-        );
+        // Duas com acesso ao mesmo tempo: desfaz a que não é a vigente
+        // (cancela + estorna). Ver desfazerAssinaturaDuplicada.
+        await desfazerAssinaturaDuplicada(subscription, userId, linhaAtual.stripe_subscription_id);
+        return { userId, duplicada: true };
       }
-      return;
+      return { userId, duplicada: false };
     }
     const { error: insertError } = await supabaseAdmin
       .from("assinaturas")
@@ -255,12 +387,25 @@ async function upsertAssinaturaDaSubscription(
   }
 
   if (STATUS_COM_ACESSO.includes(subscription.status)) {
-    if (priceId && PRICE_TO_PLANO[priceId]) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ plano: PRICE_TO_PLANO[priceId] })
-        .eq("id", userId);
+    const planoDoPreco = priceId ? PRICE_TO_PLANO[priceId] : undefined;
+    if (!planoDoPreco) {
+      // Preço fora do mapa (secret STRIPE_PRICE_ID_* faltando ou preço novo
+      // criado no Stripe): a assinatura cobra e o plano não muda. Antes isso
+      // passava calado. Agora alerta e devolve 500: o Stripe reentrega, e
+      // quando o secret for corrigido a reentrega grava o plano.
+      await dispararAlerta(
+        "stripe_webhook_preco_desconhecido",
+        "Assinatura paga com preço que o webhook não conhece: plano não liberado",
+        { userId, assinatura: subscription.id, priceId },
+      );
+      throw new Error(`Preço sem plano no webhook: ${priceId ?? "(sem price)"}`);
     }
+    const { error: erroPlano } = await supabaseAdmin
+      .from("profiles")
+      .update({ plano: planoDoPreco })
+      .eq("id", userId);
+    // Sem plano gravado ela pagou e segue no Grátis: erro aqui também reentrega.
+    if (erroPlano) throw erroPlano;
   } else if (subscription.status === "incomplete_expired" || subscription.status === "unpaid") {
     await rebaixarPlanoSemPagamento(userId, subscription.status, statusAnterior);
   }
@@ -274,6 +419,7 @@ async function upsertAssinaturaDaSubscription(
       price_id: priceId,
     });
   }
+  return { userId, duplicada: false };
 }
 
 // Busca via função SQL (migration 20261005140000), não por .from("users") no
@@ -299,6 +445,19 @@ function mascararEmail(email: string): string {
   const [local, dominio] = email.split("@");
   if (!dominio) return "***";
   return `${local.slice(0, 2)}***@${dominio}`;
+}
+
+// E-mail de quem comprou sempre minúsculo e sem espaço (08/10/2026): o hook de
+// cadastro procura o convite por lower(trim(email)) com igualdade exata, então
+// "Ana@..." gravado cru em convites_cadastro bloqueava a conta da compra paga.
+function normalizarEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+// Data dos e-mails no fuso de Brasília. Sem timeZone, o Deno formata em UTC e
+// uma assinatura que vence às 22h do dia 9 aparecia como "10/10".
+function formatarDataBR(data: Date): string {
+  return data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
 // Mensagem de erro do Resend pode repetir o endereço: troca qualquer e-mail
@@ -338,6 +497,9 @@ async function enviarViaResend(
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from: "Pólia <naoresponda@usepolia.com.br>",
+        // Quem responde um e-mail de cobrança chega na caixa real da Pólia,
+        // não no naoresponda@ (08/10/2026).
+        reply_to: "oi@usepolia.com.br",
         to: [to],
         subject,
         text,
@@ -370,13 +532,13 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
   return await enviarViaResend(
     "Sua compra foi confirmada",
-    `Agora falta criar sua senha para entrar na Pólia One pela primeira vez.\n\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignore este e-mail.`,
+    `Agora falta criar sua senha para entrar na Pólia One pela primeira vez.\n\n${linkAtivacao}\n\nEsse link vale por pouco tempo. Se não foi você quem comprou, ignore este e-mail.`,
     emailPolia({
       preheader: "Agora falta criar sua senha para entrar na Pólia One.",
       headline: "Sua compra foi confirmada",
       paragrafos: [
         "Agora falta criar sua senha para entrar na Pólia One pela primeira vez.",
-        "Esse link expira em algumas horas. Se não foi você quem comprou, ignore este e-mail.",
+        "Esse link vale por pouco tempo. Se não foi você quem comprou, ignore este e-mail.",
       ],
       ctaLabel: "Criar minha senha",
       ctaUrl: linkAtivacao,
@@ -392,13 +554,14 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
 async function enviarEmailCompraContaExistente(email: string) {
   return await enviarViaResend(
     "Sua compra foi confirmada",
-    `O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail (${email}).\n\n${SITE_URL}/auth/login\n\nSe não lembra a senha, use "Esqueci minha senha" na tela de entrada. Se não foi você quem comprou, responda a este e-mail.`,
+    `O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail (${email}).\n\n${SITE_URL}/auth/login\n\nSe não lembra a senha, use "Recuperar acesso" na tela de entrada. Se não foi você quem comprou, escreva pra oi@usepolia.com.br.`,
     emailPolia({
       preheader: "O plano já está ativo na sua conta da Pólia One.",
       headline: "Sua compra foi confirmada",
       paragrafos: [
         "O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail.",
-        'Se não lembra a senha, use "Esqueci minha senha" na tela de entrada.',
+        'Se não lembra a senha, use "Recuperar acesso" na tela de entrada.',
+        "Se não foi você quem comprou, escreva pra oi@usepolia.com.br.",
       ],
       ctaLabel: "Entrar na Pólia",
       ctaUrl: `${SITE_URL}/auth/login`,
@@ -425,22 +588,48 @@ async function enviarEmailPagamentoRecusado(email: string) {
   );
 }
 
-async function enviarEmailCancelamento(email: string, dataFimAcesso: string | null) {
+// Sai quando ela PEDE o cancelamento (customer.subscription.updated com
+// cancel_at_period_end virando true), não no fim do período: antes só saía no
+// customer.subscription.deleted, no último dia, dizendo "continua até [hoje]"
+// (08/10/2026). O fim do período manda enviarEmailAssinaturaTerminou.
+async function enviarEmailCancelamentoAgendado(email: string, dataFimAcesso: string | null) {
   const paragrafo1 = dataFimAcesso
-    ? `Seu acesso à Pólia One continua até ${dataFimAcesso}.`
-    : "Seu acesso à Pólia One continua até o fim do período já pago.";
+    ? `O cancelamento está confirmado. O acesso à Pólia One continua até ${dataFimAcesso}.`
+    : "O cancelamento está confirmado. O acesso à Pólia One continua até o fim do período já pago.";
+  const paragrafo2 = "Até lá, nada muda. Depois, a conta volta pro plano Grátis e os dados continuam guardados.";
   return await enviarViaResend(
-    "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
+    "Cancelamento confirmado",
+    `${paragrafo1}\n\n${paragrafo2}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: paragrafo1,
-      headline: "Assinatura cancelada",
-      paragrafos: [paragrafo1, "Se quiser voltar depois, seus dados continuam guardados."],
+      headline: "Cancelamento confirmado",
+      paragrafos: [paragrafo1, paragrafo2],
+      ctaLabel: "Ver minha assinatura",
+      ctaUrl: `${SITE_URL}/configuracoes`,
+    }),
+    email,
+    "e-mail de cancelamento confirmado",
+  );
+}
+
+// Texto curto do fim de verdade (customer.subscription.deleted). O aviso com a
+// data já saiu quando ela pediu o cancelamento; este só fecha o ciclo.
+async function enviarEmailAssinaturaTerminou(email: string) {
+  const paragrafo1 =
+    "A assinatura da Pólia One terminou, e a conta voltou pro plano Grátis.";
+  const paragrafo2 = "O Planejamento e os dados continuam guardados, caso queira voltar.";
+  return await enviarViaResend(
+    "Sua assinatura terminou",
+    `${paragrafo1}\n\n${paragrafo2}\n\n${SITE_URL}/planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
+    emailPolia({
+      preheader: paragrafo1,
+      headline: "Assinatura encerrada",
+      paragrafos: [paragrafo1, paragrafo2],
       ctaLabel: "Assinar de novo",
       ctaUrl: `${SITE_URL}/planos`,
     }),
     email,
-    "e-mail de cancelamento",
+    "e-mail de assinatura encerrada",
   );
 }
 
@@ -450,8 +639,8 @@ async function enviarEmailRenovacao(
   dataCobranca: string | null,
 ) {
   const paragrafo = dataCobranca
-    ? `Em ${dataCobranca} vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia One.`
-    : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia One.`;
+    ? `Em ${dataCobranca} a Pólia cobra ${valorFormatado} no cartão cadastrado pra manter o acesso à Pólia One.`
+    : `Em poucos dias a Pólia cobra ${valorFormatado} no cartão cadastrado pra manter o acesso à Pólia One.`;
   return await enviarViaResend(
     "Sua assinatura renova em breve",
     `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
@@ -491,7 +680,7 @@ interface ContaDaCompra {
 
 // A conta já existente foi criada por esta mesma checkout session e ainda
 // não criou senha? Falha de leitura vira "não": o e-mail de conta existente
-// também resolve (entrar + "Esqueci minha senha").
+// também resolve (entrar + "Recuperar acesso").
 async function contaCriadaPorEstaSessao(userId: string, sessionId: string): Promise<boolean> {
   const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
   if (error || !data.user) {
@@ -508,12 +697,17 @@ async function contaCriadaPorEstaSessao(userId: string, sessionId: string): Prom
 // registro do evento (QA-38). Em qualquer caso, grava o user_id nos metadados
 // do Customer no Stripe — upsertAssinaturaDaSubscription já sabe ler esse
 // metadado como fallback.
+//
+// `email` chega já normalizado (normalizarEmail). Se a conta não puder ser
+// criada, JOGA (08/10/2026): o handler devolve 500 sem gravar o event.id e o
+// Stripe reentrega. Antes devolvia null, o evento era gravado como processado
+// e a compra paga ficava sem conta pra sempre.
 async function resolverContaDaCompra(
   email: string,
   customerId: string,
   origem: Record<string, string>,
   sessionId: string,
-): Promise<ContaDaCompra | null> {
+): Promise<ContaDaCompra> {
   const existente = await buscarUserIdPorEmail(email);
   let userId = existente;
   let emailPendente: EmailDaCompra;
@@ -552,20 +746,26 @@ async function resolverContaDaCompra(
     });
     if (error || !data.user) {
       console.error("[stripe-webhook] Falha ao criar conta pra compra:", error);
-      // Sem isso, uma falha aqui é uma venda perdida em silêncio: o Stripe já
-      // cobrou (o evento não trata isso como erro pro Stripe, pra não reentregar
-      // e cobrar de novo), mas ninguém fica sabendo que a conta nunca foi
-      // criada.
-      void dispararAlerta(
+      // O Stripe já cobrou e a conta não nasceu. Reentregar NÃO cobra de novo
+      // (o webhook só lê a cobrança, quem cobra é o checkout): a reentrega só
+      // tenta criar a conta outra vez. E é segura: buscarUserIdPorEmail acha a
+      // conta se ela chegou a ser criada, e contaCriadaPorEstaSessao reconhece
+      // que foi esta compra que criou. Por isso joga em vez de devolver null:
+      // o handler responde 500, não grava o event.id, e o Stripe tenta de novo
+      // (até ~3 dias). O alerta avisa já na primeira falha.
+      await dispararAlerta(
         "stripe_webhook_falha_criar_conta",
-        "Compra paga, mas a conta não foi criada",
+        "Compra paga, mas a conta não foi criada (o Stripe vai reentregar)",
         {
-          email,
+          email: mascararEmail(email),
           customerId,
-          mensagem: error?.message ?? "generateLink não devolveu usuário",
+          mensagem: semEmails(error?.message ?? "generateLink não devolveu usuário"),
         },
       );
-      return null;
+      // A mensagem vai pro alerta genérico do catch: sem e-mail nela.
+      throw new Error(
+        `Falha ao criar conta pra compra: ${semEmails(error?.message ?? "generateLink sem usuário")}`,
+      );
     }
     userId = data.user.id;
     emailPendente = { tipo: "ativacao", link: data.properties.action_link };
@@ -617,7 +817,7 @@ async function enviarEmailDaCompra(email: string, pendente: EmailDaCompra): Prom
         return;
       }
       // Sem link novo, o e-mail de conta existente ainda leva ao acesso
-      // (entrar + "Esqueci minha senha"), e o alerta avisa que o link falhou.
+      // (entrar + "Recuperar acesso"), e o alerta avisa que o link falhou.
       await dispararAlerta(
         "stripe_webhook_email_falhou",
         "E-mail do Stripe não saiu: link de ativação na reentrega da compra",
@@ -686,15 +886,19 @@ Deno.serve(async (req) => {
     });
   }
 
-  // E-mail da compra (checkout.session.completed), enviado só no fim do
-  // caminho de sucesso, depois do registro do event.id.
-  let emailDaCompra: { para: string; pendente: EmailDaCompra } | null = null;
+  // E-mails que só saem no fim do caminho de sucesso, depois do registro do
+  // event.id (compra, cancelamento confirmado, assinatura encerrada). Se algo
+  // no meio falhar (500), nada sai, e a reentrega manda uma vez só.
+  const posRegistro: Array<() => Promise<void>> = [];
 
   try {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
-        const email = session.customer_details?.email;
+        // Normalizado antes de tudo: busca de conta, convite, criação e e-mail
+        // usam o mesmo endereço que o hook de cadastro compara.
+        const emailBruto = session.customer_details?.email;
+        const email = emailBruto ? normalizarEmail(emailBruto) : null;
         const customerId =
           typeof session.customer === "string" ? session.customer : session.customer?.id;
         const subscriptionId =
@@ -712,39 +916,81 @@ Deno.serve(async (req) => {
           break;
         }
 
+        // Falha ao criar a conta JOGA (vai pro catch: 500, event.id não é
+        // gravado, o Stripe reentrega). Antes devolvia null e o evento era
+        // dado como processado com a compra paga sem conta (08/10/2026).
         const conta = await resolverContaDaCompra(
           email,
           customerId,
           origemDaSessao(session.metadata),
           session.id,
         );
-        if (!conta) {
-          await registrarEventoAnalytics("checkout_falhou", session.id, {
-            motivo: "erro_criar_conta",
-          });
-          break;
-        }
 
         // A assinatura em si (status, ciclo, plano) é gravada pelo mesmo
         // caminho de customer.subscription.created/updated — busca a
-        // subscription e reaproveita o upsert já existente, agora que o
-        // Customer já tem o user_id certo nos metadados.
+        // subscription e reaproveita o upsert já existente. O user_id vai
+        // junto: não depende do customers.update ter dado certo.
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        await upsertAssinaturaDaSubscription(subscription, event.id);
+        const resultado = await upsertAssinaturaDaSubscription(
+          subscription,
+          event.id,
+          conta.userId,
+        );
         await registrarEventoAnalytics("checkout_concluido", session.id, {
           plano: session.metadata?.plano ?? null,
           ...origemDaSessao(session.metadata),
+          ...(resultado.duplicada ? { duplicada_estornada: true } : {}),
         });
+        // Compra duplicada desfeita (cancelada + estornada): não manda
+        // "Sua compra foi confirmada" por ela. O alerta já foi pra Sil.
+        if (resultado.duplicada) break;
         // QA-38: o e-mail sai só depois do registro do evento (fim do handler).
         // Antes saía dentro de resolverContaDaCompra, antes do upsert: se o
         // upsert falhava, o Stripe reentregava e ela recebia ativação + "conta
         // existente".
-        emailDaCompra = { para: email, pendente: conta.emailPendente };
+        const pendente = conta.emailPendente;
+        posRegistro.push(() => enviarEmailDaCompra(email, pendente));
         break;
       }
       case "customer.subscription.created":
       case "customer.subscription.updated": {
-        await upsertAssinaturaDaSubscription(event.data.object as Stripe.Subscription, event.id);
+        const payload = event.data.object as Stripe.Subscription;
+        // Evento fora de ordem (08/10/2026): um "updated" antigo entregue
+        // depois do "deleted" regravava status/plano do payload velho e
+        // reativava o plano. Grava o estado ATUAL do Stripe; se a leitura
+        // falhar, usa o payload como antes.
+        let atual = payload;
+        try {
+          atual = await stripe.subscriptions.retrieve(payload.id);
+        } catch (err) {
+          console.error("[stripe-webhook] Falha ao ler assinatura atual, usando o payload:", err);
+        }
+        const resultado = await upsertAssinaturaDaSubscription(atual, event.id);
+
+        // Cancelamento confirmado: e-mail no momento em que ela pede, com a
+        // data até quando o acesso vai (08/10/2026). Só quando ESTE evento é a
+        // virada (previous_attributes mostra que antes não estava agendado),
+        // então reentrega e outros "updated" não repetem. E só se o estado
+        // atual continua agendado: cancelou e desistiu logo depois não recebe.
+        if (
+          event.type === "customer.subscription.updated" &&
+          resultado.userId &&
+          !resultado.duplicada &&
+          STATUS_COM_ACESSO.includes(atual.status) &&
+          cancelamentoAgendado(atual) &&
+          cancelamentoFoiAgendadoNesteEvento(
+            payload,
+            (event.data as { previous_attributes?: Partial<Stripe.Subscription> })
+              .previous_attributes,
+          )
+        ) {
+          const userId = resultado.userId;
+          const dataFim = fimDoAcesso(atual);
+          posRegistro.push(async () => {
+            const email = await buscarEmailPorUserId(userId);
+            if (email) await enviarEmailCancelamentoAgendado(email, dataFim);
+          });
+        }
         break;
       }
       case "customer.subscription.deleted": {
@@ -777,13 +1023,13 @@ Deno.serve(async (req) => {
           await registrarFounderEvento("subscription_cancelled", userId, event.id, {
             current_period_end: currentPeriodEnd ?? null,
           });
-          const email = await buscarEmailPorUserId(userId);
-          if (email) {
-            const dataFim = currentPeriodEnd
-              ? new Date(currentPeriodEnd).toLocaleDateString("pt-BR")
-              : null;
-            await enviarEmailCancelamento(email, dataFim);
-          }
+          // O aviso com a data saiu quando ela pediu o cancelamento
+          // (customer.subscription.updated). Aqui é o fim de verdade: texto
+          // curto de "terminou", depois do registro do evento.
+          posRegistro.push(async () => {
+            const email = await buscarEmailPorUserId(userId);
+            if (email) await enviarEmailAssinaturaTerminou(email);
+          });
         }
         break;
       }
@@ -837,7 +1083,7 @@ Deno.serve(async (req) => {
           currency: "BRL",
         });
         const dataCobranca = invoice.next_payment_attempt
-          ? new Date(invoice.next_payment_attempt * 1000).toLocaleDateString("pt-BR")
+          ? formatarDataBR(new Date(invoice.next_payment_attempt * 1000))
           : null;
         await enviarEmailRenovacao(email, valorFormatado, dataCobranca);
         break;
@@ -870,9 +1116,16 @@ Deno.serve(async (req) => {
 
   // 23505 = outra entrega simultânea do mesmo evento registrou primeiro; ela
   // manda o e-mail. Qualquer outro resultado (inclusive falha do registro)
-  // manda: melhor um e-mail a mais que nenhum.
-  if (emailDaCompra && registroErro?.code !== "23505") {
-    await enviarEmailDaCompra(emailDaCompra.para, emailDaCompra.pendente);
+  // manda: melhor um e-mail a mais que nenhum. Cada envio isolado: um que
+  // falha não impede o outro nem vira 500 (o evento já está registrado).
+  if (registroErro?.code !== "23505") {
+    for (const enviar of posRegistro) {
+      try {
+        await enviar();
+      } catch (err) {
+        console.error("[stripe-webhook] Erro ao enviar e-mail pós-registro:", err);
+      }
+    }
   }
 
   return new Response(JSON.stringify({ received: true }), {

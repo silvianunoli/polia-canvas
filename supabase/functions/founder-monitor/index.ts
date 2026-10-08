@@ -201,25 +201,61 @@ async function checarEmails(): Promise<Check> {
   };
 }
 
+// O PostgREST do projeto devolve no máximo 1.000 linhas por requisição, sem
+// erro e sem aviso: .limit(20000) não passava disso e as contagens saturavam
+// em 1.000. Onde só precisa contar, usa count exato (head, sem linhas); onde
+// precisa das linhas (distintos, p95), lê página por página com .range.
+const TAMANHO_PAGINA = 1000;
+const MAX_PAGINAS = 100; // até 100 mil linhas; passou disso, avisa no log
+
+async function lerPaginado<T>(
+  buscarPagina: (de: number, ate: number) => PromiseLike<{ data: T[] | null; error: unknown }>,
+  origem: string,
+): Promise<T[]> {
+  const todas: T[] = [];
+  for (let pagina = 0; pagina < MAX_PAGINAS; pagina++) {
+    const de = pagina * TAMANHO_PAGINA;
+    const { data, error } = await buscarPagina(de, de + TAMANHO_PAGINA - 1);
+    if (error) throw error;
+    const linhas = data ?? [];
+    todas.push(...linhas);
+    if (linhas.length < TAMANHO_PAGINA) return todas;
+  }
+  console.warn(`[founder-monitor] ${origem}: passou de ${MAX_PAGINAS * TAMANHO_PAGINA} linhas, número parcial`);
+  return todas;
+}
+
+async function contarIaDesde(desde: string): Promise<{ chamadas: number; falhas: number }> {
+  const [total, falhas] = await Promise.all([
+    admin.from("ia_geracoes").select("id", { head: true, count: "exact" }).gte("criado_em", desde),
+    admin
+      .from("ia_geracoes")
+      .select("id", { head: true, count: "exact" })
+      .gte("criado_em", desde)
+      .eq("sucesso", false),
+  ]);
+  if (total.error) throw total.error;
+  if (falhas.error) throw falhas.error;
+  return { chamadas: total.count ?? 0, falhas: falhas.count ?? 0 };
+}
+
 async function checarIa(): Promise<{ check: Check; chamadas: number; falhas: number }> {
   const desde = new Date(Date.now() - 86400000).toISOString();
-  const { data, error } = await admin.from("ia_geracoes").select("sucesso").gte("criado_em", desde);
-  if (error) {
+  const contagem = await contarIaDesde(desde).catch(() => null);
+  if (!contagem) {
     return {
       check: {
         service: "ia",
         label: "IA",
         status: "critico",
-        detalhe: "Não consegui ler ia_geracoes.",
+        detalhe: "O monitor não conseguiu ler ia_geracoes.",
         latencia_ms: null,
       },
       chamadas: 0,
       falhas: 0,
     };
   }
-  const linhas = (data ?? []) as { sucesso: boolean }[];
-  const chamadas = linhas.length;
-  const falhas = linhas.filter((l) => !l.sucesso).length;
+  const { chamadas, falhas } = contagem;
   if (chamadas === 0) {
     return {
       check: {
@@ -285,44 +321,91 @@ const EVENTOS_ATIVOS = [
   "business_created",
 ];
 
+// Distintos precisam das linhas (não dá pra contar distinto com head), então
+// lê tudo paginado, ordenado por id pra nenhuma linha pular ou repetir entre
+// páginas. Falha de leitura vira 0, como antes (o snapshot não cai inteiro).
 async function usuariasAtivasDesde(desde: string): Promise<number> {
-  const { data } = await admin
-    .from("founder_eventos")
-    .select("user_id")
-    .in("evento", EVENTOS_ATIVOS)
-    .not("user_id", "is", null)
-    .gte("criado_em", desde)
-    .limit(20000);
-  return new Set(((data ?? []) as { user_id: string }[]).map((l) => l.user_id)).size;
+  try {
+    const linhas = await lerPaginado<{ user_id: string }>(
+      (de, ate) =>
+        admin
+          .from("founder_eventos")
+          .select("user_id")
+          .in("evento", EVENTOS_ATIVOS)
+          .not("user_id", "is", null)
+          .gte("criado_em", desde)
+          .order("id", { ascending: true })
+          .range(de, ate),
+      "usuarias ativas",
+    );
+    return new Set(linhas.map((l) => l.user_id)).size;
+  } catch (erro) {
+    console.error("[founder-monitor] falha ao ler usuárias ativas:", erro);
+    return 0;
+  }
 }
 
 async function sessoesDesde(desde: string): Promise<number> {
-  const { data } = await admin
-    .from("founder_eventos")
-    .select("sessao_id")
-    .gte("criado_em", desde)
-    .limit(50000);
-  return new Set(((data ?? []) as { sessao_id: string }[]).map((l) => l.sessao_id)).size;
+  try {
+    const linhas = await lerPaginado<{ sessao_id: string }>(
+      (de, ate) =>
+        admin
+          .from("founder_eventos")
+          .select("sessao_id")
+          .gte("criado_em", desde)
+          .order("id", { ascending: true })
+          .range(de, ate),
+      "sessoes",
+    );
+    return new Set(linhas.map((l) => l.sessao_id)).size;
+  } catch (erro) {
+    console.error("[founder-monitor] falha ao ler sessões:", erro);
+    return 0;
+  }
 }
 
 async function apiDesde(
   desde: string,
 ): Promise<{ requests: number; erros: number; p95: number | null }> {
-  const { data } = await admin
-    .from("founder_api_chamadas")
-    .select("ok, tipo, latencia_ms")
-    .gte("criado_em", desde)
-    .limit(50000);
-  const linhas = (data ?? []) as { ok: boolean; tipo: string; latencia_ms: number }[];
-  if (linhas.length === 0) return { requests: 0, erros: 0, p95: null };
-  // p95 só das server functions: no Worker o relógio só anda em I/O, então o
-  // SSR (CPU puro) mede ~0 ms e puxaria o percentil pra baixo.
-  const lat = linhas
-    .filter((l) => l.tipo === "server_fn")
-    .map((l) => l.latencia_ms)
-    .sort((a, b) => a - b);
-  const p95 = lat.length ? lat[Math.min(lat.length - 1, Math.floor(lat.length * 0.95))] : null;
-  return { requests: linhas.length, erros: linhas.filter((l) => !l.ok).length, p95 };
+  try {
+    // Total e erros: contagem exata, sem trazer linha. Latência: só as server
+    // functions (no Worker o relógio só anda em I/O, então o SSR, CPU puro,
+    // mede ~0 ms e puxaria o percentil pra baixo), paginado.
+    const [total, erros, lat] = await Promise.all([
+      admin
+        .from("founder_api_chamadas")
+        .select("id", { head: true, count: "exact" })
+        .gte("criado_em", desde),
+      admin
+        .from("founder_api_chamadas")
+        .select("id", { head: true, count: "exact" })
+        .gte("criado_em", desde)
+        .eq("ok", false),
+      lerPaginado<{ latencia_ms: number }>(
+        (de, ate) =>
+          admin
+            .from("founder_api_chamadas")
+            .select("latencia_ms")
+            .gte("criado_em", desde)
+            .eq("tipo", "server_fn")
+            .order("id", { ascending: true })
+            .range(de, ate),
+        "latencia api",
+      ),
+    ]);
+    if (total.error) throw total.error;
+    if (erros.error) throw erros.error;
+    const requests = total.count ?? 0;
+    if (requests === 0) return { requests: 0, erros: 0, p95: null };
+    const ordenadas = lat.map((l) => l.latencia_ms).sort((a, b) => a - b);
+    const p95 = ordenadas.length
+      ? ordenadas[Math.min(ordenadas.length - 1, Math.floor(ordenadas.length * 0.95))]
+      : null;
+    return { requests, erros: erros.count ?? 0, p95 };
+  } catch (erro) {
+    console.error("[founder-monitor] falha ao ler chamadas de API:", erro);
+    return { requests: 0, erros: 0, p95: null };
+  }
 }
 
 async function contar(tabela: string, filtro?: (q: any) => any): Promise<number> {

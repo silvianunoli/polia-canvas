@@ -1,6 +1,18 @@
 project_id = "egzwkyqpkexgrhbxwcvb"
 
-[functions.enviar-contato]
+# verify_jwt = false em TODAS as funções deste repo, igual ao que está no ar.
+# Nenhuma fica aberta: cada uma valida quem chama dentro do código.
+#   segredo compartilhado em header: alertas-criticos (ALERTAS_SECRET),
+#     raiox-mensal-cron (RAIOX_CRON_SECRET), social-publisher /
+#     social-metricas / social-token-renovar (SOCIAL_CRON_SECRET),
+#     founder-monitor (FOUNDER_MONITOR_SECRET ou JWT de admin conferido no código)
+#   assinatura do provedor: stripe-webhook (HMAC do Stripe)
+#   token de verificação da Meta: ig-webhook (bot desativado, só responde o desafio)
+#   JWT conferido no código (auth.getUser + is_admin): social-ia
+# Função que não está listada aqui sobe com verify_jwt = true no próximo
+# deploy: quem é chamada por cron/webhook sem JWT passaria a tomar 401.
+
+[functions.alertas-criticos]
 verify_jwt = false
 
 [functions.stripe-webhook]
@@ -13,4 +25,16 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.founder-monitor]
+verify_jwt = false
+
+[functions.social-publisher]
+verify_jwt = false
+
+[functions.social-metricas]
+verify_jwt = false
+
+[functions.social-token-renovar]
+verify_jwt = false
+
+[functions.social-ia]
 verify_jwt = false

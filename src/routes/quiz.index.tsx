@@ -480,20 +480,41 @@ function TelaResultado({
         Seus próximos passos chegam no seu e-mail.
       </p>
 
+      {/* O resultado terminava só no Instagram (08/10/2026): o cadastro Grátis
+          vira a ação principal, com origem=quiz, igual ao botão do e-mail
+          (src/lib/quiz/email.ts). */}
+      <p className="mt-4 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
+        A Pólia One organiza a marca, o preço e a meta do mês num lugar só, a partir do
+        Planejamento. O plano Grátis abre sem cartão.
+      </p>
+
       <div className="mt-6 flex flex-wrap items-center gap-3">
+        <Link
+          to="/auth/cadastro"
+          search={{ origem: "quiz" }}
+          data-track="cadastro_cta_clicado"
+          data-track-props='{"contexto":"quiz_resultado"}'
+          className={`${BTN_PRIMARIO} ${CTA_LARGO}`}
+        >
+          Quero começar grátis
+          <span aria-hidden="true">→</span>
+        </Link>
         <a
           href={INSTAGRAM_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className={`${BTN_PRIMARIO} ${CTA_LARGO}`}
+          className={`${BTN_CONTORNO} ${CTA_LARGO}`}
         >
           Seguir @hub.polia
-          <span aria-hidden="true">→</span>
         </a>
-        <button type="button" onClick={onRefazer} className={`${BTN_CONTORNO} ${CTA_LARGO}`}>
-          Refazer o teste
-        </button>
       </div>
+      <button
+        type="button"
+        onClick={onRefazer}
+        className="mt-4 inline-flex min-h-[44px] items-center rounded-lg px-2 text-[15px] text-[var(--ink-soft)] underline underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
+      >
+        Refazer o teste
+      </button>
     </div>
   );
 }

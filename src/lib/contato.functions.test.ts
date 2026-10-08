@@ -112,6 +112,21 @@ describe("enviarContato: gravação e notificação", () => {
     );
   });
 
+  // O formulário coleta o WhatsApp e o e-mail pra Sil não trazia (08/10/2026).
+  it("leva o WhatsApp no e-mail quando veio, e omite quando não veio", async () => {
+    from.mockReturnValueOnce(consulta({ error: null }));
+    await enviar({ data: { ...valido, telefone: "11 98888-7777" } });
+    const comTel = enviarEmailResend.mock.calls[0][0] as { text: string; html: string };
+    expect(comTel.text).toContain("WhatsApp: 5511988887777");
+    expect(comTel.html).toContain('href="https://wa.me/5511988887777"');
+
+    from.mockReturnValueOnce(consulta({ error: null }));
+    await enviar({ data: valido });
+    const semTel = enviarEmailResend.mock.calls[1][0] as { text: string; html: string };
+    expect(semTel.text).not.toContain("WhatsApp");
+    expect(semTel.html).not.toContain("wa.me");
+  });
+
   it("escapa HTML da mensagem no e-mail (XSS corrigido em jul/2026)", async () => {
     from.mockReturnValueOnce(consulta({ error: null }));
     await enviar({

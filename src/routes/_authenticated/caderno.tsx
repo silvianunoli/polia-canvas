@@ -11,6 +11,9 @@ import { toastErro, toastInfo, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { Plus, Pin, Trash2, ArrowLeft, NotebookPen, Search, Lock } from "lucide-react";
 import { COTAS_CONFERE } from "@/lib/planos";
+import { ehPlanoGratis } from "@/lib/planoGratis";
+import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
+import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
@@ -56,13 +59,16 @@ function CadernoPage() {
   const userId = user?.id;
   const qc = useQueryClient();
   const meta = useUserMeta();
-  const ehConfere = meta.plano === "confere";
+  // Grátis do jeito que a trava de rota entende (cancelada conta) e só depois
+  // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
+  const ehConfere = ehPlanoGratis(meta);
+  const linkModulo5 = useLinkDoModulo(5);
 
   const notasQuery = useQuery({
     queryKey: ["notas", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("notas")
         .select("id, titulo, conteudo, fixada, arquivada, created_at, updated_at, deleted_at")
         .eq("user_id", userId!)
@@ -70,6 +76,8 @@ function CadernoPage() {
         .is("deleted_at", null)
         .order("fixada", { ascending: false })
         .order("updated_at", { ascending: false });
+      // Leitura que falha não pode virar "Nenhuma nota por aqui ainda".
+      if (error) throw error;
       return (data ?? []) as Nota[];
     },
   });
@@ -344,7 +352,8 @@ function CadernoPage() {
         <button
           type="button"
           onClick={() => criar.mutate(undefined)}
-          disabled={criar.isPending || cotaAtingida}
+          // Sem a lista lida não dá pra saber a cota: espera a leitura.
+          disabled={criar.isPending || cotaAtingida || !notasQuery.isSuccess}
           aria-label="Nova nota"
           className={BTN_ACAO}
         >
@@ -395,6 +404,13 @@ function CadernoPage() {
                   <div key={i} className="h-[88px] animate-pulse rounded-xl bg-[var(--surface)]" />
                 ))}
               </div>
+            ) : notasQuery.isError ? (
+              <div role="alert">
+                <BlockError
+                  message="A Pólia One não conseguiu ler as suas notas agora. Nada foi perdido, é só a leitura que falhou."
+                  onRetry={() => void notasQuery.refetch()}
+                />
+              </div>
             ) : notas.length === 0 ? (
               <Vazio
                 denso
@@ -406,18 +422,21 @@ function CadernoPage() {
                     <button
                       type="button"
                       onClick={() => criar.mutate(undefined)}
+                      disabled={criar.isPending}
                       className={BTN_ACAO}
                     >
                       <Plus size={16} aria-hidden="true" />
-                      Criar a primeira nota
+                      {criar.isPending ? "Criando…" : "Criar a primeira nota"}
                     </button>
+                    {/* Só aponta pro Módulo 5 quando ele está liberado; antes
+                        o link caía num módulo trancado. */}
                     <p className="mt-3 text-[12px] text-[var(--muted)]">
                       ou monte seu guia de presença pelo{" "}
                       <LinkInterno
-                        href="/planejamento/modulo/5"
-                        className="font-medium text-[var(--secondary-text)] hover:underline"
+                        href={linkModulo5.href}
+                        className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
                       >
-                        Planejamento →
+                        {linkModulo5.liberado ? "Módulo 5 do Planejamento →" : "Planejamento →"}
                       </LinkInterno>
                     </p>
                   </>
