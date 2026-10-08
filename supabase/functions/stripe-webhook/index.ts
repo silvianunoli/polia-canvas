@@ -293,17 +293,44 @@ async function buscarUserIdPorEmail(email: string): Promise<string | null> {
   return (data as string | null) ?? null;
 }
 
+// "ana.souza@gmail.com" -> "an***@gmail.com". O alerta vai pro Telegram: dá
+// pra achar a compra no Stripe pelo começo do e-mail sem expor o endereço.
+function mascararEmail(email: string): string {
+  const [local, dominio] = email.split("@");
+  if (!dominio) return "***";
+  return `${local.slice(0, 2)}***@${dominio}`;
+}
+
+// Mensagem de erro do Resend pode repetir o endereço: troca qualquer e-mail
+// por [email] antes de mandar pro alerta.
+function semEmails(texto: string): string {
+  return texto.replace(/[^\s@"'<>]+@[^\s@"'<>]+/g, "[email]").slice(0, 200);
+}
+
+// QA-38: devolve se o e-mail saiu. Antes a falha (inclusive chave ausente) só
+// ia pro console.error e ninguém ficava sabendo que a cliente não recebeu o
+// e-mail. Agora toda falha dispara o alerta stripe_webhook_email_falhou.
+// Não reenvia sozinha: a fila de reenvio é o próximo passo.
 async function enviarViaResend(
   subject: string,
   text: string,
   html: string,
   to: string,
   contexto: string,
-) {
+): Promise<boolean> {
+  const avisarFalha = (motivo: string, detalhe?: string) =>
+    dispararAlerta("stripe_webhook_email_falhou", `E-mail do Stripe não saiu: ${contexto}`, {
+      email: mascararEmail(to),
+      qual: contexto,
+      motivo,
+      ...(detalhe ? { detalhe: semEmails(detalhe) } : {}),
+    });
+
   const apiKey = Deno.env.get("RESEND_API_KEY");
   if (!apiKey) {
     console.error(`[stripe-webhook] Missing RESEND_API_KEY — ${contexto} não enviado.`);
-    return;
+    await avisarFalha("RESEND_API_KEY ausente");
+    return false;
   }
   try {
     const resp = await fetch("https://api.resend.com/emails", {
@@ -318,10 +345,16 @@ async function enviarViaResend(
       }),
     });
     if (!resp.ok) {
-      console.error(`[stripe-webhook] Falha ao enviar ${contexto}:`, await resp.text());
+      const corpo = await resp.text();
+      console.error(`[stripe-webhook] Falha ao enviar ${contexto}:`, corpo);
+      await avisarFalha(`Resend devolveu HTTP ${resp.status}`, corpo);
+      return false;
     }
+    return true;
   } catch (err) {
     console.error(`[stripe-webhook] Erro ao enviar ${contexto}:`, err);
+    await avisarFalha("erro de rede", err instanceof Error ? err.message : String(err));
+    return false;
   }
 }
 
@@ -335,7 +368,7 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
 }
 
 async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
-  await enviarViaResend(
+  return await enviarViaResend(
     "Sua compra foi confirmada",
     `Agora falta criar sua senha para entrar na Pólia One pela primeira vez.\n\n${linkAtivacao}\n\nEsse link expira em algumas horas. Se não foi você quem comprou, ignore este e-mail.`,
     emailPolia({
@@ -357,7 +390,7 @@ async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
 // confirma a compra e leva pro login. Sem ele, a pessoa pagava e a tela de
 // "compra confirmada" prometia um link que nunca chegava.
 async function enviarEmailCompraContaExistente(email: string) {
-  await enviarViaResend(
+  return await enviarViaResend(
     "Sua compra foi confirmada",
     `O plano já está ativo na sua conta da Pólia One. É só entrar com este e-mail (${email}).\n\n${SITE_URL}/auth/login\n\nSe não lembra a senha, use "Esqueci minha senha" na tela de entrada. Se não foi você quem comprou, responda a este e-mail.`,
     emailPolia({
@@ -376,7 +409,7 @@ async function enviarEmailCompraContaExistente(email: string) {
 }
 
 async function enviarEmailPagamentoRecusado(email: string) {
-  await enviarViaResend(
+  return await enviarViaResend(
     "Pagamento recusado",
     `Atualize a forma de pagamento pra manter seu acesso sem interrupção:\n${SITE_URL}/configuracoes\n\nA cobrança da sua assinatura na Pólia One não funcionou.\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
@@ -396,15 +429,15 @@ async function enviarEmailCancelamento(email: string, dataFimAcesso: string | nu
   const paragrafo1 = dataFimAcesso
     ? `Seu acesso à Pólia One continua até ${dataFimAcesso}.`
     : "Seu acesso à Pólia One continua até o fim do período já pago.";
-  await enviarViaResend(
+  return await enviarViaResend(
     "Sua assinatura foi cancelada",
-    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/#planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
+    `${paragrafo1}\n\nSe quiser voltar depois, seus dados continuam guardados.\n\n${SITE_URL}/planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
       preheader: paragrafo1,
       headline: "Assinatura cancelada",
       paragrafos: [paragrafo1, "Se quiser voltar depois, seus dados continuam guardados."],
       ctaLabel: "Assinar de novo",
-      ctaUrl: `${SITE_URL}/#planos`,
+      ctaUrl: `${SITE_URL}/planos`,
     }),
     email,
     "e-mail de cancelamento",
@@ -419,7 +452,7 @@ async function enviarEmailRenovacao(
   const paragrafo = dataCobranca
     ? `Em ${dataCobranca} vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia One.`
     : `Em poucos dias vamos cobrar ${valorFormatado} no cartão cadastrado pra continuar seu acesso à Pólia One.`;
-  await enviarViaResend(
+  return await enviarViaResend(
     "Sua assinatura renova em breve",
     `${paragrafo}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
     emailPolia({
@@ -434,17 +467,56 @@ async function enviarEmailRenovacao(
   );
 }
 
+// Chave do user_metadata com o id da checkout session que criou a conta.
+// Serve pra reconhecer, na reentrega do mesmo checkout.session.completed, que
+// a conta "existente" é a que esta mesma compra criou (QA-38).
+const META_COMPRA_SESSION_ID = "compra_session_id";
+
+// Qual e-mail a compra manda, decidido em resolverContaDaCompra e enviado só
+// no fim do caminho de sucesso (QA-38):
+//  - ativacao: conta criada agora, com o link do convite;
+//  - reenviar_ativacao: conta criada por esta mesma sessão numa entrega
+//    anterior que falhou depois de criar a conta; ela ainda não criou senha.
+//    O link novo só é gerado na hora de enviar (gerar link invalida o anterior);
+//  - conta_existente: já tinha conta antes da compra.
+type EmailDaCompra =
+  | { tipo: "ativacao"; link: string }
+  | { tipo: "reenviar_ativacao" }
+  | { tipo: "conta_existente" };
+
+interface ContaDaCompra {
+  userId: string;
+  emailPendente: EmailDaCompra;
+}
+
+// A conta já existente foi criada por esta mesma checkout session e ainda
+// não criou senha? Falha de leitura vira "não": o e-mail de conta existente
+// também resolve (entrar + "Esqueci minha senha").
+async function contaCriadaPorEstaSessao(userId: string, sessionId: string): Promise<boolean> {
+  const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+  if (error || !data.user) {
+    console.error("[stripe-webhook] Erro ao ler a conta na reentrega da compra:", error);
+    return false;
+  }
+  const meta = data.user.user_metadata ?? {};
+  return meta[META_COMPRA_SESSION_ID] === sessionId && meta.precisa_criar_senha === true;
+}
+
 // Resolve o e-mail de quem comprou pra um user_id: reaproveita conta existente
-// (ex.: já tinha convite) ou cria uma nova + manda o link de ativação. Em
-// qualquer um dos casos, grava o user_id nos metadados do Customer no Stripe —
-// upsertAssinaturaDaSubscription já sabe ler esse metadado como fallback.
+// (ex.: já tinha convite) ou cria uma nova. NÃO manda e-mail: devolve qual
+// e-mail mandar, e quem chama envia só depois do upsert da assinatura e do
+// registro do evento (QA-38). Em qualquer caso, grava o user_id nos metadados
+// do Customer no Stripe — upsertAssinaturaDaSubscription já sabe ler esse
+// metadado como fallback.
 async function resolverContaDaCompra(
   email: string,
   customerId: string,
   origem: Record<string, string>,
-): Promise<string | null> {
+  sessionId: string,
+): Promise<ContaDaCompra | null> {
   const existente = await buscarUserIdPorEmail(email);
   let userId = existente;
+  let emailPendente: EmailDaCompra;
 
   if (!userId) {
     // PAY-02 (achado 14/08, confirmado ao vivo em 15/09 via "Invite user" no
@@ -473,6 +545,7 @@ async function resolverContaDaCompra(
         redirectTo: `${SITE_URL}/auth/criar-senha`,
         data: {
           precisa_criar_senha: true,
+          [META_COMPRA_SESSION_ID]: sessionId,
           ...(Object.keys(origem).length > 0 ? { origem_campanha: origem } : {}),
         },
       },
@@ -495,9 +568,11 @@ async function resolverContaDaCompra(
       return null;
     }
     userId = data.user.id;
-    await enviarEmailAtivacao(email, data.properties.action_link);
+    emailPendente = { tipo: "ativacao", link: data.properties.action_link };
+  } else if (await contaCriadaPorEstaSessao(userId, sessionId)) {
+    emailPendente = { tipo: "reenviar_ativacao" };
   } else {
-    await enviarEmailCompraContaExistente(email);
+    emailPendente = { tipo: "conta_existente" };
   }
 
   try {
@@ -506,7 +581,62 @@ async function resolverContaDaCompra(
     console.error("[stripe-webhook] Falha ao gravar user_id no Customer:", err);
   }
 
-  return userId;
+  return { userId, emailPendente };
+}
+
+// Link novo pra conta criada numa entrega anterior desta compra. O convite
+// ("invite") não serve pra conta que já existe; o magiclink faz o mesmo login
+// e /auth/criar-senha só precisa da sessão (precisa_criar_senha já está na
+// conta desde a primeira entrega).
+async function gerarLinkDeAtivacaoDeNovo(email: string): Promise<string | null> {
+  const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo: `${SITE_URL}/auth/criar-senha` },
+  });
+  if (error || !data?.properties?.action_link) {
+    console.error("[stripe-webhook] Falha ao gerar link de ativação de novo:", error);
+    return null;
+  }
+  return data.properties.action_link;
+}
+
+// Envia o e-mail decidido em resolverContaDaCompra. Nunca joga: roda depois
+// do registro do evento, e um erro aqui não pode virar 500 (o Stripe
+// reentregaria um evento já registrado à toa).
+async function enviarEmailDaCompra(email: string, pendente: EmailDaCompra): Promise<void> {
+  try {
+    if (pendente.tipo === "ativacao") {
+      await enviarEmailAtivacao(email, pendente.link);
+      return;
+    }
+    if (pendente.tipo === "reenviar_ativacao") {
+      const link = await gerarLinkDeAtivacaoDeNovo(email);
+      if (link) {
+        await enviarEmailAtivacao(email, link);
+        return;
+      }
+      // Sem link novo, o e-mail de conta existente ainda leva ao acesso
+      // (entrar + "Esqueci minha senha"), e o alerta avisa que o link falhou.
+      await dispararAlerta(
+        "stripe_webhook_email_falhou",
+        "E-mail do Stripe não saiu: link de ativação na reentrega da compra",
+        {
+          email: mascararEmail(email),
+          qual: "e-mail de ativação (reentrega)",
+          motivo: "generateLink magiclink falhou; mandado o e-mail de conta existente no lugar",
+        },
+      );
+    }
+    await enviarEmailCompraContaExistente(email);
+  } catch (err) {
+    console.error("[stripe-webhook] Erro ao enviar e-mail da compra:", err);
+    await dispararAlerta("stripe_webhook_email_falhou", "E-mail do Stripe não saiu: compra", {
+      email: mascararEmail(email),
+      qual: pendente.tipo,
+      motivo: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 Deno.serve(async (req) => {
@@ -556,6 +686,10 @@ Deno.serve(async (req) => {
     });
   }
 
+  // E-mail da compra (checkout.session.completed), enviado só no fim do
+  // caminho de sucesso, depois do registro do event.id.
+  let emailDaCompra: { para: string; pendente: EmailDaCompra } | null = null;
+
   try {
     switch (event.type) {
       case "checkout.session.completed": {
@@ -578,12 +712,13 @@ Deno.serve(async (req) => {
           break;
         }
 
-        const userId = await resolverContaDaCompra(
+        const conta = await resolverContaDaCompra(
           email,
           customerId,
           origemDaSessao(session.metadata),
+          session.id,
         );
-        if (!userId) {
+        if (!conta) {
           await registrarEventoAnalytics("checkout_falhou", session.id, {
             motivo: "erro_criar_conta",
           });
@@ -600,6 +735,11 @@ Deno.serve(async (req) => {
           plano: session.metadata?.plano ?? null,
           ...origemDaSessao(session.metadata),
         });
+        // QA-38: o e-mail sai só depois do registro do evento (fim do handler).
+        // Antes saía dentro de resolverContaDaCompra, antes do upsert: se o
+        // upsert falhava, o Stripe reentregava e ela recebia ativação + "conta
+        // existente".
+        emailDaCompra = { para: email, pendente: conta.emailPendente };
         break;
       }
       case "customer.subscription.created":
@@ -726,6 +866,13 @@ Deno.serve(async (req) => {
     .insert({ id: event.id, type: event.type });
   if (registroErro && registroErro.code !== "23505") {
     console.error("[stripe-webhook] Falha ao registrar event.id:", registroErro);
+  }
+
+  // 23505 = outra entrega simultânea do mesmo evento registrou primeiro; ela
+  // manda o e-mail. Qualquer outro resultado (inclusive falha do registro)
+  // manda: melhor um e-mail a mais que nenhum.
+  if (emailDaCompra && registroErro?.code !== "23505") {
+    await enviarEmailDaCompra(emailDaCompra.para, emailDaCompra.pendente);
   }
 
   return new Response(JSON.stringify({ received: true }), {
