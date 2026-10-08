@@ -735,7 +735,7 @@ export function Calculadora({
               Preço sugerido
             </p>
             <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
-              {calc.invalido ? "—" : fmt(round2(calc.precoSugerido))}
+              {calc.invalido ? "R$ --" : fmt(round2(calc.precoSugerido))}
             </p>
             {calc.invalido && (
               <p className="mt-2 text-[13px] text-[var(--danger)]">
@@ -794,11 +794,11 @@ export function Calculadora({
                   taxa e lucro saíam calculados sobre esse preço de mentira. */}
               <LinhaCalc
                 label="Taxas e impostos"
-                valor={calc.invalido ? "—" : fmt(round2(calc.taxasReais))}
+                valor={calc.invalido ? "R$ --" : fmt(round2(calc.taxasReais))}
               />
               <LinhaCalc
                 label="Seu lucro"
-                valor={calc.invalido ? "—" : fmt(round2(calc.lucroReais))}
+                valor={calc.invalido ? "R$ --" : fmt(round2(calc.lucroReais))}
               />
             </div>
             {vendasParaMetaBoa !== null && (
