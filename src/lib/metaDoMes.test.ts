@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  ativasNoLimite,
   buscarMetaDoMes,
+  LIMITE_METAS_ATIVAS,
+  podeAtivarMeta,
   escolherMetaDoMes,
   metaDoMesConta,
   TITULO_META_DO_MES,
@@ -114,5 +117,36 @@ describe("buscarMetaDoMes", () => {
   it("sem meta válida, data null e sem erro", async () => {
     const { cliente } = clienteFalso({ data: [], error: null });
     expect(await buscarMetaDoMes(cliente, "u")).toEqual({ data: null, error: null });
+  });
+});
+
+// ONE-87 (08/10/2026): a Meta do mês não ocupa vaga no teto de 3 ativas.
+describe("teto de metas ativas", () => {
+  const meta = (id: string, titulo: string, status = "ativa") => ({ id, titulo, status });
+  const tresProprias = [meta("a", "Vender 10"), meta("b", "Guardar 500"), meta("c", "Postar 3x")];
+
+  it("a Meta do mês ativa não conta", () => {
+    const metas = [...tresProprias, meta("m", TITULO_META_DO_MES)];
+    expect(ativasNoLimite(metas).map((m) => m.id)).toEqual(["a", "b", "c"]);
+    expect(LIMITE_METAS_ATIVAS).toBe(3);
+  });
+
+  it("concluída e arquivada não contam", () => {
+    const metas = [meta("a", "x", "concluida"), meta("b", "y", "arquivada"), meta("c", "z")];
+    expect(ativasNoLimite(metas)).toHaveLength(1);
+  });
+
+  it("com 3 metas próprias, outra meta não ativa, mas a Meta do mês ativa", () => {
+    expect(podeAtivarMeta({ id: "n", titulo: "Nova" }, tresProprias)).toBe(false);
+    expect(podeAtivarMeta({ id: "m", titulo: TITULO_META_DO_MES }, tresProprias)).toBe(true);
+  });
+
+  it("com 2 próprias e a Meta do mês, ainda cabe mais uma", () => {
+    const metas = [meta("a", "x"), meta("b", "y"), meta("m", TITULO_META_DO_MES)];
+    expect(podeAtivarMeta({ id: "n", titulo: "Nova" }, metas)).toBe(true);
+  });
+
+  it("reativar a própria meta não conta ela duas vezes", () => {
+    expect(podeAtivarMeta({ id: "c", titulo: "Postar 3x" }, tresProprias)).toBe(true);
   });
 });

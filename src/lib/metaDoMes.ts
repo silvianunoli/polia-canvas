@@ -78,3 +78,29 @@ export async function buscarMetaDoMes(
     error: null,
   };
 }
+
+/**
+ * Teto de metas ativas ao mesmo tempo. Vale pra TODO plano: é regra de foco,
+ * não cota de assinatura (ver a nota em src/lib/planos.ts).
+ *
+ * A Meta do mês NÃO conta no teto (ONE-87, decisão da Sil em 08/10/2026): ela
+ * é a meta do Planejamento, nasce pela trigger materializar_planejamento mesmo
+ * com 3 ativas, e contá-la fazia a usuária com 3 metas próprias ver "4 de 3".
+ */
+export const LIMITE_METAS_ATIVAS = 3;
+
+/** Metas ativas que ocupam vaga no teto: todas menos a Meta do mês. */
+export function ativasNoLimite<T extends { titulo: string; status: string | null }>(
+  metas: readonly T[],
+): T[] {
+  return metas.filter((m) => m.status === "ativa" && m.titulo !== TITULO_META_DO_MES);
+}
+
+/** Pode ativar (criar, reabrir ou desfazer a conclusão de) esta meta? */
+export function podeAtivarMeta<T extends { id: string; titulo: string; status: string | null }>(
+  meta: Pick<T, "id" | "titulo">,
+  metas: readonly T[],
+): boolean {
+  if (meta.titulo === TITULO_META_DO_MES) return true;
+  return ativasNoLimite(metas).filter((m) => m.id !== meta.id).length < LIMITE_METAS_ATIVAS;
+}

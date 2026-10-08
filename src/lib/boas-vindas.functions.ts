@@ -27,17 +27,28 @@ export const garantirBoasVindas = createServerFn({ method: "POST" })
       to: [email],
       subject: "Bem-vinda à Pólia One",
       // "Você" não é sujeito de capacidade (trava de 17/08/2026): quem promete
-      // é a Pólia One.
-      text: `Sua conta está pronta.\n\nA partir de agora, a Pólia One faz parte do seu negócio.\n\nA Pólia One organiza os números do negócio e mostra o que eles dizem. A decisão sobre o que fazer com eles continua sua.\n\n${SITE_URL}/painel`,
+      // é a Pólia One. Marca primeiro e um próximo passo concreto (ONE-103,
+      // 08/10/2026): antes o texto falava só de números e não dizia por onde
+      // começar.
+      text: `Sua conta está pronta.
+
+A Pólia One começa pela marca: por que ela existe, pra quem, e o que a diferencia. É isso que sustenta o preço que ela cobra.
+
+Os números entram depois, ligados a ela. O preço sai do custo real de cada produto, e o Painel mostra quanto falta pra meta do mês.
+
+Por onde começar: o Módulo 1 do Planejamento, Razão de existir. As respostas dele alimentam o resto da Pólia One.
+
+${SITE_URL}/planejamento`,
       html: emailPolia({
-        preheader: "A Pólia One já está pronta pra organizar os números do seu negócio.",
+        preheader: "Por onde começar: o Módulo 1 do Planejamento, sobre a sua marca.",
         headline: "Sua conta está pronta",
         paragrafos: [
-          "A partir de agora, a Pólia One faz parte do seu negócio.",
-          "A Pólia One organiza os números do negócio e mostra o que eles dizem. A decisão sobre o que fazer com eles continua sua.",
+          "A Pólia One começa pela marca: por que ela existe, pra quem, e o que a diferencia. É isso que sustenta o preço que ela cobra.",
+          "Os números entram depois, ligados a ela. O preço sai do custo real de cada produto, e o Painel mostra quanto falta pra meta do mês.",
+          "Por onde começar: o Módulo 1 do Planejamento, Razão de existir. As respostas dele alimentam o resto da Pólia One.",
         ],
-        ctaLabel: "Acessar",
-        ctaUrl: `${SITE_URL}/painel`,
+        ctaLabel: "Começar pelo Planejamento",
+        ctaUrl: `${SITE_URL}/planejamento`,
       }),
       contexto: "[BoasVindas]",
     });

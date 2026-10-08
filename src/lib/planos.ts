@@ -91,7 +91,7 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   // Metas é do plano Grátis desde 03/09/2026 (decisão COPY-03): o card do plano
   // grátis promete "até 3 metas acompanhadas" e a rota redirecionava pro
   // upgrade — a usuária tinha zero metas, não três. O teto de 3 ativas por vez
-  // vale pra todo plano e mora em LIMITE_ATIVAS (routes/_authenticated/metas.tsx).
+  // vale pra todo plano e mora em LIMITE_METAS_ATIVAS (src/lib/metaDoMes.ts).
   { prefixo: "/metas", tier: "confere" },
   { prefixo: "/clientes", tier: "controle" },
   { prefixo: "/financeiro", tier: "controle" },
@@ -133,7 +133,7 @@ export const MSG_LIMITE_CARTOES =
 // O teto de 3 metas ativas NÃO entra aqui de propósito. Ele não é cota de
 // plano: é regra de foco, vale igual pro plano Grátis, pro Premium e pro Pro
 // ("Até 3 metas ativas por vez, pra o foco não se dividir." está na própria
-// tela). Fonte única: LIMITE_ATIVAS em routes/_authenticated/metas.tsx.
+// tela). Fonte única: LIMITE_METAS_ATIVAS em src/lib/metaDoMes.ts.
 // Também não ganhou trigger no banco como produtos/quadros/notas
 // (20260727130000): a trigger materializar_planejamento cria "Meta do mês" e
 // "Meta pessoal" a partir do Planejamento, que é módulo do plano Grátis — uma cota

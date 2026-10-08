@@ -102,8 +102,12 @@ describe("garantirBoasVindas: regra do 'só marca com envio confirmado'", () => 
       }),
     );
     const { text, html } = enviarEmailResend.mock.calls[0][0] as { text: string; html: string };
-    expect(text).toContain("https://one.usepolia.com.br/painel");
-    expect(html).toContain("https://one.usepolia.com.br/painel");
+    // ONE-103: marca primeiro e o próximo passo é o Planejamento.
+    expect(text).toContain("https://one.usepolia.com.br/planejamento");
+    expect(html).toContain("https://one.usepolia.com.br/planejamento");
+    expect(text).toContain("Módulo 1 do Planejamento");
+    expect(text.indexOf("marca")).toBeLessThan(text.indexOf("números"));
+    expect(text).not.toMatch(/[—!]/);
 
     expect(from).toHaveBeenLastCalledWith("profiles");
     expect(update.update).toHaveBeenCalledWith({ boas_vindas_enviado_em: expect.any(String) });

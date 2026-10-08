@@ -18,7 +18,13 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
-import { TITULO_META_DO_MES, metaDoMesConta } from "@/lib/metaDoMes";
+import {
+  LIMITE_METAS_ATIVAS as LIMITE_ATIVAS,
+  TITULO_META_DO_MES,
+  ativasNoLimite,
+  metaDoMesConta,
+  podeAtivarMeta,
+} from "@/lib/metaDoMes";
 import { progressoPct } from "@/lib/metas";
 import { somarEntradasDoMes } from "@/lib/numerosDoMes";
 import { formatarReais } from "@/lib/formatarReais";
@@ -59,12 +65,9 @@ interface Meta {
   created_at: string;
 }
 
-// Teto de metas ativas ao mesmo tempo. Vale pra TODO plano: é regra de foco,
-// não cota de assinatura, por isso não mora em COTAS_CONFERE (ver a nota lá em
-// src/lib/planos.ts). É também o "até 3 metas acompanhadas" que o card do
-// Confere promete na landing (src/routes/index.tsx) — a rota abriu pro plano
-// grátis em 03/09/2026 (COPY-03), este número é o que sustenta a promessa.
-const LIMITE_ATIVAS = 3;
+// Teto de metas ativas: LIMITE_METAS_ATIVAS em src/lib/metaDoMes.ts. Vale pra
+// TODO plano (regra de foco, não cota) e sustenta o "até 3 metas" do Grátis.
+// A Meta do mês não ocupa vaga (ONE-87, 08/10/2026).
 
 /* ───────── helpers ───────── */
 function num(s: string) {
@@ -139,7 +142,10 @@ function MetasPage() {
   const concluidas = metas.filter((m) => m.status === "concluida");
   // Arquivar tirava a meta da tela pra sempre: não havia onde ver nem reabrir (QA-32).
   const arquivadas = metas.filter((m) => m.status === "arquivada");
-  const limiteAtingido = ativas.length >= LIMITE_ATIVAS;
+  const proprias = ativasNoLimite(metas);
+  const limiteAtingido = proprias.length >= LIMITE_ATIVAS;
+  // Botão "Reabrir": a Meta do mês reabre mesmo com o teto cheio.
+  const reabrirTravado = (m: Meta) => !ehMetaDoMes(m) && limiteAtingido;
   const [verArquivadas, setVerArquivadas] = useState(false);
 
   // Uma segunda "Meta do mês" valendo faria as 5 telas escolherem entre duas.
@@ -209,10 +215,9 @@ function MetasPage() {
         // o status, e o valor atual ficava cravado no alvo.
         onClick: () => {
           const agora = qc.getQueryData<Meta[]>(["metas", userId]) ?? [];
-          const outrasAtivas = agora.filter((x) => x.status === "ativa" && x.id !== m.id).length;
-          if (outrasAtivas >= LIMITE_ATIVAS) {
+          if (!podeAtivarMeta(m, agora)) {
             setErroAcao(
-              `Já tem ${outrasAtivas} metas ativas. Conclua ou arquive uma antes de reabrir "${m.titulo}".`,
+              `Já tem ${LIMITE_ATIVAS} metas ativas. Conclua ou arquive uma antes de reabrir "${m.titulo}".`,
             );
             return;
           }
@@ -241,7 +246,7 @@ function MetasPage() {
   };
 
   const reabrir = (m: Meta) => {
-    if (limiteAtingido) return;
+    if (reabrirTravado(m)) return;
     // Arquivada não conta como Meta do mês; reabrir uma com outra já valendo
     // criaria duas.
     if (ehMetaDoMes(m) && m.status === "arquivada" && metaDoMesJaExiste(m.id)) {
@@ -269,7 +274,7 @@ function MetasPage() {
   };
 
   const abrirCriarMetaDoMes = () => {
-    if (limiteAtingido || metaDoMesJaExiste()) return;
+    if (metaDoMesJaExiste()) return;
     setMetaEdit(null);
     setPresetMetaDoMes(true);
     setModalAberto(true);
@@ -288,15 +293,7 @@ function MetasPage() {
   const listaPronta = metasQuery.isSuccess;
   useEffect(() => {
     if (criarPedido !== "meta-do-mes" || !listaPronta) return;
-    if (!metaDoMesJaExiste()) {
-      if (limiteAtingido) {
-        setErroAcao(
-          `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma pra criar a Meta do mês.`,
-        );
-      } else {
-        abrirCriarMetaDoMes();
-      }
-    }
+    if (!metaDoMesJaExiste()) abrirCriarMetaDoMes();
     void navigate({ to: "/metas", search: {}, replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [criarPedido, listaPronta]);
@@ -307,7 +304,7 @@ function MetasPage() {
       largura="larga"
       eyebrow="Suas metas"
       titulo="Onde a marca quer chegar."
-      subtitulo={`Até ${LIMITE_ATIVAS} metas ativas por vez, pra o foco não se dividir.`}
+      subtitulo={`Até ${LIMITE_ATIVAS} metas ativas por vez, além da Meta do mês, pra o foco não se dividir.`}
       acao={
         <button
           type="button"
@@ -323,13 +320,10 @@ function MetasPage() {
       }
     >
       <div>
-        {/* A Meta do mês nasce do Planejamento mesmo com 3 ativas (a trigger
-        não conhece o limite), então o número real pode passar de 3. */}
+        {/* Conta só as metas próprias: a Meta do mês fica fora do teto. */}
         {limiteAtingido && (
           <p className="mb-4 text-[12px] text-[var(--muted)]">
-            {ativas.length > LIMITE_ATIVAS
-              ? `Já tem ${ativas.length} metas ativas aqui, e o limite é ${LIMITE_ATIVAS}. Conclua ou arquive uma antes de adicionar outra.`
-              : `Já tem ${LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar outra.`}
+            {`Já tem ${proprias.length} metas ativas aqui, fora a Meta do mês. Conclua ou arquive uma antes de adicionar outra.`}
           </p>
         )}
 
@@ -355,17 +349,11 @@ function MetasPage() {
             <button
               type="button"
               onClick={abrirCriarMetaDoMes}
-              disabled={limiteAtingido}
               className={`${BTN_ACAO_CONTORNO} mt-4 bg-white`}
             >
               <Target size={15} aria-hidden="true" />
               Criar a Meta do mês
             </button>
-            {limiteAtingido && (
-              <p className="mt-2 text-[12px] text-[var(--muted)]">
-                Conclua ou arquive uma meta ativa antes de criar a Meta do mês.
-              </p>
-            )}
           </section>
         )}
 
@@ -476,10 +464,10 @@ function MetasPage() {
                     <button
                       type="button"
                       onClick={() => reabrir(m)}
-                      disabled={limiteAtingido}
+                      disabled={reabrirTravado(m)}
                       title={
-                        limiteAtingido
-                          ? `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
+                        reabrirTravado(m)
+                          ? `Já tem ${proprias.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
                           : undefined
                       }
                       className="inline-flex min-h-11 shrink-0 items-center text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
@@ -520,10 +508,10 @@ function MetasPage() {
                     <button
                       type="button"
                       onClick={() => reabrir(m)}
-                      disabled={limiteAtingido || atualizar.isPending}
+                      disabled={reabrirTravado(m) || atualizar.isPending}
                       title={
-                        limiteAtingido
-                          ? `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
+                        reabrirTravado(m)
+                          ? `Já tem ${proprias.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
                           : undefined
                       }
                       className="inline-flex min-h-11 shrink-0 items-center text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
