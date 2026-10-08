@@ -1211,16 +1211,22 @@ function Timeline({ steps }: { steps: { quando: string; texto: string }[] }) {
 
 function FirstAction({ acao, data }: { acao: string; data?: string }) {
   return (
-    <div className="mt-8 flex items-baseline justify-between gap-4 rounded-lg border border-[var(--line)] bg-white px-4 py-3">
-      <div>
+    // ONE-99: a 2a resposta ("quando") é texto livre. Com shrink-0 e sem quebra,
+    // qualquer frase média empurrava a página pro lado no celular (782px em 390).
+    <div className="mt-8 flex flex-col gap-2 rounded-lg border border-[var(--line)] bg-white px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+      <div className="min-w-0">
         <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Sua primeira ação
         </p>
-        <p className="mt-1 whitespace-pre-line text-[15px] leading-relaxed text-[var(--ink-soft)]">
+        <p className="mt-1 whitespace-pre-line break-words text-[15px] leading-relaxed text-[var(--ink-soft)]">
           {acao}
         </p>
       </div>
-      {data && <span className="shrink-0 text-[13px] text-[var(--muted)]">{data}</span>}
+      {data && (
+        <span className="min-w-0 whitespace-pre-line break-words text-[13px] text-[var(--muted)] sm:max-w-[40%] sm:text-right">
+          {data}
+        </span>
+      )}
     </div>
   );
 }

@@ -16,6 +16,9 @@ import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
+import { CamposDoc } from "@/components/planejamento/CamposDoc";
+import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({
@@ -63,6 +66,9 @@ function CadernoPage() {
   // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
   const ehConfere = ehPlanoGratis(meta);
   const linkModulo5 = useLinkDoModulo(5);
+  const camposQuery = useCamposPlanejamento(userId);
+  const camposGuia = camposQuery.data ?? new Map<string, string>();
+  const temGuia = CAMPOS_FERRAMENTA["/caderno"].some((c) => camposGuia.has(c));
 
   const notasQuery = useQuery({
     queryKey: ["notas", userId],
@@ -379,6 +385,32 @@ function CadernoPage() {
           </div>
         )}
 
+        {/* ONE-98: o fim do Módulo 5 anuncia "Acabou de nascer o Caderno, seu
+            guia de presença" e manda pra cá, mas o guia não aparecia em lugar
+            nenhum. Agora as respostas do Módulo 5 ficam aqui, no topo. */}
+        {temGuia && (
+          <details
+            open={notas.length === 0}
+            className="mb-6 rounded-xl border border-[var(--line)] bg-white p-4 md:p-6"
+          >
+            <summary className="cursor-pointer text-[15px] font-medium text-[var(--ink)]">
+              Seu guia de presença{" "}
+              <span className="font-normal text-[var(--muted)]">
+                · canais, voz e bio, do Módulo 5
+              </span>
+            </summary>
+            <div className="mt-4">
+              <CamposDoc mapa={camposGuia} campos={CAMPOS_FERRAMENTA["/caderno"]} />
+            </div>
+            <LinkInterno
+              href={linkModulo5.href}
+              className="mt-2 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              Editar no Planejamento →
+            </LinkInterno>
+          </details>
+        )}
+
         <div className="grid gap-5 lg:grid-cols-[330px_1fr]">
           {/* Lista (esquerda) */}
           <aside className={selectedId ? "hidden lg:block" : "block"}>
@@ -432,16 +464,19 @@ function CadernoPage() {
                       {criar.isPending ? "Criando…" : "Criar a primeira nota"}
                     </button>
                     {/* Só aponta pro Módulo 5 quando ele está liberado; antes
-                        o link caía num módulo trancado. */}
-                    <p className="mt-3 text-[12px] text-[var(--muted)]">
-                      ou monte seu guia de presença pelo{" "}
-                      <LinkInterno
-                        href={linkModulo5.href}
-                        className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
-                      >
-                        {linkModulo5.liberado ? "Módulo 5 do Planejamento →" : "Planejamento →"}
-                      </LinkInterno>
-                    </p>
+                        o link caía num módulo trancado. Com o guia já
+                        escrito, ele aparece no topo e este convite sai. */}
+                    {!temGuia && (
+                      <p className="mt-3 text-[12px] text-[var(--muted)]">
+                        ou monte seu guia de presença pelo{" "}
+                        <LinkInterno
+                          href={linkModulo5.href}
+                          className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                        >
+                          {linkModulo5.liberado ? "Módulo 5 do Planejamento →" : "Planejamento →"}
+                        </LinkInterno>
+                      </p>
+                    )}
                   </>
                 }
               />

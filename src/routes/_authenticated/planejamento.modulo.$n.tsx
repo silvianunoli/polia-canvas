@@ -42,6 +42,21 @@ import {
 } from "@/lib/planejamentoSalvamento";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BlockError } from "@/components/ui/BlockError";
+import { COTAS_CONFERE, ehBeta, tierDoPlano } from "@/lib/planos";
+
+// Linhas da lista de produtos (as duas perguntas da seção 3.1 alimentam o
+// catálogo) passam da cota do Grátis? Só avisa: a cota é aplicada no banco.
+function passaDaCotaDeProdutos(
+  plano: string | null | undefined,
+  perguntas: { campo?: string }[],
+  valores: string[],
+): boolean {
+  if (ehBeta(plano) || tierDoPlano(plano) !== "confere") return false;
+  const linhas = perguntas
+    .flatMap((q, j) => (q.campo === "produto.lista" ? (valores[j] ?? "").split("\n") : []))
+    .filter((l) => l.trim() !== "");
+  return linhas.length > COTAS_CONFERE.produtos;
+}
 
 export const Route = createFileRoute("/_authenticated/planejamento/modulo/$n")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -439,8 +454,9 @@ function ModuloPage() {
                 <ArrowRight size={16} aria-hidden="true" />
               </button>
               <p className="mt-2 text-[0.8rem] text-[var(--muted)]">
-                Faltam {TOTAL_MODULOS - n} {TOTAL_MODULOS - n === 1 ? "módulo" : "módulos"} pra
-                fechar o Planejamento.
+                {TOTAL_MODULOS - n === 1
+                  ? "Falta 1 módulo pra fechar o Planejamento."
+                  : `Faltam ${TOTAL_MODULOS - n} módulos pra fechar o Planejamento.`}
               </p>
               <LinkInterno href={acessoFerramenta.href} className={`${BTN_ACAO_CONTORNO} mt-5`}>
                 {!acessoFerramenta.liberada && <Lock size={15} aria-hidden="true" />}
@@ -1155,6 +1171,18 @@ function SecaoForm({
                     : "border border-[var(--line)]"
                 }`}
               />
+
+              {p.campo === "produto.lista" &&
+                i === secao.perguntas.findIndex((q) => q.campo === "produto.lista") &&
+                passaDaCotaDeProdutos(plano, secao.perguntas, valores) && (
+                  // ONE-97: a cota do Grátis cortava o catálogo calada (6 itens
+                  // listados, 5 produtos criados e nenhum aviso).
+                  <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                    O plano Grátis guarda até {COTAS_CONFERE.produtos} produtos no catálogo,
+                    contando os que já estão lá. Os primeiros da lista viram produto; o resto fica
+                    guardado aqui no Planejamento.
+                  </p>
+                )}
 
               {conflitos[i] && (
                 <AvisoConflito

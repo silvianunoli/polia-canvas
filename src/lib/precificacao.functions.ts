@@ -127,6 +127,28 @@ export function taxasDoBreakdown(bk: CalculadoraBreakdown | null | undefined): {
   return { taxaVendaPct: n(bk.valores.taxaVendaS), impostosPct: n(bk.valores.impostosS) };
 }
 
+// Custo DIRETO de uma unidade, sem o rateio dos custos fixos. O perfil
+// "produto" da calculadora salva em preco_custo o custo direto + o rateio
+// (fixos do mês / quantas vende). Pra quem já soma os custos fixos à parte
+// (a Projeção), usar o preco_custo contava o fixo duas vezes (ONE-95,
+// 08/10/2026): caderno a R$ 30,43 com R$ 300 de fixos dava 50 vendas pra
+// empatar em vez de 25. Só desconta o rateio quando o preco_custo ainda é o
+// que a calculadora salvou; custo editado à mão depois fica como está.
+export function custoDiretoDoProduto(
+  precoCusto: number | null,
+  bk: CalculadoraBreakdown | null | undefined,
+): number {
+  const custo = precoCusto ?? 0;
+  if (!bk || bk.perfil !== "produto") return custo;
+  const n = (s?: string) => (s ? parseFloat(s.replace(",", ".")) || 0 : 0);
+  const v = bk.valores;
+  const direto = n(v.materiaPrima) + n(v.embalagem) + n(v.maoObra) + n(v.outrosDiretos);
+  const rateio = n(v.despesasFixas) / Math.max(n(v.qtd), 1);
+  if (rateio <= 0) return custo;
+  const salvoPelaCalculadora = Math.abs(custo - (direto + rateio)) < 0.01;
+  return salvoPelaCalculadora ? direto : custo;
+}
+
 // ── Modo Encomenda (Projete): material por item + trabalho por hora + custos
 // extras, na mesma fórmula "por dentro" acima — sem conta paralela. O piso é
 // o mesmo cálculo do preço sugerido, só que sem a margem (quantoSobraPct).

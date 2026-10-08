@@ -10,10 +10,13 @@ export function AssinaturaCheckout({
   onClose,
   onSucesso,
   returnUrl,
+  resumo,
 }: {
   clientSecret: string;
   onClose: () => void;
   onSucesso: () => void;
+  /** "Premium, R$ 29,90 por mês" (resumoDoPlano). Sem ele, o texto genérico. */
+  resumo?: string | null;
   /**
    * Pra onde o Stripe devolve quando o meio de pagamento exige sair do site
    * (redirect). Sem ele, um meio desses fazia o confirmPayment falhar com
@@ -28,7 +31,11 @@ export function AssinaturaCheckout({
         if (!aberto) onClose();
       }}
       title="Confirmar pagamento"
-      description="Assinatura da Pólia One. O pagamento é processado pelo Stripe."
+      description={
+        resumo
+          ? `Pólia One ${resumo}. A cobrança se renova sozinha e dá pra cancelar quando quiser, em Configurações. O pagamento é processado pelo Stripe.`
+          : "Assinatura da Pólia One. O pagamento é processado pelo Stripe."
+      }
     >
       <Elements stripe={getStripe()} options={{ clientSecret }}>
         <FormularioPagamento onClose={onClose} onSucesso={onSucesso} returnUrl={returnUrl} />

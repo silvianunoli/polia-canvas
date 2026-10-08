@@ -202,6 +202,23 @@ export const TIERS_PAGOS: Record<
   },
 };
 
+/**
+ * O que está sendo assinado, em palavras, pro diálogo de pagamento:
+ * "Premium, R$ 29,90 por mês". Antes o diálogo dizia só "Assinatura da Pólia
+ * One" e o botão Confirmar não mostrava plano nem preço (PAY-31, 08/10/2026).
+ * Chave desconhecida volta null.
+ */
+export function resumoDoPlano(plano: string | null | undefined): string | null {
+  const [tier, ciclo] = (plano ?? "").split("_");
+  const valor = valorDoPlano(plano);
+  if (valor === null || (tier !== "controle" && tier !== "projete")) return null;
+  const preco = valor.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return `${TIERS_PAGOS[tier].titulo}, R$ ${preco} ${ciclo === "anual" ? "por ano" : "por mês"}`;
+}
+
 // Valor cobrado por chave de plano ("controle_mensal" etc.), pro evento
 // purchase do GA4. Chave desconhecida volta null em vez de inventar valor.
 export function valorDoPlano(plano: string | null | undefined): number | null {

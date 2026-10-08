@@ -11,6 +11,7 @@ import {
   ehBeta,
   tierDoPlano,
   valorDoPlano,
+  resumoDoPlano,
   FEATURES_GRATIS,
   TIERS_PAGOS,
   type TierPago,
@@ -299,6 +300,7 @@ function AssinarPage() {
       {clientSecret && (
         <AssinaturaCheckout
           clientSecret={clientSecret}
+          resumo={resumoDoPlano(planoNoCheckout)}
           onClose={() => setClientSecret(null)}
           onSucesso={() => {
             track("assinatura_concluida");

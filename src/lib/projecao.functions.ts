@@ -4,7 +4,11 @@
 // do mês). Reaproveita precificacao.functions.ts (mesma "sobra") e
 // CATEGORIA_PRO_LABORE de resumoContador.functions.ts (mesma categoria).
 
-import { calcularQuantoSobra, taxasDoBreakdown } from "@/lib/precificacao.functions";
+import {
+  calcularQuantoSobra,
+  custoDiretoDoProduto,
+  taxasDoBreakdown,
+} from "@/lib/precificacao.functions";
 import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { CATEGORIA_PRO_LABORE, pertenceAoMes } from "@/lib/resumoContador.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
@@ -163,10 +167,17 @@ export function ticketMedio(produtos: ProdutoResumo[]): number {
   return validos.reduce((acc, p) => acc + p.precoVenda, 0) / validos.length;
 }
 
+// Custo direto: os custos fixos entram à parte (custosFixosDoMes), então o
+// rateio que a calculadora embute no preco_custo sai daqui (ONE-95).
 export function custoMedio(produtos: ProdutoResumo[]): number {
   const validos = produtosValidos(produtos);
   if (validos.length === 0) return 0;
-  return validos.reduce((acc, p) => acc + (p.precoCusto ?? 0), 0) / validos.length;
+  return (
+    validos.reduce(
+      (acc, p) => acc + custoDiretoDoProduto(p.precoCusto, p.calculadora_breakdown),
+      0,
+    ) / validos.length
+  );
 }
 
 export function mediaTaxas(produtos: ProdutoResumo[]): {

@@ -1,5 +1,19 @@
 import { describe, it, expect } from "vitest";
-import { valorDoPlano } from "./planos";
+import { resumoDoPlano, valorDoPlano } from "./planos";
+
+describe("resumoDoPlano (PAY-31: o diálogo de pagamento diz plano e preço)", () => {
+  it("monta plano, preço e ciclo", () => {
+    expect(resumoDoPlano("controle_mensal")).toBe("Premium, R$ 29,90 por mês");
+    expect(resumoDoPlano("controle_anual")).toBe("Premium, R$ 299,00 por ano");
+    expect(resumoDoPlano("projete_mensal")).toBe("Pro, R$ 47,90 por mês");
+    expect(resumoDoPlano("projete_anual")).toBe("Pro, R$ 479,00 por ano");
+  });
+
+  it("chave desconhecida não inventa texto", () => {
+    expect(resumoDoPlano("confere")).toBeNull();
+    expect(resumoDoPlano(null)).toBeNull();
+  });
+});
 import {
   ehBeta,
   ehRotaProjete,

@@ -480,7 +480,11 @@ function ProjecaoPage() {
                     }`}
                   />
                 </Campo>
-                <Campo label="Custo médio (R$)" error={erroValidacao.custo}>
+                <Campo
+                  label="Custo médio (R$)"
+                  hint="Só o custo de fazer cada unidade. Os custos fixos já entram no campo de cima."
+                  error={erroValidacao.custo}
+                >
                   <input
                     type="text"
                     inputMode="decimal"

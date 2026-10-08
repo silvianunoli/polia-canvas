@@ -167,6 +167,44 @@ describe("ticketMedio / custoMedio / mediaTaxas", () => {
     ];
     expect(mediaTaxas(produtos)).toEqual({ taxaVendaPct: 15, impostosPct: 5 });
   });
+
+  // ONE-95: o preco_custo da calculadora já traz o rateio dos fixos, e a
+  // Projeção soma os fixos à parte. Caderno do teste de 08/10: 8 + 2 + 5 de
+  // custo direto, R$ 300 de fixos em 50 vendas (rateio 6), preço 30,43.
+  const bkCaderno = {
+    perfil: "produto" as const,
+    valores: {
+      materiaPrima: "8",
+      embalagem: "2",
+      maoObra: "5",
+      outrosDiretos: "",
+      despesasFixas: "300",
+      qtd: "50",
+      taxaVenda: "5",
+      impostos: "6",
+      margem: "20",
+    },
+  };
+
+  it("tira do custo o rateio dos fixos que a calculadora embutiu", () => {
+    const p = produto({ precoVenda: 30.43, precoCusto: 21, calculadora_breakdown: bkCaderno });
+    expect(custoMedio([p])).toBe(15);
+  });
+
+  it("custo editado à mão depois da calculadora fica como está", () => {
+    const p = produto({ precoVenda: 30.43, precoCusto: 18, calculadora_breakdown: bkCaderno });
+    expect(custoMedio([p])).toBe(18);
+  });
+
+  it("ponto de empate do caderno conta o fixo uma vez só: 25 vendas, não 50", () => {
+    const p = produto({ precoVenda: 30.43, precoCusto: 21, calculadora_breakdown: bkCaderno });
+    const sobra = sobraPorVenda({
+      ticketMedio: ticketMedio([p]),
+      custoMedio: custoMedio([p]),
+      ...mediaTaxas([p]),
+    });
+    expect(vendasParaAlvo(300, sobra)).toBe(25);
+  });
 });
 
 describe("vendasParaAlvo", () => {
