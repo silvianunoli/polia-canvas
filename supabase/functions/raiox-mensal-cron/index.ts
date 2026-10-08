@@ -21,7 +21,10 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const MODELO_PRO = "gemini-pro-latest";
 const FEATURE = "raiox";
-const LIMITE_MENSAL = 3;
+// Sem LIMITE_MENSAL aqui de propósito (07/10/2026): a geração automática do
+// mês fechado NÃO conta no limite de 3 gerações da usuária (ia_uso). O que
+// impede gerar duas vezes é a checagem de "já existe raio-x desse mês" abaixo,
+// e o cron roda uma vez por mês (dia 1, 09h UTC).
 
 const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -207,13 +210,21 @@ Deno.serve(async (req: Request) => {
       continue;
     }
 
-    const { data: existente } = await supabaseAdmin
+    // Desde 07/10/2026 cada geração é uma linha (histórico do mês), então o
+    // mês pode ter várias: maybeSingle() daria erro com 2 linhas e o cron
+    // geraria de novo. limit(1) só pergunta "tem alguma?". Erro de leitura
+    // pula a usuária em vez de arriscar gerar em dobro.
+    const { data: existentes, error: erroExistente } = await supabaseAdmin
       .from("ia_raiox")
       .select("id")
       .eq("user_id", userId)
       .eq("mes", mesLabel)
-      .maybeSingle();
-    if (existente) {
+      .limit(1);
+    if (erroExistente) {
+      erros++;
+      continue;
+    }
+    if ((existentes ?? []).length > 0) {
       pulados++;
       continue;
     }
@@ -247,21 +258,10 @@ Deno.serve(async (req: Request) => {
     const dadoRalo = total <= 2;
     const produtosSobra = produtosPorSobra((produtos ?? []) as Produto[]);
 
-    // Reserva ANTES de chamar o Gemini (mesmo padrão do caminho manual em
-    // raiox.functions.ts) — se a cota do mês já estiver no teto (ex.: a
-    // usuária já regenerou pelo app), pula esse usuário em vez de gerar de
-    // graça, ignorando o retorno da RPC. Mesmo guard de "1 por mês" que o
-    // caminho manual, sem contar duas vezes.
-    const { data: liberado } = await supabaseAdmin.rpc("incrementar_ia_uso", {
-      p_user_id: userId,
-      p_feature: FEATURE,
-      p_periodo: mesLabel,
-      p_limite: LIMITE_MENSAL,
-    });
-    if (!liberado) {
-      pulados++;
-      continue;
-    }
+    // Até 07/10/2026 o cron reservava cota em ia_uso no período do mês
+    // FECHADO, enquanto o caminho manual cobra no mês de Brasília em que a
+    // geração acontece: dois relógios. Decisão: a geração automática é
+    // presente do plano e não come o limite da usuária, então não reserva.
 
     const partesPrompt = [
       `Mês analisado: ${mesLabel}`,
@@ -305,18 +305,31 @@ Deno.serve(async (req: Request) => {
         rota: s.rota && ROTAS_VALIDAS.has(s.rota) ? s.rota : null,
       }));
 
-      await supabaseAdmin.from("ia_raiox").upsert(
-        {
-          user_id: userId,
-          mes: mesLabel,
-          placar: parsed.placar,
-          causas: parsed.causas,
-          sugestoes: sugestoesLimpa,
-          dado_ralo: dadoRalo,
-          email_enviado_em: new Date().toISOString(),
-        },
-        { onConflict: "user_id,mes" },
-      );
+      // Uma linha por geração (histórico do mês). Antes da migração
+      // 20261008200000 a UNIQUE (user_id, mes) ainda existe: se uma geração
+      // manual entrou entre a checagem acima e aqui, o insert volta 23505 e
+      // cai no update da linha existente (comportamento antigo). Mesma regra
+      // de gravarGeracaoRaioX em src/lib/raioxGeracoes.ts (runtime diferente,
+      // não dá pra importar).
+      const linha = {
+        user_id: userId,
+        mes: mesLabel,
+        placar: parsed.placar,
+        causas: parsed.causas,
+        sugestoes: sugestoesLimpa,
+        dado_ralo: dadoRalo,
+        email_enviado_em: new Date().toISOString(),
+      };
+      const { error: erroInsert } = await supabaseAdmin.from("ia_raiox").insert(linha);
+      if (erroInsert) {
+        if (erroInsert.code !== "23505") throw new Error(`ia_raiox insert: ${erroInsert.message}`);
+        const { error: erroUpdate } = await supabaseAdmin
+          .from("ia_raiox")
+          .update({ ...linha, criado_em: new Date().toISOString() })
+          .eq("user_id", userId)
+          .eq("mes", mesLabel);
+        if (erroUpdate) throw new Error(`ia_raiox update: ${erroUpdate.message}`);
+      }
       await supabaseAdmin.from("ia_geracoes").insert({
         user_id: userId,
         feature: FEATURE,
@@ -331,20 +344,14 @@ Deno.serve(async (req: Request) => {
       gerados++;
     } catch (erro) {
       erros++;
-      await Promise.all([
-        supabaseAdmin.rpc("estornar_ia_uso", {
-          p_user_id: userId,
-          p_feature: FEATURE,
-          p_periodo: mesLabel,
-        }),
-        supabaseAdmin.from("ia_geracoes").insert({
-          user_id: userId,
-          feature: FEATURE,
-          modelo: MODELO_PRO,
-          sucesso: false,
-          erro: erro instanceof Error ? erro.message : String(erro),
-        }),
-      ]);
+      // Sem estorno em ia_uso: a geração automática não reservou cota.
+      await supabaseAdmin.from("ia_geracoes").insert({
+        user_id: userId,
+        feature: FEATURE,
+        modelo: MODELO_PRO,
+        sucesso: false,
+        erro: erro instanceof Error ? erro.message : String(erro),
+      });
     }
   }
 

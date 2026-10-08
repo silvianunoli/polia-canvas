@@ -11,6 +11,7 @@ import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { mesAnoEmBrasilia, mesEmBrasilia } from "@/lib/data.functions";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { LIMITE_RAIOX_MENSAL, planoGeraRaioX, type MotivoRaioX } from "@/lib/raioxMotivo";
+import { faltaSchema, gravarGeracaoRaioX } from "@/lib/raioxGeracoes";
 import {
   avisosDoRaioX,
   escolherMetaDoRaioX,
@@ -234,15 +235,6 @@ export type ResultadoRaioX =
       motivo: MotivoRaioX;
     };
 
-// Erro de "tabela/coluna não existe" (migração 20261008190000 ainda não
-// aplicada): PostgREST devolve PGRST205/PGRST204, o Postgres 42P01/42703.
-const CODIGOS_SEM_SCHEMA = new Set(["PGRST205", "PGRST204", "42P01", "42703"]);
-
-function faltaSchema(erro: unknown): boolean {
-  const code = (erro as { code?: unknown } | null)?.code;
-  return typeof code === "string" && CODIGOS_SEM_SCHEMA.has(code);
-}
-
 /**
  * Meta do mês guardada pra um mês passado (meta_do_mes_historico). Qualquer
  * falha vira null: a leitura cai na meta de hoje e o aviso aparece, em vez de
@@ -273,23 +265,47 @@ interface LinhaRaioX {
 }
 
 /**
- * Grava o raio-x com os avisos. Sem a coluna `avisos` (migração ainda não
- * aplicada) grava de novo sem ela, pra não perder a leitura.
+ * Grava cada geração como uma linha nova (histórico do mês, 07/10/2026).
+ * Antes da migração 20261008200000 a UNIQUE (user_id, mes) ainda existe e o
+ * insert num mês que já tem raio-x volta 23505: aí atualiza a linha que
+ * existe (comportamento antigo), com criado_em de agora pra lista de gerações
+ * mostrar a hora certa. Sem a coluna `avisos` grava sem ela. Falha aqui só
+ * vai pro log: a leitura já saiu e volta pra tela de qualquer jeito.
  */
 async function salvarRaioX(linha: LinhaRaioX, avisos: string[]): Promise<void> {
-  const upsert = (valores: LinhaRaioX & { avisos?: string[] }) =>
-    supabaseAdmin
-      .from("ia_raiox" as never)
-      .upsert(valores as never, { onConflict: "user_id,mes" } as never);
-  const { error } = await upsert({ ...linha, avisos });
-  if (!error) return;
-  if (faltaSchema(error)) {
-    const { error: erroSemAvisos } = await upsert(linha);
-    if (erroSemAvisos) console.error("raiox: falha ao salvar", erroSemAvisos);
-    return;
-  }
-  console.error("raiox: falha ao salvar", error);
+  const resultado = await gravarGeracaoRaioX(linha, avisos, {
+    inserir: (valores) => supabaseAdmin.from("ia_raiox" as never).insert(valores as never),
+    atualizar: (valores) =>
+      supabaseAdmin
+        .from("ia_raiox" as never)
+        .update({ ...valores, criado_em: new Date().toISOString() } as never)
+        .eq("user_id", linha.user_id)
+        .eq("mes", linha.mes),
+  });
+  if (resultado.modo === "falhou") console.error("raiox: falha ao salvar", resultado.error);
 }
+
+/**
+ * Quantas gerações de raio-x ela já usou no mês, pra tela mostrar quantas
+ * restam e avisar antes da última (07/10/2026). Só leitura, da mesma fonte que
+ * gerarRaioX cobra: ia_uso, feature "raiox", mês de Brasília.
+ */
+export const usoRaioX = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<{ usado: number; limite: number; periodo: string }> => {
+    const periodo = mesEmBrasilia();
+    const { data, error } = await supabaseAdmin
+      .from("ia_uso" as never)
+      .select("contagem")
+      .eq("user_id", context.userId)
+      .eq("feature", FEATURE)
+      .eq("periodo", periodo)
+      .maybeSingle();
+    // Falha de leitura não pode virar "restam 3": a tela cai no texto genérico.
+    if (error) throw new Error("Falha ao ler o uso do raio-x");
+    const usado = Number((data as { contagem?: unknown } | null)?.contagem ?? 0);
+    return { usado: Number.isFinite(usado) ? usado : 0, limite: LIMITE_MENSAL, periodo };
+  });
 
 export const gerarRaioX = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
