@@ -202,6 +202,12 @@ function CalendarioPage() {
     () => eventosGoogleQuery.data?.eventos ?? [],
     [eventosGoogleQuery.data],
   );
+  // O servidor desfez a conexão (sem permissão da agenda ou token expirado):
+  // relê o status pra tela trocar "desconectar" por "Conectar".
+  const servidorDesconectou = eventosGoogleQuery.data?.conectado === false;
+  useEffect(() => {
+    if (servidorDesconectou && conectado) void statusGoogleQuery.refetch();
+  }, [servidorDesconectou, conectado, statusGoogleQuery]);
 
   const conectarMutation = useMutation({
     mutationFn: () => iniciarConexaoGoogle(),
@@ -487,7 +493,12 @@ function CalendarioPage() {
         {mostrarGoogle && eventosGoogleQuery.data?.error && (
           <div className="mb-5">
             <BlockError
-              message="Não deu pra carregar os compromissos do Google Calendar."
+              // O servidor já devolve o motivo em português ("precisa da
+              // permissão de ver a agenda", "não conseguiu buscar agora").
+              message={
+                eventosGoogleQuery.data.error ||
+                "Não deu pra carregar os compromissos do Google Calendar."
+              }
               onRetry={() => eventosGoogleQuery.refetch()}
             />
           </div>

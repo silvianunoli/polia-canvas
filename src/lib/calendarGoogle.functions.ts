@@ -11,6 +11,8 @@ import {
   buscarEmailConectado,
   listarEventosGoogle,
   revogarToken,
+  concedeuAgenda,
+  MSG_SEM_PERMISSAO_AGENDA,
   type EventoGoogle,
 } from "./googleCalendarApi";
 
@@ -79,6 +81,17 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
     if (error || !tokens)
       return { ok: false, error: error ?? "A Pólia One não conseguiu confirmar com o Google." };
 
+    // Caixa da agenda desmarcada na tela do Google: não grava uma conexão que
+    // nunca vai ler evento. Devolve o acesso e explica o que marcar.
+    if (!concedeuAgenda(tokens.scope)) {
+      await revogarToken(tokens.access_token);
+      await supabaseAdmin
+        .from("google_calendar_conexoes" as never)
+        .delete()
+        .eq("user_id", context.userId);
+      return { ok: false, error: MSG_SEM_PERMISSAO_AGENDA };
+    }
+
     const email = await buscarEmailConectado(tokens.access_token);
     const expiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
     const payload: Record<string, unknown> = {
@@ -144,6 +157,16 @@ export const listarEventosDoMes = createServerFn({ method: "POST" })
       }
 
       const resultado = await listarEventosGoogle(accessToken, data.inicioISO, data.fimISO);
+      // Conectada sem a permissão da agenda (caixa desmarcada antes desta
+      // correção): desfaz a conexão pra tela voltar a oferecer "Conectar".
+      if (resultado.error === MSG_SEM_PERMISSAO_AGENDA) {
+        await revogarToken(accessToken);
+        await supabaseAdmin
+          .from("google_calendar_conexoes" as never)
+          .delete()
+          .eq("user_id", context.userId);
+        return { eventos: [], error: MSG_SEM_PERMISSAO_AGENDA, conectado: false };
+      }
       if (resultado.expirado) {
         return {
           eventos: [],

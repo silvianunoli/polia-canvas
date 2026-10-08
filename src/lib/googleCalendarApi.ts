@@ -2,10 +2,22 @@
 // Requer GOOGLE_CALENDAR_CLIENT_ID / _CLIENT_SECRET / _REDIRECT_URI no ambiente:
 // .env em dev, secret do Worker em prod. O secret NUNCA tem prefixo VITE_.
 
-const ESCOPO = [
-  "https://www.googleapis.com/auth/calendar.readonly",
-  "https://www.googleapis.com/auth/userinfo.email",
-].join(" ");
+const ESCOPO_AGENDA = "https://www.googleapis.com/auth/calendar.readonly";
+const ESCOPO = [ESCOPO_AGENDA, "https://www.googleapis.com/auth/userinfo.email"].join(" ");
+
+/**
+ * O Google deixa desmarcar a caixa da agenda na tela de permissão e conecta
+ * só com o e-mail. Aí toda leitura de evento volta 403
+ * (ACCESS_TOKEN_SCOPE_INSUFFICIENT) e a tela ficava em "Não deu pra carregar"
+ * pra sempre (teste de 08/10/2026). Sem o campo scope na resposta, não barra.
+ */
+export function concedeuAgenda(scope: string | undefined): boolean {
+  if (scope == null) return true;
+  return scope.split(/\s+/).includes(ESCOPO_AGENDA);
+}
+
+export const MSG_SEM_PERMISSAO_AGENDA =
+  'A Pólia One precisa da permissão de ver a agenda. Conecta de novo e, na tela do Google, marca a caixa "Ver e baixar qualquer agenda".';
 
 function credenciais() {
   const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
@@ -42,7 +54,13 @@ export function montarUrlConsentimento(state: string): {
   return { url: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`, error: null };
 }
 
-type TokensGoogle = { access_token: string; refresh_token?: string; expires_in: number };
+type TokensGoogle = {
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+  /** Escopos que ela de fato concedeu, separados por espaço. */
+  scope?: string;
+};
 
 export async function trocarCodigoPorTokens(
   code: string,
@@ -153,7 +171,14 @@ export async function listarEventosGoogle(
     );
     if (res.status === 401) return { eventos: null, error: null, expirado: true };
     if (!res.ok) {
-      console.error("Google listarEventos error:", res.status, await res.text());
+      const corpo = await res.text();
+      console.error("Google listarEventos error:", res.status, corpo);
+      if (
+        res.status === 403 &&
+        /ACCESS_TOKEN_SCOPE_INSUFFICIENT|insufficientPermissions/.test(corpo)
+      ) {
+        return { eventos: null, error: MSG_SEM_PERMISSAO_AGENDA, expirado: false };
+      }
       return {
         eventos: null,
         error: "A Pólia One não conseguiu buscar os eventos do Google agora.",

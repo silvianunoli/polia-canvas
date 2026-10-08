@@ -7,7 +7,27 @@ import {
   buscarEmailConectado,
   listarEventosGoogle,
   revogarToken,
+  concedeuAgenda,
+  MSG_SEM_PERMISSAO_AGENDA,
 } from "./googleCalendarApi";
+
+describe("concedeuAgenda (caixa da agenda desmarcada, teste de 08/10)", () => {
+  it("aceita quando a agenda está entre os escopos concedidos", () => {
+    expect(
+      concedeuAgenda(
+        "https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar.readonly",
+      ),
+    ).toBe(true);
+  });
+
+  it("recusa quando só o e-mail foi concedido", () => {
+    expect(concedeuAgenda("https://www.googleapis.com/auth/userinfo.email openid")).toBe(false);
+  });
+
+  it("sem o campo scope na resposta, não barra", () => {
+    expect(concedeuAgenda(undefined)).toBe(true);
+  });
+});
 
 const CREDS_OK = {
   GOOGLE_CALENDAR_CLIENT_ID: "client-123",
@@ -195,6 +215,19 @@ describe("chamadas HTTP ao Google (fetch mockado)", () => {
   });
 
   describe("listarEventosGoogle", () => {
+    it("403 por escopo insuficiente vira a mensagem de permissão da agenda", async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        text: async () =>
+          '{"error":{"status":"PERMISSION_DENIED","details":[{"reason":"ACCESS_TOKEN_SCOPE_INSUFFICIENT"}]}}',
+      }) as unknown as typeof fetch;
+      const { eventos, error, expirado } = await listarEventosGoogle("at", "x", "y");
+      expect(eventos).toBeNull();
+      expect(expirado).toBe(false);
+      expect(error).toBe(MSG_SEM_PERMISSAO_AGENDA);
+    });
+
     it("mapeia eventos com horário definido (diaTodo: false)", async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
