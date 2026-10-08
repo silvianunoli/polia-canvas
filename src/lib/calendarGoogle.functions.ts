@@ -84,6 +84,11 @@ export const finalizarConexaoGoogle = createServerFn({ method: "POST" })
     // Caixa da agenda desmarcada na tela do Google: não grava uma conexão que
     // nunca vai ler evento. Devolve o acesso e explica o que marcar.
     if (!concedeuAgenda(tokens.scope)) {
+      // Diagnóstico: quais escopos o Google concedeu (lista de escopos, não é segredo).
+      console.warn(
+        "Google: agenda não concedida. Escopos recebidos:",
+        tokens.scope ?? "(sem campo scope)",
+      );
       await revogarToken(tokens.access_token);
       await supabaseAdmin
         .from("google_calendar_conexoes" as never)
