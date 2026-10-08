@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { Users } from "lucide-react";
+import { AlertTriangle, Pencil, Trash2, Users } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -15,6 +15,7 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar as registrarFounder } from "@/lib/founder-eventos";
 import { gerarCsv, baixarCsv } from "@/lib/csv";
+import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -78,6 +79,8 @@ function ClientesPage() {
   const userId = user?.id;
   const qc = useQueryClient();
   const [modalAberto, setModalAberto] = useState(false);
+  // QA-31 (07/10/2026): editar reaproveita o mesmo modal da criação.
+  const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
 
   const dadosQuery = useQuery({
     queryKey: ["clientes-hub", userId],
@@ -94,7 +97,7 @@ function ClientesPage() {
                 order: (
                   c: string,
                   o: { ascending: boolean },
-                ) => Promise<{ data: Cliente[] | null }>;
+                ) => Promise<{ data: Cliente[] | null; error: unknown }>;
               };
             };
           }
@@ -104,8 +107,12 @@ function ClientesPage() {
           .order("created_at", { ascending: false }),
         supabase.from("produtos").select("id, nome").eq("user_id", userId!),
       ]);
+      // Leitura que falha não pode virar "Nenhuma cliente cadastrada ainda"
+      // (07/10/2026): lança, e a tela mostra o estado de erro com nova tentativa.
+      if (clientesRes.error) throw clientesRes.error;
+      if (produtosRes.error) throw produtosRes.error;
       return {
-        clientes: ((clientesRes as { data: Cliente[] | null }).data ?? []) as Cliente[],
+        clientes: (clientesRes.data ?? []) as Cliente[],
         produtos: (produtosRes.data ?? []) as Produto[],
       };
     },
@@ -138,10 +145,7 @@ function ClientesPage() {
       formatarDataCurta(c.created_at),
       c.venda_registrada ? "sim" : "não",
     ]);
-    baixarCsv(
-      `clientes-polia-${new Date().toISOString().slice(0, 10)}.csv`,
-      gerarCsv(cabecalho, linhas),
-    );
+    baixarCsv(`clientes-polia-${hojeISO()}.csv`, gerarCsv(cabecalho, linhas));
     track("clientes_exportados", { total: clientes.length });
   };
 
@@ -168,6 +172,17 @@ function ClientesPage() {
       <div>
         {dadosQuery.isLoading ? (
           <p className="py-16 text-center text-[14px] text-[var(--muted)]">Carregando…</p>
+        ) : dadosQuery.isError ? (
+          <Vazio
+            icone={AlertTriangle}
+            titulo="A Pólia One não conseguiu carregar as suas clientes."
+            texto="Pode ter sido a conexão. Tenta de novo, nada do que já está salvo se perdeu."
+            acao={
+              <button type="button" onClick={() => void dadosQuery.refetch()} className={BTN_ACAO}>
+                Tentar de novo
+              </button>
+            }
+          />
         ) : clientes.length === 0 ? (
           <Vazio
             icone={Users}
@@ -188,6 +203,7 @@ function ClientesPage() {
                 nomeProduto={nomeProduto(cliente.produto_id)}
                 userId={userId!}
                 onRegistrado={() => qc.invalidateQueries({ queryKey: ["clientes-hub", userId] })}
+                onEditar={() => setClienteEditando(cliente)}
               />
             ))}
           </div>
@@ -204,6 +220,21 @@ function ClientesPage() {
           }}
         />
       )}
+
+      {clienteEditando && userId && (
+        <ModalCliente
+          userId={userId}
+          cliente={clienteEditando}
+          nomeProdutoAtual={
+            clienteEditando.produto_id ? nomeProduto(clienteEditando.produto_id) : undefined
+          }
+          onClose={() => setClienteEditando(null)}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ["clientes-hub", userId] });
+            setClienteEditando(null);
+          }}
+        />
+      )}
     </PaginaLogada>
   );
 }
@@ -214,16 +245,45 @@ function LinhaCliente({
   nomeProduto,
   userId,
   onRegistrado,
+  onEditar,
 }: {
   cliente: Cliente;
   nomeProduto: string;
   userId: string;
   onRegistrado: () => void;
+  onEditar: () => void;
 }) {
   const [popAberto, setPopAberto] = useState(false);
   const [duplicataData, setDuplicataData] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [salvandoStatus, setSalvandoStatus] = useState(false);
+  const [confirmarExcluir, setConfirmarExcluir] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+
+  // QA-31 (07/10/2026): excluir a cliente apaga só a linha de `clientes`. O
+  // lançamento que registrar_venda_cliente criou em `lancamentos` não tem FK pra
+  // cliente (liga só pela descrição), então continua no Financeiro: a venda
+  // aconteceu e o dinheiro entrou, sumir com ele bagunçaria o mês.
+  const excluir = async () => {
+    setExcluindo(true);
+    const { error } = await (
+      supabase.from("clientes" as never) as unknown as {
+        delete: () => { eq: (c: string, v: string) => Promise<{ error: unknown }> };
+      }
+    )
+      .delete()
+      .eq("id", cliente.id);
+    setExcluindo(false);
+    if (error) {
+      console.error("cliente_excluir", error);
+      toastErro("A Pólia One não conseguiu excluir a cliente. Tenta de novo.");
+      return;
+    }
+    track("cliente_excluido", { venda_registrada: cliente.venda_registrada });
+    setConfirmarExcluir(false);
+    onRegistrado();
+    toastSucesso("Cliente excluída.");
+  };
 
   const mudarStatus = async (novo: StatusPedido) => {
     if (novo === cliente.status_pedido) return;
@@ -256,7 +316,7 @@ function LinhaCliente({
       .select("data, descricao")
       .eq("user_id", userId)
       .ilike("descricao", cliente.nome)
-      .gte("data", seteDiasAtras.toISOString().slice(0, 10));
+      .gte("data", dataISOLocal(seteDiasAtras));
     if (data && data.length > 0) {
       setDuplicataData(data[0].data);
     }
@@ -297,7 +357,7 @@ function LinhaCliente({
   const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
 
   return (
-    <div className="mb-3 flex items-center justify-between rounded-xl border border-[var(--line)] bg-white p-5">
+    <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] bg-white p-5">
       <div className="flex min-w-0 items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent)]">
           <span className="font-sans text-[16px] font-semibold text-[var(--accent-ink)]">
@@ -349,7 +409,35 @@ function LinhaCliente({
             Registrar venda →
           </button>
         ) : null}
+        <MenuOpcoes
+          ariaLabel={`Opções da cliente ${cliente.nome}`}
+          itens={[
+            { label: "Editar", icone: Pencil, onClick: onEditar },
+            {
+              label: "Excluir",
+              icone: Trash2,
+              destrutivo: true,
+              onClick: () => setConfirmarExcluir(true),
+            },
+          ]}
+        />
       </div>
+
+      <ConfirmarAcao
+        open={confirmarExcluir}
+        onOpenChange={setConfirmarExcluir}
+        titulo={`Excluir ${cliente.nome}?`}
+        descricao={
+          cliente.venda_registrada
+            ? "A cliente sai da lista, com contato e notas, e não dá pra desfazer. A venda dela já foi registrada: o lançamento continua no Financeiro, porque o dinheiro entrou de verdade. Se quiser tirar também, apague o lançamento lá."
+            : "A cliente sai da lista, com contato, notas e pedido. Não dá pra desfazer."
+        }
+        textoConfirmar="Excluir"
+        textoCarregando="Excluindo…"
+        destrutivo
+        carregando={excluindo}
+        onConfirmar={excluir}
+      />
 
       <ConfirmarAcao
         open={popAberto}
@@ -378,22 +466,29 @@ function LinhaCliente({
   );
 }
 
-/* ============== Modal: novo cliente ============== */
+/* ============== Modal: nova cliente / editar cliente ============== */
 function ModalCliente({
   userId,
+  cliente,
+  nomeProdutoAtual,
   onClose,
   onSaved,
 }: {
   userId: string;
+  /** Com cliente, o modal edita essa linha; sem, cria uma nova. */
+  cliente?: Cliente;
+  /** Nome do produto atual da cliente, pra não sumir do select se estiver arquivado. */
+  nomeProdutoAtual?: string;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [nome, setNome] = useState("");
-  const [contato, setContato] = useState("");
-  const [statusPedido, setStatusPedido] = useState<StatusPedido | "">("");
-  const [notas, setNotas] = useState("");
-  const [valor, setValor] = useState("");
-  const [produtoId, setProdutoId] = useState("");
+  const editando = !!cliente;
+  const [nome, setNome] = useState(cliente?.nome ?? "");
+  const [contato, setContato] = useState(cliente?.contato ?? "");
+  const [statusPedido, setStatusPedido] = useState<StatusPedido | "">(cliente?.status_pedido ?? "");
+  const [notas, setNotas] = useState(cliente?.notas ?? "");
+  const [valor, setValor] = useState(cliente?.valor != null ? String(cliente.valor) : "");
+  const [produtoId, setProdutoId] = useState(cliente?.produto_id ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -423,27 +518,44 @@ function ModalCliente({
       setErro("Nome é obrigatório.");
       return;
     }
+    const valorNumero = valor.trim() === "" ? null : Number(valor);
+    if (valorNumero !== null && (!Number.isFinite(valorNumero) || valorNumero < 0)) {
+      setErro("O valor precisa ser um número igual ou maior que zero.");
+      return;
+    }
     setSalvando(true);
     setErro(null);
-    const payload: Record<string, unknown> = {
-      user_id: userId,
+    // Sem user_id nem venda_registrada no payload da edição: a dona não muda, e
+    // a marca de venda registrada só a RPC registrar_venda_cliente mexe.
+    const campos: Record<string, unknown> = {
       nome: nome.trim(),
       contato: contato.trim() || null,
       status_pedido: statusPedido || null,
       notas: notas.trim() || null,
-      valor: valor ? Number(valor) : null,
+      valor: valorNumero,
       produto_id: produtoId || null,
     };
-    const { error } = await (
-      supabase.from("clientes" as never) as unknown as {
-        insert: (p: Record<string, unknown>) => Promise<{ error: unknown }>;
-      }
-    ).insert(payload);
+    const tabela = supabase.from("clientes" as never) as unknown as {
+      insert: (p: Record<string, unknown>) => Promise<{ error: unknown }>;
+      update: (p: Record<string, unknown>) => {
+        eq: (c: string, v: string) => Promise<{ error: unknown }>;
+      };
+    };
+    const { error } = cliente
+      ? await tabela
+          .update({ ...campos, updated_at: new Date().toISOString() })
+          .eq("id", cliente.id)
+      : await tabela.insert({ ...campos, user_id: userId });
     setSalvando(false);
     if (error) {
       // Técnico no log, frase da Pólia na tela (mesmo padrão do modal de lançamento).
-      console.error("cliente_criar", error);
+      console.error(editando ? "cliente_editar" : "cliente_criar", error);
       setErro("A Pólia One não conseguiu salvar a cliente agora. Tenta de novo.");
+      return;
+    }
+    if (editando) {
+      track("cliente_editado");
+      onSaved();
       return;
     }
     track("cliente_criado");
@@ -462,7 +574,7 @@ function ModalCliente({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title="Adicionar cliente"
+      title={editando ? "Editar cliente" : "Adicionar cliente"}
       footer={
         <>
           <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
@@ -532,6 +644,9 @@ function ModalCliente({
             className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           >
             <option value="">Sem produto</option>
+            {produtoId && !produtos.some((p) => p.id === produtoId) && (
+              <option value={produtoId}>{nomeProdutoAtual ?? "Produto atual"}</option>
+            )}
             {produtos.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.nome} · R$ {Number(p.preco_venda).toLocaleString("pt-BR")}
@@ -549,8 +664,19 @@ function ModalCliente({
             onChange={(e) => setValor(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
+            aria-describedby={cliente?.venda_registrada ? "cliente-valor-aviso" : undefined}
           />
         </Campo>
+        {cliente?.venda_registrada && (
+          <p
+            id="cliente-valor-aviso"
+            className="mt-2 rounded-lg bg-[var(--bg)] px-3 py-2 text-[12.5px] leading-[1.5] text-[var(--ink-soft)]"
+          >
+            A venda dessa cliente já foi registrada. Mudar o valor aqui não mexe no Financeiro: o
+            lançamento guarda o valor do dia em que a venda foi registrada. Se precisar corrigir,
+            edite o lançamento no Financeiro.
+          </p>
+        )}
       </div>
 
       <div>

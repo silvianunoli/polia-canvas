@@ -8,7 +8,9 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { Vazio } from "@/components/layout/Vazio";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
-import { hojeISO, ehMesAtual } from "@/lib/data.functions";
+import { hojeISO, ehMesAtual, mesAnoDe } from "@/lib/data.functions";
+import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { rotaLiberada } from "@/lib/planos";
 import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
@@ -91,6 +93,10 @@ const SPAN_CLASS: Record<number, string> = {
 // usuária com 26 atrasadas ganhava um cartão de 1.328px e uma parede vermelha
 // na abertura do painel.
 const LIMITE_TAREFAS = 5;
+
+// Intenção do dia é uma frase, não um texto (QA-17: o campo não tinha limite).
+// Cabe folgado o exemplo do placeholder e não estoura a linha do cabeçalho.
+const LIMITE_INTENCAO = 160;
 
 function upgradeHref(rota: string) {
   return `/upgrade?rota=${encodeURIComponent(rota)}&tier=controle`;
@@ -212,6 +218,8 @@ function PainelPage() {
     enabled: !!userId,
     queryFn: async () => {
       const hoje = hojeISO();
+      const { ano, mes } = mesAnoDe(hoje);
+      const mesCorrente = intervaloDoMes(ano, mes);
       const [
         profileRes,
         secoesRes,
@@ -237,16 +245,26 @@ function PainelPage() {
           // respondido no módulo 4 do Planejamento, que o plano Grátis tem.
           .in("campo", ["financeiro.meta_minima", "financeiro.meta_celebracao"]),
         // Meta do mês: fonte única (mesma que Financeiro e a calculadora de Produtos lêem).
-        supabase
-          .from("metas")
-          .select("valor_alvo")
-          .eq("user_id", userId!)
-          .eq("titulo", "Meta do mês")
-          .maybeSingle(),
-        supabase
-          .from("lancamentos")
-          .select("id, tipo, valor, data, descricao, categoria, created_at")
-          .eq("user_id", userId!),
+        // A escolha entre linhas repetidas/arquivadas mora em buscarMetaDoMes (QA-19).
+        buscarMetaDoMes(supabase, userId!),
+        // Só o mês corrente, e lido inteiro (QA-24): sem filtro, o PostgREST
+        // cortava em 1.000 linhas e os totais do mês ficavam errados sem aviso.
+        // Tudo o que o Painel e o RegistroDoMes mostram é do mês corrente.
+        lerTodasAsPaginas<LancRow>((de, ate) =>
+          supabase
+            .from("lancamentos")
+            .select("id, tipo, valor, data, descricao, categoria, created_at")
+            .eq("user_id", userId!)
+            .gte("data", mesCorrente.inicio)
+            .lt("data", mesCorrente.fimExclusivo)
+            .order("data", { ascending: false })
+            .order("id", { ascending: true })
+            .range(de, ate)
+            .then((r) => ({ data: r.data as unknown as LancRow[] | null, error: r.error })),
+        ).then(
+          (data) => ({ data, error: null as unknown }),
+          (error: unknown) => ({ data: null, error }),
+        ),
         supabase
           .from("clientes" as never)
           .select("status_pedido")
@@ -490,20 +508,38 @@ function PainelPage() {
     if (editandoIntencao) inputIntencaoRef.current?.focus();
   }, [editandoIntencao]);
 
+  // QA-17 (08/10/2026): o modo edição fechava ANTES do upsert responder. Ao
+  // fechar, o efeito acima trocava o rascunho pelo valor velho, então quando a
+  // gravação falhava o texto novo sumia e a tela mostrava a intenção antiga.
+  // Agora o campo só fecha depois de gravado; se falhar, o texto fica no campo.
+  const [salvandoIntencao, setSalvandoIntencao] = useState(false);
   const salvarIntencao = async () => {
-    const texto = rascunhoIntencao.trim();
-    if (!texto || !userId) return;
-    setEditandoIntencao(false);
+    const texto = rascunhoIntencao.trim().slice(0, LIMITE_INTENCAO);
+    if (!texto || !userId || salvandoIntencao) return;
+    setSalvandoIntencao(true);
     const { error } = await supabase
       .from("intencoes_dia" as never)
       .upsert(
         { user_id: userId, data: hojeISO(), texto, updated_at: new Date().toISOString() } as never,
         { onConflict: "user_id,data" },
       );
+    setSalvandoIntencao(false);
     if (error) {
-      toastErro("A Pólia One não conseguiu guardar sua intenção. Tenta de novo.");
+      toastErro(
+        "A Pólia One não conseguiu guardar sua intenção. Tenta de novo, o texto continua no campo.",
+      );
+      requestAnimationFrame(() => inputIntencaoRef.current?.focus());
       return;
     }
+    // O cache recebe o texto novo antes de sair do modo edição, senão o efeito
+    // do rascunho piscaria o valor velho até o refetch chegar.
+    qc.setQueryData(["painel-dados", userId], (antigo: typeof dados) =>
+      antigo ? { ...antigo, intencao: texto } : antigo,
+    );
+    setEditandoIntencao(false);
+    // Enter/check desmontam o <input>; o foco vai pro botão "Editar intenção"
+    // depois que ele existe no DOM.
+    requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
     qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
   };
 
@@ -600,11 +636,11 @@ function PainelPage() {
                   type="text"
                   value={rascunhoIntencao}
                   onChange={(e) => setRascunhoIntencao(e.target.value)}
+                  maxLength={LIMITE_INTENCAO}
+                  readOnly={salvandoIntencao}
+                  aria-busy={salvandoIntencao || undefined}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      salvarIntencao();
-                      requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
-                    }
+                    if (e.key === "Enter") void salvarIntencao();
                     if (e.key === "Escape" && intencaoSalva) {
                       setEditandoIntencao(false);
                       requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
@@ -616,17 +652,18 @@ function PainelPage() {
                 />
                 <button
                   type="button"
-                  onClick={salvarIntencao}
-                  aria-label="Guardar intenção"
+                  onClick={() => void salvarIntencao()}
+                  disabled={salvandoIntencao}
+                  aria-label={salvandoIntencao ? "Guardando intenção" : "Guardar intenção"}
                   title="Guardar intenção"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] transition-transform duration-150 hover:-translate-y-px"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] transition-transform duration-150 hover:-translate-y-px disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
                 >
                   <Check size={16} aria-hidden="true" />
                 </button>
               </div>
             ) : (
               <div className="mt-2 flex items-center gap-2">
-                <span className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
+                <span className="min-w-0 break-words font-fraunces text-[19px] italic text-[var(--ink-soft)]">
                   {intencaoSalva}
                 </span>
                 <button

@@ -14,15 +14,23 @@ import { track } from "@/lib/analytics";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { registrar } from "@/lib/founder-eventos";
 import {
+  acaoDaMeta,
+  CATEGORIA_INSUMOS,
   custosFixosDoMes,
   custoMedio,
+  insumosDoMes,
+  lerValorReais,
   mediaTaxas,
   montarProjecao,
+  paraCampoReais,
   proLaboreJaLancado,
   sobraPorVenda,
   ticketMedio,
+  valorDoCampo,
 } from "@/lib/projecao.functions";
 import { temProjete } from "@/lib/planos";
+import { buscarMetaDoMes, TITULO_META_DO_MES } from "@/lib/metaDoMes";
+import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import type { ProdutoResumo } from "@/lib/projecao.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 
@@ -36,12 +44,6 @@ export const Route = createFileRoute("/_authenticated/projecao")({
   component: ProjecaoPage,
 });
 
-function numOuVazio(v: string): number | null {
-  if (v.trim() === "") return null;
-  const n = Number(v.replace(",", "."));
-  return Number.isFinite(n) && n >= 0 ? n : NaN;
-}
-
 function fmtBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -49,12 +51,10 @@ function fmtBRL(v: number): string {
 /**
  * Valor inicial de um campo editável, arredondado a 2 casas.
  * `ticketMedio` e `custoMedio` são médias, e chegavam com a precisão binária
- * inteira: o campo abria com "898.5714285714286". Os botões de cenário deste
- * mesmo arquivo já arredondavam assim; faltava no valor de partida.
+ * inteira: o campo abria com "898.5714285714286". Desde 08/10/2026 (QA-29) sai
+ * com vírgula decimal ("898,57"), que é como ela escreve e como lerValorReais lê.
  */
-function paraCampo(v: number): string {
-  return String(Math.round(v * 100) / 100);
-}
+const paraCampo = paraCampoReais;
 
 function ProjecaoPage() {
   const { user } = useSupabaseSession();
@@ -71,32 +71,47 @@ function ProjecaoPage() {
     queryKey: ["projecao", userId],
     enabled: !!userId && ehProjete,
     queryFn: async () => {
-      const [lancRes, prodRes, metaRes, perfilRes] = await Promise.all([
-        supabase
-          .from("lancamentos")
-          .select("id, tipo, valor, data, descricao, categoria")
-          .eq("user_id", userId!),
+      // A Projeção só usa o mês corrente (custos fixos e pró-labore lançado):
+      // filtra no banco e lê inteiro, página por página (QA-24/QA-29). Antes
+      // lia tudo sem paginar e o PostgREST cortava em 1.000 linhas.
+      const mes = intervaloDoMes(anoAtual, mesAtual);
+      const [lancamentosMes, prodRes, metaRes, perfilRes] = await Promise.all([
+        lerTodasAsPaginas<LancamentoResumo>((de, ate) =>
+          supabase
+            .from("lancamentos")
+            .select("id, tipo, valor, data, descricao, categoria")
+            .eq("user_id", userId!)
+            .gte("data", mes.inicio)
+            .lt("data", mes.fimExclusivo)
+            .order("data", { ascending: false })
+            .order("id", { ascending: true })
+            .range(de, ate)
+            .then((r) => ({
+              data: r.data as unknown as LancamentoResumo[] | null,
+              error: r.error,
+            })),
+        ),
         supabase
           .from("produtos")
           .select("preco_venda, preco_custo, calculadora_breakdown")
           .eq("user_id", userId!)
           .eq("arquivado", false)
           .gt("preco_venda", 0),
-        supabase
-          .from("metas")
-          .select("id, valor_alvo")
-          .eq("user_id", userId!)
-          .eq("titulo", "Meta do mês")
-          .maybeSingle(),
+        buscarMetaDoMes(supabase, userId!),
         supabase.from("profiles").select("pro_labore_desejado").eq("id", userId!).maybeSingle(),
       ]);
+      // Antes os erros destas leituras eram ignorados: produto ou meta que não
+      // carregou virava "sem produto" / "sem meta" calado. Agora cai na tela
+      // de "não conseguiu puxar os seus números".
+      const falha = [prodRes, metaRes, perfilRes].find((r) => (r as { error: unknown }).error);
+      if (falha) throw (falha as { error: unknown }).error;
       const produtosRaw = (prodRes.data ?? []) as unknown as {
         preco_venda: number;
         preco_custo: number | null;
         calculadora_breakdown: ProdutoResumo["calculadora_breakdown"];
       }[];
       return {
-        lancamentos: (lancRes.data ?? []) as LancamentoResumo[],
+        lancamentos: lancamentosMes,
         produtos: produtosRaw.map(
           (p): ProdutoResumo => ({
             precoVenda: p.preco_venda,
@@ -125,6 +140,11 @@ function ProjecaoPage() {
     () => custosFixosDoMes(lancamentos, mesAtual, anoAtual),
     [lancamentos, mesAtual, anoAtual],
   );
+  // Insumo do mês que ficou fora dos custos fixos (só pra linha de ajuda).
+  const insumosForaBase = useMemo(
+    () => insumosDoMes(lancamentos, mesAtual, anoAtual),
+    [lancamentos, mesAtual, anoAtual],
+  );
   const proLaboreBase = useMemo(() => {
     const lancado = proLaboreJaLancado(lancamentos, mesAtual, anoAtual);
     if (lancado > 0) return lancado;
@@ -142,13 +162,20 @@ function ProjecaoPage() {
   const [salvando, setSalvando] = useState(false);
   const [erroValidacao, setErroValidacao] = useState<Record<string, string>>({});
 
-  const custosFixos = custosFixosTxt != null ? (numOuVazio(custosFixosTxt) ?? 0) : custosFixosBase;
-  const proLaboreDesejado =
-    proLaboreTxt != null ? (numOuVazio(proLaboreTxt) ?? 0) : (proLaboreBase ?? 0);
-  const ticket = ticketTxt != null ? (numOuVazio(ticketTxt) ?? 0) : ticketBase;
-  const custo = custoTxt != null ? (numOuVazio(custoTxt) ?? 0) : custoBase;
-  const metaAlvo = metaTxt != null ? numOuVazio(metaTxt) : (metaMes?.valor_alvo ?? null);
+  const custosFixos = valorDoCampo(custosFixosTxt, custosFixosBase, 0);
+  const proLaboreDesejado = valorDoCampo(proLaboreTxt, proLaboreBase ?? 0, 0);
+  const ticket = valorDoCampo(ticketTxt, ticketBase, 0);
+  const custo = valorDoCampo(custoTxt, custoBase, 0);
+  const metaAlvo = valorDoCampo(metaTxt, metaMes?.valor_alvo ?? null, null);
 
+  // Sobra com os números REAIS (sem edição): decide se a tela inteira vira o
+  // aviso "nenhuma venda deixa sobra". A sobra do cenário editado não decide
+  // isso: antes, apagar o ticket médio pra digitar outro (ticket 0, sobra 0)
+  // trocava a tela pelo aviso e os campos sumiam junto, sem volta.
+  const sobraReal = useMemo(
+    () => sobraPorVenda({ ticketMedio: ticketBase, custoMedio: custoBase, ...taxasBase }),
+    [ticketBase, custoBase, taxasBase],
+  );
   const sobra = useMemo(
     () => sobraPorVenda({ ticketMedio: ticket, custoMedio: custo, ...taxasBase }),
     [ticket, custo, taxasBase],
@@ -160,7 +187,7 @@ function ProjecaoPage() {
   );
 
   const validarCampo = (chave: string, valor: string) => {
-    const n = numOuVazio(valor);
+    const n = lerValorReais(valor);
     setErroValidacao((prev) => {
       const novo = { ...prev };
       if (Number.isNaN(n)) novo[chave] = "Coloque um valor em reais.";
@@ -169,8 +196,8 @@ function ProjecaoPage() {
     });
   };
 
-  const aplicarCenarioPreco = () => setTicketTxt(String(Math.round(ticket * 1.1 * 100) / 100));
-  const aplicarCenarioCusto = () => setCustoTxt(String(Math.round(custo * 0.9 * 100) / 100));
+  const aplicarCenarioPreco = () => setTicketTxt(paraCampo(ticket * 1.1));
+  const aplicarCenarioCusto = () => setCustoTxt(paraCampo(custo * 0.9));
   const voltarAoValorReal = () => {
     setCustosFixosTxt(null);
     setProLaboreTxt(null);
@@ -184,25 +211,55 @@ function ProjecaoPage() {
     if (Object.keys(erroValidacao).length > 0) return;
     setSalvando(true);
     try {
-      const { error: erroPerfil } = await supabase
+      // .select("id") confirma que a linha foi mesmo gravada: com RLS, um
+      // update que não acha a linha volta sem erro e sem nada salvo.
+      const { data: perfilSalvo, error: erroPerfil } = await supabase
         .from("profiles")
         .update({ pro_labore_desejado: proLaboreDesejado })
-        .eq("id", userId!);
+        .eq("id", userId!)
+        .select("id");
       if (erroPerfil) throw erroPerfil;
-      if (metaMes?.id && metaTxt != null && metaAlvo != null) {
-        const { error: erroMeta } = await supabase
+      if (!perfilSalvo?.length) throw new Error("perfil não atualizado");
+
+      const acao = acaoDaMeta({
+        metaId: metaMes?.id ?? null,
+        editada: metaTxt != null,
+        valor: metaAlvo,
+      });
+      if (acao === "atualizar" && metaMes?.id) {
+        const { data: metaSalva, error: erroMeta } = await supabase
           .from("metas")
-          .update({ valor_alvo: metaAlvo, updated_at: new Date().toISOString() })
-          .eq("id", metaMes.id);
+          .update({ valor_alvo: metaAlvo!, updated_at: new Date().toISOString() })
+          .eq("id", metaMes.id)
+          .select("id");
+        if (erroMeta) throw erroMeta;
+        if (!metaSalva?.length) throw new Error("meta não atualizada");
+      } else if (acao === "criar") {
+        // Mesmo formato da linha que a trigger materializar_planejamento cria
+        // (da_jornada = true): se depois ela responder a meta no Planejamento,
+        // a trigger atualiza ESTA linha em vez de criar uma segunda.
+        const { error: erroMeta } = await supabase.from("metas").insert({
+          user_id: userId!,
+          titulo: TITULO_META_DO_MES,
+          formato: "moeda",
+          valor_alvo: metaAlvo!,
+          valor_atual: 0,
+          status: "ativa",
+          da_jornada: true,
+        });
         if (erroMeta) throw erroMeta;
       }
-      toastSucesso("Salário e meta salvos.");
+      toastSucesso(acao === "manter" ? "Salário salvo." : "Salário e meta salvos.");
       track("projecao_confirmada", { proLaboreDesejado, metaAlvo });
       void registrar("feature_completed", {
         feature: "projecao",
         propriedades: { acao: "confirmada" },
       });
-      await qc.invalidateQueries({ queryKey: ["projecao", userId] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["projecao", userId] }),
+        qc.invalidateQueries({ queryKey: ["meta-do-mes", userId] }),
+        qc.invalidateQueries({ queryKey: ["financeiro", userId] }),
+      ]);
     } catch (e) {
       console.error("projecao: falha ao salvar", e);
       toastErro(
@@ -278,7 +335,7 @@ function ProjecaoPage() {
               }
             />
           </div>
-        ) : sobra <= 0 ? (
+        ) : sobraReal <= 0 ? (
           <div className="mt-6">
             <Vazio
               icone={TrendingDown}
@@ -306,50 +363,67 @@ function ProjecaoPage() {
             )}
 
             <div className="mt-6 rounded-xl border border-[var(--line)] bg-white p-6">
-              <div className="space-y-3">
-                <p className="text-[16px] text-[var(--ink)]">
-                  Pra empatar:{" "}
-                  <strong>
-                    {projecao!.empatar.vendas} vendas ({fmtBRL(projecao!.empatar.faturamento)})
-                  </strong>
+              {/* Cenário editado sem sobra (ticket apagado, custo acima do preço):
+                  avisa no lugar das linhas e mantém os campos na tela. */}
+              {!projecao ? (
+                <p role="status" className="text-[15px] text-[var(--ink)]">
+                  Com esse ticket médio e esse custo, cada venda não deixa sobra, então não existe
+                  número de vendas que se pague. Ajuste os valores abaixo ou volte ao valor real.
                 </p>
-                {/* Sem pró-labore preenchido a linha repetiria a de empatar: em vez do
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-[16px] text-[var(--ink)]">
+                    Pra empatar:{" "}
+                    <strong>
+                      {projecao.empatar.vendas} vendas ({fmtBRL(projecao.empatar.faturamento)})
+                    </strong>
+                  </p>
+                  {/* Sem pró-labore preenchido a linha repetiria a de empatar: em vez do
                     número, a tela pede o dado que falta. */}
-                {proLaboreDesejado > 0 ? (
-                  <p className="text-[16px] text-[var(--ink)]">
-                    Pra pagar o seu salário ({fmtBRL(proLaboreDesejado)} por mês):{" "}
-                    <strong>
-                      {projecao!.sePagar.vendas} vendas ({fmtBRL(projecao!.sePagar.faturamento)})
-                    </strong>
-                  </p>
-                ) : (
-                  <p className="text-[16px] text-[var(--ink)]">
-                    Pra pagar o seu salário: falta dizer quanto você quer tirar por mês. Preenche
-                    aqui embaixo que a conta aparece.
-                  </p>
-                )}
-                {projecao!.meta ? (
-                  <p className="text-[16px] text-[var(--ink)]">
-                    Pra bater a meta ({fmtBRL(metaAlvo ?? 0)}):{" "}
-                    <strong>
-                      {projecao!.meta.vendas} vendas ({fmtBRL(projecao!.meta.faturamento)})
-                    </strong>
-                  </p>
-                ) : (
-                  <p className="text-[13px] text-[var(--muted)]">
-                    Sem Meta do mês definida ainda.{" "}
-                    <Link
-                      to="/metas"
-                      className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
-                    >
-                      Definir agora
-                    </Link>
-                  </p>
-                )}
-              </div>
+                  {proLaboreDesejado > 0 ? (
+                    <p className="text-[16px] text-[var(--ink)]">
+                      Pra pagar o seu salário ({fmtBRL(proLaboreDesejado)} por mês):{" "}
+                      <strong>
+                        {projecao.sePagar.vendas} vendas ({fmtBRL(projecao.sePagar.faturamento)})
+                      </strong>
+                    </p>
+                  ) : (
+                    <p className="text-[16px] text-[var(--ink)]">
+                      Pra pagar o seu salário: falta dizer quanto você quer tirar por mês. Preenche
+                      aqui embaixo que a conta aparece.
+                    </p>
+                  )}
+                  {projecao.meta ? (
+                    <p className="text-[16px] text-[var(--ink)]">
+                      Pra bater a meta ({fmtBRL(metaAlvo ?? 0)}):{" "}
+                      <strong>
+                        {projecao.meta.vendas} vendas ({fmtBRL(projecao.meta.faturamento)})
+                      </strong>
+                    </p>
+                  ) : (
+                    <p className="text-[13px] text-[var(--muted)]">
+                      Sem Meta do mês definida ainda.{" "}
+                      <Link
+                        to="/metas"
+                        className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+                      >
+                        Definir agora
+                      </Link>
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
-                <Campo label="Custos fixos do mês (R$)" error={erroValidacao.custosFixos}>
+                <Campo
+                  label="Custos fixos do mês (R$)"
+                  hint={
+                    insumosForaBase > 0
+                      ? `Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto.`
+                      : `Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto.`
+                  }
+                  error={erroValidacao.custosFixos}
+                >
                   <input
                     type="text"
                     inputMode="decimal"
@@ -373,7 +447,7 @@ function ProjecaoPage() {
                   <input
                     type="text"
                     inputMode="decimal"
-                    value={proLaboreTxt ?? String(proLaboreBase ?? "")}
+                    value={proLaboreTxt ?? (proLaboreBase != null ? paraCampo(proLaboreBase) : "")}
                     onChange={(e) => {
                       setProLaboreTxt(e.target.value);
                       validarCampo("proLabore", e.target.value);
@@ -421,7 +495,9 @@ function ProjecaoPage() {
                   <input
                     type="text"
                     inputMode="decimal"
-                    value={metaTxt ?? String(metaMes?.valor_alvo ?? "")}
+                    value={
+                      metaTxt ?? (metaMes?.valor_alvo != null ? paraCampo(metaMes.valor_alvo) : "")
+                    }
                     onChange={(e) => {
                       setMetaTxt(e.target.value);
                       validarCampo("meta", e.target.value);

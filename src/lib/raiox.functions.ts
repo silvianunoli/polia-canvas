@@ -5,17 +5,27 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
 import { moedaParaPrompt } from "@/lib/moeda";
-import {
-  calcularQuantoSobra,
-  calcularSobraPct,
-  taxasDoBreakdown,
-} from "@/lib/precificacao.functions";
+import { sobraDoProduto } from "@/lib/precificacao.functions";
 import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
+import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { mesAnoEmBrasilia, mesEmBrasilia } from "@/lib/data.functions";
+import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { LIMITE_RAIOX_MENSAL, planoGeraRaioX, type MotivoRaioX } from "@/lib/raioxMotivo";
+import {
+  avisosDoRaioX,
+  escolherMetaDoRaioX,
+  mesJaPassou,
+  produtosDoRaioX,
+  type ProdutoDoBanco,
+} from "@/lib/raioxHistorico";
 
 const FEATURE = "raiox";
 const MODELO_PRO = "gemini-pro-latest";
-const LIMITE_MENSAL = 3; // 1 geração + até 2 re-gerações, teto único (ia_uso)
+const LIMITE_MENSAL = LIMITE_RAIOX_MENSAL; // 1 geração + até 2 re-gerações, teto único (ia_uso)
 
+// Só formata um mês já escolhido (data montada com Date.UTC no dia 1). Pra
+// saber o mês de AGORA use mesEmBrasilia: o Worker roda em UTC e o mês virava
+// às 21h de Brasília.
 export function periodoMensal(agora: Date): string {
   const ano = agora.getUTCFullYear();
   const mes = String(agora.getUTCMonth() + 1).padStart(2, "0");
@@ -61,22 +71,21 @@ export interface ProdutoPorSobra {
 }
 
 // Rankeia produtos salvos pela sobra real (maior primeiro) — reaproveita
-// taxasDoBreakdown/calcularQuantoSobra de precificacao.functions.ts, a mesma
+// sobraDoProduto de precificacao.functions.ts (taxas do breakdown salvo), a mesma
 // conta usada no card de Produtos. Produto sem preço de venda é ignorado
 // (não dá pra saber a sobra de algo sem preço).
 export function produtosPorSobra(produtos: ProdutoResumo[]): ProdutoPorSobra[] {
   return produtos
     .filter((p) => p.preco_venda > 0)
     .map((p) => {
-      const { taxaVendaPct, impostosPct } = taxasDoBreakdown(p.calculadora_breakdown);
-      const custo = p.preco_custo ?? 0;
-      const sobraPct = calcularSobraPct({
+      // sobraDoProduto devolve o % com sinal: calcularSobraPct travava em 0 e
+      // produto com prejuízo ia pra IA como "(0%)".
+      const sobra = sobraDoProduto({
         precoVenda: p.preco_venda,
-        precoCusto: custo,
-        taxaVendaPct,
-        impostosPct,
+        precoCusto: p.preco_custo ?? 0,
+        breakdown: p.calculadora_breakdown,
       });
-      return { nome: p.nome, sobraPct };
+      return { nome: p.nome, sobraPct: sobra?.pct ?? 0 };
     })
     .sort((a, b) => b.sobraPct - a.sobraPct);
 }
@@ -105,6 +114,8 @@ export interface ContextoRaioX {
   metaAtual: number | null;
   produtos: ProdutoPorSobra[];
   dadoRalo: boolean;
+  /** Frases fixas de limite da leitura (meta/preço de hoje no lugar do mês). */
+  avisos?: string[];
 }
 
 export function montarPromptRaioX(ctx: ContextoRaioX): {
@@ -132,6 +143,13 @@ export function montarPromptRaioX(ctx: ContextoRaioX): {
   if (ctx.dadoRalo) {
     partes.push(
       "Aviso: esse mês tem poucos lançamentos, a leitura é limitada. Diga isso na resposta.",
+    );
+  }
+  // QA-30: a tela já mostra a frase; aqui é pra a IA não tratar o número de
+  // hoje como se fosse o daquele mês.
+  for (const aviso of ctx.avisos ?? []) {
+    partes.push(
+      `Limite dos dados: ${aviso} Não afirme que esse valor era o daquele mês; a tela já mostra esse aviso, não precisa repetir a frase.`,
     );
   }
   partes.push(
@@ -209,17 +227,69 @@ export type ResultadoRaioX =
       causas: string;
       sugestoes: { texto: string; rota: string | null }[];
       dadoRalo: boolean;
+      avisos: string[];
     }
   | {
       ok: false;
-      motivo:
-        | "manutencao"
-        | "teto_atingido"
-        | "falha_ia"
-        | "dado_insuficiente"
-        | "mes_nao_fechado"
-        | "plano_insuficiente";
+      motivo: MotivoRaioX;
     };
+
+// Erro de "tabela/coluna não existe" (migração 20261008190000 ainda não
+// aplicada): PostgREST devolve PGRST205/PGRST204, o Postgres 42P01/42703.
+const CODIGOS_SEM_SCHEMA = new Set(["PGRST205", "PGRST204", "42P01", "42703"]);
+
+function faltaSchema(erro: unknown): boolean {
+  const code = (erro as { code?: unknown } | null)?.code;
+  return typeof code === "string" && CODIGOS_SEM_SCHEMA.has(code);
+}
+
+/**
+ * Meta do mês guardada pra um mês passado (meta_do_mes_historico). Qualquer
+ * falha vira null: a leitura cai na meta de hoje e o aviso aparece, em vez de
+ * derrubar o raio-x.
+ */
+async function lerMetaDoHistorico(userId: string, mes: string): Promise<number | null> {
+  const { data, error } = await supabaseAdmin
+    .from("meta_do_mes_historico" as never)
+    .select("valor_alvo")
+    .eq("user_id", userId)
+    .eq("mes", mes)
+    .maybeSingle();
+  if (error) {
+    if (!faltaSchema(error)) console.error("raiox: falha ao ler meta do histórico", error);
+    return null;
+  }
+  const valor = Number((data as { valor_alvo?: unknown } | null)?.valor_alvo);
+  return data && Number.isFinite(valor) ? valor : null;
+}
+
+interface LinhaRaioX {
+  user_id: string;
+  mes: string;
+  placar: string;
+  causas: string;
+  sugestoes: { texto: string; rota: string | null }[];
+  dado_ralo: boolean;
+}
+
+/**
+ * Grava o raio-x com os avisos. Sem a coluna `avisos` (migração ainda não
+ * aplicada) grava de novo sem ela, pra não perder a leitura.
+ */
+async function salvarRaioX(linha: LinhaRaioX, avisos: string[]): Promise<void> {
+  const upsert = (valores: LinhaRaioX & { avisos?: string[] }) =>
+    supabaseAdmin
+      .from("ia_raiox" as never)
+      .upsert(valores as never, { onConflict: "user_id,mes" } as never);
+  const { error } = await upsert({ ...linha, avisos });
+  if (!error) return;
+  if (faltaSchema(error)) {
+    const { error: erroSemAvisos } = await upsert(linha);
+    if (erroSemAvisos) console.error("raiox: falha ao salvar", erroSemAvisos);
+    return;
+  }
+  console.error("raiox: falha ao salvar", error);
+}
 
 export const gerarRaioX = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -231,13 +301,15 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
-    if (profile?.plano !== "projete") {
+    // QA-30: beta é acesso total e a tela já abria pra ela, mas aqui só
+    // "projete" passava e a conta beta via a tela vazia sem explicação.
+    if (!planoGeraRaioX(profile?.plano)) {
       return { ok: false, motivo: "plano_insuficiente" };
     }
 
-    const hoje = new Date();
-    const mesAtual = hoje.getUTCMonth() + 1;
-    const anoAtual = hoje.getUTCFullYear();
+    // Mês de Brasília, não UTC: às 21h do último dia o mês já contava como
+    // fechado, e no dia 1º até as 21h o mês passado ainda contava como aberto.
+    const { mes: mesAtual, ano: anoAtual } = mesAnoEmBrasilia();
     if (data.mes === mesAtual && data.ano === anoAtual && !data.forcar) {
       return { ok: false, motivo: "mes_nao_fechado" };
     }
@@ -246,23 +318,56 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       return { ok: false, motivo: "manutencao" };
     }
 
-    const [{ data: lancamentos }, { data: meta }, { data: produtos }] = await Promise.all([
-      supabaseAdmin.from("lancamentos").select("tipo, valor, data").eq("user_id", context.userId),
-      supabaseAdmin
-        .from("metas")
-        .select("valor_alvo, valor_atual")
-        .eq("user_id", context.userId)
-        .eq("titulo", "Meta do mês")
-        .maybeSingle(),
+    // Só o mês pedido, página por página: sem filtro, a leitura trazia todos os
+    // lançamentos da conta e o PostgREST corta em 1.000 linhas sem avisar, o
+    // que deixava o mês com soma parcial em quem tem histórico longo.
+    const { inicio, fimExclusivo } = intervaloDoMes(data.ano, data.mes);
+    const lerLancamentos = lerTodasAsPaginas<LancamentoResumo>(
+      (de, ate) =>
+        supabaseAdmin
+          .from("lancamentos")
+          .select("tipo, valor, data")
+          .eq("user_id", context.userId)
+          .gte("data", inicio)
+          .lt("data", fimExclusivo)
+          .order("data", { ascending: true })
+          .order("id", { ascending: true })
+          .range(de, ate) as unknown as PromiseLike<{
+          data: LancamentoResumo[] | null;
+          error: unknown;
+        }>,
+    ).then(
+      (linhas) => ({ data: linhas }),
+      (erro) => {
+        console.error("raiox: falha ao ler lançamentos", erro);
+        return null;
+      },
+    );
+    const mesLabel = periodoMensal(new Date(Date.UTC(data.ano, data.mes - 1, 1)));
+    const mesPassado = mesJaPassou(
+      { ano: data.ano, mes: data.mes },
+      { ano: anoAtual, mes: mesAtual },
+    );
+    const [leitura, { data: meta }, { data: produtos }, metaDoHistorico] = await Promise.all([
+      lerLancamentos,
+      buscarMetaDoMes(supabaseAdmin, context.userId),
       supabaseAdmin
         .from("produtos")
-        .select("nome, preco_venda, preco_custo, calculadora_breakdown")
+        .select(
+          "nome, preco_venda, preco_custo, calculadora_breakdown, historico_precos, preco_atualizado_em, created_at, updated_at",
+        )
         .eq("user_id", context.userId)
         .eq("arquivado", false),
+      mesPassado ? lerMetaDoHistorico(context.userId, mesLabel) : Promise.resolve(null),
     ]);
 
+    // Leitura que falha não pode virar "mês sem lançamento" nem soma parcial.
+    if (!leitura) {
+      return { ok: false, motivo: "falha_ia" };
+    }
+
     const { entradas, saidas, resultado, totalLancamentos } = resultadoDoMes(
-      (lancamentos ?? []) as LancamentoResumo[],
+      leitura.data,
       data.mes,
       data.ano,
     );
@@ -272,19 +377,40 @@ export const gerarRaioX = createServerFn({ method: "POST" })
     }
     const dadoRalo = totalLancamentos <= 2;
 
-    const mesLabel = periodoMensal(new Date(Date.UTC(data.ano, data.mes - 1, 1)));
+    // QA-30: mês passado usa a meta e o preço daquele mês quando ficaram
+    // guardados; quando não ficaram, usa os de hoje e diz isso numa frase.
+    const escolhaMeta = escolherMetaDoRaioX({
+      mesPassado,
+      metaDoHistorico,
+      metaDeHoje: meta?.valor_alvo ?? null,
+    });
+    const doMes = produtosDoRaioX(
+      (produtos ?? []) as unknown as ProdutoDoBanco[],
+      { ano: data.ano, mes: data.mes },
+      mesPassado,
+    );
+    const avisos = avisosDoRaioX({
+      alvo: { ano: data.ano, mes: data.mes },
+      usaMetaDeHoje: escolhaMeta.usaMetaDeHoje,
+      usaPrecoDeHoje: doMes.usaPrecoDeHoje,
+      usaCustoDeHoje: doMes.usaCustoDeHoje,
+    });
     const contexto: ContextoRaioX = {
       mes: mesLabel,
       entradas,
       saidas,
       resultado,
-      metaAlvo: meta?.valor_alvo ?? null,
-      metaAtual: meta?.valor_atual ?? null,
-      produtos: produtosPorSobra((produtos ?? []) as ProdutoResumo[]),
+      metaAlvo: escolhaMeta.valorAlvo,
+      // "Atingido" = entradas do mês lido, a mesma conta do Financeiro. Antes
+      // ia o valor_atual de hoje, que é digitado à mão e não é do mês lido.
+      metaAtual: escolhaMeta.valorAlvo != null ? entradas : null,
+      produtos: produtosPorSobra(doMes.produtos),
       dadoRalo,
+      avisos,
     };
 
-    const periodo = periodoMensal(new Date());
+    // Cota do mês no horário de Brasília (antes renovava às 21h do último dia).
+    const periodo = mesEmBrasilia();
     const { data: liberado } = await supabaseAdmin.rpc(
       "incrementar_ia_uso" as never,
       {
@@ -310,7 +436,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       const json = JSON.parse(resultadoIa.texto);
       const saneado = sanearRespostaRaioX(json);
 
-      await supabaseAdmin.from("ia_raiox" as never).upsert(
+      await salvarRaioX(
         {
           user_id: context.userId,
           mes: mesLabel,
@@ -318,8 +444,8 @@ export const gerarRaioX = createServerFn({ method: "POST" })
           causas: saneado.causas,
           sugestoes: saneado.sugestoes,
           dado_ralo: dadoRalo,
-        } as never,
-        { onConflict: "user_id,mes" } as never,
+        },
+        avisos,
       );
       await supabaseAdmin.from("ia_geracoes" as never).insert({
         user_id: context.userId,
@@ -330,7 +456,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
         sucesso: true,
       } as never);
 
-      return { ok: true, dadoRalo, ...saneado };
+      return { ok: true, dadoRalo, avisos, ...saneado };
     } catch (erro) {
       await Promise.all([
         supabaseAdmin.rpc(

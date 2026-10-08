@@ -6,6 +6,8 @@ import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
 import { temProjete } from "@/lib/planos";
 import { moedaParaPrompt } from "@/lib/moeda";
+import { hojeEmBrasilia, mesAnoEmBrasilia } from "@/lib/data.functions";
+import { buscarMetaDoMes } from "@/lib/metaDoMes";
 
 const FEATURE = "aimer";
 const MODELO_FLASH = "gemini-flash-latest";
@@ -29,36 +31,87 @@ export function configDoPlano(plano: string | null | undefined): ConfigPlano {
   return CONFIG_POR_PLANO[plano ?? ""] ?? CONFIG_POR_PLANO.confere;
 }
 
+// Dia da cota no horário de Brasília (07/10/2026). Antes era o dia UTC e o
+// limite diário renovava às 21h, não à meia-noite.
 export function periodoDiario(agora: Date): string {
-  const ano = agora.getUTCFullYear();
-  const mes = String(agora.getUTCMonth() + 1).padStart(2, "0");
-  const dia = String(agora.getUTCDate()).padStart(2, "0");
-  return `${ano}-${mes}-${dia}`;
+  return hojeEmBrasilia(agora);
+}
+
+// "DAS" é a guia do Simples/MEI, mas "das" também é preposição ("quanto sobra
+// das vendas"). Antes qualquer "das" bloqueava a pergunta (07/10/2026). Agora
+// só conta como fiscal a sigla em maiúscula numa frase normal, ou "das" com
+// contexto de guia ("o DAS", "do das", "das do MEI").
+function mencionaGuiaDas(pergunta: string): boolean {
+  const fraseNormal = /[a-zà-ú]/.test(pergunta); // tudo em caixa alta não conta como sigla
+  if (fraseNormal && /\bDAS\b/.test(pergunta)) return true;
+  return /\b(o|do|no)\s+das\b/i.test(pergunta) || /\bdas\s+(do\s+)?(mei|simples)\b/i.test(pergunta);
+}
+
+// "IR" (imposto de renda) só como sigla em maiúscula numa frase normal: "ir"
+// minúsculo é o verbo ("vou ir na feira"), e frase toda em caixa alta não conta.
+function mencionaSiglaIr(pergunta: string): boolean {
+  return /[a-zà-ú]/.test(pergunta) && /\bIR\b/.test(pergunta);
 }
 
 // Filtro determinístico de escopo — roda ANTES de qualquer chamada à IA, sem
 // gastar cota nem custo. É a garantia real do no-go fiscal/jurídico/
 // investimento (o system prompt sozinho pode ser burlado; isto não pode,
 // porque a IA nunca chega a rodar quando bate aqui).
+// 07/10/2026: "mei", "contrato" e "investir" deixaram de bloquear sozinhos
+// ("sou MEI e vendo bolo", "fechei um contrato de 3 meses", "quanto investir
+// em anúncio" são perguntas de negócio). Só bloqueiam com contexto de
+// regime fiscal, de redação/rescisão de contrato ou de aplicação financeira.
+// 07/10/2026: "imposto" também deixou de bloquear sozinho. "Como coloco o
+// imposto no preço?" é assunto de preço (a Calculadora tem campo de imposto).
+// Só bloqueia em contexto fiscal/contábil: pagar ou recolher imposto, declarar,
+// alíquota, imposto de renda/IR, guia, imposto atrasado, regime tributário,
+// siglas de tributo. Pergunta de imposto que sobra no meio do caminho cai no
+// system prompt, que continua proibindo conselho fiscal.
 const PALAVRAS_FORA_DE_ESCOPO = [
   // fiscal
-  /\bimposto\b/i,
-  /\bdas\b/i,
+  /\b(pago|pagar|pagando|paguei|pagamos|pagaria|recolho|recolher|recolhendo|recolhimento)\s+(de\s+|o\s+|os\s+|do\s+|meu\s+|meus\s+|esse\s+|mais\s+|menos\s+|algum\s+)?impostos?\b/i,
+  /\bimpostos?\s+(eu\s+|que\s+(eu\s+)?)?(pago|pagaria|devo pagar|tenho que pagar|preciso pagar|vou pagar|a pagar)\b/i,
+  /\bdeclar\w*\b.{0,30}\bimpostos?\b/i,
+  /\bimpostos?\b.{0,30}\bdeclar\w*/i,
+  /\bimpostos? de renda\b/i,
+  /\bal[íi]quotas?\b/i,
+  /\bguias?\b.{0,20}\b(impostos?|simples|mei|inss|iss|icms|darf)\b/i,
+  /\bimpostos?\b.{0,20}\bguias?\b/i,
+  /\bimpostos?\s+(atrasad\w*|em atraso|vencid\w*)/i,
+  /\b(atrasei|atrasad\w*|devendo)\b.{0,20}\bimpostos?\b/i,
+  /\bregime\s+(tribut[áa]rio|de\s+tributa[çc][ãa]o|fiscal)\b/i,
+  /\benquadramento\s+(tribut[áa]rio|fiscal)\b/i,
+  /\blucro presumido\b/i,
+  /\b(icms|iss|darf|cofins|ipi|inss)\b/i,
+  /\breceita federal\b/i,
+  /\bmalha fina\b/i,
+  /\brestitui[çc][ãa]o\b/i,
+  /\bsonega\w*/i,
+  /\bdasn\b/i,
   /\bsimples nacional\b/i,
   /\bdeclarar (o )?imposto de renda\b/i,
   /\birpf\b/i,
   /\bcnpj\b.*(abrir|abertura|regularizar)/i,
-  /\bmei\b/i,
+  /\b(abrir|abertura de|formalizar|fechar|baixar|dar baixa no|sair do|virar|desenquadrar)\s+(um\s+|o\s+|meu\s+|no\s+|do\s+)?mei\b/i,
+  /\b(limite|teto|desenquadr\w*|declara\w*)\b.{0,30}\bmei\b/i,
+  /\bmei\b.{0,30}\b(limite|teto|desenquadr\w*|declara\w*)\b/i,
   /\bnota fiscal\b/i,
   // jurídico
   /\badvogad[oa]\b/i,
   /\bprocesso judicial\b/i,
   /\baç[ãa]o judicial\b/i,
-  /\bcontrato\b/i,
+  /\bcl[áa]usulas?\b/i,
+  /\b(rescindir|rescis[ãa]o|quebra de|quebrar|anular|validade d[eo]|modelo de|redigir|elaborar)\s+(o\s+|um\s+|esse\s+|este\s+|meu\s+)?contratos?\b/i,
+  /\bcontratos?\b.{0,30}\b(v[áa]lid[oa]|multa|rescis[ãa]o|rescindir|processar|na justi[çc]a)/i,
   /\bregistrar marca\b/i,
   /\binpi\b/i,
   // investimento
-  /\binvestir\b/i,
+  // "bolsa" e "ações" também são produto e marketing ("bolsas de couro",
+  // "ações de divulgação"): só contam no sentido de aplicação financeira.
+  /\bonde (investir|aplicar)\b/i,
+  /\b(investir|aplicar|investimento)\s+(em|no|na|nos|nas)\s+(cdb|lci|lca|tesouro|poupan[çc]a|renda fixa|renda vari[áa]vel|fiis?|previd[êe]ncia|bolsa(?!\s+d[eao]s?\s+(?!valores))\b)/i,
+  /\binvestir em a[çc][õo]es(?=\s*(?:[?.!,;]|$|da bolsa|na bolsa))/i,
+  /\b(cdb|lci|lca|fiis?|renda vari[áa]vel|fundos? de investimento|fundos? imobili[áa]rios?)\b/i,
   /\ba[çc][õo]es? da bolsa\b/i,
   /\bbitcoin\b/i,
   /\bcript(o|omoeda)\b/i,
@@ -73,7 +126,11 @@ const PALAVRAS_FORA_DE_ESCOPO = [
 ];
 
 export function foraDeEscopo(pergunta: string): boolean {
-  return PALAVRAS_FORA_DE_ESCOPO.some((re) => re.test(pergunta));
+  return (
+    mencionaGuiaDas(pergunta) ||
+    mencionaSiglaIr(pergunta) ||
+    PALAVRAS_FORA_DE_ESCOPO.some((re) => re.test(pergunta))
+  );
 }
 
 interface LancamentoResumo {
@@ -172,7 +229,7 @@ export type ResultadoAimer =
   | { ok: false; motivo: "manutencao" | "teto_atingido" | "falha_ia" | "fora_de_escopo" };
 
 const MENSAGEM_FORA_DE_ESCOPO =
-  "Isso é com o seu contador ou advogado. Comigo dá pra ver preço, quanto sobra e a sua meta.";
+  "Isso é com o seu contador ou advogado. A Pólia One ajuda com preço, quanto sobra e a sua meta.";
 
 export const perguntarAimer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -196,17 +253,21 @@ export const perguntarAimer = createServerFn({ method: "POST" })
 
     let contextoProjete: string | null = null;
     if (temProjete(profile?.plano)) {
-      const hoje = new Date();
-      const mes = hoje.getUTCMonth() + 1;
-      const ano = hoje.getUTCFullYear();
+      // Mês dela (Brasília), não o mês UTC do Worker.
+      const { mes, ano } = mesAnoEmBrasilia();
+      // Só o mês, já no banco: sem filtro, o PostgREST corta em 1.000 linhas
+      // e a conta de quem tem histórico longo ficava errada (QA-24).
+      const inicioMes = `${ano}-${String(mes).padStart(2, "0")}-01`;
+      const inicioProximo =
+        mes === 12 ? `${ano + 1}-01-01` : `${ano}-${String(mes + 1).padStart(2, "0")}-01`;
       const [{ data: lancamentos }, { data: meta }] = await Promise.all([
-        supabaseAdmin.from("lancamentos").select("tipo, valor, data").eq("user_id", context.userId),
         supabaseAdmin
-          .from("metas")
-          .select("valor_alvo, valor_atual")
+          .from("lancamentos")
+          .select("tipo, valor, data")
           .eq("user_id", context.userId)
-          .eq("titulo", "Meta do mês")
-          .maybeSingle(),
+          .gte("data", inicioMes)
+          .lt("data", inicioProximo),
+        buscarMetaDoMes(supabaseAdmin, context.userId),
       ]);
       const { entradas, saidas, resultado } = resultadoDoMes(
         (lancamentos ?? []) as LancamentoResumo[],

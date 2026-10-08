@@ -9,6 +9,9 @@ import {
   MODULOS,
   TOTAL_MODULOS,
   ferramentaDe,
+  moduloAtualDe,
+  moduloCompleto as moduloCompletoDe,
+  moduloLiberado,
   secoesDoModulo,
 } from "@/lib/planejamento";
 import { MODULO_ICONE } from "@/components/planejamento/modulosVisual";
@@ -350,12 +353,10 @@ function PlanejamentoPage() {
     return m;
   }, [dadosQuery.data?.campos]);
 
-  const moduloCompleto = (n: number) => secoesDoModulo(n).every((s) => concluidas.has(s.id));
-  const moduloAtual = useMemo(() => {
-    for (let n = 1; n <= TOTAL_MODULOS; n++) if (!moduloCompleto(n)) return n;
-    return TOTAL_MODULOS + 1;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [concluidas]);
+  // QA-21: a regra mora em src/lib/planejamento.ts e é a mesma que a rota do
+  // módulo usa pra trancar quem digita /planejamento/modulo/N na barra.
+  const moduloCompleto = (n: number) => moduloCompletoDe(n, concluidas);
+  const moduloAtual = useMemo(() => moduloAtualDe(concluidas), [concluidas]);
   const concluidosCount = MODULOS.filter((m) => moduloCompleto(m.n)).length;
   const secoesFeitasModuloAtual = useMemo(() => {
     if (moduloAtual > TOTAL_MODULOS) return 0;
@@ -470,8 +471,8 @@ function PlanejamentoPage() {
                   const completo = moduloCompleto(m.n);
                   const atual = m.n === moduloAtual;
                   const emAndamento = atual && feitas > 0;
-                  const bloqueado = m.n > moduloAtual;
-                  const clicavel = completo || atual;
+                  const clicavel = moduloLiberado(m.n, concluidas);
+                  const bloqueado = !clicavel;
                   const Icone = MODULO_ICONE[m.n];
                   return (
                     <button

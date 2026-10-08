@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-mot
 import { ArrowDown, ArrowRight } from "lucide-react";
 import { Cartela, Janela, Label } from "@/components/site/ProdutoMock";
 import { calcularQuantoSobra } from "@/lib/precificacao.functions";
+import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { fmt } from "@/components/produtos/tipos";
 
 /**
@@ -15,16 +16,17 @@ import { fmt } from "@/components/produtos/tipos";
  * mínimo R$ 2.500, mês bom R$ 3.000, mês de celebrar R$ 8.000, R$ 2.570 até agora.
  *
  * As frases de desconto e de meta são as mesmas da Calculadora real
- * (components/produtos/Calculadora.tsx) e a conta usa a mesma função
- * (calcularQuantoSobra). Se a tela real mudar a frase, muda aqui também.
+ * (components/produtos/Calculadora.tsx) e as contas usam as mesmas funções
+ * (calcularQuantoSobra e vendasParaFaturar). Se a tela real mudar a frase,
+ * muda aqui também. Desde 07/10/2026 a meta divide pelo preço (o que precisa
+ * entrar), como na Projeção e no Painel: 62 vendas de R$ 49, não 154.
  */
 
 const PRECO = 49;
 const CUSTO = 26.95;
 const TAXA_PCT = 5;
-const SOBRA = 19.6;
 const META_DO_MES = 3000;
-const VENDAS_PRA_META = Math.ceil(META_DO_MES / SOBRA);
+const VENDAS_PRA_META = vendasParaFaturar(META_DO_MES, PRECO);
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
 
@@ -50,7 +52,7 @@ function fraseDesconto(pct: number) {
   };
 }
 
-const fraseMeta = `Pra bater a Meta do mês (${fmt(META_DO_MES)}) só com esse produto: ${VENDAS_PRA_META} vendas.`;
+const fraseMeta = `Pra entrar a Meta do mês (${fmt(META_DO_MES)}) só com esse produto: ${VENDAS_PRA_META} vendas de ${fmt(PRECO)}.`;
 
 function CabecalhoProduto() {
   return (

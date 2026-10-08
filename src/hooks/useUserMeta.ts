@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 
 export interface UserMeta {
   initial: string;
@@ -34,7 +35,8 @@ export function useUserMeta() {
   // serializar a leitura do header atrás do round-trip de escrita. Idempotente por dia.
   useEffect(() => {
     if (!userId) return;
-    const hojeKey = new Date().toISOString().slice(0, 10);
+    // Dia LOCAL (QA-40): o dia UTC virava "amanhã" depois das 21h de Brasília.
+    const hojeKey = hojeISO();
     supabase
       .from("presencas")
       .upsert(
@@ -54,7 +56,7 @@ export function useUserMeta() {
     queryFn: async () => {
       const desde = new Date();
       desde.setDate(desde.getDate() - 365);
-      const desdeKey = desde.toISOString().slice(0, 10);
+      const desdeKey = dataISOLocal(desde);
 
       const [{ data: profile }, { data: tarefas }, { data: presencas }] = await Promise.all([
         supabase
@@ -87,7 +89,8 @@ export function useUserMeta() {
         if (p.data) ativos.add(p.data);
       });
       (tarefas ?? []).forEach((t: { status: string; updated_at: string }) => {
-        if (t.status === "concluido") ativos.add(new Date(t.updated_at).toISOString().slice(0, 10));
+        // Dia local da conclusão, no mesmo fuso da presença (QA-40).
+        if (t.status === "concluido") ativos.add(dataISOLocal(new Date(t.updated_at)));
       });
       const streak = ativos.size;
 

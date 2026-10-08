@@ -10,7 +10,76 @@ import {
   secoesDoModulo,
   secaoPorId,
   ferramentaDe,
+  moduloAtualDe,
+  moduloCompleto,
+  moduloLiberado,
+  modulosQueFaltamAntes,
+  textoModulosQueFaltam,
 } from "./planejamento";
+
+const idsDosModulos = (...ns: number[]) =>
+  new Set(ns.flatMap((n) => secoesDoModulo(n).map((s) => s.id)));
+
+describe("liberação dos módulos (QA-21)", () => {
+  it("sem nada concluído, só o Módulo 1 abre", () => {
+    const nada = new Set<string>();
+    expect(moduloAtualDe(nada)).toBe(1);
+    expect(moduloLiberado(1, nada)).toBe(true);
+    for (let n = 2; n <= TOTAL_MODULOS; n++) expect(moduloLiberado(n, nada)).toBe(false);
+  });
+
+  it("com os Módulos 1 e 2 fechados, abre até o 3", () => {
+    const feitos = idsDosModulos(1, 2);
+    expect(moduloAtualDe(feitos)).toBe(3);
+    expect(moduloLiberado(1, feitos)).toBe(true);
+    expect(moduloLiberado(3, feitos)).toBe(true);
+    expect(moduloLiberado(4, feitos)).toBe(false);
+  });
+
+  it("módulo pela metade não libera o seguinte", () => {
+    const feitos = idsDosModulos(1);
+    feitos.add(secoesDoModulo(2)[0].id);
+    expect(moduloCompleto(2, feitos)).toBe(false);
+    expect(moduloLiberado(2, feitos)).toBe(true);
+    expect(moduloLiberado(3, feitos)).toBe(false);
+  });
+
+  it("a seção 1.0 conta pro Módulo 4, não pro 1", () => {
+    const feitos = idsDosModulos(1, 2, 3);
+    feitos.delete("1.0");
+    expect(moduloCompleto(1, feitos)).toBe(true);
+    expect(moduloCompleto(4, feitos)).toBe(false);
+    expect(moduloAtualDe(feitos)).toBe(4);
+  });
+
+  it("módulo já concluído continua abrindo, mesmo com um anterior reaberto", () => {
+    // Seção nova num módulo antigo reabre ele; o que já estava fechado depois
+    // continua editável.
+    const feitos = idsDosModulos(1, 2, 3, 5);
+    expect(moduloAtualDe(feitos)).toBe(4);
+    expect(moduloLiberado(5, feitos)).toBe(true);
+    expect(moduloLiberado(6, feitos)).toBe(false);
+  });
+
+  it("com tudo concluído, todos abrem", () => {
+    const tudo = new Set(SECOES.map((s) => s.id));
+    expect(moduloAtualDe(tudo)).toBe(TOTAL_MODULOS + 1);
+    for (let n = 1; n <= TOTAL_MODULOS; n++) expect(moduloLiberado(n, tudo)).toBe(true);
+  });
+
+  it("lista os módulos anteriores que ainda faltam", () => {
+    expect(modulosQueFaltamAntes(4, idsDosModulos(1))).toEqual([2, 3]);
+    expect(modulosQueFaltamAntes(6, idsDosModulos(1, 2, 3, 5))).toEqual([4]);
+    expect(modulosQueFaltamAntes(1, new Set())).toEqual([]);
+  });
+
+  it("monta o texto dos módulos que faltam", () => {
+    expect(textoModulosQueFaltam([3])).toBe("o Módulo 3 estiver concluído");
+    expect(textoModulosQueFaltam([2, 3])).toBe("os Módulos 2 e 3 estiverem concluídos");
+    expect(textoModulosQueFaltam([2, 3, 4])).toBe("os Módulos 2, 3 e 4 estiverem concluídos");
+    expect(textoModulosQueFaltam([])).toBe("");
+  });
+});
 
 describe("moduloInfo", () => {
   it("retorna o módulo correspondente ao número pedido", () => {

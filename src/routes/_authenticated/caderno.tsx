@@ -112,9 +112,16 @@ function CadernoPage() {
     qc.invalidateQueries({ queryKey: ["notas", userId] });
   };
 
+  // Preenchida logo abaixo de `salvar` (ver QA-18 lá).
+  const gravarPendenteRef = useRef<() => void>(() => {});
+  // Último conteúdo gravado com sucesso, pra não regravar o mesmo texto
+  // enquanto a lista ainda não recarregou.
+  const ultimoSalvoRef = useRef<{ id: string; t: string; c: string } | null>(null);
+
   // Troca de nota selecionada: fade out -> troca conteúdo -> fade in.
   function selecionar(id: string | null) {
     if (id === selectedId) return;
+    gravarPendenteRef.current();
     setExcluirArmado(false);
     if (trocaTimerRef.current) window.clearTimeout(trocaTimerRef.current);
     if (reduceMotion) {
@@ -150,6 +157,7 @@ function CadernoPage() {
         .update({ titulo: t, conteudo: c })
         .eq("id", id);
       if (error) throw error;
+      ultimoSalvoRef.current = { id, t, c };
       return id;
     },
     onError: () =>
@@ -183,6 +191,24 @@ function CadernoPage() {
     return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [titulo, conteudo, selectedId]);
+
+  // QA-18 (08/10/2026): o debounce acima é cancelado quando a nota aberta
+  // muda ou a tela desmonta, e o que tinha sido digitado nos últimos 0,8 s
+  // sumia. Antes de largar a nota (trocar, voltar, sair da tela), o que estiver
+  // pendente é gravado na hora. A ref é refeita a cada render pra a
+  // desmontagem enxergar o texto atual, não o do primeiro render.
+  gravarPendenteRef.current = () => {
+    const id = idCarregadoRef.current;
+    if (!id || idsExcedentes.has(id)) return;
+    const n = notas.find((x) => x.id === id);
+    if (!n || (n.titulo === titulo && n.conteudo === conteudo)) return;
+    const u = ultimoSalvoRef.current;
+    if (u && u.id === id && u.t === titulo && u.c === conteudo) return;
+    salvar.mutate({ id, t: titulo, c: conteudo });
+  };
+  useEffect(() => {
+    return () => gravarPendenteRef.current();
+  }, []);
 
   const criar = useMutation({
     mutationFn: async (tituloInicial?: string) => {
@@ -297,8 +323,12 @@ function CadernoPage() {
     selecionar(null);
   }
 
+  // QA-18: o botão "Criar nota" da busca vazia ignorava a cota do plano
+  // Grátis; o banco recusava e o erro dizia "tenta de novo", o que não ia
+  // adiantar. Agora respeita a mesma trava do botão "Nova nota".
   function criarDeBusca() {
-    const termo = busca.trim();
+    if (cotaAtingida || criar.isPending) return;
+    const termo = busca.trim().slice(0, 160);
     criar.mutate(termo);
     setBusca("");
   }
@@ -400,10 +430,21 @@ function CadernoPage() {
                 titulo="Nada com esse termo."
                 texto="Nenhuma nota tem essa palavra no título nem no corpo."
                 acao={
-                  <button type="button" onClick={criarDeBusca} className={BTN_ACAO}>
-                    <Plus size={16} aria-hidden="true" />
-                    Criar nota &quot;{busca.trim()}&quot;
-                  </button>
+                  cotaAtingida ? (
+                    <p className="text-[12px] text-[var(--muted)]">
+                      No plano Grátis cabe 1 nota, e ela já existe.
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={criarDeBusca}
+                      disabled={criar.isPending}
+                      className={BTN_ACAO}
+                    >
+                      <Plus size={16} aria-hidden="true" />
+                      Criar nota &quot;{busca.trim()}&quot;
+                    </button>
+                  )
                 }
               />
             ) : (

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { hojeISO } from "@/lib/data.functions";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,8 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { TITULO_META_DO_MES, metaDoMesConta } from "@/lib/metaDoMes";
+import { progressoPct } from "@/lib/metas";
 
 export const Route = createFileRoute("/_authenticated/metas")({
   head: () => ({
@@ -41,6 +43,8 @@ interface Meta {
   formato: string;
   prazo: string | null;
   concluida_em: string | null;
+  progresso: number;
+  da_jornada: boolean;
   created_at: string;
 }
 
@@ -66,10 +70,9 @@ function sufixoUnidade(m: Meta) {
   return m.formato === "numero" && m.unidade?.trim() ? ` ${m.unidade.trim()}` : "";
 }
 
-function progressoPct(m: Meta) {
-  const alvo = m.valor_alvo ?? 0;
-  if (alvo <= 0) return 0;
-  return Math.min(100, Math.round((m.valor_atual / alvo) * 100));
+/** A Meta do mês é lida pelo título em 5 telas: renomear desliga todas (QA-19). */
+function ehMetaDoMes(m: Pick<Meta, "titulo">) {
+  return m.titulo === TITULO_META_DO_MES;
 }
 
 function prazoCurto(prazo: string) {
@@ -104,7 +107,7 @@ function MetasPage() {
       const { data, error } = await supabase
         .from("metas")
         .select(
-          "id, titulo, status, valor_atual, valor_alvo, unidade, formato, prazo, concluida_em, created_at",
+          "id, titulo, status, valor_atual, valor_alvo, unidade, formato, prazo, concluida_em, progresso, da_jornada, created_at",
         )
         .eq("user_id", userId!)
         .order("created_at", { ascending: false });
@@ -116,7 +119,14 @@ function MetasPage() {
   const metas = metasQuery.data ?? [];
   const ativas = metas.filter((m) => m.status === "ativa");
   const concluidas = metas.filter((m) => m.status === "concluida");
+  // Arquivar tirava a meta da tela pra sempre: não havia onde ver nem reabrir (QA-32).
+  const arquivadas = metas.filter((m) => m.status === "arquivada");
   const limiteAtingido = ativas.length >= LIMITE_ATIVAS;
+  const [verArquivadas, setVerArquivadas] = useState(false);
+
+  // Uma segunda "Meta do mês" valendo faria as 5 telas escolherem entre duas.
+  const metaDoMesJaExiste = (idIgnorado?: string) =>
+    metas.some((m) => m.id !== idIgnorado && ehMetaDoMes(m) && metaDoMesConta(m.status));
 
   const invalidar = () => qc.invalidateQueries({ queryKey: ["metas", userId] });
 
@@ -158,8 +168,27 @@ function MetasPage() {
       duracaoMs: 6000,
       action: {
         label: "Desfazer",
-        onClick: () =>
-          atualizar.mutate({ id: m.id, patch: { status: "ativa", concluida_em: null } }),
+        // Desfazer devolve tudo o que concluir mudou (QA-32): antes voltava só
+        // o status, e o valor atual ficava cravado no alvo.
+        onClick: () => {
+          const agora = qc.getQueryData<Meta[]>(["metas", userId]) ?? [];
+          const outrasAtivas = agora.filter((x) => x.status === "ativa" && x.id !== m.id).length;
+          if (outrasAtivas >= LIMITE_ATIVAS) {
+            setErroAcao(
+              `Já tem ${outrasAtivas} metas ativas. Conclua ou arquive uma antes de reabrir "${m.titulo}".`,
+            );
+            return;
+          }
+          atualizar.mutate({
+            id: m.id,
+            patch: {
+              status: "ativa",
+              concluida_em: null,
+              valor_atual: m.valor_atual,
+              progresso: m.progresso,
+            },
+          });
+        },
       },
     });
   };
@@ -176,7 +205,23 @@ function MetasPage() {
 
   const reabrir = (m: Meta) => {
     if (limiteAtingido) return;
+    // Arquivada não conta como Meta do mês; reabrir uma com outra já valendo
+    // criaria duas.
+    if (ehMetaDoMes(m) && m.status === "arquivada" && metaDoMesJaExiste(m.id)) {
+      setErroAcao(
+        "Já existe outra Meta do mês valendo. Arquive aquela antes de reabrir esta, pra os números não ficarem com duas.",
+      );
+      return;
+    }
     atualizar.mutate({ id: m.id, patch: { status: "ativa", concluida_em: null } });
+  };
+
+  const salvarTitulo = (m: Meta, titulo: string) => {
+    if (titulo === TITULO_META_DO_MES && metaDoMesJaExiste(m.id)) {
+      setErroAcao("Já existe uma Meta do mês. Escolha outro nome pra esta meta.");
+      return;
+    }
+    atualizar.mutate({ id: m.id, patch: { titulo } });
   };
 
   const abrirCriar = () => {
@@ -212,10 +257,13 @@ function MetasPage() {
       }
     >
       <div>
+        {/* A Meta do mês nasce do Planejamento mesmo com 3 ativas (a trigger
+        não conhece o limite), então o número real pode passar de 3. */}
         {limiteAtingido && (
           <p className="mb-4 text-[12px] text-[var(--muted)]">
-            Já tem {LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar
-            outra.
+            {ativas.length > LIMITE_ATIVAS
+              ? `Já tem ${ativas.length} metas ativas aqui, e o limite é ${LIMITE_ATIVAS}. Conclua ou arquive uma antes de adicionar outra.`
+              : `Já tem ${LIMITE_ATIVAS} metas ativas aqui. Conclua ou arquive uma antes de adicionar outra.`}
           </p>
         )}
 
@@ -269,7 +317,7 @@ function MetasPage() {
                   onEditar={() => abrirEditar(m)}
                   onArquivar={() => arquivar(m)}
                   onConcluir={() => concluir(m)}
-                  onSalvarTitulo={(titulo) => atualizar.mutate({ id: m.id, patch: { titulo } })}
+                  onSalvarTitulo={(titulo) => salvarTitulo(m, titulo)}
                   onSalvarAtual={(valor_atual) =>
                     atualizar.mutate({ id: m.id, patch: { valor_atual } })
                   }
@@ -316,7 +364,51 @@ function MetasPage() {
                       disabled={limiteAtingido}
                       title={
                         limiteAtingido
-                          ? "Já tem 3 metas ativas. Conclua ou arquive uma antes de reabrir."
+                          ? `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
+                          : undefined
+                      }
+                      className="inline-flex min-h-11 shrink-0 items-center text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                    >
+                      Reabrir
+                    </button>
+                  </li>
+                ))}
+              </ConcluidasLista>
+            )}
+          </section>
+        )}
+
+        {/* ───────── Arquivadas (colapsável) ───────── */}
+        {arquivadas.length > 0 && (
+          <section className="mt-6 border-t border-[var(--line)] pt-6">
+            <button
+              type="button"
+              onClick={() => setVerArquivadas((v) => !v)}
+              aria-expanded={verArquivadas}
+              className="-mx-1 inline-flex min-h-11 items-center gap-1.5 px-1 text-[14px] text-[var(--ink-soft)] hover:text-[var(--ink)]"
+            >
+              <ChevronDown
+                size={16}
+                aria-hidden="true"
+                className={`transition-transform ${verArquivadas ? "rotate-180" : ""}`}
+              />
+              Ver arquivadas ({arquivadas.length})
+            </button>
+            {verArquivadas && (
+              <ConcluidasLista>
+                {arquivadas.map((m) => (
+                  <li
+                    key={m.id}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-[var(--line)] bg-white px-4 py-3"
+                  >
+                    <p className="min-w-0 truncate text-[14px] text-[var(--ink)]">{m.titulo}</p>
+                    <button
+                      type="button"
+                      onClick={() => reabrir(m)}
+                      disabled={limiteAtingido || atualizar.isPending}
+                      title={
+                        limiteAtingido
+                          ? `Já tem ${ativas.length} metas ativas. Conclua ou arquive uma antes de reabrir.`
                           : undefined
                       }
                       className="inline-flex min-h-11 shrink-0 items-center text-[13px] text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
@@ -336,6 +428,7 @@ function MetasPage() {
         <ModalMeta
           userId={userId}
           metaEdit={metaEdit}
+          metaDoMesJaExiste={metaDoMesJaExiste(metaEdit?.id)}
           onClose={() => setModalAberto(false)}
           onSaved={() => {
             invalidar();
@@ -350,7 +443,11 @@ function MetasPage() {
         onOpenChange={(open) => !open && setMetaArquivar(null)}
         titulo="Arquivar meta"
         descricao={
-          metaArquivar ? `"${metaArquivar.titulo}" sai da sua lista de metas ativas.` : undefined
+          metaArquivar
+            ? ehMetaDoMes(metaArquivar)
+              ? `"${metaArquivar.titulo}" sai da sua lista de metas ativas, e o Painel, o Financeiro e a Calculadora deixam de usar esse alvo. Dá pra reabrir em "Ver arquivadas".`
+              : `"${metaArquivar.titulo}" sai da sua lista de metas ativas. Dá pra reabrir em "Ver arquivadas".`
+            : undefined
         }
         textoConfirmar="Arquivar"
         destrutivo
@@ -436,7 +533,18 @@ function MetaCard({
     >
       {/* Título + menu */}
       <div className="flex items-start justify-between gap-3">
-        <InlineTitle titulo={meta.titulo} onCommit={onSalvarTitulo} />
+        {ehMetaDoMes(meta) ? (
+          // Nome travado: é por ele que Painel, Financeiro, Calculadora,
+          // Projeção e Raio-x acham esta meta (QA-19). O valor muda à vontade.
+          <p
+            className="min-h-6 min-w-0 flex-1 text-[17px] leading-snug text-[var(--ink)]"
+            title="Esse nome liga a meta ao Painel, ao Financeiro e à Calculadora, por isso fica fixo."
+          >
+            {meta.titulo}
+          </p>
+        ) : (
+          <InlineTitle titulo={meta.titulo} onCommit={onSalvarTitulo} />
+        )}
         <div className="shrink-0">
           <MenuOpcoes
             align="end"
@@ -524,15 +632,25 @@ function MetaCard({
 function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(titulo);
+  // Enter chama commit, e um segundo Enter (ou o blur da desmontagem) antes
+  // do re-render chamava de novo: duas gravações por edição (QA-32).
+  const fechouRef = useRef(false);
 
   const start = () => {
     setDraft(titulo);
+    fechouRef.current = false;
     setEditing(true);
   };
   const commit = () => {
+    if (fechouRef.current) return;
+    fechouRef.current = true;
     setEditing(false);
     const v = draft.trim();
     if (v && v !== titulo) onCommit(v);
+  };
+  const cancelar = () => {
+    fechouRef.current = true;
+    setEditing(false);
   };
 
   if (editing) {
@@ -545,7 +663,7 @@ function InlineTitle({ titulo, onCommit }: { titulo: string; onCommit: (v: strin
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();
-          if (e.key === "Escape") setEditing(false);
+          if (e.key === "Escape") cancelar();
         }}
         className="min-w-0 flex-1 rounded-md border border-[var(--secondary-text)] px-2 py-1 text-[17px] text-[var(--ink)]"
       />
@@ -576,15 +694,24 @@ function InlineValor({
 }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(String(value));
+  // Mesmo guarda do InlineTitle: um commit por edição (QA-32, Enter duplo).
+  const fechouRef = useRef(false);
 
   const start = () => {
     setDraft(value ? String(value) : "");
+    fechouRef.current = false;
     setEditing(true);
   };
   const commit = () => {
+    if (fechouRef.current) return;
+    fechouRef.current = true;
     setEditing(false);
     const v = num(draft);
     if (v !== value) onCommit(v);
+  };
+  const cancelar = () => {
+    fechouRef.current = true;
+    setEditing(false);
   };
 
   if (editing) {
@@ -598,7 +725,7 @@ function InlineValor({
         onBlur={commit}
         onKeyDown={(e) => {
           if (e.key === "Enter") commit();
-          if (e.key === "Escape") setEditing(false);
+          if (e.key === "Escape") cancelar();
         }}
         className="min-h-6 w-24 rounded-md border border-[var(--secondary-text)] px-2 py-0.5 text-[14px] font-medium text-[var(--ink)]"
       />
@@ -621,11 +748,14 @@ function InlineValor({
 function ModalMeta({
   userId,
   metaEdit,
+  metaDoMesJaExiste,
   onClose,
   onSaved,
 }: {
   userId: string;
   metaEdit: Meta | null;
+  /** Já há outra Meta do mês valendo, fora a que está em edição. */
+  metaDoMesJaExiste: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -643,7 +773,11 @@ function ModalMeta({
   const [erro, setErro] = useState<string | null>(null);
 
   const alvoNum = num(alvo);
-  const podeSalvar = titulo.trim().length > 0 && alvoNum > 0;
+  // A Meta do mês não troca de nome (5 telas a acham pelo título) e não ganha
+  // gêmea: duas com o mesmo nome deixavam os números sem saber qual usar.
+  const tituloTravado = !!metaEdit && ehMetaDoMes(metaEdit);
+  const tituloDuplicaMetaDoMes = titulo.trim() === TITULO_META_DO_MES && metaDoMesJaExiste;
+  const podeSalvar = titulo.trim().length > 0 && alvoNum > 0 && !tituloDuplicaMetaDoMes;
 
   const salvar = async () => {
     if (!podeSalvar) return;
@@ -717,11 +851,26 @@ function ModalMeta({
             value={titulo}
             onChange={(e) => setTitulo(e.target.value)}
             maxLength={120}
-            autoFocus
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            readOnly={tituloTravado}
+            aria-describedby={
+              tituloTravado || tituloDuplicaMetaDoMes ? "meta-titulo-nota" : undefined
+            }
+            autoFocus={!tituloTravado}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none read-only:bg-[var(--surface)] read-only:text-[var(--ink-soft)]"
             placeholder="ex: chegar a 30 clientes fixas"
           />
         </Campo>
+        {tituloTravado && (
+          <p id="meta-titulo-nota" className="mt-1 text-[12px] text-[var(--muted)]">
+            Esse nome liga a meta ao Painel, ao Financeiro e à Calculadora, por isso fica fixo. O
+            valor muda à vontade.
+          </p>
+        )}
+        {tituloDuplicaMetaDoMes && (
+          <p id="meta-titulo-nota" role="alert" className="mt-1 text-[12px] text-[var(--danger)]">
+            Já existe uma Meta do mês. Escolha outro nome pra esta meta.
+          </p>
+        )}
       </div>
 
       {/* Formato */}

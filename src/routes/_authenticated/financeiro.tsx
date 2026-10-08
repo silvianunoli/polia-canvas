@@ -16,13 +16,12 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import {
-  calcularQuantoSobra,
-  taxasDoBreakdown,
-  type CalculadoraBreakdown,
-} from "@/lib/precificacao.functions";
+import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
+import { fmt as fmtCentavos } from "@/components/produtos/tipos";
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
 import { temProjete } from "@/lib/planos";
+import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
 // O modal de lançamento saiu daqui em 03/09/2026 (COPY-04): o Painel do plano Grátis
 // também registra entrada/saída por ele, sem abrir esta tela.
@@ -73,8 +72,11 @@ interface MetaMesRow {
   valor_atual: number;
 }
 
+// Valor redondo sem centavos ("R$ 3.000", cabe nos cards de 32px); com
+// centavos, sempre duas casas: antes um mês com R$ 44,10 aparecia "R$ 44,1".
 function fmt(v: number) {
-  return `R$ ${v.toLocaleString("pt-BR")}`;
+  const casas = Number.isInteger(Math.round(v * 100) / 100) ? 0 : 2;
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: 2 })}`;
 }
 
 function fmtData(iso: string) {
@@ -144,28 +146,33 @@ function FinanceiroPage() {
     queryKey: ["financeiro", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const [lancRes, camposRes, metaRes] = await Promise.all([
-        supabase
-          .from("lancamentos")
-          .select("id, tipo, valor, data, descricao, categoria, created_at")
-          .eq("user_id", userId!)
-          .order("data", { ascending: false }),
+      const [lancamentosTodos, camposRes, metaRes] = await Promise.all([
+        // Todos os lançamentos, lidos página por página (QA-24/QA-28): o
+        // histórico, os filtros de período e o resumo pro contador precisam de
+        // tudo, e o PostgREST corta em 1.000 linhas sem avisar. Se a leitura
+        // falhar ou passar do teto, o erro sobe e a tela mostra o BlockError em
+        // vez de somar só uma parte.
+        lerTodasAsPaginas<Lancamento>((de, ate) =>
+          supabase
+            .from("lancamentos")
+            .select("id, tipo, valor, data, descricao, categoria, created_at")
+            .eq("user_id", userId!)
+            .order("data", { ascending: false })
+            .order("id", { ascending: true })
+            .range(de, ate)
+            .then((r) => ({ data: r.data as unknown as Lancamento[] | null, error: r.error })),
+        ),
         supabase
           .from("planejamento_campos" as never)
           .select("campo, valor")
           .eq("user_id", userId!)
           .in("campo", ["financeiro.meta_minima", "financeiro.meta_celebracao"]),
-        supabase
-          .from("metas")
-          .select("id, valor_alvo, valor_atual")
-          .eq("user_id", userId!)
-          .eq("titulo", "Meta do mês")
-          .maybeSingle(),
+        buscarMetaDoMes(supabase, userId!),
       ]);
-      const falha = [lancRes, camposRes, metaRes].find((r) => (r as { error: unknown }).error);
+      const falha = [camposRes, metaRes].find((r) => (r as { error: unknown }).error);
       if (falha) throw (falha as { error: unknown }).error;
       return {
-        lancamentos: (lancRes.data ?? []) as Lancamento[],
+        lancamentos: lancamentosTodos,
         campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
         metaMes: (metaRes.data ?? null) as MetaMesRow | null,
       };
@@ -792,16 +799,22 @@ function ModalRegistrarVendaProduto({
   });
   const produtos = produtosQuery.data ?? [];
   const produto = produtos.find((p) => p.id === produtoId) ?? null;
-  const sobrou = produto
-    ? calcularQuantoSobra({
+  // Produto criado pelo Planejamento nasce com preço 0 ("preço a definir"):
+  // registrar a venda dele lançava uma entrada de R$ 0 no caixa.
+  const semPreco = produto != null && !(Number(produto.preco_venda) > 0);
+  // null quando não há custo cadastrado: antes o custo vazio virava 0 e a
+  // frase "Dessa venda sobram..." aparecia sempre, com o preço inteiro como
+  // sobra (QA-28). Também mostra o prejuízo, que antes saía "sobram R$ -5".
+  const sobra = produto
+    ? sobraDoProduto({
         precoVenda: Number(produto.preco_venda),
-        precoCusto: Number(produto.preco_custo ?? 0),
-        ...taxasDoBreakdown(produto.calculadora_breakdown),
+        precoCusto: produto.preco_custo != null ? Number(produto.preco_custo) : null,
+        breakdown: produto.calculadora_breakdown,
       })
     : null;
 
   const salvar = async () => {
-    if (!produto) return;
+    if (!produto || semPreco) return;
     setSalvando(true);
     setErro(null);
     const { error } = await supabase.from("lancamentos").insert({
@@ -822,9 +835,11 @@ function ModalRegistrarVendaProduto({
     track("venda_produto_registrada", { produto_id: produto.id });
     void registrar("feature_completed", { feature: "financeiro", propriedades: { acao: "venda" } });
     onSaved(
-      sobrou !== null
-        ? `Venda de "${produto.nome}" registrada. Dessa venda sobraram ${fmt(Math.round(sobrou))}.`
-        : `Venda de "${produto.nome}" registrada.`,
+      sobra == null
+        ? `Venda de "${produto.nome}" registrada.`
+        : sobra.prejuizo
+          ? `Venda de "${produto.nome}" registrada. Essa venda ficou ${fmtCentavos(-sobra.valor)} abaixo do custo.`
+          : `Venda de "${produto.nome}" registrada. Dessa venda sobraram ${fmtCentavos(sobra.valor)}.`,
     );
   };
 
@@ -844,7 +859,7 @@ function ModalRegistrarVendaProduto({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando || !produto}
+            disabled={salvando || !produto || semPreco}
             className={BTN_ACAO}
           >
             {salvando ? "Registrando..." : "Registrar venda"}
@@ -892,15 +907,27 @@ function ModalRegistrarVendaProduto({
             </Campo>
           </div>
 
-          {produto && (
+          {produto && semPreco ? (
+            <div className="mb-4 rounded-lg bg-[var(--surface)] px-3 py-2.5 text-[13px] text-[var(--ink-soft)]">
+              Esse produto ainda está sem preço de venda. Defina o preço em{" "}
+              <Link to="/produtos" className="text-[var(--secondary-text)] hover:underline">
+                Produtos
+              </Link>{" "}
+              pra registrar a venda.
+            </div>
+          ) : produto && sobra?.prejuizo ? (
+            <div className="mb-4 rounded-lg bg-[var(--danger-soft)] px-3 py-2.5 text-[13px] text-[var(--danger)]">
+              Com esse preço, a venda fica {fmtCentavos(-sobra.valor)} abaixo do custo direto.
+            </div>
+          ) : produto ? (
             <div className="mb-4 rounded-lg bg-[var(--secondary-light)] px-3 py-2.5 text-[13px] text-[var(--secondary-text)]">
-              {sobrou !== null ? (
-                <>Dessa venda sobram {fmt(Math.round(sobrou))}, descontado o custo direto.</>
+              {sobra != null ? (
+                <>Dessa venda sobram {fmtCentavos(sobra.valor)}, descontado o custo direto.</>
               ) : (
                 <>Cadastre o custo desse produto pra ver quanto sobra.</>
               )}
             </div>
-          )}
+          ) : null}
         </>
       )}
 

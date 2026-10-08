@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
@@ -42,6 +42,8 @@ export function LembretePlanejamento({ pathname }: { pathname: string }) {
   const navigate = useNavigate();
   const { pronto, mostrar } = useDicasVistas();
   const [aberto, setAberto] = useState(false);
+  // O tour estava pendente nesta visita: quando ele fecha, o dia já é dele.
+  const viuTourPendente = useRef(false);
 
   const foraDeContexto =
     pathname === "/onboarding" ||
@@ -68,7 +70,18 @@ export function LembretePlanejamento({ pathname }: { pathname: string }) {
 
   useEffect(() => {
     if (!userId || !pronto || foraDeContexto || !progresso || aberto) return;
-    if (mostrar("tour")) return; // primeiro dia: quem apresenta é o tour
+    if (mostrar("tour")) {
+      viuTourPendente.current = true;
+      return; // primeiro dia: quem apresenta é o tour
+    }
+    // QA-25: assim que o tour era marcado como visto, o lembrete abria em
+    // seguida (dois pop-ups no primeiro minuto) e voltava num F5 no mesmo dia.
+    // O fim do tour conta como o lembrete de hoje.
+    if (viuTourPendente.current) {
+      viuTourPendente.current = false;
+      gravarHoje(userId);
+      return;
+    }
     // Convite do tutorial pendente ou aberto nesta visita: um modal por entrada.
     if (mostrar("tutorial") || conviteFoiAberto()) return;
     if (!deveLembrarHoje(lerUltimo(userId), dataLocal(new Date()))) return;

@@ -7,12 +7,13 @@ import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
 import {
   calcularQuantoSobra,
-  calcularSobraPct,
   calcularPrecoSugerido,
   calcularTaxas,
   calcularEncomenda,
+  simularDesconto,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
+import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
 import { fmt, num, type Prefill, type Produto } from "./tipos";
@@ -249,8 +250,14 @@ export function Calculadora({
         : encomendaCalc.custoTotal;
   const round2 = (v: number) => Math.round(v * 100) / 100;
   const lucroPorVenda = round2(calc.lucroReais);
+  // Meta do mês é o que precisa ENTRAR (Painel e Financeiro medem entradas /
+  // meta), então divide pelo preço, na mesma conta da Projeção. Antes dividia
+  // pela sobra: caderno a R$ 49 com sobra de R$ 19,60 e meta de R$ 3.000 dava
+  // 154 aqui e 62 na Projeção. Continua escondida quando a venda não deixa
+  // sobra (o aviso de preço abaixo do piso já aparece).
+  const precoParaMeta = round2(calc.precoSugerido);
   const vendasParaMetaBoa =
-    lucroPorVenda > 0 && metaBoa ? Math.ceil(metaBoa / lucroPorVenda) : null;
+    lucroPorVenda > 0 && metaBoa ? vendasParaFaturar(metaBoa, precoParaMeta) : null;
   const taxaVendaPctAtual =
     perfil === "produto"
       ? num(taxaVenda)
@@ -271,18 +278,32 @@ export function Calculadora({
   const encomendaAbaixoDoPiso =
     perfil === "encomenda" && !encomendaVazia && num(quantoSobraPct) < 0;
 
+  // Preço abaixo do piso nos perfis Produto e Serviço (sobra pedida negativa):
+  // a Encomenda já avisava, os outros dois mostravam "Seu lucro" negativo calado.
+  const abaixoDoPisoProdutoServico =
+    perfil !== "encomenda" && !calc.invalido && round2(calc.lucroReais) < 0;
+  const pisoAtual = calcularPrecoSugerido(custoBase, taxaVendaPctAtual + impostosPctAtual);
+
+  // Salvar com as porcentagens em 100% ou mais gravava o próprio custo como
+  // preço de venda (calcularPrecoSugerido cai pro custo nesse caso). Preço
+  // zerado também não vira produto nem substitui o preço de um existente.
+  const precoNaoSalvavel = calc.invalido || round2(calc.precoSugerido) <= 0;
+
   // Com desconto de X%: taxa/imposto são % do preço, então caem junto com ele.
+  // Conta em simularDesconto (precificacao.functions.ts): com 100% ou mais o
+  // preço vai a zero e o custo continua saindo, então aparece o prejuízo.
   const descontoPct = num(desconto);
   const simulacaoDesconto = useMemo(() => {
-    if (!descontoPct) return null;
-    const precoComDesconto = calc.precoSugerido * (1 - descontoPct / 100);
-    const lucroComDesconto = calcularQuantoSobra({
-      precoVenda: precoComDesconto,
+    const s = simularDesconto({
+      precoVenda: calc.precoSugerido,
       precoCusto: custoBase,
       taxaVendaPct: taxaVendaPctAtual,
       impostosPct: impostosPctAtual,
+      descontoPct,
     });
-    return { precoComDesconto, lucroComDesconto };
+    return s
+      ? { precoComDesconto: s.precoComDesconto, lucroComDesconto: s.sobra, prejuizo: s.prejuizo }
+      : null;
   }, [descontoPct, calc.precoSugerido, custoBase, taxaVendaPctAtual, impostosPctAtual]);
 
   function buildBreakdown(): CalculadoraBreakdown {
@@ -333,6 +354,7 @@ export function Calculadora({
   }
 
   const salvar = async () => {
+    if (precoNaoSalvavel) return;
     const precoVenda = round2(calc.precoSugerido);
     const precoCusto = round2(custoBase) || undefined;
     const breakdown = buildBreakdown();
@@ -712,6 +734,12 @@ export function Calculadora({
                 {fmt(round2(encomendaCalc.piso))}.
               </p>
             )}
+            {abaixoDoPisoProdutoServico && (
+              <p className="mt-2 text-[13px] text-[var(--danger)]">
+                Esse preço não cobre os custos. O mínimo pra não ter prejuízo é{" "}
+                {fmt(round2(pisoAtual))}.
+              </p>
+            )}
             <div className="mt-4 space-y-1.5 text-[13px] text-[var(--ink-soft)]">
               {perfil === "produto" ? (
                 <>
@@ -752,8 +780,8 @@ export function Calculadora({
             </div>
             {vendasParaMetaBoa !== null && (
               <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
-                Pra bater a Meta do mês ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
-                vendas.
+                Pra entrar a Meta do mês ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
+                {vendasParaMetaBoa === 1 ? "venda" : "vendas"} de {fmt(precoParaMeta)}.
               </p>
             )}
           </div>
@@ -768,15 +796,13 @@ export function Calculadora({
             {simulacaoDesconto && (
               <p
                 className={`mt-3 text-[13px] ${
-                  simulacaoDesconto.lucroComDesconto < 0
-                    ? "text-[var(--danger)]"
-                    : "text-[var(--ink-soft)]"
+                  simulacaoDesconto.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"
                 }`}
               >
                 Com {descontoPct}% de desconto, o preço cai pra{" "}
                 {fmt(round2(simulacaoDesconto.precoComDesconto))} e sobram{" "}
                 {fmt(round2(simulacaoDesconto.lucroComDesconto))}.
-                {simulacaoDesconto.lucroComDesconto < 0 && " Esse desconto dá prejuízo."}
+                {simulacaoDesconto.prejuizo && " Esse desconto dá prejuízo."}
               </p>
             )}
           </div>
@@ -788,10 +814,16 @@ export function Calculadora({
           )}
 
           {/* Salvar */}
+          {calc.invalido && (
+            <p id="calc-salvar-motivo" className="mt-4 text-[13px] text-[var(--muted)]">
+              Pra salvar, as porcentagens precisam somar menos de 100%.
+            </p>
+          )}
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando || (salvarBloqueado && !produtoRecalcular)}
+            disabled={salvando || precoNaoSalvavel || (salvarBloqueado && !produtoRecalcular)}
+            aria-describedby={calc.invalido ? "calc-salvar-motivo" : undefined}
             className={`${BTN_ACAO} mt-4`}
           >
             {salvando

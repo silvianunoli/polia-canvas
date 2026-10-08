@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { MAX_NICHOS, montarAnoDoBanco, nichoPorChave } from "@/lib/bancoIdeias";
 import { temProjete } from "@/lib/planos";
+import { hojeEmBrasilia } from "@/lib/data.functions";
 
 // Plano de conteúdo pelo banco fixo de ideias (05/10/2026, decisão da Sil):
 // sem IA, sem cota e sem exigir o Planejamento completo. Grava na mesma tabela
@@ -38,8 +39,9 @@ export const montarPlanoConteudoDoBanco = createServerFn({ method: "POST" })
     }
 
     // Trocar de nicho refaz de hoje em diante: o que já passou (e o que ela
-    // marcou como postado) fica como está.
-    const hoje = new Date().toISOString().slice(0, 10);
+    // marcou como postado) fica como está. "Hoje" no horário de Brasília: o
+    // Worker roda em UTC e, das 21h à meia-noite, o dia dela ainda não virou.
+    const hoje = hojeEmBrasilia();
     const { data: passados, error: erroLeitura } = await supabaseAdmin
       .from("ia_plano_conteudo" as never)
       .select("data")

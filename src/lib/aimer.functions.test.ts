@@ -6,6 +6,7 @@ import {
   resultadoDoMes,
   montarContextoProjete,
   montarPromptAimer,
+  MENSAGENS_CANONICAS,
 } from "./aimer.functions";
 
 describe("configDoPlano", () => {
@@ -24,9 +25,18 @@ describe("configDoPlano", () => {
 });
 
 describe("periodoDiario", () => {
-  it("formata ano-mes-dia em UTC", () => {
+  it("o dia da cota vira à meia-noite de Brasília, não às 21h", () => {
+    // 27/07 20h59, 21h00 e 23h59 em Brasília = 23h59, 00h00 e 02h59 UTC.
     expect(periodoDiario(new Date(Date.UTC(2026, 6, 27, 23, 59)))).toBe("2026-07-27");
-    expect(periodoDiario(new Date(Date.UTC(2026, 6, 28, 0, 0)))).toBe("2026-07-28");
+    expect(periodoDiario(new Date(Date.UTC(2026, 6, 28, 0, 0)))).toBe("2026-07-27");
+    expect(periodoDiario(new Date(Date.UTC(2026, 6, 28, 2, 59)))).toBe("2026-07-27");
+    expect(periodoDiario(new Date(Date.UTC(2026, 6, 28, 3, 0)))).toBe("2026-07-28");
+  });
+
+  it("virada de mês e de ano", () => {
+    expect(periodoDiario(new Date(Date.UTC(2026, 10, 1, 1, 0)))).toBe("2026-10-31");
+    expect(periodoDiario(new Date(Date.UTC(2027, 0, 1, 2, 59)))).toBe("2026-12-31");
+    expect(periodoDiario(new Date(Date.UTC(2027, 0, 1, 3, 0)))).toBe("2027-01-01");
   });
 });
 
@@ -59,6 +69,84 @@ describe("foraDeEscopo — guarda-corpo de segurança", () => {
     expect(foraDeEscopo("como preencho o Planejamento?")).toBe(false);
     expect(foraDeEscopo("por que sobrou tão pouco esse mês?")).toBe(false);
     expect(foraDeEscopo("quanto preciso vender esse mês pra bater a meta?")).toBe(false);
+  });
+
+  // QA-23 (07/10/2026): palavras soltas bloqueavam pergunta de negócio.
+  it("NÃO bloqueia 'das', 'mei', 'contrato' e 'investir' soltos", () => {
+    expect(foraDeEscopo("quanto sobra das vendas desse mês?")).toBe(false);
+    expect(foraDeEscopo("quais das minhas peças dão mais lucro?")).toBe(false);
+    expect(foraDeEscopo("O RESUMO DAS VENDAS ESTÁ CERTO?")).toBe(false);
+    expect(foraDeEscopo("sou MEI e vendo bolo, quanto cobro por fatia?")).toBe(false);
+    expect(foraDeEscopo("fechei um contrato de 3 meses com uma cliente, quanto cobro?")).toBe(
+      false,
+    );
+    expect(foraDeEscopo("quanto investir em anúncio esse mês?")).toBe(false);
+    expect(foraDeEscopo("vale investir em bolsas de couro pro estoque?")).toBe(false);
+    expect(foraDeEscopo("quanto investir em ações de divulgação?")).toBe(false);
+    expect(foraDeEscopo("o meio do mês é quando mais vendo")).toBe(false);
+  });
+
+  it("continua bloqueando DAS, MEI, contrato e investimento com contexto", () => {
+    expect(foraDeEscopo("como pago o DAS?")).toBe(true);
+    expect(foraDeEscopo("quanto vem o das mei esse mês?")).toBe(true);
+    expect(foraDeEscopo("esqueci de pagar o das, e agora?")).toBe(true);
+    expect(foraDeEscopo("qual o limite de faturamento do MEI?")).toBe(true);
+    expect(foraDeEscopo("como abrir um MEI?")).toBe(true);
+    expect(foraDeEscopo("como faço a declaração anual do MEI?")).toBe(true);
+    expect(foraDeEscopo("tem um modelo de contrato pra eu usar?")).toBe(true);
+    expect(foraDeEscopo("essa cláusula de multa vale?")).toBe(true);
+    expect(foraDeEscopo("onde investir o dinheiro que sobrou?")).toBe(true);
+    expect(foraDeEscopo("vale investir no tesouro?")).toBe(true);
+    expect(foraDeEscopo("devo investir na bolsa?")).toBe(true);
+    expect(foraDeEscopo("devo investir em ações?")).toBe(true);
+    expect(foraDeEscopo("CDB ou poupança?")).toBe(true);
+  });
+
+  // 07/10/2026: "imposto" sozinho bloqueava "Como coloco o imposto no preço?",
+  // e a Calculadora tem campo de imposto. Imposto no preço/custo/quanto sobra passa.
+  it("NÃO bloqueia imposto como parte do preço, do custo ou do quanto sobra", () => {
+    expect(foraDeEscopo("Como coloco o imposto no preço?")).toBe(false);
+    expect(foraDeEscopo("o imposto entra no custo do produto?")).toBe(false);
+    expect(foraDeEscopo("quanto sobra depois do imposto?")).toBe(false);
+    expect(foraDeEscopo("onde coloco o imposto na calculadora?")).toBe(false);
+    expect(foraDeEscopo("quanto de imposto coloco no preço da peça?")).toBe(false);
+    expect(foraDeEscopo("Meu preço já cobre os impostos?")).toBe(false);
+    expect(foraDeEscopo("se eu somar imposto e taxa da maquininha, quanto cobro?")).toBe(false);
+    expect(foraDeEscopo("IMPOSTO ENTRA NO PREÇO?")).toBe(false);
+  });
+
+  it("NÃO confunde 'ir', 'lucro real' e 'isso' com assunto fiscal", () => {
+    expect(foraDeEscopo("vale a pena ir na feira do fim de semana?")).toBe(false);
+    expect(foraDeEscopo("qual o meu lucro real esse mês?")).toBe(false);
+    expect(foraDeEscopo("isso cobre o custo da embalagem?")).toBe(false);
+    expect(foraDeEscopo("VOU IR NA FEIRA, QUANTO LEVO DE ESTOQUE?")).toBe(false);
+  });
+
+  it("continua bloqueando imposto em contexto fiscal e contábil", () => {
+    expect(foraDeEscopo("quanto pago de imposto?")).toBe(true);
+    expect(foraDeEscopo("quanto de imposto eu pago por mês?")).toBe(true);
+    expect(foraDeEscopo("quanto imposto tenho que pagar?")).toBe(true);
+    expect(foraDeEscopo("como pagar menos imposto?")).toBe(true);
+    expect(foraDeEscopo("como declarar imposto?")).toBe(true);
+    expect(foraDeEscopo("como faço a declaração do imposto?")).toBe(true);
+    expect(foraDeEscopo("qual a alíquota do Simples pra mim?")).toBe(true);
+    expect(foraDeEscopo("qual aliquota de imposto eu uso?")).toBe(true);
+    expect(foraDeEscopo("preciso emitir nota fiscal?")).toBe(true);
+    expect(foraDeEscopo("como declaro meu imposto de renda?")).toBe(true);
+    expect(foraDeEscopo("o IR incide sobre o pró-labore?")).toBe(true);
+    expect(foraDeEscopo("onde tiro a guia do imposto?")).toBe(true);
+    expect(foraDeEscopo("qual o melhor regime tributário pra mim?")).toBe(true);
+    expect(foraDeEscopo("tô com imposto atrasado, e agora?")).toBe(true);
+    expect(foraDeEscopo("quanto de ISS eu recolho?")).toBe(true);
+    expect(foraDeEscopo("lucro presumido vale a pena?")).toBe(true);
+    expect(foraDeEscopo("caí na malha fina, o que faço?")).toBe(true);
+  });
+});
+
+describe("MENSAGENS_CANONICAS", () => {
+  it("a recusa fala como a Pólia One, nunca em 1ª pessoa", () => {
+    expect(MENSAGENS_CANONICAS.foraDeEscopo).toContain("A Pólia One");
+    expect(MENSAGENS_CANONICAS.foraDeEscopo).not.toMatch(/\b(comigo|eu|me)\b/i);
   });
 });
 

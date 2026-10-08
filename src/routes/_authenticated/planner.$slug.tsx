@@ -1,8 +1,11 @@
 import { useMemo, useRef, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { COTAS_CONFERE } from "@/lib/planos";
+import { idsAcimaDaCota } from "@/lib/cotaExcedente";
 import { Vazio } from "@/components/layout/Vazio";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { Campo } from "@/components/ui/Campo";
@@ -17,6 +20,7 @@ import {
   Target,
   Pencil,
   X,
+  Lock,
 } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
@@ -207,6 +211,31 @@ function PlannerBoard() {
 
   const quadroId = quadroQuery.data?.id;
 
+  // QA-33 (07/10/2026): a trigger cota_confere_quadros só impede criar quadro
+  // novo e editar a LINHA do quadro excedente; os cartões e as colunas dele
+  // continuavam editáveis aqui depois de um downgrade. Mesma regra do Caderno
+  // (idsExcedentes): o quadro mais antigo fica na cota, o resto abre só leitura.
+  // Enquanto o perfil carrega, plano cai no padrão "confere": espera, senão quem
+  // paga via a faixa piscar.
+  const userMeta = useUserMeta();
+  const ehConfere = !userMeta.carregando && userMeta.plano === "confere";
+  const quadrosCotaQuery = useQuery({
+    queryKey: ["quadros-cota", userId],
+    enabled: !!userId && ehConfere,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("quadros")
+        .select("id, created_at")
+        .eq("user_id", userId!);
+      if (error) throw error;
+      return (data ?? []) as { id: string; created_at: string }[];
+    },
+  });
+  const somenteLeitura = useMemo(() => {
+    if (!ehConfere || !quadroId || !quadrosCotaQuery.data) return false;
+    return idsAcimaDaCota(quadrosCotaQuery.data, COTAS_CONFERE.planner).has(quadroId);
+  }, [ehConfere, quadroId, quadrosCotaQuery.data]);
+
   const colunasQuery = useQuery({
     queryKey: ["quadro-colunas", quadroId],
     enabled: !!quadroId,
@@ -301,6 +330,7 @@ function PlannerBoard() {
   const invalidar = () => qc.invalidateQueries({ queryKey: ["quadro-tarefas", quadroId] });
 
   const mover = async (id: string, status: ColId) => {
+    if (somenteLeitura) return;
     updateLocal((l) => l.map((c) => (c.id === id ? { ...c, status } : c)));
     const { error } = await supabase
       .from("tarefas")
@@ -315,6 +345,7 @@ function PlannerBoard() {
   };
 
   const mudarPrioridade = async (id: string, prioridade: string) => {
+    if (somenteLeitura) return;
     updateLocal((l) => l.map((c) => (c.id === id ? { ...c, prioridade } : c)));
     const { error } = await supabase.from("tarefas").update({ prioridade }).eq("id", id);
     if (error) {
@@ -324,6 +355,7 @@ function PlannerBoard() {
   };
 
   const deletar = async (id: string) => {
+    if (somenteLeitura) return;
     updateLocal((l) => l.filter((c) => c.id !== id));
     const { error } = await supabase.from("tarefas").delete().eq("id", id);
     if (error) {
@@ -352,7 +384,7 @@ function PlannerBoard() {
   const salvarNomeColuna = async (colId: ColId) => {
     const nome = nomeRename.trim();
     setRenomeandoCol(null);
-    if (!nome || !quadroId) return;
+    if (!nome || !quadroId || somenteLeitura) return;
     const { error } = await supabase.from("quadro_colunas" as never).upsert(
       {
         quadro_id: quadroId,
@@ -435,7 +467,7 @@ function PlannerBoard() {
     const atual = cards.find((c) => c.id === id);
     setDetalheId(null);
     setDelArmado(false);
-    if (!atual) return;
+    if (!atual || somenteLeitura) return;
 
     // Nada mudou desde o abrir → fecha sem tocar no banco. Evita reescrever (e "carimbar"
     // datas em) um cartão que a usuária só abriu pra olhar.
@@ -530,20 +562,32 @@ function PlannerBoard() {
 
   // Quick add: Enter salva só com o nome; obrigatórios preenchidos por padrão
   // (categoria mais usada do quadro, início e fim = hoje). Ajuste fino no detalhe.
+  // QA-33: Enter duas vezes rápido criava 2 cartões iguais. A ref trava o
+  // segundo envio enquanto o primeiro não volta do banco e, depois do sucesso,
+  // até a próxima digitação no campo (o handler antigo ainda pode ver o título
+  // velho antes do campo limpar na tela).
+  const criandoCartaoRef = useRef(false);
   const criar = async (status: string) => {
     const titulo = novoTitulo.trim();
-    if (!titulo || !userId || !quadroId) return;
+    if (!titulo || !userId || !quadroId || somenteLeitura || criandoCartaoRef.current) return;
+    criandoCartaoRef.current = true;
     const hoje = hojeISO();
-    const { error } = await supabase.from("tarefas").insert({
-      user_id: userId,
-      quadro_id: quadroId,
-      titulo,
-      status,
-      fonte: "manual",
-      data_inicio: hoje,
-      prazo: hoje,
-    } as never);
+    let error: unknown;
+    try {
+      ({ error } = await supabase.from("tarefas").insert({
+        user_id: userId,
+        quadro_id: quadroId,
+        titulo,
+        status,
+        fonte: "manual",
+        data_inicio: hoje,
+        prazo: hoje,
+      } as never));
+    } catch (e) {
+      error = e;
+    }
     if (error) {
+      criandoCartaoRef.current = false;
       toastErro("A Pólia One não conseguiu salvar o cartão. Tenta de novo.");
       return;
     }
@@ -612,6 +656,26 @@ function PlannerBoard() {
             </button>
           </div>
 
+          {somenteLeitura && (
+            <div
+              role="status"
+              className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 text-[13px] text-[var(--ink-soft)]"
+            >
+              <Lock size={14} className="shrink-0" aria-hidden="true" />
+              <span>
+                Esse quadro passou do limite do plano Grátis. Dá pra ver tudo; pra editar, assine o
+                Premium.
+              </span>
+              <Link
+                to="/upgrade"
+                search={{ rota: "/planner", tier: "controle" }}
+                className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] no-underline hover:underline"
+              >
+                Assinar o Premium
+              </Link>
+            </div>
+          )}
+
           {/* Filtro de período */}
           <div className="mt-5 inline-flex gap-1 rounded-[10px] border border-[var(--line)] bg-white p-1">
             {FILTROS.map((f) => (
@@ -670,6 +734,7 @@ function PlannerBoard() {
                 <div
                   key={col.id}
                   onDragOver={(e) => {
+                    if (somenteLeitura) return;
                     e.preventDefault();
                     setOverCol(col.id);
                   }}
@@ -708,46 +773,53 @@ function PlannerBoard() {
                           {nomeColuna(col.id)}
                         </span>
                         <span className="flex shrink-0 items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setNomeRename(nomeColuna(col.id));
-                              setRenomeandoCol(col.id);
-                            }}
-                            aria-label="Renomear coluna"
-                            title="Renomear coluna"
-                            className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-[14px] before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
-                          >
-                            <Pencil size={12} aria-hidden="true" />
-                          </button>
+                          {!somenteLeitura && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setNomeRename(nomeColuna(col.id));
+                                setRenomeandoCol(col.id);
+                              }}
+                              aria-label="Renomear coluna"
+                              title="Renomear coluna"
+                              className="relative rounded p-0.5 text-[var(--muted)] opacity-0 transition-opacity before:absolute before:-inset-[14px] before:content-[''] hover:bg-white hover:text-[var(--ink)] group-hover/col:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100"
+                            >
+                              <Pencil size={12} aria-hidden="true" />
+                            </button>
+                          )}
                           <span className="rounded-md border border-[var(--line)] bg-white px-1.5 py-0.5 text-[11px] text-[var(--muted)]">
                             {lista.length}
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setComposerCol(col.id);
-                              setNovoTitulo("");
-                            }}
-                            aria-label={`Adicionar cartão em ${nomeColuna(col.id)}`}
-                            className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-white hover:text-[var(--secondary-text)]"
-                          >
-                            <Plus size={16} aria-hidden="true" />
-                          </button>
+                          {!somenteLeitura && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setComposerCol(col.id);
+                                setNovoTitulo("");
+                              }}
+                              aria-label={`Adicionar cartão em ${nomeColuna(col.id)}`}
+                              className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] transition-colors before:absolute before:-inset-2 before:content-[''] hover:bg-white hover:text-[var(--secondary-text)]"
+                            >
+                              <Plus size={16} aria-hidden="true" />
+                            </button>
+                          )}
                         </span>
                       </>
                     )}
                   </div>
 
-                  {composerCol === col.id && (
+                  {composerCol === col.id && !somenteLeitura && (
                     <div className="mb-3 rounded-xl border border-[var(--line)] bg-white p-2.5">
                       <input
                         type="text"
                         autoFocus
                         value={novoTitulo}
-                        onChange={(e) => setNovoTitulo(e.target.value)}
+                        onChange={(e) => {
+                          criandoCartaoRef.current = false;
+                          setNovoTitulo(e.target.value);
+                        }}
                         onKeyDown={(e) => {
-                          if (e.key === "Enter") criar(col.id);
+                          if (e.key === "Enter") void criar(col.id);
                           if (e.key === "Escape") setComposerCol(null);
                         }}
                         maxLength={200}
@@ -782,19 +854,25 @@ function PlannerBoard() {
                         <Vazio
                           denso
                           titulo="Coluna vazia."
-                          texto="O primeiro cartão pode nascer aqui mesmo."
+                          texto={
+                            somenteLeitura
+                              ? "Nenhum cartão nesta coluna."
+                              : "O primeiro cartão pode nascer aqui mesmo."
+                          }
                           acao={
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setComposerCol(col.id);
-                                setNovoTitulo("");
-                              }}
-                              className={BTN_MIUDO}
-                            >
-                              <Plus size={14} aria-hidden="true" />
-                              Novo cartão
-                            </button>
+                            somenteLeitura ? undefined : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setComposerCol(col.id);
+                                  setNovoTitulo("");
+                                }}
+                                className={BTN_MIUDO}
+                              >
+                                <Plus size={14} aria-hidden="true" />
+                                Novo cartão
+                              </button>
+                            )
                           }
                         />
                       )
@@ -807,8 +885,10 @@ function PlannerBoard() {
                         return (
                           <article
                             key={c.id}
-                            draggable
-                            onDragStart={() => setDraggedId(c.id)}
+                            draggable={!somenteLeitura}
+                            onDragStart={() => {
+                              if (!somenteLeitura) setDraggedId(c.id);
+                            }}
                             onDragEnd={() => {
                               setDraggedId(null);
                               setOverCol(null);
@@ -830,7 +910,11 @@ function PlannerBoard() {
                                 abrirDetalhe(c);
                               }
                             }}
-                            className="group cursor-grab rounded-xl border border-[var(--line)] bg-white p-3 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] active:cursor-grabbing"
+                            className={`group rounded-xl border border-[var(--line)] bg-white p-3 transition-[opacity,transform] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+                              somenteLeitura
+                                ? "cursor-pointer"
+                                : "cursor-grab active:cursor-grabbing"
+                            }`}
                             style={
                               saindo ? { opacity: 0, transform: "translateX(12px)" } : undefined
                             }
@@ -860,15 +944,17 @@ function PlannerBoard() {
                                 aria-label={
                                   concluido ? "Marcar como não concluído" : "Marcar como concluído"
                                 }
+                                disabled={somenteLeitura}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  if (somenteLeitura) return;
                                   if (concluido) {
                                     mover(c.id, "hoje");
                                     return;
                                   }
                                   setConfirmarId(c.id);
                                 }}
-                                className={`relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-[14px] before:content-[''] ${
+                                className={`relative mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors before:absolute before:-inset-[14px] before:content-[''] disabled:cursor-not-allowed ${
                                   concluido
                                     ? "border-[var(--secondary)] bg-[var(--secondary)]"
                                     : "border-[var(--muted)] hover:border-[var(--secondary-text)] hover:bg-[var(--secondary-light)]"
@@ -928,13 +1014,14 @@ function PlannerBoard() {
                               {/* Prioridade — clique cicla */}
                               <button
                                 type="button"
+                                disabled={somenteLeitura}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   mudarPrioridade(c.id, proxPrioridade(c.prioridade));
                                 }}
                                 title={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Clique pra mudar.`}
                                 aria-label={`Prioridade: ${rotuloPrioridade(c.prioridade) ?? "não definida"}. Mudar prioridade.`}
-                                className="relative flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] hover:bg-[var(--surface)]"
+                                className="relative flex items-center gap-1.5 rounded-md px-1.5 py-0.5 transition-colors before:absolute before:inset-x-0 before:-inset-y-1 before:content-[''] hover:bg-[var(--surface)] disabled:cursor-not-allowed disabled:hover:bg-transparent"
                               >
                                 <span
                                   className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -949,34 +1036,36 @@ function PlannerBoard() {
                                 </span>
                               </button>
 
-                              <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
-                                {col.id !== "concluido" && (
+                              {!somenteLeitura && (
+                                <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
+                                  {col.id !== "concluido" && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        mover(c.id, PROXIMA[col.id]);
+                                      }}
+                                      aria-label="Avançar"
+                                      title="Avançar"
+                                      className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--secondary-light)]"
+                                    >
+                                      <ArrowRight size={14} aria-hidden="true" />
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      mover(c.id, PROXIMA[col.id]);
+                                      setApagarCardId(c.id);
                                     }}
-                                    aria-label="Avançar"
-                                    title="Avançar"
-                                    className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--secondary-text)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--secondary-light)]"
+                                    aria-label="Remover cartão"
+                                    title="Remover"
+                                    className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
                                   >
-                                    <ArrowRight size={14} aria-hidden="true" />
+                                    <Trash2 size={13} aria-hidden="true" />
                                   </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setApagarCardId(c.id);
-                                  }}
-                                  aria-label="Remover cartão"
-                                  title="Remover"
-                                  className="relative flex h-7 w-7 items-center justify-center rounded-lg text-[var(--muted)] before:absolute before:-inset-2 before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                                >
-                                  <Trash2 size={13} aria-hidden="true" />
-                                </button>
-                              </div>
+                                </div>
+                              )}
                             </div>
                           </article>
                         );
@@ -1006,8 +1095,15 @@ function PlannerBoard() {
               <p className="mb-4 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                 Cartão
               </p>
+              {somenteLeitura && (
+                <p className="mb-4 flex items-center gap-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+                  <Lock size={14} className="shrink-0" aria-hidden="true" />
+                  Só leitura · o quadro passou do limite do plano Grátis.
+                </p>
+              )}
               <textarea
                 rows={1}
+                readOnly={somenteLeitura}
                 value={dTitulo}
                 onChange={(e) => setDTitulo(e.target.value.replace(/\n/g, " "))}
                 onKeyDown={(e) => {
@@ -1035,37 +1131,44 @@ function PlannerBoard() {
                           aria-hidden="true"
                         />
                         {tag}
-                        <button
-                          type="button"
-                          onClick={() => setDTags((t) => t.filter((x) => x !== tag))}
-                          aria-label={`Remover tag ${tag}`}
-                          className="relative flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] before:absolute before:-inset-[14px] before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
-                        >
-                          <X size={11} aria-hidden="true" />
-                        </button>
+                        {!somenteLeitura && (
+                          <button
+                            type="button"
+                            onClick={() => setDTags((t) => t.filter((x) => x !== tag))}
+                            aria-label={`Remover tag ${tag}`}
+                            className="relative flex h-4 w-4 items-center justify-center rounded-full text-[var(--muted)] before:absolute before:-inset-[14px] before:content-[''] hover:bg-[var(--danger-soft)] hover:text-[var(--danger)]"
+                          >
+                            <X size={11} aria-hidden="true" />
+                          </button>
+                        )}
                       </span>
                     ))}
                   </div>
                 )}
-                <input
-                  value={dTagInput}
-                  onChange={(e) => setDTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key !== "Enter") return;
-                    e.preventDefault();
-                    adicionarTagPendente();
-                  }}
-                  onBlur={adicionarTagPendente}
-                  maxLength={30}
-                  aria-label="Nova tag"
-                  placeholder="Nova tag · Enter adiciona"
-                  className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
-                />
+                {somenteLeitura ? (
+                  dTags.length === 0 && <p className="text-[13px] text-[var(--muted)]">Sem tags.</p>
+                ) : (
+                  <input
+                    value={dTagInput}
+                    onChange={(e) => setDTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter") return;
+                      e.preventDefault();
+                      adicionarTagPendente();
+                    }}
+                    onBlur={adicionarTagPendente}
+                    maxLength={30}
+                    aria-label="Nova tag"
+                    placeholder="Nova tag · Enter adiciona"
+                    className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
+                  />
+                )}
               </div>
 
               <div className="mt-5">
                 <Campo label="Descrição">
                   <textarea
+                    readOnly={somenteLeitura}
                     value={dDesc}
                     onChange={(e) => setDDesc(e.target.value)}
                     rows={2}
@@ -1085,7 +1188,8 @@ function PlannerBoard() {
                       <button
                         type="button"
                         aria-label="Data de início"
-                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
+                        disabled={somenteLeitura}
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)] disabled:cursor-not-allowed disabled:bg-[var(--bg)]"
                       >
                         {dInicio ? fmtDataCompleta(dInicio) : "Selecionar"}
                         <CalendarDays
@@ -1121,7 +1225,8 @@ function PlannerBoard() {
                       <button
                         type="button"
                         aria-label="Data de fim (prazo)"
-                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)]"
+                        disabled={somenteLeitura}
+                        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] px-3 py-2 text-left text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)] disabled:cursor-not-allowed disabled:bg-[var(--bg)]"
                       >
                         {dFim ? fmtDataCompleta(dFim) : "Selecionar"}
                         <CalendarDays
@@ -1156,6 +1261,7 @@ function PlannerBoard() {
                     <input
                       type="text"
                       inputMode="numeric"
+                      readOnly={somenteLeitura}
                       value={dHorario}
                       onChange={(e) => setDHorario(e.target.value)}
                       onBlur={(e) => {
@@ -1175,6 +1281,7 @@ function PlannerBoard() {
                       min={0}
                       max={24}
                       step={0.5}
+                      readOnly={somenteLeitura}
                       value={dHpd}
                       onChange={(e) => setDHpd(e.target.value)}
                       placeholder="Ex: 2"
@@ -1189,6 +1296,7 @@ function PlannerBoard() {
                   Vinculado à meta
                 </p>
                 <Select
+                  disabled={somenteLeitura}
                   value={dMetaId || "none"}
                   onValueChange={(v) => setDMetaId(v === "none" ? "" : v)}
                 >
@@ -1217,6 +1325,7 @@ function PlannerBoard() {
               <div className="mt-5">
                 <Campo label="Anotações rápidas">
                   <textarea
+                    readOnly={somenteLeitura}
                     value={dNota}
                     onChange={(e) => setDNota(e.target.value)}
                     rows={3}
@@ -1230,7 +1339,11 @@ function PlannerBoard() {
                 <p className="mb-2 text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                   Coluna
                 </p>
-                <Select value={dColuna} onValueChange={(v) => setDColuna(v as ColId)}>
+                <Select
+                  disabled={somenteLeitura}
+                  value={dColuna}
+                  onValueChange={(v) => setDColuna(v as ColId)}
+                >
                   <SelectTrigger
                     aria-label="Coluna"
                     className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink-soft)] outline-none focus:border-[var(--secondary-text)] focus:ring-0"
@@ -1252,15 +1365,17 @@ function PlannerBoard() {
 
               <div className="mt-8 flex flex-wrap items-center justify-between gap-2">
                 <button type="button" onClick={fecharDetalhe} className={BTN_ACAO}>
-                  Salvar e fechar
+                  {somenteLeitura ? "Fechar" : "Salvar e fechar"}
                 </button>
-                <button
-                  type="button"
-                  onClick={excluirDoDetalhe}
-                  className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
-                >
-                  {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
-                </button>
+                {!somenteLeitura && (
+                  <button
+                    type="button"
+                    onClick={excluirDoDetalhe}
+                    className={`${BTN_MIUDO} !border-[var(--danger)] !text-[var(--danger)]`}
+                  >
+                    {delArmado ? "Confirmar: apaga o cartão de vez" : "Excluir cartão"}
+                  </button>
+                )}
               </div>
               {/* Aqui não tem desfazer: a confirmação diz o que some junto. */}
               {delArmado && (

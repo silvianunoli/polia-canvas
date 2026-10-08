@@ -28,10 +28,74 @@ export function calcularQuantoSobra(input: QuantoSobraInput): number {
   return input.precoVenda - input.precoCusto - calcularTaxas(input);
 }
 
-// % do preço de venda que sobra — pro card de produto e pra barra de margem.
+// % do preço de venda que sobra, presa em 0 de propósito: serve pra largura de
+// barra (não existe barra negativa). Pra TEXTO, use sobraDoProduto, que mostra
+// o prejuízo em vez de esconder atrás de "0%".
 export function calcularSobraPct(input: QuantoSobraInput): number {
   if (input.precoVenda <= 0) return 0;
   return Math.max(0, Math.round((calcularQuantoSobra(input) / input.precoVenda) * 100));
+}
+
+export interface SobraDoProduto {
+  /** R$ que sobra por venda; negativo = cada venda fica abaixo do custo. */
+  valor: number;
+  /** % do preço que sobra, COM sinal (pode ser negativa). */
+  pct: number;
+  /** % presa entre 0 e 100, só pra largura de barra. */
+  pctBarra: number;
+  prejuizo: boolean;
+}
+
+// Sobra de um produto do catálogo. Devolve null quando a conta não existe:
+// sem preço de venda (produto criado pelo Planejamento com "preço a definir")
+// ou sem custo cadastrado. Antes, custo vazio virava custo 0 e a venda rápida
+// do Financeiro anunciava "sobram R$ 49" de um produto sem custo conhecido.
+export function sobraDoProduto(params: {
+  precoVenda: number;
+  precoCusto: number | null;
+  breakdown: CalculadoraBreakdown | null | undefined;
+}): SobraDoProduto | null {
+  const { precoVenda, precoCusto } = params;
+  if (!(precoVenda > 0) || precoCusto == null) return null;
+  const input: QuantoSobraInput = {
+    precoVenda,
+    precoCusto,
+    ...taxasDoBreakdown(params.breakdown),
+  };
+  const valor = calcularQuantoSobra(input);
+  const pct = Math.round((valor / precoVenda) * 100);
+  return {
+    valor,
+    pct,
+    pctBarra: Math.min(100, Math.max(0, pct)),
+    prejuizo: Math.round(valor * 100) < 0,
+  };
+}
+
+// Simulador de desconto da calculadora. Taxa e imposto são % do preço, então
+// caem junto com ele. O preço com desconto nunca fica negativo, e a sobra NÃO
+// passa por calcularQuantoSobra: aquela devolve 0 quando o preço é 0, e com
+// 100% de desconto o custo continua saindo do bolso (bug do QA-26: 100% ou
+// mais mostrava "sobram R$ 0,00" sem o aviso de prejuízo).
+// null = sem simulação (campo vazio, zero ou negativo).
+export function simularDesconto(params: {
+  precoVenda: number;
+  precoCusto: number;
+  taxaVendaPct?: number;
+  impostosPct?: number;
+  descontoPct: number;
+}): { precoComDesconto: number; sobra: number; prejuizo: boolean } | null {
+  const { descontoPct } = params;
+  if (!Number.isFinite(descontoPct) || descontoPct <= 0) return null;
+  const precoComDesconto = Math.max(0, params.precoVenda * (1 - descontoPct / 100));
+  const taxas = calcularTaxas({
+    precoVenda: precoComDesconto,
+    precoCusto: params.precoCusto,
+    taxaVendaPct: params.taxaVendaPct,
+    impostosPct: params.impostosPct,
+  });
+  const sobra = precoComDesconto - params.precoCusto - taxas;
+  return { precoComDesconto, sobra, prejuizo: Math.round(sobra * 100) < 0 };
 }
 
 // Preço sugerido a partir do custo unitário e dos percentuais desejados

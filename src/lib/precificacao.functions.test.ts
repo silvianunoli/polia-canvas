@@ -6,6 +6,8 @@ import {
   calcularPrecoSugerido,
   calcularEncomenda,
   taxasDoBreakdown,
+  simularDesconto,
+  sobraDoProduto,
   type EncomendaInput,
 } from "./precificacao.functions";
 
@@ -135,5 +137,92 @@ describe("calcularTaxas / calcularQuantoSobra / calcularSobraPct (regressão)", 
     expect(calcularTaxas(input)).toBe(10);
     expect(calcularQuantoSobra(input)).toBe(40);
     expect(calcularSobraPct(input)).toBe(40);
+  });
+});
+
+describe("simularDesconto (QA-26)", () => {
+  // Caderno A5 da landing: preço 49, custo 26,95, maquininha 5%.
+  const base = { precoVenda: 49, precoCusto: 26.95, taxaVendaPct: 5, impostosPct: 0 };
+
+  it("desconto pequeno: preço cai, taxa cai junto, sobra positiva sem prejuízo", () => {
+    const r = simularDesconto({ ...base, descontoPct: 15 })!;
+    expect(r.precoComDesconto).toBeCloseTo(41.65, 2);
+    // 41,65 - 26,95 - 5% de 41,65 (2,0825) = 12,6175
+    expect(r.sobra).toBeCloseTo(12.6175, 4);
+    expect(r.prejuizo).toBe(false);
+  });
+
+  it("desconto que passa do custo dá prejuízo (bate com a frase da landing, 45%)", () => {
+    const r = simularDesconto({ ...base, descontoPct: 45 })!;
+    expect(r.precoComDesconto).toBeCloseTo(26.95, 2);
+    expect(r.sobra).toBeCloseTo(-1.3475, 4);
+    expect(r.prejuizo).toBe(true);
+  });
+
+  it("100% de desconto: preço zero, o custo inteiro vira prejuízo (antes dava sobra 0 sem aviso)", () => {
+    const r = simularDesconto({ ...base, descontoPct: 100 })!;
+    expect(r.precoComDesconto).toBe(0);
+    expect(r.sobra).toBeCloseTo(-26.95, 2);
+    expect(r.prejuizo).toBe(true);
+  });
+
+  it("mais de 100%: preço não fica negativo e o prejuízo continua sendo o custo", () => {
+    const r = simularDesconto({ ...base, descontoPct: 150 })!;
+    expect(r.precoComDesconto).toBe(0);
+    expect(r.sobra).toBeCloseTo(-26.95, 2);
+    expect(r.prejuizo).toBe(true);
+  });
+
+  it("desconto vazio, zero ou negativo não simula", () => {
+    expect(simularDesconto({ ...base, descontoPct: 0 })).toBeNull();
+    expect(simularDesconto({ ...base, descontoPct: -10 })).toBeNull();
+    expect(simularDesconto({ ...base, descontoPct: Number.NaN })).toBeNull();
+  });
+
+  it("sobra que arredonda pra zero centavo não é prejuízo", () => {
+    const r = simularDesconto({
+      precoVenda: 100,
+      precoCusto: 50.004,
+      descontoPct: 50,
+    })!;
+    expect(r.prejuizo).toBe(false);
+  });
+});
+
+describe("sobraDoProduto (QA-27)", () => {
+  it("devolve valor e % com sinal quando o produto dá prejuízo (calcularSobraPct escondia em 0%)", () => {
+    const r = sobraDoProduto({ precoVenda: 50, precoCusto: 80, breakdown: null })!;
+    expect(r.valor).toBe(-30);
+    expect(r.pct).toBe(-60);
+    expect(r.pctBarra).toBe(0);
+    expect(r.prejuizo).toBe(true);
+    // a função antiga continua presa em 0 (é só pra barra)
+    expect(calcularSobraPct({ precoVenda: 50, precoCusto: 80 })).toBe(0);
+  });
+
+  it("caso normal bate com calcularQuantoSobra, com taxa do breakdown", () => {
+    const r = sobraDoProduto({
+      precoVenda: 100,
+      precoCusto: 50,
+      breakdown: { perfil: "produto", valores: { taxaVenda: "5", impostos: "5" } },
+    })!;
+    expect(r.valor).toBe(40);
+    expect(r.pct).toBe(40);
+    expect(r.pctBarra).toBe(40);
+    expect(r.prejuizo).toBe(false);
+  });
+
+  it("sem custo cadastrado não inventa custo zero: devolve null", () => {
+    expect(sobraDoProduto({ precoVenda: 49, precoCusto: null, breakdown: null })).toBeNull();
+  });
+
+  it("sem preço de venda (produto do Planejamento, 'preço a definir') devolve null", () => {
+    expect(sobraDoProduto({ precoVenda: 0, precoCusto: 10, breakdown: null })).toBeNull();
+  });
+
+  it("custo zero cadastrado é custo conhecido (não é o mesmo que sem custo)", () => {
+    const r = sobraDoProduto({ precoVenda: 30, precoCusto: 0, breakdown: null })!;
+    expect(r.valor).toBe(30);
+    expect(r.pct).toBe(100);
   });
 });

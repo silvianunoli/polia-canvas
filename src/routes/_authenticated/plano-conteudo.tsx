@@ -1,19 +1,22 @@
 import { useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
+import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { NICHOS } from "@/lib/bancoIdeias";
 import { montarPlanoConteudoDoBanco } from "@/lib/planoConteudoBanco.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
+import { hojeISO, mesAnoAtual } from "@/lib/data.functions";
+import { toastErro } from "@/lib/toast";
 
 export const Route = createFileRoute("/_authenticated/plano-conteudo")({
   head: () => ({
@@ -59,10 +62,6 @@ interface DiaRow {
   postado: boolean;
 }
 
-function hojeISO(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function PlanoConteudoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
@@ -70,8 +69,9 @@ function PlanoConteudoPage() {
   const ehProjete = temProjete(meta.plano);
   const qc = useQueryClient();
 
-  const anoAtual = new Date().getFullYear();
-  const [mesAtivo, setMesAtivo] = useState(new Date().getMonth() + 1);
+  // Dia e mês LOCAIS (07/10/2026): o "hoje" em UTC trocava o post do dia às 21h.
+  const anoAtual = mesAnoAtual().ano;
+  const [mesAtivo, setMesAtivo] = useState(() => mesAnoAtual().mes);
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [nichos, setNichos] = useState<string[]>([]);
@@ -81,12 +81,15 @@ function PlanoConteudoPage() {
     queryKey: ["ia-plano-conteudo", userId, anoAtual],
     enabled: !!userId && ehProjete,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("ia_plano_conteudo")
         .select("id, data, tipo, titulo, ideia, postado")
         .eq("user_id", userId!)
         .eq("ano", anoAtual)
         .order("data", { ascending: true });
+      // Leitura que falha não pode virar "sem plano": a tela mostraria a escolha
+      // de nicho e "Montar meu plano" refaria o ano por cima do que já existe.
+      if (error) throw error;
       return ((data ?? []) as unknown as DiaRow[]) ?? [];
     },
   });
@@ -178,14 +181,19 @@ function PlanoConteudoPage() {
     </div>
   );
 
-  // marcarPostado/salvarCampo aplicam um patch otimista só na linha editada em
-  // vez de invalidateQueries (que refazia o fetch do ano inteiro a cada
-  // clique/blur) — o UPDATE já confirmou no servidor antes do patch local.
+  // marcarPostado/salvarCampo aplicam um patch só na linha editada em vez de
+  // invalidateQueries (que refazia o fetch do ano inteiro a cada clique/blur).
+  // O patch só entra depois que o UPDATE voltou sem erro (07/10/2026: antes o
+  // erro era ignorado e a tela mostrava salvo o que não foi).
   const marcarPostado = async (row: DiaRow, postado: boolean) => {
-    await supabase
+    const { error } = await supabase
       .from("ia_plano_conteudo")
       .update({ postado, postado_em: postado ? new Date().toISOString() : null })
       .eq("id", row.id);
+    if (error) {
+      toastErro("A Pólia One não conseguiu marcar esse post agora. Tenta de novo.");
+      return;
+    }
     qc.setQueryData<DiaRow[]>(["ia-plano-conteudo", userId, anoAtual], (old) =>
       old?.map((d) => (d.id === row.id ? { ...d, postado } : d)),
     );
@@ -196,12 +204,18 @@ function PlanoConteudoPage() {
     // Update por branch em vez de `{ [campo]: valor }` — a chave computada
     // com tipo união não bate com o Update gerado do Supabase sem `as never`.
     const query = supabase.from("ia_plano_conteudo");
-    if (campo === "titulo") {
-      await query.update({ titulo: valor }).eq("id", row.id);
-    } else if (campo === "ideia") {
-      await query.update({ ideia: valor }).eq("id", row.id);
-    } else {
-      await query.update({ tipo: valor }).eq("id", row.id);
+    const { error } =
+      campo === "titulo"
+        ? await query.update({ titulo: valor }).eq("id", row.id)
+        : campo === "ideia"
+          ? await query.update({ ideia: valor }).eq("id", row.id)
+          : await query.update({ tipo: valor }).eq("id", row.id);
+    if (error) {
+      // O texto digitado continua no campo: sair do campo de novo tenta outra vez.
+      toastErro(
+        "A Pólia One não conseguiu salvar essa mudança. Tenta de novo, o texto continua no campo.",
+      );
+      return;
     }
     qc.setQueryData<DiaRow[]>(["ia-plano-conteudo", userId, anoAtual], (old) =>
       old?.map((d) => (d.id === row.id ? { ...d, [campo]: valor } : d)),
@@ -256,6 +270,23 @@ function PlanoConteudoPage() {
 
         {planoQuery.isLoading ? (
           <div className="mt-6 h-40 animate-pulse rounded-xl bg-[var(--surface)]" />
+        ) : planoQuery.isError ? (
+          <div className="mt-6">
+            <Vazio
+              icone={AlertTriangle}
+              titulo="A Pólia One não conseguiu carregar o seu plano de conteúdo."
+              texto="Pode ter sido a conexão. Tenta de novo, nada do que já está salvo se perdeu."
+              acao={
+                <button
+                  type="button"
+                  onClick={() => void planoQuery.refetch()}
+                  className={BTN_ACAO}
+                >
+                  Tentar de novo
+                </button>
+              }
+            />
+          </div>
         ) : dias.length > 0 ? (
           <>
             <div className="mt-6">

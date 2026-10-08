@@ -6,6 +6,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { COTAS_CONFERE, temProjete } from "@/lib/planos";
+import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
@@ -67,13 +68,8 @@ function CalculadoraPage() {
     queryKey: ["meta-do-mes", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("metas")
-        .select("valor_alvo")
-        .eq("user_id", userId!)
-        .eq("titulo", "Meta do mês")
-        .maybeSingle();
-      return (data as { valor_alvo: number | null } | null)?.valor_alvo || null;
+      const { data } = await buscarMetaDoMes(supabase, userId!);
+      return data?.valor_alvo || null;
     },
   });
 

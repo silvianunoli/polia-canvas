@@ -8,6 +8,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { rotuloStatusChamado } from "@/lib/chamados";
 
 export const Route = createFileRoute("/_authenticated/chamados/$id")({
   head: () => ({ meta: [{ title: "Chamado · Pólia One" }] }),
@@ -59,6 +60,21 @@ function ChamadoDetalhe() {
 
   useEffect(() => {
     carregar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, userId]);
+
+  // QA-36: a resposta do suporte só aparecia com F5. Relê ao voltar pra aba;
+  // o texto que ela está escrevendo mora em outro estado e não é tocado.
+  useEffect(() => {
+    const aoVoltar = () => {
+      if (document.visibilityState === "visible") void carregar();
+    };
+    document.addEventListener("visibilitychange", aoVoltar);
+    window.addEventListener("focus", aoVoltar);
+    return () => {
+      document.removeEventListener("visibilitychange", aoVoltar);
+      window.removeEventListener("focus", aoVoltar);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, userId]);
 
@@ -114,7 +130,8 @@ function ChamadoDetalhe() {
     <PaginaLogada
       eyebrow="Chamado"
       titulo={ticket.title}
-      subtitulo={`${ticket.status === "resolvido" ? "Resolvido" : "Em aberto"} · aberto em ${new Date(ticket.created_at).toLocaleDateString("pt-BR")}`}
+      // QA-36: "em_andamento" aparecia como "Em aberto".
+      subtitulo={`${rotuloStatusChamado(ticket.status)} · aberto em ${new Date(ticket.created_at).toLocaleDateString("pt-BR")}`}
       acao={
         <Link to="/chamados" className={BTN_ACAO_CONTORNO}>
           ← Seus chamados

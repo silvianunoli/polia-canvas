@@ -12,6 +12,7 @@ import {
   Unlink,
   Plus,
   CalendarDays,
+  AlertTriangle,
 } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -52,6 +53,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { diaLocalDe } from "@/lib/data.functions";
+import { ddmm, distribuirTarefasPorDia, type OcorrenciaTarefa } from "@/lib/calendarioTarefas";
 
 interface CalendarioSearch {
   code?: string;
@@ -88,6 +91,7 @@ interface TarefaCal {
   status: string;
   quadro_id: string;
   prazo: string;
+  data_inicio: string | null;
   horario: string | null;
 }
 
@@ -99,6 +103,8 @@ type ItemDia =
       horario: string | null;
       href: string;
       concluido: boolean;
+      /** "até 20/10" no começo do intervalo; "em andamento, até 20/10" no meio. */
+      detalhe: string | null;
     }
   | { fonte: "google"; id: string; titulo: string; horario: string | null; href: string | null };
 
@@ -150,14 +156,20 @@ function CalendarioPage() {
     queryKey: ["calendario-tarefas", userId, inicioISO, fimISO],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      // QA-34 (07/10/2026): a tarefa entra se o intervalo [data_inicio, prazo]
+      // encosta na grade, não só se o prazo cai nela. prazo >= início da grade E
+      // (prazo <= fim OU data_inicio <= fim). Sem data_inicio, o segundo termo é
+      // nulo e vale só o prazo, como antes.
+      const { data, error } = await supabase
         .from("tarefas")
-        .select("id, titulo, status, quadro_id, prazo, horario")
+        .select("id, titulo, status, quadro_id, prazo, data_inicio, horario")
         .eq("user_id", userId!)
         .not("quadro_id", "is", null)
         .not("prazo", "is", null)
         .gte("prazo", inicioISO)
-        .lte("prazo", fimISO);
+        .or(`prazo.lte.${fimISO},data_inicio.lte.${fimISO}`);
+      // Falha na leitura não pode virar "Nada marcado neste mês".
+      if (error) throw error;
       return (data ?? []) as unknown as TarefaCal[];
     },
   });
@@ -270,23 +282,24 @@ function CalendarioPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.code, search.state]);
 
+  // Cada dia guarda as tarefas com o papel delas ali (início, andamento, prazo).
+  // A grade mostra só início e prazo; o detalhe do dia mostra todas.
   const tarefasPorDia = useMemo(() => {
-    const m = new Map<string, TarefaCal[]>();
-    if (!mostrarPlanner) return m;
-    for (const t of tarefasQuery.data ?? []) {
-      if (quadroFiltro !== "todos" && t.quadro_id !== quadroFiltro) continue;
-      const lista = m.get(t.prazo) ?? [];
-      lista.push(t);
-      m.set(t.prazo, lista);
-    }
-    return m;
-  }, [tarefasQuery.data, mostrarPlanner, quadroFiltro]);
+    if (!mostrarPlanner) return new Map<string, OcorrenciaTarefa<TarefaCal>[]>();
+    const filtradas = (tarefasQuery.data ?? []).filter(
+      (t) => quadroFiltro === "todos" || t.quadro_id === quadroFiltro,
+    );
+    return distribuirTarefasPorDia(filtradas, inicioISO, fimISO);
+  }, [tarefasQuery.data, mostrarPlanner, quadroFiltro, inicioISO, fimISO]);
 
   const eventosPorDia = useMemo(() => {
     const m = new Map<string, EventoGoogle[]>();
     if (!mostrarGoogle) return m;
     for (const ev of eventosGoogle) {
-      const dia = ev.inicio.slice(0, 10);
+      // Dia no fuso do navegador, o mesmo do horário mostrado na grade. Os 10
+      // primeiros caracteres vinham no fuso da agenda do Google (ou em UTC) e
+      // podiam pôr o compromisso da noite no dia seguinte (07/10/2026).
+      const dia = diaLocalDe(ev.inicio);
       const lista = m.get(dia) ?? [];
       lista.push(ev);
       m.set(dia, lista);
@@ -303,15 +316,23 @@ function CalendarioPage() {
     return q ? `/planner/${q.slug}` : "/planner";
   };
 
-  const itensDoDia = (iso: string): ItemDia[] => {
-    const t: ItemDia[] = (tarefasPorDia.get(iso) ?? []).map((x) => ({
-      fonte: "planner",
-      id: x.id,
-      titulo: x.titulo,
-      horario: x.horario,
-      href: linkQuadro(x.quadro_id),
-      concluido: x.status === "concluido",
-    }));
+  const itensDoDia = (iso: string, { comAndamento }: { comAndamento: boolean }): ItemDia[] => {
+    const t: ItemDia[] = (tarefasPorDia.get(iso) ?? [])
+      .filter((o) => comAndamento || o.papel !== "andamento")
+      .map(({ tarefa: x, papel }) => ({
+        fonte: "planner",
+        id: x.id,
+        titulo: x.titulo,
+        horario: x.horario,
+        href: linkQuadro(x.quadro_id),
+        concluido: x.status === "concluido",
+        detalhe:
+          papel === "inicio"
+            ? `até ${ddmm(x.prazo)}`
+            : papel === "andamento"
+              ? `em andamento, até ${ddmm(x.prazo)}`
+              : null,
+      }));
     const g: ItemDia[] = (eventosPorDia.get(iso) ?? []).map((x) => ({
       fonte: "google",
       id: x.id,
@@ -326,8 +347,10 @@ function CalendarioPage() {
   // carregamento, nem uma saída. A grade fica (ela é a própria navegação), mas
   // ganha embaixo o estado vazio canônico.
   const totalNaGrade = useMemo(() => {
-    let n = 0;
-    for (const lista of tarefasPorDia.values()) n += lista.length;
+    // Tarefa com intervalo aparece em vários dias: conta uma vez só.
+    const idsTarefas = new Set<string>();
+    for (const lista of tarefasPorDia.values()) for (const o of lista) idsTarefas.add(o.tarefa.id);
+    let n = idsTarefas.size;
     for (const lista of eventosPorDia.values()) n += lista.length;
     return n;
   }, [tarefasPorDia, eventosPorDia]);
@@ -339,7 +362,10 @@ function CalendarioPage() {
     : googleAtivo
       ? "O calendário junta as tarefas do Planner e os compromissos do Google Calendar. As duas fontes estão vazias por aqui."
       : "O calendário mostra as tarefas do Planner que têm prazo. Nenhuma delas cai neste mês.";
-  const itensDiaSelecionado = diaSelecionado ? itensDoDia(diaSelecionado) : [];
+  const itensDiaSelecionado = diaSelecionado
+    ? itensDoDia(diaSelecionado, { comAndamento: true })
+    : [];
+  const erroTarefas = mostrarPlanner && tarefasQuery.isError;
 
   return (
     <PaginaLogada
@@ -460,6 +486,26 @@ function CalendarioPage() {
           </div>
         )}
 
+        {erroTarefas && (
+          <div className="mb-5">
+            <Vazio
+              icone={AlertTriangle}
+              titulo="A Pólia One não conseguiu carregar as tarefas deste mês."
+              texto="Pode ter sido a conexão. As tarefas continuam guardadas no Planner, a grade só não conseguiu ler agora."
+              acao={
+                <button
+                  type="button"
+                  onClick={() => void tarefasQuery.refetch()}
+                  disabled={tarefasQuery.isFetching}
+                  className={BTN_ACAO}
+                >
+                  {tarefasQuery.isFetching ? "Tentando…" : "Tentar de novo"}
+                </button>
+              }
+            />
+          </div>
+        )}
+
         {/* Grade mensal */}
         <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-accent font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
           {DIAS_SEMANA.map((d) => (
@@ -469,7 +515,7 @@ function CalendarioPage() {
         <div className="mt-1.5 grid grid-cols-7 gap-1.5">
           {dias.map((dia) => {
             const iso = format(dia, "yyyy-MM-dd");
-            const itens = itensDoDia(iso);
+            const itens = itensDoDia(iso, { comAndamento: false });
             const foraDoMes = !isSameMonth(dia, mes);
             const hoje = isToday(dia);
             const selecionado = diaSelecionado === iso;
@@ -538,6 +584,7 @@ function CalendarioPage() {
                       }`}
                     >
                       {item.titulo}
+                      {item.fonte === "planner" && item.detalhe ? ` · ${item.detalhe}` : ""}
                     </span>
                   ))}
                   {itens.length > 3 && (
@@ -553,7 +600,7 @@ function CalendarioPage() {
 
         {carregandoGrade ? (
           <div className="mt-4 h-28 animate-pulse rounded-xl bg-[var(--surface)]" />
-        ) : totalNaGrade === 0 ? (
+        ) : erroTarefas ? null : totalNaGrade === 0 ? (
           <div className="mt-4">
             <Vazio
               icone={CalendarDays}
@@ -665,14 +712,28 @@ function CalendarioPage() {
                   </button>
                 )}
 
-                {itensDiaSelecionado.length === 0 ? (
+                {erroTarefas ? (
+                  <div role="alert" className="rounded-lg border border-[var(--line)] p-3">
+                    <p className="text-[13px] text-[var(--ink-soft)]">
+                      A Pólia One não conseguiu carregar as tarefas desse dia.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void tarefasQuery.refetch()}
+                      disabled={tarefasQuery.isFetching}
+                      className={`${BTN_MIUDO} mt-2 min-h-11`}
+                    >
+                      {tarefasQuery.isFetching ? "Tentando…" : "Tentar de novo"}
+                    </button>
+                  </div>
+                ) : itensDiaSelecionado.length === 0 ? (
                   <Vazio
                     denso
                     titulo="Nada marcado nesse dia."
                     texto={
                       conectado
-                        ? "Nenhuma tarefa do Planner com prazo aqui, e nenhum compromisso no Google Calendar."
-                        : "Nenhuma tarefa do Planner com prazo aqui."
+                        ? "Nenhuma tarefa do Planner passa por esse dia, e nenhum compromisso no Google Calendar."
+                        : "Nenhuma tarefa do Planner passa por esse dia."
                     }
                   />
                 ) : (
@@ -690,8 +751,15 @@ function CalendarioPage() {
                           }`}
                           aria-hidden="true"
                         />
-                        <span className="flex-1 truncate text-[14px] text-[var(--ink-soft)]">
-                          {item.titulo}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[14px] text-[var(--ink-soft)]">
+                            {item.titulo}
+                          </span>
+                          {item.fonte === "planner" && item.detalhe && (
+                            <span className="block truncate text-[12px] text-[var(--muted)]">
+                              {item.detalhe}
+                            </span>
+                          )}
                         </span>
                         {item.horario && (
                           <span className="shrink-0 text-[12px] text-[var(--muted)]">

@@ -108,7 +108,11 @@ function ConfiguracoesPage() {
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
   const [notifDicas, setNotifDicas] = useState(true);
-  const plano = profileQuery.data?.plano ?? "beta";
+  // Sem default (QA-37): o "beta" de antes fazia a seção Assinatura mostrar
+  // "Plano de lançamento" pra quem é Grátis ou Premium enquanto o perfil
+  // carregava. null = ainda não se sabe.
+  const plano: string | null = profileQuery.data?.plano ?? null;
+  const nomePlano = plano ? (NOME_PLANO[plano] ?? plano) : null;
   const queryClient = useQueryClient();
 
   const assinaturaQuery = useQuery({
@@ -117,6 +121,8 @@ function ConfiguracoesPage() {
     queryFn: () => statusAssinatura(),
   });
   const assinatura = assinaturaQuery.data;
+  // A seção Assinatura depende dos dois: do status na Stripe e do plano no perfil.
+  const assinaturaCarregando = assinaturaQuery.isLoading || profileQuery.isLoading;
 
   const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
   const [cancelando, setCancelando] = useState(false);
@@ -246,22 +252,37 @@ function ConfiguracoesPage() {
   const razaoSocialTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cnpjTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // QA-37 (08/10/2026): o perfil enche o formulário UMA vez por conta. Antes
+  // este efeito rodava a cada refetch (o React Query recarrega ao voltar pra
+  // aba), e o valor do servidor sobrescrevia o que ela estava digitando.
+  // `persistidoRef` guarda o último valor que o banco tem de cada campo: o
+  // autosave só grava quando o campo difere dele. Sem isso, encher o
+  // formulário no carregamento já disparava a gravação dos quatro campos.
+  const carregadoParaRef = useRef<string | null>(null);
+  const persistidoRef = useRef({ full_name: "", business_name: "", razao_social: "", cnpj: "" });
   useEffect(() => {
     const p = profileQuery.data;
-    if (p) {
-      setNome(p.full_name ?? "");
-      setNomeNegocio(p.business_name ?? "");
-      setRazaoSocial(p.razao_social ?? "");
-      setCnpj(p.cnpj ?? "");
-      setNotifResumo(p.notif_resumo_semanal ?? true);
-      setNotifNovidades(p.notif_novidades ?? true);
-      setNotifDicas(p.notif_dicas ?? true);
-      carregouInicial.current = true;
-    }
-  }, [profileQuery.data]);
+    if (!p || !userId || carregadoParaRef.current === userId) return;
+    carregadoParaRef.current = userId;
+    persistidoRef.current = {
+      full_name: p.full_name ?? "",
+      business_name: p.business_name ?? "",
+      razao_social: p.razao_social ?? "",
+      cnpj: p.cnpj ?? "",
+    };
+    setNome(p.full_name ?? "");
+    setNomeNegocio(p.business_name ?? "");
+    setRazaoSocial(p.razao_social ?? "");
+    setCnpj(p.cnpj ?? "");
+    setNotifResumo(p.notif_resumo_semanal ?? true);
+    setNotifNovidades(p.notif_novidades ?? true);
+    setNotifDicas(p.notif_dicas ?? true);
+    carregouInicial.current = true;
+  }, [profileQuery.data, userId]);
 
   useEffect(() => {
     if (!userId || !carregouInicial.current) return;
+    if (nome === persistidoRef.current.full_name) return;
     if (nomeTimer.current) clearTimeout(nomeTimer.current);
     nomeTimer.current = setTimeout(async () => {
       const { error } = await supabase
@@ -269,6 +290,7 @@ function ConfiguracoesPage() {
         .update({ full_name: nome })
         .eq("id", userId);
       if (error) return toastErro(ERRO_AUTOSAVE);
+      persistidoRef.current.full_name = nome;
       setNomeSalvo(true);
       setTimeout(() => setNomeSalvo(false), 1600);
     }, 600);
@@ -279,6 +301,7 @@ function ConfiguracoesPage() {
 
   useEffect(() => {
     if (!userId || !carregouInicial.current) return;
+    if (nomeNegocio === persistidoRef.current.business_name) return;
     if (nomeNegocioTimer.current) clearTimeout(nomeNegocioTimer.current);
     nomeNegocioTimer.current = setTimeout(async () => {
       const criouNegocio = !businessNameAtualRef.current.trim() && nomeNegocio.trim().length > 0;
@@ -287,6 +310,7 @@ function ConfiguracoesPage() {
         .update({ business_name: nomeNegocio })
         .eq("id", userId);
       if (error) return toastErro(ERRO_AUTOSAVE);
+      persistidoRef.current.business_name = nomeNegocio;
       if (criouNegocio) void registrar("business_created", { feature: "configuracoes" });
       setNomeNegocioSalvo(true);
       setTimeout(() => setNomeNegocioSalvo(false), 1600);
@@ -298,6 +322,7 @@ function ConfiguracoesPage() {
 
   useEffect(() => {
     if (!userId || !carregouInicial.current) return;
+    if (razaoSocial === persistidoRef.current.razao_social) return;
     if (razaoSocialTimer.current) clearTimeout(razaoSocialTimer.current);
     razaoSocialTimer.current = setTimeout(async () => {
       const { error } = await supabase
@@ -305,6 +330,7 @@ function ConfiguracoesPage() {
         .update({ razao_social: razaoSocial })
         .eq("id", userId);
       if (error) return toastErro(ERRO_AUTOSAVE);
+      persistidoRef.current.razao_social = razaoSocial;
       setRazaoSocialSalvo(true);
       setTimeout(() => setRazaoSocialSalvo(false), 1600);
     }, 600);
@@ -315,10 +341,12 @@ function ConfiguracoesPage() {
 
   useEffect(() => {
     if (!userId || !carregouInicial.current) return;
+    if (cnpj === persistidoRef.current.cnpj) return;
     if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
     cnpjTimer.current = setTimeout(async () => {
       const { error } = await supabase.from("profiles").update({ cnpj }).eq("id", userId);
       if (error) return toastErro(ERRO_AUTOSAVE);
+      persistidoRef.current.cnpj = cnpj;
       setCnpjSalvo(true);
       setTimeout(() => setCnpjSalvo(false), 1600);
     }, 600);
@@ -756,16 +784,16 @@ function ConfiguracoesPage() {
 
         {/* SEÇÃO 6 — ASSINATURA */}
         <Secao titulo="Assinatura">
-          {assinaturaQuery.isLoading && (
+          {assinaturaCarregando && (
             <p className="font-sans text-[13px] text-[var(--muted)]">Carregando...</p>
           )}
 
-          {!assinaturaQuery.isLoading && assinatura?.ativa && (
+          {!assinaturaCarregando && assinatura?.ativa && (
             <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <span className="inline-block rounded bg-[var(--secondary)] px-2.5 py-1 text-[10px] font-accent font-bold uppercase tracking-[1px] text-[var(--secondary-ink)]">
-                    {NOME_PLANO[plano] ?? plano}
+                    {nomePlano ?? "Assinatura ativa"}
                   </span>
                   <p className="mt-2 font-sans text-[14px] text-[var(--ink)]">
                     {assinatura.cancelAtPeriodEnd
@@ -790,7 +818,7 @@ function ConfiguracoesPage() {
             </div>
           )}
 
-          {!assinaturaQuery.isLoading && !assinatura?.ativa && plano !== "beta" && (
+          {!assinaturaCarregando && !assinatura?.ativa && plano !== null && plano !== "beta" && (
             <>
               <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
                 {plano === "cancelada"
@@ -803,7 +831,7 @@ function ConfiguracoesPage() {
             </>
           )}
 
-          {!assinaturaQuery.isLoading && !assinatura?.ativa && plano === "beta" && (
+          {!assinaturaCarregando && !assinatura?.ativa && plano === "beta" && (
             <p className="font-sans text-[15px] text-[var(--ink-soft)]">
               Plano de lançamento: acesso completo, sem cobrança.
             </p>
@@ -813,7 +841,7 @@ function ConfiguracoesPage() {
             {/* PAY-06: até aqui não existia jeito nenhum de trocar cartão, e os
                 e-mails de cobrança recusada mandavam pra esta tela. Só aparece
                 pra quem já tem customer na Stripe. */}
-            {!assinaturaQuery.isLoading && assinatura?.temCobranca && (
+            {!assinaturaCarregando && assinatura?.temCobranca && (
               <button
                 type="button"
                 onClick={abrirPortal}
@@ -843,7 +871,7 @@ function ConfiguracoesPage() {
               titulo="Cancelar a assinatura?"
               descricao={
                 <>
-                  O {NOME_PLANO[plano] ?? "plano"} continua ativo até{" "}
+                  O {nomePlano ?? "plano"} continua ativo até{" "}
                   {assinatura?.currentPeriodEnd
                     ? formatarData(assinatura.currentPeriodEnd)
                     : "o fim do período já pago"}
@@ -862,7 +890,7 @@ function ConfiguracoesPage() {
                 verdade, mandada direto pro e-mail cadastrado, então não tem
                 mais nada pra baixar aqui dentro — só o aviso. Mesma
                 pré-condição de antes (plano pago, com cobrança de verdade). */}
-            {!assinaturaQuery.isLoading && plano !== "beta" && assinatura?.preco && (
+            {!assinaturaCarregando && plano !== "beta" && assinatura?.preco && (
               <p className="max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
                 A nota fiscal da sua assinatura é emitida automaticamente e chega no e-mail
                 cadastrado aqui na Pólia One.
@@ -870,7 +898,7 @@ function ConfiguracoesPage() {
             )}
           </div>
 
-          {!assinaturaQuery.isLoading && assinatura?.temCobranca && (
+          {!assinaturaCarregando && assinatura?.temCobranca && (
             <p className="mt-3 max-w-[52ch] font-sans text-[13px] text-[var(--ink-soft)]">
               Trocar o cartão, ver as faturas e mudar entre Premium e Pro acontece na página segura
               da Stripe, que abre numa nova aba.

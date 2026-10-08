@@ -578,6 +578,49 @@ export function secaoPorId(id: string): Secao | undefined {
   return SECOES.find((s) => s.id === id);
 }
 
+// ───────── Liberação dos módulos (QA-21, 07/10/2026) ─────────
+// Regra única, usada pelo mapa do /planejamento (chips e botões) e pela rota do
+// módulo (que antes abria qualquer número digitado na URL). `concluidas` é o
+// conjunto dos ids de seção concluídos, de TODOS os módulos: a seção "1.0" mora
+// no módulo 4 mas pode ter linha antiga com modulo = 1 no banco, então a conta
+// sai do id da seção, nunca da coluna `modulo`.
+
+/** Todas as seções do módulo estão concluídas. */
+export function moduloCompleto(n: number, concluidas: ReadonlySet<string>): boolean {
+  return secoesDoModulo(n).every((s) => concluidas.has(s.id));
+}
+
+/** Primeiro módulo com seção aberta; TOTAL_MODULOS + 1 quando os 6 fecharam. */
+export function moduloAtualDe(concluidas: ReadonlySet<string>): number {
+  for (let n = 1; n <= TOTAL_MODULOS; n++) if (!moduloCompleto(n, concluidas)) return n;
+  return TOTAL_MODULOS + 1;
+}
+
+/**
+ * Módulo pode ser aberto: é o módulo atual (o primeiro com seção aberta), um
+ * anterior a ele, ou um que já foi concluído (pode ser reaberto pra editar).
+ */
+export function moduloLiberado(n: number, concluidas: ReadonlySet<string>): boolean {
+  return n <= moduloAtualDe(concluidas) || moduloCompleto(n, concluidas);
+}
+
+/** Módulos anteriores a `n` que ainda não fecharam, em ordem. */
+export function modulosQueFaltamAntes(n: number, concluidas: ReadonlySet<string>): number[] {
+  const faltam: number[] = [];
+  for (let m = 1; m < n && m <= TOTAL_MODULOS; m++) {
+    if (!moduloCompleto(m, concluidas)) faltam.push(m);
+  }
+  return faltam;
+}
+
+/** "o Módulo 3 estiver concluído" / "os Módulos 2 e 3 estiverem concluídos". */
+export function textoModulosQueFaltam(faltam: readonly number[]): string {
+  if (faltam.length === 0) return "";
+  if (faltam.length === 1) return `o Módulo ${faltam[0]} estiver concluído`;
+  const lista = `${faltam.slice(0, -1).join(", ")} e ${faltam[faltam.length - 1]}`;
+  return `os Módulos ${lista} estiverem concluídos`;
+}
+
 // ───────── Ferramentas desbloqueadas ─────────
 export interface FerramentaPlan {
   nome: string;

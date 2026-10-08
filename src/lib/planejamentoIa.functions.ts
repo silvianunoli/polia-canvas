@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { gerarTexto } from "@/lib/gemini.server";
 import { flagAtivaServidor } from "@/lib/flags.server";
 import { MODULOS_SEM_IA, secaoPorId, secoesDoModulo } from "@/lib/planejamento";
+import { mesEmBrasilia } from "@/lib/data.functions";
 
 const FEATURE = "planejamento";
 
@@ -32,15 +33,10 @@ export function configDoPlano(plano: string | null | undefined): ConfigPlano {
   return CONFIG_POR_PLANO[plano ?? ""] ?? CONFIG_POR_PLANO.confere;
 }
 
-// "Mês de calendário" contado no relógio do servidor (UTC) — mesma
-// convenção simples de período de cobrança da maioria dos SaaS. Um caso de
-// borda perto da virada do mês num fuso muito adiantado/atrasado de UTC pode
-// discordar em poucas horas do "mês" que a usuária sente localmente; aceitável
-// pro v1 (documentado, não uma omissão silenciosa).
+// "Mês de calendário" no horário de Brasília (07/10/2026). Antes era o mês
+// UTC do servidor, e a cota renovava às 21h do último dia, não à meia-noite.
 export function periodoAtual(agora: Date): string {
-  const ano = agora.getUTCFullYear();
-  const mes = String(agora.getUTCMonth() + 1).padStart(2, "0");
-  return `${ano}-${mes}`;
+  return mesEmBrasilia(agora);
 }
 
 /**

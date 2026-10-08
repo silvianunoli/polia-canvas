@@ -10,6 +10,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { BTN_ACAO } from "@/lib/botoes";
 import { gerarRaioX } from "@/lib/raiox.functions";
+import { LIMITE_RAIOX_MENSAL, avisoDoMotivoRaioX, type MotivoRaioX } from "@/lib/raioxMotivo";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { temProjete } from "@/lib/planos";
@@ -67,6 +68,8 @@ interface RaioXRow {
   causas: string;
   sugestoes: { texto: string; rota: string | null }[];
   dado_ralo: boolean;
+  /** QA-30: frases fixas (meta/preço de hoje no lugar do mês). Ausente antes da migração 20261008190000. */
+  avisos?: string[] | null;
 }
 
 function RaioXPage() {
@@ -80,8 +83,12 @@ function RaioXPage() {
   const [selecionado, setSelecionado] = useState(opcoes[1] ?? opcoes[0]); // mês passado por padrão (já fechado)
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [motivo, setMotivo] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState<MotivoRaioX | null>(null);
   const [forcarMesAtual, setForcarMesAtual] = useState(false);
+  // Avisos da última geração, pra mostrar mesmo antes da coluna ia_raiox.avisos existir.
+  const [avisosGerados, setAvisosGerados] = useState<{ mes: string; avisos: string[] } | null>(
+    null,
+  );
 
   const mesLabel = `${selecionado.ano}-${String(selecionado.mes).padStart(2, "0")}`;
 
@@ -89,9 +96,11 @@ function RaioXPage() {
     queryKey: ["ia-raiox", userId, mesLabel],
     enabled: !!userId && ehProjete,
     queryFn: async () => {
+      // "*" de propósito: a coluna avisos só existe depois da migração
+      // 20261008190000, e pedir uma coluna que não existe derruba a leitura.
       const { data } = await supabase
         .from("ia_raiox")
-        .select("placar, causas, sugestoes, dado_ralo")
+        .select("*")
         .eq("user_id", userId!)
         .eq("mes", mesLabel)
         .maybeSingle();
@@ -108,14 +117,12 @@ function RaioXPage() {
         data: { mes: selecionado.mes, ano: selecionado.ano, forcar },
       });
       if (resultado.ok) {
+        setAvisosGerados({ mes: mesLabel, avisos: resultado.avisos });
         track("raiox_gerado", { mes: mesLabel });
         void registrar("feature_completed", { feature: "raiox", propriedades: { acao: "gerado" } });
         await qc.invalidateQueries({ queryKey: ["ia-raiox", userId, mesLabel] });
       } else {
         setMotivo(resultado.motivo);
-        if (resultado.motivo === "falha_ia") {
-          setErro("A Pólia One não conseguiu ler o seu mês agora. Tenta de novo.");
-        }
       }
     } catch {
       setErro("A Pólia One não conseguiu ler o seu mês agora. Tenta de novo.");
@@ -145,9 +152,19 @@ function RaioXPage() {
   }
 
   const raioX = raioXQuery.data;
+  const avisosDoRaioX = raioX && Array.isArray(raioX.avisos)
+    ? raioX.avisos
+    : avisosGerados?.mes === mesLabel
+      ? avisosGerados.avisos
+      : [];
   const mesAtual = new Date();
   const ehMesCorrente =
     selecionado.mes === mesAtual.getMonth() + 1 && selecionado.ano === mesAtual.getFullYear();
+  // QA-30: com um raio-x na tela, a recusa (teto, manutenção, plano) era
+  // guardada e nunca mostrada. Agora todo motivo vira texto.
+  const aviso = erro ?? (motivo ? avisoDoMotivoRaioX(motivo) : null);
+  const avisoEhErro = !!erro || motivo === "falha_ia";
+  const limiteEscrito = `Até ${LIMITE_RAIOX_MENSAL} gerações de raio-x por mês, somando todos os meses lidos.`;
 
   return (
     <PaginaLogada
@@ -190,6 +207,13 @@ function RaioXPage() {
                 Esse mês tem pouco registrado, a leitura é limitada.
               </p>
             )}
+            {avisosDoRaioX.length > 0 && (
+              <div className="mb-4 space-y-1 rounded-lg bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+                {avisosDoRaioX.map((a) => (
+                  <p key={a}>{a}</p>
+                ))}
+              </div>
+            )}
             <p className="text-[16px] leading-relaxed text-[var(--ink)]">{raioX.placar}</p>
             <p className="mt-3 text-[14px] leading-relaxed text-[var(--ink-soft)]">
               {raioX.causas}
@@ -211,17 +235,26 @@ function RaioXPage() {
                 ))}
               </ul>
             )}
+            {/* Mês corrente com raio-x já na tela: ela já escolheu ler o mês
+                aberto. Sem forçar, depois de um F5 o servidor respondia
+                "mês não fechado" e o botão parecia não fazer nada. */}
             <button
               type="button"
-              onClick={() => void gerar(forcarMesAtual)}
+              onClick={() => void gerar(forcarMesAtual || ehMesCorrente)}
               disabled={gerando}
               className="mt-5 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:opacity-60"
             >
               {gerando ? "Gerando outro..." : "Gerar outro"}
             </button>
-            {erro && (
-              <p role="alert" className="mt-2 text-[13px] text-[var(--danger)]">
-                {erro}
+            <p className="text-[12px] text-[var(--muted)]">{limiteEscrito}</p>
+            {aviso && (
+              <p
+                role="alert"
+                className={`mt-2 text-[13px] ${
+                  avisoEhErro ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"
+                }`}
+              >
+                {aviso}
               </p>
             )}
           </div>
@@ -263,7 +296,7 @@ function RaioXPage() {
             <Vazio
               icone={Sparkles}
               titulo="As gerações de raio-x deste mês acabaram."
-              texto="Dá pra reler os raio-x que já saíram escolhendo outro mês."
+              texto={`${limiteEscrito} Renovam no dia 1º. Dá pra reler os raio-x que já saíram escolhendo outro mês.`}
             />
           </div>
         ) : (
@@ -282,9 +315,15 @@ function RaioXPage() {
                   >
                     {gerando ? "A Pólia One está lendo o seu mês..." : "Gerar raio-x"}
                   </button>
-                  {erro && (
-                    <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
-                      {erro}
+                  <p className="mt-2 text-[12px] text-[var(--muted)]">{limiteEscrito}</p>
+                  {aviso && (
+                    <p
+                      role="alert"
+                      className={`mt-3 text-[13px] ${
+                        avisoEhErro ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"
+                      }`}
+                    >
+                      {aviso}
                     </p>
                   )}
                 </>

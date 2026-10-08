@@ -94,6 +94,37 @@ describe("montarPromptRaioX", () => {
     });
     expect(prompt).toContain("poucos lançamentos");
   });
+
+  it("QA-30: leva o aviso de meta de hoje pra IA não tratar como a do mês", () => {
+    const aviso = "A meta de agosto não ficou guardada; a leitura usa a meta de hoje.";
+    const { prompt } = montarPromptRaioX({
+      mes: "2026-08",
+      entradas: 1000,
+      saidas: 400,
+      resultado: 600,
+      metaAlvo: 2000,
+      metaAtual: 1000,
+      produtos: [],
+      dadoRalo: false,
+      avisos: [aviso],
+    });
+    expect(prompt).toContain(aviso);
+    expect(prompt).toContain("Não afirme que esse valor era o daquele mês");
+  });
+
+  it("sem avisos, o prompt não fala de limite dos dados", () => {
+    const { prompt } = montarPromptRaioX({
+      mes: "2026-08",
+      entradas: 1000,
+      saidas: 400,
+      resultado: 600,
+      metaAlvo: null,
+      metaAtual: null,
+      produtos: [],
+      dadoRalo: false,
+    });
+    expect(prompt).not.toContain("Limite dos dados");
+  });
 });
 
 describe("sanearRespostaRaioX", () => {

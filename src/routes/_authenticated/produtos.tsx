@@ -10,7 +10,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
 import { COTAS_CONFERE } from "@/lib/planos";
-import { calcularSobraPct, taxasDoBreakdown } from "@/lib/precificacao.functions";
+import { sobraDoProduto, taxasDoBreakdown } from "@/lib/precificacao.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
@@ -233,8 +233,14 @@ function ProdutoCard({
   // Mesma fonte que a calculadora: lê taxa/imposto do breakdown salvo (se o
   // produto veio de lá), pra não divergir do preço sugerido na mesma sessão.
   const { taxaVendaPct, impostosPct } = taxasDoBreakdown(produto.calculadora_breakdown);
-  const sobraInput = { precoVenda, precoCusto: custo, taxaVendaPct, impostosPct };
-  const sobraPct = calcularSobraPct(sobraInput);
+  // A barra usa a % presa em 0..100; o texto usa o valor com sinal, pra um
+  // produto vendido abaixo do custo não aparecer como "sobra 0%" (QA-27).
+  const sobra = sobraDoProduto({
+    precoVenda,
+    precoCusto: produto.preco_custo != null ? custo : null,
+    breakdown: produto.calculadora_breakdown,
+  });
+  const sobraPct = sobra?.pctBarra ?? 0;
   const temTaxas = taxaVendaPct > 0 || impostosPct > 0;
 
   return (
@@ -317,10 +323,16 @@ function ProdutoCard({
               />
             </div>
           )}
-          <p className="mt-1.5 text-[12px] text-[var(--muted)]">
-            {produto.preco_custo != null
-              ? `custo ${fmt(custo)} · sobra ${sobraPct}%${temTaxas ? "" : " (sem taxa/imposto)"}`
-              : "sem custo cadastrado · cadastre o custo pra saber quanto sobra"}
+          <p
+            className={`mt-1.5 text-[12px] ${
+              sobra?.prejuizo ? "text-[var(--danger)]" : "text-[var(--muted)]"
+            }`}
+          >
+            {sobra == null
+              ? "sem custo cadastrado · cadastre o custo pra saber quanto sobra"
+              : sobra.prejuizo
+                ? `custo ${fmt(custo)} · prejuízo de ${fmt(-sobra.valor)} por venda${temTaxas ? "" : " (sem taxa/imposto)"}`
+                : `custo ${fmt(custo)} · sobra ${sobra.pct}%${temTaxas ? "" : " (sem taxa/imposto)"}`}
           </p>
         </>
       )}

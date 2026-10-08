@@ -9,8 +9,9 @@ import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
-import { toastErro } from "@/lib/toast";
+import { BlockError } from "@/components/ui/BlockError";
 import { track } from "@/lib/analytics";
+import { ordenarPorUltimaAtividade, rotuloStatusChamado } from "@/lib/chamados";
 
 export const Route = createFileRoute("/_authenticated/chamados/")({
   head: () => ({
@@ -30,12 +31,6 @@ interface Ticket {
   created_at: string;
   updated_at: string;
 }
-
-const STATUS_LABEL: Record<Ticket["status"], string> = {
-  aberto: "Aberto",
-  em_andamento: "Em andamento",
-  resolvido: "Resolvido",
-};
 
 const STATUS_COR: Record<Ticket["status"], string> = {
   aberto: "bg-[var(--accent)] text-[var(--accent-ink)]",
@@ -57,12 +52,19 @@ function ChamadosPage() {
     queryKey: ["chamados-hub", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
+      // QA-36: mensagem nova não mexe em tickets.updated_at (a cliente não pode
+      // editar o chamado, só reabrir), então a ordem sai da última mensagem.
+      const { data, error } = await supabase
         .from("tickets")
-        .select("id, title, status, priority, created_at, updated_at")
-        .eq("user_id", userId!)
-        .order("updated_at", { ascending: false });
-      return (data ?? []) as Ticket[];
+        .select("id, title, status, priority, created_at, updated_at, ticket_messages(created_at)")
+        .eq("user_id", userId!);
+      // Leitura que falha não pode virar "Nenhum chamado ainda".
+      if (error) throw error;
+      return ordenarPorUltimaAtividade(
+        (data ?? []) as unknown as (Ticket & {
+          ticket_messages: { created_at: string }[] | null;
+        })[],
+      );
     },
   });
 
@@ -91,6 +93,11 @@ function ChamadosPage() {
       <div>
         {dadosQuery.isLoading ? (
           <p className="py-16 text-center font-sans text-[15px] text-[var(--muted)]">Carregando…</p>
+        ) : dadosQuery.isError ? (
+          <BlockError
+            message="A Pólia One não conseguiu abrir os seus chamados agora. Eles continuam guardados, é só a leitura que falhou."
+            onRetry={() => void dadosQuery.refetch()}
+          />
         ) : tickets.length === 0 ? (
           <Vazio
             icone={MessagesSquare}
@@ -117,13 +124,14 @@ function ChamadosPage() {
                   </p>
                   <p className="mt-0.5 font-sans text-[12px] text-[var(--muted)]">
                     aberto em {fmtData(t.created_at)}
+                    {t.ultimaMensagem ? ` · última mensagem em ${fmtData(t.ultimaMensagem)}` : ""}
                     {t.priority === "urgente" ? " · urgente" : ""}
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded px-3 py-1 font-sans text-[11px] font-medium ${STATUS_COR[t.status]}`}
+                  className={`shrink-0 rounded px-3 py-1 font-sans text-[11px] font-medium ${STATUS_COR[t.status] ?? STATUS_COR.aberto}`}
                 >
-                  {STATUS_LABEL[t.status]}
+                  {rotuloStatusChamado(t.status)}
                 </span>
               </Link>
             ))}

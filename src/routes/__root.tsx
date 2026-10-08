@@ -24,6 +24,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
+import { toastInfo } from "@/lib/toast";
 import { urlCanonica } from "@/lib/seo";
 import { jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "@/lib/jsonld";
 
@@ -249,13 +250,33 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {MODO_MANUTENCAO ? (
         <AutoChromeErrorPage code="manutencao" />
-      ) : !online ? (
-        <AutoChromeErrorPage
-          code="offline"
-          primaryAction={{ label: "Tentar de novo", onClick: () => window.location.reload() }}
-        />
       ) : (
-        <Outlet />
+        <>
+          {!online && (
+            <AutoChromeErrorPage
+              code="offline"
+              primaryAction={{
+                label: "Tentar de novo",
+                // Recarregar sem internet derrubava a página e o que estava
+                // digitado. Só recarrega se o navegador já vê conexão.
+                onClick: () => {
+                  if (navigator.onLine) window.location.reload();
+                  else
+                    toastInfo(
+                      "A conexão ainda não voltou. O que estava na tela continua guardado aqui.",
+                    );
+                },
+              }}
+            />
+          )}
+          {/* QA-14: a página fica montada (só escondida) por baixo da tela de
+              offline. Antes ela era trocada pela tela de offline, o formulário
+              desmontava e o texto ainda não salvo se perdia. display:contents
+              não muda o layout de nenhuma página quando está online. */}
+          <div style={{ display: online ? "contents" : "none" }}>
+            <Outlet />
+          </div>
+        </>
       )}
       <Toaster
         position="bottom-right"

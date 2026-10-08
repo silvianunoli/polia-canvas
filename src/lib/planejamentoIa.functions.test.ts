@@ -31,14 +31,23 @@ describe("configDoPlano", () => {
 });
 
 describe("periodoAtual", () => {
-  it("formata ano-mês em UTC com dois dígitos", () => {
-    expect(periodoAtual(new Date(Date.UTC(2026, 6, 27)))).toBe("2026-07");
-    expect(periodoAtual(new Date(Date.UTC(2026, 0, 5)))).toBe("2026-01");
+  it("formata ano-mês com dois dígitos", () => {
+    expect(periodoAtual(new Date(Date.UTC(2026, 6, 27, 15)))).toBe("2026-07");
+    expect(periodoAtual(new Date(Date.UTC(2026, 0, 5, 15)))).toBe("2026-01");
   });
 
-  it("mês de calendário vira exatamente na troca de mês (UTC)", () => {
+  it("mês vira à meia-noite de Brasília, não às 21h (meia-noite UTC)", () => {
+    // 31/07 20h59, 21h00 e 23h59 em Brasília = 23h59, 00h00 e 02h59 UTC.
     expect(periodoAtual(new Date(Date.UTC(2026, 6, 31, 23, 59)))).toBe("2026-07");
-    expect(periodoAtual(new Date(Date.UTC(2026, 7, 1, 0, 0)))).toBe("2026-08");
+    expect(periodoAtual(new Date(Date.UTC(2026, 7, 1, 0, 0)))).toBe("2026-07");
+    expect(periodoAtual(new Date(Date.UTC(2026, 7, 1, 2, 59)))).toBe("2026-07");
+    // 01/08 00h00 em Brasília = 03h00 UTC.
+    expect(periodoAtual(new Date(Date.UTC(2026, 7, 1, 3, 0)))).toBe("2026-08");
+  });
+
+  it("virada de ano: 31/12 23h59 em Brasília ainda é dezembro", () => {
+    expect(periodoAtual(new Date(Date.UTC(2027, 0, 1, 2, 59)))).toBe("2026-12");
+    expect(periodoAtual(new Date(Date.UTC(2027, 0, 1, 3, 0)))).toBe("2027-01");
   });
 });
 

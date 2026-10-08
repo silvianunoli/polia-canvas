@@ -5,6 +5,9 @@ import { registrar } from "@/lib/founder-eventos";
 import { Modal } from "@/components/ui/Modal";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { categoriaParaSalvar, clicarCategoria, type SelecaoCategoria } from "./categoriaLancamento";
+import { CATEGORIA_INSUMOS } from "@/lib/projecao.functions";
+import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
 
 /**
  * Modal de registro de entrada/saída. Vive fora da rota /financeiro desde
@@ -35,11 +38,14 @@ export interface Lancamento {
 
 // Semente padrão pra usuárias novas; some assim que o histórico real tiver categorias.
 const CATEGORIAS_ENTRADA = ["Venda de produto", "Prestação de serviço", "Outros"];
+// Insumos e Pró-labore vêm das mesmas constantes que a Projeção usa pra tirar
+// essas saídas dos custos fixos: renomear aqui sem renomear lá voltaria a
+// contar insumo duas vezes no ponto de empate.
 const CATEGORIAS_SAIDA = [
-  "Insumos / estoque",
+  CATEGORIA_INSUMOS,
   "Marketing",
   "Ferramentas e assinaturas",
-  "Pró-labore",
+  CATEGORIA_PRO_LABORE,
   "Outros",
 ];
 const NOVA_CATEGORIA = "+ nova categoria";
@@ -76,9 +82,14 @@ export function ModalLancamento({
   });
   const [data, setData] = useState(lancamentoEdit?.data ?? dataPadrao);
   const [descricao, setDescricao] = useState(lancamentoEdit?.descricao ?? prefill?.desc ?? "");
-  const [categoria, setCategoria] = useState(lancamentoEdit?.categoria ?? prefill?.categoria ?? "");
-  const [novaCategoriaAberta, setNovaCategoriaAberta] = useState(false);
-  const [novaCategoriaTexto, setNovaCategoriaTexto] = useState("");
+  // Chip marcado e "+ nova categoria" num estado só: as duas escolhas se
+  // excluem (regra em categoriaLancamento.ts, QA-28).
+  const [selecao, setSelecao] = useState<SelecaoCategoria>(() => ({
+    categoria: lancamentoEdit?.categoria ?? prefill?.categoria ?? "",
+    novaAberta: false,
+    novaTexto: "",
+  }));
+  const { categoria, novaAberta: novaCategoriaAberta, novaTexto: novaCategoriaTexto } = selecao;
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -101,17 +112,14 @@ export function ModalLancamento({
 
   const trocarTipo = (t: RegistrarTipo) => {
     setTipo(t);
-    setCategoria(""); // categorias dependem do tipo; limpa ao trocar
-    setNovaCategoriaAberta(false);
-    setNovaCategoriaTexto("");
+    // categorias dependem do tipo; limpa ao trocar
+    setSelecao({ categoria: "", novaAberta: false, novaTexto: "" });
   };
 
   const escolherCategoria = (c: string) => {
-    if (c === NOVA_CATEGORIA) {
-      setNovaCategoriaAberta(true);
-      return;
-    }
-    setCategoria(categoria === c ? "" : c);
+    setSelecao((atual) =>
+      clicarCategoria(atual, c === NOVA_CATEGORIA ? { tipo: "nova" } : { tipo: "chip", valor: c }),
+    );
   };
 
   const moedaFmt = (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -124,7 +132,7 @@ export function ModalLancamento({
     setCents(digitos ? Number(digitos) : 0);
   };
 
-  const categoriaFinal = novaCategoriaAberta ? novaCategoriaTexto.trim() : categoria;
+  const categoriaFinal = categoriaParaSalvar(selecao);
 
   // Descrição e categoria são opcionais: dá pra registrar só o valor em 2 toques.
   const faltaMsg = !cents ? "Falta o valor" : "";
@@ -138,7 +146,7 @@ export function ModalLancamento({
       valor: valorNum,
       data,
       descricao: descricao.trim() || null,
-      categoria: categoriaFinal || null,
+      categoria: categoriaFinal,
     };
     const { error } =
       edit && lancamentoEdit
@@ -264,8 +272,10 @@ export function ModalLancamento({
               key={c}
               type="button"
               onClick={() => escolherCategoria(c)}
-              aria-pressed={categoria === c}
-              className={`${BTN_MIUDO} ${categoria === c ? "!bg-[var(--secondary)]" : "bg-white"}`}
+              aria-pressed={!novaCategoriaAberta && categoria === c}
+              className={`${BTN_MIUDO} ${
+                !novaCategoriaAberta && categoria === c ? "!bg-[var(--secondary)]" : "bg-white"
+              }`}
             >
               {c}
             </button>
@@ -285,7 +295,10 @@ export function ModalLancamento({
               <input
                 autoFocus
                 value={novaCategoriaTexto}
-                onChange={(e) => setNovaCategoriaTexto(e.target.value)}
+                onChange={(e) => {
+                  const novaTexto = e.target.value;
+                  setSelecao((atual) => ({ ...atual, novaTexto }));
+                }}
                 placeholder="Nome da categoria"
                 maxLength={40}
                 className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"

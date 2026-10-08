@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { LayoutGrid, Plus, ArrowRight, Lock } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { COTAS_CONFERE } from "@/lib/planos";
+import { idsAcimaDaCota } from "@/lib/cotaExcedente";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({
@@ -59,7 +60,9 @@ function PlannerIndex() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const meta = useUserMeta();
-  const ehConfere = meta.plano === "confere";
+  // Enquanto o perfil carrega, plano cai no padrão "confere": sem esperar, quem
+  // paga via o cadeado piscar nos quadros extras.
+  const ehConfere = !meta.carregando && meta.plano === "confere";
 
   const quadrosQuery = useQuery({
     queryKey: ["quadros", userId],
@@ -117,13 +120,15 @@ function PlannerIndex() {
   // quadros (migração 20260727130000).
   const idsExcedentes = useMemo(() => {
     if (!ehConfere) return new Set<string>();
-    const porCriacao = [...quadros].sort((a, b) => a.created_at.localeCompare(b.created_at));
-    return new Set(porCriacao.slice(COTAS_CONFERE.planner).map((q) => q.id));
+    return idsAcimaDaCota(quadros, COTAS_CONFERE.planner);
   }, [ehConfere, quadros]);
   const cotaAtingida = ehConfere && quadros.length >= COTAS_CONFERE.planner;
 
   const [novoNome, setNovoNome] = useState("");
   const [criando, setCriando] = useState(false);
+  // QA-33: Enter duas vezes rápido criava 2 quadros. O `isPending` da mutation
+  // só muda no próximo render, tarde demais pro segundo Enter; a ref trava na hora.
+  const enviandoRef = useRef(false);
 
   const criar = useMutation({
     mutationFn: async () => {
@@ -153,7 +158,15 @@ function PlannerIndex() {
     onError: () => {
       toastErro("A Pólia One não conseguiu criar o quadro agora. Tenta de novo.");
     },
+    onSettled: () => {
+      enviandoRef.current = false;
+    },
   });
+  const criarUmaVez = () => {
+    if (enviandoRef.current || !novoNome.trim()) return;
+    enviandoRef.current = true;
+    criar.mutate();
+  };
 
   return (
     <PaginaLogada
@@ -203,7 +216,7 @@ function PlannerIndex() {
                 value={novoNome}
                 onChange={(e) => setNovoNome(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && novoNome.trim()) criar.mutate();
+                  if (e.key === "Enter") criarUmaVez();
                 }}
                 maxLength={60}
                 placeholder="Ex: Lançamento de inverno · Feira de artesanato · Conteúdo do mês"
@@ -211,7 +224,7 @@ function PlannerIndex() {
               />
               <button
                 type="button"
-                onClick={() => criar.mutate()}
+                onClick={criarUmaVez}
                 disabled={!novoNome.trim() || criar.isPending}
                 className={BTN_ACAO}
               >
