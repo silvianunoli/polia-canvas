@@ -23,6 +23,9 @@ import {
 const FEATURE = "raiox";
 const MODELO_PRO = "gemini-pro-latest";
 const LIMITE_MENSAL = LIMITE_RAIOX_MENSAL; // 1 geração + até 2 re-gerações, teto único (ia_uso)
+// O padrão de 20 s de gemini.server não cabe no raio-x: a resposta é maior que a
+// das outras features e o Pro devolvia 504 nas duas tentativas (teste de 08/10/2026).
+const TIMEOUT_RAIOX_MS = 50_000;
 
 // Só formata um mês já escolhido (data montada com Date.UTC no dia 1). Pra
 // saber o mês de AGORA use mesEmBrasilia: o Worker roda em UTC e o mês virava
@@ -448,6 +451,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
         systemInstruction,
         prompt,
         responseSchema: RESPONSE_SCHEMA,
+        timeoutMs: TIMEOUT_RAIOX_MS,
       });
       const json = JSON.parse(resultadoIa.texto);
       const saneado = sanearRespostaRaioX(json);

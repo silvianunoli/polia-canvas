@@ -41,10 +41,12 @@ const FEATURE = "raiox";
 // temProjete no app. Antes só "projete" entrava e a conta beta ficava sem.
 const PLANOS_COM_RAIOX = ["projete", "beta"];
 const CONCORRENCIA = 4;
-// Gemini tem timeout de 20 s; quem começa até aqui termina bem antes do teto
-// de wall-clock da edge function (150 s no plano mais baixo).
-const ORCAMENTO_MS = 90_000;
-const TIMEOUT_GEMINI_MS = 20_000;
+// Gemini tem timeout de 50 s; quem começa até aqui termina antes do teto de
+// wall-clock da edge function (150 s no plano mais baixo): 80 + 50 = 130 s.
+const ORCAMENTO_MS = 80_000;
+// 20 s não dava: o raio-x no modelo Pro devolvia 504 nas duas tentativas
+// (teste de 08/10/2026), porque o prazo vai pro Google como teto do servidor.
+const TIMEOUT_GEMINI_MS = 50_000;
 // Sem LIMITE_MENSAL aqui de propósito (07/10/2026): a geração automática do
 // mês fechado NÃO conta no limite de 3 gerações da usuária (ia_uso). O que
 // impede gerar duas vezes é a checagem de "já existe raio-x desse mês" abaixo.
