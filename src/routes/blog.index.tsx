@@ -7,7 +7,13 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import { BotaoCadastro, CORPO, Rotulo, Secao } from "@/components/landing/BlocosLanding";
-import { ChamadaBlog, FotoSil, ManchetePost, SumarioPosts } from "@/components/site/BlogBlocos";
+import {
+  ChamadaBlog,
+  FotoSil,
+  ManchetePost,
+  SumarioPosts,
+  TituloSecaoBlog,
+} from "@/components/site/BlogBlocos";
 import type { Tables } from "@/integrations/supabase/types";
 
 const TITULO = "Blog da Pólia · Preço, marca e o que sobra no fim do mês";
@@ -101,8 +107,9 @@ function BlogList() {
       <SiteHeader />
 
       <main id="conteudo">
-        {/* HERO: h1 e texto fora do Reveal, visíveis no HTML do servidor. */}
-        <Secao className="!pb-[clamp(32px,4vw,48px)] !pt-[clamp(40px,5vw,64px)]">
+        {/* HERO com fundo próprio: separa o título do blog do título do texto.
+            h1 e texto fora do Reveal, visíveis no HTML do servidor. */}
+        <Secao fundo="surface" className="!pb-[clamp(40px,5vw,64px)] !pt-[clamp(40px,5vw,64px)]">
           <div className="grid grid-cols-1 items-end gap-x-[clamp(32px,5vw,64px)] gap-y-8 md:grid-cols-[8fr_3fr]">
             <div>
               <Rotulo>Blog da Pólia</Rotulo>
@@ -160,7 +167,7 @@ function BlogList() {
           )}
         </Secao>
 
-        <Secao className="!pt-0">
+        <Secao className="!pt-[clamp(40px,5vw,64px)]">
           {erro ? (
             <Aviso titulo="Não deu pra carregar os textos agora.">
               <p className={`mt-2 ${CORPO}`}>Recarregar a página costuma resolver.</p>
@@ -188,12 +195,13 @@ function BlogList() {
             )
           ) : (
             <>
-              <div className="border-t border-[var(--line)] pt-10">
+              <TituloSecaoBlog>Texto mais recente</TituloSecaoBlog>
+              <div className="mt-4">
                 <ManchetePost post={manchete} />
               </div>
               {resto.length > 0 && (
                 <div className="mt-16">
-                  <Rotulo>Mais textos</Rotulo>
+                  <TituloSecaoBlog>Mais textos</TituloSecaoBlog>
                   <div className="mt-4">
                     <SumarioPosts posts={resto} />
                   </div>

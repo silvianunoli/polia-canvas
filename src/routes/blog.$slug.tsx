@@ -6,9 +6,14 @@ import { linkCanonico, urlCanonica, HOST_CANONICO } from "@/lib/seo";
 import { jsonLdBlogPosting, jsonLdBreadcrumb, tagJsonLd } from "@/lib/jsonld";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
-import { CONTAINER, SECAO, BTN_PRIMARIO, Eyebrow } from "@/components/site/Editorial";
+import { CONTAINER, SECAO, BTN_PRIMARIO } from "@/components/site/Editorial";
 import { Rotulo } from "@/components/landing/BlocosLanding";
-import { AssinaturaSil, ChamadaBlog, SumarioPosts } from "@/components/site/BlogBlocos";
+import {
+  AssinaturaSil,
+  ChamadaBlog,
+  SumarioPosts,
+  TituloSecaoBlog,
+} from "@/components/site/BlogBlocos";
 import type { ReactNode } from "react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -280,7 +285,7 @@ function BlogPost() {
         {related.length > 0 && (
           <section className={SECAO}>
             <div className={`${CONTAINER} max-w-[880px]`}>
-              <Eyebrow>Pra continuar</Eyebrow>
+              <TituloSecaoBlog>Pra continuar</TituloSecaoBlog>
               <div className="mt-4">
                 <SumarioPosts posts={related} resumo={false} />
               </div>

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { ArrowRight } from "lucide-react";
 import { BotaoCadastro, CORPO, H2, Rotulo, Secao } from "@/components/landing/BlocosLanding";
 import {
   MockCalculadoraHero,
@@ -56,23 +57,35 @@ const LINK_POST =
 const TITULO_HOVER =
   "decoration-[var(--secondary)] decoration-2 underline-offset-[6px] group-hover:underline";
 
-/** Texto mais recente, como manchete. Capa só entra quando é foto de verdade. */
+/**
+ * Texto mais recente, como manchete: bloco branco sobre o fundo da página, pra
+ * não se confundir com o título do blog (pedido da Sil, 07/10/2026). Destaque por
+ * fundo, sem borda nem faixa. Capa só entra quando é foto de verdade.
+ */
 export function ManchetePost({ post }: { post: PostResumo }) {
   return (
-    <Link to="/blog/$slug" params={{ slug: post.slug }} className={LINK_POST}>
+    <Link
+      to="/blog/$slug"
+      params={{ slug: post.slug }}
+      className={`${LINK_POST} rounded-xl bg-white p-[clamp(24px,4vw,48px)]`}
+    >
       <article
         className={`grid grid-cols-1 items-center gap-8 ${post.capa_url ? "md:grid-cols-[6fr_5fr]" : ""}`}
       >
         <div>
           {post.categoria && <Rotulo>{post.categoria}</Rotulo>}
-          <h2
-            className={`mt-4 max-w-[22ch] text-[clamp(32px,4vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance text-[var(--ink)] ${TITULO_HOVER}`}
+          <h3
+            className={`mt-4 max-w-[26ch] text-[clamp(26px,3vw,38px)] font-bold leading-[1.12] tracking-[-0.02em] text-balance text-[var(--ink)] ${TITULO_HOVER}`}
           >
             {post.titulo}
-          </h2>
-          {post.resumo && <p className={`mt-5 ${CORPO}`}>{post.resumo}</p>}
-          <div className="mt-5">
+          </h3>
+          {post.resumo && <p className={`mt-4 ${CORPO}`}>{post.resumo}</p>}
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-4">
             <Meta post={post} />
+            <span className="inline-flex items-center gap-1.5 text-[15px] font-semibold text-[var(--secondary-text)]">
+              Ler o texto
+              <ArrowRight size={16} aria-hidden="true" />
+            </span>
           </div>
         </div>
         {post.capa_url && (
@@ -123,6 +136,19 @@ export function LinhaPost({ post, resumo = true }: { post: PostResumo; resumo?: 
         )}
       </article>
     </Link>
+  );
+}
+
+/**
+ * Título de seção do blog ("Texto mais recente", "Mais textos", "Pra continuar").
+ * Cabinet e sem o tracinho: o rótulo com traço fica só pra categoria do texto,
+ * senão a seção parece mais uma categoria (pedido da Sil, 07/10/2026).
+ */
+export function TituloSecaoBlog({ children }: { children: ReactNode }) {
+  return (
+    <h2 className="text-[clamp(20px,2vw,24px)] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)]">
+      {children}
+    </h2>
   );
 }
 
