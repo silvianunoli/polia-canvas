@@ -2,7 +2,7 @@
 // Sem dependência de lib externa — só isso é usado no projeto (import de
 // respostas de pesquisa no admin).
 
-export function parseCsv(texto: string): string[][] {
+export function parseCsv(texto: string, separador: string = ","): string[][] {
   const linhas: string[][] = [];
   let campo = "";
   let linha: string[] = [];
@@ -26,7 +26,7 @@ export function parseCsv(texto: string): string[][] {
     }
     if (c === '"') {
       dentroAspas = true;
-    } else if (c === ",") {
+    } else if (c === separador) {
       linha.push(campo);
       campo = "";
     } else if (c === "\n") {
@@ -46,15 +46,21 @@ export function parseCsv(texto: string): string[][] {
   return linhas.filter((l) => l.some((c) => c.trim().length > 0));
 }
 
-// Escapa um campo pra CSV (RFC 4180): aspas quando tem vírgula, aspas ou quebra de linha.
-function escaparCampoCsv(valor: string): string {
-  if (/[",\n]/.test(valor)) return `"${valor.replace(/"/g, '""')}"`;
+// Escapa um campo pra CSV (RFC 4180): aspas quando tem separador, vírgula,
+// aspas ou quebra de linha.
+function escaparCampoCsv(valor: string, separador: string): string {
+  if (/[",\n]/.test(valor) || valor.includes(separador)) return `"${valor.replace(/"/g, '""')}"`;
   return valor;
 }
 
-export function gerarCsv(cabecalho: string[], linhas: string[][]): string {
+// Ponto e vírgula por padrão (08/10/2026, decisão da Sil): é o separador do
+// Excel em português. Com vírgula, o resumo pro contador abria tudo numa coluna
+// só, porque a vírgula aqui é a casa decimal ("1800,00").
+export function gerarCsv(cabecalho: string[], linhas: string[][], separador: string = ";"): string {
   const todas = [cabecalho, ...linhas];
-  return todas.map((linha) => linha.map(escaparCampoCsv).join(",")).join("\r\n");
+  return todas
+    .map((linha) => linha.map((campo) => escaparCampoCsv(campo, separador)).join(separador))
+    .join("\r\n");
 }
 
 // Baixa o CSV com BOM UTF-8 (senão o Excel abre acento quebrado no Windows).

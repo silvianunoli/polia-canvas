@@ -32,6 +32,16 @@ describe("formatarReais", () => {
   it("valor inválido não quebra a tela", () => {
     expect(formatarReais(Number.NaN)).toBe("R$ 0");
   });
+
+  it("sempreCentavos (Financeiro) mostra as duas casas até no valor redondo", () => {
+    const c = { sempreCentavos: true };
+    expect(formatarReais(150, c)).toBe("R$ 150,00");
+    expect(formatarReais(0, c)).toBe("R$ 0,00");
+    expect(formatarReais(-0.004, c)).toBe("R$ 0,00");
+    expect(formatarReais(Number.NaN, c)).toBe("R$ 0,00");
+    expect(formatarReais(-620, c)).toBe("-R$ 620,00");
+    expect(formatarReais(1384.56, c)).toBe("R$ 1.384,56");
+  });
 });
 
 describe("percentualDe", () => {

@@ -29,7 +29,8 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
  * o cartão de métrica linkando pra tela completa, que faz tudo isso e mais.
  */
 
-const fmtValor = formatarReais;
+// Lançamento sempre com centavos, igual ao Financeiro (decisão da Sil, 08/10/2026).
+const fmtValor = (valor: number) => formatarReais(valor, { sempreCentavos: true });
 
 function fmtDataCurta(iso: string) {
   const [, m, d] = iso.split("-").map(Number);

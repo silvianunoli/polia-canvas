@@ -73,11 +73,11 @@ interface MetaMesRow {
   valor_atual: number;
 }
 
-// Valor redondo sem centavos ("R$ 3.000", cabe nos cards de 32px); com
-// centavos, sempre duas casas. Formatador único do app desde 08/10/2026
-// (o Painel arredondava pra inteiro e mostrava outro número pro mesmo mês).
-const fmt = formatarReais;
-const fmtCentavos = formatarReais;
+// Sempre com centavos no Financeiro ("R$ 0,00", "+ R$ 150,00"), decisão da Sil
+// em 08/10/2026: antes "R$ 0" e "R$ 150" ficavam ao lado de "R$ 1.384,56".
+// Formatador único do app desde 08/10/2026, aqui com as duas casas fixas.
+const fmt = (valor: number) => formatarReais(valor, { sempreCentavos: true });
+const fmtCentavos = fmt;
 
 function fmtData(iso: string) {
   // iso = "YYYY-MM-DD"

@@ -53,11 +53,22 @@ describe("parseCsv", () => {
 
 describe("gerarCsv", () => {
   it("põe o cabeçalho na primeira linha e junta linhas com CRLF (RFC 4180)", () => {
-    expect(gerarCsv(["a", "b"], [["1", "2"]])).toBe("a,b\r\n1,2");
+    expect(gerarCsv(["a", "b"], [["1", "2"]])).toBe("a;b\r\n1;2");
   });
 
-  it("envolve em aspas o campo que tem vírgula", () => {
+  it("separa por ponto e vírgula por padrão: o valor com vírgula decimal fica numa coluna só", () => {
+    expect(gerarCsv(["Data", "Valor"], [["2026-09-05", "1800,00"]])).toBe(
+      'Data;Valor\r\n2026-09-05;"1800,00"',
+    );
+  });
+
+  it("aceita vírgula como separador quando pedido", () => {
+    expect(gerarCsv(["a", "b"], [["1", "2"]], ",")).toBe("a,b\r\n1,2");
+  });
+
+  it("envolve em aspas o campo que tem vírgula ou ponto e vírgula", () => {
     expect(gerarCsv(["x"], [["sim, claro"]])).toBe('x\r\n"sim, claro"');
+    expect(gerarCsv(["x"], [["a;b"]])).toBe('x\r\n"a;b"');
   });
 
   it("dobra as aspas internas e envolve o campo", () => {
@@ -77,7 +88,8 @@ describe("gerarCsv", () => {
       ["Ana", 'disse "oi", e foi', "a\nb"],
       ["", "vazio no começo", ""],
     ];
-    expect(parseCsv(gerarCsv(["n", "r", "q"], linhas))).toEqual([["n", "r", "q"], ...linhas]);
+    expect(parseCsv(gerarCsv(["n", "r", "q"], linhas), ";")).toEqual([["n", "r", "q"], ...linhas]);
+    expect(parseCsv(gerarCsv(["n", "r", "q"], linhas, ","))).toEqual([["n", "r", "q"], ...linhas]);
   });
 });
 

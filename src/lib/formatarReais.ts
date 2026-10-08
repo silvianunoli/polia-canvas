@@ -13,11 +13,17 @@
  * Sem `style: "currency"` de propósito: ele insere um espaço não separável
  * depois do "R$", e o resto do produto usa espaço comum.
  */
-export function formatarReais(valor: number): string {
-  if (!Number.isFinite(valor)) return "R$ 0";
+export function formatarReais(
+  valor: number,
+  // O Financeiro mostra sempre as duas casas ("R$ 0,00", "R$ 150,00"), decisão
+  // da Sil em 08/10/2026: tela de dinheiro lado a lado com "R$ 1.384,56".
+  opcoes: { sempreCentavos?: boolean } = {},
+): string {
+  const zero = opcoes.sempreCentavos ? "R$ 0,00" : "R$ 0";
+  if (!Number.isFinite(valor)) return zero;
   const centavos = Math.round(valor * 100);
-  if (centavos === 0) return "R$ 0";
-  const casas = centavos % 100 === 0 ? 0 : 2;
+  if (centavos === 0) return zero;
+  const casas = opcoes.sempreCentavos || centavos % 100 !== 0 ? 2 : 0;
   const corpo = (Math.abs(centavos) / 100).toLocaleString("pt-BR", {
     minimumFractionDigits: casas,
     maximumFractionDigits: casas,

@@ -190,9 +190,11 @@ function fimDoAcesso(s: Stripe.Subscription): string | null {
   return fim ? formatarDataBR(new Date(fim * 1000)) : null;
 }
 
-// Quem nunca pagou (incomplete_expired) volta pro Grátis; quem pagou e parou
-// de pagar (unpaid) fica como cancelada, igual ao customer.subscription.deleted.
-// Só mexe em plano pago: beta e contas liberadas à mão ficam como estão.
+// Quem pagou e parou de pagar (unpaid) fica como cancelada, igual ao
+// customer.subscription.deleted. Quem nunca pagou (incomplete_expired) não
+// mexe no plano: desde o QA-01 o plano pago só abre com pagamento, então o que
+// ela tem não veio desta assinatura. Antes ia pra "confere" e derrubava o
+// Premium/Pro liberado à mão de quem abria o checkout e desistia (PAY-30).
 async function rebaixarPlanoSemPagamento(
   userId: string,
   status: string,
@@ -200,11 +202,24 @@ async function rebaixarPlanoSemPagamento(
 ) {
   const jaTeveAcesso =
     status === "unpaid" || (statusAnterior !== null && STATUS_COM_ACESSO.includes(statusAnterior));
+  if (!jaTeveAcesso) return;
   await supabaseAdmin
     .from("profiles")
-    .update({ plano: jaTeveAcesso ? "cancelada" : "confere" })
+    .update({ plano: "cancelada" })
     .eq("id", userId)
     .in("plano", ["controle", "projete"]);
+}
+
+// A assinatura chegou a ser paga alguma vez? Fatura "paid" inclui a de valor
+// zero (cupom de 100% ou trial). Erro na leitura joga: o webhook devolve 500 e o
+// Stripe reentrega, em vez de chutar e cancelar o plano de quem pagou.
+async function assinaturaFoiPaga(subscriptionId: string): Promise<boolean> {
+  const faturas = await stripe.invoices.list({
+    subscription: subscriptionId,
+    status: "paid",
+    limit: 1,
+  });
+  return faturas.data.length > 0;
 }
 
 const msgErro = (err: unknown) => (err instanceof Error ? err.message : String(err)).slice(0, 200);
@@ -596,7 +611,8 @@ async function enviarEmailCancelamentoAgendado(email: string, dataFimAcesso: str
   const paragrafo1 = dataFimAcesso
     ? `O cancelamento está confirmado. O acesso à Pólia One continua até ${dataFimAcesso}.`
     : "O cancelamento está confirmado. O acesso à Pólia One continua até o fim do período já pago.";
-  const paragrafo2 = "Até lá, nada muda. Depois, a conta volta pro plano Grátis e os dados continuam guardados.";
+  const paragrafo2 =
+    "Até lá, nada muda. Depois, a conta volta pro plano Grátis e os dados continuam guardados.";
   return await enviarViaResend(
     "Cancelamento confirmado",
     `${paragrafo1}\n\n${paragrafo2}\n\n${SITE_URL}/configuracoes\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,
@@ -615,8 +631,7 @@ async function enviarEmailCancelamentoAgendado(email: string, dataFimAcesso: str
 // Texto curto do fim de verdade (customer.subscription.deleted). O aviso com a
 // data já saiu quando ela pediu o cancelamento; este só fecha o ciclo.
 async function enviarEmailAssinaturaTerminou(email: string) {
-  const paragrafo1 =
-    "A assinatura da Pólia One terminou, e a conta voltou pro plano Grátis.";
+  const paragrafo1 = "A assinatura da Pólia One terminou, e a conta voltou pro plano Grátis.";
   const paragrafo2 = "O Planejamento e os dados continuam guardados, caso queira voltar.";
   return await enviarViaResend(
     "Sua assinatura terminou",
@@ -1004,10 +1019,12 @@ Deno.serve(async (req) => {
         const currentPeriodEnd = data?.[0]?.current_period_end as string | undefined;
         // Assinatura que nunca foi paga (tentativa abandonada, cancelada pelo
         // iniciarAssinatura ao tentar de novo) não vira "cancelada" nem manda
-        // e-mail de cancelamento: a pessoa nunca teve o plano. Desde a correção
-        // do QA-01 o plano pago só é gravado com pagamento confirmado, então é
-        // ele que diz se houve acesso (o status da linha pode já ter chegado
-        // como "canceled" pelo customer.subscription.updated).
+        // e-mail de cancelamento: a pessoa nunca teve o plano por ela. Precisa
+        // das duas coisas: plano pago no perfil E fatura paga nesta assinatura.
+        // Só o plano não bastava: conta com Premium/Pro liberado à mão que
+        // abandonava o checkout virava "cancelada" (PAY-30, 08/10/2026). O
+        // status da linha não serve, porque pode já ter chegado como "canceled"
+        // pelo customer.subscription.updated.
         let tinhaAcesso = false;
         if (userId) {
           const { data: perfil } = await supabaseAdmin
@@ -1016,7 +1033,9 @@ Deno.serve(async (req) => {
             .eq("id", userId)
             .maybeSingle();
           const plano = (perfil as { plano?: string } | null)?.plano ?? "";
-          tinhaAcesso = plano === "controle" || plano === "projete";
+          tinhaAcesso =
+            (plano === "controle" || plano === "projete") &&
+            (await assinaturaFoiPaga(subscription.id));
         }
         if (userId && tinhaAcesso) {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);

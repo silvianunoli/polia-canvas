@@ -198,13 +198,17 @@ function ProjecaoPage() {
 
   const aplicarCenarioPreco = () => setTicketTxt(paraCampo(ticket * 1.1));
   const aplicarCenarioCusto = () => setCustoTxt(paraCampo(custo * 0.9));
+  // O salário fica: ele não é cenário, é o que ela quer tirar e ainda vai
+  // salvar. Antes "Voltar ao valor real" apagava o que ela tinha acabado de
+  // digitar e o "Salvar" seguinte gravava 0 (teste de 08/10/2026).
   const voltarAoValorReal = () => {
     setCustosFixosTxt(null);
-    setProLaboreTxt(null);
     setTicketTxt(null);
     setCustoTxt(null);
     setMetaTxt(null);
-    setErroValidacao({});
+    setErroValidacao(
+      (prev): Record<string, string> => (prev.proLabore ? { proLabore: prev.proLabore } : {}),
+    );
   };
 
   const confirmar = async () => {
