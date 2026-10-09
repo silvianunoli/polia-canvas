@@ -3,7 +3,15 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toastErro, toastSucesso } from "@/lib/toast";
-import { iniciarAssinatura, statusAssinatura, type PlanoAssinatura } from "@/lib/stripe.functions";
+import {
+  abrirTrocaDePlano,
+  cancelarAssinatura,
+  iniciarAssinatura,
+  statusAssinatura,
+  type PlanoAssinatura,
+} from "@/lib/stripe.functions";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
 import { gtagEvent } from "@/lib/gtag";
@@ -77,17 +85,19 @@ export const Route = createFileRoute("/_authenticated/assinar")({
       .maybeSingle();
     if (!profile?.onboarding_completed) throw redirect({ to: "/onboarding" });
 
-    // Tela só faz sentido pra quem está no Grátis. Checa `profiles.plano`
-    // (fonte única do direito de acesso, ver _authenticated.tsx) em vez de só
-    // `assinaturas.status`: conta beta não tem linha em `assinaturas`, mas já
-    // tem acesso completo e não devia ver o paywall.
+    // Quem pode ver esta tela (09/10/2026, pedido da Sil: os planos lado a
+    // lado em qualquer plano):
+    //  - Grátis e cancelada: escolhem e pagam aqui;
+    //  - Premium ou Pro com assinatura ativa no Stripe: veem o Premium e o Pro
+    //    lado a lado, o seu marcado, e trocam pelo portal (cobra a diferença);
+    //  - Premium liberado pela Pólia, sem assinatura, pedindo o Pro: compra o
+    //    Pro aqui pelo checkout normal.
+    // Beta e plano liberado sem cobrança (fora o caso acima) não têm o que
+    // comprar: vão pro Painel. `profiles.plano` é a fonte do direito de acesso
+    // (ver _authenticated.tsx).
     const plano = (profile as { plano?: string | null } | null)?.plano;
-    // Premium pedindo o Pro: a troca de plano mora no /upgrade (portal do
-    // Stripe), não aqui. Antes ia pro Painel e parecia que o botão não fazia
-    // nada (QA-06).
-    if (plano === "controle" && search.plano === "projete") {
-      // Com assinatura ativa, a troca é no portal (via /upgrade). Premium
-      // liberado pela Pólia, sem assinatura no Stripe, compra o Pro aqui.
+    if (ehBeta(plano)) throw redirect({ to: "/painel" });
+    if (plano === "controle" || plano === "projete") {
       const { data: assinatura } = await supabase
         .from("assinaturas" as never)
         .select("status")
@@ -95,11 +105,10 @@ export const Route = createFileRoute("/_authenticated/assinar")({
         .maybeSingle();
       const status = (assinatura as { status: string } | null)?.status;
       const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
-      if (ativa) throw redirect({ to: "/upgrade", search: { tier: "projete" } });
-      return;
+      if (ativa) return;
+      if (plano === "controle" && search.plano === "projete") return;
+      throw redirect({ to: "/painel" });
     }
-    const jaTemAcessoPago = ehBeta(plano) || tierDoPlano(plano) === "controle";
-    if (jaTemAcessoPago) throw redirect({ to: "/painel" });
   },
   component: AssinarPage,
 });
@@ -118,6 +127,62 @@ function AssinarPage() {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [planoNoCheckout, setPlanoNoCheckout] = useState<PlanoAssinatura | null>(null);
   const [ativando, setAtivando] = useState(false);
+  // Assinante (Premium ou Pro com assinatura ativa) vê os dois planos pagos
+  // e troca pelo portal; não passa pelo checkout de novo.
+  const meta = useUserMeta();
+  const planoAtual: TierId | null =
+    meta.plano === "controle" || meta.plano === "projete" ? meta.plano : null;
+  const assinante = !!planoAtual && !!assinaturaQuery.data?.ativa;
+  const [trocando, setTrocando] = useState<TierId | null>(null);
+  const cancelaNoFim = !!assinaturaQuery.data?.cancelAtPeriodEnd;
+  const dataFimPeriodo = assinaturaQuery.data?.currentPeriodEnd
+    ? new Date(assinaturaQuery.data.currentPeriodEnd).toLocaleDateString("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+      })
+    : "o fim do período já pago";
+  const [confirmandoCancelamento, setConfirmandoCancelamento] = useState(false);
+  const [cancelando, setCancelando] = useState(false);
+  const voltarProGratis = async () => {
+    setCancelando(true);
+    try {
+      const resultado = await cancelarAssinatura();
+      if (!resultado.ok) {
+        toastErro(
+          resultado.error ??
+            "A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.",
+        );
+        return;
+      }
+      track("assinatura_cancelada", { origem: "planos" });
+      toastSucesso("Assinatura cancelada. Fica ativa até o fim do período já pago.");
+      setConfirmandoCancelamento(false);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["assinatura-status"] }),
+        queryClient.invalidateQueries({ queryKey: ["user-meta"] }),
+      ]);
+    } catch {
+      toastErro("A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.");
+    } finally {
+      setCancelando(false);
+    }
+  };
+  const trocarPlano = async (destino: TierId) => {
+    setTrocando(destino);
+    track("upgrade_cta_clicado", { rota: search.rota, tier: destino, troca: true });
+    try {
+      const r = await abrirTrocaDePlano();
+      if (r.url) {
+        window.location.assign(r.url);
+        return;
+      }
+      toastErro(
+        r.error ?? "A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.",
+      );
+    } catch {
+      toastErro("A Pólia One não conseguiu abrir a troca de plano agora. Tenta de novo.");
+    }
+    setTrocando(null);
+  };
   const desmontou = useRef(false);
   useEffect(() => {
     // Volta pra false na remontagem do StrictMode (dev), senão a espera parava.
@@ -250,18 +315,25 @@ function AssinarPage() {
           </p>
         )}
         <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
-          Escolha seu plano
+          {assinante ? "Os planos da Pólia One" : "Escolha seu plano"}
         </h1>
         <p className="mb-8 text-center font-sans text-[16px] text-[var(--ink-soft)]">
           {ganhoDaTela
-            ? ganhoDaTela
-            : vemDoOnboarding
-              ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
-              : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
+            ? assinante
+              ? `${ganhoDaTela} A troca cobra só a diferença do mês.`
+              : ganhoDaTela
+            : assinante
+              ? "A troca é feita na página de pagamento, que cobra só a diferença do mês. O que já está guardado continua no lugar."
+              : vemDoOnboarding
+                ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
+                : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
         </p>
 
-        {/* Ciclo mensal/anual */}
-        <div className="mx-auto mb-8 flex w-fit gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]">
+        {/* Ciclo mensal/anual. Assinante escolhe o ciclo no portal, na troca. */}
+        <div
+          hidden={assinante}
+          className="mx-auto mb-8 flex w-fit gap-0.5 rounded-lg border border-[var(--line)] bg-white p-[3px]"
+        >
           {(
             [
               { id: "mensal", label: "Mensal" },
@@ -285,15 +357,32 @@ function AssinarPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
+          {/* Assinante também vê o Grátis (pedido da Sil, 09/10/2026: "precisa
+              aparecer tudo"). Voltar pro Grátis é cancelar a assinatura, com a
+              mesma confirmação de Configurações; o plano pago segue até o fim
+              do período já pago. */}
           <PlanoCard
             titulo="Grátis"
             preco="R$ 0"
             periodo="sem cobrança"
             features={FEATURES_GRATIS}
-            botaoLabel="Continuar no Grátis"
+            botaoLabel={
+              !assinante
+                ? "Continuar no Grátis"
+                : cancelaNoFim
+                  ? `Volta pro Grátis em ${dataFimPeriodo}`
+                  : "Voltar pro Grátis"
+            }
             carregando={false}
-            desabilitado={planoIniciando !== null || assinaturaQuery.isLoading}
-            onAssinar={() => navigate({ to: "/painel" })}
+            desabilitado={
+              planoIniciando !== null ||
+              trocando !== null ||
+              assinaturaQuery.isLoading ||
+              (assinante && cancelaNoFim)
+            }
+            onAssinar={() =>
+              assinante ? setConfirmandoCancelamento(true) : navigate({ to: "/painel" })
+            }
           />
           {(Object.entries(TIERS) as [TierId, (typeof TIERS)[TierId]][]).map(([tierId, tier]) => (
             <PlanoCard
@@ -302,20 +391,58 @@ function AssinarPage() {
               preco={fmtPreco(ciclo === "mensal" ? tier.precoMensal : tier.precoAnual)}
               periodo={ciclo === "mensal" ? "por mês" : "por ano"}
               features={tier.features}
-              destaque={tier.destaque}
-              carregando={planoIniciando === `${tierId}_${ciclo}`}
-              desabilitado={planoIniciando !== null || assinaturaQuery.isLoading}
-              foco={search.plano === tierId}
-              onAssinar={() => assinar(tierId)}
+              destaque={assinante ? false : tier.destaque}
+              carregando={assinante ? trocando === tierId : planoIniciando === `${tierId}_${ciclo}`}
+              desabilitado={
+                planoIniciando !== null ||
+                trocando !== null ||
+                assinaturaQuery.isLoading ||
+                (assinante && planoAtual === tierId)
+              }
+              foco={assinante ? false : search.plano === tierId}
+              seuPlano={assinante && planoAtual === tierId}
+              botaoLabel={
+                assinante
+                  ? planoAtual === tierId
+                    ? "Seu plano atual"
+                    : `Mudar pro ${tier.titulo}`
+                  : undefined
+              }
+              botaoPrincipal={assinante && planoAtual !== tierId}
+              onAssinar={() => (assinante ? trocarPlano(tierId) : assinar(tierId))}
             />
           ))}
         </div>
 
-        <p className="mt-6 text-center font-sans text-[12px] text-[var(--muted)]">
+        <p
+          hidden={assinante}
+          className="mt-6 text-center font-sans text-[12px] text-[var(--muted)]"
+        >
           cancela quando quiser, direto em Configurações. Volta pro plano Grátis, sem apagar o
           Planejamento.
         </p>
       </div>
+
+      <ConfirmarAcao
+        open={confirmandoCancelamento}
+        onOpenChange={(aberto) => {
+          if (!cancelando) setConfirmandoCancelamento(aberto);
+        }}
+        titulo="Voltar pro plano Grátis?"
+        descricao={
+          <>
+            O {planoAtual ? TIERS[planoAtual].titulo : "plano"} continua ativo até {dataFimPeriodo}.
+            Depois, a conta volta pro plano Grátis: os dados continuam guardados, e as telas do
+            plano pago deixam de abrir. Não tem nova cobrança.
+          </>
+        }
+        textoCancelar="Manter assinatura"
+        textoConfirmar="Voltar pro Grátis"
+        textoCarregando="Cancelando…"
+        destrutivo
+        carregando={cancelando}
+        onConfirmar={voltarProGratis}
+      />
 
       {clientSecret && (
         <AssinaturaCheckout
@@ -367,6 +494,8 @@ function PlanoCard({
   desabilitado,
   onAssinar,
   botaoLabel,
+  seuPlano,
+  botaoPrincipal,
 }: {
   titulo: string;
   preco: string;
@@ -378,8 +507,12 @@ function PlanoCard({
   desabilitado: boolean;
   onAssinar: () => void;
   botaoLabel?: string;
+  /** Assinante: marca o cartão do plano dela. */
+  seuPlano?: boolean;
+  /** Botão com rótulo próprio que ainda é a ação principal (ex.: "Mudar pro Pro"). */
+  botaoPrincipal?: boolean;
 }) {
-  const realcado = destaque || foco;
+  const realcado = destaque || foco || seuPlano;
   return (
     <div
       className={`flex flex-col rounded-2xl border p-6 ${
@@ -395,7 +528,7 @@ function PlanoCard({
           realcado ? "" : "invisible"
         }`}
       >
-        {destaque ? "Melhor valor" : "Escolhido"}
+        {seuPlano ? "Seu plano" : destaque ? "Melhor valor" : "Escolhido"}
       </span>
       <p className="text-[13px] font-accent font-bold uppercase tracking-[1px] text-[var(--ink-soft)]">
         {titulo}
@@ -418,7 +551,7 @@ function PlanoCard({
           type="button"
           onClick={onAssinar}
           disabled={desabilitado}
-          className={`${botaoLabel ? BTN_ACAO_CONTORNO : BTN_ACAO} w-full`}
+          className={`${botaoLabel && !botaoPrincipal ? BTN_ACAO_CONTORNO : BTN_ACAO} w-full`}
         >
           {carregando ? "Preparando..." : (botaoLabel ?? `Assinar o ${titulo}`)}
         </button>

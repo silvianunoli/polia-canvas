@@ -945,6 +945,13 @@ function ConfiguracoesPage() {
                 {portalCobrancaMutation.isPending ? "Abrindo..." : "Gerenciar assinatura"}
               </button>
             )}
+            {/* Premium e Pro veem os três planos lado a lado e trocam por lá
+                (09/10/2026). */}
+            {assinatura?.ativa && (
+              <LinkInterno href="/assinar" className={BTN_MIUDO}>
+                Ver os planos
+              </LinkInterno>
+            )}
             {assinatura?.ativa && !assinatura.cancelAtPeriodEnd && (
               <button
                 type="button"
