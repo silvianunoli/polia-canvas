@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { TIERS_PAGOS, ehBeta, temProjete, tierDoPlano, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { SeloCadeado } from "@/components/layout/UpgradeGate";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { abrirTrocaDePlano, statusAssinatura } from "@/lib/stripe.functions";
@@ -204,6 +204,21 @@ function UpgradePage() {
             className={`${BTN_ACAO} mt-6 w-full`}
           >
             Assinar o {tier.titulo}
+          </Link>
+        )}
+        {/* Quem está no Grátis escolhe entre os dois: esta tela vendia só o
+            plano que a rota pede, e o Premium sumia pra quem chegava por uma
+            tela do Pro (achado da Sil, 09/10/2026). O /assinar mostra os dois
+            lado a lado. Premium pedindo o Pro não vê: ela já escolheu. */}
+        {!carregandoPlano && !trocaDePlano && !queroProSendoPremium && (
+          <Link
+            to="/assinar"
+            onClick={() =>
+              track("upgrade_cta_clicado", { rota: search.rota, tier: tierId, comparar: true })
+            }
+            className={`${BTN_ACAO_CONTORNO} mt-3 w-full`}
+          >
+            Ver o Premium e o Pro lado a lado
           </Link>
         )}
         <Link
