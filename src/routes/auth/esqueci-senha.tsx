@@ -90,8 +90,10 @@ function EsqueciSenhaPage() {
               />
               <TurnstileCampo captcha={captcha} />
               <div className="mt-1">
-                <AuthButton type="submit" fullWidth loading={loading}>
-                  {loading ? (
+                <AuthButton type="submit" fullWidth loading={loading} disabled={!captchaPronto}>
+                  {!captchaPronto ? (
+                    "Verificando que não é um robô..."
+                  ) : loading ? (
                     "Enviando..."
                   ) : (
                     <>

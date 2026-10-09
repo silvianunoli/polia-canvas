@@ -21,6 +21,7 @@ import { senhaCumpreRequisitos } from "@/lib/senha";
 import { emailJaTemConta } from "@/lib/signup";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
+import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
 import {
   campoDeBusca,
@@ -75,6 +76,8 @@ function CadastroPage() {
   const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);
   const captcha = useCaptcha();
+  // Botão só libera com o token do Turnstile (ou depois da espera máxima).
+  const captchaPronto = useCaptchaPronto(captcha);
   const [googleLoading, setGoogleLoading] = useState(false);
   const nomeRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -258,8 +261,10 @@ function CadastroPage() {
 
         <TurnstileCampo captcha={captcha} />
         <div className="mt-1">
-          <AuthButton type="submit" fullWidth loading={loading}>
-            {loading ? (
+          <AuthButton type="submit" fullWidth loading={loading} disabled={!captchaPronto}>
+            {!captchaPronto ? (
+              "Verificando que não é um robô..."
+            ) : loading ? (
               "Criando..."
             ) : (
               <>

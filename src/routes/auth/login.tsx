@@ -358,9 +358,18 @@ function LoginPage() {
             )}
 
             <TurnstileCampo captcha={captcha} />
-            <AuthButton type="submit" fullWidth loading={loading} disabled={lockoutCooldown > 0}>
+            {/* Sem esperar o token, o clique saía sem captcha e o Supabase
+                recusava (captcha_failed, visto nos logs do teste de 09/10). */}
+            <AuthButton
+              type="submit"
+              fullWidth
+              loading={loading}
+              disabled={lockoutCooldown > 0 || !captchaPronto}
+            >
               {lockoutCooldown > 0 ? (
                 `Tenta de novo em ${lockoutCooldown}s`
+              ) : !captchaPronto ? (
+                "Verificando que não é um robô..."
               ) : loading ? (
                 "Entrando..."
               ) : (
@@ -415,8 +424,15 @@ function LoginPage() {
               disabled={recuperar.loading}
             />
             <TurnstileCampo captcha={recuperar.captcha} />
-            <AuthButton type="submit" fullWidth loading={recuperar.loading}>
-              {recuperar.loading ? (
+            <AuthButton
+              type="submit"
+              fullWidth
+              loading={recuperar.loading}
+              disabled={!recuperar.captchaPronto}
+            >
+              {!recuperar.captchaPronto ? (
+                "Verificando que não é um robô..."
+              ) : recuperar.loading ? (
                 "Enviando..."
               ) : (
                 <>
