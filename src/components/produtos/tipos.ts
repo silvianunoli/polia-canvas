@@ -64,3 +64,11 @@ export function num(s: string) {
   const v = parseFloat(s.replace(",", "."));
   return Number.isFinite(v) ? v : 0;
 }
+
+// "Coloque um número." inline — negativo ou texto não-numérico num campo que
+// já tem algo digitado (campo vazio não é erro, é só ainda-não-preenchido).
+export function numInvalido(s: string): boolean {
+  if (!s.trim()) return false;
+  const v = parseFloat(s.replace(",", "."));
+  return !Number.isFinite(v) || v < 0;
+}

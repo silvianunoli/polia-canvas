@@ -8,6 +8,11 @@ import {
   taxasDoBreakdown,
   simularDesconto,
   sobraDoProduto,
+  custoNaPeca,
+  somarInsumos,
+  maoDeObraPorPeca,
+  custoDiretoDoProduto,
+  type CalculadoraBreakdown,
   type EncomendaInput,
 } from "./precificacao.functions";
 
@@ -224,5 +229,52 @@ describe("sobraDoProduto (QA-27)", () => {
     const r = sobraDoProduto({ precoVenda: 30, precoCusto: 0, breakdown: null })!;
     expect(r.valor).toBe(30);
     expect(r.pct).toBe(100);
+  });
+});
+
+describe("custo direto detalhado (09/10/2026)", () => {
+  it("material de pacote: R$ 40 em 500 folhas, 40 por peça = R$ 3,20", () => {
+    expect(custoNaPeca({ pago: 40, rende: 500, usoPorPeca: 40 })).toBeCloseTo(3.2, 10);
+  });
+
+  it("'veio quanto' vazio conta como 1: o preço já é de uma unidade", () => {
+    expect(custoNaPeca({ pago: 2.5, rende: 0, usoPorPeca: 2 })).toBe(5);
+  });
+
+  it("sem uso por peça ou sem preço, a linha não entra na conta", () => {
+    expect(custoNaPeca({ pago: 40, rende: 500, usoPorPeca: 0 })).toBe(0);
+    expect(custoNaPeca({ pago: 0, rende: 500, usoPorPeca: 40 })).toBe(0);
+  });
+
+  it("soma as linhas", () => {
+    expect(
+      somarInsumos([
+        { pago: 40, rende: 500, usoPorPeca: 40 },
+        { pago: 18, rende: 100, usoPorPeca: 0.5 },
+      ]),
+    ).toBeCloseTo(3.29, 10);
+  });
+
+  it("mão de obra pelo tempo: 45 min a R$ 40/h = R$ 30", () => {
+    expect(maoDeObraPorPeca(45, 40)).toBe(30);
+    expect(maoDeObraPorPeca(45, 0)).toBe(0);
+    expect(maoDeObraPorPeca(0, 40)).toBe(0);
+  });
+
+  it("custo direto salvo com 4 casas bate com o preco_custo e a Projeção tira o rateio", () => {
+    const bk: CalculadoraBreakdown = {
+      perfil: "produto",
+      valores: {
+        materiaPrima: "3.2867", // detalhado: 3,28666...
+        embalagem: "1.3333",
+        maoObra: "30",
+        despesasFixas: "300",
+        qtd: "50",
+        materiaPrimaDetalhada: "1",
+        maoObraDetalhada: "1",
+      },
+    };
+    const custoSalvo = Math.round((3.286666 + 1.333333 + 30 + 6) * 100) / 100;
+    expect(custoDiretoDoProduto(custoSalvo, bk)).toBeCloseTo(34.62, 2);
   });
 });

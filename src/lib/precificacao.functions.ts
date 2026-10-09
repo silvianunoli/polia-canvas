@@ -191,6 +191,32 @@ export function rateioDoBreakdown(bk: CalculadoraBreakdown | null | undefined): 
   return 0;
 }
 
+// ── Detalhamento do custo direto (09/10/2026, perfil Produto) ──
+// Material vem em pacote e é usado aos poucos: "paguei R$ 40 em 500 folhas e
+// uso 40 por caderno" = R$ 3,20 na peça. "Veio quanto" vazio ou zero conta
+// como 1 (o preço já é de uma unidade). Vale pra matéria-prima e embalagem.
+export interface ItemInsumoNum {
+  pago: number;
+  rende: number;
+  usoPorPeca: number;
+}
+
+export function custoNaPeca(item: ItemInsumoNum): number {
+  if (!(item.pago > 0) || !(item.usoPorPeca > 0)) return 0;
+  const rende = item.rende > 0 ? item.rende : 1;
+  return (item.pago / rende) * item.usoPorPeca;
+}
+
+export function somarInsumos(itens: ItemInsumoNum[]): number {
+  return itens.reduce((acc, it) => acc + custoNaPeca(it), 0);
+}
+
+// Mão de obra de uma peça pelo tempo: 45 min a R$ 40/h = R$ 30.
+export function maoDeObraPorPeca(minutos: number, valorHora: number): number {
+  if (!(minutos > 0) || !(valorHora > 0)) return 0;
+  return (minutos / 60) * valorHora;
+}
+
 // ── Modo Encomenda (Projete): material por item + trabalho por hora + custos
 // extras, na mesma fórmula "por dentro" acima — sem conta paralela. O piso é
 // o mesmo cálculo do preço sugerido, só que sem a margem (quantoSobraPct).

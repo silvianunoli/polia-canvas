@@ -12,6 +12,7 @@ import {
   calcularTaxas,
   calcularEncomenda,
   calcularRateio,
+  maoDeObraPorPeca,
   simularDesconto,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
@@ -22,10 +23,12 @@ import {
   type ChaveCustoFixo,
 } from "@/lib/custosFixos.functions";
 import { BlocoCustosFixos, type DetalheFixos } from "./BlocoCustosFixos";
+import { BlocoInsumos, BlocoMaoDeObra } from "./BlocoInsumos";
+import { totalDosInsumos, type ItemInsumo } from "./insumos";
 import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
-import { fmt, num, type Prefill, type Produto } from "./tipos";
+import { fmt, num, numInvalido, type Prefill, type Produto } from "./tipos";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
 
@@ -93,6 +96,18 @@ export function Calculadora({
   const [embalagem, setEmbalagem] = useState(() => v("embalagem"));
   const [maoObra, setMaoObra] = useState(() => v("maoObra"));
   const [outrosDiretos, setOutrosDiretos] = useState(() => v("outrosDiretos"));
+  // Detalhamento do custo direto (09/10/2026): matéria-prima e embalagem pelo
+  // pacote, mão de obra pelo tempo. Detalhado, o campo de total vira a conta.
+  const [mpDetalhada, setMpDetalhada] = useState(() => v("materiaPrimaDetalhada") === "1");
+  const [itensMp, setItensMp] = useState<ItemInsumo[]>(() =>
+    parseItens<ItemInsumo>(v("itensMateriaPrima") || "[]"),
+  );
+  const [embDetalhada, setEmbDetalhada] = useState(() => v("embalagemDetalhada") === "1");
+  const [itensEmb, setItensEmb] = useState<ItemInsumo[]>(() =>
+    parseItens<ItemInsumo>(v("itensEmbalagem") || "[]"),
+  );
+  const [maoObraDetalhada, setMaoObraDetalhada] = useState(() => v("maoObraDetalhada") === "1");
+  const [minutosPorPeca, setMinutosPorPeca] = useState(() => v("minutosPorPeca"));
   const [qtd, setQtd] = useState(() => v("qtd"));
   const [proLabore, setProLabore] = useState(() => v("proLabore"));
   const [taxaVenda, setTaxaVenda] = useState(() => v("taxaVenda"));
@@ -122,6 +137,11 @@ export function Calculadora({
     ),
   );
   const fixosMes = fixosDetalhado ? somarCustosFixos(fixosDetalhe) : num(despesasFixas);
+  const materiaPrimaVal = mpDetalhada ? totalDosInsumos(itensMp) : num(materiaPrima);
+  const embalagemVal = embDetalhada ? totalDosInsumos(itensEmb) : num(embalagem);
+  const maoObraVal = maoObraDetalhada
+    ? maoDeObraPorPeca(num(minutosPorPeca), num(valorHora))
+    : num(maoObra);
 
   // ── Perfil Encomenda (Pro) ──
   // valorHora/horas são os MESMOS estados do perfil Serviço acima (de propósito:
@@ -177,7 +197,7 @@ export function Calculadora({
   // Fórmula "preço por dentro": taxa, imposto e lucro são % do PREÇO final,
   // então o preço = custo / (1 − soma_dos_percentuais/100).
   const produtoCalc = useMemo(() => {
-    const custoDireto = num(materiaPrima) + num(embalagem) + num(maoObra) + num(outrosDiretos);
+    const custoDireto = materiaPrimaVal + embalagemVal + maoObraVal + num(outrosDiretos);
     const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: num(qtd) });
     const rateioSalario = calcularRateio({
       custosFixosMes: 0,
@@ -212,9 +232,9 @@ export function Calculadora({
       invalido,
     };
   }, [
-    materiaPrima,
-    embalagem,
-    maoObra,
+    materiaPrimaVal,
+    embalagemVal,
+    maoObraVal,
     outrosDiretos,
     fixosMes,
     proLabore,
@@ -367,14 +387,38 @@ export function Calculadora({
     return r;
   }
 
+  // Custo direto detalhado: o total efetivo vai nas chaves de sempre
+  // (materiaPrima/embalagem/maoObra, lidas por custoDiretoDoProduto) com 4
+  // casas, pra soma bater com o preco_custo salvo; os detalhes vão junto.
+  const comoTexto = (n: number) => String(Math.round(n * 10000) / 10000);
+  function diretosParaBreakdown(): Record<string, string> {
+    const r: Record<string, string> = {
+      materiaPrima: mpDetalhada ? comoTexto(materiaPrimaVal) : materiaPrima,
+      embalagem: embDetalhada ? comoTexto(embalagemVal) : embalagem,
+      maoObra: maoObraDetalhada ? comoTexto(maoObraVal) : maoObra,
+    };
+    if (mpDetalhada) {
+      r.materiaPrimaDetalhada = "1";
+      r.itensMateriaPrima = JSON.stringify(itensMp);
+    }
+    if (embDetalhada) {
+      r.embalagemDetalhada = "1";
+      r.itensEmbalagem = JSON.stringify(itensEmb);
+    }
+    if (maoObraDetalhada) {
+      r.maoObraDetalhada = "1";
+      r.minutosPorPeca = minutosPorPeca;
+      r.valorHora = valorHora;
+    }
+    return r;
+  }
+
   function buildBreakdown(): CalculadoraBreakdown {
     if (perfil === "produto") {
       return {
         perfil,
         valores: {
-          materiaPrima,
-          embalagem,
-          maoObra,
+          ...diretosParaBreakdown(),
           outrosDiretos,
           ...fixosParaBreakdown(),
           proLabore,
@@ -465,6 +509,51 @@ export function Calculadora({
     }
     track("produto_preco_recalculado");
     onAtualizado?.();
+  };
+
+  // Valor da sua hora: o MESMO estado em Produto (mão de obra pelo tempo),
+  // Serviço e Encomenda. Desde 09/10/2026 o "usar como meu valor-hora padrão"
+  // aparece nos três e em todo plano (antes só na Encomenda, Pro).
+  const campoValorHora = (onde: PerfilCalc, dica?: string) => {
+    const id = `calc-valor-hora-${onde}`;
+    return (
+      <div>
+        <label htmlFor={id} className="mb-1.5 block text-[12px] font-medium text-[var(--ink-soft)]">
+          Valor da sua hora (R$)
+        </label>
+        <input
+          id={id}
+          ref={onde === "encomenda" ? valorHoraFocusRef : undefined}
+          type="number"
+          inputMode="decimal"
+          value={valorHora}
+          onChange={(e) => setValorHora(e.target.value)}
+          disabled={valorHoraPadraoCarregando && !valorHora}
+          aria-describedby={dica ? `${id}-dica` : undefined}
+          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
+          placeholder={valorHoraPadraoCarregando && !valorHora ? "carregando..." : "0"}
+        />
+        {dica && (
+          <p id={`${id}-dica`} className="mt-1.5 text-[12.5px] text-[var(--muted)]">
+            {dica}
+          </p>
+        )}
+        {userId && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
+          <button
+            type="button"
+            onClick={() => void salvarValorHoraPadrao()}
+            disabled={salvandoValorHora}
+            className="inline-flex min-h-11 items-center text-[12px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-wait disabled:opacity-60"
+          >
+            {salvandoValorHora
+              ? "salvando..."
+              : valorHoraSalvo
+                ? "valor-hora padrão salvo"
+                : "usar como meu valor-hora padrão"}
+          </button>
+        )}
+      </div>
+    );
   };
 
   const abasDisponiveis: PerfilCalc[] = ehProjete
@@ -579,13 +668,40 @@ export function Calculadora({
       {perfil === "produto" ? (
         <div id="calc-painel-produto" role="tabpanel" aria-labelledby="calc-tab-produto">
           <GrupoCalc titulo="Custos diretos (por unidade)">
-            <CampoNum
+            <BlocoInsumos
               label="Matéria-prima / insumos (R$)"
-              value={materiaPrima}
-              onChange={setMateriaPrima}
+              total={materiaPrima}
+              onTotal={setMateriaPrima}
+              detalhado={mpDetalhada}
+              onDetalhado={setMpDetalhada}
+              itens={itensMp}
+              onItens={setItensMp}
+              exemploNome="Ex: Papel pólen"
+              exemploUnidade="folhas"
+              rotuloAdicionar="Adicionar material"
             />
-            <CampoNum label="Embalagem (R$)" value={embalagem} onChange={setEmbalagem} />
-            <CampoNum label="Mão de obra por unidade (R$)" value={maoObra} onChange={setMaoObra} />
+            <BlocoInsumos
+              label="Embalagem (R$)"
+              total={embalagem}
+              onTotal={setEmbalagem}
+              detalhado={embDetalhada}
+              onDetalhado={setEmbDetalhada}
+              itens={itensEmb}
+              onItens={setItensEmb}
+              exemploNome="Ex: Caixinha kraft"
+              exemploUnidade="caixas"
+              rotuloAdicionar="Adicionar item de embalagem"
+            />
+            <BlocoMaoDeObra
+              total={maoObra}
+              onTotal={setMaoObra}
+              detalhado={maoObraDetalhada}
+              onDetalhado={setMaoObraDetalhada}
+              minutos={minutosPorPeca}
+              onMinutos={setMinutosPorPeca}
+              valorHora={valorHora}
+              campoValorHora={campoValorHora("produto")}
+            />
             <CampoNum
               label="Outros custos diretos (R$)"
               value={outrosDiretos}
@@ -606,7 +722,7 @@ export function Calculadora({
             </div>
             <CampoNum
               label="Pró-labore (seu salário) (R$)"
-              dica="Quanto quer tirar pra você por mês. Se a sua mão de obra já entra por unidade, deixe em branco."
+              dica="Quanto quer tirar pra você por mês. Se a sua hora já entra na mão de obra de cada peça, deixe em branco pra não cobrar duas vezes."
               value={proLabore}
               onChange={setProLabore}
             />
@@ -630,12 +746,10 @@ export function Calculadora({
       ) : perfil === "servico" ? (
         <div id="calc-painel-servico" role="tabpanel" aria-labelledby="calc-tab-servico">
           <GrupoCalc titulo="Seu trabalho">
-            <CampoNum
-              label="Valor da sua hora (R$)"
-              dica="O que quer ganhar por hora. Os custos fixos entram mais abaixo."
-              value={valorHora}
-              onChange={setValorHora}
-            />
+            {campoValorHora(
+              "servico",
+              "O que quer ganhar por hora. Os custos fixos entram mais abaixo.",
+            )}
             <CampoNum label="Horas estimadas no serviço" value={horas} onChange={setHoras} />
           </GrupoCalc>
           <GrupoCalc titulo="Custos do projeto">
@@ -733,39 +847,7 @@ export function Calculadora({
           <GrupoCalc titulo="Seu trabalho">
             {/* <div> + <label htmlFor>, não <label> envolvendo o botão "usar como
                 padrão": o texto dele entrava no nome acessível do campo. */}
-            <div>
-              <label
-                htmlFor="calc-valor-hora-encomenda"
-                className="mb-1 block text-[12px] text-[var(--muted)]"
-              >
-                Valor da sua hora (R$)
-              </label>
-              <input
-                id="calc-valor-hora-encomenda"
-                ref={valorHoraFocusRef}
-                type="number"
-                inputMode="decimal"
-                value={valorHora}
-                onChange={(e) => setValorHora(e.target.value)}
-                disabled={valorHoraPadraoCarregando && !valorHora}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
-                placeholder={valorHoraPadraoCarregando && !valorHora ? "carregando..." : "0"}
-              />
-              {ehProjete && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
-                <button
-                  type="button"
-                  onClick={() => void salvarValorHoraPadrao()}
-                  disabled={salvandoValorHora}
-                  className="inline-flex min-h-11 items-center text-[12px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-wait disabled:opacity-60"
-                >
-                  {salvandoValorHora
-                    ? "salvando..."
-                    : valorHoraSalvo
-                      ? "valor-hora padrão salvo"
-                      : "usar como meu valor-hora padrão"}
-                </button>
-              )}
-            </div>
+            {campoValorHora("encomenda")}
             <CampoNum label="Horas estimadas" value={horas} onChange={setHoras} />
           </GrupoCalc>
           {encomendaSemValorHora && (
@@ -1012,14 +1094,6 @@ function LinhaCalc({ label, valor }: { label: string; valor: string }) {
       <span className="font-medium text-[var(--ink)]">{valor}</span>
     </p>
   );
-}
-
-// "Coloque um número." inline — negativo ou texto não-numérico num campo que
-// já tem algo digitado (campo vazio não é erro, é só ainda-não-preenchido).
-function numInvalido(s: string): boolean {
-  if (!s.trim()) return false;
-  const v = parseFloat(s.replace(",", "."));
-  return !Number.isFinite(v) || v < 0;
 }
 
 /* ============== Modo Encomenda: linha de material/extra ============== */
