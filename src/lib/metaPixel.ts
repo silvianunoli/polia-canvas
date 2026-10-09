@@ -66,3 +66,20 @@ export function pixelLead(eventId: string) {
   if (typeof window === "undefined" || !window.fbq) return;
   window.fbq("track", "Lead", {}, { eventID: eventId });
 }
+
+// Cadastro grátis concluído (e-mail ou Google): é a conversão que os anúncios
+// do Meta otimizam (09/10/2026). Dispara nos mesmos pontos do sign_up do GA4.
+// Sem dado pessoal: só o método.
+export function pixelCadastro(metodo: "email" | "google") {
+  if (typeof window === "undefined" || !window.fbq) return;
+  window.fbq("track", "CompleteRegistration", { content_name: metodo, status: true });
+}
+
+// Assinatura paga confirmada. O eventId (session_id do Stripe, quando existe)
+// faz o Meta ignorar a mesma compra contada de novo num recarregar da página.
+export function pixelCompra(valor: number, plano: string, eventId?: string) {
+  if (typeof window === "undefined" || !window.fbq) return;
+  const dados = { value: valor, currency: "BRL", content_name: plano };
+  if (eventId) window.fbq("track", "Purchase", dados, { eventID: eventId });
+  else window.fbq("track", "Purchase", dados);
+}

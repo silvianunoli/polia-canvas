@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Mail } from "lucide-react";
 import { gtagEvent } from "@/lib/gtag";
+import { pixelCompra } from "@/lib/metaPixel";
 import { valorDoPlano } from "@/lib/planos";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -40,6 +41,7 @@ function CompraConfirmadaPage() {
       currency: "BRL",
       items: [{ item_id: plano, item_name: plano, price: valor, quantity: 1 }],
     });
+    pixelCompra(valor, plano ?? "assinatura", session_id);
   }, [plano, session_id]);
 
   return (

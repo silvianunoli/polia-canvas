@@ -7,6 +7,7 @@ import {
   registrarAberturaDeTela,
 } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
+import { pixelCadastro } from "@/lib/metaPixel";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
@@ -122,7 +123,10 @@ function AuthenticatedLayout() {
   useEffect(() => {
     void consumirLoginPendente().then((evento) => {
       // Cadastro pelo Google também conta como conversão no GA4 (FUN-09).
-      if (evento === "signup") gtagEvent("sign_up", { method: "google" });
+      if (evento === "signup") {
+        gtagEvent("sign_up", { method: "google" });
+        pixelCadastro("google");
+      }
     });
     registrarAberturaDeTela(pathname);
   }, [pathname]);

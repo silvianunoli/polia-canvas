@@ -15,6 +15,7 @@ import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckout";
 import { track } from "@/lib/analytics";
 import { gtagEvent } from "@/lib/gtag";
+import { pixelCompra } from "@/lib/metaPixel";
 import {
   ehBeta,
   tierDoPlano,
@@ -466,6 +467,7 @@ function AssinarPage() {
                   },
                 ],
               });
+              pixelCompra(valor, planoNoCheckout ?? "assinatura");
             }
             setClientSecret(null);
             // Espera o webhook liberar o plano antes de ir pro Painel (ver

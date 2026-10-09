@@ -98,11 +98,53 @@ describe("pixelLead", () => {
   });
 });
 
+describe("pixelCadastro", () => {
+  it("não faz nada sem o Pixel carregado", () => {
+    expect(() => mod.pixelCadastro("email")).not.toThrow();
+    expect(window.fbq).toBeUndefined();
+  });
+
+  it("manda CompleteRegistration só com o método, sem dado pessoal", () => {
+    mod.carregarPixel("123");
+    mod.pixelCadastro("google");
+    expect(window.fbq!.queue.at(-1)).toEqual([
+      "track",
+      "CompleteRegistration",
+      { content_name: "google", status: true },
+    ]);
+  });
+});
+
+describe("pixelCompra", () => {
+  it("manda Purchase com valor em BRL e eventID quando houver", () => {
+    mod.carregarPixel("123");
+    mod.pixelCompra(29.9, "controle", "cs_123");
+    expect(window.fbq!.queue.at(-1)).toEqual([
+      "track",
+      "Purchase",
+      { value: 29.9, currency: "BRL", content_name: "controle" },
+      { eventID: "cs_123" },
+    ]);
+  });
+
+  it("sem eventId manda só os dados da compra", () => {
+    mod.carregarPixel("123");
+    mod.pixelCompra(47.9, "projete");
+    expect(window.fbq!.queue.at(-1)).toEqual([
+      "track",
+      "Purchase",
+      { value: 47.9, currency: "BRL", content_name: "projete" },
+    ]);
+  });
+});
+
 describe("sem window (SSR)", () => {
   it("nenhuma função explode", () => {
     vi.stubGlobal("window", undefined);
     expect(() => mod.carregarPixel("123")).not.toThrow();
     expect(() => mod.pixelPageView("/")).not.toThrow();
     expect(() => mod.pixelLead("x")).not.toThrow();
+    expect(() => mod.pixelCadastro("email")).not.toThrow();
+    expect(() => mod.pixelCompra(10, "controle")).not.toThrow();
   });
 });

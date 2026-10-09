@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
+import { pixelCadastro } from "@/lib/metaPixel";
 import {
   AuthShell,
   AuthButton,
@@ -173,6 +174,8 @@ function CadastroPage() {
       });
       // Conversão principal do Google Ads (FUN-09), importada do GA4.
       gtagEvent("sign_up", { method: "email" });
+      // Mesma conversão pro Meta Pixel: é o que os anúncios otimizam.
+      pixelCadastro("email");
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {
