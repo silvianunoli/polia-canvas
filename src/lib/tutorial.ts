@@ -11,7 +11,7 @@
 export const TUTORIAL_ROTA = "/como-usar";
 
 /**
- * Telas onde o convite não abre: fluxo de entrada, upgrade, o próprio tutorial
+ * Telas onde o convite GLOBAL não abre: fluxo de entrada, upgrade, o próprio tutorial
  * e a Calculadora. O onboarding termina em "Quero calcular meu primeiro preço" e
  * cai na Calculadora; o convite de 5 minutos por cima, junto com a dica da
  * tela, interrompia justo quem pediu pra calcular (ONE-101). Ele abre na tela
@@ -19,6 +19,8 @@ export const TUTORIAL_ROTA = "/como-usar";
  */
 const SEM_CONVITE = ["/onboarding", "/assinar", "/upgrade", TUTORIAL_ROTA, "/calculadora"];
 
+// O onboarding tem convite próprio, só na tela de boas-vindas (09/10/2026):
+// ConviteTutorial com `naEntrada`, que toca o vídeo ali mesmo.
 export function rotaAceitaConvite(pathname: string): boolean {
   return !SEM_CONVITE.some((r) => pathname === r || pathname.startsWith(r + "/"));
 }

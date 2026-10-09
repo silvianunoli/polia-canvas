@@ -7,8 +7,9 @@ import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
-import { BotaoSair } from "@/components/cosmic/SairDaConta";
+import { ConviteTutorial } from "@/components/dicas/ConviteTutorial";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { toastErro } from "@/lib/toast";
 
 // O passo mora na URL (?passo=3) desde 07/10/2026 (ONE-23): o voltar do
 // navegador recua um passo em vez de sair do fluxo.
@@ -189,6 +190,40 @@ function OnboardingPage() {
       });
   };
 
+  // "Pular" (09/10/2026, pedido da Sil) no lugar do "Sair", que fazia logoff.
+  // Marca o onboarding como feito, senão o guard da área logada mandaria de
+  // volta pra cá, e leva pro Painel. As respostas do negócio ficam em branco;
+  // dá pra contar depois no Planejamento. Quem entrou com a conta errada
+  // continua tendo o Sair, agora no menu do Painel.
+  const [pulando, setPulando] = useState(false);
+  async function pularOnboarding() {
+    setPulando(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const userId = sess.session?.user.id;
+      if (!userId) throw new Error("Sessão expirou");
+      const fullName =
+        (sess.session?.user.user_metadata?.full_name as string | undefined)?.trim() || null;
+      const { error } = await supabase.from("profiles").upsert(
+        {
+          id: userId,
+          ...(fullName ? { display_name: fullName } : {}),
+          onboarding_completed: true,
+          onboarding_completed_at: new Date().toISOString(),
+        } as never,
+        { onConflict: "id" },
+      );
+      if (error) throw error;
+      track("onboarding_pulado", { passo: step });
+      gravarRascunhoOnboarding(userId, null);
+      void navigate({ to: "/painel" });
+    } catch (e) {
+      track("onboarding_pular_falhou", { motivo: (e as Error).message || "erro_desconhecido" });
+      toastErro("A Pólia One não conseguiu pular agora. Confere a internet e tenta de novo.");
+      setPulando(false);
+    }
+  }
+
   // Best-effort, silencioso: se falhar, não atrapalha o onboarding. A função
   // só marca a conta como notificada quando o e-mail sai de verdade, então um
   // envio que falhou é tentado de novo no próximo load — de propósito.
@@ -200,10 +235,21 @@ function OnboardingPage() {
     <div className="polia-v3 min-h-screen w-full bg-[var(--bg)] text-[var(--ink)]">
       <div className="w-full px-5 pb-10 pt-6">
         {/* Porta de saída: toda a área logada manda pra cá enquanto o
-            onboarding não termina, e a tela não tem barra lateral. Sem isto,
-            quem entrou com a conta Google errada ficava presa. */}
-        <div className="mx-auto -mt-2 mb-2 flex w-full max-w-[900px] justify-end">
-          <BotaoSair />
+            onboarding não termina, e a tela não tem barra lateral. Até
+            09/10/2026 era "Sair" (logoff); virou "Pular", que segue pro
+            Painel. Na tela final o onboarding já está salvo: sem botão. */}
+        <div className="mx-auto -mt-2 mb-2 flex min-h-11 w-full max-w-[900px] justify-end">
+          {step < ULTIMO_PASSO && (
+            <button
+              type="button"
+              onClick={() => void pularOnboarding()}
+              disabled={pulando}
+              data-track="onboarding_pular_clicado"
+              className="inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] text-[var(--ink-soft)] underline underline-offset-2 hover:text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:text-[var(--muted)] disabled:no-underline"
+            >
+              {pulando ? "Pulando..." : "Pular"}
+            </button>
+          )}
         </div>
         {step > 1 && <StepIndicator step={step} />}
         {/* O passo 4 grava com upsert, então voltar da tela final e salvar de
@@ -221,6 +267,9 @@ function OnboardingPage() {
           </div>
         )}
         <div className="mx-auto w-full max-w-[900px]">
+          {/* Convite do tutorial na tela de boas-vindas (09/10/2026): uma vez
+              por conta, com "Pular". */}
+          {step === 1 && restaurado && <ConviteTutorial pathname="/onboarding" naEntrada />}
           {step === 1 && (
             <Step1
               onNext={() => {

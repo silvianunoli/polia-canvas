@@ -13,6 +13,8 @@ interface ModalProps {
   children?: ReactNode;
   /** Área de botões no rodapé (ex: BTN_ACAO_CONTORNO + BTN_ACAO de src/lib/botoes.ts). */
   footer?: ReactNode;
+  /** "larga" (960px) pra conteúdo grande, como o vídeo do tutorial. Padrão 440px. */
+  largura?: "padrao" | "larga";
 }
 
 /**
@@ -22,13 +24,21 @@ interface ModalProps {
  * e devolvido ao gatilho, fechar com Esc e trava de scroll do body já vêm de
  * graça do Radix — nada disso é reimplementado aqui.
  */
-export function Modal({ open, onOpenChange, title, description, children, footer }: ModalProps) {
+export function Modal({
+  open,
+  onOpenChange,
+  title,
+  description,
+  children,
+  footer,
+  largura = "padrao",
+}: ModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="polia-v3 fixed inset-0 z-50 bg-[var(--ink)]/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-[250ms] data-[state=closed]:duration-[150ms]" />
         <Dialog.Content
-          className="polia-v3 fixed left-1/2 top-1/2 z-50 max-h-[85dvh] w-[calc(100vw-32px)] max-w-[440px] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:duration-[250ms] data-[state=closed]:duration-[150ms]"
+          className={`polia-v3 fixed left-1/2 top-1/2 z-50 max-h-[85dvh] w-[calc(100vw-32px)] ${largura === "larga" ? "max-w-[960px]" : "max-w-[440px]"} -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl border border-[var(--line)] bg-white p-6 outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:duration-[250ms] data-[state=closed]:duration-[150ms]`}
           style={TOKEN_BRIDGE_V3}
         >
           <Dialog.Close
