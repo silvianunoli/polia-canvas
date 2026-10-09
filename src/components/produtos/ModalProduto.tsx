@@ -25,6 +25,10 @@ export function ModalProduto({
   onSaved: () => void;
 }) {
   const edit = !!produtoEdit;
+  // O modal só monta depois de um clique (nunca no SSR), então window existe.
+  const [focoAutomatico] = useState(
+    () => typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches === true,
+  );
 
   const [nome, setNome] = useState(produtoEdit?.nome ?? prefill?.nome ?? "");
   const [tipo, setTipo] = useState<ProdutoTipo>(
@@ -150,7 +154,9 @@ export function ModalProduto({
             onChange={(e) => setNome(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: Camiseta bordada"
-            autoFocus
+            // No celular, foco automático abre o teclado por cima do modal e o
+            // botão "Salvar produto" some embaixo dele (09/10/2026). Só no mouse.
+            autoFocus={focoAutomatico}
           />
         </Campo>
       </div>

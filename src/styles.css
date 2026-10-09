@@ -368,6 +368,28 @@ button.transition-colors {
     scale;
 }
 
+/* Campo de texto com fonte abaixo de 16px faz o Safari do iPhone dar zoom ao
+   focar e não desfazer: a tela fica maior que o aparelho e "dança" até a
+   pessoa arrastar (achado da Sil na Calculadora, 09/10/2026; os campos de lá e
+   do modal de produto eram 14px). No toque, todo campo vai a 16px. Fora de
+   layer de propósito, pra ganhar dos utilitários text-[13px]/text-[14px].
+   Campo que já é maior (text-[2Xpx], text-[3Xpx]) fica como está. */
+@media (max-width: 768px), (pointer: coarse) {
+  input:not(
+      [type="checkbox"],
+      [type="radio"],
+      [type="range"],
+      [type="file"],
+      [type="color"],
+      [class*="text-[2"],
+      [class*="text-[3"]
+    ),
+  select:not([class*="text-[2"], [class*="text-[3"]),
+  textarea:not([class*="text-[2"], [class*="text-[3"]) {
+    font-size: 16px;
+  }
+}
+
 /* Reduced motion — as classes utilitárias de animação vêm de tw-animate-css
    (zoom-in-95, zoom-out-95, slide-in-from-X, slide-out-to-X, usadas por tooltip,
    select, popover e alert-dialog) e não respeitam prefers-reduced-motion sozinhas.
