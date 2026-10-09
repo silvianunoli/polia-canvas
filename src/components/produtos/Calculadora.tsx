@@ -11,9 +11,17 @@ import {
   calcularPrecoSugerido,
   calcularTaxas,
   calcularEncomenda,
+  calcularRateio,
   simularDesconto,
   type CalculadoraBreakdown,
 } from "@/lib/precificacao.functions";
+import {
+  ITENS_CUSTO_FIXO,
+  PREFIXO_FIXO,
+  somarCustosFixos,
+  type ChaveCustoFixo,
+} from "@/lib/custosFixos.functions";
+import { BlocoCustosFixos, type DetalheFixos } from "./BlocoCustosFixos";
 import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
@@ -57,6 +65,7 @@ export function Calculadora({
   produtoRecalcular,
   onCancelarRecalculo,
   onAtualizado,
+  fixosDoFinanceiro = null,
 }: {
   onSalvarComoProduto: (pf: Prefill) => void;
   /** Cota do catálogo cheia: calcular segue livre, só o "Salvar como produto" fecha. */
@@ -69,6 +78,8 @@ export function Calculadora({
   produtoRecalcular?: Produto | null;
   onCancelarRecalculo?: () => void;
   onAtualizado?: () => void;
+  /** Saídas fixas do mês corrente no Financeiro, por item (null = sem dado). */
+  fixosDoFinanceiro?: Record<ChaveCustoFixo, number> | null;
 }) {
   const bk = produtoRecalcular?.calculadora_breakdown ?? null;
   const v = (campo: string) => bk?.valores?.[campo] ?? "";
@@ -82,8 +93,8 @@ export function Calculadora({
   const [embalagem, setEmbalagem] = useState(() => v("embalagem"));
   const [maoObra, setMaoObra] = useState(() => v("maoObra"));
   const [outrosDiretos, setOutrosDiretos] = useState(() => v("outrosDiretos"));
-  const [despesasFixas, setDespesasFixas] = useState(() => v("despesasFixas"));
   const [qtd, setQtd] = useState(() => v("qtd"));
+  const [proLabore, setProLabore] = useState(() => v("proLabore"));
   const [taxaVenda, setTaxaVenda] = useState(() => v("taxaVenda"));
   const [impostos, setImpostos] = useState(() => v("impostos"));
   const [margem, setMargem] = useState(() => v("margem"));
@@ -98,6 +109,19 @@ export function Calculadora({
   const [taxaVendaS, setTaxaVendaS] = useState(() => v("taxaVendaS"));
   const [impostosS, setImpostosS] = useState(() => v("impostosS"));
   const [margemSeg, setMargemSeg] = useState(() => v("margemSeg"));
+  const [qtdServicos, setQtdServicos] = useState(() => v("qtdServicos"));
+
+  // ── Custos fixos do mês (Produto e Serviço) ──
+  // Mesmo estado nas duas abas, como o valor-hora: o aluguel é o mesmo,
+  // vendendo peça ou serviço. Detalhado, o total é a soma dos itens.
+  const [despesasFixas, setDespesasFixas] = useState(() => v("despesasFixas"));
+  const [fixosDetalhado, setFixosDetalhado] = useState(() => v("fixosDetalhado") === "1");
+  const [fixosDetalhe, setFixosDetalhe] = useState<DetalheFixos>(() =>
+    Object.fromEntries(
+      ITENS_CUSTO_FIXO.map((i) => [i.chave, v(PREFIXO_FIXO + i.chave)]).filter(([, x]) => x),
+    ),
+  );
+  const fixosMes = fixosDetalhado ? somarCustosFixos(fixosDetalhe) : num(despesasFixas);
 
   // ── Perfil Encomenda (Pro) ──
   // valorHora/horas são os MESMOS estados do perfil Serviço acima (de propósito:
@@ -154,8 +178,13 @@ export function Calculadora({
   // então o preço = custo / (1 − soma_dos_percentuais/100).
   const produtoCalc = useMemo(() => {
     const custoDireto = num(materiaPrima) + num(embalagem) + num(maoObra) + num(outrosDiretos);
-    const rateio = num(despesasFixas) / Math.max(num(qtd), 1);
-    const custoUnitario = custoDireto + rateio;
+    const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: num(qtd) });
+    const rateioSalario = calcularRateio({
+      custosFixosMes: 0,
+      proLaboreMes: num(proLabore),
+      qtdMes: num(qtd),
+    });
+    const custoUnitario = custoDireto + rateioFixos + rateioSalario;
     const taxaVendaPct = num(taxaVenda);
     const impostosPct = num(impostos);
     const pctVenda = taxaVendaPct + impostosPct;
@@ -173,7 +202,8 @@ export function Calculadora({
     const lucroReais = calcularQuantoSobra(sobraInput);
     return {
       custoDireto,
-      rateio,
+      rateioFixos,
+      rateioSalario,
       custoUnitario,
       precoMinimo,
       precoSugerido,
@@ -186,7 +216,8 @@ export function Calculadora({
     embalagem,
     maoObra,
     outrosDiretos,
-    despesasFixas,
+    fixosMes,
+    proLabore,
     qtd,
     taxaVenda,
     impostos,
@@ -197,7 +228,8 @@ export function Calculadora({
     const maoDeObra = num(valorHora) * num(horas);
     const custosProjeto =
       num(materiais) + num(deslocamento) + num(ferramentas) + num(outrosServico);
-    const custoTotal = maoDeObra + custosProjeto;
+    const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: num(qtdServicos) });
+    const custoTotal = maoDeObra + custosProjeto + rateioFixos;
     const taxaVendaPct = num(taxaVendaS);
     const impostosPct = num(impostosS);
     const pctVenda = taxaVendaPct + impostosPct;
@@ -215,6 +247,7 @@ export function Calculadora({
     return {
       maoDeObra,
       custosProjeto,
+      rateioFixos,
       custoTotal,
       precoSugerido,
       taxasReais,
@@ -228,6 +261,8 @@ export function Calculadora({
     deslocamento,
     ferramentas,
     outrosServico,
+    fixosMes,
+    qtdServicos,
     taxaVendaS,
     impostosS,
     margemSeg,
@@ -316,6 +351,22 @@ export function Calculadora({
       : null;
   }, [descontoPct, calc.precoSugerido, custoBase, taxaVendaPctAtual, impostosPctAtual]);
 
+  // despesasFixas guarda sempre o total que entrou na conta (lido por
+  // rateioDoBreakdown); os itens só vão quando ela detalhou.
+  function fixosParaBreakdown(): Record<string, string> {
+    const r: Record<string, string> = {
+      despesasFixas: fixosDetalhado ? String(Math.round(fixosMes * 100) / 100) : despesasFixas,
+    };
+    if (fixosDetalhado) {
+      r.fixosDetalhado = "1";
+      for (const i of ITENS_CUSTO_FIXO) {
+        const x = fixosDetalhe[i.chave];
+        if (x) r[PREFIXO_FIXO + i.chave] = x;
+      }
+    }
+    return r;
+  }
+
   function buildBreakdown(): CalculadoraBreakdown {
     if (perfil === "produto") {
       return {
@@ -325,7 +376,8 @@ export function Calculadora({
           embalagem,
           maoObra,
           outrosDiretos,
-          despesasFixas,
+          ...fixosParaBreakdown(),
+          proLabore,
           qtd,
           taxaVenda,
           impostos,
@@ -356,6 +408,8 @@ export function Calculadora({
         deslocamento,
         ferramentas,
         outrosServico,
+        ...fixosParaBreakdown(),
+        qtdServicos,
         taxaVendaS,
         impostosS,
         margemSeg,
@@ -538,14 +592,30 @@ export function Calculadora({
               onChange={setOutrosDiretos}
             />
           </GrupoCalc>
-          <GrupoCalc titulo="Custos fixos (rateio do mês)">
+          <GrupoCalc titulo="Custos fixos e salário (rateio do mês)">
+            <div className="sm:col-span-2">
+              <BlocoCustosFixos
+                total={despesasFixas}
+                onTotal={setDespesasFixas}
+                detalhado={fixosDetalhado}
+                onDetalhado={setFixosDetalhado}
+                detalhe={fixosDetalhe}
+                onDetalhe={setFixosDetalhe}
+                doFinanceiro={fixosDoFinanceiro}
+              />
+            </div>
             <CampoNum
-              label="Custos fixos do mês (R$)"
-              dica="aluguel, internet, ferramentas"
-              value={despesasFixas}
-              onChange={setDespesasFixas}
+              label="Pró-labore (seu salário) (R$)"
+              dica="Quanto quer tirar pra você por mês. Se a sua mão de obra já entra por unidade, deixe em branco."
+              value={proLabore}
+              onChange={setProLabore}
             />
-            <CampoNum label="Quantas vende por mês" value={qtd} onChange={setQtd} />
+            <CampoNum
+              label="Quantas vende por mês"
+              dica="Os custos fixos e o salário se dividem por esse número."
+              value={qtd}
+              onChange={setQtd}
+            />
           </GrupoCalc>
           <GrupoCalc titulo="Sobre o preço de venda (%)">
             <CampoNum
@@ -560,7 +630,12 @@ export function Calculadora({
       ) : perfil === "servico" ? (
         <div id="calc-painel-servico" role="tabpanel" aria-labelledby="calc-tab-servico">
           <GrupoCalc titulo="Seu trabalho">
-            <CampoNum label="Valor da sua hora (R$)" value={valorHora} onChange={setValorHora} />
+            <CampoNum
+              label="Valor da sua hora (R$)"
+              dica="O que quer ganhar por hora. Os custos fixos entram mais abaixo."
+              value={valorHora}
+              onChange={setValorHora}
+            />
             <CampoNum label="Horas estimadas no serviço" value={horas} onChange={setHoras} />
           </GrupoCalc>
           <GrupoCalc titulo="Custos do projeto">
@@ -568,10 +643,33 @@ export function Calculadora({
             <CampoNum label="Deslocamento (R$)" value={deslocamento} onChange={setDeslocamento} />
             <CampoNum
               label="Ferramentas / software (R$)"
+              dica="Só o que é deste serviço. Assinatura mensal entra nos custos fixos."
               value={ferramentas}
               onChange={setFerramentas}
             />
             <CampoNum label="Outros (R$)" value={outrosServico} onChange={setOutrosServico} />
+          </GrupoCalc>
+          <GrupoCalc titulo="Custos fixos (rateio do mês)">
+            <div className="sm:col-span-2">
+              <BlocoCustosFixos
+                total={despesasFixas}
+                onTotal={setDespesasFixas}
+                detalhado={fixosDetalhado}
+                onDetalhado={setFixosDetalhado}
+                detalhe={fixosDetalhe}
+                onDetalhe={setFixosDetalhe}
+                doFinanceiro={fixosDoFinanceiro}
+              />
+            </div>
+            <CampoNum
+              label="Quantos serviços faz por mês"
+              dica="Os custos fixos se dividem por esse número."
+              value={qtdServicos}
+              onChange={setQtdServicos}
+            />
+            <p className="self-center text-[12.5px] text-[var(--muted)]">
+              O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
+            </p>
           </GrupoCalc>
           <GrupoCalc titulo="Sobre o preço (%)">
             <CampoNum label="Taxa / comissão (%)" value={taxaVendaS} onChange={setTaxaVendaS} />
@@ -764,7 +862,9 @@ export function Calculadora({
                   />
                   <p className="text-[12px] text-[var(--ink-soft)]">
                     diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
-                    {fmt(round2(produtoCalc.rateio))}
+                    {fmt(round2(produtoCalc.rateioFixos))}
+                    {produtoCalc.rateioSalario > 0 &&
+                      ` + salário ${fmt(round2(produtoCalc.rateioSalario))}`}
                   </p>
                   <LinhaCalc
                     label="Preço mínimo (sem lucro)"
@@ -777,6 +877,8 @@ export function Calculadora({
                   <p className="text-[12px] text-[var(--muted)]">
                     mão de obra {fmt(round2(servicoCalc.maoDeObra))} + custos do projeto{" "}
                     {fmt(round2(servicoCalc.custosProjeto))}
+                    {servicoCalc.rateioFixos > 0 &&
+                      ` + rateio dos fixos ${fmt(round2(servicoCalc.rateioFixos))}`}
                   </p>
                 </>
               ) : (

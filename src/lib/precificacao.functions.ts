@@ -134,19 +134,61 @@ export function taxasDoBreakdown(bk: CalculadoraBreakdown | null | undefined): {
 // 08/10/2026): caderno a R$ 30,43 com R$ 300 de fixos dava 50 vendas pra
 // empatar em vez de 25. Só desconta o rateio quando o preco_custo ainda é o
 // que a calculadora salvou; custo editado à mão depois fica como está.
+//
+// Desde 09/10/2026 o rateio também leva o pró-labore (perfil produto) e o
+// perfil serviço também rateia os custos fixos. A Projeção soma salário e
+// fixos à parte, então os dois saem daqui.
 export function custoDiretoDoProduto(
   precoCusto: number | null,
   bk: CalculadoraBreakdown | null | undefined,
 ): number {
   const custo = precoCusto ?? 0;
-  if (!bk || bk.perfil !== "produto") return custo;
+  if (!bk || bk.perfil === "encomenda") return custo;
   const n = (s?: string) => (s ? parseFloat(s.replace(",", ".")) || 0 : 0);
   const v = bk.valores;
-  const direto = n(v.materiaPrima) + n(v.embalagem) + n(v.maoObra) + n(v.outrosDiretos);
-  const rateio = n(v.despesasFixas) / Math.max(n(v.qtd), 1);
+  const direto =
+    bk.perfil === "produto"
+      ? n(v.materiaPrima) + n(v.embalagem) + n(v.maoObra) + n(v.outrosDiretos)
+      : n(v.valorHora) * n(v.horas) +
+        n(v.materiais) +
+        n(v.deslocamento) +
+        n(v.ferramentas) +
+        n(v.outrosServico);
+  const rateio = rateioDoBreakdown(bk);
   if (rateio <= 0) return custo;
   const salvoPelaCalculadora = Math.abs(custo - (direto + rateio)) < 0.01;
   return salvoPelaCalculadora ? direto : custo;
+}
+
+// Parte dos custos fixos do mês (e, no produto, do pró-labore) que cada
+// venda carrega. Quantidade vazia divide por 1, como sempre foi.
+export function calcularRateio(params: {
+  custosFixosMes: number;
+  proLaboreMes?: number;
+  qtdMes: number;
+}): number {
+  const total = params.custosFixosMes + (params.proLaboreMes ?? 0);
+  return total / Math.max(params.qtdMes, 1);
+}
+
+// Rateio que a calculadora embutiu no preco_custo salvo. Breakdown antigo do
+// serviço não tem despesasFixas e dá 0, como era antes. No serviço o salário
+// já entra pelo valor da hora, então o pró-labore não rateia.
+export function rateioDoBreakdown(bk: CalculadoraBreakdown | null | undefined): number {
+  if (!bk) return 0;
+  const n = (s?: string) => (s ? parseFloat(s.replace(",", ".")) || 0 : 0);
+  const v = bk.valores;
+  if (bk.perfil === "produto") {
+    return calcularRateio({
+      custosFixosMes: n(v.despesasFixas),
+      proLaboreMes: n(v.proLabore),
+      qtdMes: n(v.qtd),
+    });
+  }
+  if (bk.perfil === "servico") {
+    return calcularRateio({ custosFixosMes: n(v.despesasFixas), qtdMes: n(v.qtdServicos) });
+  }
+  return 0;
 }
 
 // ── Modo Encomenda (Projete): material por item + trabalho por hora + custos

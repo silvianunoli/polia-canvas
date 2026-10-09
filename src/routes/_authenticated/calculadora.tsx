@@ -8,6 +8,9 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { COTAS_CONFERE, temProjete } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { custosFixosPorItem } from "@/lib/custosFixos.functions";
+import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
@@ -73,6 +76,37 @@ function CalculadoraPage() {
     queryFn: async () => {
       const { data } = await buscarMetaDoMes(supabase, userId!);
       return data?.valor_alvo || null;
+    },
+  });
+
+  // Saídas do mês corrente no Financeiro, pro "Puxar do Financeiro" dos custos
+  // fixos. Mesmo recorte da Projeção (mês filtrado no banco, lido página por
+  // página). Leitura opcional: se falhar, o botão só não aparece.
+  const fixosFinanceiroQuery = useQuery({
+    queryKey: ["calculadora-fixos-financeiro", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const hoje = new Date();
+      const mes = hoje.getMonth() + 1;
+      const ano = hoje.getFullYear();
+      const intervalo = intervaloDoMes(ano, mes);
+      const lancamentos = await lerTodasAsPaginas<LancamentoResumo>((de, ate) =>
+        supabase
+          .from("lancamentos")
+          .select("id, tipo, valor, data, descricao, categoria")
+          .eq("user_id", userId!)
+          .eq("tipo", "saida")
+          .gte("data", intervalo.inicio)
+          .lt("data", intervalo.fimExclusivo)
+          .order("data", { ascending: false })
+          .order("id", { ascending: true })
+          .range(de, ate)
+          .then((r) => ({
+            data: r.data as unknown as LancamentoResumo[] | null,
+            error: r.error,
+          })),
+      );
+      return custosFixosPorItem(lancamentos, mes, ano);
     },
   });
 
@@ -176,6 +210,7 @@ function CalculadoraPage() {
         ehProjete={ehProjete}
         valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
         valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
+        fixosDoFinanceiro={fixosFinanceiroQuery.data ?? null}
         produtoRecalcular={produtoRecalcular}
         onCancelarRecalculo={irParaProdutos}
         onAtualizado={() => {
