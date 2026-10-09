@@ -18,6 +18,13 @@ import { classificarErroLogin, MSG_LOGIN_LIMITE, MSG_LOGIN_REDE } from "@/lib/si
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
 import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
 import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
+import {
+  gravarBloqueioLogin,
+  lerBloqueioLogin,
+  limparBloqueioLogin,
+  segundosRestantes,
+  somarFalha,
+} from "@/lib/bloqueioLogin";
 
 const searchSchema = z.object({
   email: z.string().email().optional(),
@@ -34,8 +41,8 @@ function destinoSeguro(next: string | undefined): string | null {
   return next;
 }
 
-const MAX_TENTATIVAS = 5;
-const LOCKOUT_SEGUNDOS = 60;
+// Tentativas e bloqueio de 60 s: src/lib/bloqueioLogin.ts (guardados no
+// navegador, pra um F5 não zerar o bloqueio; QA-10).
 const RESEND_COOLDOWN_SEGUNDOS = 60;
 
 export const Route = createFileRoute("/auth/login")({
@@ -104,11 +111,25 @@ function LoginPage() {
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
+  // Retoma o bloqueio que estava valendo antes do F5.
+  useEffect(() => {
+    const guardado = lerBloqueioLogin();
+    setTentativas(guardado.tentativas);
+    const restante = segundosRestantes(guardado, Date.now());
+    if (restante > 0) {
+      setLockoutCooldown(restante);
+      setLoginErro("Muitas tentativas. Vale esperar um minuto e tentar de novo.");
+    }
+  }, []);
+
   useEffect(() => {
     if (lockoutCooldown <= 0) return;
     const t = setTimeout(() => {
       setLockoutCooldown((c) => c - 1);
-      if (lockoutCooldown - 1 <= 0) setTentativas(0);
+      if (lockoutCooldown - 1 <= 0) {
+        setTentativas(0);
+        limparBloqueioLogin();
+      }
     }, 1000);
     return () => clearTimeout(t);
   }, [lockoutCooldown]);
@@ -158,10 +179,12 @@ function LoginPage() {
         } else if (motivo === "email_nao_confirmado") {
           setUnverified(values.email.trim());
         } else {
-          const proximaTentativa = tentativas + 1;
-          setTentativas(proximaTentativa);
-          if (proximaTentativa >= MAX_TENTATIVAS) {
-            setLockoutCooldown(LOCKOUT_SEGUNDOS);
+          const agora = Date.now();
+          const proximo = somarFalha({ tentativas, ate: null }, agora);
+          gravarBloqueioLogin(proximo);
+          setTentativas(proximo.tentativas);
+          if (proximo.ate !== null) {
+            setLockoutCooldown(segundosRestantes(proximo, agora));
             setLoginErro("Muitas tentativas. Vale esperar um minuto e tentar de novo.");
           } else {
             setLoginErro("E-mail ou senha não conferem. Vale conferir de novo.");
@@ -174,6 +197,7 @@ function LoginPage() {
         return;
       }
       setTentativas(0);
+      limparBloqueioLogin();
       if (data.user) {
         void registrar("login", { feature: "conta", propriedades: { metodo: "email" } });
         const target = destinoSeguro(search.next) ?? (await resolvePostLoginPath(data.user.id));

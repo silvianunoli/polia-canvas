@@ -83,6 +83,16 @@ export const Route = createFileRoute("/_authenticated")({
       return;
     }
     const expirou = localStorage.getItem(TEVE_SESSAO_KEY) === "1";
+    // Aviso de uma vez só (QA-10, 09/10/2026): sem apagar, toda URL interna
+    // aberta depois, mesmo sem sessão nenhuma, voltava a dizer "Sua sessão
+    // expirou". A marca volta a ser gravada no próximo login.
+    if (expirou) {
+      try {
+        localStorage.removeItem(TEVE_SESSAO_KEY);
+      } catch {
+        // localStorage indisponível: no pior caso o aviso aparece de novo.
+      }
+    }
     throw redirect({
       to: "/auth/login",
       search: {
