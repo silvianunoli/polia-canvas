@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { TIERS_PAGOS, ehBeta, temProjete, tierDoPlano, type TierPago } from "@/lib/planos";
 import { track } from "@/lib/analytics";
-import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO } from "@/lib/botoes";
 import { SeloCadeado } from "@/components/layout/UpgradeGate";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { abrirTrocaDePlano, statusAssinatura } from "@/lib/stripe.functions";
 import { toastErro } from "@/lib/toast";
+import { GANHO_POR_ROTA, fraseDoGanho } from "@/lib/ganhoDoUpgrade";
 
 interface UpgradeSearch {
   rota?: string;
@@ -34,50 +35,11 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
   component: UpgradePage,
 });
 
-// O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
-const GANHO_POR_ROTA: Record<string, string> = {
-  "/financeiro": "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto sobrou no mês.",
-  // Botão "Resumo pro contador" do Financeiro: a tela já abre no Premium, o
-  // que é do Pro é o resumo (08/10/2026).
-  "/financeiro/resumo": "O Pro monta o resumo do mês pro contador, em PDF e CSV.",
-  "/produtos": "O Premium solta o limite: cada produto com o custo, o preço e quanto sobra.",
-  "/calculadora":
-    "O Pro abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
-  // Raio-x é Pro, não Premium (ROTAS_PROJETE + o portão `temProjete` dentro
-  // da página). Nomear o Premium aqui vendia por R$ 29,90 uma tela que só abre
-  // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
-  "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
-  "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
-  // O banco tem 60 ideias por nicho, que se repetem ao longo do ano: não
-  // prometer "uma ideia nova por dia" (08/10/2026).
-  "/plano-conteudo":
-    "O Pro monta o plano de conteúdo do ano: 60 ideias do seu nicho espalhadas pelos dias, uma por dia.",
-  // Rotas pagas que caíam no fallback genérico (08/10/2026).
-  "/marca": "O Premium escreve o documento da sua Marca a partir do que o Planejamento já sabe.",
-  "/mercado": "O Premium monta o Mapa de Mercado a partir das respostas do Planejamento.",
-  "/calendario": "O Premium abre o Calendário, com a agenda do Google junto.",
-  "/clientes": "O Premium mostra cada cliente com o status do pedido, da espera à entrega.",
-  // Telas com cota no Grátis: a tela abre, o que o Premium muda é o limite.
-  "/caderno": "O Premium tira o limite do Caderno: notas sem teto.",
-  "/planner": "O Premium tira o limite do Planner: quadros sem teto.",
-  "/aimer": "O Premium aumenta o teto diário do Assistente.",
-};
-
-// Telas que abrem no Grátis com limite. Sem frase própria, o fallback não
-// pode dizer "essa tela abre": ela já está aberta, o que muda é o limite
-// ("aumenta", não "tira": a IA do Planejamento tem teto até no Pro).
-const ROTAS_COM_COTA = ["/caderno", "/planner", "/produtos", "/planejamento", "/aimer"];
-
 function UpgradePage() {
   const search = Route.useSearch();
   const tierId: TierPago = search.tier ?? TIER_PADRAO;
   const tier = TIERS_PAGOS[tierId];
-  const rotaComCota = !!search.rota && ROTAS_COM_COTA.some((r) => search.rota!.startsWith(r));
-  const ganho =
-    (search.rota ? GANHO_POR_ROTA[search.rota] : undefined) ??
-    (rotaComCota
-      ? `O ${tier.titulo} aumenta o limite.`
-      : `Assinando o ${tier.titulo}, essa tela abre na sua conta na hora.`);
+  const ganho = fraseDoGanho(search.rota, tier.titulo);
 
   // Quem já é Premium e quer o Pro não passa pelo /assinar (só serve pro
   // Grátis): troca o plano da assinatura que já existe, no portal do Stripe,
@@ -106,6 +68,16 @@ function UpgradePage() {
       ? temProjete(meta.plano)
       : ehBeta(meta.plano) || tierDoPlano(meta.plano) === "controle");
   const [abrindo, setAbrindo] = useState(false);
+  // Grátis (ou cancelada) escolhe entre os dois planos na /assinar, lado a lado,
+  // com o plano desta tela em destaque e a mesma frase do ganho (09/10/2026,
+  // pedido da Sil: "mostra direto o Premium e o Pro"). Esta tela fica só pra
+  // Premium pedindo o Pro (troca no portal) e pra quem o plano já cobre.
+  const navigate = useNavigate();
+  const vaiPraComparacao = !meta.carregando && !jaCobre && !queroProSendoPremium;
+  useEffect(() => {
+    if (!vaiPraComparacao) return;
+    void navigate({ to: "/assinar", search: { plano: tierId, rota: search.rota }, replace: true });
+  }, [vaiPraComparacao, navigate, tierId, search.rota]);
   const mudarProPro = async () => {
     setAbrindo(true);
     track("upgrade_cta_clicado", { rota: search.rota, tier: tierId, troca: true });
@@ -123,6 +95,14 @@ function UpgradePage() {
     }
     setAbrindo(false);
   };
+
+  if (meta.carregando || vaiPraComparacao) {
+    return (
+      <div className="polia-v3 flex min-h-full items-center justify-center bg-[var(--bg)] px-6 py-16">
+        <p className="font-sans text-[14px] text-[var(--muted)]">Carregando os planos...</p>
+      </div>
+    );
+  }
 
   if (jaCobre) {
     return (
@@ -204,21 +184,6 @@ function UpgradePage() {
             className={`${BTN_ACAO} mt-6 w-full`}
           >
             Assinar o {tier.titulo}
-          </Link>
-        )}
-        {/* Quem está no Grátis escolhe entre os dois: esta tela vendia só o
-            plano que a rota pede, e o Premium sumia pra quem chegava por uma
-            tela do Pro (achado da Sil, 09/10/2026). O /assinar mostra os dois
-            lado a lado. Premium pedindo o Pro não vê: ela já escolheu. */}
-        {!carregandoPlano && !trocaDePlano && !queroProSendoPremium && (
-          <Link
-            to="/assinar"
-            onClick={() =>
-              track("upgrade_cta_clicado", { rota: search.rota, tier: tierId, comparar: true })
-            }
-            className={`${BTN_ACAO_CONTORNO} mt-3 w-full`}
-          >
-            Ver o Premium e o Pro lado a lado
           </Link>
         )}
         <Link

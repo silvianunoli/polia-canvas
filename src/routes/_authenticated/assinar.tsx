@@ -17,6 +17,7 @@ import {
   type TierPago,
 } from "@/lib/planos";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { fraseDoGanho } from "@/lib/ganhoDoUpgrade";
 
 type TierId = TierPago;
 type CicloId = "mensal" | "anual";
@@ -26,6 +27,9 @@ interface AssinarSearch {
   // "onboarding": veio do fim do onboarding e vê o "ÚLTIMO PASSO". Quem chega
   // da /upgrade no meio do uso ou com a conta cancelada vê um título neutro.
   de?: "onboarding";
+  // Tela bloqueada de onde ela veio (via /upgrade): vira a frase do que o
+  // plano libera, em cima dos dois planos (09/10/2026).
+  rota?: string;
   // Volta do Stripe depois de um meio de pagamento com redirecionamento
   // (confirmParams.return_url do AssinaturaCheckout). O Stripe acrescenta
   // redirect_status=succeeded|processing|failed.
@@ -53,6 +57,12 @@ export const Route = createFileRoute("/_authenticated/assinar")({
   validateSearch: (search: Record<string, unknown>): AssinarSearch => ({
     plano: search.plano === "controle" || search.plano === "projete" ? search.plano : undefined,
     de: search.de === "onboarding" ? "onboarding" : undefined,
+    rota:
+      typeof search.rota === "string" &&
+      search.rota.startsWith("/") &&
+      !search.rota.startsWith("//")
+        ? search.rota
+        : undefined,
     redirect_status:
       typeof search.redirect_status === "string" ? search.redirect_status : undefined,
   }),
@@ -222,6 +232,9 @@ function AssinarPage() {
   // onboarding. Quem chega da /upgrade no meio do uso ou com a conta cancelada
   // vê um título neutro (08/10/2026).
   const vemDoOnboarding = search.de === "onboarding";
+  // Veio de uma tela bloqueada: diz o que destrava, no plano que a tela pede.
+  const ganhoDaTela =
+    search.rota && search.plano ? fraseDoGanho(search.rota, TIERS[search.plano].titulo) : null;
 
   return (
     <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
@@ -231,13 +244,20 @@ function AssinarPage() {
             ÚLTIMO PASSO
           </p>
         )}
+        {ganhoDaTela && search.plano && (
+          <p className="mb-2 text-center text-[10px] font-accent font-bold uppercase tracking-[2px] text-[var(--muted)]">
+            Recurso do plano {TIERS[search.plano].titulo}
+          </p>
+        )}
         <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
           Escolha seu plano
         </h1>
         <p className="mb-8 text-center font-sans text-[16px] text-[var(--ink-soft)]">
-          {vemDoOnboarding
-            ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
-            : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
+          {ganhoDaTela
+            ? ganhoDaTela
+            : vemDoOnboarding
+              ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
+              : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
         </p>
 
         {/* Ciclo mensal/anual */}
