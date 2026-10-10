@@ -6,6 +6,7 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
+import { FOTOS_NICHOS } from "@/lib/nichosLanding";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Minus, type LucideIcon } from "lucide-react";
@@ -28,6 +29,8 @@ export type BuscaCadastro = {
   utm_campaign?: string;
   utm_content?: string;
   utm_term?: string;
+  /** Id do clique no anúncio do Meta: vai pro servidor no cadastro (API de Conversões). */
+  fbclid?: string;
 };
 
 /* ───────────────────────────── botões ───────────────────────────── */
@@ -296,6 +299,8 @@ const FOTOS_DISPONIVEIS = new Set<string>([
   "ctafinal-celular-pedido",
   "a-cena-encomenda-lembrancinhas",
   "quemfez-sil-retrato",
+  // Topo da /landing-b por nicho (ver src/lib/nichosLanding.ts).
+  ...FOTOS_NICHOS,
 ]);
 
 export function FotoLanding({

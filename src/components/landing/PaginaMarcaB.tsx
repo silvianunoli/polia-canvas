@@ -45,6 +45,7 @@ import {
   MockTresNumeros,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
+import type { NichoLanding } from "@/lib/nichosLanding";
 
 /**
  * Página "a marca sustenta o preço" (Ângulo B), a copy aprovada em 06/10/2026.
@@ -287,9 +288,12 @@ export const PERGUNTAS_MARCA_B = [
 export function PaginaMarcaB({
   busca,
   linkSobre = false,
+  nicho = null,
 }: {
   busca: BuscaCadastro;
   linkSobre?: boolean;
+  /** Topo do nicho do anúncio (só /landing-b); null mostra o topo padrão. */
+  nicho?: NichoLanding | null;
 }) {
   const heroCta = useRef<HTMLAnchorElement>(null);
   const zonaPlanos = useRef<HTMLElement>(null);
@@ -303,20 +307,26 @@ export function PaginaMarcaB({
         <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
           <div className="grid grid-cols-1 items-center gap-x-[clamp(32px,5vw,64px)] gap-y-12 md:grid-cols-[55fr_45fr]">
             <div>
-              <Rotulo>Pólia One · para quem toca a própria marca</Rotulo>
+              <Rotulo>
+                {nicho ? `Pólia One · ${nicho.rotulo}` : "Pólia One · para quem toca a própria marca"}
+              </Rotulo>
               {/* h1, subtítulo e botão fora do Reveal de propósito: chegam visíveis no HTML
                   do servidor, sem esperar o JS (LCP e anúncio em 4G). */}
               <h1 className="mt-4 text-[clamp(30px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance max-md:text-[32px]">
-                Sua marca já vale mais do que você está cobrando.
+                {nicho ? nicho.titulo : "Sua marca já vale mais do que você está cobrando."}
               </h1>
-              <p className={`mt-6 ${CORPO}`}>
-                A Pólia One junta o que a sua marca é, quanto ela precisa render no mês e quanto
-                custa cada produto. Na hora do orçamento,{" "}
-                <b className="font-semibold">
-                  <HighlightWord delay={0.3}>o preço sai dessa conta</HighlightWord>
-                </b>
-                , não do chute nem da concorrente.
-              </p>
+              {nicho ? (
+                <p className={`mt-6 ${CORPO}`}>{nicho.subtitulo}</p>
+              ) : (
+                <p className={`mt-6 ${CORPO}`}>
+                  A Pólia One junta o que a sua marca é, quanto ela precisa render no mês e quanto
+                  custa cada produto. Na hora do orçamento,{" "}
+                  <b className="font-semibold">
+                    <HighlightWord delay={0.3}>o preço sai dessa conta</HighlightWord>
+                  </b>
+                  , não do chute nem da concorrente.
+                </p>
+              )}
               <div className="mt-8">
                 <BotaoCadastro busca={busca} contexto="hero" botaoRef={heroCta} />
                 <p className="mt-3 text-[13px] text-[var(--muted)]">Sem cartão no Grátis.</p>
@@ -325,8 +335,12 @@ export function PaginaMarcaB({
 
             <div className="relative">
               <FotoLanding
-                nome="hero-orcamento-celular"
-                alt="Mão segurando o celular com um pedido de orçamento aberto, sobre a mesa de trabalho com cadernos de aquarela."
+                nome={nicho ? nicho.foto : "hero-orcamento-celular"}
+                alt={
+                  nicho
+                    ? nicho.alt
+                    : "Mão segurando o celular com um pedido de orçamento aberto, sobre a mesa de trabalho com cadernos de aquarela."
+                }
                 proporcao="4/5"
                 prioridade
               />
