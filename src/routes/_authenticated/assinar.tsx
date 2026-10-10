@@ -467,7 +467,13 @@ function AssinarPage() {
                   },
                 ],
               });
-              pixelCompra(valor, planoNoCheckout ?? "assinatura");
+              // event_id = id da sessão do Checkout (cs_...), o mesmo que o
+              // webhook manda pela API de Conversões: o Meta conta uma vez.
+              pixelCompra(
+                valor,
+                planoNoCheckout ?? "assinatura",
+                clientSecret.split("_secret_")[0] || undefined,
+              );
             }
             setClientSecret(null);
             // Espera o webhook liberar o plano antes de ir pro Painel (ver

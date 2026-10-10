@@ -7,7 +7,8 @@ import {
   registrarAberturaDeTela,
 } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
-import { pixelCadastro } from "@/lib/metaPixel";
+import { eventIdCadastro, lerFbp, pixelCadastro } from "@/lib/metaPixel";
+import { registrarCadastroMeta } from "@/lib/metaCapi.functions";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
 import { LembretePlanejamento } from "@/components/dicas/LembretePlanejamento";
@@ -125,7 +126,21 @@ function AuthenticatedLayout() {
       // Cadastro pelo Google também conta como conversão no GA4 (FUN-09).
       if (evento === "signup") {
         gtagEvent("sign_up", { method: "google" });
-        pixelCadastro("google");
+        void supabase.auth.getUser().then(({ data }) => {
+          const userId = data.user?.id;
+          if (!userId) return pixelCadastro("google");
+          // Mesmo event_id no Pixel e na API de Conversões: o Meta conta uma vez.
+          pixelCadastro("google", eventIdCadastro(userId));
+          const fbp = lerFbp();
+          void registrarCadastroMeta({
+            data: {
+              userId,
+              metodo: "google",
+              ...(fbp ? { fbp } : {}),
+              url: `${window.location.origin}/auth/cadastro`,
+            },
+          }).catch(() => {});
+        });
       }
     });
     registrarAberturaDeTela(pathname);

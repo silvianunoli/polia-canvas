@@ -7,7 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
-import { pixelCadastro } from "@/lib/metaPixel";
+import { eventIdCadastro, lerFbp, pixelCadastro } from "@/lib/metaPixel";
+import { registrarCadastroMeta } from "@/lib/metaCapi.functions";
 import {
   AuthShell,
   AuthButton,
@@ -43,6 +44,8 @@ const searchSchema = z.object({
   utm_campaign: campoDeBusca,
   utm_content: campoDeBusca,
   utm_term: campoDeBusca,
+  // Clique no anúncio do Meta (ver lerFbclidDaQuery). Só vai pro servidor.
+  fbclid: campoDeBusca,
 });
 
 export const Route = createFileRoute("/auth/cadastro")({
@@ -70,7 +73,7 @@ export const Route = createFileRoute("/auth/cadastro")({
 
 function CadastroPage() {
   const navigate = useNavigate();
-  const { email: emailConvite, ...buscaCampanha } = Route.useSearch();
+  const { email: emailConvite, fbclid, ...buscaCampanha } = Route.useSearch();
   const origemCampanha = lerOrigemCampanha(buscaCampanha);
   const [values, setValues] = useState({ nome: "", email: emailConvite ?? "", senha: "" });
   const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
@@ -174,8 +177,23 @@ function CadastroPage() {
       });
       // Conversão principal do Google Ads (FUN-09), importada do GA4.
       gtagEvent("sign_up", { method: "email" });
-      // Mesma conversão pro Meta Pixel: é o que os anúncios otimizam.
-      pixelCadastro("email");
+      // Mesma conversão pro Meta: Pixel no navegador (com consentimento) e API
+      // de Conversões pelo servidor, com o mesmo event_id pra contar uma vez só.
+      if (data.user?.id) {
+        pixelCadastro("email", eventIdCadastro(data.user.id));
+        const fbp = lerFbp();
+        void registrarCadastroMeta({
+          data: {
+            userId: data.user.id,
+            metodo: "email",
+            ...(fbclid ? { fbclid } : {}),
+            ...(fbp ? { fbp } : {}),
+            url: window.location.href.split("?")[0],
+          },
+        }).catch(() => {});
+      } else {
+        pixelCadastro("email");
+      }
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {

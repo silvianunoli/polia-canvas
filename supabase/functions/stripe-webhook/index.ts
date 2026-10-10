@@ -74,6 +74,61 @@ async function dispararAlerta(tipo: string, titulo: string, detalhes?: Record<st
 // então o webhook grava direto em eventos_analytics pelo mesmo formato — usa o
 // id da checkout session como sessao_id pra correlacionar com o
 // checkout_iniciado disparado no client (ver src/routes/precos.tsx).
+// Compra → API de Conversões do Meta (09/10/2026, base legal confirmada pela
+// Sil). Mesmo event_id do Pixel (id da sessão do Checkout, cs_...), então o
+// Meta conta uma vez só quando o navegador também disparou. E-mail e id da
+// conta só em hash SHA-256. Sem o secret META_CAPI_TOKEN, não faz nada.
+// Fire-and-forget como o alerta: nunca atrasa nem derruba o webhook.
+const META_PIXEL_ID = Deno.env.get("META_PIXEL_ID") ?? "945253153454733";
+async function sha256Meta(valor: string): Promise<string> {
+  const hash = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(valor.trim().toLowerCase()),
+  );
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+async function enviarCompraMeta(
+  session: Stripe.Checkout.Session,
+  email: string,
+  userId: string,
+): Promise<void> {
+  const token = Deno.env.get("META_CAPI_TOKEN");
+  if (!token || session.amount_total == null) return;
+  try {
+    const corpo: Record<string, unknown> = {
+      data: [
+        {
+          event_name: "Purchase",
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: session.id,
+          action_source: "website",
+          user_data: {
+            em: [await sha256Meta(email)],
+            external_id: [await sha256Meta(userId)],
+            country: [await sha256Meta("br")],
+          },
+          custom_data: {
+            value: session.amount_total / 100,
+            currency: (session.currency ?? "brl").toUpperCase(),
+            content_name: session.metadata?.plano ?? "assinatura",
+          },
+        },
+      ],
+    };
+    const teste = Deno.env.get("META_CAPI_TEST_CODE");
+    if (teste) corpo.test_event_code = teste;
+    const resp = await fetch(
+      `https://graph.facebook.com/v21.0/${META_PIXEL_ID}/events?access_token=${encodeURIComponent(token)}`,
+      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) },
+    );
+    if (!resp.ok) console.error(`[stripe-webhook] Meta recusou a compra (HTTP ${resp.status}).`);
+  } catch {
+    console.error("[stripe-webhook] Falha ao enviar a compra pro Meta.");
+  }
+}
+
 async function registrarEventoAnalytics(
   evento: string,
   stripeSessionId: string,
@@ -915,6 +970,7 @@ Deno.serve(async (req) => {
         // existente".
         const pendente = conta.emailPendente;
         posRegistro.push(() => enviarEmailDaCompra(email, pendente));
+        posRegistro.push(() => enviarCompraMeta(session, email, conta.userId));
         break;
       }
       case "customer.subscription.created":

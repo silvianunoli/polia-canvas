@@ -69,10 +69,25 @@ export function pixelLead(eventId: string) {
 
 // Cadastro grátis concluído (e-mail ou Google): é a conversão que os anúncios
 // do Meta otimizam (09/10/2026). Dispara nos mesmos pontos do sign_up do GA4.
-// Sem dado pessoal: só o método.
-export function pixelCadastro(metodo: "email" | "google") {
+// Sem dado pessoal: só o método. O eventId é o mesmo que o servidor manda pela
+// API de Conversões (registrarCadastroMeta), pro Meta contar uma vez só.
+export function pixelCadastro(metodo: "email" | "google", eventId?: string) {
   if (typeof window === "undefined" || !window.fbq) return;
-  window.fbq("track", "CompleteRegistration", { content_name: metodo, status: true });
+  const dados = { content_name: metodo, status: true };
+  if (eventId) window.fbq("track", "CompleteRegistration", dados, { eventID: eventId });
+  else window.fbq("track", "CompleteRegistration", dados);
+}
+
+/** event_id do cadastro: igual no Pixel e na API de Conversões (dedup no Meta). */
+export function eventIdCadastro(userId: string): string {
+  return `cadastro_${userId}`;
+}
+
+/** Cookie _fbp do Pixel. Só existe se a visitante aceitou os cookies. */
+export function lerFbp(): string | undefined {
+  if (typeof document === "undefined") return undefined;
+  const m = document.cookie.match(/(?:^|;\s*)_fbp=([^;]+)/);
+  return m?.[1];
 }
 
 // Assinatura paga confirmada. O eventId (session_id do Stripe, quando existe)

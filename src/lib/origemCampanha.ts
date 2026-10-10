@@ -61,6 +61,17 @@ export function lerUtmsDaQuery(searchStr: string): Partial<Record<ChaveUtm, stri
   return lerUtms(Object.fromEntries(params.entries()));
 }
 
+/**
+ * fbclid que o Meta põe no link do anúncio. Não é origem de campanha (não vai
+ * pro user_metadata): só viaja até o cadastro pra API de Conversões casar o
+ * cadastro com o clique. Formato do Meta: letras, números, _ e -.
+ */
+export function lerFbclidDaQuery(searchStr: string): string | undefined {
+  const params = new URLSearchParams(searchStr.startsWith("?") ? searchStr.slice(1) : searchStr);
+  const v = params.get("fbclid")?.trim();
+  return v && /^[A-Za-z0-9_-]{10,500}$/.test(v) ? v : undefined;
+}
+
 export function temOrigemCampanha(o: OrigemCampanha): boolean {
   return Object.keys(o).length > 0;
 }

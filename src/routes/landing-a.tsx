@@ -12,7 +12,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { linkCanonico } from "@/lib/seo";
-import { lerUtmsDaQuery } from "@/lib/origemCampanha";
+import { lerFbclidDaQuery, lerUtmsDaQuery } from "@/lib/origemCampanha";
 import { TIERS_PAGOS } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
@@ -249,7 +249,12 @@ const perguntas = [
 
 function LandingA() {
   const searchStr = useLocation({ select: (l) => l.searchStr });
-  const busca: BuscaCadastro = { origem: "landing-a", ...lerUtmsDaQuery(searchStr) };
+  const fbclid = lerFbclidDaQuery(searchStr);
+  const busca: BuscaCadastro = {
+    origem: "landing-a",
+    ...lerUtmsDaQuery(searchStr),
+    ...(fbclid ? { fbclid } : {}),
+  };
   const heroCta = useRef<HTMLAnchorElement>(null);
   const zonaPlanos = useRef<HTMLElement>(null);
   const zonaFinal = useRef<HTMLDivElement>(null);
