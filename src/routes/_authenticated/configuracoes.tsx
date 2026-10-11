@@ -529,7 +529,10 @@ function ConfiguracoesPage() {
     >
       <div>
         {/* SEÇÃO 1 — PERFIL */}
-        <Secao titulo="Seu perfil">
+        <Secao
+          titulo="Seu perfil"
+          subtitulo="salva sozinho enquanto digita, não tem botão de salvar."
+        >
           {profileQuery.isError && (
             <div
               role="alert"
@@ -644,7 +647,10 @@ function ConfiguracoesPage() {
         </Secao>
 
         {/* SEÇÃO 2 — NEGÓCIO */}
-        <Secao titulo="Seu negócio">
+        <Secao
+          titulo="Seu negócio"
+          subtitulo="salva sozinho enquanto digita, não tem botão de salvar."
+        >
           <Campo label="NOME DO NEGÓCIO" saved={nomeNegocioSalvo}>
             <input
               type="text"

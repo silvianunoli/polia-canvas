@@ -727,8 +727,8 @@ export function Calculadora({
               onChange={setProLabore}
             />
             <CampoNum
-              label="Quantas vende por mês"
-              dica="Os custos fixos e o salário se dividem por esse número."
+              label="Quantas peças a marca vende por mês"
+              dica="Some todos os produtos, não só este. O custo fixo é da marca inteira e se divide entre todas as peças; contando só este produto, o aluguel todo cai em cima dele."
               value={qtd}
               onChange={setQtd}
             />
@@ -776,8 +776,8 @@ export function Calculadora({
               />
             </div>
             <CampoNum
-              label="Quantos serviços faz por mês"
-              dica="Os custos fixos se dividem por esse número."
+              label="Quantos serviços a marca faz por mês"
+              dica="Some todos os serviços, não só este. O custo fixo é da marca inteira e se divide entre todos os atendimentos; contando só este serviço, o aluguel todo cai em cima dele."
               value={qtdServicos}
               onChange={setQtdServicos}
             />

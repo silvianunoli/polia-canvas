@@ -168,6 +168,11 @@ function ProjecaoPage() {
   }, [lancamentos, mesAtual, anoAtual, dados?.proLaboreSalvo, dados?.proLaboreDoPlanejamento]);
   const ticketBase = useMemo(() => ticketMedio(produtos), [produtos]);
   const custoBase = useMemo(() => custoMedio(produtos), [produtos]);
+  // Mesmo filtro do ticketMedio/custoMedio: só produto com preço de venda.
+  const qtdProdutosNaMedia = useMemo(
+    () => produtos.filter((p) => p.precoVenda > 0).length,
+    [produtos],
+  );
   const taxasBase = useMemo(() => mediaTaxas(produtos), [produtos]);
 
   const [custosFixosTxt, setCustosFixosTxt] = useState<string | null>(null);
@@ -498,7 +503,11 @@ function ProjecaoPage() {
                 </Campo>
                 <Campo
                   label="Custo médio (R$)"
-                  hint="Só o custo de fazer cada unidade. Os custos fixos já entram no campo de cima."
+                  hint={
+                    qtdProdutosNaMedia > 0
+                      ? `Média do custo de fazer cada unidade, puxada ${qtdProdutosNaMedia === 1 ? "do único produto cadastrado" : `dos ${qtdProdutosNaMedia} produtos cadastrados`}. Os custos fixos já entram no campo de cima.`
+                      : "Só o custo de fazer cada unidade. Com produtos cadastrados, a Pólia puxa a média deles. Os custos fixos já entram no campo de cima."
+                  }
                   error={erroValidacao.custo}
                 >
                   <input
