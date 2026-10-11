@@ -97,3 +97,9 @@ Proposta aprovada pela Sil (página em claude.ai/artifact/BoCZefMeSBPza42Y86t7kb
 - Módulo do Planejamento: dicas de uma vez só (primeiro salvamento automático, botão de completar depois das primeiras palavras, Assistente após 30 s parada num campo) e a tela `PrimeiraSecaoFeita` no fim da primeira seção da conta.
 - Chaves novas em `profiles.dicas_vistas`: `boas-vindas`, `dica-completar`, `dica-salvou`, `dica-assistente`. Sem migration.
 - Não mexido: o fim do onboarding continua mandando pra Calculadora (decisão de 06/10); fica pra Sil decidir se o primeiro passo vira o Planejamento.
+
+## 2026-10-11 — Onboarding termina no Módulo 1 (ONE-116)
+
+- Decisão da Sil: o onboarding não termina mais na Calculadora (decisão de 06/10 revogada). A tela final mostra o Módulo 1 e o ciclo da Pólia One, com um botão só, "Quero começar pelo Módulo 1", que abre `/planejamento/modulo/1`.
+- Como essa tela já faz o papel das boas-vindas, o clique marca `boas-vindas` e `tour` em `profiles.dicas_vistas`: o modal e o balão do Painel não repetem o recado. Quem pular o onboarding pelo "Pular" continua vendo os dois no Painel.
+- `CALCULADORA_DESC` (texto da Calculadora por tipo de negócio) saiu junto. Evento novo: `onboarding_fim_planejamento`.

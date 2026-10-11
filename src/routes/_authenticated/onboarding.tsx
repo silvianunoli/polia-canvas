@@ -8,6 +8,9 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useDicasVistas } from "@/hooks/useDicasVistas";
+import { BOAS_VINDAS } from "@/lib/dicas";
+import { moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 import { toastErro } from "@/lib/toast";
 
 // O passo mora na URL (?passo=3) desde 07/10/2026 (ONE-23): o voltar do
@@ -131,6 +134,7 @@ function OnboardingPage() {
   const [state, setState] = useState<OnboardingState>(ESTADO_VAZIO);
   const { user, loading: carregandoSessao } = useSupabaseSession();
   const uid = user?.id;
+  const dicas = useDicasVistas();
   // Só decide pra qual passo mandar depois de tentar restaurar o rascunho.
   const [restaurado, setRestaurado] = useState(false);
   const navigate = useNavigate();
@@ -306,13 +310,23 @@ function OnboardingPage() {
               }}
             />
           )}
-          {/* Termina na Calculadora, não no Painel vazio (06/10/2026): é o
-              valor mais rápido do produto e o caminho que a landing promete. */}
+          {/* Termina no Módulo 1 do Planejamento (11/10/2026, decisão da Sil,
+              ONE-116): a primeira sessão tem um objetivo só, a primeira seção.
+              Até 10/10 terminava na Calculadora. A tela final já mostra o ciclo
+              da Pólia One, então as boas-vindas e o balão do Painel saem como
+              vistos: repetir o mesmo recado no Painel seria a terceira vez. */}
           {step === 5 && (
             <StepFinal
-              tipo={state.business_type ?? concluidoAntes?.tipo ?? null}
-              onFinish={() => navigate({ to: "/calculadora" })}
-              onPlanejamento={() => navigate({ to: "/planejamento" })}
+              onComecar={() => {
+                dicas.marcar("boas-vindas");
+                dicas.marcar("tour");
+                void track("onboarding_fim_planejamento");
+                void navigate({
+                  to: "/planejamento/modulo/$n",
+                  params: { n: "1" },
+                  search: { secao: undefined },
+                });
+              }}
             />
           )}
         </div>
@@ -880,55 +894,41 @@ function Toggle({
 }
 
 /* ---------------- STEP 5 ---------------- */
-// O que a Calculadora faz, no idioma de cada tipo de negócio.
-const CALCULADORA_DESC: Record<BusinessType, string> = {
-  produto_fisico:
-    "O custo do material, as taxas da maquininha ou do marketplace e quanto precisa sobrar viram um preço sugerido.",
-  produto_digital:
-    "O custo da plataforma, as taxas de venda e quanto precisa sobrar viram um preço sugerido.",
-  servico:
-    "As horas de trabalho, os custos e quanto precisa sobrar viram o valor a cobrar por hora.",
-  hibrido:
-    "Funciona pro produto e pro serviço: custo, taxas e quanto precisa sobrar viram um preço sugerido.",
-};
-
-function StepFinal({
-  tipo,
-  onFinish,
-  onPlanejamento,
-}: {
-  tipo: BusinessType | null;
-  onFinish: () => void;
-  onPlanejamento: () => void;
-}) {
-  const desc = tipo ? CALCULADORA_DESC[tipo] : CALCULADORA_DESC.produto_fisico;
+function StepFinal({ onComecar }: { onComecar: () => void }) {
+  const modulo = moduloInfo(1);
+  const secoes = secoesDoModulo(1).length;
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col items-center gap-5 pt-6">
       <LogoPlaceholder />
       <Manuscrito>Pronto, tá tudo no lugar</Manuscrito>
-      <Headline size={56}>Agora, o primeiro preço</Headline>
+      <Headline size={56}>Agora, a razão de existir da marca</Headline>
 
       <div className="w-full rounded-2xl border border-[var(--line)] bg-white p-6">
         <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-          Calculadora de preço
+          Planejamento · Módulo 1
         </p>
-        <p className="mt-3 text-[24px] text-[var(--ink)]">Quanto cobrar e quanto sobra</p>
-        <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">{desc}</p>
+        <p className="mt-3 text-[24px] text-[var(--ink)]">{modulo.nome}</p>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+          {modulo.subtitulo} São {secoes} seções curtas, e tudo salva sozinho.
+        </p>
       </div>
 
-      <p className="text-center text-[14px] text-[var(--muted)]">
-        Não depende do Planejamento: um produto já mostra o preço.
-      </p>
+      <ol className="w-full space-y-3">
+        {BOAS_VINDAS.ciclo.map((linha, i) => (
+          <li key={linha} className="flex gap-3 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+            <span
+              aria-hidden="true"
+              className="font-cabinet flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--secondary-light)] text-[14px] text-[var(--ink)]"
+            >
+              {i + 1}
+            </span>
+            <span className="pt-0.5">{linha}</span>
+          </li>
+        ))}
+      </ol>
 
-      <button type="button" onClick={onFinish} className={`${BTN_PRIMARIO} w-full`}>
-        Quero calcular meu primeiro preço →
-      </button>
-      <button
-        type="button"
-        onClick={onPlanejamento}
-        className="inline-flex min-h-11 items-center rounded-lg px-2 text-[14px] text-[var(--secondary-text)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)]"
-      >
-        Prefiro começar pelo Planejamento
+      <button type="button" onClick={onComecar} className={`${BTN_PRIMARIO} w-full`}>
+        {BOAS_VINDAS.acao} →
       </button>
     </div>
   );
