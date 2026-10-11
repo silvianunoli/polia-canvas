@@ -161,6 +161,54 @@ function produtosValidos(produtos: ProdutoResumo[]): ProdutoResumo[] {
   return produtos.filter((p) => p.precoVenda > 0);
 }
 
+// ONE-122 (feedback de teste de 11/10/2026): um produto muito mais caro ou
+// muito mais barato que os outros puxava a média e mudava a Projeção inteira.
+// Regra dos quartis (Tukey): fica fora da curva o produto cujo preço ou custo
+// direto passa 1,5 vez a distância entre o 1º e o 3º quartil. Sai das três
+// médias juntas (ticket, custo, taxas), senão um produto caro deixava o preço
+// na média e tirava só o custo, e a sobra saía maior do que é.
+// Com menos de 4 produtos não há curva pra comparar, então ninguém sai. Com
+// distância zero (vários produtos iguais), aquele lado não tira ninguém: um
+// produto um pouco diferente de cinco iguais não é ponto fora da curva.
+export const MINIMO_PRA_SEPARAR_FORA_DA_CURVA = 4;
+
+function quartil(ordenados: number[], q: number): number {
+  const pos = (ordenados.length - 1) * q;
+  const base = Math.floor(pos);
+  const resto = pos - base;
+  const prox = ordenados[base + 1] ?? ordenados[base];
+  return ordenados[base] + resto * (prox - ordenados[base]);
+}
+
+function limitesDaCurva(valores: number[]): { min: number; max: number } | null {
+  const ordenados = [...valores].sort((a, b) => a - b);
+  const q1 = quartil(ordenados, 0.25);
+  const q3 = quartil(ordenados, 0.75);
+  const distancia = q3 - q1;
+  if (distancia <= 0) return null;
+  return { min: q1 - 1.5 * distancia, max: q3 + 1.5 * distancia };
+}
+
+export function separarForaDaCurva<T extends ProdutoResumo>(
+  produtos: T[],
+): { naMedia: T[]; foraDaCurva: T[] } {
+  const validos = produtosValidos(produtos) as T[];
+  if (validos.length < MINIMO_PRA_SEPARAR_FORA_DA_CURVA) {
+    return { naMedia: validos, foraDaCurva: [] };
+  }
+  const custo = (p: T) => custoDiretoDoProduto(p.precoCusto, p.calculadora_breakdown);
+  const limPreco = limitesDaCurva(validos.map((p) => p.precoVenda));
+  const limCusto = limitesDaCurva(validos.map(custo));
+  const fora = (v: number, lim: { min: number; max: number } | null) =>
+    lim !== null && (v < lim.min || v > lim.max);
+  const naMedia: T[] = [];
+  const foraDaCurva: T[] = [];
+  for (const p of validos) {
+    (fora(p.precoVenda, limPreco) || fora(custo(p), limCusto) ? foraDaCurva : naMedia).push(p);
+  }
+  return { naMedia, foraDaCurva };
+}
+
 export function ticketMedio(produtos: ProdutoResumo[]): number {
   const validos = produtosValidos(produtos);
   if (validos.length === 0) return 0;

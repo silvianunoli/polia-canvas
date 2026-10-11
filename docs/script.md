@@ -109,3 +109,9 @@ Proposta aprovada pela Sil (página em claude.ai/artifact/BoCZefMeSBPza42Y86t7kb
 - Produtos: coluna `produtos.observacao_interna` (texto, até 2000) e campo "Observação interna" no modal, pra código do produto e dados do fornecedor. Só no cadastro, não sai em nada que a cliente vê. Migration `20261011230000_produtos_observacao_interna.sql`.
 - Clientes: `lib/statusCliente.ts` (+ teste) com os status em três grupos. Antes do pedido: Primeiro contato, Orçamento enviado, Pensando. Pedido: os quatro de antes. Depois da entrega: Pós-venda. O modal mostra os grupos; o seletor da linha lista na mesma ordem. "Registrar venda" aparece em Entregue e em Pós-venda, e o Painel conta os dois como entregues. Migration `20261011230100_clientes_status_negociacao_pos_venda.sql` troca o check (os valores antigos continuam válidos).
 - As duas migrations precisam entrar no banco ANTES do deploy: a tela de Produtos lê a coluna nova.
+
+## 2026-10-11 — Projeção sem produto fora da curva na média (ONE-122)
+
+- Pedido de teste da Karla: um produto muito acima ou abaixo dos outros puxava o custo médio. A Sil liberou seguir sem escolher entre mediana e média aparada; ficou a regra dos quartis (Tukey, 1,5 × a distância entre o 1º e o 3º quartil), que mantém o número como média e só tira o que destoa de verdade.
+- `separarForaDaCurva` em `lib/projecao.functions.ts` (+ 6 testes): olha preço e custo direto; o produto que sai, sai das três médias (ticket, custo, taxas), pra sobra não ficar maior do que é. Com menos de 4 produtos ninguém sai; distância zero entre quartis não tira ninguém daquele lado.
+- Projeção: abaixo dos campos, o aviso diz quem ficou fora, com o botão "Usar todos na média" (e "Tirar da média" pra voltar). A leitura de produtos passou a trazer o nome. Sem migration.

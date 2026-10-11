@@ -24,6 +24,7 @@ import {
   montarProjecao,
   paraCampoReais,
   proLaboreJaLancado,
+  separarForaDaCurva,
   sobraPorVenda,
   ticketMedio,
   valorDoCampo,
@@ -32,6 +33,8 @@ import { temProjete } from "@/lib/planos";
 import { buscarMetaDoMes, TITULO_META_DO_MES } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import type { ProdutoResumo } from "@/lib/projecao.functions";
+
+type ProdutoDaProjecao = ProdutoResumo & { nome: string };
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 
 export const Route = createFileRoute("/_authenticated/projecao")({
@@ -93,7 +96,7 @@ function ProjecaoPage() {
         ),
         supabase
           .from("produtos")
-          .select("preco_venda, preco_custo, calculadora_breakdown")
+          .select("nome, preco_venda, preco_custo, calculadora_breakdown")
           .eq("user_id", userId!)
           .eq("arquivado", false)
           .gt("preco_venda", 0),
@@ -115,6 +118,7 @@ function ProjecaoPage() {
       const falha = [prodRes, metaRes, perfilRes].find((r) => (r as { error: unknown }).error);
       if (falha) throw (falha as { error: unknown }).error;
       const produtosRaw = (prodRes.data ?? []) as unknown as {
+        nome: string;
         preco_venda: number;
         preco_custo: number | null;
         calculadora_breakdown: ProdutoResumo["calculadora_breakdown"];
@@ -122,7 +126,8 @@ function ProjecaoPage() {
       return {
         lancamentos: lancamentosMes,
         produtos: produtosRaw.map(
-          (p): ProdutoResumo => ({
+          (p): ProdutoDaProjecao => ({
+            nome: p.nome,
             precoVenda: p.preco_venda,
             precoCusto: p.preco_custo,
             calculadora_breakdown: p.calculadora_breakdown,
@@ -166,14 +171,18 @@ function ProjecaoPage() {
     if (salvo != null && salvo > 0) return salvo;
     return dados?.proLaboreDoPlanejamento ?? salvo;
   }, [lancamentos, mesAtual, anoAtual, dados?.proLaboreSalvo, dados?.proLaboreDoPlanejamento]);
-  const ticketBase = useMemo(() => ticketMedio(produtos), [produtos]);
-  const custoBase = useMemo(() => custoMedio(produtos), [produtos]);
-  // Mesmo filtro do ticketMedio/custoMedio: só produto com preço de venda.
-  const qtdProdutosNaMedia = useMemo(
-    () => produtos.filter((p) => p.precoVenda > 0).length,
-    [produtos],
+  // ONE-122: produto fora da curva sai das médias, a menos que ela peça
+  // pra usar todos. A tela mostra quem saiu: a Pólia não esconde a conta.
+  const [usarTodosNaMedia, setUsarTodosNaMedia] = useState(false);
+  const curva = useMemo(() => separarForaDaCurva(produtos), [produtos]);
+  const produtosNaMedia = useMemo(
+    () => (usarTodosNaMedia ? [...curva.naMedia, ...curva.foraDaCurva] : curva.naMedia),
+    [curva, usarTodosNaMedia],
   );
-  const taxasBase = useMemo(() => mediaTaxas(produtos), [produtos]);
+  const ticketBase = useMemo(() => ticketMedio(produtosNaMedia), [produtosNaMedia]);
+  const custoBase = useMemo(() => custoMedio(produtosNaMedia), [produtosNaMedia]);
+  const qtdProdutosNaMedia = produtosNaMedia.length;
+  const taxasBase = useMemo(() => mediaTaxas(produtosNaMedia), [produtosNaMedia]);
 
   const [custosFixosTxt, setCustosFixosTxt] = useState<string | null>(null);
   const [proLaboreTxt, setProLaboreTxt] = useState<string | null>(null);
@@ -505,7 +514,7 @@ function ProjecaoPage() {
                   label="Custo médio (R$)"
                   hint={
                     qtdProdutosNaMedia > 0
-                      ? `Média do custo de fazer cada unidade, puxada ${qtdProdutosNaMedia === 1 ? "do único produto cadastrado" : `dos ${qtdProdutosNaMedia} produtos cadastrados`}. Os custos fixos já entram no campo de cima.`
+                      ? `Média do custo de fazer cada unidade, puxada ${qtdProdutosNaMedia === 1 ? "do único produto" : `de ${qtdProdutosNaMedia} produtos`} do cadastro. Os custos fixos já entram no campo de cima.`
                       : "Só o custo de fazer cada unidade. Com produtos cadastrados, a Pólia puxa a média deles. Os custos fixos já entram no campo de cima."
                   }
                   error={erroValidacao.custo}
@@ -525,6 +534,20 @@ function ProjecaoPage() {
                     }`}
                   />
                 </Campo>
+                {curva.foraDaCurva.length > 0 && (
+                  <p className="text-[13px] text-[var(--ink-soft)] sm:col-span-2">
+                    {usarTodosNaMedia
+                      ? `A média usa todos os produtos, inclusive ${listarNomes(curva.foraDaCurva)}, bem acima ou abaixo dos outros.`
+                      : `${curva.foraDaCurva.length === 1 ? "Ficou fora" : "Ficaram fora"} do ticket e do custo médios, por estar bem acima ou abaixo dos outros: ${listarNomes(curva.foraDaCurva)}.`}{" "}
+                    <button
+                      type="button"
+                      onClick={() => setUsarTodosNaMedia((v) => !v)}
+                      className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                    >
+                      {usarTodosNaMedia ? "Tirar da média" : "Usar todos na média"}
+                    </button>
+                  </p>
+                )}
                 <Campo label="Meta do mês (R$)" error={erroValidacao.meta}>
                   <input
                     type="text"
@@ -575,4 +598,14 @@ function ProjecaoPage() {
       </div>
     </PaginaLogada>
   );
+}
+
+// "A, B e C" (até três nomes; o resto vira "e mais N").
+function listarNomes(produtos: { nome: string }[]): string {
+  const nomes = produtos.map((p) => p.nome);
+  const mostrados = nomes.slice(0, 3);
+  const resto = nomes.length - mostrados.length;
+  if (resto > 0) return `${mostrados.join(", ")} e mais ${resto}`;
+  if (mostrados.length <= 1) return mostrados[0] ?? "";
+  return `${mostrados.slice(0, -1).join(", ")} e ${mostrados[mostrados.length - 1]}`;
 }

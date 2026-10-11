@@ -12,6 +12,7 @@ import {
   mediaTaxas,
   montarProjecao,
   proLaboreJaLancado,
+  separarForaDaCurva,
   sobraPorVenda,
   ticketMedio,
   vendasParaAlvo,
@@ -128,6 +129,56 @@ const produto = (over: Partial<ProdutoResumo>): ProdutoResumo => ({
   precoCusto: 40,
   calculadora_breakdown: null,
   ...over,
+});
+
+describe("separarForaDaCurva (ONE-122)", () => {
+  it("tira o produto de preço muito acima dos outros", () => {
+    const caro = produto({ precoVenda: 500, precoCusto: 45 });
+    const produtos = [50, 55, 60, 65].map((v) => produto({ precoVenda: v, precoCusto: 40 }));
+    const { naMedia, foraDaCurva } = separarForaDaCurva([...produtos, caro]);
+    expect(foraDaCurva).toEqual([caro]);
+    expect(naMedia).toHaveLength(4);
+    expect(ticketMedio(naMedia)).toBe(57.5);
+  });
+
+  it("tira pelo custo também, e das três médias juntas", () => {
+    const custoso = produto({ precoVenda: 100, precoCusto: 90 });
+    const produtos = [10, 12, 11, 13].map((c) => produto({ precoVenda: 100, precoCusto: c }));
+    const { naMedia, foraDaCurva } = separarForaDaCurva([...produtos, custoso]);
+    expect(foraDaCurva).toEqual([custoso]);
+    expect(custoMedio(naMedia)).toBe(11.5);
+  });
+
+  it("produto barato demais também sai", () => {
+    const brinde = produto({ precoVenda: 2, precoCusto: 1 });
+    const produtos = [80, 90, 100, 110].map((v) => produto({ precoVenda: v, precoCusto: 30 }));
+    expect(separarForaDaCurva([...produtos, brinde]).foraDaCurva).toEqual([brinde]);
+  });
+
+  it("com menos de 4 produtos ninguém sai", () => {
+    const produtos = [
+      produto({ precoVenda: 10 }),
+      produto({ precoVenda: 10 }),
+      produto({ precoVenda: 1000 }),
+    ];
+    const { naMedia, foraDaCurva } = separarForaDaCurva(produtos);
+    expect(foraDaCurva).toEqual([]);
+    expect(naMedia).toHaveLength(3);
+  });
+
+  it("um pouco diferente de vários iguais não é fora da curva", () => {
+    const produtos = [50, 50, 50, 50, 50, 60].map((v) =>
+      produto({ precoVenda: v, precoCusto: 20 }),
+    );
+    expect(separarForaDaCurva(produtos).foraDaCurva).toEqual([]);
+  });
+
+  it("produto sem preço de venda não entra em nenhum dos dois", () => {
+    const produtos = [produto({ precoVenda: 0 }), produto({ precoVenda: 100 })];
+    const { naMedia, foraDaCurva } = separarForaDaCurva(produtos);
+    expect(naMedia).toHaveLength(1);
+    expect(foraDaCurva).toEqual([]);
+  });
 });
 
 describe("ticketMedio / custoMedio / mediaTaxas", () => {
