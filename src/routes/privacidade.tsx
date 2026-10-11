@@ -288,7 +288,22 @@ function PrivacidadePage() {
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">Google Agenda</strong>: apenas se a titular
-                  conectar, para ler os próprios eventos
+                  conectar, para ler os próprios eventos. O acesso é só de leitura: os eventos
+                  aparecem no Calendário da Pólia One na hora em que a tela abre e não ficam
+                  guardados. A Pólia guarda apenas o e-mail da conta conectada e a chave de acesso
+                  que o Google entrega, e apaga as duas quando a titular desconecta. Esses dados
+                  não são vendidos, não vão pra publicidade, não treinam IA e não são repassados a
+                  terceiros. O uso e a transferência de informações recebidas das APIs do Google
+                  seguem a{" "}
+                  <a
+                    href="https://developers.google.com/terms/api-services-user-data-policy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[var(--secondary-text)] underline"
+                  >
+                    Política de Dados do Usuário dos Serviços de API do Google
+                  </a>
+                  , incluindo os requisitos de Uso Limitado
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">Google Analytics e Google Ads</strong>:
