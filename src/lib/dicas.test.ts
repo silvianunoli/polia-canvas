@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { PASSOS_TOUR, TEXTO_DICA, deveMostrar, esquecerVista, marcarVista } from "./dicas";
+import { secoesDoModulo } from "./planejamento";
+
+import {
+  BOAS_VINDAS,
+  PASSOS_TOUR,
+  TEXTO_DICA,
+  TEXTO_DICA_PLANEJAMENTO,
+  deveMostrar,
+  esquecerVista,
+  marcarVista,
+} from "./dicas";
 
 describe("dicas vistas", () => {
   it("marca sem duplicar", () => {
@@ -26,13 +36,33 @@ describe("dicas vistas", () => {
 });
 
 describe("conteúdo do tour", () => {
-  it("tem 3 balões, com o Planejamento primeiro", () => {
-    expect(PASSOS_TOUR).toHaveLength(3);
+  it("tem um balão só, apontando o Planejamento (ONE-112)", () => {
+    expect(PASSOS_TOUR).toHaveLength(1);
     expect(PASSOS_TOUR[0].alvo).toBe("planejamento");
+  });
+
+  it("o balão diz o número real de seções do Módulo 1", () => {
+    const n = secoesDoModulo(1).length;
+    expect(PASSOS_TOUR[0].texto).toContain(`${n} seções`);
+    expect(PASSOS_TOUR[0].textoSemAlvo).toContain(`${n} seções`);
   });
 
   it("chama o produto de Pólia One quando fala dele pelo nome", () => {
     const textos = [...PASSOS_TOUR.map((p) => p.texto), ...Object.values(TEXTO_DICA)];
     for (const t of textos) expect(t).not.toMatch(/Pólia(?! One)/);
+  });
+
+  it("boas-vindas e dicas do módulo seguem a voz: sem exclamação, travessão ou vocabulário morto", () => {
+    const textos = [
+      BOAS_VINDAS.titulo,
+      ...BOAS_VINDAS.ciclo,
+      BOAS_VINDAS.acao,
+      ...Object.values(TEXTO_DICA_PLANEJAMENTO),
+    ];
+    for (const t of textos) {
+      expect(t).not.toMatch(/!|—|etapa|trilha|jornada|transform/i);
+      expect(t).not.toMatch(/Pólia(?! One)/);
+    }
+    expect(BOAS_VINDAS.acao).toMatch(/^Quero /);
   });
 });

@@ -84,3 +84,16 @@ Com isso os 6 blocos do plano estão no ar. Pendências fora do código: `RESEND
 - Decisão da Sil: o Plano de conteúdo deixa de usar IA. `src/lib/bancoIdeias/` tem 8 nichos × 60 ideias (tipos, categorias, voz revisados; teste de qualidade em `bancoIdeias.test.ts`). A usuária escolhe UM nicho (`MAX_NICHOS = 1`) e `montarPlanoConteudoDoBanco` grava o ano em `ia_plano_conteudo` (mesma tabela e mesma tela). Trocar de nicho refaz só de hoje em diante.
 - Sem cota, sem exigir Planejamento completo; continua no Pro. O código da geração por IA (`gerarPlanoConteudo`) ficou sem uso, apagar quando a Sil confirmar.
 - Revisão das ideias pela Sil: https://claude.ai/artifact/ERUAoBZV2NtHs8juTZ5eZC
+
+## 2026-10-11 — Onboarding guiado pelo Planejamento (ONE-112)
+
+Proposta aprovada pela Sil (página em claude.ai/artifact/BoCZefMeSBPza42Y86t7kb), com as três recomendações: o Painel aponta pro Planejamento antes do Módulo 4, o vídeo de 5 min sai do primeiro acesso e a lista some quando fica pronta.
+
+- `lib/painelAcende.ts` (+ teste): estágio do Painel (Planejamento até o Módulo 4 fechar, números depois), manchete e ação de cada estágio, itens da lista "Pra o Painel acender".
+- `components/dicas/BoasVindas.tsx`: modal curto no primeiro acesso ao Painel (ciclo em 3 linhas, um botão), no lugar do convite do tutorial. `ConviteTutorial.tsx` removido, inclusive da boas-vindas do onboarding; helpers do convite saíram de `lib/tutorial.ts`.
+- `TourBoasVindas.tsx`: um balão só, sem "Próximo"; o clique no item Planejamento marca o tour e leva pro módulo em andamento. No celular, sem o menu à vista, o balão traz o botão.
+- Painel: manchete e ação principal por estágio, lista `ListaPraAcender`, `FaixaPlanejamento` (lembrete em faixa, só depois do Módulo 4, quando a manchete volta a ser de dinheiro). `LembretePlanejamento.tsx` (modal diário em qualquer tela) removido.
+- Sidebar: selo "N de M" ao lado de Planejamento via `hooks/useProgressoPlanejamento.ts`.
+- Módulo do Planejamento: dicas de uma vez só (primeiro salvamento automático, botão de completar depois das primeiras palavras, Assistente após 30 s parada num campo) e a tela `PrimeiraSecaoFeita` no fim da primeira seção da conta.
+- Chaves novas em `profiles.dicas_vistas`: `boas-vindas`, `dica-completar`, `dica-salvou`, `dica-assistente`. Sem migration.
+- Não mexido: o fim do onboarding continua mandando pra Calculadora (decisão de 06/10); fica pra Sil decidir se o primeiro passo vira o Planejamento.

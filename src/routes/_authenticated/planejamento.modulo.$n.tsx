@@ -4,6 +4,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArrowRight, Lock, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useDicasVistas } from "@/hooks/useDicasVistas";
+import { CHAVE_PROGRESSO_PLANEJAMENTO } from "@/hooks/useProgressoPlanejamento";
+import { TEXTO_DICA_PLANEJAMENTO } from "@/lib/dicas";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
@@ -158,6 +161,13 @@ function ModuloPage() {
   // antes o fim do Planejamento era igual ao fim de um módulo qualquer.
   const [planejamentoCompleto, setPlanejamentoCompleto] = useState(false);
   const [secaoId, setSecaoId] = useState<string | null>(null);
+  // Fim da primeira seção da conta (ONE-112): antes de seguir, a resposta dela
+  // aparece do jeito que vai ficar no documento da marca.
+  const [vitrine, setVitrine] = useState<{
+    secao: Secao;
+    respostas: string[];
+    proxima: Secao;
+  } | null>(null);
   const csat = useCsatTrigger("entregavel_concluido", `modulo_${n}`, desbloqueada);
 
   const dadosQuery = useQuery({
@@ -377,6 +387,7 @@ function ModuloPage() {
 
   const concluirSecao = useCallback(async () => {
     if (!userId || !secaoAtual) return;
+    const primeiraDaConta = concluidas.size === 0;
     const { error: erroSecao } = await (
       supabase.from("planejamento_secoes" as never) as unknown as {
         upsert: (
@@ -397,8 +408,25 @@ function ModuloPage() {
     if (erroSecao) throw erroSecao;
     track("planejamento_secao_concluida", { modulo: n, secao: secaoAtual.id });
     await qc.invalidateQueries({ queryKey: ["modulo", userId, n] });
+    // Selo da sidebar e Painel leem o progresso por outra chave.
+    void qc.invalidateQueries({ queryKey: [CHAVE_PROGRESSO_PLANEJAMENTO, userId] });
+    void qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
     const proxima = secoes[idx + 1];
     if (proxima) {
+      if (primeiraDaConta) {
+        const lidas = qc.getQueryData<{ drafts: DraftRow[] }>(["modulo", userId, n])?.drafts ?? [];
+        const respostas = secaoAtual.perguntas
+          .map((_, i) =>
+            (
+              lidas.find((r) => r.secao === secaoAtual.id && r.pergunta_idx === i)?.resposta ?? ""
+            ).trim(),
+          )
+          .filter(Boolean);
+        if (respostas.length > 0) {
+          setVitrine({ secao: secaoAtual, respostas, proxima });
+          void track("planejamento_primeira_secao_vista", { secao: secaoAtual.id });
+        }
+      }
       setSecaoId(proxima.id);
       if (typeof window !== "undefined") window.scrollTo({ top: 0 });
     } else {
@@ -423,7 +451,7 @@ function ModuloPage() {
       setDesbloqueada(true);
       if (typeof window !== "undefined") window.scrollTo({ top: 0 });
     }
-  }, [userId, secaoAtual, n, secoes, idx, qc]);
+  }, [userId, secaoAtual, n, secoes, idx, qc, concluidas]);
 
   const voltarSecao = useCallback(() => {
     const anterior = secoes[idx - 1];
@@ -576,6 +604,18 @@ function ModuloPage() {
             message="A Pólia One não conseguiu abrir as suas respostas agora. Nada foi perdido, é só a leitura que falhou."
             onRetry={() => void dadosQuery.refetch()}
           />
+        ) : vitrine ? (
+          <PrimeiraSecaoFeita
+            secao={vitrine.secao}
+            respostas={vitrine.respostas}
+            proxima={vitrine.proxima}
+            feitas={feitasNoModulo}
+            total={total}
+            onSeguir={() => {
+              setVitrine(null);
+              if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+            }}
+          />
         ) : !secaoAtual || !leituraFresca ? (
           <div className="space-y-3">
             {[0, 1].map((i) => (
@@ -607,6 +647,77 @@ function ModuloPage() {
         )}
       </div>
     </PaginaLogada>
+  );
+}
+
+/**
+ * Fim da primeira seção da conta (ONE-112, 11/10/2026): o ponto alto da
+ * primeira sessão. A resposta dela aparece no formato do documento da marca,
+ * com quanto falta pro módulo. Sem confete nem "parabéns": progresso real.
+ */
+function PrimeiraSecaoFeita({
+  secao,
+  respostas,
+  proxima,
+  feitas,
+  total,
+  onSeguir,
+}: {
+  secao: Secao;
+  respostas: string[];
+  proxima: Secao;
+  feitas: number;
+  total: number;
+  onSeguir: () => void;
+}) {
+  const tituloRef = useRef<HTMLHeadingElement>(null);
+  // Leva o foco pro título: a troca de conteúdo sem isso passa em branco pra
+  // quem navega por teclado ou leitor de tela.
+  useEffect(() => tituloRef.current?.focus(), []);
+  return (
+    <div className="max-w-[640px]">
+      <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+        No documento da marca
+      </p>
+      <div className="mt-3 rounded-xl border border-[var(--line)] bg-white p-6">
+        <h2
+          ref={tituloRef}
+          tabIndex={-1}
+          className="font-cabinet text-[24px] leading-tight text-[var(--ink)] outline-none"
+        >
+          {secao.titulo}
+        </h2>
+        <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-[var(--ink-soft)]">
+          {respostas.map((r, i) => (
+            <p key={i} className="whitespace-pre-line">
+              {r}
+            </p>
+          ))}
+        </div>
+      </div>
+      <div className="mt-6 flex items-baseline justify-between gap-3">
+        <span className="text-[14px] font-medium text-[var(--ink)]">Módulo {secao.modulo}</span>
+        <span className="text-[13px] tabular-nums text-[var(--muted)]">
+          {feitas} de {total} seções
+        </span>
+      </div>
+      <p className="mt-6 text-[14px] leading-relaxed text-[var(--ink-soft)]">
+        Cada seção fechada entra assim no Planejamento, e é dele que saem preço, meta e a conta do
+        mês nas outras telas.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <button type="button" onClick={onSeguir} className={BTN_ACAO}>
+          Quero seguir pra {proxima.titulo}
+          <ArrowRight size={16} aria-hidden="true" />
+        </button>
+        <LinkInterno
+          href="/painel"
+          className="inline-flex min-h-11 items-center px-2 text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+        >
+          Voltar pro Painel
+        </LinkInterno>
+      </div>
+    </div>
   );
 }
 
@@ -801,6 +912,41 @@ function SecaoForm({
   const [avancando, setAvancando] = useState(false);
   const [semResposta, setSemResposta] = useState(false);
 
+  // Dicas de uma vez só (ONE-112, 11/10/2026), cada uma na hora da dúvida:
+  // o primeiro salvamento automático, o botão de completar depois das
+  // primeiras palavras e o Assistente quando ela fica parada num campo.
+  const dicas = useDicasVistas();
+  const dicasRef = useRef(dicas);
+  dicasRef.current = dicas;
+  const dicaSalvouDada = useRef(false);
+  const formRef = useRef<HTMLDivElement>(null);
+  const [dicaAssistente, setDicaAssistente] = useState(false);
+  const querDicaAssistente = dicas.mostrar("dica-assistente");
+  useEffect(() => {
+    if (!querDicaAssistente || dicaAssistente) return;
+    // Relógio volta a zero a cada tecla (valores muda): 30 s sem digitar com o
+    // foco num campo desta seção.
+    const t = window.setTimeout(() => {
+      const ativo = document.activeElement;
+      if (
+        ativo &&
+        formRef.current?.contains(ativo) &&
+        (ativo.tagName === "TEXTAREA" || ativo.tagName === "INPUT")
+      ) {
+        setDicaAssistente(true);
+        void track("dica_assistente_exibida", { secao: secao.id });
+      }
+    }, 30_000);
+    return () => window.clearTimeout(t);
+  }, [valores, querDicaAssistente, dicaAssistente, secao.id]);
+  const fecharDicaAssistente = () => {
+    setDicaAssistente(false);
+    dicas.marcar("dica-assistente");
+  };
+  // A dica do botão de completar fica no primeiro campo que já tem texto.
+  const indiceDicaCompletar =
+    semIa || !dicas.mostrar("dica-completar") ? -1 : valores.findIndex((v) => v.trim() !== "");
+
   // O que vai pro banco: campo em reais sai sempre normalizado ("R$ 3.000,00"),
   // mesmo que na tela ainda esteja "R$ 3000" (QA-15).
   const valorParaSalvar = useCallback(
@@ -864,6 +1010,13 @@ function SecaoForm({
         // "Salvo" pipocava toda hora. O toast fica no "Salvar e continuar".
         if (pendentes.current.size === 0)
           setStatus(Object.keys(conflitosRef.current).length > 0 ? "conflito" : "saved");
+        // Primeiro salvamento automático da conta: avisa uma vez que não
+        // precisa de botão pra guardar (ONE-112).
+        if (!dicaSalvouDada.current && dicasRef.current.mostrar("dica-salvou")) {
+          dicaSalvouDada.current = true;
+          dicasRef.current.marcar("dica-salvou");
+          toastInfo(TEXTO_DICA_PLANEJAMENTO.salvou);
+        }
       } catch (e) {
         if (ehConflitoDeVersao(e)) {
           const jaAvisado = !!conflitosRef.current[i];
@@ -1184,7 +1337,13 @@ function SecaoForm({
   };
 
   return (
-    <div>
+    <div ref={formRef}>
+      {dicaAssistente && (
+        // Fica logo acima do balão do Assistente (bottom-6, 56px de altura).
+        <div className="fixed bottom-[92px] right-6 z-40 w-[min(300px,calc(100vw-48px))]">
+          <DicaEscura texto={TEXTO_DICA_PLANEJAMENTO.assistente} onEntendi={fecharDicaAssistente} />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <p className="text-[11px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
           Seção {indice + 1} de {total}
@@ -1376,17 +1535,28 @@ function SecaoForm({
                     Escreve um começo, mesmo curto, e a Pólia One ajuda a completar.
                   </p>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => void gerarComAimer(i)}
-                    disabled={gerando[i]}
-                    className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
-                  >
-                    <Sparkles size={13} aria-hidden="true" />
-                    {gerando[i]
-                      ? "A Pólia One está completando o seu texto…"
-                      : "Completar com a Pólia One"}
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (i === indiceDicaCompletar) dicas.marcar("dica-completar");
+                        void gerarComAimer(i);
+                      }}
+                      disabled={gerando[i]}
+                      className="mt-1 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline disabled:cursor-not-allowed disabled:text-[var(--muted)] disabled:no-underline"
+                    >
+                      <Sparkles size={13} aria-hidden="true" />
+                      {gerando[i]
+                        ? "A Pólia One está completando o seu texto…"
+                        : "Completar com a Pólia One"}
+                    </button>
+                    {i === indiceDicaCompletar && !gerando[i] && (
+                      <DicaEscura
+                        texto={TEXTO_DICA_PLANEJAMENTO.completar}
+                        onEntendi={() => dicas.marcar("dica-completar")}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -1432,6 +1602,25 @@ function SecaoForm({
  * Outra aba (ou aparelho) salvou esta resposta depois que esta tela leu. Nada
  * foi gravado por cima: ela escolhe se fica o texto desta tela ou o da outra.
  */
+/** Dica de uma vez só dentro do módulo: fundo tinta, some no "Entendi". */
+function DicaEscura({ texto, onEntendi }: { texto: string; onEntendi: () => void }) {
+  return (
+    <div
+      role="note"
+      className="mt-2 flex max-w-[440px] items-start gap-3 rounded-xl bg-[var(--ink)] py-2 pl-4 pr-2 text-[13px] leading-snug text-white"
+    >
+      <p className="min-w-0 flex-1 py-1">{texto}</p>
+      <button
+        type="button"
+        onClick={onEntendi}
+        className="-my-1 inline-flex min-h-11 shrink-0 items-center rounded-lg px-2 font-medium text-white underline underline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+      >
+        Entendi
+      </button>
+    </div>
+  );
+}
+
 function AvisoConflito({
   noBanco,
   onManter,

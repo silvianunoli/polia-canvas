@@ -7,7 +7,6 @@ import { garantirBoasVindas } from "@/lib/boas-vindas.functions";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { BTN_MIUDO, BTN_PRIMARIO } from "@/lib/botoes";
-import { ConviteTutorial } from "@/components/dicas/ConviteTutorial";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { toastErro } from "@/lib/toast";
 
@@ -267,9 +266,9 @@ function OnboardingPage() {
           </div>
         )}
         <div className="mx-auto w-full max-w-[900px]">
-          {/* Convite do tutorial na tela de boas-vindas (09/10/2026): uma vez
-              por conta, com "Pular". */}
-          {step === 1 && restaurado && <ConviteTutorial pathname="/onboarding" naEntrada />}
+          {/* O convite do tutorial que abria aqui (09/10/2026) saiu em
+              11/10/2026 (ONE-112): o primeiro acesso agora tem um objetivo só,
+              a primeira seção do Módulo 1. O vídeo fica no menu, em Tutorial. */}
           {step === 1 && (
             <Step1
               onNext={() => {

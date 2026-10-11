@@ -19,6 +19,11 @@ import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { TourBoasVindas } from "@/components/dicas/TourBoasVindas";
+import { BoasVindas } from "@/components/dicas/BoasVindas";
+import { FaixaPlanejamento } from "@/components/dicas/FaixaPlanejamento";
+import { ListaPraAcender } from "@/components/dicas/ListaPraAcender";
+import { progressoPlanejamento } from "@/lib/lembretePlanejamento";
+import { chamadaDoPlanejamento, estagioPainel, itensPraAcender } from "@/lib/painelAcende";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 
 export const Route = createFileRoute("/_authenticated/painel")({
@@ -377,6 +382,38 @@ function PainelPage() {
   const jornadaFinalizada = moduloAtual > TOTAL_MODULOS;
   const etapaInfo = moduloInfo(jornadaFinalizada ? TOTAL_MODULOS : moduloAtual);
 
+  // ── O Painel acende por partes (ONE-112, 11/10/2026) ──
+  // Até o Módulo 4 fechar, a manchete e a ação principal apontam o módulo em
+  // andamento: antes ela pedia "Registrar uma entrada" enquanto o tour apontava
+  // o Planejamento, dois recados na mesma tela. Depois do 4, volta a manchete
+  // de dinheiro (COPY-04), e o lembrete dos Módulos 5 e 6 vira faixa no topo.
+  const estagio = useMemo(() => estagioPainel(concluidas), [concluidas]);
+  const chamadaPlanejamento = useMemo(
+    () => (estagio.tipo === "planejamento" ? chamadaDoPlanejamento(estagio) : null),
+    [estagio],
+  );
+  const progressoFaixa = useMemo(
+    () => (estagio.tipo === "numeros" ? progressoPlanejamento(concluidas) : null),
+    [estagio.tipo, concluidas],
+  );
+  // "Registrar a primeira entrada" da lista olha qualquer mês, não só o atual:
+  // quem registrou em setembro já acendeu o cartão. Conta só o cabeçalho (sem
+  // linhas); se a leitura falhar, vale o que o mês corrente diz.
+  const temEntradaQuery = useQuery({
+    queryKey: ["painel-tem-entrada", userId],
+    enabled: !!userId && dadosQuery.isSuccess,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("lancamentos")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .eq("tipo", "entrada");
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+  });
+
   // Dia do cadastro é o 1º dia (08/10/2026): antes era floor com mínimo 1, e
   // o 1º e o 2º dia apareciam os dois como "1º".
   const diasDesdeCadastro = useMemo(() => {
@@ -420,6 +457,11 @@ function PainelPage() {
       lucroMes: n.sobra,
     };
   }, [dados?.lancamentos, clientReady]);
+
+  const itensAcender = useMemo(
+    () => itensPraAcender(concluidas, entradasMes > 0 || temEntradaQuery.data === true),
+    [concluidas, entradasMes, temEntradaQuery.data],
+  );
 
   const clientes = dados?.clientes ?? [];
   const clientesCount = clientes.length;
@@ -474,6 +516,7 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
+    if (chamadaPlanejamento) return chamadaPlanejamento.manchete;
     // A manchete do plano Grátis era um desvio pro Planejamento, porque sem
     // Financeiro a receita era sempre 0 e "registre sua primeira venda" mandava
     // fazer o que o plano não deixava. Desde 03/09/2026 (COPY-04) todo plano
@@ -511,7 +554,7 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [receitaMes, metaBoa, metaMinima]);
+  }, [receitaMes, metaBoa, metaMinima, chamadaPlanejamento]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
@@ -522,6 +565,12 @@ function PainelPage() {
   // (COPY-04). O que o Premium abre segue dito no rodapé do cartão de
   // registro, não no botão principal.
   const acaoPrincipal = useMemo((): { texto: string; href?: string; abreRegistro?: boolean } => {
+    if (chamadaPlanejamento) {
+      return {
+        texto: chamadaPlanejamento.acao,
+        href: `/planejamento/modulo/${chamadaPlanejamento.modulo}`,
+      };
+    }
     if (!financeiroLiberado) {
       return {
         texto: receitaMes <= 0 ? "Registrar uma entrada" : "Registrar entrada ou saída",
@@ -530,7 +579,7 @@ function PainelPage() {
     }
     if (receitaMes <= 0) return { texto: "Registrar uma entrada", href: "/financeiro" };
     return { texto: "Abrir o Financeiro", href: "/financeiro" };
-  }, [financeiroLiberado, receitaMes]);
+  }, [financeiroLiberado, receitaMes, chamadaPlanejamento]);
 
   // Modal de registro disparado pelo botão da manchete. Fica separado do estado
   // interno do cartão "Entrou e saiu este mês" de propósito: os dois usam o
@@ -628,8 +677,12 @@ function PainelPage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <TourBoasVindas />
+      <BoasVindas />
+      {dadosQuery.isSuccess && <TourBoasVindas modulo={jornadaFinalizada ? null : moduloAtual} />}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-24 pt-16 md:px-10">
+        {userId && progressoFaixa && (
+          <FaixaPlanejamento userId={userId} progresso={progressoFaixa} />
+        )}
         {/* Header: primeira dobra, sem reveal */}
         <div>
           <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
@@ -648,7 +701,9 @@ function PainelPage() {
             )}
           </h1>
 
-          {acaoPrincipal.href ? (
+          {/* Só depois dos dados: antes disso a ação era a de conta nova e
+              piscava "Quero começar o Módulo 1" pra quem já passou dele. */}
+          {!dadosQuery.isSuccess ? null : acaoPrincipal.href ? (
             <LinkInterno
               href={acaoPrincipal.href}
               data-tour="acao-principal"
@@ -668,6 +723,8 @@ function PainelPage() {
               <span aria-hidden="true">→</span>
             </button>
           )}
+
+          {dadosQuery.isSuccess && <ListaPraAcender itens={itensAcender} />}
 
           {/* Intenção do dia */}
           <div className="mt-6 max-w-[560px]">
@@ -774,12 +831,14 @@ function PainelPage() {
                 </span>
                 {/* ONE-11 (07/10/2026): era um "abrir" discreto e a Sil não achava
                 o caminho de volta pro Planejamento. Virou botão com o verbo
-                certo. A ação principal do Painel continua sendo registrar
-                entrada e saída (COPY-04); este é o caminho secundário. */}
-                <LinkInterno href="/planejamento" className={BTN_MIUDO}>
-                  {jornadaFinalizada ? "Rever o Planejamento" : "Continuar o Planejamento"}
-                  <span aria-hidden="true">→</span>
-                </LinkInterno>
+                certo. Antes do Módulo 4 a ação principal já leva pro módulo
+                (ONE-112), então este caminho secundário só aparece depois. */}
+                {estagio.tipo === "numeros" && (
+                  <LinkInterno href="/planejamento" className={BTN_MIUDO}>
+                    {jornadaFinalizada ? "Rever o Planejamento" : "Continuar o Planejamento"}
+                    <span aria-hidden="true">→</span>
+                  </LinkInterno>
+                )}
               </div>
             </div>
 

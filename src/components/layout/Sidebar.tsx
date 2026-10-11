@@ -28,6 +28,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
 
@@ -91,6 +92,10 @@ function Body({
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const configAtiva = isActive("/configuracoes", pathname) || isActive("/chamados", pathname);
   const tutorialAtivo = isActive("/como-usar", pathname);
+  // Selo "2 de 5" ao lado de Planejamento (ONE-112, 11/10/2026): o lembrete
+  // diário era um modal em qualquer tela; o selo lembra onde parou sem
+  // interromper. Some com os 6 módulos fechados.
+  const { progresso } = useProgressoPlanejamento();
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -188,6 +193,22 @@ function Body({
               >
                 <Icon size={18} aria-hidden="true" />
                 <span className={compact ? "sr-only" : undefined}>{item.label}</span>
+                {item.to === "/planejamento" && progresso && (
+                  <span
+                    className={
+                      compact
+                        ? "sr-only"
+                        : "ml-auto shrink-0 rounded-full bg-[var(--surface-pink)] px-2 text-[11px] font-medium tabular-nums leading-[18px] text-[var(--ink)]"
+                    }
+                  >
+                    <span className="sr-only">
+                      {`, Módulo ${progresso.modulo}: ${progresso.feitas} de ${progresso.total} seções feitas`}
+                    </span>
+                    <span aria-hidden="true">
+                      {progresso.feitas} de {progresso.total}
+                    </span>
+                  </span>
+                )}
               </Link>
             ) : (
               <Link

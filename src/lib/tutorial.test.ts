@@ -1,28 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { htmlEmbutido, lerMensagemTutorial, rotaAceitaConvite } from "./tutorial";
-
-describe("convite do tutorial", () => {
-  it("não abre no fluxo de entrada, no upgrade nem no próprio tutorial", () => {
-    expect(rotaAceitaConvite("/onboarding")).toBe(false);
-    expect(rotaAceitaConvite("/assinar")).toBe(false);
-    expect(rotaAceitaConvite("/upgrade")).toBe(false);
-    expect(rotaAceitaConvite("/como-usar")).toBe(false);
-  });
-
-  it("não abre na Calculadora, onde o onboarding termina (ONE-101)", () => {
-    expect(rotaAceitaConvite("/calculadora")).toBe(false);
-  });
-
-  it("abre na primeira tela seguinte da área logada", () => {
-    expect(rotaAceitaConvite("/painel")).toBe(true);
-    expect(rotaAceitaConvite("/planejamento/modulo/1")).toBe(true);
-  });
-
-  it("não confunde rota parecida com a do tutorial", () => {
-    expect(rotaAceitaConvite("/como-usar-antigo")).toBe(true);
-  });
-});
+import { htmlEmbutido, lerMensagemTutorial } from "./tutorial";
 
 describe("vídeo embutido", () => {
   it("liga o modo embutido no <html>", () => {

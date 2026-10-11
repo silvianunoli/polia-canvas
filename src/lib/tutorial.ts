@@ -4,41 +4,16 @@
 // o áudio fica em public/video-tutorial/), gerado a partir de
 // Desktop/Novo Projeto/polia-one-tutorial por `gerar_versao_app.py`. Mexeu no tutorial lá, roda o script e o app pega a
 // versão nova. As telas /como-usar (app) e /tutorial (pública) carregam esse
-// HTML num iframe (components/tutorial/PlayerTutorial.tsx); o convite do
-// primeiro acesso mora em components/dicas/ConviteTutorial.tsx.
+// HTML num iframe (components/tutorial/PlayerTutorial.tsx). O convite pro
+// vídeo no primeiro acesso saiu em 11/10/2026 (ONE-112): no lugar dele, o
+// modal curto de components/dicas/BoasVindas.tsx aponta o tutorial no menu.
 
 /** Tela do tutorial dentro do app. A página pública, sem login, é /tutorial. */
 export const TUTORIAL_ROTA = "/como-usar";
 
-/**
- * Telas onde o convite GLOBAL não abre: fluxo de entrada, upgrade, o próprio tutorial
- * e a Calculadora. O onboarding termina em "Quero calcular meu primeiro preço" e
- * cai na Calculadora; o convite de 5 minutos por cima, junto com a dica da
- * tela, interrompia justo quem pediu pra calcular (ONE-101). Ele abre na tela
- * seguinte.
- */
-const SEM_CONVITE = ["/onboarding", "/assinar", "/upgrade", TUTORIAL_ROTA, "/calculadora"];
-
-// O onboarding tem convite próprio, só na tela de boas-vindas (09/10/2026):
-// ConviteTutorial com `naEntrada`, que toca o vídeo ali mesmo.
-export function rotaAceitaConvite(pathname: string): boolean {
-  return !SEM_CONVITE.some((r) => pathname === r || pathname.startsWith(r + "/"));
-}
-
 /** HTML do vídeo pronto pro srcDoc do iframe: liga o modo embutido (sem cabeçalho). */
 export function htmlEmbutido(html: string): string {
   return html.replace('<html lang="pt-BR">', '<html lang="pt-BR" class="embed">');
-}
-
-// O lembrete diário do Planejamento não abre no mesmo carregamento em que o
-// convite apareceu: dois modais seguidos na entrada é demais. Fica em memória
-// (some no reload) porque só precisa valer pra esta visita.
-let conviteAbertoNestaVisita = false;
-export function marcarConviteAberto() {
-  conviteAbertoNestaVisita = true;
-}
-export function conviteFoiAberto() {
-  return conviteAbertoNestaVisita;
 }
 
 export type MensagemTutorial =
