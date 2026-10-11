@@ -1843,6 +1843,7 @@ export type Database = {
           created_at: string
           da_jornada: boolean
           descricao: string | null
+          observacao_interna: string | null
           foto_url: string | null
           historico_precos: Json
           id: string
@@ -1861,6 +1862,7 @@ export type Database = {
           created_at?: string
           da_jornada?: boolean
           descricao?: string | null
+          observacao_interna?: string | null
           foto_url?: string | null
           historico_precos?: Json
           id?: string
@@ -1879,6 +1881,7 @@ export type Database = {
           created_at?: string
           da_jornada?: boolean
           descricao?: string | null
+          observacao_interna?: string | null
           foto_url?: string | null
           historico_precos?: Json
           id?: string

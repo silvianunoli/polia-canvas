@@ -18,6 +18,13 @@ import { gerarCsv, baixarCsv } from "@/lib/csv";
 import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
+import {
+  emNegociacao,
+  GRUPOS_STATUS,
+  jaEntregue,
+  TODOS_STATUS,
+  type StatusCliente,
+} from "@/lib/statusCliente";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -29,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/clientes")({
   component: ClientesPage,
 });
 
-type StatusPedido = "Em espera" | "Em produção" | "Entregue" | "Atrasado";
+type StatusPedido = StatusCliente;
 
 interface Cliente {
   id: string;
@@ -67,6 +74,7 @@ function formatarDataCurta(iso: string) {
 }
 
 function statusPedidoCor(status: StatusPedido) {
+  if (emNegociacao(status)) return "border border-[var(--line)] bg-white text-[var(--ink-soft)]";
   switch (status) {
     case "Em produção":
       return "bg-[var(--secondary-light)] text-[var(--secondary-text)]";
@@ -74,13 +82,13 @@ function statusPedidoCor(status: StatusPedido) {
       return "bg-[var(--surface-pink)] text-[var(--ink-soft)]";
     case "Atrasado":
       return "bg-[var(--highlight)] text-[var(--highlight-ink)]";
+    case "Pós-venda":
+      return "bg-[var(--accent)] text-[var(--accent-ink)]";
     case "Em espera":
     default:
       return "bg-[var(--line)] text-[var(--ink-soft)]";
   }
 }
-
-const STATUS_PEDIDO_OPTIONS: StatusPedido[] = ["Em espera", "Em produção", "Entregue", "Atrasado"];
 
 function ClientesPage() {
   const { user } = useSupabaseSession();
@@ -188,7 +196,7 @@ function ClientesPage() {
           <Vazio
             icone={Users}
             titulo="Nenhuma cliente cadastrada ainda."
-            texto="Cada cliente guarda o pedido, o valor e o status da entrega. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
+            texto="Cada cliente guarda onde a conversa está, o pedido, o valor e o pós-venda. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
             acao={
               <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
                 Adicionar a primeira cliente
@@ -359,7 +367,9 @@ function LinhaCliente({
     toastSucesso("Venda registrada no Financeiro.");
   };
 
-  const mostrarAcaoRegistrar = cliente.status_pedido === "Entregue" && !cliente.venda_registrada;
+  // Pós-venda vem depois da entrega: a venda ainda pode ser registrada ali,
+  // senão mover a cliente pro pós-venda escondia o botão (ONE-123).
+  const mostrarAcaoRegistrar = jaEntregue(cliente.status_pedido) && !cliente.venda_registrada;
   const semValor = !temValorDeVenda(cliente.valor);
 
   // A ação de venda mora numa linha própria no celular: em 375px, selo +
@@ -421,15 +431,15 @@ function LinhaCliente({
       )}
       <div className="order-2 flex shrink-0 items-center gap-3 sm:order-3">
         <MenuOpcoes
-          ariaLabel={`Alterar status do pedido. Status atual: ${cliente.status_pedido ?? "sem pedido"}.`}
+          ariaLabel={`Alterar status da cliente. Status atual: ${cliente.status_pedido ?? "sem status"}.`}
           trigger={
             <span
-              className={`rounded px-3 py-1.5 font-sans text-[11px] transition-opacity hover:opacity-80 ${statusPedidoCor(cliente.status_pedido ?? "Em espera")}`}
+              className={`rounded px-3 py-1.5 font-sans text-[11px] transition-opacity hover:opacity-80 ${statusPedidoCor(cliente.status_pedido ?? "Primeiro contato")}`}
             >
-              {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem pedido")}
+              {salvandoStatus ? "Salvando…" : (cliente.status_pedido ?? "Sem status")}
             </span>
           }
-          itens={STATUS_PEDIDO_OPTIONS.map((s) => ({
+          itens={TODOS_STATUS.map((s) => ({
             label: s === cliente.status_pedido ? `${s} (atual)` : s,
             onClick: () => mudarStatus(s),
             desabilitado: salvandoStatus,
@@ -592,8 +602,6 @@ function ModalCliente({
     onSaved();
   };
 
-  const statusOptions = STATUS_PEDIDO_OPTIONS;
-
   return (
     <Modal
       open
@@ -637,27 +645,34 @@ function ModalCliente({
 
       <div className="mb-4">
         <p id="cliente-status-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
-          Status do pedido
+          Status
         </p>
-        <div role="group" aria-labelledby="cliente-status-rotulo" className="flex flex-wrap gap-2">
+        <div role="group" aria-labelledby="cliente-status-rotulo" className="space-y-3">
           <button
             type="button"
             onClick={() => setStatusPedido("")}
             aria-pressed={statusPedido === ""}
             className={`${BTN_MIUDO} ${statusPedido === "" ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
-            Sem pedido
+            Sem status
           </button>
-          {statusOptions.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setStatusPedido(s)}
-              aria-pressed={statusPedido === s}
-              className={`${BTN_MIUDO} ${statusPedido === s ? "!bg-[var(--secondary)]" : "bg-white"}`}
-            >
-              {s}
-            </button>
+          {GRUPOS_STATUS.map((grupo) => (
+            <div key={grupo.titulo}>
+              <p className="mb-1.5 text-[12px] text-[var(--muted)]">{grupo.titulo}</p>
+              <div className="flex flex-wrap gap-2">
+                {grupo.status.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setStatusPedido(s)}
+                    aria-pressed={statusPedido === s}
+                    className={`${BTN_MIUDO} ${statusPedido === s ? "!bg-[var(--secondary)]" : "bg-white"}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>

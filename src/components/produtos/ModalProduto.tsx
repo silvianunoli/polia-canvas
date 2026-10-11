@@ -50,6 +50,7 @@ export function ModalProduto({
         : "",
   );
   const [descricao, setDescricao] = useState(produtoEdit?.descricao ?? "");
+  const [observacaoInterna, setObservacaoInterna] = useState(produtoEdit?.observacao_interna ?? "");
   const [canal, setCanal] = useState(produtoEdit?.canal ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -71,6 +72,7 @@ export function ModalProduto({
         preco_venda: precoVendaNum,
         preco_custo: precoCustoNum,
         descricao: descricao.trim() || null,
+        observacao_interna: observacaoInterna.trim() || null,
         canal: canal.trim() || null,
         updated_at: new Date().toISOString(),
       };
@@ -107,6 +109,7 @@ export function ModalProduto({
         preco_venda: precoVendaNum,
         preco_custo: precoCustoNum,
         descricao: descricao.trim() || null,
+        observacao_interna: observacaoInterna.trim() || null,
         canal: canal.trim() || null,
         calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
       } as never);
@@ -235,6 +238,23 @@ export function ModalProduto({
             onChange={(e) => setDescricao(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="ex: algodão pima, tamanho único"
+          />
+        </Campo>
+      </div>
+
+      {/* Observação interna (ONE-120): código, fornecedor, o que ela precisar */}
+      <div className="mb-4">
+        <Campo
+          label="Observação interna"
+          hint="Só aparece pra você, aqui no cadastro. Bom pra código do produto e dados do fornecedor."
+        >
+          <textarea
+            value={observacaoInterna}
+            onChange={(e) => setObservacaoInterna(e.target.value)}
+            maxLength={2000}
+            rows={3}
+            className="w-full resize-y rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            placeholder="ex: cód. CAM-014 · Malharia Sol, (11) 9999-0000, pedido mínimo 20 peças"
           />
         </Campo>
       </div>

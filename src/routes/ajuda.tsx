@@ -131,7 +131,7 @@ const CATEGORIAS = [
       {
         pergunta: "Acompanhar os pedidos",
         resposta:
-          "No plano Premium, a lista de Clientes mostra cada pedido com o status dele: Em espera, Em produção, Entregue ou Atrasado. Dá pra ver de relance o que está parado, o que está saindo e o que já foi entregue.",
+          "No plano Premium, a lista de Clientes mostra onde cada cliente está. Antes do pedido: Primeiro contato, Orçamento enviado ou Pensando. No pedido: Em espera, Em produção, Atrasado ou Entregue. Depois da entrega: Pós-venda. Dá pra ver de relance quem ainda está decidindo, o que está parado e o que já foi entregue.",
       },
       {
         pergunta: "Exportar a minha lista",
@@ -404,8 +404,8 @@ function AjudaPage() {
 
             {categoriasFiltradas.length === 0 ? (
               <p className="mt-[clamp(32px,4vw,40px)] text-[16px] leading-[1.65] text-[var(--ink-soft)]">
-                Nada encontrado pra “{busca.trim()}”. Escreve no formulário aqui embaixo que a
-                Pólia responde.
+                Nada encontrado pra “{busca.trim()}”. Escreve no formulário aqui embaixo que a Pólia
+                responde.
               </p>
             ) : (
               <RevealGroup className="mt-[clamp(40px,5vw,48px)] grid grid-cols-1 gap-4 md:grid-cols-[repeat(auto-fit,minmax(260px,1fr))]">

@@ -103,3 +103,9 @@ Proposta aprovada pela Sil (página em claude.ai/artifact/BoCZefMeSBPza42Y86t7kb
 - Decisão da Sil: o onboarding não termina mais na Calculadora (decisão de 06/10 revogada). A tela final mostra o Módulo 1 e o ciclo da Pólia One, com um botão só, "Quero começar pelo Módulo 1", que abre `/planejamento/modulo/1`.
 - Como essa tela já faz o papel das boas-vindas, o clique marca `boas-vindas` e `tour` em `profiles.dicas_vistas`: o modal e o balão do Painel não repetem o recado. Quem pular o onboarding pelo "Pular" continua vendo os dois no Painel.
 - `CALCULADORA_DESC` (texto da Calculadora por tipo de negócio) saiu junto. Evento novo: `onboarding_fim_planejamento`.
+
+## 2026-10-11 — Feedback de teste da Karla: observação no produto e status de negociação (ONE-120, ONE-123)
+
+- Produtos: coluna `produtos.observacao_interna` (texto, até 2000) e campo "Observação interna" no modal, pra código do produto e dados do fornecedor. Só no cadastro, não sai em nada que a cliente vê. Migration `20261011230000_produtos_observacao_interna.sql`.
+- Clientes: `lib/statusCliente.ts` (+ teste) com os status em três grupos. Antes do pedido: Primeiro contato, Orçamento enviado, Pensando. Pedido: os quatro de antes. Depois da entrega: Pós-venda. O modal mostra os grupos; o seletor da linha lista na mesma ordem. "Registrar venda" aparece em Entregue e em Pós-venda, e o Painel conta os dois como entregues. Migration `20261011230100_clientes_status_negociacao_pos_venda.sql` troca o check (os valores antigos continuam válidos).
+- As duas migrations precisam entrar no banco ANTES do deploy: a tela de Produtos lê a coluna nova.

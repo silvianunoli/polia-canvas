@@ -9,6 +9,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { Vazio } from "@/components/layout/Vazio";
 import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 import { hojeISO, mesAnoDe } from "@/lib/data.functions";
+import { jaEntregue } from "@/lib/statusCliente";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { numerosDoMes } from "@/lib/numerosDoMes";
@@ -465,7 +466,7 @@ function PainelPage() {
 
   const clientes = dados?.clientes ?? [];
   const clientesCount = clientes.length;
-  const clientesEntregues = clientes.filter((c) => c.status_pedido === "Entregue").length;
+  const clientesEntregues = clientes.filter((c) => jaEntregue(c.status_pedido)).length;
   const clientesEmEspera = clientes.filter((c) => c.status_pedido === "Em espera").length;
 
   // ── Suas tarefas (quadros do Planner, agrupadas por prazo) ──

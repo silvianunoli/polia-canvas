@@ -16,6 +16,8 @@ export interface Produto {
   preco_venda: number;
   preco_custo: number | null;
   descricao: string | null;
+  /** Só pra dona da marca (código, fornecedor). Não sai em nada que a cliente vê. */
+  observacao_interna: string | null;
   canal: string | null;
   arquivado: boolean;
   preco_atualizado_em: string | null;
