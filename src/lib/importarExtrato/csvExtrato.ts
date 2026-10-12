@@ -37,7 +37,11 @@ export function detectarSeparador(texto: string): string {
 }
 
 function norm(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
 function acharColuna(titulos: string[], teste: (t: string) => boolean): number | undefined {

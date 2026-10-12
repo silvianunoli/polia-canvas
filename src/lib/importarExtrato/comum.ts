@@ -29,7 +29,7 @@ export const MAX_BYTES_ARQUIVO = 5 * 1024 * 1024;
 export function normalizarDescricao(s: string): string {
   return s
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toUpperCase()
     .replace(/[^A-Z]+/g, " ")
     .trim()

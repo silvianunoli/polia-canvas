@@ -8,7 +8,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
@@ -19,6 +19,7 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
+import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { fmt, fmtData, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 
 export const Route = createFileRoute("/_authenticated/produtos")({
@@ -50,6 +51,7 @@ function ProdutosPage() {
   const [produtoEdit, setProdutoEdit] = useState<Produto | null>(null);
   const [produtoParaArquivar, setProdutoParaArquivar] = useState<Produto | null>(null);
   const [arquivando, setArquivando] = useState(false);
+  const [importarAberto, setImportarAberto] = useState(false);
 
   const produtosQuery = useQuery({
     queryKey: ["produtos", userId],
@@ -149,6 +151,14 @@ function ProdutosPage() {
         <button type="button" onClick={abrirAdicionar} disabled={cotaAtingida} className={BTN_ACAO}>
           + Adicionar produto
         </button>
+        <button
+          type="button"
+          onClick={() => setImportarAberto(true)}
+          disabled={cotaAtingida}
+          className={BTN_ACAO_CONTORNO}
+        >
+          Importar planilha
+        </button>
         <Link
           to="/calculadora"
           className="inline-flex min-h-11 items-center text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
@@ -245,6 +255,15 @@ function ProdutosPage() {
         onConfirmar={confirmarArquivar}
         carregando={arquivando}
       />
+      {importarAberto && userId && (
+        <ModalImportarProdutos
+          userId={userId}
+          nomesExistentes={produtos.map((p) => p.nome)}
+          restanteCota={ehConfere ? Math.max(0, COTAS_CONFERE.produtos - produtos.length) : null}
+          onClose={() => setImportarAberto(false)}
+          onMudou={() => qc.invalidateQueries({ queryKey: ["produtos", userId] })}
+        />
+      )}
     </PaginaLogada>
   );
 }

@@ -125,3 +125,10 @@ Plano aprovado pela Sil no chat, com o XML de nota junto (em vez de Fase 2) e no
 - `components/financeiro/ModalImportar.tsx`: arquivo (vários XML de uma vez), mapeamento quando precisa, revisão com marcar, trocar entrada/saída e categoria por linha, importação em lotes de 500 com tudo-ou-nada, e "Desfazer importação" no fim. Botão "Importar extrato" no cabeçalho do Financeiro.
 - Categorias-semente saíram do ModalLancamento pra `lib/categoriasLancamento.ts` (mesma lista, agora compartilhada).
 - Migration `20261011233000_lancamentos_importacao.sql`: `id_externo` (índice único por usuária; o insert usa on conflict do nothing, então reimportar o mesmo OFX não duplica) e `importacao_id` (pra desfazer). Precisa entrar no banco antes do deploy.
+
+## 2026-10-12 — Importar produtos de planilha (ONE-121)
+
+- Mesmo desenho da importação do Financeiro (ONE-124, aprovado): arquivo, colunas quando a Pólia não reconhece os títulos, revisão e "Desfazer importação". Sem migration.
+- `lib/importarProdutos.ts` (+ 11 testes): acha nome, preço de venda, custo, tipo, onde vende, descrição e observação interna pelo título; coluna de código, SKU ou fornecedor entra junto na observação interna (ONE-120). Linha sem nome ou sem preço fica de fora com o número da linha. Produto com nome que já está no catálogo (ignorando acento, caixa e espaço, mas não número) vem desmarcado.
+- `components/produtos/ModalImportarProdutos.tsx`: botão "Importar planilha" em Produtos, planilha modelo pra baixar, tipo trocável por linha. No Grátis marca só o que cabe na cota de 5 e trava o botão se passar; a trigger do banco continua sendo a barreira final. Inserção em lotes, tudo ou nada.
+- Escapes `̀-ͯ` e ` ` voltaram a ser escritos como escape em `lib/importarExtrato` (estavam como caractere invisível; mesmo comportamento).
