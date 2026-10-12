@@ -115,3 +115,13 @@ Proposta aprovada pela Sil (página em claude.ai/artifact/BoCZefMeSBPza42Y86t7kb
 - Pedido de teste da Karla: um produto muito acima ou abaixo dos outros puxava o custo médio. A Sil liberou seguir sem escolher entre mediana e média aparada; ficou a regra dos quartis (Tukey, 1,5 × a distância entre o 1º e o 3º quartil), que mantém o número como média e só tira o que destoa de verdade.
 - `separarForaDaCurva` em `lib/projecao.functions.ts` (+ 6 testes): olha preço e custo direto; o produto que sai, sai das três médias (ticket, custo, taxas), pra sobra não ficar maior do que é. Com menos de 4 produtos ninguém sai; distância zero entre quartis não tira ninguém daquele lado.
 - Projeção: abaixo dos campos, o aviso diz quem ficou fora, com o botão "Usar todos na média" (e "Tirar da média" pra voltar). A leitura de produtos passou a trazer o nome. Sem migration.
+
+## 2026-10-11 — Importar extrato, planilha e nota no Financeiro (ONE-124)
+
+Plano aprovado pela Sil no chat, com o XML de nota junto (em vez de Fase 2) e no Premium e Pro (onde o Financeiro já está).
+
+- `lib/importarExtrato/` (regra pura, 37 testes): `ofx.ts` (SGML e XML, id `ofx:<conta>:<FITID>`), `csvExtrato.ts` (acha o separador e a linha de títulos depois do cabeçalho da conta, valor único ou crédito/débito, pula linha de saldo; sem títulos reconhecíveis, pede mapeamento), `nfe.ts` (NF-e 55/65; emitente = CNPJ de Configurações vira entrada "Venda de produto", senão saída "Insumos / estoque"; NFS-e fica de fora), `revisao.ts` (categoria pelo histórico dela e depois por palavras de extrato; PIX recebido sem sugestão; repetido = mesmo dia, valor e sentido, contado por quantidade), `comum.ts` (valor e data no jeito brasileiro, UTF-8 ou Windows-1252).
+- Excel (.xlsx) não entra direto: a tela pede pra salvar como CSV. As bibliotecas de xlsx no npm têm falha conhecida ou pesam demais pra isso.
+- `components/financeiro/ModalImportar.tsx`: arquivo (vários XML de uma vez), mapeamento quando precisa, revisão com marcar, trocar entrada/saída e categoria por linha, importação em lotes de 500 com tudo-ou-nada, e "Desfazer importação" no fim. Botão "Importar extrato" no cabeçalho do Financeiro.
+- Categorias-semente saíram do ModalLancamento pra `lib/categoriasLancamento.ts` (mesma lista, agora compartilhada).
+- Migration `20261011233000_lancamentos_importacao.sql`: `id_externo` (índice único por usuária; o insert usa on conflict do nothing, então reimportar o mesmo OFX não duplica) e `importacao_id` (pra desfazer). Precisa entrar no banco antes do deploy.

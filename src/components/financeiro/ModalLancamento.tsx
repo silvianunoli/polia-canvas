@@ -6,9 +6,7 @@ import { Modal } from "@/components/ui/Modal";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { categoriaParaSalvar, clicarCategoria, type SelecaoCategoria } from "./categoriaLancamento";
-import { CATEGORIA_INSUMOS } from "@/lib/projecao.functions";
-import { CATEGORIAS_CUSTO_FIXO } from "@/lib/custosFixos.functions";
-import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
+import { CATEGORIAS_ENTRADA, CATEGORIAS_SAIDA } from "@/lib/categoriasLancamento";
 import { CATEGORIAS_DE_VENDA, dataNoMesDe, limitesDoMes } from "@/lib/numerosDoMes";
 
 /**
@@ -38,20 +36,8 @@ export interface Lancamento {
   created_at: string;
 }
 
-// Semente padrão pra usuárias novas; some assim que o histórico real tiver categorias.
-// As duas de venda são as mesmas que o Painel conta em "Pedidos · mês".
-const CATEGORIAS_ENTRADA = [...CATEGORIAS_DE_VENDA, "Outros"];
-// Insumos e Pró-labore vêm das mesmas constantes que a Projeção usa pra tirar
-// essas saídas dos custos fixos: renomear aqui sem renomear lá voltaria a
-// contar insumo duas vezes no ponto de empate. Os custos fixos vêm da mesma
-// lista dos campos da calculadora (custosFixos.functions.ts), pro "puxar do
-// Financeiro" de lá cair no campo certo.
-const CATEGORIAS_SAIDA = [
-  CATEGORIA_INSUMOS,
-  ...CATEGORIAS_CUSTO_FIXO,
-  CATEGORIA_PRO_LABORE,
-  "Outros",
-];
+// Semente padrão pra usuárias novas; some assim que o histórico real tiver
+// categorias. A lista mora em lib/categoriasLancamento.ts (ONE-124).
 const NOVA_CATEGORIA = "+ nova categoria";
 
 export function ModalLancamento({

@@ -1327,6 +1327,8 @@ export type Database = {
           data: string
           descricao: string | null
           id: string
+          id_externo: string | null
+          importacao_id: string | null
           tipo: string
           user_id: string
           valor: number
@@ -1337,6 +1339,8 @@ export type Database = {
           data?: string
           descricao?: string | null
           id?: string
+          id_externo?: string | null
+          importacao_id?: string | null
           tipo: string
           user_id: string
           valor: number
@@ -1347,6 +1351,8 @@ export type Database = {
           data?: string
           descricao?: string | null
           id?: string
+          id_externo?: string | null
+          importacao_id?: string | null
           tipo?: string
           user_id?: string
           valor?: number

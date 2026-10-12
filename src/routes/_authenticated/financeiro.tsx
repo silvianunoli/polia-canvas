@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Lock, Wallet } from "lucide-react";
+import { FileText, Lock, Upload, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -31,6 +31,7 @@ import {
   type Lancamento,
   type RegistrarTipo,
 } from "@/components/financeiro/ModalLancamento";
+import { ModalImportar } from "@/components/financeiro/ModalImportar";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface FinanceiroSearch {
@@ -200,6 +201,7 @@ function FinanceiroPage() {
   });
   const ehProjete = temProjete(perfilResumoQuery.data?.plano);
   const [resumoContadorAberto, setResumoContadorAberto] = useState(false);
+  const [importarAberto, setImportarAberto] = useState(false);
 
   const campoValor = useMemo(() => {
     const m = new Map<string, string>();
@@ -378,25 +380,35 @@ function FinanceiroPage() {
       titulo="O dinheiro do mês."
       subtitulo="Tudo o que entrou e saiu, e o que sobrou no fim."
       acao={
-        ehProjete ? (
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
-            onClick={() => setResumoContadorAberto(true)}
+            onClick={() => setImportarAberto(true)}
             className={BTN_ACAO_CONTORNO}
           >
-            <FileText size={14} aria-hidden="true" />
-            Resumo pro contador
+            <Upload size={14} aria-hidden="true" />
+            Importar extrato
           </button>
-        ) : (
-          <Link
-            to="/upgrade"
-            search={{ rota: "/financeiro/resumo", tier: "projete" }}
-            className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
-          >
-            <Lock size={14} aria-hidden="true" />
-            Resumo pro contador
-          </Link>
-        )
+          {ehProjete ? (
+            <button
+              type="button"
+              onClick={() => setResumoContadorAberto(true)}
+              className={BTN_ACAO_CONTORNO}
+            >
+              <FileText size={14} aria-hidden="true" />
+              Resumo pro contador
+            </button>
+          ) : (
+            <Link
+              to="/upgrade"
+              search={{ rota: "/financeiro/resumo", tier: "projete" }}
+              className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
+            >
+              <Lock size={14} aria-hidden="true" />
+              Resumo pro contador
+            </Link>
+          )}
+        </div>
       }
     >
       <div>
@@ -680,6 +692,17 @@ function FinanceiroPage() {
             setModalVendaAberto(false);
             toastSucesso(msg);
           }}
+        />
+      )}
+
+      {/* ───────── Modal: importar extrato, planilha ou nota (ONE-124) ───────── */}
+      {importarAberto && userId && (
+        <ModalImportar
+          userId={userId}
+          lancamentos={lancamentos}
+          cnpj={perfilResumoQuery.data?.cnpj ?? null}
+          onClose={() => setImportarAberto(false)}
+          onMudou={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
         />
       )}
 
