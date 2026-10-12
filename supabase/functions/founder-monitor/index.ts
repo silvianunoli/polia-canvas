@@ -162,6 +162,26 @@ async function checarPagamentos(): Promise<Check> {
   };
 }
 
+const LIMITE_LENTO_EMAILS_MS = 2500;
+const CHECAGENS_LENTAS_EMAILS = 3;
+
+// As checagens anteriores contam como lentas pela latência gravada (ou pelo
+// crítico), não pelo status: com esta regra, uma lenta isolada fica gravada
+// como operacional. Se a leitura falhar, não confirma a atenção.
+async function anterioresLentasEmails(): Promise<boolean> {
+  const precisa = CHECAGENS_LENTAS_EMAILS - 1;
+  const { data, error } = await admin
+    .from("founder_service_checks")
+    .select("status, latencia_ms")
+    .eq("service", "emails")
+    .order("checado_em", { ascending: false })
+    .limit(precisa);
+  if (error || !data || data.length < precisa) return false;
+  return data.every(
+    (l) => l.status === "critico" || (l.latencia_ms ?? 0) > LIMITE_LENTO_EMAILS_MS,
+  );
+}
+
 async function checarEmails(): Promise<Check> {
   if (!RESEND_API_KEY) {
     return {
@@ -186,14 +206,22 @@ async function checarEmails(): Promise<Check> {
   // leitura — a API está de pé e a chave é reconhecida, então é operacional.
   const chaveSoEnvio = status === 403 || (status === 400 && /restricted|permission/i.test(msg));
   const ok = (status >= 200 && status < 300) || chaveSoEnvio;
+  // FND-12: o /domains do Resend oscila muito (é leitura, não o envio). Uma
+  // checagem lenta isolada não vira atenção; só a terceira seguida acima do
+  // limite. Crítico (erro ou timeout) continua imediato.
+  const lenta = r.ms > LIMITE_LENTO_EMAILS_MS;
+  const lentidaoSeguida = ok && lenta && (await anterioresLentasEmails());
+  const sufixo = chaveSoEnvio ? " (chave só de envio, sem leitura)" : "";
   return {
     service: "emails",
     label: "E-mails",
-    status: ok ? statusPorLatencia(false, r.ms, 2500) : "critico",
+    status: ok ? (lentidaoSeguida ? "atencao" : "operacional") : "critico",
     detalhe: ok
-      ? chaveSoEnvio
-        ? `Resend respondeu em ${r.ms}ms (chave só de envio, sem leitura).`
-        : `Resend respondeu em ${r.ms}ms.`
+      ? lentidaoSeguida
+        ? `Resend lento em ${CHECAGENS_LENTAS_EMAILS} checagens seguidas, ${r.ms}ms agora${sufixo}.`
+        : lenta
+          ? `Resend respondeu em ${r.ms}ms, lento só nesta checagem${sufixo}.`
+          : `Resend respondeu em ${r.ms}ms${sufixo}.`
       : status === 0
         ? "Resend não respondeu a tempo."
         : `Resend respondeu HTTP ${status}${msg ? `: ${msg}` : ""}`,
