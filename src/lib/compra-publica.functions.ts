@@ -6,6 +6,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 import { lerOrigemCampanha, temOrigemCampanha } from "@/lib/origemCampanha";
+import { CHAVE_CAMPO_DOCUMENTO } from "../../supabase/functions/_shared/notaFiscalRegras";
 
 const inputSchema = z.object({
   // Minúsculo desde 08/10/2026: o hook de cadastro compara o convite com
@@ -146,12 +147,21 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         success_url: `${SITE_URL}/compra-confirmada?plano=${data.plano}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}/planos?${voltar.toString()}`,
         allow_promotion_codes: true,
-        // Nota fiscal (PAY-32, 12/10/2026): CPF/CNPJ e endereço obrigatórios.
-        // O Stripe grava os dois no customer, e o webhook lê dali pra emitir
-        // a NFS-e pela NFE.io. "if_supported" torna o documento obrigatório
-        // quando o país do endereço aceita (Brasil: CPF ou CNPJ).
+        // Nota fiscal (PAY-32): CPF/CNPJ e endereço obrigatórios. O endereço
+        // o Stripe grava no customer. O documento vem num campo próprio: o
+        // tax_id_collection (12/10) não apareceu pra pessoa física no Brasil
+        // e a 1ª compra de teste saiu sem CPF (13/10). O webhook lê este campo
+        // pela sessão (CHAVE_CAMPO_DOCUMENTO) e guarda no customer.
         billing_address_collection: "required",
-        tax_id_collection: { enabled: true, required: "if_supported" },
+        custom_fields: [
+          {
+            key: CHAVE_CAMPO_DOCUMENTO,
+            label: { type: "custom", custom: "CPF ou CNPJ (vai na nota fiscal)" },
+            type: "numeric",
+            numeric: { minimum_length: 11, maximum_length: 14 },
+            optional: false,
+          },
+        ],
         // metadata.plano vai junto no evento do webhook (checkout.session.completed),
         // e session.id correlaciona o checkout_iniciado (client) com o
         // checkout_concluido/falhou (server) no funil de tagueamento. A origem

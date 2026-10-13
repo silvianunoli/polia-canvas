@@ -84,6 +84,22 @@ export function documentoDaCliente(
   return null;
 }
 
+/** Chave do campo "CPF ou CNPJ" do Checkout público (só letras e números, regra do Stripe). */
+export const CHAVE_CAMPO_DOCUMENTO = "cpfcnpj";
+
+export interface CampoCheckout {
+  key: string;
+  numeric?: { value?: string | null } | null;
+  text?: { value?: string | null } | null;
+}
+
+/** CPF/CNPJ digitado no campo do Checkout; null se não veio ou não fecha o dígito. */
+export function documentoDoCampo(campos: CampoCheckout[] | null | undefined): string | null {
+  const campo = (campos ?? []).find((c) => c.key === CHAVE_CAMPO_DOCUMENTO);
+  const valor = campo?.numeric?.value ?? campo?.text?.value ?? null;
+  return valor && tipoDocumento(valor) ? soDigitos(valor) : null;
+}
+
 /**
  * Separa "Rua X, 123" em rua e número. O Stripe guarda a linha inteira em
  * line1; a nota pede os dois separados. Sem número reconhecível vai "S/N".

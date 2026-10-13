@@ -18,6 +18,7 @@ import { proximaTentativaEm } from "../_shared/reenvioEmail.ts";
 import { montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
 import {
   documentoDaCliente,
+  documentoDoCampo,
   erroTemporario,
   faturaGeraNota,
   montarTomador,
@@ -910,6 +911,25 @@ async function atualizarNota(id: string, campos: Record<string, unknown>): Promi
   if (error) throw error;
 }
 
+async function documentoDoCheckout(invoice: Stripe.Invoice): Promise<string | null> {
+  const subRef =
+    invoice.parent?.type === "subscription_details"
+      ? invoice.parent.subscription_details?.subscription
+      : null;
+  const subscriptionId = typeof subRef === "string" ? subRef : subRef?.id;
+  if (!subscriptionId) return null;
+  try {
+    const sessoes = await stripe.checkout.sessions.list({
+      subscription: subscriptionId,
+      limit: 1,
+    });
+    return documentoDoCampo(sessoes.data[0]?.custom_fields);
+  } catch (err) {
+    console.error("[stripe-webhook] Falha ao ler o CPF/CNPJ do checkout:", err);
+    return null;
+  }
+}
+
 async function emitirNotaDaFatura(invoice: Stripe.Invoice): Promise<void> {
   if (!invoice.id || !faturaGeraNota(invoice)) return;
   const customerId =
@@ -962,6 +982,19 @@ async function emitirNotaDaFatura(invoice: Stripe.Invoice): Promise<void> {
       documento = documentoDaCliente(c.tax_ids?.data ?? [], c.metadata);
       nome = c.name ?? nome;
       endereco = c.address ?? endereco;
+    }
+    // Compra pela /planos: o CPF/CNPJ vem no campo próprio do Checkout. Lê
+    // da sessão desta assinatura e guarda no customer, pra renovação achar
+    // direto. Não depende do checkout.session.completed ter chegado antes.
+    if (!documento) {
+      documento = await documentoDoCheckout(invoice);
+      if (documento) {
+        try {
+          await stripe.customers.update(customerId, { metadata: { cpf_cnpj: documento } });
+        } catch (err) {
+          console.error("[stripe-webhook] Falha ao guardar CPF/CNPJ no customer:", err);
+        }
+      }
     }
   }
   const cep = endereco?.postal_code ? await buscarCep(endereco.postal_code) : null;

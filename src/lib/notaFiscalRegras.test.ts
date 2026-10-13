@@ -6,7 +6,9 @@ import {
   tipoDocumento,
 } from "../../supabase/functions/_shared/documentoFiscal";
 import {
+  CHAVE_CAMPO_DOCUMENTO,
   documentoDaCliente,
+  documentoDoCampo,
   erroTemporario,
   faturaGeraNota,
   montarTomador,
@@ -201,5 +203,23 @@ describe("valorEmReais", () => {
   it("converte centavos", () => {
     expect(valorEmReais(2990)).toBe(29.9);
     expect(valorEmReais(47900)).toBe(479);
+  });
+});
+
+describe("documentoDoCampo (campo do Checkout público)", () => {
+  it("lê o CPF digitado no campo próprio", () => {
+    expect(
+      documentoDoCampo([{ key: CHAVE_CAMPO_DOCUMENTO, numeric: { value: "52998224725" } }]),
+    ).toBe("52998224725");
+  });
+  it("número que não fecha o dígito vira nota sem documento, não nota errada", () => {
+    expect(
+      documentoDoCampo([{ key: CHAVE_CAMPO_DOCUMENTO, numeric: { value: "52998224726" } }]),
+    ).toBeNull();
+  });
+  it("sessão sem o campo (compra antiga) não quebra", () => {
+    expect(documentoDoCampo([])).toBeNull();
+    expect(documentoDoCampo(undefined)).toBeNull();
+    expect(documentoDoCampo([{ key: "outro", text: { value: "52998224725" } }])).toBeNull();
   });
 });
