@@ -70,7 +70,8 @@ async function chamar(
       statusHttp: res.status,
       corpo: json,
       // Só a mensagem, cortada: o corpo pode trazer dado da cliente.
-      erro: res.ok ? null : mensagemDeErro(json, texto),
+      // Sem corpo (13/10: cancelamento recusado veio vazio), guarda o código HTTP.
+      erro: res.ok ? null : mensagemDeErro(json, texto) || `HTTP ${res.status} sem mensagem`,
     };
   } catch (err) {
     return {
