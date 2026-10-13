@@ -132,3 +132,13 @@ Plano aprovado pela Sil no chat, com o XML de nota junto (em vez de Fase 2) e no
 - `lib/importarProdutos.ts` (+ 11 testes): acha nome, preço de venda, custo, tipo, onde vende, descrição e observação interna pelo título; coluna de código, SKU ou fornecedor entra junto na observação interna (ONE-120). Linha sem nome ou sem preço fica de fora com o número da linha. Produto com nome que já está no catálogo (ignorando acento, caixa e espaço, mas não número) vem desmarcado.
 - `components/produtos/ModalImportarProdutos.tsx`: botão "Importar planilha" em Produtos, planilha modelo pra baixar, tipo trocável por linha. No Grátis marca só o que cabe na cota de 5 e trava o botão se passar; a trigger do banco continua sendo a barreira final. Inserção em lotes, tudo ou nada.
 - Escapes `̀-ͯ` e ` ` voltaram a ser escritos como escape em `lib/importarExtrato` (estavam como caractere invisível; mesmo comportamento).
+
+## 2026-10-12 — Nota fiscal automática pela NFE.io (PAY-32)
+
+Decisão da Sil no chat: API da NFE.io (não o app da Stripe, que não cancela nem liga a nota à fatura), CPF/CNPJ e endereço completo obrigatórios no pagamento, e cancelamento automático quando a assinatura é reembolsada.
+
+- `supabase/functions/_shared/documentoFiscal.ts` (CPF/CNPJ com dígito verificador e máscara) e `_shared/notaFiscalRegras.ts` (emite ou não, reembolso total ou parcial, tomador no formato da NFE.io), 22 testes em `src/lib/notaFiscalRegras.test.ts`. `_shared/nfeio.ts` é o cliente da API (emitir, cancelar) e o CEP → código IBGE pelo ViaCEP.
+- `stripe-webhook`: `invoice.paid` emite a NFS-e (toda fatura paga, inclusive renovação; externalId = id da fatura), `charge.refunded` cancela a nota quando o reembolso é total. Reembolso parcial não cancela e avisa no Telegram. Erro temporário da NFE.io devolve 500 (o Stripe reentrega); erro definitivo fica gravado na linha e vai pro Telegram.
+- Migration `20261012210000_notas_fiscais.sql`: uma linha por fatura, sem user_id (registro fiscal fica fora da exclusão de conta), RLS sem policy. Já aplicada no banco.
+- Checkout público: `billing_address_collection: "required"` e `tax_id_collection` obrigatório (testado contra a Stripe, sessão expirada na hora). `/assinar`: campo CPF ou CNPJ + `AddressElement` no modal; `salvarDadosFiscais` grava os dois no customer antes da cobrança (+ 5 testes).
+- Falta (Sil): secrets NFEIO_API_KEY / NFEIO_COMPANY_ID / NFEIO_CODIGO_SERVICO, eventos `invoice.paid` e `charge.refunded` no endpoint do webhook na Stripe, deploy da edge function (classificador barra daqui).

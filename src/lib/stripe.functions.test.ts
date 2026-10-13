@@ -34,7 +34,13 @@ vi.mock("@tanstack/react-start", () => ({
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));
 
 const stripeMock = vi.hoisted(() => ({
-  customers: { create: vi.fn() },
+  customers: {
+    create: vi.fn(),
+    update: vi.fn(),
+    listTaxIds: vi.fn(),
+    deleteTaxId: vi.fn(),
+    createTaxId: vi.fn(),
+  },
   subscriptions: { create: vi.fn(), update: vi.fn(), retrieve: vi.fn(), cancel: vi.fn() },
   billingPortal: { sessions: { create: vi.fn() } },
 }));
@@ -61,6 +67,7 @@ import {
   statusAssinatura,
   abrirPortalCobranca,
   cancelarAssinatura,
+  salvarDadosFiscais,
 } from "./stripe.functions";
 
 type Chamavel = (opts?: { data?: unknown; context?: unknown }) => Promise<unknown>;
@@ -88,6 +95,10 @@ beforeEach(() => {
   from.mockReset();
   dispararAlerta.mockReset();
   stripeMock.customers.create.mockReset();
+  stripeMock.customers.update.mockReset();
+  stripeMock.customers.listTaxIds.mockReset();
+  stripeMock.customers.deleteTaxId.mockReset();
+  stripeMock.customers.createTaxId.mockReset();
   stripeMock.subscriptions.create.mockReset();
   stripeMock.subscriptions.update.mockReset();
   stripeMock.subscriptions.retrieve.mockReset();
@@ -313,7 +324,10 @@ describe("iniciarAssinatura", () => {
     it("no Stripe ainda incompleta: cancela e abre outra com chave nova", async () => {
       from.mockReturnValueOnce(consulta(linhaIncompleta));
       from.mockReturnValueOnce(consulta({ error: null }));
-      stripeMock.subscriptions.retrieve.mockResolvedValue({ id: "sub_velha", status: "incomplete" });
+      stripeMock.subscriptions.retrieve.mockResolvedValue({
+        id: "sub_velha",
+        status: "incomplete",
+      });
       stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
 
       const r = await iniciar({ data: { plano: "controle_mensal" }, context });
@@ -585,5 +599,81 @@ describe("cancelarAssinatura", () => {
       ok: false,
       error: "A Pólia One não conseguiu cancelar sua assinatura agora. Tenta de novo.",
     });
+  });
+});
+
+describe("salvarDadosFiscais (PAY-32)", () => {
+  const salvar = salvarDadosFiscais as unknown as Chamavel;
+  const endereco = {
+    line1: "Rua das Flores, 123",
+    line2: null,
+    city: "São Paulo",
+    state: "SP",
+    postal_code: "01310-100",
+    country: "BR",
+  };
+  const linhaComCustomer = { data: { stripe_customer_id: "cus_1" }, error: null };
+
+  it("recusa CPF que não fecha sem tocar no Stripe", async () => {
+    const r = (await salvar({
+      data: { documento: "529.982.247-26", nome: "Ana Souza", endereco },
+      context,
+    })) as { ok: boolean };
+    expect(r.ok).toBe(false);
+    expect(stripeMock.customers.update).not.toHaveBeenCalled();
+  });
+
+  it("grava endereço e CPF no customer dela, no formato que o Stripe pede", async () => {
+    from.mockReturnValue(consulta(linhaComCustomer));
+    stripeMock.customers.listTaxIds.mockResolvedValue({ data: [] });
+    const r = (await salvar({
+      data: { documento: "52998224725", nome: "Ana Souza", endereco },
+      context,
+    })) as { ok: boolean };
+    expect(r.ok).toBe(true);
+    expect(stripeMock.customers.update).toHaveBeenCalledWith(
+      "cus_1",
+      expect.objectContaining({ name: "Ana Souza" }),
+    );
+    expect(stripeMock.customers.createTaxId).toHaveBeenCalledWith("cus_1", {
+      type: "br_cpf",
+      value: "529.982.247-25",
+    });
+  });
+
+  it("documento igual ao que já está lá não duplica", async () => {
+    from.mockReturnValue(consulta(linhaComCustomer));
+    stripeMock.customers.listTaxIds.mockResolvedValue({
+      data: [{ id: "txi_1", type: "br_cpf", value: "529.982.247-25" }],
+    });
+    await salvar({ data: { documento: "529.982.247-25", nome: "Ana Souza", endereco }, context });
+    expect(stripeMock.customers.createTaxId).not.toHaveBeenCalled();
+    expect(stripeMock.customers.deleteTaxId).not.toHaveBeenCalled();
+  });
+
+  it("trocou de CPF pra CNPJ: tira o antigo e grava o novo", async () => {
+    from.mockReturnValue(consulta(linhaComCustomer));
+    stripeMock.customers.listTaxIds.mockResolvedValue({
+      data: [{ id: "txi_1", type: "br_cpf", value: "529.982.247-25" }],
+    });
+    await salvar({
+      data: { documento: "11.222.333/0001-81", nome: "Ana Ltda", endereco },
+      context,
+    });
+    expect(stripeMock.customers.deleteTaxId).toHaveBeenCalledWith("cus_1", "txi_1");
+    expect(stripeMock.customers.createTaxId).toHaveBeenCalledWith("cus_1", {
+      type: "br_cnpj",
+      value: "11.222.333/0001-81",
+    });
+  });
+
+  it("sem assinatura iniciada não grava em customer nenhum", async () => {
+    from.mockReturnValue(consulta({ data: null, error: null }));
+    const r = (await salvar({
+      data: { documento: "52998224725", nome: "Ana Souza", endereco },
+      context,
+    })) as { ok: boolean };
+    expect(r.ok).toBe(false);
+    expect(stripeMock.customers.update).not.toHaveBeenCalled();
   });
 });

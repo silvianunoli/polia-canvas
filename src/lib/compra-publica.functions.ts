@@ -146,6 +146,12 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         success_url: `${SITE_URL}/compra-confirmada?plano=${data.plano}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}/planos?${voltar.toString()}`,
         allow_promotion_codes: true,
+        // Nota fiscal (PAY-32, 12/10/2026): CPF/CNPJ e endereço obrigatórios.
+        // O Stripe grava os dois no customer, e o webhook lê dali pra emitir
+        // a NFS-e pela NFE.io. "if_supported" torna o documento obrigatório
+        // quando o país do endereço aceita (Brasil: CPF ou CNPJ).
+        billing_address_collection: "required",
+        tax_id_collection: { enabled: true, required: "if_supported" },
         // metadata.plano vai junto no evento do webhook (checkout.session.completed),
         // e session.id correlaciona o checkout_iniciado (client) com o
         // checkout_concluido/falhou (server) no funil de tagueamento. A origem

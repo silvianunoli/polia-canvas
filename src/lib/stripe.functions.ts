@@ -5,6 +5,11 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispararAlerta } from "@/lib/alertas.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
+import {
+  formatarDocumento,
+  soDigitos,
+  tipoDocumento,
+} from "../../supabase/functions/_shared/documentoFiscal";
 
 let _stripe: Stripe | undefined;
 
@@ -183,9 +188,13 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
             // Sem saber o estado real, não cancela (pode estar paga) e não abre
             // outra (pode virar cobrança dupla). Ela tenta de novo.
             console.error("[Stripe] Falha ao conferir a tentativa anterior:", err);
-            void dispararAlerta("checkout_erro", "Erro ao conferir assinatura anterior (checkout)", {
-              mensagem: err instanceof Error ? err.message : String(err),
-            });
+            void dispararAlerta(
+              "checkout_erro",
+              "Erro ao conferir assinatura anterior (checkout)",
+              {
+                mensagem: err instanceof Error ? err.message : String(err),
+              },
+            );
             return { clientSecret: null, error: ERRO_INICIAR_ASSINATURA };
           }
           // Não existe mais no Stripe: nada a cancelar, segue.
@@ -273,6 +282,87 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
         mensagem: err instanceof Error ? err.message : String(err),
       });
       return { clientSecret: null, error: ERRO_INICIAR_ASSINATURA };
+    }
+  });
+
+// Nota fiscal (PAY-32, 12/10/2026): CPF/CNPJ e endereço de quem assina pelo
+// /assinar. O modal de pagamento chama isto antes de confirmar a cobrança, e
+// o stripe-webhook lê os dois do customer quando a fatura é paga. Mesmo lugar
+// onde o Checkout público grava (tax_id_collection), então o webhook tem uma
+// fonte só.
+const ERRO_DADOS_FISCAIS =
+  "A Pólia One não conseguiu guardar os dados da nota fiscal agora. Tenta de novo.";
+
+const salvarDadosFiscaisInput = z.object({
+  documento: z.string().trim().max(20),
+  nome: z.string().trim().min(2).max(120),
+  endereco: z.object({
+    line1: z.string().trim().min(3).max(200),
+    line2: z.string().trim().max(200).optional().nullable(),
+    city: z.string().trim().min(2).max(100),
+    state: z.string().trim().min(2).max(50),
+    postal_code: z
+      .string()
+      .trim()
+      .refine((v) => soDigitos(v).length === 8, "CEP inválido"),
+    country: z.literal("BR"),
+  }),
+});
+
+export const salvarDadosFiscais = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => salvarDadosFiscaisInput.parse(input))
+  .handler(async ({ data, context }) => {
+    const tipo = tipoDocumento(data.documento);
+    if (!tipo) return { ok: false, error: "Confere o CPF ou CNPJ: o número não fecha." };
+
+    // O customer é sempre o da linha dela (criado no iniciarAssinatura):
+    // ninguém grava documento no customer de outra pessoa.
+    const assinatura = await lerAssinatura(context.userId);
+    if (!assinatura?.stripe_customer_id) return { ok: false, error: ERRO_DADOS_FISCAIS };
+
+    try {
+      const stripe = stripeClient();
+      const customerId = assinatura.stripe_customer_id;
+      await stripe.customers.update(customerId, {
+        name: data.nome,
+        address: {
+          line1: data.endereco.line1,
+          line2: data.endereco.line2 ?? undefined,
+          city: data.endereco.city,
+          state: data.endereco.state,
+          postal_code: data.endereco.postal_code,
+          country: "BR",
+        },
+      });
+
+      const valor = soDigitos(data.documento);
+      const tipoStripe = tipo === "cpf" ? "br_cpf" : "br_cnpj";
+      const existentes = await stripe.customers.listTaxIds(customerId, { limit: 20 });
+      const brasileiros = existentes.data.filter(
+        (t) => t.type === "br_cpf" || t.type === "br_cnpj",
+      );
+      if (!brasileiros.some((t) => t.type === tipoStripe && soDigitos(t.value) === valor)) {
+        // Trocou o documento: sai o antigo, senão a nota podia pegar o errado.
+        for (const t of brasileiros) await stripe.customers.deleteTaxId(customerId, t.id);
+        // O Stripe pede o número no formato com pontuação (123.456.789-09).
+        await stripe.customers.createTaxId(customerId, {
+          type: tipoStripe,
+          value: formatarDocumento(valor),
+        });
+      }
+      return { ok: true, error: null };
+    } catch (err) {
+      console.error("[Stripe] Erro ao salvar dados fiscais:", err);
+      // Recusa do Stripe ao documento (tax_id_invalid) é dado dela, não falha nossa.
+      const codigo = (err as { code?: string } | null)?.code;
+      if (codigo === "tax_id_invalid") {
+        return { ok: false, error: "Confere o CPF ou CNPJ: o Stripe não aceitou esse número." };
+      }
+      void dispararAlerta("checkout_erro", "Erro ao salvar CPF/CNPJ e endereço (checkout)", {
+        mensagem: err instanceof Error ? err.message : String(err),
+      });
+      return { ok: false, error: ERRO_DADOS_FISCAIS };
     }
   });
 

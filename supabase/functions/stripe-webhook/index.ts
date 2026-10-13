@@ -16,6 +16,17 @@ import {
 } from "../_shared/stripeWebhookRegras.ts";
 import { proximaTentativaEm } from "../_shared/reenvioEmail.ts";
 import { montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
+import {
+  documentoDaCliente,
+  erroTemporario,
+  faturaGeraNota,
+  montarTomador,
+  podeEmitir,
+  tipoDeReembolso,
+  valorEmReais,
+  type StatusNota,
+} from "../_shared/notaFiscalRegras.ts";
+import { buscarCep, cancelarNfse, emitirNfse, lerConfigNfeio } from "../_shared/nfeio.ts";
 
 // Stripe manda o corpo assinado (sem JWT de usuária) — esta função fica com
 // verify_jwt = false e valida a autenticidade pela assinatura HMAC do próprio
@@ -121,7 +132,11 @@ async function enviarCompraMeta(
     if (teste) corpo.test_event_code = teste;
     const resp = await fetch(
       `https://graph.facebook.com/v21.0/${META_PIXEL_ID}/events?access_token=${encodeURIComponent(token)}`,
-      { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corpo) },
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(corpo),
+      },
     );
     if (!resp.ok) console.error(`[stripe-webhook] Meta recusou a compra (HTTP ${resp.status}).`);
   } catch {
@@ -859,6 +874,220 @@ async function enviarEmailDaCompra(email: string, pendente: EmailDaCompra): Prom
   }
 }
 
+// ---------------------------------------------------------------------------
+// Nota fiscal (PAY-32, 12/10/2026). Toda fatura paga vira NFS-e pela NFE.io,
+// e o reembolso total cancela a nota sozinho. A NFE.io manda o PDF pro e-mail
+// da cliente. Regras em _shared/notaFiscalRegras.ts.
+//
+// Erro temporário (NFE.io fora do ar, tempo esgotado) JOGA: o webhook devolve
+// 500 e o Stripe reentrega o evento. Erro que não melhora tentando de novo
+// (falta configurar, dado recusado) fica gravado na linha, vai pro Telegram e
+// o evento é dado como processado, senão o Stripe desligaria o endpoint
+// depois de dias de falha.
+
+interface LinhaNota {
+  id: string;
+  status: StatusNota;
+  nfeio_id: string | null;
+  tentativas: number;
+}
+
+async function lerNota(stripeInvoiceId: string): Promise<LinhaNota | null> {
+  const { data, error } = await supabaseAdmin
+    .from("notas_fiscais")
+    .select("id, status, nfeio_id, tentativas")
+    .eq("stripe_invoice_id", stripeInvoiceId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as LinhaNota | null) ?? null;
+}
+
+async function atualizarNota(id: string, campos: Record<string, unknown>): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from("notas_fiscais")
+    .update({ ...campos, atualizado_em: new Date().toISOString() })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+async function emitirNotaDaFatura(invoice: Stripe.Invoice): Promise<void> {
+  if (!invoice.id || !faturaGeraNota(invoice)) return;
+  const customerId =
+    typeof invoice.customer === "string" ? invoice.customer : (invoice.customer?.id ?? null);
+
+  let linha = await lerNota(invoice.id);
+  if (!podeEmitir(linha)) return;
+  if (!linha) {
+    const { data, error } = await supabaseAdmin
+      .from("notas_fiscais")
+      .insert({
+        stripe_invoice_id: invoice.id,
+        stripe_customer_id: customerId,
+        valor_centavos: invoice.amount_paid,
+      })
+      .select("id, status, nfeio_id, tentativas")
+      .single();
+    if (error) {
+      // Duas entregas ao mesmo tempo: a outra criou a linha e está emitindo.
+      if ((error as { code?: string }).code === "23505") return;
+      throw error;
+    }
+    linha = data as LinhaNota;
+  }
+
+  const config = lerConfigNfeio((nome) => Deno.env.get(nome));
+  if (!config) {
+    await atualizarNota(linha.id, {
+      status: "erro_emissao",
+      erro: "NFE.io não configurada (NFEIO_API_KEY, NFEIO_COMPANY_ID, NFEIO_CODIGO_SERVICO)",
+    });
+    await dispararAlerta(
+      "nota_fiscal_nao_emitida",
+      "Nota fiscal não emitida: falta configurar a NFE.io",
+      {
+        fatura: invoice.id,
+      },
+    );
+    return;
+  }
+
+  // Dados da cliente: CPF/CNPJ como Tax ID e endereço, gravados no checkout.
+  let documento: string | null = null;
+  let nome: string | null = invoice.customer_name ?? null;
+  let endereco: Stripe.Address | null = invoice.customer_address ?? null;
+  if (customerId) {
+    const cliente = await stripe.customers.retrieve(customerId, { expand: ["tax_ids"] });
+    if (!("deleted" in cliente && cliente.deleted)) {
+      const c = cliente as Stripe.Customer;
+      documento = documentoDaCliente(c.tax_ids?.data ?? [], c.metadata);
+      nome = c.name ?? nome;
+      endereco = c.address ?? endereco;
+    }
+  }
+  const cep = endereco?.postal_code ? await buscarCep(endereco.postal_code) : null;
+  const tomador = montarTomador({
+    documento,
+    nome,
+    email: invoice.customer_email ?? null,
+    endereco,
+    codigoIbge: cep?.codigoIbge ?? null,
+    bairro: cep?.bairro ?? null,
+  });
+
+  await atualizarNota(linha.id, { status: "emitindo", tentativas: linha.tentativas + 1 });
+  const resposta = await emitirNfse(config, {
+    tomador,
+    valor: valorEmReais(invoice.amount_paid),
+    externalId: invoice.id,
+  });
+
+  const nfeioId = typeof resposta.corpo?.id === "string" ? resposta.corpo.id : null;
+  if (resposta.ok && nfeioId) {
+    await atualizarNota(linha.id, {
+      status: "emitida",
+      nfeio_id: nfeioId,
+      nfeio_status:
+        typeof resposta.corpo?.flowStatus === "string" ? resposta.corpo.flowStatus : null,
+      erro: documento ? null : "Sem CPF/CNPJ no Stripe: nota como cliente não identificada",
+      emitida_em: new Date().toISOString(),
+    });
+    return;
+  }
+
+  // Aceitou sem devolver id: não tenta de novo (podia duplicar a nota), avisa.
+  const motivo = resposta.erro ?? "NFE.io respondeu sem o id da nota";
+  await atualizarNota(linha.id, { status: "erro_emissao", erro: motivo });
+  if (!resposta.ok && (erroTemporario(resposta.statusHttp) || resposta.statusHttp === 0)) {
+    throw new Error(`NFE.io indisponível ao emitir nota (${resposta.statusHttp}): ${motivo}`);
+  }
+  await dispararAlerta("nota_fiscal_nao_emitida", "Nota fiscal recusada pela NFE.io", {
+    fatura: invoice.id,
+    status_http: resposta.statusHttp,
+    motivo,
+  });
+}
+
+// Fatura da cobrança reembolsada. Na API atual do Stripe a cobrança não traz
+// mais o id da fatura; o caminho é o pagamento (payment_intent).
+async function faturaDaCobranca(charge: Stripe.Charge): Promise<string | null> {
+  const pi =
+    typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+  if (!pi) return null;
+  const pagamentos = await stripe.invoicePayments.list({
+    payment: { type: "payment_intent", payment_intent: pi },
+    limit: 1,
+  });
+  const fatura = pagamentos.data[0]?.invoice;
+  return typeof fatura === "string" ? fatura : (fatura?.id ?? null);
+}
+
+async function cancelarNotaDoReembolso(charge: Stripe.Charge): Promise<void> {
+  const tipo = tipoDeReembolso(charge);
+  if (tipo === "nenhum") return;
+  const faturaId = await faturaDaCobranca(charge);
+  if (!faturaId) return;
+
+  if (tipo === "parcial") {
+    await dispararAlerta(
+      "nota_fiscal_reembolso_parcial",
+      "Reembolso parcial: a nota fiscal continua valendo (NFS-e não cancela em parte)",
+      { fatura: faturaId, cobranca: charge.id },
+    );
+    return;
+  }
+
+  const linha = await lerNota(faturaId);
+  if (!linha || linha.status === "cancelada") return;
+
+  // A nota ainda não tinha saído: marca cancelada e ela não sai mais.
+  if (!linha.nfeio_id) {
+    await atualizarNota(linha.id, {
+      status: "cancelada",
+      erro: "Reembolsada antes da nota ser emitida",
+      cancelada_em: new Date().toISOString(),
+    });
+    return;
+  }
+
+  const config = lerConfigNfeio((nome) => Deno.env.get(nome));
+  if (!config) {
+    await atualizarNota(linha.id, { status: "erro_cancelamento", erro: "NFE.io não configurada" });
+    await dispararAlerta(
+      "nota_fiscal_nao_cancelada",
+      "Nota fiscal não cancelada: falta configurar a NFE.io",
+      {
+        fatura: faturaId,
+      },
+    );
+    return;
+  }
+
+  const resposta = await cancelarNfse(config, linha.nfeio_id);
+  if (resposta.ok) {
+    await atualizarNota(linha.id, {
+      status: "cancelada",
+      erro: null,
+      cancelada_em: new Date().toISOString(),
+    });
+    return;
+  }
+
+  await atualizarNota(linha.id, { status: "erro_cancelamento", erro: resposta.erro });
+  if (erroTemporario(resposta.statusHttp) || resposta.statusHttp === 0) {
+    throw new Error(
+      `NFE.io indisponível ao cancelar nota (${resposta.statusHttp}): ${resposta.erro}`,
+    );
+  }
+  // Recusa da prefeitura (prazo de cancelamento passou, ISS já recolhido):
+  // aí é com o contador, e a Sil precisa saber.
+  await dispararAlerta("nota_fiscal_nao_cancelada", "Nota fiscal de reembolso NÃO foi cancelada", {
+    fatura: faturaId,
+    nota: linha.nfeio_id,
+    status_http: resposta.statusHttp,
+    motivo: resposta.erro,
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response("Method not allowed", { status: 405 });
 
@@ -1114,6 +1343,14 @@ Deno.serve(async (req) => {
           ? formatarDataBR(new Date(invoice.next_payment_attempt * 1000))
           : null;
         await enviarEmailRenovacao(email, valorFormatado, dataCobranca);
+        break;
+      }
+      case "invoice.paid": {
+        await emitirNotaDaFatura(event.data.object as Stripe.Invoice);
+        break;
+      }
+      case "charge.refunded": {
+        await cancelarNotaDoReembolso(event.data.object as Stripe.Charge);
         break;
       }
       default:
