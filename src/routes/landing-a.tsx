@@ -16,7 +16,6 @@ import { lerFbclidDaQuery, lerUtmsDaQuery } from "@/lib/origemCampanha";
 import { TIERS_PAGOS } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
-import { HighlightWord } from "@/components/site/HighlightWord";
 import {
   BarraCtaMobile,
   BotaoCadastro,
@@ -46,7 +45,7 @@ import {
   MockVendasMeta,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
-import { VideoVsl } from "@/components/landing/VideoVsl";
+import { HeroComVideo } from "@/components/landing/VideoVsl";
 
 // Landing A de campanha (06/10/2026): Ângulo A, "o próximo orçamento". Copy em
 // COPY-LANDING-A-POLIA-ONE.md e layout em WIREFRAME-LANDINGS-POLIA-ONE.md, na raiz
@@ -266,52 +265,21 @@ function LandingA() {
       <HeaderCampanha busca={busca} />
 
       <main id="conteudo">
-        {/* A1 · HERO */}
-        <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
-          <div className="grid grid-cols-1 items-center gap-x-[clamp(32px,5vw,64px)] gap-y-12 md:grid-cols-[55fr_45fr]">
-            <div>
-              <Rotulo>Pólia One · pra hora do orçamento</Rotulo>
-              {/* h1, subtítulo e botão fora do Reveal de propósito: chegam visíveis no HTML
-                  do servidor, sem esperar o JS. Título longo: override menor. */}
-              <h1 className="mt-4 text-[clamp(24px,2.8vw,44px)] font-bold leading-[1.1] tracking-[-0.02em] text-balance max-md:text-[28px]">
-                O orçamento chegou. A Pólia One faz a conta antes de você responder.
-              </h1>
-              <p className={`mt-6 ${CORPO}`}>
-                Custo do material, taxa da maquininha, quanto precisa sobrar: a Pólia One junta tudo
-                e mostra{" "}
-                <b className="font-semibold">
-                  <HighlightWord delay={0.3}>o preço e o que sobra nele</HighlightWord>
-                </b>
-                . Se a cliente pedir desconto, mostra quanto fica com o desconto também.
-              </p>
-              <div className="mt-8">
-                <BotaoCadastro busca={busca} contexto="hero" botaoRef={heroCta} />
-                <p className="mt-3 text-[13px] text-[var(--muted)]">
-                  A Calculadora está no plano Grátis. Sem cartão.
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <FotoLanding
-                nome="hero-orcamento-celular"
-                alt="Mão segurando o celular com um pedido de orçamento aberto, sobre a mesa de trabalho com cadernos de aquarela."
-                proporcao="4/5"
-                prioridade
-              />
-              <Reveal
-                delay={0.2}
-                className="relative -mt-10 w-[85%] max-w-[320px] md:absolute md:bottom-12 md:left-0 md:mt-0 lg:-left-12"
-              >
-                <MockDescontoHero />
-              </Reveal>
-            </div>
-          </div>
-          <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
-        </Secao>
-
-        {/* A1b · VSL */}
-        <VideoVsl busca={busca} />
+        {/* A1 · HERO: título em cima, VSL grande embaixo e o botão colado no vídeo. */}
+        <HeroComVideo
+          busca={busca}
+          botaoRef={heroCta}
+          rotulo="Pólia One · pra hora do orçamento"
+          titulo="O orçamento chegou. A Pólia One faz a conta antes de você responder."
+          subtitulo={
+            <>
+              Custo do material, taxa da maquininha, quanto precisa sobrar: a Pólia One junta tudo e
+              mostra <b className="font-semibold">o preço e o que sobra nele</b>. Se a cliente pedir
+              desconto, mostra quanto fica com o desconto também.
+            </>
+          }
+          micro="A Calculadora está no plano Grátis. Sem cartão."
+        />
 
         {/* A2 · A CENA */}
         <Secao fundo="surface">

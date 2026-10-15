@@ -1,8 +1,8 @@
-import { useRef } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { track } from "@/lib/analytics";
 import {
   BotaoCadastro,
-  H2,
+  CORPO,
   Rotulo,
   Secao,
   type BuscaCadastro,
@@ -70,18 +70,37 @@ export function PlayerVsl({
   );
 }
 
-/** Seção do VSL nas landings de cadastro (landing-a e landing-b). */
-export function VideoVsl({ busca }: { busca: BuscaCadastro }) {
+/**
+ * Topo das landings de cadastro com o VSL (15/10/2026, pedido da Sil): título em
+ * cima, vídeo grande embaixo e o botão logo depois, porque a narração termina com
+ * "toca no botão aqui embaixo". Título, subtítulo e botão chegam no HTML do servidor.
+ */
+export function HeroComVideo({
+  busca,
+  rotulo,
+  titulo,
+  subtitulo,
+  micro = "Sem cartão no Grátis.",
+  botaoRef,
+}: {
+  busca: BuscaCadastro;
+  rotulo: string;
+  titulo: ReactNode;
+  subtitulo: ReactNode;
+  micro?: string;
+  botaoRef?: RefObject<HTMLAnchorElement | null>;
+}) {
   return (
-    <Secao fundo="surface-pink">
-      <Rotulo>Em um minuto e meio</Rotulo>
-      <h2 className={`mt-4 max-w-[26ch] ${H2}`}>
-        Por que mais um app de tarefas não mostra seu lucro.
-      </h2>
-      <PlayerVsl busca={busca} className="mt-8 max-w-[960px]" />
+    <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
+      <Rotulo>{rotulo}</Rotulo>
+      <h1 className="mt-4 max-w-[24ch] text-[clamp(28px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+        {titulo}
+      </h1>
+      <div className={`mt-6 ${CORPO}`}>{subtitulo}</div>
+      <PlayerVsl busca={busca} className="mt-10 max-w-[1040px]" />
       <div className="mt-8">
-        <BotaoCadastro busca={busca} contexto="vsl" />
-        <p className="mt-3 text-[13px] text-[var(--muted)]">Sem cartão no Grátis.</p>
+        <BotaoCadastro busca={busca} contexto="hero" botaoRef={botaoRef} />
+        <p className="mt-3 text-[13px] text-[var(--muted)]">{micro}</p>
       </div>
     </Secao>
   );
