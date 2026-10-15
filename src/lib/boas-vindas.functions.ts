@@ -38,19 +38,19 @@ A Pólia One começa pela marca: por que ela existe, pra quem, e o que a diferen
 
 Os números entram depois, ligados a ela. O preço sai do custo real de cada produto, e o Painel mostra quanto falta pra meta do mês.
 
-Por onde começar: o Módulo 1 do Planejamento, Razão de existir. As respostas dele alimentam o resto da Pólia One.
+Por onde começar: os Primeiros passos no Painel. O primeiro é o preço de um produto ou serviço, calculado com o custo real; o segundo é o Módulo 1 do Planejamento, sobre a marca que sustenta esse preço.
 
-${SITE_URL}/planejamento`,
+${SITE_URL}/painel`,
       html: emailPolia({
-        preheader: "Por onde começar: o Módulo 1 do Planejamento, sobre a sua marca.",
+        preheader: "Por onde começar: os Primeiros passos no Painel.",
         headline: "Sua conta está pronta",
         paragrafos: [
           "A Pólia One começa pela marca: por que ela existe, pra quem, e o que a diferencia. É isso que sustenta o preço que ela cobra.",
           "Os números entram depois, ligados a ela. O preço sai do custo real de cada produto, e o Painel mostra quanto falta pra meta do mês.",
-          "Por onde começar: o Módulo 1 do Planejamento, Razão de existir. As respostas dele alimentam o resto da Pólia One.",
+          "Por onde começar: os Primeiros passos no Painel. O primeiro é o preço de um produto ou serviço, calculado com o custo real; o segundo é o Módulo 1 do Planejamento, sobre a marca que sustenta esse preço.",
         ],
         ctaLabel: "Começar pelo Planejamento",
-        ctaUrl: `${SITE_URL}/planejamento`,
+        ctaUrl: `${SITE_URL}/painel`,
       }),
       contexto: "[BoasVindas]",
     });

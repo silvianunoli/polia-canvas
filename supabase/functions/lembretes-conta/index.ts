@@ -39,7 +39,7 @@ async function linkQueConfirma(email: string): Promise<string | null> {
   const { data, error } = await supabaseAdmin.auth.admin.generateLink({
     type: "magiclink",
     email,
-    options: { redirectTo: `${SITE_URL}/onboarding` },
+    options: { redirectTo: `${SITE_URL}/painel` },
   });
   if (error || !data?.properties?.action_link) {
     console.error("[lembretes-conta] Falha ao gerar link:", error?.message);

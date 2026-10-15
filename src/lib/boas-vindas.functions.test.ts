@@ -102,9 +102,10 @@ describe("garantirBoasVindas: regra do 'só marca com envio confirmado'", () => 
       }),
     );
     const { text, html } = enviarEmailResend.mock.calls[0][0] as { text: string; html: string };
-    // ONE-103: marca primeiro e o próximo passo é o Planejamento.
-    expect(text).toContain("https://one.usepolia.com.br/planejamento");
-    expect(html).toContain("https://one.usepolia.com.br/planejamento");
+    // ONE-103: marca primeiro. Desde GRW-33 (15/10/2026) o próximo passo são
+    // os Primeiros passos do Painel, com o Módulo 1 como segundo passo.
+    expect(text).toContain("https://one.usepolia.com.br/painel");
+    expect(html).toContain("https://one.usepolia.com.br/painel");
     expect(text).toContain("Módulo 1 do Planejamento");
     expect(text.indexOf("marca")).toBeLessThan(text.indexOf("números"));
     expect(text).not.toMatch(/[—!]/);
