@@ -35,7 +35,7 @@ export function VideoVsl({ busca }: { busca: BuscaCadastro }) {
     <Secao fundo="surface-pink">
       <Rotulo>Em um minuto e meio</Rotulo>
       <h2 className={`mt-4 max-w-[26ch] ${H2}`}>
-        Por que mais um app de tarefas não fecha o mês da marca.
+        Por que mais um app de tarefas não mostra seu lucro.
       </h2>
       <div className="mt-8 max-w-[960px] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--ink)]">
         <video
