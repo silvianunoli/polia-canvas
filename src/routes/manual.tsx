@@ -7,6 +7,7 @@ import { linkCanonico } from "@/lib/seo";
 import { track } from "@/lib/analytics";
 import { gtagEvent } from "@/lib/gtag";
 import { pixelLead } from "@/lib/metaPixel";
+import { tiktokLead } from "@/lib/tiktokPixel";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
@@ -296,7 +297,10 @@ function CartaoPedido({
       gtagEvent("manual_lead_gravado", { origem: origem ?? "instagram_bio" });
       // Lead só pra inscrição nova: e-mail repetido já converteu antes e não
       // deve contar de novo pro anúncio.
-      if (r.eventId) pixelLead(r.eventId);
+      if (r.eventId) {
+        pixelLead(r.eventId);
+        tiktokLead(r.eventId);
+      }
       setDownloadUrl(r.downloadUrl);
       iniciarDownload(r.downloadUrl);
     } catch (erro) {

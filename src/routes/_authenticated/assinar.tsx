@@ -16,6 +16,7 @@ import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckou
 import { track } from "@/lib/analytics";
 import { gtagEvent } from "@/lib/gtag";
 import { pixelCompra } from "@/lib/metaPixel";
+import { tiktokCompra } from "@/lib/tiktokPixel";
 import {
   ehBeta,
   tierDoPlano,
@@ -472,6 +473,11 @@ function AssinarPage() {
               // event_id = id da sessão do Checkout (cs_...), o mesmo que o
               // webhook manda pela API de Conversões: o Meta conta uma vez.
               pixelCompra(
+                valor,
+                planoNoCheckout ?? "assinatura",
+                clientSecret.split("_secret_")[0] || undefined,
+              );
+              tiktokCompra(
                 valor,
                 planoNoCheckout ?? "assinatura",
                 clientSecret.split("_secret_")[0] || undefined,

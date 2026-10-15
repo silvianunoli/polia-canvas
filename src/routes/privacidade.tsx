@@ -123,9 +123,9 @@ function PrivacidadePage() {
             <div className={`${LEITURA} ${PROSA}`}>
               <h2 id="controlador">1. Quem trata os dados</h2>
               <p>
-                O controlador dos dados é Nunoli Soluções Digitais Ltda, CNPJ
-                18.305.925/0001-06, com sede na Rua Kenkiti Shimomoto, São Paulo/SP. Somos nós que
-                decidimos como e por que os dados são tratados.
+                O controlador dos dados é Nunoli Soluções Digitais Ltda, CNPJ 18.305.925/0001-06,
+                com sede na Rua Kenkiti Shimomoto, São Paulo/SP. Somos nós que decidimos como e por
+                que os dados são tratados.
               </p>
 
               <h2 id="coleta">2. Dados que coletamos</h2>
@@ -209,9 +209,7 @@ function PrivacidadePage() {
                   · base: execução de contrato / legítimo interesse.
                 </li>
                 <li>
-                  <strong className="text-[var(--ink)]">
-                    Gerar texto com a IA da Pólia One
-                  </strong>{" "}
+                  <strong className="text-[var(--ink)]">Gerar texto com a IA da Pólia One</strong>{" "}
                   (Assistente, ajuda pra completar o Planejamento e Raio-x do mês) · base: execução
                   de contrato. Vai para a IA só o pedido da titular e os dados do negócio que aquela
                   resposta usa.
@@ -252,11 +250,11 @@ function PrivacidadePage() {
               <p>
                 Usamos cookies essenciais (pra manter a sessão logada) e, mediante permissão,
                 cookies de análise e publicidade: Google Analytics (para entender como o site é
-                usado), Google Ads e Meta Ads / Meta Pixel (para medir o resultado dos nossos
-                anúncios e, quando aplicável, mostrar publicidade da Pólia em outros sites). O
-                controle fica no banner de cookies e nas configurações do navegador: quem visita
-                pode aceitar só os essenciais, e os cookies de análise e publicidade só rodam depois
-                do consentimento.
+                usado), Google Ads, Meta Ads / Meta Pixel e TikTok Ads / TikTok Pixel (para medir o
+                resultado dos nossos anúncios e, quando aplicável, mostrar publicidade da Pólia em
+                outros sites). O controle fica no banner de cookies e nas configurações do
+                navegador: quem visita pode aceitar só os essenciais, e os cookies de análise e
+                publicidade só rodam depois do consentimento.
               </p>
 
               <h2 id="compartilha">5. Com quem compartilhamos</h2>
@@ -291,8 +289,8 @@ function PrivacidadePage() {
                   conectar, para ler os próprios eventos. O acesso é só de leitura: os eventos
                   aparecem no Calendário da Pólia One na hora em que a tela abre e não ficam
                   guardados. A Pólia guarda apenas o e-mail da conta conectada e a chave de acesso
-                  que o Google entrega, e apaga as duas quando a titular desconecta. Esses dados
-                  não são vendidos, não vão pra publicidade, não treinam IA e não são repassados a
+                  que o Google entrega, e apaga as duas quando a titular desconecta. Esses dados não
+                  são vendidos, não vão pra publicidade, não treinam IA e não são repassados a
                   terceiros. O uso e a transferência de informações recebidas das APIs do Google
                   seguem a{" "}
                   <a
@@ -312,6 +310,10 @@ function PrivacidadePage() {
                 <li>
                   <strong className="text-[var(--ink)]">Meta Ads (Meta Pixel)</strong>: medição do
                   resultado dos anúncios no Instagram e Facebook, só com consentimento
+                </li>
+                <li>
+                  <strong className="text-[var(--ink)]">TikTok Ads (TikTok Pixel)</strong>: medição
+                  do resultado dos anúncios no TikTok, só com consentimento
                 </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
@@ -350,10 +352,11 @@ function PrivacidadePage() {
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
-                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics, Ads e Gemini)
-                e Meta (Meta Ads) também podem processar dados fora do Brasil. Nesses casos, a
-                transferência se apoia nas garantias adequadas previstas na LGPD (art. 33), como as
-                cláusulas contratuais e os acordos de tratamento de dados (DPA) desses provedores.
+                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics, Ads e
+                Gemini), Meta (Meta Ads) e TikTok (TikTok Ads) também podem processar dados fora do
+                Brasil. Nesses casos, a transferência se apoia nas garantias adequadas previstas na
+                LGPD (art. 33), como as cláusulas contratuais e os acordos de tratamento de dados
+                (DPA) desses provedores.
               </p>
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>

@@ -8,6 +8,7 @@ import {
 } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
 import { eventIdCadastro, lerFbp, pixelCadastro } from "@/lib/metaPixel";
+import { tiktokCadastro } from "@/lib/tiktokPixel";
 import { registrarCadastroMeta } from "@/lib/metaCapi.functions";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { CsatPrompt } from "@/components/csat/CsatPrompt";
@@ -141,9 +142,13 @@ function AuthenticatedLayout() {
         gtagEvent("sign_up", { method: "google" });
         void supabase.auth.getUser().then(({ data }) => {
           const userId = data.user?.id;
-          if (!userId) return pixelCadastro("google");
+          if (!userId) {
+            tiktokCadastro("google");
+            return pixelCadastro("google");
+          }
           // Mesmo event_id no Pixel e na API de Conversões: o Meta conta uma vez.
           pixelCadastro("google", eventIdCadastro(userId));
+          tiktokCadastro("google", eventIdCadastro(userId));
           const fbp = lerFbp();
           void registrarCadastroMeta({
             data: {

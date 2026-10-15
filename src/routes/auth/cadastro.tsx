@@ -8,6 +8,7 @@ import { track } from "@/lib/analytics";
 import { marcarLoginPendente, registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
 import { eventIdCadastro, lerFbp, pixelCadastro } from "@/lib/metaPixel";
+import { tiktokCadastro } from "@/lib/tiktokPixel";
 import { registrarCadastroMeta } from "@/lib/metaCapi.functions";
 import {
   AuthShell,
@@ -200,6 +201,7 @@ function CadastroPage() {
       // de Conversões pelo servidor, com o mesmo event_id pra contar uma vez só.
       if (data.user?.id) {
         pixelCadastro("email", eventIdCadastro(data.user.id));
+        tiktokCadastro("email", eventIdCadastro(data.user.id));
         const fbp = lerFbp();
         void registrarCadastroMeta({
           data: {
@@ -212,6 +214,7 @@ function CadastroPage() {
         }).catch(() => {});
       } else {
         pixelCadastro("email");
+        tiktokCadastro("email");
       }
       if (!data.session) {
         // A origem e o fbclid seguem junto: o "E-mail errado? Corrigir" da

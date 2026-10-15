@@ -17,6 +17,8 @@ import { CookieConsent } from "@/components/ui/CookieConsent";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { MetaPixel } from "@/components/MetaPixel";
 import { pixelPageView } from "@/lib/metaPixel";
+import { TiktokPixel } from "@/components/TiktokPixel";
+import { tiktokPageView } from "@/lib/tiktokPixel";
 import { ErrorPage, type ErrorPageProps } from "@/components/layout/ErrorPage";
 import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
@@ -170,6 +172,7 @@ function RootComponent() {
   useEffect(() => {
     track("pageview");
     pixelPageView(pathname);
+    tiktokPageView(pathname);
   }, [pathname]);
 
   // Clique instrumentado por delegação: qualquer elemento com data-track vira
@@ -316,6 +319,7 @@ function RootComponent() {
       <CookieConsent />
       <GoogleAnalytics />
       <MetaPixel />
+      <TiktokPixel />
       {import.meta.env.DEV && <DiagnosticPanel />}
     </QueryClientProvider>
   );
