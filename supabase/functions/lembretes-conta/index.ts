@@ -1,18 +1,30 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   lembreteDeConfirmacao,
+  lembreteDePreco,
   montarEmailConfirmacao,
+  montarEmailPreco,
+  type TipoConfirmacao,
   type TipoLembrete,
 } from "../_shared/lembretesConta.ts";
+import { nichoDoAnuncio } from "../_shared/nichosAnuncio.ts";
 import { mascararEmail } from "../_shared/stripeWebhookRegras.ts";
 
 // Lembretes pra conta nova (GRW-33, 14/10/2026). Chamada só pelo pg_cron
-// (disparar_lembretes_conta(), migração 20261014120000) a cada 15 min, e só
-// quando há conta sem confirmação na janela. verify_jwt desligado: quem chama
-// não tem sessão; o segredo do cron mora no Vault e é conferido por RPC.
+// (disparar_lembretes_conta(), migrações 20261014120000 e 20261015090000) a
+// cada 15 min, e só quando há conta elegível pra algum dos lembretes abaixo.
+// verify_jwt desligado: quem chama não tem sessão; o segredo do cron mora no
+// Vault e é conferido por RPC.
 //
-// Hoje: lembrete de confirmação de e-mail (1h e 24h). O link é um magiclink
-// novo: abrir confirma o e-mail e já entra na conta.
+// Dois tipos, cada um sai uma vez só por conta (lembretes_conta, marcado antes
+// de enviar):
+// - Confirmação de e-mail (confirmacao_1h e confirmacao_24h), pra conta não
+//   confirmada (RPC contas_sem_confirmacao). O link é um magiclink novo: abrir
+//   confirma o e-mail e já entra na conta.
+// - Primeiro preço (preco_d1, 15/10/2026), pra conta confirmada entre 20 e 72
+//   horas sem nenhum preço calculado (RPC contas_sem_preco). Copy pelo nicho do
+//   anúncio (utm_content). Link normal pra Calculadora ou Painel, não magiclink:
+//   o magiclink vence antes de o e-mail do dia seguinte ser aberto.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -64,7 +76,35 @@ async function enviar(email: string, assunto: string, texto: string, html: strin
   return resp.ok ? null : `Resend HTTP ${resp.status}`;
 }
 
-type Conta = { user_id: string; email: string; criado_em: string; enviados: string[] };
+type ContaSemConfirmacao = {
+  user_id: string;
+  email: string;
+  criado_em: string;
+  enviados: string[];
+};
+type ContaSemPreco = {
+  user_id: string;
+  email: string;
+  criado_em: string;
+  utm_content: string | null;
+  ja_recebeu: boolean;
+};
+type Email = { assunto: string; texto: string; html: string };
+type Envio = {
+  user_id: string;
+  email: string;
+  tipo: TipoLembrete;
+  montar: () => Promise<Email | null>;
+};
+
+async function ler<T>(rpc: "contas_sem_confirmacao" | "contas_sem_preco"): Promise<T[] | null> {
+  const { data, error } = await supabaseAdmin.rpc(rpc);
+  if (error) {
+    console.error(`[lembretes-conta] Falha ao ler ${rpc}:`, error.message);
+    return null;
+  }
+  return (data ?? []) as T[];
+}
 
 Deno.serve(async (req: Request) => {
   if (!(await autenticado(req))) {
@@ -74,40 +114,70 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: false, motivo: "sem_resend" }), { status: 500 });
   }
 
-  const { data, error } = await supabaseAdmin.rpc("contas_sem_confirmacao");
-  if (error) {
-    console.error("[lembretes-conta] Falha ao ler contas:", error.message);
+  const [semConfirmacao, semPreco] = await Promise.all([
+    ler<ContaSemConfirmacao>("contas_sem_confirmacao"),
+    ler<ContaSemPreco>("contas_sem_preco"),
+  ]);
+  // Uma leitura que falha não segura a outra; as duas falhando é erro de verdade.
+  if (!semConfirmacao && !semPreco) {
     return new Response(JSON.stringify({ ok: false, motivo: "falha_leitura" }), { status: 500 });
   }
 
+  // Primeiro filtra o que cabe, depois corta o lote: quem já recebeu não ocupa
+  // vaga de quem ainda não recebeu. Confirmação vem antes porque sem ela a
+  // conta nem abre.
   const agora = new Date();
-  let enviados = 0;
-  let falhas = 0;
-  for (const c of ((data ?? []) as Conta[]).slice(0, LOTE)) {
-    const tipo = lembreteDeConfirmacao(
+  const envios: Envio[] = [];
+  for (const c of semConfirmacao ?? []) {
+    const tipo: TipoConfirmacao | null = lembreteDeConfirmacao(
       new Date(c.criado_em),
       agora,
       new Set(c.enviados as TipoLembrete[]),
     );
     if (!tipo) continue;
+    envios.push({
+      user_id: c.user_id,
+      email: c.email,
+      tipo,
+      montar: async () => {
+        const link = await linkQueConfirma(c.email);
+        return link ? montarEmailConfirmacao(tipo, link) : null;
+      },
+    });
+  }
+  for (const c of semPreco ?? []) {
+    const tipo = lembreteDePreco(new Date(c.criado_em), agora, c.ja_recebeu);
+    if (!tipo) continue;
+    envios.push({
+      user_id: c.user_id,
+      email: c.email,
+      tipo,
+      montar: () => Promise.resolve(montarEmailPreco(nichoDoAnuncio(c.utm_content))),
+    });
+  }
 
+  let enviados = 0;
+  let falhas = 0;
+  for (const envio of envios.slice(0, LOTE)) {
     // Marca antes de enviar: se o envio falhar, não insiste a cada 15 min
-    // (o próximo lembrete da janela ainda vem). Conflito = outra execução já pegou.
+    // (na confirmação, o próximo lembrete da janela ainda vem; o preco_d1 é
+    // um só e fica por isso mesmo). Conflito = outra execução já pegou.
     const { error: erroMarca } = await supabaseAdmin
       .from("lembretes_conta")
-      .insert({ user_id: c.user_id, tipo });
+      .insert({ user_id: envio.user_id, tipo: envio.tipo });
     if (erroMarca) continue;
 
-    const link = await linkQueConfirma(c.email);
-    if (!link) {
+    const email = await envio.montar();
+    if (!email) {
       falhas++;
       continue;
     }
-    const { assunto, texto, html } = montarEmailConfirmacao(tipo, link);
-    const erro = await enviar(c.email, assunto, texto, html);
+    const erro = await enviar(envio.email, email.assunto, email.texto, email.html);
     if (erro) {
       falhas++;
-      console.error(`[lembretes-conta] ${tipo} não saiu pra ${mascararEmail(c.email)}: ${erro}`);
+      console.error(
+        `[lembretes-conta] ${envio.tipo} não saiu pra ${mascararEmail(envio.email)}: ${erro}`,
+      );
     } else {
       enviados++;
     }

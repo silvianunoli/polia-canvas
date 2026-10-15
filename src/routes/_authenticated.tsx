@@ -17,6 +17,7 @@ import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada, tierPagoDaRota } from "@/lib/planos";
 import { precisaCriarSenha } from "@/lib/senha";
 import { gravarOrigemDoOAuth } from "@/lib/gravarOrigemOAuth";
+import { lerLinkComErro } from "@/lib/linkComErro";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -84,6 +85,17 @@ export const Route = createFileRoute("/_authenticated")({
         }
       }
       return;
+    }
+    // Link do e-mail (confirmação ou magiclink do lembrete) vencido: o
+    // Supabase volta pro /painel com #error_code=otp_expired e sem sessão.
+    // Sem isto, o redirect abaixo jogava a pessoa no login sem explicação (e
+    // o hash com o erro sumia dentro do ?next=, antes de o __root ver).
+    const caso = lerLinkComErro(location.pathname, window.location.hash, window.location.search);
+    if (caso === "link-vencido") {
+      throw redirect({ to: "/auth/link-expirado", search: { tipo: "confirmacao" } });
+    }
+    if (caso === "entrada-cancelada") {
+      throw redirect({ to: "/auth/login", search: { motivo: "entrada-cancelada" }, replace: true });
     }
     const expirou = localStorage.getItem(TEVE_SESSAO_KEY) === "1";
     // Aviso de uma vez só (QA-10, 09/10/2026): sem apagar, toda URL interna

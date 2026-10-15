@@ -224,6 +224,10 @@ const NICHOS: Record<string, NichoLanding> = {
   },
 };
 
+/** utm_content de todos os nichos. O teste nichosAnuncio.test.ts confere que
+ *  supabase/functions/_shared/nichosAnuncio.ts (cópia pro e-mail) tem as mesmas. */
+export const CHAVES_NICHOS = Object.keys(NICHOS);
+
 /** Fotos dos nichos, pra lista de fotos disponíveis da landing. */
 export const FOTOS_NICHOS = Object.values(NICHOS).map((n) => n.foto);
 

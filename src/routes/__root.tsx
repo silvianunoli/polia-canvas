@@ -25,6 +25,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
 import { toastInfo } from "@/lib/toast";
+import { lerLinkComErro } from "@/lib/linkComErro";
 import { urlCanonica } from "@/lib/seo";
 import { jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "@/lib/jsonld";
 
@@ -230,29 +231,22 @@ function RootComponent() {
 
   // Link de confirmação de e-mail vencido/já usado: o Supabase volta com o
   // erro no hash da URL (não dá pro servidor ver, só o client). O link de
-  // confirmação aponta pro /painel (era /onboarding até 14/10/2026; links
-  // antigos ainda chegam lá e são redirecionados) — redefinir-senha.tsx já trata o caso
-  // dela mesma, então aqui só cobre o resto (a confirmação de cadastro).
-  //
-  // Link vencido chega como error=access_denied&error_code=otp_expired. Só
-  // access_denied, sem otp_expired, é outra coisa: ela desistiu na tela do
-  // Google. Isso não é link expirado: volta pra entrada com aviso neutro.
+  // confirmação e o magiclink do lembrete apontam pro /painel; links antigos
+  // ainda chegam no /onboarding. A regra mora em lerLinkComErro (vencido vai
+  // pra /auth/link-expirado, desistência no Google vai pra entrada com aviso
+  // neutro; criar-senha e redefinir-senha tratam o próprio caso). Rota da área
+  // logada sem sessão é pega antes, no guard do _authenticated, que já leva
+  // pro mesmo lugar: aqui sobra rota pública e quem já tem sessão.
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const hash = window.location.hash;
-    const query = window.location.search;
-    const linkVencido = hash.includes("otp_expired");
-    const acessoNegado =
-      !linkVencido &&
-      (hash.includes("error=access_denied") || query.includes("error=access_denied"));
-    // criar-senha (convite da compra) também trata o próprio caso.
-    const telaTrataSozinha =
-      window.location.pathname === "/auth/redefinir-senha" ||
-      window.location.pathname === "/auth/criar-senha";
-    if (telaTrataSozinha) return;
-    if (linkVencido) {
+    const caso = lerLinkComErro(
+      window.location.pathname,
+      window.location.hash,
+      window.location.search,
+    );
+    if (caso === "link-vencido") {
       router.navigate({ to: "/auth/link-expirado", search: { tipo: "confirmacao" } });
-    } else if (acessoNegado) {
+    } else if (caso === "entrada-cancelada") {
       router.navigate({
         to: "/auth/login",
         search: { motivo: "entrada-cancelada" },

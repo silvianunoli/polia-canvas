@@ -9,9 +9,20 @@ import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
 import { useCaptchaPronto } from "@/hooks/useCaptchaPronto";
 import { sessaoEhDoEmail } from "@/lib/signup";
+import { campoDeBusca, lerOrigemCampanha } from "@/lib/origemCampanha";
 
+// origem/utm_*/fbclid chegam do cadastro só pra voltar pra ele no "E-mail
+// errado? Corrigir" (15/10/2026), com a mesma campanha. Mesmo tratamento
+// tolerante do cadastro: valor estranho some, a rota não cai.
 const searchSchema = z.object({
   email: z.string().email().optional(),
+  origem: campoDeBusca,
+  utm_source: campoDeBusca,
+  utm_medium: campoDeBusca,
+  utm_campaign: campoDeBusca,
+  utm_content: campoDeBusca,
+  utm_term: campoDeBusca,
+  fbclid: campoDeBusca,
 });
 
 export const Route = createFileRoute("/auth/verificacao")({
@@ -36,7 +47,12 @@ export const Route = createFileRoute("/auth/verificacao")({
 });
 
 function VerificacaoPage() {
-  const { email } = Route.useSearch();
+  const { email, fbclid, ...buscaCampanha } = Route.useSearch();
+  // Volta pro cadastro sem o e-mail na URL: o errado não deve voltar preenchido.
+  const buscaCorrigir = {
+    ...lerOrigemCampanha(buscaCampanha),
+    ...(fbclid ? { fbclid } : {}),
+  };
   const navigate = useNavigate();
   const [cooldown, setCooldown] = useState(0);
   const [resending, setResending] = useState(false);
@@ -95,6 +111,16 @@ function VerificacaoPage() {
           <span className="font-semibold text-[var(--ink)]">{email ?? "seu e-mail"}</span>.
           <br />
           Confirma pra entrar.
+        </p>
+        <p className="mt-2 text-center text-[13.5px] text-[var(--muted)]">
+          E-mail errado?{" "}
+          <Link
+            to="/auth/cadastro"
+            search={buscaCorrigir}
+            className="inline-flex min-h-11 items-center px-1 text-[var(--ink-soft)] underline underline-offset-2"
+          >
+            Corrigir
+          </Link>
         </p>
 
         <p className="mt-5 text-center text-[13.5px] text-[var(--muted)]">

@@ -16,7 +16,13 @@ import {
   SerifHeadline,
   SubText,
 } from "@/components/cosmic/AuthShell";
-import { CosmicInput, PasswordRequirements, CapsLockHint } from "@/components/cosmic/CosmicInput";
+import {
+  CosmicInput,
+  PasswordRequirements,
+  CapsLockHint,
+  SugestaoEmailHint,
+} from "@/components/cosmic/CosmicInput";
+import { sugerirEmail } from "@/lib/sugestaoEmail";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
 import { senhaCumpreRequisitos } from "@/lib/senha";
@@ -87,17 +93,28 @@ function CadastroPage() {
   const emailRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
   const caps = useCapsLockWarning();
+  // "Você quis dizer fulana@gmail.com?" (15/10/2026): calculada ao sair do
+  // campo e no envio, apagada quando o e-mail muda. Só sugere, não bloqueia.
+  const [sugestaoEmail, setSugestaoEmail] = useState<string | null>(null);
+  const sugestaoVisivel = sugestaoEmail && !errors.email ? sugestaoEmail : null;
 
   function set<K extends keyof typeof values>(key: K, v: string) {
     setValues((s) => ({ ...s, [key]: v }));
     if (errors[key as "nome" | "email"]) setErrors((e) => ({ ...e, [key]: undefined }));
     if (key === "senha") setSenhaInvalida(false);
+    if (key === "email") setSugestaoEmail(null);
+  }
+
+  function aceitarSugestao(email: string) {
+    set("email", email);
+    emailRef.current?.focus();
   }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     const nome = values.nome.trim();
     const email = values.email.trim();
+    setSugestaoEmail(sugerirEmail(email));
 
     const fieldErrors: typeof errors = {};
     if (nome.length < 2) fieldErrors.nome = "Falta o seu nome.";
@@ -197,7 +214,12 @@ function CadastroPage() {
         pixelCadastro("email");
       }
       if (!data.session) {
-        navigate({ to: "/auth/verificacao", search: { email } });
+        // A origem e o fbclid seguem junto: o "E-mail errado? Corrigir" da
+        // verificação volta pra cá com eles, e a conta refeita não perde a campanha.
+        navigate({
+          to: "/auth/verificacao",
+          search: { email, ...origemCampanha, ...(fbclid ? { fbclid } : {}) },
+        });
       } else {
         navigate({ to: "/painel" });
       }
@@ -249,20 +271,30 @@ function CadastroPage() {
           reserveErrorSpace
           disabled={loading}
         />
-        <CosmicInput
-          ref={emailRef}
-          label="Seu e-mail"
-          name="email"
-          type="email"
-          autoComplete="email"
-          placeholder="voce@seunegocio.com.br"
-          icon={<Mail size={18} />}
-          value={values.email}
-          onChange={(e) => set("email", e.target.value)}
-          error={errors.email}
-          reserveErrorSpace
-          disabled={loading}
-        />
+        <div>
+          <CosmicInput
+            ref={emailRef}
+            label="Seu e-mail"
+            name="email"
+            type="email"
+            autoComplete="email"
+            placeholder="voce@seunegocio.com.br"
+            icon={<Mail size={18} />}
+            value={values.email}
+            onChange={(e) => set("email", e.target.value)}
+            onBlur={(e) => setSugestaoEmail(sugerirEmail(e.target.value))}
+            error={errors.email}
+            // Com a dica na tela, ela ocupa o lugar da linha de erro reservada.
+            reserveErrorSpace={!sugestaoVisivel}
+            {...(sugestaoVisivel ? { "aria-describedby": "email-sugestao" } : {})}
+            disabled={loading}
+          />
+          <SugestaoEmailHint
+            id="email-sugestao"
+            sugestao={sugestaoVisivel}
+            onAceitar={aceitarSugestao}
+          />
+        </div>
         <div>
           <CosmicInput
             ref={senhaRef}

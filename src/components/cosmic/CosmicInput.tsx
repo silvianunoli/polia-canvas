@@ -95,6 +95,46 @@ export function CapsLockHint({ ligado }: { ligado: boolean }) {
   );
 }
 
+/**
+ * "Você quis dizer ...?" embaixo do campo de e-mail. Fica sempre montado (vazio
+ * e fora da tela quando não há sugestão) pra o aria-live anunciar quando ela
+ * aparece. Visível, ocupa a mesma altura da linha de erro reservada, que o
+ * campo solta nessa hora: o formulário não pula.
+ */
+export function SugestaoEmailHint({
+  id,
+  sugestao,
+  onAceitar,
+}: {
+  id: string;
+  sugestao: string | null;
+  onAceitar: (email: string) => void;
+}) {
+  return (
+    <p
+      id={id}
+      aria-live="polite"
+      className={
+        sugestao ? "mt-1.5 min-h-[18px] break-all text-[12px] text-[var(--muted)]" : "sr-only"
+      }
+    >
+      {sugestao ? (
+        <>
+          Você quis dizer{" "}
+          <button
+            type="button"
+            onClick={() => onAceitar(sugestao)}
+            className="rounded-sm font-medium text-[var(--secondary-text)] underline underline-offset-2 transition-colors hover:text-[var(--ink)]"
+          >
+            {sugestao}
+          </button>
+          ?
+        </>
+      ) : null}
+    </p>
+  );
+}
+
 export function PasswordRequirements({ password, id }: { password: string; id?: string }) {
   const oks = REQUISITOS.map((r) => r.teste(password));
   const score = oks.filter(Boolean).length;
