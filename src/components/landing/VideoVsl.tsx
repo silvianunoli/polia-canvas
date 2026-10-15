@@ -71,8 +71,8 @@ export function PlayerVsl({
 }
 
 /**
- * Topo das landings de cadastro com o VSL (15/10/2026, pedido da Sil): título em
- * cima, vídeo grande embaixo e o botão logo depois, porque a narração termina com
+ * Topo das landings de cadastro com o VSL (15/10/2026, pedido da Sil): textos
+ * centralizados, título em cima, vídeo grande embaixo e o botão logo depois, porque a narração termina com
  * "toca no botão aqui embaixo". Título, subtítulo e botão chegam no HTML do servidor.
  */
 export function HeroComVideo({
@@ -92,13 +92,16 @@ export function HeroComVideo({
 }) {
   return (
     <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
-      <Rotulo>{rotulo}</Rotulo>
-      <h1 className="mt-4 max-w-[24ch] text-[clamp(28px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
+      {/* Topo centralizado a pedido da Sil (15/10/2026): exceção à regra de alinhar à esquerda. */}
+      <div className="flex justify-center text-center">
+        <Rotulo>{rotulo}</Rotulo>
+      </div>
+      <h1 className="mx-auto mt-4 max-w-[24ch] text-center text-[clamp(28px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
         {titulo}
       </h1>
-      <div className={`mt-6 ${CORPO}`}>{subtitulo}</div>
-      <PlayerVsl busca={busca} className="mt-10 max-w-[1040px]" />
-      <div className="mt-8">
+      <div className={`mx-auto mt-6 text-center ${CORPO}`}>{subtitulo}</div>
+      <PlayerVsl busca={busca} className="mx-auto mt-10 max-w-[1040px]" />
+      <div className="mt-8 flex flex-col items-center text-center">
         <BotaoCadastro busca={busca} contexto="hero" botaoRef={botaoRef} />
         <p className="mt-3 text-[13px] text-[var(--muted)]">{micro}</p>
       </div>
