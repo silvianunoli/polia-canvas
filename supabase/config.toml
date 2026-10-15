@@ -42,3 +42,6 @@ verify_jwt = false
 
 [functions.reenviar-emails]
 verify_jwt = false
+
+[functions.lembretes-conta]
+verify_jwt = false
