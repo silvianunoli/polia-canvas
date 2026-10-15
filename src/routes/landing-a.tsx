@@ -46,6 +46,7 @@ import {
   MockVendasMeta,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
+import { VideoVsl } from "@/components/landing/VideoVsl";
 
 // Landing A de campanha (06/10/2026): Ângulo A, "o próximo orçamento". Copy em
 // COPY-LANDING-A-POLIA-ONE.md e layout em WIREFRAME-LANDINGS-POLIA-ONE.md, na raiz
@@ -308,6 +309,9 @@ function LandingA() {
           </div>
           <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
         </Secao>
+
+        {/* A1b · VSL */}
+        <VideoVsl busca={busca} />
 
         {/* A2 · A CENA */}
         <Secao fundo="surface">

@@ -45,6 +45,7 @@ import {
   MockTresNumeros,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
+import { VideoVsl } from "@/components/landing/VideoVsl";
 import type { NichoLanding } from "@/lib/nichosLanding";
 
 /**
@@ -289,9 +290,12 @@ export function PaginaMarcaB({
   busca,
   linkSobre = false,
   nicho = null,
+  vsl = false,
 }: {
   busca: BuscaCadastro;
   linkSobre?: boolean;
+  /** VSL logo abaixo do topo: só na /landing-b, a home fica sem. */
+  vsl?: boolean;
   /** Topo do nicho do anúncio (só /landing-b); null mostra o topo padrão. */
   nicho?: NichoLanding | null;
 }) {
@@ -308,7 +312,9 @@ export function PaginaMarcaB({
           <div className="grid grid-cols-1 items-center gap-x-[clamp(32px,5vw,64px)] gap-y-12 md:grid-cols-[55fr_45fr]">
             <div>
               <Rotulo>
-                {nicho ? `Pólia One · ${nicho.rotulo}` : "Pólia One · para quem toca a própria marca"}
+                {nicho
+                  ? `Pólia One · ${nicho.rotulo}`
+                  : "Pólia One · para quem toca a própria marca"}
               </Rotulo>
               {/* h1, subtítulo e botão fora do Reveal de propósito: chegam visíveis no HTML
                   do servidor, sem esperar o JS (LCP e anúncio em 4G). */}
@@ -354,6 +360,9 @@ export function PaginaMarcaB({
           </div>
           <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
         </Secao>
+
+        {/* B1b · VSL (só landing) */}
+        {vsl && <VideoVsl busca={busca} />}
 
         {/* B2 · PROVA */}
         <Secao fundo="surface" className="!py-[clamp(48px,6vw,64px)]">

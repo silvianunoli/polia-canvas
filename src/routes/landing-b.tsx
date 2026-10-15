@@ -42,7 +42,7 @@ function LandingB() {
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <HeaderCampanha busca={busca} />
-      <PaginaMarcaB busca={busca} nicho={nichoDaCampanha(busca.utm_content)} />
+      <PaginaMarcaB busca={busca} nicho={nichoDaCampanha(busca.utm_content)} vsl />
     </div>
   );
 }
