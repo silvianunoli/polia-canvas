@@ -92,10 +92,61 @@ export function LinkCadastro({
   );
 }
 
+/**
+ * Botão das landings Premium (/premium-a e /premium-b, 15/10/2026): vai direto
+ * pro formulário de pagamento do /planos com o Premium escolhido, levando a
+ * origem e as UTMs até o Stripe, igual o "Quero o Premium" dos planos.
+ */
+export function BotaoPremium({
+  busca,
+  contexto,
+  children = "Quero o Premium",
+  className = "",
+  compacto = false,
+  invertido = false,
+  botaoRef,
+}: {
+  busca: BuscaCadastro;
+  contexto: string;
+  children?: ReactNode;
+  className?: string;
+  compacto?: boolean;
+  invertido?: boolean;
+  botaoRef?: RefObject<HTMLAnchorElement | null>;
+}) {
+  const base = invertido ? `${BTN_PRIMARIO} !bg-[var(--ink)] !text-[var(--bg)]` : BTN_PRIMARIO;
+  // fbclid não entra no /planos: o validateSearch de lá não conhece o campo.
+  const { fbclid: _fbclid, ...origem } = busca;
+  return (
+    <Link
+      ref={botaoRef}
+      to="/planos"
+      search={{ ...origem, plano: "premium" }}
+      hash="pagamento"
+      data-track="plano_cta_clicado"
+      data-track-props={JSON.stringify({
+        plano: "Premium",
+        contexto,
+        landing: busca.origem ?? null,
+      })}
+      className={`${base} ${compacto ? "!min-h-[44px] !px-4 !py-2 !text-[14px]" : ""} ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
 /* ───────────────────────────── estrutura ───────────────────────────── */
 
 /** Topo de campanha: logo e um botão. Sem menu, pra não abrir saída. */
-export function HeaderCampanha({ busca }: { busca: BuscaCadastro }) {
+export function HeaderCampanha({
+  busca,
+  premium = false,
+}: {
+  busca: BuscaCadastro;
+  /** Landings Premium: o botão do topo vende o Premium em vez do cadastro. */
+  premium?: boolean;
+}) {
   return (
     <header className="z-30 border-b border-[var(--line)] bg-[var(--bg)] md:sticky md:top-0">
       <a href="#conteudo" className="skip-link">
@@ -105,7 +156,11 @@ export function HeaderCampanha({ busca }: { busca: BuscaCadastro }) {
         <Link to="/" aria-label="Pólia One, página inicial">
           <PoliaWordmark className="h-6 w-auto" />
         </Link>
-        <BotaoCadastro busca={busca} contexto="header" compacto />
+        {premium ? (
+          <BotaoPremium busca={busca} contexto="header" compacto />
+        ) : (
+          <BotaoCadastro busca={busca} contexto="header" compacto />
+        )}
       </div>
     </header>
   );
@@ -119,10 +174,12 @@ export function BarraCtaMobile({
   busca,
   heroCta,
   zonasSemBarra,
+  premium = false,
 }: {
   busca: BuscaCadastro;
   heroCta: RefObject<HTMLElement | null>;
   zonasSemBarra: RefObject<HTMLElement | null>[];
+  premium?: boolean;
 }) {
   const [heroVisivel, setHeroVisivel] = useState(true);
   const [zonasVisiveis, setZonasVisiveis] = useState(0);
@@ -162,7 +219,11 @@ export function BarraCtaMobile({
         visivel ? "translate-y-0" : "pointer-events-none translate-y-full"
       }`}
     >
-      <BotaoCadastro busca={busca} contexto="barra_mobile" className="w-full" />
+      {premium ? (
+        <BotaoPremium busca={busca} contexto="barra_mobile" className="w-full" />
+      ) : (
+        <BotaoCadastro busca={busca} contexto="barra_mobile" className="w-full" />
+      )}
     </div>
   );
 }
@@ -483,7 +544,15 @@ export function ParaQuem({ sim, nao }: { sim: string[]; nao: string[] }) {
 
 /* ───────────────────────────── como funciona ───────────────────────────── */
 
-export type Passo = { n: string; titulo: string; texto: ReactNode; mock: ReactNode };
+export type Passo = {
+  /** Número grande do passo; vazio quando os itens não são sequência (oferta Premium). */
+  n?: string;
+  titulo: string;
+  texto: ReactNode;
+  /** Linha curta abaixo do texto, em etiqueta ("No lugar da planilha perdida"). */
+  nota?: string;
+  mock: ReactNode;
+};
 
 /**
  * Passos à esquerda; no desktop, o mock do passo em foco fica parado à direita
@@ -513,7 +582,7 @@ export function ComoFuncionaPassos({ passos }: { passos: Passo[] }) {
       <ol className="flex list-none flex-col">
         {passos.map((p, i) => (
           <li
-            key={p.n}
+            key={p.titulo}
             ref={(el) => {
               refs.current[i] = el;
             }}
@@ -525,10 +594,12 @@ export function ComoFuncionaPassos({ passos }: { passos: Passo[] }) {
                 ativo === i ? "md:bg-[var(--surface)]" : ""
               }`}
             >
-              <p className="font-cabinet text-[40px] font-bold leading-none tracking-[-0.02em] text-[var(--ink)]">
-                {p.n}
-              </p>
-              <h3 className="mt-3 text-[20px] font-bold tracking-[-0.02em] text-[var(--ink)]">
+              {p.n && (
+                <p className="mb-3 font-cabinet text-[40px] font-bold leading-none tracking-[-0.02em] text-[var(--ink)]">
+                  {p.n}
+                </p>
+              )}
+              <h3 className=" text-[20px] font-bold tracking-[-0.02em] text-[var(--ink)]">
                 {p.titulo}
               </h3>
               <p
@@ -538,6 +609,11 @@ export function ComoFuncionaPassos({ passos }: { passos: Passo[] }) {
               >
                 {p.texto}
               </p>
+              {p.nota && (
+                <p className="mt-3 inline-block rounded-full bg-[var(--surface-pink)] px-3 py-1 text-[13px] text-[var(--ink-soft)]">
+                  {p.nota}
+                </p>
+              )}
             </div>
             <div className="mt-6 md:hidden">{p.mock}</div>
           </li>
@@ -578,10 +654,16 @@ export function PlanosLanding({
   planos,
   busca,
   microGratis = "Sem cartão.",
+  foco = "gratis",
 }: {
   planos: PlanoLanding[];
   busca: BuscaCadastro;
   microGratis?: string;
+  /**
+   * "premium" (landings Premium): o Premium ganha o botão cheio e o Grátis vira
+   * link, pra página não vender as duas coisas com o mesmo peso.
+   */
+  foco?: "gratis" | "premium";
 }) {
   const [anual, setAnual] = useState(false);
   return (
@@ -665,7 +747,11 @@ export function PlanosLanding({
                 ))}
               </ul>
               <div className="mt-8">
-                {gratis ? (
+                {gratis && foco === "premium" ? (
+                  <LinkCadastro busca={busca} contexto="planos_gratis">
+                    Começar grátis, sem cartão
+                  </LinkCadastro>
+                ) : gratis ? (
                   <>
                     <BotaoCadastro busca={busca} contexto="planos_gratis" className="w-full" />
                     <p className="mt-3 text-[13px] text-[var(--muted)]">{microGratis}</p>
@@ -686,7 +772,9 @@ export function PlanosLanding({
                       plano: p.nome,
                       landing: busca.origem ?? null,
                     })}
-                    className={`${BTN_CONTORNO} w-full`}
+                    className={`${
+                      foco === "premium" && p.nome === "Premium" ? BTN_PRIMARIO : BTN_CONTORNO
+                    } w-full`}
                   >
                     {`Quero o ${p.nome}`}
                   </Link>

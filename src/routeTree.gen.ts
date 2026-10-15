@@ -13,6 +13,8 @@ import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as PremiumBRouteImport } from './routes/premium-b'
+import { Route as PremiumARouteImport } from './routes/premium-a'
 import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
 import { Route as ManualRouteImport } from './routes/manual'
@@ -79,6 +81,16 @@ const SobreRoute = SobreRouteImport.update({
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumBRoute = PremiumBRouteImport.update({
+  id: '/premium-b',
+  path: '/premium-b',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PremiumARoute = PremiumARouteImport.update({
+  id: '/premium-a',
+  path: '/premium-a',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlanosRoute = PlanosRouteImport.update({
@@ -335,6 +347,8 @@ export interface FileRoutesByFullPath {
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
+  '/premium-a': typeof PremiumARoute
+  '/premium-b': typeof PremiumBRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -387,6 +401,8 @@ export interface FileRoutesByTo {
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
+  '/premium-a': typeof PremiumARoute
+  '/premium-b': typeof PremiumBRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -441,6 +457,8 @@ export interface FileRoutesById {
   '/manual': typeof ManualRoute
   '/pesquisa': typeof PesquisaRoute
   '/planos': typeof PlanosRoute
+  '/premium-a': typeof PremiumARoute
+  '/premium-b': typeof PremiumBRoute
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
@@ -495,6 +513,8 @@ export interface FileRouteTypes {
     | '/manual'
     | '/pesquisa'
     | '/planos'
+    | '/premium-a'
+    | '/premium-b'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -547,6 +567,8 @@ export interface FileRouteTypes {
     | '/manual'
     | '/pesquisa'
     | '/planos'
+    | '/premium-a'
+    | '/premium-b'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -600,6 +622,8 @@ export interface FileRouteTypes {
     | '/manual'
     | '/pesquisa'
     | '/planos'
+    | '/premium-a'
+    | '/premium-b'
     | '/privacidade'
     | '/sobre'
     | '/termos'
@@ -654,6 +678,8 @@ export interface RootRouteChildren {
   ManualRoute: typeof ManualRoute
   PesquisaRoute: typeof PesquisaRoute
   PlanosRoute: typeof PlanosRoute
+  PremiumARoute: typeof PremiumARoute
+  PremiumBRoute: typeof PremiumBRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
@@ -699,6 +725,20 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium-b': {
+      id: '/premium-b'
+      path: '/premium-b'
+      fullPath: '/premium-b'
+      preLoaderRoute: typeof PremiumBRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/premium-a': {
+      id: '/premium-a'
+      path: '/premium-a'
+      fullPath: '/premium-a'
+      preLoaderRoute: typeof PremiumARouteImport
       parentRoute: typeof rootRouteImport
     }
     '/planos': {
@@ -1107,6 +1147,8 @@ const rootRouteChildren: RootRouteChildren = {
   ManualRoute: ManualRoute,
   PesquisaRoute: PesquisaRoute,
   PlanosRoute: PlanosRoute,
+  PremiumARoute: PremiumARoute,
+  PremiumBRoute: PremiumBRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,

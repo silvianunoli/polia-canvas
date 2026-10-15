@@ -446,3 +446,94 @@ export function MockTresNumeros({ className }: { className?: string }) {
     </Cartela>
   );
 }
+
+/* ───────────────────────── Landings Premium ───────────────────────── */
+
+const pedidos = [
+  {
+    cliente: "Júlia Prado",
+    item: "Kit 3 cadernos A5",
+    valor: "R$ 147,00",
+    status: "Em produção",
+    tom: "bg-[var(--secondary-light)] text-[var(--secondary-text)]",
+  },
+  {
+    cliente: "Bia Santos",
+    item: "12 cadernos com nome",
+    valor: "R$ 588,00",
+    status: "Em espera",
+    tom: "bg-[var(--line)] text-[var(--ink-soft)]",
+  },
+  {
+    cliente: "Marina Costa",
+    item: "Caderno A5",
+    valor: "R$ 49,00",
+    status: "Entregue",
+    tom: "bg-[var(--surface-pink)] text-[var(--ink-soft)]",
+  },
+];
+
+/** Clientes do Premium: cada pedido com status, como na tela real. */
+export function MockPedidos({ className }: { className?: string }) {
+  return (
+    <Cartela
+      label="Tela de Clientes da Pólia One com três pedidos: Júlia Prado em produção, Bia Santos em espera e Marina Costa entregue."
+      className={className}
+    >
+      <Label>Clientes · pedidos da semana</Label>
+      <ul className="mt-3 flex list-none flex-col">
+        {pedidos.map((p) => (
+          <li
+            key={p.cliente}
+            className="flex items-center justify-between gap-3 border-b border-dashed border-[var(--line)] py-2.5 last:border-b-0"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-[13.5px] font-semibold text-[var(--ink)]">{p.cliente}</p>
+              <p className="truncate text-[12px] text-[var(--muted)]">
+                {p.item} · {p.valor}
+              </p>
+            </div>
+            <span className={`flex-none rounded-md px-2.5 py-1 text-[11.5px] ${p.tom}`}>
+              {p.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Cartela>
+  );
+}
+
+const semana = [
+  { dia: "Seg", tarefa: "Embalar o kit da Júlia", origem: "Planner" },
+  { dia: "Ter", tarefa: "Comprar papel 300g", origem: "Planner" },
+  { dia: "Qua", tarefa: "Entrega da Bia, 15h", origem: "Google Agenda" },
+  { dia: "Qui", tarefa: "Post: do miolo ao caderno pronto", origem: "Planner" },
+];
+
+/** Planner do Premium: tarefas e agenda do Google na mesma lista. */
+export function MockPlannerSemana({ className }: { className?: string }) {
+  return (
+    <Cartela
+      label="Planner da Pólia One com a semana: tarefas do ateliê e um compromisso que veio da agenda do Google, na mesma lista."
+      className={className}
+    >
+      <Label>Planner · esta semana</Label>
+      <ul className="mt-3 flex list-none flex-col">
+        {semana.map((s) => (
+          <li
+            key={s.tarefa}
+            className="flex items-center gap-3 border-b border-dashed border-[var(--line)] py-2.5 last:border-b-0"
+          >
+            <span className="w-9 flex-none font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {s.dia}
+            </span>
+            <span className="min-w-0 flex-1 truncate text-[13px] text-[var(--ink)]">
+              {s.tarefa}
+            </span>
+            <span className="flex-none text-[11px] text-[var(--muted)]">{s.origem}</span>
+          </li>
+        ))}
+      </ul>
+    </Cartela>
+  );
+}
