@@ -79,12 +79,14 @@ export const Route = createFileRoute("/_authenticated/assinar")({
     if (typeof window === "undefined") return;
     const { data: sess } = await supabase.auth.getSession();
     if (!sess.session) return;
+    // A trava "sem onboarding vai pro /onboarding" saiu em 14/10/2026: o
+    // onboarding deixou de ser obrigatório e o /onboarding só redireciona pro
+    // Painel, então ela viraria um desvio pro Painel no meio da compra.
     const { data: profile } = await supabase
       .from("profiles")
-      .select("onboarding_completed, plano")
+      .select("plano")
       .eq("id", sess.session.user.id)
       .maybeSingle();
-    if (!profile?.onboarding_completed) throw redirect({ to: "/onboarding" });
 
     // Quem pode ver esta tela (09/10/2026, pedido da Sil: os planos lado a
     // lado em qualquer plano):

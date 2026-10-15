@@ -218,8 +218,8 @@ function LoginPage() {
     setGoogleLoading(true);
     marcarLoginPendente("google");
     // Mesmo destino calculado do login por e-mail (search.next validado por
-    // destinoSeguro). Sem next, cai em /painel — que já redireciona sozinho
-    // pro /onboarding via guard de _authenticated quando falta concluir.
+    // destinoSeguro). Sem next, cai em /painel, que é também a entrada da
+    // conta nova (bloco "Primeiros passos", 14/10/2026).
     const destino = destinoSeguro(search.next) ?? "/painel";
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",

@@ -52,24 +52,27 @@ export const Route = createFileRoute("/_authenticated")({
       if (!isentoDeAssinatura(location.pathname)) {
         const { data: profile, error: erroPerfil } = await supabase
           .from("profiles")
-          .select("onboarding_completed, plano")
+          .select("plano")
           .eq("id", data.session.user.id)
           .maybeSingle();
 
-        // Leitura que falhou não é "perfil sem onboarding" nem "plano Grátis":
-        // mandar pro /onboarding ou pro /upgrade por erro de rede jogava quem
-        // paga num fluxo errado. Deixa passar; a tela trata a própria leitura e
-        // o direito real continua imposto por RLS (ver nota acima).
+        // Leitura que falhou não é "plano Grátis": mandar pro /upgrade por erro
+        // de rede jogava quem paga num fluxo errado. Deixa passar; a tela trata
+        // a própria leitura e o direito real continua imposto por RLS (ver nota
+        // acima).
         if (erroPerfil) return;
 
-        if (!profile?.onboarding_completed) {
-          throw redirect({ to: "/onboarding" });
-        }
+        // Sem trava de onboarding desde 14/10/2026: a conta nova entra direto no
+        // Painel, que mostra o bloco "Primeiros passos" e marca
+        // onboarding_completed sozinho na primeira carga (usePrimeirosPassos).
+        // O /onboarding virou só um redirect pro Painel.
 
         // profiles.plano é a fonte única do direito de acesso (o webhook do
         // Stripe já grava 'cancelada' no cancelamento — não precisa de uma
-        // segunda leitura em `assinaturas` aqui).
-        if (!rotaLiberada(location.pathname, profile.plano)) {
+        // segunda leitura em `assinaturas` aqui). Perfil que ainda não existe
+        // (antes ia pro /onboarding) vale como Grátis: o Painel abre, rota
+        // paga manda pro /upgrade.
+        if (!rotaLiberada(location.pathname, profile?.plano)) {
           // O plano a nomear na tela de upgrade é o que a ROTA exige, não um
           // fixo: /raiox, /projecao e /plano-conteudo são do Pro. Com "controle"
           // fixo, a usuária do Grátis via "Recurso do plano Premium", assinava

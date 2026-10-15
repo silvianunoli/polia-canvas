@@ -86,7 +86,7 @@ Todos usam o template central [`src/lib/email-template.ts`](../src/lib/email-tem
 
 | # | E-mail | Assunto | Vai para | Gatilho | Arquivo |
 |---|---|---|---|---|---|
-| 1 | Boas-vindas | `Bem-vinda à Pólia One` | a usuária | primeiro load do `/onboarding` (só marca como enviado se o Resend confirmar) | [boas-vindas.functions.ts](../src/lib/boas-vindas.functions.ts) |
+| 1 | Boas-vindas | `Bem-vinda à Pólia One` | a usuária | load do `/painel`, uma vez por aba, só pra conta na regra do bloco "Primeiros passos" (até 14/10/2026 era o load do `/onboarding`; só marca como enviado se o Resend confirmar) | [boas-vindas.functions.ts](../src/lib/boas-vindas.functions.ts) |
 | 2 | Convite | `Você foi convidada pra Pólia One` | a convidada | admin cria convite em `/admin/convites` | [convites.functions.ts](../src/lib/convites.functions.ts) |
 | 3 | Diagnóstico do quiz | `Seu diagnóstico está quase pronto` (fixo, não varia mais por faixa) | o lead | fim do `/quiz`, após o gate de e-mail | [quiz.functions.ts](../src/lib/quiz.functions.ts) + [quiz/email.ts](../src/lib/quiz/email.ts) |
 | 4 | Contato (interno) | `[Contato] {assunto} · {nome}` | `oi@usepolia.com.br` | envio do formulário `/contato` | [contato.functions.ts](../src/lib/contato.functions.ts) |

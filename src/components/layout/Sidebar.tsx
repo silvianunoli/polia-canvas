@@ -135,9 +135,12 @@ function Body({
               </Tooltip>
             )}
           </div>
-          {!compact && meta.businessName && (
+          {/* Sem nome ainda (o passo "Dar nome à marca" do Painel, 14/10/2026),
+              o lugar do nome diz "Sua marca" em vez de sumir. Espera o perfil
+              pra não piscar "Sua marca" pra quem já tem nome. */}
+          {!compact && (meta.businessName || !meta.carregando) && (
             <p className="text-[13px] text-[var(--muted)] leading-tight -mt-1">
-              {meta.businessName}
+              {meta.businessName ?? "Sua marca"}
             </p>
           )}
           <div className={`flex items-center gap-2 ${compact ? "flex-col" : "justify-end"}`}>

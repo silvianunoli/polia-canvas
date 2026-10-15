@@ -4,10 +4,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { emailPolia, enviarEmailResend } from "@/lib/email-template";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 
-// Chamada 1x no primeiro load do /onboarding — cobre os dois jeitos de criar
-// conta (cadastro normal e compra pública) porque os dois redirecionam pra
-// lá. Idempotente via boas_vindas_enviado_em: se já tem timestamp, não manda
-// de novo. O timestamp só é gravado com o envio confirmado — ver abaixo.
+// Chamada no load do Painel (até 14/10/2026 era no do /onboarding, que virou
+// redirect), uma vez por aba, só pra conta que entra na regra do bloco
+// "Primeiros passos" (hooks/usePrimeirosPassos.ts). Cobre os dois jeitos de
+// criar conta (cadastro normal e compra pública) porque os dois caem no
+// Painel. Idempotente via boas_vindas_enviado_em: se já tem timestamp, não
+// manda de novo. O timestamp só é gravado com o envio confirmado — ver abaixo.
 export const garantirBoasVindas = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -57,11 +59,10 @@ ${SITE_URL}/planejamento`,
     // aconteceu com quem criou conta enquanto a RESEND_API_KEY não existia
     // no Worker de produção (descoberto em 12/08/2026 via erros_app).
     //
-    // Sem trava de tentativa de propósito: com falha persistente a função
-    // tenta de novo a cada load do /onboarding, e isso é aceitável porque
-    // o /onboarding se auto-limita — o beforeLoad manda pra /painel ou
-    // /assinar assim que onboarding_completed vira true, então são poucos
-    // loads por conta, não um laço. Cada falha já vira linha em erros_app,
+    // Sem trava de tentativa no banco de propósito: com falha persistente a
+    // função tenta de novo a cada aba nova do Painel (o client guarda a
+    // tentativa no sessionStorage da aba), então são poucas chamadas por
+    // conta, não um laço. Cada falha já vira linha em erros_app,
     // que tem tela no admin, e o retry é justamente o que faz o e-mail sair
     // sozinho quando a causa (chave, domínio, cota) for corrigida. Contador
     // ou intervalo mínimo exigiria coluna nova e estado extra pra resolver

@@ -124,7 +124,9 @@ function CadastroPage() {
         email,
         password: values.senha,
         options: {
-          emailRedirectTo: `${window.location.origin}/onboarding`,
+          // Direto pro Painel desde 14/10/2026 (o onboarding de 5 passos saiu;
+          // o Painel abre com o bloco "Primeiros passos").
+          emailRedirectTo: `${window.location.origin}/painel`,
           captchaToken: tokenCaptcha(captcha.token),
           // origem_campanha só entra quando veio de landing com tag válida.
           data: temOrigemCampanha(origemCampanha)
@@ -197,7 +199,7 @@ function CadastroPage() {
       if (!data.session) {
         navigate({ to: "/auth/verificacao", search: { email } });
       } else {
-        navigate({ to: "/onboarding" });
+        navigate({ to: "/painel" });
       }
     } catch {
       track("cadastro_falhou", { motivo: "excecao_client" });

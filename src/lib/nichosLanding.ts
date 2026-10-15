@@ -7,9 +7,19 @@
 // Chamada e apoio são os textos aprovados das artes (CRIATIVOS-NICHOS-POLIA-ONE.md,
 // na raiz do workspace). Foto: public/marketing/landing/nicho-<slug>.
 
+// `pessoa` e `tipo` (14/10/2026) servem ao bloco "Primeiros passos" do Painel:
+// quem veio do anúncio de um nicho não responde "vende o quê?", a Pólia One já
+// sabe pelo anúncio. `pessoa` é a palavra antes da vírgula do título ("Trancista",
+// "Papelaria personalizada"); `tipo` escolhe a aba da Calculadora.
+export type TipoNicho = "servico" | "produto";
+
 export type NichoLanding = {
   /** Etiqueta acima do título. */
   rotulo: string;
+  /** Como o anúncio chama quem ele procura: o trecho antes da vírgula do título. */
+  pessoa: string;
+  /** Serviço (preço da hora) ou produto (preço da unidade). */
+  tipo: TipoNicho;
   titulo: string;
   subtitulo: string;
   /** Nome da foto em public/marketing/landing (sem extensão). */
@@ -20,6 +30,8 @@ export type NichoLanding = {
 const NICHOS: Record<string, NichoLanding> = {
   "N01-nail": {
     rotulo: "Nail design",
+    pessoa: "Nail designer",
+    tipo: "servico",
     titulo: "Nail designer, sua marca atrai cliente ou só promoção?",
     subtitulo:
       "O Planejamento da marca da Pólia One organiza o que te diferencia, e a Calculadora mostra quanto cobrar por isso.",
@@ -28,6 +40,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N02-trancista": {
     rotulo: "Tranças",
+    pessoa: "Trancista",
+    tipo: "servico",
     titulo: "Trancista, você sabe quanto cobrar pela sua hora?",
     subtitulo:
       "Box braids leva horas. A Pólia One calcula o serviço por hora, com cabelo, material e o seu tempo.",
@@ -36,6 +50,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N03-lash": {
     rotulo: "Cílios e sobrancelha",
+    pessoa: "Lash designer",
+    tipo: "servico",
     titulo: "Lash designer, quanto custa de verdade cada aplicação?",
     subtitulo: "Fio, cola, descartáveis e a sua hora. A Pólia One junta tudo e sugere o preço.",
     foto: "nicho-lash",
@@ -43,6 +59,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N04-cabeleireira": {
     rotulo: "Salão de beleza",
+    pessoa: "Cabeleireira",
+    tipo: "servico",
     titulo: "Cabeleireira, quanto sobra de uma progressiva depois dos produtos?",
     subtitulo:
       "A Pólia One coloca produto, energia, taxa do cartão e o seu tempo na conta antes do preço.",
@@ -51,6 +69,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N05-esteticista": {
     rotulo: "Estética",
+    pessoa: "Esteticista",
+    tipo: "servico",
     titulo: "Esteticista, a limpeza de pele está pagando a sua sala?",
     subtitulo:
       "A Pólia One divide aluguel e produtos pelo mês e mostra quantos atendimentos fecham as contas.",
@@ -59,6 +79,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N06-maquiadora": {
     rotulo: "Maquiagem",
+    pessoa: "Maquiadora",
+    tipo: "servico",
     titulo: "Maquiadora, o pacote da noiva está no preço certo?",
     subtitulo:
       "Deslocamento, teste, produto e horas de espera. A Pólia One faz a conta do pacote inteiro.",
@@ -67,6 +89,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N07-confeiteira": {
     rotulo: "Confeitaria",
+    pessoa: "Confeiteira",
+    tipo: "produto",
     titulo: "Confeiteira, você sabe quanto cobrar pelo bolo de pote?",
     subtitulo:
       "A Pólia One soma ingrediente, pote, gás e taxa e mostra o preço que deixa sobra de verdade.",
@@ -75,6 +99,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N08-doceira": {
     rotulo: "Doces de festa",
+    pessoa: "Doceira",
+    tipo: "produto",
     titulo: "Doceira, o cento de brigadeiro está pagando o seu tempo?",
     subtitulo:
       "A Pólia One coloca a sua hora na conta do cento, junto com chocolate, forminha e embalagem.",
@@ -83,6 +109,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N09-marmita": {
     rotulo: "Marmitas",
+    pessoa: "Marmiteira",
+    tipo: "produto",
     titulo: "Marmiteira, quanto sobra de cada marmita que sai daí?",
     subtitulo:
       "A Pólia One faz a conta por unidade e mostra quantas marmitas fecham a meta do mês.",
@@ -91,6 +119,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N10-salgadeira": {
     rotulo: "Salgados e bufê",
+    pessoa: "Salgadeira",
+    tipo: "produto",
     titulo: "Salgadeira, o orçamento da festa cobre o óleo e o gás?",
     subtitulo:
       "A Pólia One faz a conta do cento antes do orçamento sair, com desconto simulado se a cliente pedir.",
@@ -99,22 +129,26 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N11-loja-roupa": {
     rotulo: "Loja de roupa",
+    pessoa: "Lojista",
+    tipo: "produto",
     titulo: "Lojista, o desconto da blusinha saiu de onde?",
-    subtitulo:
-      "A Pólia One simula o desconto antes e mostra quanto ainda sobra de cada peça.",
+    subtitulo: "A Pólia One simula o desconto antes e mostra quanto ainda sobra de cada peça.",
     foto: "nicho-loja-roupa",
     alt: "Lojista mostrando um vestido estampado na arara da loja, com parede coral ao fundo.",
   },
   "N12-cosmeticos": {
     rotulo: "Revenda de cosméticos",
+    pessoa: "Revendedora",
+    tipo: "produto",
     titulo: "Revendedora, quanto sobra depois do frete e do parcelamento?",
-    subtitulo:
-      "A Pólia One coloca frete, taxa e parcelas na conta e mostra a sobra de cada venda.",
+    subtitulo: "A Pólia One coloca frete, taxa e parcelas na conta e mostra a sobra de cada venda.",
     foto: "nicho-cosmeticos",
     alt: "Mãos embalando cosméticos em uma caixa de envio, com papel de seda e produtos na mesa.",
   },
   "N14-social-media": {
     rotulo: "Social media",
+    pessoa: "Social media",
+    tipo: "servico",
     titulo: "Social media, o pacote mensal cobre as suas horas reais?",
     subtitulo:
       "A Pólia One calcula o serviço por hora e mostra quantos clientes fecham a meta do mês.",
@@ -123,6 +157,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N15-psicologa": {
     rotulo: "Psicologia",
+    pessoa: "Psicóloga",
+    tipo: "servico",
     titulo: "Psicóloga, quantas sessões fecham o seu mês?",
     subtitulo: "A Pólia One divide os custos fixos e mostra a meta do mês em sessões.",
     foto: "nicho-psicologa",
@@ -130,6 +166,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N16-nutricionista": {
     rotulo: "Nutrição",
+    pessoa: "Nutricionista",
+    tipo: "servico",
     titulo: "Nutricionista, o retorno incluso está saindo de graça?",
     subtitulo:
       "A Pólia One coloca o retorno na conta da consulta e mostra o preço que se sustenta.",
@@ -138,6 +176,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N17-designer": {
     rotulo: "Design",
+    pessoa: "Designer",
+    tipo: "servico",
     titulo: "Designer, as rodadas de ajuste estão incluídas no seu preço?",
     subtitulo:
       "A Pólia One calcula o projeto por hora, com as revisões dentro, e mostra o preço que fecha o mês.",
@@ -146,6 +186,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N18-papelaria": {
     rotulo: "Papelaria personalizada",
+    pessoa: "Papelaria personalizada",
+    tipo: "produto",
     titulo: "Papelaria personalizada, quanto custa de verdade cada lembrancinha?",
     subtitulo: "Papel, impressão, laço e a sua hora. A Pólia One junta tudo e sugere o preço.",
     foto: "nicho-papelaria",
@@ -153,6 +195,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N19-croche": {
     rotulo: "Crochê",
+    pessoa: "Crocheteira",
+    tipo: "produto",
     titulo: "Crocheteira, você cobra pelo fio ou pelas horas de ponto?",
     subtitulo: "A Pólia One coloca as suas horas na conta da peça, além do fio.",
     foto: "nicho-croche",
@@ -160,6 +204,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N20-saboaria": {
     rotulo: "Saboaria e velas",
+    pessoa: "Saboaria artesanal",
+    tipo: "produto",
     titulo: "Saboaria artesanal, a sua marca vale mais que o preço da feira?",
     subtitulo:
       "O Planejamento da marca e a Calculadora da Pólia One mostram por que o seu preço não é o da feira.",
@@ -168,6 +214,8 @@ const NICHOS: Record<string, NichoLanding> = {
   },
   "N21-fotografa": {
     rotulo: "Fotografia",
+    pessoa: "Fotógrafa",
+    tipo: "servico",
     titulo: "Fotógrafa, o preço do ensaio inclui as horas de edição?",
     subtitulo:
       "Ensaio, edição, deslocamento e equipamento. A Pólia One faz a conta por hora e mostra o preço do pacote.",

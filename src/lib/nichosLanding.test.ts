@@ -3,6 +3,29 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { FOTOS_NICHOS, nichoDaCampanha } from "./nichosLanding";
 
+const TODOS = [
+  "N01-nail",
+  "N02-trancista",
+  "N03-lash",
+  "N04-cabeleireira",
+  "N05-esteticista",
+  "N06-maquiadora",
+  "N07-confeiteira",
+  "N08-doceira",
+  "N09-marmita",
+  "N10-salgadeira",
+  "N11-loja-roupa",
+  "N12-cosmeticos",
+  "N14-social-media",
+  "N15-psicologa",
+  "N16-nutricionista",
+  "N17-designer",
+  "N18-papelaria",
+  "N19-croche",
+  "N20-saboaria",
+  "N21-fotografa",
+];
+
 describe("nichoDaCampanha", () => {
   it("devolve o topo do nicho pelo utm_content do anúncio", () => {
     const n = nichoDaCampanha("N07-confeiteira");
@@ -36,18 +59,50 @@ describe("nichoDaCampanha", () => {
   });
 
   it("copy sem travessão, sem exclamação e sem emoji", () => {
-    const todos = [
-      "N01-nail", "N02-trancista", "N03-lash", "N04-cabeleireira", "N05-esteticista",
-      "N06-maquiadora", "N07-confeiteira", "N08-doceira", "N09-marmita", "N10-salgadeira",
-      "N11-loja-roupa", "N12-cosmeticos", "N14-social-media", "N15-psicologa",
-      "N16-nutricionista", "N17-designer", "N18-papelaria", "N19-croche", "N20-saboaria",
-      "N21-fotografa",
-    ];
-    for (const id of todos) {
+    for (const id of TODOS) {
       const n = nichoDaCampanha(id);
       expect(n, id).not.toBeNull();
-      const texto = `${n!.rotulo} ${n!.titulo} ${n!.subtitulo}`;
+      const texto = `${n!.rotulo} ${n!.pessoa} ${n!.titulo} ${n!.subtitulo}`;
       expect(texto, id).not.toMatch(/[—–!]|\p{Extended_Pictographic}/u);
     }
+  });
+
+  it("pessoa é o trecho antes da vírgula do título", () => {
+    for (const id of TODOS) {
+      const n = nichoDaCampanha(id)!;
+      expect(n.titulo.startsWith(`${n.pessoa}, `), id).toBe(true);
+    }
+    expect(nichoDaCampanha("N02-trancista")?.pessoa).toBe("Trancista");
+    expect(nichoDaCampanha("N18-papelaria")?.pessoa).toBe("Papelaria personalizada");
+  });
+
+  it("serviço e produto conforme a lista aprovada (11 de serviço, 9 de produto)", () => {
+    const servico = [
+      "N01-nail",
+      "N02-trancista",
+      "N03-lash",
+      "N04-cabeleireira",
+      "N05-esteticista",
+      "N06-maquiadora",
+      "N14-social-media",
+      "N15-psicologa",
+      "N16-nutricionista",
+      "N17-designer",
+      "N21-fotografa",
+    ];
+    const produto = [
+      "N07-confeiteira",
+      "N08-doceira",
+      "N09-marmita",
+      "N10-salgadeira",
+      "N11-loja-roupa",
+      "N12-cosmeticos",
+      "N18-papelaria",
+      "N19-croche",
+      "N20-saboaria",
+    ];
+    for (const id of servico) expect(nichoDaCampanha(id)?.tipo, id).toBe("servico");
+    for (const id of produto) expect(nichoDaCampanha(id)?.tipo, id).toBe("produto");
+    expect(servico.length + produto.length).toBe(TODOS.length);
   });
 });

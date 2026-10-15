@@ -96,56 +96,11 @@ describe("resolvePostLoginPath", () => {
     vi.clearAllMocks();
   });
 
-  function mockProfileQuery(
-    data: { onboarding_completed: boolean } | null,
-    throwError = false,
-    error: { message: string } | null = null,
-  ) {
-    maybeSingleMock.mockImplementation(async () => {
-      if (throwError) throw new Error("falha de rede");
-      return { data, error };
-    });
-    fromMock.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock }),
-      }),
-    });
-  }
-
-  it("retorna /painel quando onboarding_completed é true", async () => {
-    mockProfileQuery({ onboarding_completed: true });
+  // Desde 14/10/2026 o onboarding não é etapa obrigatória: todo login cai no
+  // Painel, que mostra o bloco "Primeiros passos" pra conta nova.
+  it("retorna /painel sempre, sem ler o perfil", async () => {
     expect(await resolvePostLoginPath("user-1")).toBe("/painel");
-  });
-
-  it("retorna /onboarding quando onboarding_completed é false", async () => {
-    mockProfileQuery({ onboarding_completed: false });
-    expect(await resolvePostLoginPath("user-1")).toBe("/onboarding");
-  });
-
-  it("retorna /onboarding quando o profile não existe ainda (data: null)", async () => {
-    mockProfileQuery(null);
-    expect(await resolvePostLoginPath("user-1")).toBe("/onboarding");
-  });
-
-  // Erro de leitura não manda quem já usa a Pólia pro onboarding (achado 7).
-  it("quando a query lança exceção duas vezes, vai pro /painel, nunca pro onboarding", async () => {
-    mockProfileQuery(null, true);
-    expect(await resolvePostLoginPath("user-1")).toBe("/painel");
-    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
-  });
-
-  it("quando o Supabase devolve error (sem lançar), também vai pro /painel", async () => {
-    mockProfileQuery(null, false, { message: "JWT expired" });
-    expect(await resolvePostLoginPath("user-1")).toBe("/painel");
-    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
-  });
-
-  it("a segunda tentativa vale quando a primeira falha", async () => {
-    mockProfileQuery({ onboarding_completed: false });
-    maybeSingleMock.mockImplementationOnce(async () => {
-      throw new Error("soluço de rede");
-    });
-    expect(await resolvePostLoginPath("user-1")).toBe("/onboarding");
-    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
+    expect(fromMock).not.toHaveBeenCalled();
+    expect(maybeSingleMock).not.toHaveBeenCalled();
   });
 });

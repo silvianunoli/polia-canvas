@@ -230,7 +230,8 @@ function RootComponent() {
 
   // Link de confirmação de e-mail vencido/já usado: o Supabase volta com o
   // erro no hash da URL (não dá pro servidor ver, só o client). O link de
-  // confirmação aponta pro /onboarding — redefinir-senha.tsx já trata o caso
+  // confirmação aponta pro /painel (era /onboarding até 14/10/2026; links
+  // antigos ainda chegam lá e são redirecionados) — redefinir-senha.tsx já trata o caso
   // dela mesma, então aqui só cobre o resto (a confirmação de cadastro).
   //
   // Link vencido chega como error=access_denied&error_code=otp_expired. Só

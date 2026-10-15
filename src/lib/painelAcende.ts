@@ -17,7 +17,8 @@ export type EstagioPainel =
   | { tipo: "planejamento"; modulo: number; nome: string; feitas: number; total: number }
   | { tipo: "numeros" };
 
-function moduloFechado(n: number, concluidas: ReadonlySet<string>): boolean {
+/** Todas as seções do módulo concluídas. Mesma régua do bloco "Primeiros passos". */
+export function moduloFechado(n: number, concluidas: ReadonlySet<string>): boolean {
   return secoesDoModulo(n).every((s) => concluidas.has(s.id));
 }
 

@@ -24,8 +24,23 @@ import { BoasVindas } from "@/components/dicas/BoasVindas";
 import { FaixaPlanejamento } from "@/components/dicas/FaixaPlanejamento";
 import { ListaPraAcender } from "@/components/dicas/ListaPraAcender";
 import { progressoPlanejamento } from "@/lib/lembretePlanejamento";
-import { chamadaDoPlanejamento, estagioPainel, itensPraAcender } from "@/lib/painelAcende";
+import {
+  chamadaDoPlanejamento,
+  estagioPainel,
+  itensPraAcender,
+  moduloFechado,
+} from "@/lib/painelAcende";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { useDicasVistas } from "@/hooks/useDicasVistas";
+import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
+import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
+import {
+  contaCriadaDepoisDoCorte,
+  contaVeBloco,
+  mancheteDoBloco,
+  nichoDaConta,
+  progressoPrimeirosPassos,
+} from "@/lib/primeirosPassos";
 
 export const Route = createFileRoute("/_authenticated/painel")({
   head: () => ({
@@ -464,6 +479,48 @@ function PainelPage() {
     [concluidas, entradasMes, temEntradaQuery.data],
   );
 
+  // ── Primeiros passos (14/10/2026): a entrada da conta nova no lugar do
+  // onboarding de 5 passos. Quem vê e o que está feito: lib/primeirosPassos.ts.
+  // Leitura que falhou não mostra o bloco: o Painel segue como era.
+  const primeiros = usePrimeirosPassos(userId);
+  const nichoPasso = useMemo(() => nichoDaConta(user?.user_metadata), [user?.user_metadata]);
+  const modulo1Fechado = useMemo(() => moduloFechado(1, concluidas), [concluidas]);
+  const progressoPassos = useMemo(
+    () =>
+      primeiros.dados
+        ? progressoPrimeirosPassos({
+            temPreco: primeiros.dados.temPreco,
+            modulo1Fechado,
+            temNome: !!primeiros.dados.nomeMarca,
+          })
+        : null,
+    [primeiros.dados, modulo1Fechado],
+  );
+  const blocoVisivel =
+    dadosQuery.isSuccess &&
+    !!primeiros.dados &&
+    !!progressoPassos &&
+    contaVeBloco(primeiros.dados) &&
+    !progressoPassos.completo;
+  // A manchete e o que vem colado nela esperam as duas leituras: sem isso a
+  // conta nova via a manchete e o botão de sempre piscarem antes do bloco.
+  const cabecalhoPronto = dadosQuery.isSuccess && !primeiros.carregando;
+  // Skeleton do bloco só pra quem a sessão já diz que é conta nova: conta
+  // antiga não pode ver um bloco piscar e sumir.
+  const blocoCarregando =
+    !cabecalhoPronto && !dadosQuery.isError && contaCriadaDepoisDoCorte(user?.created_at);
+
+  // O fim do onboarding antigo marcava as boas-vindas e o balão do tour como
+  // vistos (a tela final já fazia esse papel). O bloco faz o mesmo: sem isso,
+  // ao fechar os três passos o modal de boas-vindas abriria por cima de quem
+  // já está usando o Painel.
+  const dicas = useDicasVistas();
+  useEffect(() => {
+    if (!blocoVisivel || !dicas.pronto) return;
+    if (dicas.mostrar("boas-vindas")) dicas.marcar("boas-vindas");
+    if (dicas.mostrar("tour")) dicas.marcar("tour");
+  }, [blocoVisivel, dicas]);
+
   const clientes = dados?.clientes ?? [];
   const clientesCount = clientes.length;
   const clientesEntregues = clientes.filter((c) => jaEntregue(c.status_pedido)).length;
@@ -517,6 +574,7 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
+    if (blocoVisivel) return mancheteDoBloco(nichoPasso);
     if (chamadaPlanejamento) return chamadaPlanejamento.manchete;
     // A manchete do plano Grátis era um desvio pro Planejamento, porque sem
     // Financeiro a receita era sempre 0 e "registre sua primeira venda" mandava
@@ -555,7 +613,7 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [receitaMes, metaBoa, metaMinima, chamadaPlanejamento]);
+  }, [receitaMes, metaBoa, metaMinima, chamadaPlanejamento, blocoVisivel, nichoPasso]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
@@ -678,8 +736,13 @@ function PainelPage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      <BoasVindas />
-      {dadosQuery.isSuccess && <TourBoasVindas modulo={jornadaFinalizada ? null : moduloAtual} />}
+      {/* Fora enquanto o bloco "Primeiros passos" está na tela: ele já é o
+          recado de boas-vindas e já tem a ação. Esperam o cabeçalho pra conta
+          nova não ver o modal abrir antes de o bloco ser decidido. */}
+      {cabecalhoPronto && !blocoVisivel && <BoasVindas />}
+      {cabecalhoPronto && !blocoVisivel && (
+        <TourBoasVindas modulo={jornadaFinalizada ? null : moduloAtual} />
+      )}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-24 pt-16 md:px-10">
         {userId && progressoFaixa && (
           <FaixaPlanejamento userId={userId} progresso={progressoFaixa} />
@@ -689,8 +752,12 @@ function PainelPage() {
           <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
             {saudacao}, {meta.displayName}.
           </p>
-          <h1 className="font-cabinet mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)]">
-            {dadosQuery.isSuccess ? (
+          <h1
+            id="painel-manchete"
+            tabIndex={-1}
+            className="font-cabinet mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)] outline-none"
+          >
+            {cabecalhoPronto ? (
               headline
             ) : dadosQuery.isError ? (
               "O Painel não carregou agora."
@@ -703,8 +770,26 @@ function PainelPage() {
           </h1>
 
           {/* Só depois dos dados: antes disso a ação era a de conta nova e
-              piscava "Quero começar o Módulo 1" pra quem já passou dele. */}
-          {!dadosQuery.isSuccess ? null : acaoPrincipal.href ? (
+              piscava "Quero começar o Módulo 1" pra quem já passou dele.
+              Com o bloco "Primeiros passos" na tela, a ação é a dele. */}
+          {blocoCarregando && <PrimeirosPassosCarregando />}
+          {blocoVisivel && primeiros.dados && progressoPassos && (
+            <PrimeirosPassos
+              progresso={progressoPassos}
+              nicho={nichoPasso}
+              escolhaSalva={primeiros.dados.escolhaTipo}
+              onEscolherTipo={primeiros.salvarTipo}
+              onSalvarNome={async (nome) => {
+                const ok = await primeiros.salvarNome(nome);
+                // Era o último passo: o bloco sai e o foco iria pro <body>.
+                if (ok && progressoPassos.totalFeitos === 2) {
+                  requestAnimationFrame(() => document.getElementById("painel-manchete")?.focus());
+                }
+                return ok;
+              }}
+            />
+          )}
+          {!cabecalhoPronto || blocoVisivel ? null : acaoPrincipal.href ? (
             <LinkInterno
               href={acaoPrincipal.href}
               data-tour="acao-principal"
@@ -725,7 +810,9 @@ function PainelPage() {
             </button>
           )}
 
-          {dadosQuery.isSuccess && <ListaPraAcender itens={itensAcender} />}
+          {/* Duas listas de passos na mesma tela (as duas com o Módulo 1) seriam
+              dois recados: enquanto o bloco está na tela, a lista espera. */}
+          {cabecalhoPronto && !blocoVisivel && <ListaPraAcender itens={itensAcender} />}
 
           {/* Intenção do dia */}
           <div className="mt-6 max-w-[560px]">

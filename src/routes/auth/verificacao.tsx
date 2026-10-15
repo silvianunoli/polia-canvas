@@ -57,7 +57,7 @@ function VerificacaoPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session && sessaoEhDoEmail(session.user.email, email)) {
-        navigate({ to: "/onboarding" });
+        navigate({ to: "/painel" });
       }
     });
     return () => subscription.unsubscribe();

@@ -127,7 +127,7 @@ function CriarSenhaPage() {
       toastErro("A Pólia não conseguiu salvar a senha agora. Tenta de novo em alguns segundos.");
       return;
     }
-    navigate({ to: "/onboarding" });
+    navigate({ to: "/painel" });
   }
 
   if (!pronta) {

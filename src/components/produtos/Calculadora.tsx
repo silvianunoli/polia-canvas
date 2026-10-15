@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNod
 import { hojeISO } from "@/lib/data.functions";
 import { Link } from "@tanstack/react-router";
 import { Lock, Copy, Plus, Trash2 } from "lucide-react";
+import { EtiquetaPlano } from "@/components/landing/BlocosLanding";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
@@ -69,6 +70,7 @@ export function Calculadora({
   onCancelarRecalculo,
   onAtualizado,
   fixosDoFinanceiro = null,
+  perfilInicial,
 }: {
   onSalvarComoProduto: (pf: Prefill) => void;
   /** Cota do catálogo cheia: calcular segue livre, só o "Salvar como produto" fecha. */
@@ -83,12 +85,22 @@ export function Calculadora({
   onAtualizado?: () => void;
   /** Saídas fixas do mês corrente no Financeiro, por item (null = sem dado). */
   fixosDoFinanceiro?: Record<ChaveCustoFixo, number> | null;
+  /**
+   * Aba de abertura pedida pela URL (?tipo=, vindo dos "Primeiros passos" do
+   * Painel). O produto recalculado tem prioridade: a aba dele é a do breakdown.
+   */
+  perfilInicial?: "produto" | "servico";
 }) {
   const bk = produtoRecalcular?.calculadora_breakdown ?? null;
   const v = (campo: string) => bk?.valores?.[campo] ?? "";
 
   const [perfil, setPerfil] = useState<PerfilCalc>(
-    bk?.perfil ?? (produtoRecalcular?.tipo === "servico" ? "servico" : "produto"),
+    bk?.perfil ??
+      (produtoRecalcular
+        ? produtoRecalcular.tipo === "servico"
+          ? "servico"
+          : "produto"
+        : (perfilInicial ?? "produto")),
   );
 
   // ── Perfil Produto ──
@@ -652,6 +664,8 @@ export function Calculadora({
             </button>
           ) : null}
         </div>
+        {/* A etiqueta "Pro" avisa antes do clique (14/10/2026): só o cadeado
+            não dizia de qual plano era, e o clique caía no /upgrade de surpresa. */}
         {!ehProjete && (
           <Link
             to="/upgrade"
@@ -660,6 +674,8 @@ export function Calculadora({
           >
             <Lock size={13} aria-hidden="true" />
             Encomenda (sob medida)
+            <span className="sr-only">, do plano</span>
+            <EtiquetaPlano nome="Pro" />
           </Link>
         )}
       </div>

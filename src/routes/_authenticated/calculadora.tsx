@@ -14,9 +14,12 @@ import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
+import { tipoPrecoDaBusca, type TipoPreco } from "@/lib/primeirosPassos";
 
 interface CalculadoraSearch {
   produto?: string;
+  /** Aba de abertura (Produto ou Serviço). `produto` tem prioridade sobre ela. */
+  tipo?: TipoPreco;
 }
 
 // Ferramenta própria, separada do catálogo de Produtos. Abre no plano Grátis:
@@ -33,14 +36,20 @@ export const Route = createFileRoute("/_authenticated/calculadora")({
     ],
   }),
   // `produto` = id de um produto do catálogo a recalcular (vem do menu do card).
-  validateSearch: (search: Record<string, unknown>): CalculadoraSearch => ({
-    produto: typeof search.produto === "string" ? search.produto : undefined,
-  }),
+  // `tipo` = aba de abertura, vinda dos "Primeiros passos" do Painel; valor
+  // fora de produto/servico é ignorado (abre na aba Produto, como sempre).
+  validateSearch: (search: Record<string, unknown>): CalculadoraSearch => {
+    const tipo = tipoPrecoDaBusca(search.tipo);
+    return {
+      produto: typeof search.produto === "string" ? search.produto : undefined,
+      ...(tipo ? { tipo } : {}),
+    };
+  },
   component: CalculadoraPage,
 });
 
 function CalculadoraPage() {
-  const { produto: produtoId } = Route.useSearch();
+  const { produto: produtoId, tipo } = Route.useSearch();
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
@@ -198,7 +207,8 @@ function CalculadoraPage() {
       {/* `key` remonta a calculadora quando muda o produto recalculado: os campos
           nascem de useState(inicial) e não releriam o breakdown novo. */}
       <Calculadora
-        key={produtoRecalcular?.id ?? "novo"}
+        key={produtoRecalcular?.id ?? `novo-${tipo ?? ""}`}
+        perfilInicial={tipo}
         onSalvarComoProduto={(pf) => {
           if (cotaAtingida) return;
           setPrefill(pf);
