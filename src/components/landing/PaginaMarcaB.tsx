@@ -317,18 +317,6 @@ export function PaginaMarcaB({
               nicho ? `Pólia One · ${nicho.rotulo}` : "Pólia One · para quem toca a própria marca"
             }
             titulo={nicho ? nicho.titulo : "Sua marca já vale mais do que você está cobrando."}
-            subtitulo={
-              nicho ? (
-                nicho.subtitulo
-              ) : (
-                <>
-                  A Pólia One junta o que a sua marca é, quanto ela precisa render no mês e quanto
-                  custa cada produto. Na hora do orçamento,{" "}
-                  <b className="font-semibold">o preço sai dessa conta</b>, não do chute nem da
-                  concorrente.
-                </>
-              )
-            }
           />
         ) : (
           <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">

@@ -271,13 +271,6 @@ function LandingA() {
           botaoRef={heroCta}
           rotulo="Pólia One · pra hora do orçamento"
           titulo="O orçamento chegou. A Pólia One faz a conta antes de você responder."
-          subtitulo={
-            <>
-              Custo do material, taxa da maquininha, quanto precisa sobrar: a Pólia One junta tudo e
-              mostra <b className="font-semibold">o preço e o que sobra nele</b>. Se a cliente pedir
-              desconto, mostra quanto fica com o desconto também.
-            </>
-          }
           micro="A Calculadora está no plano Grátis. Sem cartão."
         />
 
