@@ -24,7 +24,9 @@ import { nichoDaCampanha } from "@/lib/nichosLanding";
  * Pressupõe que o deploy saia DEPOIS deste horário. Publicado antes, a conta
  * marcada entre o deploy e o corte perde o bloco na segunda carga.
  */
-export const CORTE_PRIMEIROS_PASSOS = "2026-10-15T00:00:00-03:00";
+// Era 15/10 00:00; o deploy saiu às 23:38 de 14/10, então o corte recuou pra
+// 23:30 e o deploy ficou depois dele (ver o parágrafo acima).
+export const CORTE_PRIMEIROS_PASSOS = "2026-10-14T23:30:00-03:00";
 const CORTE_MS = Date.parse(CORTE_PRIMEIROS_PASSOS);
 
 export type TipoPreco = "produto" | "servico";

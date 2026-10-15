@@ -20,12 +20,12 @@ import {
   ESCOLHAS_TIPO,
 } from "./primeirosPassos";
 
-const ANTES = "2026-10-14T23:59:59-03:00";
-const DEPOIS = "2026-10-15T00:00:00-03:00";
+const ANTES = "2026-10-14T23:29:59-03:00";
+const DEPOIS = "2026-10-14T23:30:00-03:00";
 
 describe("contaVeBloco (quem vê o bloco)", () => {
-  it("o corte é 15/10/2026 à meia-noite de Brasília", () => {
-    expect(Date.parse(CORTE_PRIMEIROS_PASSOS)).toBe(Date.parse("2026-10-15T03:00:00Z"));
+  it("o corte é 14/10/2026 às 23:30 de Brasília (antes do deploy das 23:38)", () => {
+    expect(Date.parse(CORTE_PRIMEIROS_PASSOS)).toBe(Date.parse("2026-10-15T02:30:00Z"));
   });
 
   it("conta criada a partir do corte vê, mesmo já marcada como concluída", () => {
