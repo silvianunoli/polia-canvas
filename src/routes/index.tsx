@@ -57,7 +57,8 @@ function HomePage() {
         {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
       </AnimatePresence>
       <SiteHeader />
-      <PaginaMarcaB busca={busca} linkSobre />
+      {/* Desde 16/10/2026 a home tem o mesmo topo da /landing-b: título e o VSL logo embaixo. */}
+      <PaginaMarcaB busca={busca} linkSobre vsl />
     </div>
   );
 }

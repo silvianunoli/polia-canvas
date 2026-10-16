@@ -294,7 +294,7 @@ export function PaginaMarcaB({
 }: {
   busca: BuscaCadastro;
   linkSobre?: boolean;
-  /** Topo com o VSL no lugar da foto: só na /landing-b, a home fica sem. */
+  /** Topo com o VSL no lugar da foto (home e /landing-b desde 16/10/2026); false volta pra foto com o mock. */
   vsl?: boolean;
   /** Topo do nicho do anúncio (só /landing-b); null mostra o topo padrão. */
   nicho?: NichoLanding | null;
@@ -307,8 +307,8 @@ export function PaginaMarcaB({
   return (
     <>
       <main id="conteudo">
-        {/* B1 · HERO: na /landing-b o topo é o VSL (título, vídeo grande, botão);
-            na home segue a foto com o mock da Calculadora. */}
+        {/* B1 · HERO: na home e na /landing-b o topo é o VSL (título, vídeo grande, botão);
+            sem ele, a foto com o mock da Calculadora. */}
         {vsl ? (
           <HeroComVideo
             busca={busca}
