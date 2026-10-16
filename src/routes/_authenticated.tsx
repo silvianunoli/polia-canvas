@@ -143,12 +143,12 @@ function AuthenticatedLayout() {
         void supabase.auth.getUser().then(({ data }) => {
           const userId = data.user?.id;
           if (!userId) {
-            tiktokCadastro("google");
+            tiktokCadastro("google", undefined, { email: data.user?.email });
             return pixelCadastro("google");
           }
           // Mesmo event_id no Pixel e na API de Conversões: o Meta conta uma vez.
           pixelCadastro("google", eventIdCadastro(userId));
-          tiktokCadastro("google", eventIdCadastro(userId));
+          tiktokCadastro("google", eventIdCadastro(userId), { email: data.user?.email, userId });
           const fbp = lerFbp();
           void registrarCadastroMeta({
             data: {

@@ -16,7 +16,7 @@ import { AssinaturaCheckout } from "@/components/configuracoes/AssinaturaCheckou
 import { track } from "@/lib/analytics";
 import { gtagEvent } from "@/lib/gtag";
 import { pixelCompra } from "@/lib/metaPixel";
-import { tiktokCompra } from "@/lib/tiktokPixel";
+import { tiktokCompra, tiktokIniciouCheckout, type Quem } from "@/lib/tiktokPixel";
 import {
   ehBeta,
   tierDoPlano,
@@ -55,6 +55,12 @@ const TIERS = TIERS_PAGOS;
 
 function fmtPreco(v: number) {
   return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v % 1 ? 2 : 0 })}`;
+}
+
+/** E-mail e id da conta logada, pro identify do TikTok (vai em hash). */
+async function quemEstaLogada(): Promise<Quem> {
+  const { data } = await supabase.auth.getSession();
+  return { email: data.session?.user.email, userId: data.session?.user.id };
 }
 
 export const Route = createFileRoute("/_authenticated/assinar")({
@@ -271,6 +277,7 @@ function AssinarPage() {
         return;
       }
       track("assinatura_iniciada", { plano });
+      void quemEstaLogada().then((quem) => tiktokIniciouCheckout(plano, quem));
       setPlanoNoCheckout(plano);
       setClientSecret(resultado.clientSecret);
     } catch {
@@ -477,10 +484,10 @@ function AssinarPage() {
                 planoNoCheckout ?? "assinatura",
                 clientSecret.split("_secret_")[0] || undefined,
               );
-              tiktokCompra(
-                valor,
-                planoNoCheckout ?? "assinatura",
-                clientSecret.split("_secret_")[0] || undefined,
+              const planoComprado = planoNoCheckout ?? "assinatura";
+              const idCompra = clientSecret.split("_secret_")[0] || undefined;
+              void quemEstaLogada().then((quem) =>
+                tiktokCompra(valor, planoComprado, idCompra, quem),
               );
             }
             setClientSecret(null);

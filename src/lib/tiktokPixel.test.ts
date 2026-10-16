@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
 type Mod = typeof import("./tiktokPixel");
@@ -5,7 +6,7 @@ type Mod = typeof import("./tiktokPixel");
 let mod: Mod;
 
 beforeEach(async () => {
-  // ultimaPagePathname é estado de módulo; window.ttq é global.
+  // Dedups e o ViewContent pendente são estado de módulo; window.ttq é global.
   vi.resetModules();
   document.head.innerHTML = "";
   delete window.ttq;
@@ -17,7 +18,10 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-const fila = () => Array.from(window.ttq as unknown as unknown[]);
+const fila = () => Array.from(window.ttq as unknown as unknown[]) as unknown[][];
+const ultimo = () => fila().at(-1);
+// Os eventos esperam o hash do identify (assíncrono) antes de sair.
+const esperar = () => new Promise((r) => setTimeout(r, 0));
 
 describe("TIKTOK_PIXEL_ID", () => {
   it("usa o pixel da Pólia quando a variável não existe", () => {
@@ -55,40 +59,175 @@ describe("tiktokPageView", () => {
     mod.tiktokPageView(window.location.pathname);
     mod.tiktokPageView("/planos");
     mod.tiktokPageView("/planos");
-    expect(fila().filter((c) => (c as unknown[])[0] === "page")).toHaveLength(2);
+    expect(fila().filter((c) => c[0] === "page")).toHaveLength(2);
   });
 });
 
-describe("eventos", () => {
+describe("tiktokViewContent", () => {
+  it("landing conhecida sai com nome legível", () => {
+    mod.carregarTiktokPixel("ABC");
+    mod.tiktokViewContent("/premium-a");
+    expect(ultimo()).toEqual([
+      "track",
+      "ViewContent",
+      {
+        contents: [
+          { content_id: "/premium-a", content_type: "product", content_name: "Landing Premium A" },
+        ],
+      },
+    ]);
+  });
+
+  it("landing nova, sem cadastro em lista nenhuma, também sai", () => {
+    mod.carregarTiktokPixel("ABC");
+    mod.tiktokViewContent("/landing-c/");
+    expect(ultimo()?.[2]).toEqual({
+      contents: [{ content_id: "/landing-c", content_type: "product", content_name: "/landing-c" }],
+    });
+  });
+
+  it("cadastro, páginas legais e pós-compra ficam de fora", () => {
+    mod.carregarTiktokPixel("ABC");
+    for (const p of [
+      "/auth/cadastro",
+      "/auth/login",
+      "/privacidade",
+      "/termos",
+      "/compra-confirmada",
+    ])
+      mod.tiktokViewContent(p);
+    expect(fila().filter((c) => c[1] === "ViewContent")).toHaveLength(0);
+  });
+
+  it("não repete na mesma página", () => {
+    mod.carregarTiktokPixel("ABC");
+    mod.tiktokViewContent("/landing-a");
+    mod.tiktokViewContent("/landing-a");
+    expect(fila().filter((c) => c[1] === "ViewContent")).toHaveLength(1);
+  });
+
+  it("página vista antes do aceite de cookies sai quando o pixel carrega", () => {
+    mod.tiktokViewContent("/landing-b");
+    expect(window.ttq).toBeUndefined();
+    mod.carregarTiktokPixel("ABC");
+    expect(ultimo()?.[1]).toBe("ViewContent");
+    expect((ultimo()?.[2] as { contents: { content_id: string }[] }).contents[0].content_id).toBe(
+      "/landing-b",
+    );
+  });
+});
+
+describe("tiktokCliqueEmLink", () => {
   beforeEach(() => mod.carregarTiktokPixel("ABC"));
 
-  it("Lead leva o event_id", () => {
-    mod.tiktokLead("ev-1");
-    expect(fila().at(-1)).toEqual(["track", "Lead", {}, { event_id: "ev-1" }]);
+  it("link pro cadastro vira ClickButton", async () => {
+    mod.tiktokCliqueEmLink("/auth/cadastro?origem=landing-a");
+    await esperar();
+    expect(ultimo()?.[1]).toBe("ClickButton");
   });
 
-  it("CompleteRegistration com e sem event_id", () => {
-    mod.tiktokCadastro("google", "cadastro_1");
-    expect(fila().at(-1)).toEqual([
+  it("link pro /planos com plano vira AddToCart com valor", async () => {
+    mod.tiktokCliqueEmLink("/planos?plano=premium#pagamento");
+    await esperar();
+    expect(ultimo()).toEqual([
+      "track",
+      "AddToCart",
+      {
+        contents: [
+          {
+            content_id: "controle_mensal",
+            content_type: "product",
+            content_name: "Pólia One Premium mensal",
+          },
+        ],
+        value: 29.9,
+        currency: "BRL",
+      },
+    ]);
+  });
+
+  it("link externo ou sem plano não dispara nada", async () => {
+    mod.tiktokCliqueEmLink("https://instagram.com/hub.polia");
+    mod.tiktokCliqueEmLink("/planos");
+    mod.tiktokCliqueEmLink("/blog");
+    await esperar();
+    expect(fila()).toEqual([["page"]]);
+  });
+});
+
+describe("identify", () => {
+  beforeEach(() => mod.carregarTiktokPixel("ABC"));
+
+  it("manda só hash SHA-256, antes do evento", async () => {
+    mod.tiktokCadastro("email", "cadastro_1", { email: " Ana@Email.com ", userId: "u1" });
+    await esperar();
+    const [identify, evento] = fila().slice(-2);
+    expect(identify[0]).toBe("identify");
+    const dados = identify[1] as Record<string, string>;
+    // E-mail normalizado (sem espaço, minúsculo) antes do hash.
+    expect(dados.email).toBe(createHash("sha256").update("ana@email.com").digest("hex"));
+    expect(dados.external_id).toBe(createHash("sha256").update("u1").digest("hex"));
+    expect(JSON.stringify(dados)).not.toContain("ana@");
+    expect(evento).toEqual([
       "track",
       "CompleteRegistration",
-      { content_name: "google" },
+      {
+        contents: [
+          { content_id: "gratis", content_type: "product", content_name: "Pólia One Grátis" },
+        ],
+        value: 0,
+        currency: "BRL",
+        description: "email",
+      },
       { event_id: "cadastro_1" },
     ]);
-    mod.tiktokCadastro("email");
-    expect(fila().at(-1)).toEqual(["track", "CompleteRegistration", { content_name: "email" }]);
   });
 
-  it("Purchase em BRL", () => {
+  it("telefone vira E.164 do Brasil", () => {
+    expect(mod.telefoneE164("(11) 98765-4321")).toBe("+5511987654321");
+    expect(mod.telefoneE164("+55 11 98765-4321")).toBe("+5511987654321");
+    expect(mod.telefoneE164("123")).toBeNull();
+  });
+
+  it("sem dado de quem, sai o evento sem identify", async () => {
+    mod.tiktokLead("ev-1");
+    await esperar();
+    expect(fila().some((c) => c[0] === "identify")).toBe(false);
+    expect(ultimo()).toEqual([
+      "track",
+      "Lead",
+      { contents: [{ content_id: "manual", content_type: "product", content_name: "manual" }] },
+      { event_id: "ev-1" },
+    ]);
+  });
+});
+
+describe("checkout e compra", () => {
+  beforeEach(() => mod.carregarTiktokPixel("ABC"));
+
+  it("InitiateCheckout leva plano e valor", async () => {
+    mod.tiktokIniciouCheckout("projete_anual");
+    await esperar();
+    expect(ultimo()?.[1]).toBe("InitiateCheckout");
+    expect((ultimo()?.[2] as { currency: string }).currency).toBe("BRL");
+  });
+
+  it("Purchase em BRL com o event_id da compra", async () => {
     mod.tiktokCompra(29.9, "controle_mensal", "cs_1");
-    expect(fila().at(-1)).toEqual([
+    await esperar();
+    expect(ultimo()).toEqual([
       "track",
       "Purchase",
       {
+        contents: [
+          {
+            content_id: "controle_mensal",
+            content_type: "product",
+            content_name: "Pólia One Premium mensal",
+          },
+        ],
         value: 29.9,
         currency: "BRL",
-        content_id: "controle_mensal",
-        content_name: "controle_mensal",
       },
       { event_id: "cs_1" },
     ]);

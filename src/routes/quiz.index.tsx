@@ -14,6 +14,7 @@ import { Reveal } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 import { gravarLeadQuiz } from "@/lib/quiz.functions";
+import { tiktokLead } from "@/lib/tiktokPixel";
 import {
   CONSENT_TEXTO,
   PERGUNTAS,
@@ -586,6 +587,7 @@ function QuizPage() {
       const props = { faixa: faixa.nome, territorio: territorioFraco.nome };
       track("lead_gravado", props);
       gtagEvent("lead_gravado", props);
+      tiktokLead(undefined, { email, telefone }, "quiz");
       setTela("resultado");
       return null;
     } catch (erro) {

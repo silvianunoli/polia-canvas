@@ -299,7 +299,7 @@ function CartaoPedido({
       // deve contar de novo pro anúncio.
       if (r.eventId) {
         pixelLead(r.eventId);
-        tiktokLead(r.eventId);
+        tiktokLead(r.eventId, { email: email.trim() });
       }
       setDownloadUrl(r.downloadUrl);
       iniciarDownload(r.downloadUrl);

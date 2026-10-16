@@ -13,6 +13,7 @@ import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import { FieldError } from "@/components/ui/FieldError";
+import { tiktokEscolheuPlano, tiktokIniciouCheckout } from "@/lib/tiktokPixel";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 
 type Ciclo = "mensal" | "anual";
@@ -105,6 +106,7 @@ function PlanosPage() {
   function escolher(id: TierPago) {
     setEscolhido(id);
     track("planos_plano_escolhido", { plano: `${id}_${ciclo}`, ...origemTrack });
+    tiktokEscolheuPlano(`${id}_${ciclo}`);
     document.getElementById("pagamento")?.scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => emailRef.current?.focus({ preventScroll: true }), 500);
   }
@@ -136,6 +138,9 @@ function PlanosPage() {
     }
 
     const plano = `${escolhido}_${ciclo}` as const;
+    // Antes da chamada: depois dela a página já vai embora pro Stripe e o
+    // evento pode não sair.
+    tiktokIniciouCheckout(plano, { email: valorEmail });
     setLoading(true);
     try {
       const r = await iniciarCompraPublica({
@@ -382,8 +387,8 @@ function PlanosPage() {
                     className="rounded-xl bg-[var(--surface)] px-4 py-3 text-[15px] leading-[1.5] text-[var(--ink)]"
                   >
                     A Pólia vai mandar o acesso pra{" "}
-                    <strong className="break-all font-semibold">{emailParaConfirmar}</strong>. Confere
-                    se está certo.
+                    <strong className="break-all font-semibold">{emailParaConfirmar}</strong>.
+                    Confere se está certo.
                   </p>
                 )}
 

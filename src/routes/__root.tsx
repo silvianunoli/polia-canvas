@@ -18,7 +18,7 @@ import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { MetaPixel } from "@/components/MetaPixel";
 import { pixelPageView } from "@/lib/metaPixel";
 import { TiktokPixel } from "@/components/TiktokPixel";
-import { tiktokPageView } from "@/lib/tiktokPixel";
+import { tiktokCliqueEmLink, tiktokPageView, tiktokViewContent } from "@/lib/tiktokPixel";
 import { ErrorPage, type ErrorPageProps } from "@/components/layout/ErrorPage";
 import { SiteErrorPage } from "@/components/layout/SiteErrorPage";
 import { DiagnosticPanel } from "@/components/DiagnosticPanel";
@@ -175,6 +175,15 @@ function RootComponent() {
     tiktokPageView(pathname);
   }, [pathname]);
 
+  // ViewContent do TikTok em toda página pública: landing nova entra sozinha,
+  // sem lista pra manter. Página da área logada (_authenticated) nunca conta.
+  const areaLogada = useRouterState({
+    select: (s) => s.matches.some((m) => m.routeId.startsWith("/_authenticated")),
+  });
+  useEffect(() => {
+    if (!areaLogada) tiktokViewContent(pathname);
+  }, [pathname, areaLogada]);
+
   // Clique instrumentado por delegação: qualquer elemento com data-track vira
   // evento sem precisar importar/chamar track() em cada botão. Ver plano de
   // tagueamento — data-track-props é um JSON opcional com propriedades extras.
@@ -182,6 +191,9 @@ function RootComponent() {
     const onClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
+      // TikTok lê o destino de qualquer link (cadastro, plano), com ou sem data-track.
+      const link = target.closest<HTMLAnchorElement>("a[href]");
+      if (link) tiktokCliqueEmLink(link.href);
       const el = target.closest<HTMLElement>("[data-track]");
       if (!el) return;
       const elemento = el.getAttribute("data-track");

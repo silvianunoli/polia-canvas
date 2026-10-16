@@ -313,7 +313,9 @@ function PrivacidadePage() {
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">TikTok Ads (TikTok Pixel)</strong>: medição
-                  do resultado dos anúncios no TikTok, só com consentimento
+                  do resultado dos anúncios no TikTok, só com consentimento. Quando a titular se
+                  cadastra, assina ou deixa o contato, o e-mail, o telefone e o id da conta vão
+                  apenas como código irreversível (hash SHA-256), nunca em texto
                 </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
