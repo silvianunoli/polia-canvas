@@ -1,4 +1,5 @@
-import { useRef, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Play, VolumeX } from "lucide-react";
 import { track } from "@/lib/analytics";
 import {
   BotaoCadastro,
@@ -27,7 +28,17 @@ const ARQUIVOS = {
   },
 } as const;
 
-/** Só o player, com os eventos "vsl" (play, metade, fim). */
+/**
+ * Só o player. Desde 16/10/2026 (pedido da Sil) o vídeo começa sozinho e MUDO, em
+ * loop: navegador nenhum deixa vídeo com som começar sem um toque. A legenda está
+ * gravada no vídeo, então dá pra acompanhar sem som. Por cima fica o aviso
+ * "Toque pra ouvir": o toque volta o vídeo pro começo e toca com som e controles.
+ * Com "reduzir movimento" ligado (ou autoplay bloqueado, como no modo economia do
+ * iPhone) o vídeo fica parado na capa e o aviso vira "Toque pra assistir".
+ *
+ * Eventos "vsl": autoplay (começou mudo), som (a pessoa tocou pra ouvir), metade e
+ * fim (só contam assistindo com som, pra o loop mudo não inflar o número).
+ */
 export function PlayerVsl({
   busca,
   versao = "gratis",
@@ -37,6 +48,9 @@ export function PlayerVsl({
   versao?: keyof typeof ARQUIVOS;
   className?: string;
 }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [rodandoMudo, setRodandoMudo] = useState(false);
+  const [comSom, setComSom] = useState(false);
   // Cada marco do vídeo vira um evento só uma vez por carregamento da página.
   const marcados = useRef(new Set<string>());
   const marcar = (marco: string) => {
@@ -46,25 +60,78 @@ export function PlayerVsl({
   };
   const { video, capa } = ARQUIVOS[versao];
 
+  useEffect(() => {
+    const v = ref.current;
+    if (!v || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // muted pela propriedade antes do play: o atributo do React não chega no HTML
+    // do servidor, e sem ele o iPhone recusa o autoplay.
+    v.muted = true;
+    v.play()
+      .then(() => {
+        setRodandoMudo(true);
+        marcar("autoplay");
+      })
+      .catch(() => {
+        // Autoplay bloqueado: fica a capa com "Toque pra assistir".
+      });
+    // marcar só lê refs; rodar uma vez na montagem basta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const ouvir = () => {
+    const v = ref.current;
+    if (!v) return;
+    v.currentTime = 0;
+    v.muted = false;
+    v.loop = false;
+    setComSom(true);
+    marcar("som");
+    void v.play().catch(() => {});
+  };
+
   return (
     <div
-      className={`overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--ink)] ${className}`}
+      className={`relative overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--ink)] ${className}`}
     >
       <video
+        ref={ref}
         className="block aspect-video w-full"
         src={video}
         poster={capa}
-        controls
+        controls={comSom}
+        loop={!comSom}
         playsInline
         preload="metadata"
         aria-label="Vídeo da Pólia One, 1 minuto e meio, com narração e legenda"
-        onPlay={() => marcar("play")}
         onTimeUpdate={(e) => {
           const v = e.currentTarget;
-          if (v.duration && v.currentTime / v.duration >= 0.5) marcar("metade");
+          if (!v.muted && v.duration && v.currentTime / v.duration >= 0.5) marcar("metade");
         }}
-        onEnded={() => marcar("fim")}
+        onEnded={() => {
+          if (comSom) marcar("fim");
+        }}
       />
+      {!comSom && (
+        <button
+          type="button"
+          onClick={ouvir}
+          className="absolute inset-0 flex items-center justify-center rounded-2xl focus-visible:outline focus-visible:outline-[3px] focus-visible:-outline-offset-[6px] focus-visible:outline-[var(--secondary)]"
+          aria-label={
+            rodandoMudo
+              ? "O vídeo está sem som. Toque pra ouvir desde o começo"
+              : "Toque pra assistir o vídeo com som"
+          }
+        >
+          <span className="inline-flex items-center gap-3 rounded-full border-2 border-[var(--ink)] bg-[var(--secondary)] px-6 py-3 text-[17px] font-semibold text-[var(--secondary-ink)] transition-transform duration-150 hover:scale-[1.03] max-sm:px-4 max-sm:py-2 max-sm:text-[15px]">
+            {rodandoMudo ? (
+              <VolumeX aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
+            ) : (
+              <Play aria-hidden="true" className="h-5 w-5" strokeWidth={2} />
+            )}
+            {rodandoMudo ? "Toque pra ouvir" : "Toque pra assistir"}
+          </span>
+        </button>
+      )}
     </div>
   );
 }
