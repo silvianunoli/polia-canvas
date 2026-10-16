@@ -186,8 +186,8 @@ export function telefoneE164(telefone: string): string | null {
   return null;
 }
 
-async function identificar(quem?: Quem) {
-  if (!quem || !window.ttq) return;
+async function identificar(ttq: TtqFn, quem?: Quem) {
+  if (!quem) return;
   const dados: Record<string, string> = {};
   try {
     const email = quem.email?.trim().toLowerCase();
@@ -203,17 +203,19 @@ async function identificar(quem?: Quem) {
   } catch {
     // Sem hash não tem identify; o evento sai do mesmo jeito.
   }
-  if (Object.keys(dados).length) window.ttq.identify(dados);
+  if (Object.keys(dados).length) ttq.identify(dados);
 }
 
 // identify precisa ir antes do evento; o hash é assíncrono, então o evento
 // espera ele (ou a falha dele) pra sair.
 function enviar(evento: string, dados: Record<string, unknown>, eventId?: string, quem?: Quem) {
   if (typeof window === "undefined" || !window.ttq) return;
-  void identificar(quem).finally(() => {
-    if (!window.ttq) return;
-    if (eventId) window.ttq.track(evento, dados, { event_id: eventId });
-    else window.ttq.track(evento, dados);
+  // A referência fica presa aqui: o hash termina depois, e o evento tem que
+  // cair no mesmo pixel em que começou.
+  const ttq = window.ttq;
+  void identificar(ttq, quem).finally(() => {
+    if (eventId) ttq.track(evento, dados, { event_id: eventId });
+    else ttq.track(evento, dados);
   });
 }
 

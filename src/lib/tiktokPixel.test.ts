@@ -20,8 +20,13 @@ afterEach(() => {
 
 const fila = () => Array.from(window.ttq as unknown as unknown[]) as unknown[][];
 const ultimo = () => fila().at(-1);
-// Os eventos esperam o hash do identify (assíncrono) antes de sair.
-const esperar = () => new Promise((r) => setTimeout(r, 0));
+// Os eventos esperam o hash do identify (assíncrono) antes de sair: espera o
+// evento chegar na fila, sem depender de quanto o hash demora na máquina.
+const chegou = (evento: string) =>
+  vi.waitFor(() => {
+    if (!fila().some((c) => c[0] === "track" && c[1] === evento)) throw new Error(evento);
+  });
+const esperar = () => new Promise((r) => setTimeout(r, 50));
 
 describe("TIKTOK_PIXEL_ID", () => {
   it("usa o pixel da Pólia quando a variável não existe", () => {
@@ -122,13 +127,13 @@ describe("tiktokCliqueEmLink", () => {
 
   it("link pro cadastro vira ClickButton", async () => {
     mod.tiktokCliqueEmLink("/auth/cadastro?origem=landing-a");
-    await esperar();
+    await chegou("ClickButton");
     expect(ultimo()?.[1]).toBe("ClickButton");
   });
 
   it("link pro /planos com plano vira AddToCart com valor", async () => {
     mod.tiktokCliqueEmLink("/planos?plano=premium#pagamento");
-    await esperar();
+    await chegou("AddToCart");
     expect(ultimo()).toEqual([
       "track",
       "AddToCart",
@@ -160,7 +165,7 @@ describe("identify", () => {
 
   it("manda só hash SHA-256, antes do evento", async () => {
     mod.tiktokCadastro("email", "cadastro_1", { email: " Ana@Email.com ", userId: "u1" });
-    await esperar();
+    await chegou("CompleteRegistration");
     const [identify, evento] = fila().slice(-2);
     expect(identify[0]).toBe("identify");
     const dados = identify[1] as Record<string, string>;
@@ -191,7 +196,7 @@ describe("identify", () => {
 
   it("sem dado de quem, sai o evento sem identify", async () => {
     mod.tiktokLead("ev-1");
-    await esperar();
+    await chegou("Lead");
     expect(fila().some((c) => c[0] === "identify")).toBe(false);
     expect(ultimo()).toEqual([
       "track",
@@ -207,14 +212,14 @@ describe("checkout e compra", () => {
 
   it("InitiateCheckout leva plano e valor", async () => {
     mod.tiktokIniciouCheckout("projete_anual");
-    await esperar();
+    await chegou("InitiateCheckout");
     expect(ultimo()?.[1]).toBe("InitiateCheckout");
     expect((ultimo()?.[2] as { currency: string }).currency).toBe("BRL");
   });
 
   it("Purchase em BRL com o event_id da compra", async () => {
     mod.tiktokCompra(29.9, "controle_mensal", "cs_1");
-    await esperar();
+    await chegou("Purchase");
     expect(ultimo()).toEqual([
       "track",
       "Purchase",
