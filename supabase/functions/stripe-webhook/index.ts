@@ -8,6 +8,9 @@ import {
   cancelamentoAgendado,
   cancelamentoEncerraAcesso,
   cancelamentoFoiAgendadoNesteEvento,
+  compraSemValor,
+  ehCortesia,
+  fimDaCortesia,
   formatarDataBR,
   mascararEmail,
   normalizarEmail,
@@ -107,7 +110,9 @@ async function enviarCompraMeta(
   userId: string,
 ): Promise<void> {
   const token = Deno.env.get("META_CAPI_TOKEN");
-  if (!token || session.amount_total == null) return;
+  // Sem valor (cortesia de 100%) não vai: Purchase de R$ 0 ensina a campanha
+  // a otimizar pra quem não paga.
+  if (!token || !session.amount_total) return;
   try {
     const corpo: Record<string, unknown> = {
       data: [
@@ -328,6 +333,21 @@ interface ResultadoUpsert {
   duplicada: boolean;
 }
 
+// Cortesia (cupom de 100%, campanha UGC): marca a assinatura no Stripe e agenda
+// o fim pra quando o desconto acaba. Sem isso, no fim do cupom o Stripe tentava
+// cobrar sem cartão, mandava "Pagamento recusado" e a conta ficava em past_due.
+// Com cancel_at ela só termina, e o deleted rebaixa o plano. Cupom sem data de
+// fim (once/forever) não agenda nada: a Sil cancela à mão. Repetir é seguro: o
+// update grava os mesmos valores.
+async function marcarCortesia(subscriptionId: string): Promise<void> {
+  const sub = await stripe.subscriptions.retrieve(subscriptionId, { expand: ["discounts"] });
+  const fim = fimDaCortesia(sub.discounts as Array<string | { end?: number | null }>);
+  await stripe.subscriptions.update(subscriptionId, {
+    metadata: { cortesia: "sim" },
+    ...(fim && !sub.cancel_at ? { cancel_at: fim, proration_behavior: "none" as const } : {}),
+  });
+}
+
 async function upsertAssinaturaDaSubscription(
   subscription: Stripe.Subscription,
   stripeEventId: string,
@@ -355,6 +375,7 @@ async function upsertAssinaturaDaSubscription(
     status: subscription.status,
     current_period_end: item ? new Date(item.current_period_end * 1000).toISOString() : null,
     cancel_at_period_end: subscription.cancel_at_period_end,
+    cortesia: ehCortesia(subscription.metadata),
   };
 
   // A linha já existe desde que a usuária iniciou a assinatura (server function
@@ -1208,6 +1229,12 @@ Deno.serve(async (req) => {
           session.id,
         );
 
+        // Cortesia antes da leitura: o upsert abaixo já grava a marca. Vale pro
+        // link com código (metadata) e pro código digitado no checkout normal
+        // (só dá pra saber pelo total R$ 0).
+        const cortesia = ehCortesia(session.metadata) || compraSemValor(session);
+        if (cortesia) await marcarCortesia(subscriptionId);
+
         // A assinatura em si (status, ciclo, plano) é gravada pelo mesmo
         // caminho de customer.subscription.created/updated — busca a
         // subscription e reaproveita o upsert já existente. O user_id vai
@@ -1221,6 +1248,7 @@ Deno.serve(async (req) => {
         await registrarEventoAnalytics("checkout_concluido", session.id, {
           plano: session.metadata?.plano ?? null,
           ...origemDaSessao(session.metadata),
+          ...(cortesia ? { cortesia: true } : {}),
           ...(resultado.duplicada ? { duplicada_estornada: true } : {}),
         });
         // Compra duplicada desfeita (cancelada + estornada): não manda
@@ -1260,6 +1288,9 @@ Deno.serve(async (req) => {
           resultado.userId &&
           !resultado.duplicada &&
           STATUS_COM_ACESSO.includes(atual.status) &&
+          // Cortesia: o cancel_at é a própria Pólia agendando o fim do cupom,
+          // não a criadora pedindo pra cancelar.
+          !ehCortesia(atual.metadata) &&
           cancelamentoAgendado(atual) &&
           cancelamentoFoiAgendadoNesteEvento(
             payload,

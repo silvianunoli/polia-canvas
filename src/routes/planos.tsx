@@ -40,6 +40,14 @@ const searchSchema = z.object({
   utm_campaign: campoDeBusca,
   utm_content: campoDeBusca,
   utm_term: campoDeBusca,
+  // Código de cortesia da campanha de criadoras UGC (cupom de 100% no Stripe).
+  // Quem confere se vale é o servidor; aqui só o formato.
+  codigo: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{1,40}$/)
+    .optional()
+    .catch(undefined),
 });
 
 export const Route = createFileRoute("/planos")({
@@ -138,9 +146,10 @@ function PlanosPage() {
     }
 
     const plano = `${escolhido}_${ciclo}` as const;
+    const codigo = search.codigo;
     // Antes da chamada: depois dela a página já vai embora pro Stripe e o
-    // evento pode não sair.
-    tiktokIniciouCheckout(plano, { email: valorEmail });
+    // evento pode não sair. Cortesia não é venda: não vai pros pixels.
+    if (!codigo) tiktokIniciouCheckout(plano, { email: valorEmail });
     setLoading(true);
     try {
       const r = await iniciarCompraPublica({
@@ -150,12 +159,14 @@ function PlanosPage() {
           turnstileToken: turnstile.token,
           hp,
           ...(temOrigemCampanha(origemCampanha) ? { origemCampanha } : {}),
+          ...(codigo ? { codigo } : {}),
         },
       });
       if (r.url) {
         track("checkout_iniciado", {
           plano,
           session_id: r.sessionId ?? undefined,
+          ...(codigo ? { cortesia: true } : {}),
           ...origemTrack,
         });
         // Redireciona e deixa o loading ligado: a página vai embora.
@@ -168,6 +179,12 @@ function PlanosPage() {
         setEmailErro(r.error ?? undefined);
         setJaAssina(true);
         emailRef.current?.focus();
+        setLoading(false);
+        return;
+      }
+      if ("codigoInvalido" in r && r.codigoInvalido) {
+        track("checkout_falhou", { plano, motivo: "codigo_invalido" });
+        toastErro(r.error ?? "Esse código não está valendo mais.");
         setLoading(false);
         return;
       }
@@ -324,6 +341,12 @@ function PlanosPage() {
                 Informe o e-mail em que a Pólia deve mandar o link de acesso. O pagamento é feito na
                 página segura do Stripe.
               </p>
+              {search.codigo && (
+                <p className="mt-4 rounded-xl border border-[var(--secondary)] bg-[var(--secondary-light)] px-4 py-3 text-[15px] leading-[1.5] text-[var(--ink)]">
+                  Código <strong className="font-semibold">{search.codigo}</strong>: o acesso sai
+                  por R$ 0 enquanto o código valer, sem cartão e sem CPF.
+                </p>
+              )}
 
               <form
                 onSubmit={handleSubmit}

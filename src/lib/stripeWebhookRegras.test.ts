@@ -4,6 +4,9 @@ import {
   cancelamentoAgendado,
   cancelamentoEncerraAcesso,
   cancelamentoFoiAgendadoNesteEvento,
+  compraSemValor,
+  ehCortesia,
+  fimDaCortesia,
   formatarDataBR,
   mascararEmail,
   normalizarEmail,
@@ -119,5 +122,35 @@ describe("e-mail e texto", () => {
 
   it("formata a data no fuso de Brasília (22h do dia 9 não vira dia 10)", () => {
     expect(formatarDataBR(new Date("2026-10-10T01:00:00Z"))).toBe("09/10/2026");
+  });
+});
+
+describe("cortesia (campanha UGC)", () => {
+  it("só metadata.cortesia = sim marca a assinatura", () => {
+    expect(ehCortesia({ cortesia: "sim" })).toBe(true);
+    expect(ehCortesia({ cortesia: "nao" })).toBe(false);
+    expect(ehCortesia({})).toBe(false);
+    expect(ehCortesia(null)).toBe(false);
+    expect(ehCortesia(undefined)).toBe(false);
+  });
+
+  it("compra sem valor é assinatura que saiu por R$ 0", () => {
+    expect(compraSemValor({ mode: "subscription", amount_total: 0 })).toBe(true);
+    expect(compraSemValor({ mode: "subscription", amount_total: 4790 })).toBe(false);
+    // amount_total ausente não é zero: não marca cortesia por falta de dado.
+    expect(compraSemValor({ mode: "subscription", amount_total: null })).toBe(false);
+    expect(compraSemValor({ mode: "payment", amount_total: 0 })).toBe(false);
+  });
+
+  it("fim da cortesia é o desconto que acaba primeiro", () => {
+    expect(fimDaCortesia([{ end: 2000 }, { end: 1000 }])).toBe(1000);
+    expect(fimDaCortesia([{ end: null }, { end: 1500 }])).toBe(1500);
+  });
+
+  it("sem data de fim (cupom once/forever, desconto não expandido) devolve null", () => {
+    expect(fimDaCortesia([{ end: null }])).toBeNull();
+    expect(fimDaCortesia(["di_123"])).toBeNull();
+    expect(fimDaCortesia([])).toBeNull();
+    expect(fimDaCortesia(null)).toBeNull();
   });
 });

@@ -135,3 +135,33 @@ export function semEmails(texto: string): string {
 export function formatarDataBR(data: Date): string {
   return data.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
+
+// Cortesia (campanha de criadoras UGC, 16/10/2026): assinatura que nasceu de
+// cupom de 100%. A marca mora em subscription.metadata.cortesia = "sim", gravada
+// pelo checkout do link com código ou pelo webhook quando a compra sai por R$ 0
+// (código digitado no checkout normal). O Founder Dashboard tira essas do MRR,
+// do churn e dos pagamentos falhos: não é dinheiro entrando.
+export function ehCortesia(metadata: Record<string, string> | null | undefined): boolean {
+  return metadata?.cortesia === "sim";
+}
+
+// Compra de assinatura que saiu por R$ 0 hoje (cupom de 100%). Trial também
+// daria zero, mas a Pólia não usa trial no checkout.
+export function compraSemValor(session: {
+  mode?: string | null;
+  amount_total?: number | null;
+}): boolean {
+  return session.mode === "subscription" && session.amount_total === 0;
+}
+
+// Quando o desconto acaba (cupom "repeating" traz end; "once"/"forever" vêm com
+// end null). Com mais de um desconto, vale o que acaba primeiro. Desconto não
+// expandido (só o id) não tem data: fica de fora.
+export function fimDaCortesia(
+  descontos: ReadonlyArray<string | { end?: number | null }> | null | undefined,
+): number | null {
+  const fins = (descontos ?? [])
+    .map((d) => (typeof d === "string" ? null : (d.end ?? null)))
+    .filter((fim): fim is number => typeof fim === "number");
+  return fins.length ? Math.min(...fins) : null;
+}

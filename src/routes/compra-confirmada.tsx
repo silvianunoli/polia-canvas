@@ -11,12 +11,15 @@ import { Reveal } from "@/components/site/Reveal";
 import { BTN_CONTORNO, BTN_PRIMARIO } from "@/components/site/Editorial";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
-type CompraConfirmadaSearch = { plano?: string; session_id?: string };
+type CompraConfirmadaSearch = { plano?: string; session_id?: string; cortesia?: boolean };
 
 export const Route = createFileRoute("/compra-confirmada")({
   validateSearch: (search: Record<string, unknown>): CompraConfirmadaSearch => ({
     plano: typeof search.plano === "string" ? search.plano : undefined,
     session_id: typeof search.session_id === "string" ? search.session_id : undefined,
+    // Volta do checkout de cortesia (campanha UGC): chega sem plano nem
+    // session_id, então nenhum purchase dispara. Só muda o texto.
+    cortesia: search.cortesia === 1 || search.cortesia === "1" || search.cortesia === true || undefined,
   }),
   head: () => ({
     meta: [{ title: "Compra confirmada · Pólia" }, { name: "robots", content: "noindex" }],
@@ -25,7 +28,7 @@ export const Route = createFileRoute("/compra-confirmada")({
 });
 
 function CompraConfirmadaPage() {
-  const { plano, session_id } = Route.useSearch();
+  const { plano, session_id, cortesia } = Route.useSearch();
   // Quem comprou já logada (ex.: tinha conta e entrou antes) vai direto pro
   // Painel em vez de voltar pra home (08/10/2026).
   const { user } = useSupabaseSession();
@@ -55,11 +58,12 @@ function CompraConfirmadaPage() {
             <Mail size={28} aria-hidden="true" />
           </div>
           <h1 className="font-cabinet text-[32px] leading-tight text-[var(--ink)] md:text-[40px]">
-            Compra confirmada.
+            {cortesia ? "Acesso liberado." : "Compra confirmada."}
           </h1>
           <p className="mt-4 text-[17px] leading-relaxed text-[var(--ink-soft)]">
-            Confira seu e-mail nos próximos minutos: chega a confirmação da compra. Quem ainda não
-            tinha conta recebe também o link para criar a senha e entrar na Pólia pela primeira vez.
+            {cortesia
+              ? "Confira seu e-mail nos próximos minutos: chega o link para criar a senha e entrar na Pólia One com o plano liberado."
+              : "Confira seu e-mail nos próximos minutos: chega a confirmação da compra. Quem ainda não tinha conta recebe também o link para criar a senha e entrar na Pólia pela primeira vez."}
           </p>
           <p className="mt-3 text-[14px] text-[var(--muted)]">
             Não achou? Olha a caixa de spam. Se não chegar, escreve pra{" "}

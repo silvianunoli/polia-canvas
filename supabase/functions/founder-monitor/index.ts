@@ -474,7 +474,9 @@ async function montarSnapshot(ia: { chamadas: number; falhas: number }): Promise
       contar("profiles"),
       contar("profiles", (q) => q.gte("created_at", ontem)),
       contar("erros_app", (q) => q.gte("criado_em", ontem)),
-      admin.from("assinaturas").select("price_id, status, updated_at"),
+      // Cortesia (cupom de 100%, campanha UGC) não é receita: fora do MRR,
+      // do churn e dos pagamentos falhos.
+      admin.from("assinaturas").select("price_id, status, updated_at").eq("cortesia", false),
       usuariasAtivasDesde(ontem),
       usuariasAtivasDesde(semana),
       usuariasAtivasDesde(mes),

@@ -20,14 +20,21 @@ vi.mock("@tanstack/react-start", () => ({
   },
 }));
 
-const { sessionsCreate, precoParaPlano, customersList, subscriptionsList, stripeClient } =
-  vi.hoisted(() => ({
-    sessionsCreate: vi.fn(),
-    precoParaPlano: vi.fn((plano: string) => `price_${plano}`),
-    customersList: vi.fn(),
-    subscriptionsList: vi.fn(),
-    stripeClient: vi.fn(),
-  }));
+const {
+  sessionsCreate,
+  precoParaPlano,
+  customersList,
+  subscriptionsList,
+  promotionCodesList,
+  stripeClient,
+} = vi.hoisted(() => ({
+  sessionsCreate: vi.fn(),
+  precoParaPlano: vi.fn((plano: string) => `price_${plano}`),
+  customersList: vi.fn(),
+  subscriptionsList: vi.fn(),
+  promotionCodesList: vi.fn(),
+  stripeClient: vi.fn(),
+}));
 vi.mock("@/lib/stripe.functions", () => ({ stripeClient, precoParaPlano }));
 
 const { dispararAlerta } = vi.hoisted(() => ({ dispararAlerta: vi.fn() }));
@@ -49,7 +56,7 @@ vi.mock("@/integrations/supabase/client.server", () => ({
   },
 }));
 
-import { iniciarCompraPublica, ERRO_JA_ASSINA } from "./compra-publica.functions";
+import { iniciarCompraPublica, ERRO_JA_ASSINA, ERRO_CODIGO } from "./compra-publica.functions";
 
 type Chamavel = (opts?: { data?: unknown }) => Promise<unknown>;
 const comprar = iniciarCompraPublica as unknown as Chamavel;
@@ -72,11 +79,14 @@ beforeEach(() => {
   customersList.mockResolvedValue({ data: [] });
   subscriptionsList.mockReset();
   subscriptionsList.mockResolvedValue({ data: [] });
+  promotionCodesList.mockReset();
+  promotionCodesList.mockResolvedValue({ data: [] });
   stripeClient.mockReset();
   stripeClient.mockImplementation(() => ({
     checkout: { sessions: { create: sessionsCreate } },
     customers: { list: customersList },
     subscriptions: { list: subscriptionsList },
+    promotionCodes: { list: promotionCodesList },
   }));
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -168,8 +178,11 @@ describe("iniciarCompraPublica: sessão", () => {
         // Quem desiste volta pra /planos com o mesmo plano e ciclo escolhidos.
         cancel_url: "https://one.usepolia.com.br/planos?plano=premium&ciclo=mensal",
         allow_promotion_codes: true,
+        // Cartão só quando há valor hoje: cupom de 100% digitado não pede cartão.
+        payment_method_collection: "if_required",
       }),
     );
+    expect(promotionCodesList).not.toHaveBeenCalled();
   });
 
   it("sessão sem URL devolve a mensagem de erro sem alerta (não é exceção)", async () => {
@@ -395,5 +408,66 @@ describe("iniciarCompraPublica: volta do Stripe e configuração", () => {
       expect.any(String),
       expect.objectContaining({ mensagem: expect.stringContaining("STRIPE_SECRET_KEY") }),
     );
+  });
+});
+
+describe("iniciarCompraPublica: código de cortesia (campanha UGC)", () => {
+  const base = {
+    email: "criadora@exemplo.com",
+    plano: "projete_mensal",
+    turnstileToken: TOKEN,
+    codigo: "UGCPOLIA",
+  };
+  const promo = (percent_off: number | null, valid = true) => ({
+    data: [{ id: "promo_1", promotion: { coupon: { id: "cupom_1", percent_off, valid } } }],
+  });
+
+  it("código de 100% abre o checkout com o desconto aplicado, sem CPF e sem endereço", async () => {
+    promotionCodesList.mockResolvedValue(promo(100));
+    sessionsCreate.mockResolvedValue({ id: "cs_c", url: "https://checkout/c" });
+
+    const r = await comprar({ data: base });
+
+    expect(r).toEqual({ url: "https://checkout/c", sessionId: "cs_c", error: null });
+    expect(promotionCodesList).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "UGCPOLIA", active: true }),
+    );
+    const args = sessionsCreate.mock.calls[0][0];
+    expect(args).toEqual(
+      expect.objectContaining({
+        discounts: [{ promotion_code: "promo_1" }],
+        payment_method_collection: "if_required",
+        // Sem plano/session_id na volta: a /compra-confirmada não dispara purchase.
+        success_url: "https://one.usepolia.com.br/compra-confirmada?cortesia=1",
+        cancel_url: "https://one.usepolia.com.br/planos?plano=pro&ciclo=mensal&codigo=UGCPOLIA",
+        metadata: { plano: "projete_mensal", cortesia: "sim" },
+        subscription_data: { metadata: { cortesia: "sim" } },
+      }),
+    );
+    // discounts e allow_promotion_codes não podem ir juntos no Stripe.
+    expect(args).not.toHaveProperty("allow_promotion_codes");
+    expect(args).not.toHaveProperty("custom_fields");
+    expect(args).not.toHaveProperty("billing_address_collection");
+  });
+
+  it("código que não existe ou não está ativo devolve o aviso sem criar sessão", async () => {
+    promotionCodesList.mockResolvedValue({ data: [] });
+    const r = await comprar({ data: base });
+    expect(r).toEqual({ url: null, sessionId: null, error: ERRO_CODIGO, codigoInvalido: true });
+    expect(sessionsCreate).not.toHaveBeenCalled();
+    expect(dispararAlerta).not.toHaveBeenCalled();
+  });
+
+  it("cupom parcial ou vencido não vira cortesia", async () => {
+    promotionCodesList.mockResolvedValue(promo(50));
+    expect(await comprar({ data: base })).toEqual(expect.objectContaining({ codigoInvalido: true }));
+    promotionCodesList.mockResolvedValue(promo(100, false));
+    expect(await comprar({ data: base })).toEqual(expect.objectContaining({ codigoInvalido: true }));
+    expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("código com caractere estranho é recusado antes de tocar no Stripe", async () => {
+    await expect(comprar({ data: { ...base, codigo: "UGC POLIA;--" } })).rejects.toThrow();
+    expect(promotionCodesList).not.toHaveBeenCalled();
   });
 });

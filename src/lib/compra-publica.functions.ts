@@ -23,9 +23,37 @@ const inputSchema = z.object({
   // como objeto solto de propósito: quem filtra é lerOrigemCampanha no handler,
   // que descarta o que não passa na allowlist em vez de derrubar a compra.
   origemCampanha: z.record(z.string(), z.unknown()).optional().catch(undefined),
+  // Código de cortesia (cupom de 100% no Stripe) que chega no link da campanha
+  // de criadoras UGC: /planos?plano=pro&codigo=XXXX (16/10/2026).
+  codigo: z
+    .string()
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{1,40}$/)
+    .optional(),
 });
 
 const ERRO_CHECKOUT = "A Pólia One não conseguiu abrir o checkout agora. Tenta de novo.";
+
+export const ERRO_CODIGO =
+  "Esse código não está valendo mais. Confere com quem mandou o link, ou escolhe o plano sem ele.";
+
+// O código só abre o checkout de cortesia se for de 100% e estiver ativo. Cupom
+// parcial segue pelo campo de código do checkout normal (allow_promotion_codes).
+async function promocaoDeCortesia(
+  stripe: ReturnType<typeof stripeClient>,
+  codigo: string,
+): Promise<string | null> {
+  const { data } = await stripe.promotionCodes.list({
+    code: codigo,
+    active: true,
+    limit: 1,
+    expand: ["data.promotion.coupon"],
+  });
+  const promo = data[0];
+  const cupom = promo?.promotion?.coupon;
+  if (!promo || !cupom || typeof cupom === "string") return null;
+  return cupom.valid && cupom.percent_off === 100 ? promo.id : null;
+}
 
 export const ERRO_JA_ASSINA =
   "Esse e-mail já tem uma assinatura ativa na Pólia One. Pra trocar de plano, entra na conta e abre Configurações.";
@@ -132,44 +160,72 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
     for (const [chave, valor] of Object.entries(origem)) {
       if (valor) voltar.set(chave, valor);
     }
+    if (data.codigo) voltar.set("codigo", data.codigo);
 
     try {
       // stripeClient()/precoParaPlano() jogam quando falta segredo no ambiente:
       // dentro do try viram a mensagem da Pólia One + alerta, não erro técnico.
       const stripe = stripeClient();
       const priceId = precoParaPlano(data.plano);
-      const session = await stripe.checkout.sessions.create({
-        mode: "subscription",
+
+      const promoId = data.codigo ? await promocaoDeCortesia(stripe, data.codigo) : null;
+      if (data.codigo && !promoId) {
+        return { url: null, error: ERRO_CODIGO, sessionId: null, codigoInvalido: true };
+      }
+
+      const base = {
+        mode: "subscription" as const,
         customer_email: data.email,
         line_items: [{ price: priceId, quantity: 1 }],
-        // plano + id da sessão voltam na URL pro purchase do GA4 (FUN-09); o
-        // Stripe troca {CHECKOUT_SESSION_ID} pelo id real no redirecionamento.
-        success_url: `${SITE_URL}/compra-confirmada?plano=${data.plano}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${SITE_URL}/planos?${voltar.toString()}`,
-        allow_promotion_codes: true,
-        // Nota fiscal (PAY-32): CPF/CNPJ e endereço obrigatórios. O endereço
-        // o Stripe grava no customer. O documento vem num campo próprio: o
-        // tax_id_collection (12/10) não apareceu pra pessoa física no Brasil
-        // e a 1ª compra de teste saiu sem CPF (13/10). O webhook lê este campo
-        // pela sessão (CHAVE_CAMPO_DOCUMENTO) e guarda no customer.
-        billing_address_collection: "required",
-        custom_fields: [
-          {
-            key: CHAVE_CAMPO_DOCUMENTO,
-            label: { type: "custom", custom: "CPF ou CNPJ (vai na nota fiscal)" },
-            type: "numeric",
-            numeric: { minimum_length: 11, maximum_length: 14 },
-            optional: false,
-          },
-        ],
-        // metadata.plano vai junto no evento do webhook (checkout.session.completed),
-        // e session.id correlaciona o checkout_iniciado (client) com o
-        // checkout_concluido/falhou (server) no funil de tagueamento. A origem
-        // (landing + UTMs) vai junto quando existe, pra saber qual landing vendeu;
-        // na assinatura ela fica visível no painel do Stripe.
-        metadata: { plano: data.plano, ...origem },
-        ...(comOrigem ? { subscription_data: { metadata: { ...origem } } } : {}),
-      });
+        // Cartão só quando há valor a cobrar hoje. Com cupom de 100% o Stripe
+        // pedia cartão mesmo cobrando R$ 0. Compra com valor segue igual.
+        payment_method_collection: "if_required" as const,
+      };
+
+      const session = promoId
+        ? // Cortesia (campanha UGC): o desconto já vem aplicado e sem CPF nem
+          // endereço, que só existem pra nota fiscal, e fatura de R$ 0 não tem
+          // nota. A volta não leva plano/session_id: a /compra-confirmada só
+          // dispara purchase (GA4, Meta, TikTok) com plano na URL, e cortesia
+          // não é venda. O webhook lê metadata.cortesia pra marcar a assinatura
+          // e agendar o fim dela quando o cupom acabar.
+          await stripe.checkout.sessions.create({
+            ...base,
+            success_url: `${SITE_URL}/compra-confirmada?cortesia=1`,
+            discounts: [{ promotion_code: promoId }],
+            metadata: { plano: data.plano, cortesia: "sim", ...origem },
+            subscription_data: { metadata: { cortesia: "sim", ...origem } },
+          })
+        : await stripe.checkout.sessions.create({
+            ...base,
+            // plano + id da sessão voltam na URL pro purchase do GA4 (FUN-09); o
+            // Stripe troca {CHECKOUT_SESSION_ID} pelo id real no redirecionamento.
+            success_url: `${SITE_URL}/compra-confirmada?plano=${data.plano}&session_id={CHECKOUT_SESSION_ID}`,
+            allow_promotion_codes: true,
+            // Nota fiscal (PAY-32): CPF/CNPJ e endereço obrigatórios. O endereço
+            // o Stripe grava no customer. O documento vem num campo próprio: o
+            // tax_id_collection (12/10) não apareceu pra pessoa física no Brasil
+            // e a 1ª compra de teste saiu sem CPF (13/10). O webhook lê este campo
+            // pela sessão (CHAVE_CAMPO_DOCUMENTO) e guarda no customer.
+            billing_address_collection: "required",
+            custom_fields: [
+              {
+                key: CHAVE_CAMPO_DOCUMENTO,
+                label: { type: "custom", custom: "CPF ou CNPJ (vai na nota fiscal)" },
+                type: "numeric",
+                numeric: { minimum_length: 11, maximum_length: 14 },
+                optional: false,
+              },
+            ],
+            // metadata.plano vai junto no evento do webhook (checkout.session.completed),
+            // e session.id correlaciona o checkout_iniciado (client) com o
+            // checkout_concluido/falhou (server) no funil de tagueamento. A origem
+            // (landing + UTMs) vai junto quando existe, pra saber qual landing vendeu;
+            // na assinatura ela fica visível no painel do Stripe.
+            metadata: { plano: data.plano, ...origem },
+            ...(comOrigem ? { subscription_data: { metadata: { ...origem } } } : {}),
+          });
 
       if (!session.url) {
         console.error("[CompraPublica] Sessão criada sem URL de checkout.");

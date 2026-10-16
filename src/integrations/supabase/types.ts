@@ -159,6 +159,7 @@ export type Database = {
       assinaturas: {
         Row: {
           cancel_at_period_end: boolean
+          cortesia: boolean
           created_at: string
           current_period_end: string | null
           id: string
@@ -171,6 +172,7 @@ export type Database = {
         }
         Insert: {
           cancel_at_period_end?: boolean
+          cortesia?: boolean
           created_at?: string
           current_period_end?: string | null
           id?: string
@@ -183,6 +185,7 @@ export type Database = {
         }
         Update: {
           cancel_at_period_end?: boolean
+          cortesia?: boolean
           created_at?: string
           current_period_end?: string | null
           id?: string
