@@ -125,10 +125,11 @@ describe("tiktokViewContent", () => {
 describe("tiktokCliqueEmLink", () => {
   beforeEach(() => mod.carregarTiktokPixel("ABC"));
 
-  it("link pro cadastro vira ClickButton", async () => {
+  it("link pro cadastro vira ClickButton, sem value (0 o TikTok recusa)", async () => {
     mod.tiktokCliqueEmLink("/auth/cadastro?origem=landing-a");
     await chegou("ClickButton");
     expect(ultimo()?.[1]).toBe("ClickButton");
+    expect(ultimo()?.[2]).not.toHaveProperty("value");
   });
 
   it("link pro /planos com plano vira AddToCart com valor", async () => {
@@ -180,8 +181,6 @@ describe("identify", () => {
         contents: [
           { content_id: "gratis", content_type: "product", content_name: "Pólia One Grátis" },
         ],
-        value: 0,
-        currency: "BRL",
         description: "email",
       },
       { event_id: "cadastro_1" },

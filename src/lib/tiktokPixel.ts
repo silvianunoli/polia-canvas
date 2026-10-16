@@ -242,9 +242,12 @@ function dadosDoPlano(plano: string, valor?: number | null) {
   };
 }
 
+// Grátis não leva value: o TikTok marca value 0 como "valor de compras
+// inválido" no Events Manager (visto em 15/10/2026).
+
 /** Clique em qualquer botão que leva ao cadastro grátis. */
 export function tiktokCliqueCadastro() {
-  enviar("ClickButton", { contents: [GRATIS], value: 0, currency: "BRL" });
+  enviar("ClickButton", { contents: [GRATIS] });
 }
 
 /** Plano pago escolhido (botão "Quero o Premium/Pro" ou card do /planos). */
@@ -297,12 +300,7 @@ export function tiktokLead(eventId?: string, quem?: Quem, origem = "manual") {
 }
 
 export function tiktokCadastro(metodo: "email" | "google", eventId?: string, quem?: Quem) {
-  enviar(
-    "CompleteRegistration",
-    { contents: [GRATIS], value: 0, currency: "BRL", description: metodo },
-    eventId,
-    quem,
-  );
+  enviar("CompleteRegistration", { contents: [GRATIS], description: metodo }, eventId, quem);
 }
 
 export function tiktokCompra(valor: number, plano: string, eventId?: string, quem?: Quem) {
