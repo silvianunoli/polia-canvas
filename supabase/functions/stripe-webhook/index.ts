@@ -18,7 +18,13 @@ import {
   semEmails,
 } from "../_shared/stripeWebhookRegras.ts";
 import { proximaTentativaEm } from "../_shared/reenvioEmail.ts";
-import { montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
+import {
+  contextoDaAtivacao,
+  montarEmailAtivacao,
+  montarEmailCortesiaContaExistente,
+  nomeDoPlanoCortesia,
+  type Cortesia,
+} from "../_shared/emailAtivacao.ts";
 import {
   documentoDaCliente,
   documentoDoCampo,
@@ -465,9 +471,16 @@ async function upsertAssinaturaDaSubscription(
     STATUS_ATIVOS_FOUNDER.includes(subscription.status) &&
     !(statusAnterior && STATUS_ATIVOS_FOUNDER.includes(statusAnterior))
   ) {
+    // cortesia: true tira o evento dos contadores do Founder Dashboard (não é
+    // venda). A marca já está na assinatura aqui: o link com código grava em
+    // subscription_data, e o código digitado é marcado (marcarCortesia) antes
+    // do upsert do checkout. O customer.subscription.created não chega antes
+    // com dona: o checkout público cria customer novo, e o user_id só entra
+    // nele no checkout.session.completed.
     await registrarFounderEvento("subscription_started", userId, stripeEventId, {
       status: subscription.status,
       price_id: priceId,
+      ...(ehCortesia(subscription.metadata) ? { cortesia: true } : {}),
     });
   }
   return { userId, duplicada: false };
@@ -598,11 +611,22 @@ async function buscarEmailPorUserId(userId: string): Promise<string | null> {
   return data.user.email ?? null;
 }
 
-async function enviarEmailAtivacao(email: string, linkAtivacao: string) {
-  const { assunto, texto, html } = montarEmailAtivacao(linkAtivacao);
-  return await enviarViaResend(assunto, texto, html, email, "e-mail de ativação", {
+async function enviarEmailAtivacao(
+  email: string,
+  linkAtivacao: string,
+  cortesia: Cortesia | null = null,
+) {
+  const { assunto, texto, html } = montarEmailAtivacao(linkAtivacao, cortesia);
+  return await enviarViaResend(assunto, texto, html, email, contextoDaAtivacao(cortesia), {
     regenerarAtivacao: true,
   });
+}
+
+// Cortesia em conta que já existia: mesmo papel do e-mail abaixo, sem falar em
+// compra (16/10/2026).
+async function enviarEmailCortesiaContaExistente(email: string, cortesia: Cortesia) {
+  const { assunto, texto, html } = montarEmailCortesiaContaExistente(SITE_URL, cortesia);
+  return await enviarViaResend(assunto, texto, html, email, "e-mail de cortesia em conta existente");
 }
 
 // Quem comprou já tinha conta: não há senha pra criar, então o e-mail só
@@ -860,17 +884,22 @@ async function gerarLinkDeAtivacaoDeNovo(email: string): Promise<string | null> 
 
 // Envia o e-mail decidido em resolverContaDaCompra. Nunca joga: roda depois
 // do registro do evento, e um erro aqui não pode virar 500 (o Stripe
-// reentregaria um evento já registrado à toa).
-async function enviarEmailDaCompra(email: string, pendente: EmailDaCompra): Promise<void> {
+// reentregaria um evento já registrado à toa). Com cortesia, os mesmos três
+// caminhos trocam o texto de compra pelo de acesso liberado.
+async function enviarEmailDaCompra(
+  email: string,
+  pendente: EmailDaCompra,
+  cortesia: Cortesia | null,
+): Promise<void> {
   try {
     if (pendente.tipo === "ativacao") {
-      await enviarEmailAtivacao(email, pendente.link);
+      await enviarEmailAtivacao(email, pendente.link, cortesia);
       return;
     }
     if (pendente.tipo === "reenviar_ativacao") {
       const link = await gerarLinkDeAtivacaoDeNovo(email);
       if (link) {
-        await enviarEmailAtivacao(email, link);
+        await enviarEmailAtivacao(email, link, cortesia);
         return;
       }
       // Sem link novo, o e-mail de conta existente ainda leva ao acesso
@@ -885,7 +914,8 @@ async function enviarEmailDaCompra(email: string, pendente: EmailDaCompra): Prom
         },
       );
     }
-    await enviarEmailCompraContaExistente(email);
+    if (cortesia) await enviarEmailCortesiaContaExistente(email, cortesia);
+    else await enviarEmailCompraContaExistente(email);
   } catch (err) {
     console.error("[stripe-webhook] Erro ao enviar e-mail da compra:", err);
     await dispararAlerta("stripe_webhook_email_falhou", "E-mail do Stripe não saiu: compra", {
@@ -1259,7 +1289,18 @@ Deno.serve(async (req) => {
         // upsert falhava, o Stripe reentregava e ela recebia ativação + "conta
         // existente".
         const pendente = conta.emailPendente;
-        posRegistro.push(() => enviarEmailDaCompra(email, pendente));
+        // Releitura feita depois do marcarCortesia: cancel_at já vem agendado.
+        const dadosCortesia: Cortesia | null = cortesia
+          ? {
+              plano: nomeDoPlanoCortesia(
+                PRICE_TO_PLANO[subscription.items.data[0]?.price.id ?? ""],
+              ),
+              ate: subscription.cancel_at
+                ? formatarDataBR(new Date(subscription.cancel_at * 1000))
+                : null,
+            }
+          : null;
+        posRegistro.push(() => enviarEmailDaCompra(email, pendente, dadosCortesia));
         posRegistro.push(() => enviarCompraMeta(session, email, conta.userId));
         break;
       }
@@ -1343,6 +1384,8 @@ Deno.serve(async (req) => {
           await supabaseAdmin.from("profiles").update({ plano: "cancelada" }).eq("id", userId);
           await registrarFounderEvento("subscription_cancelled", userId, event.id, {
             current_period_end: currentPeriodEnd ?? null,
+            // Fim de cortesia (cancel_at do cupom) não é churn.
+            ...(ehCortesia(subscription.metadata) ? { cortesia: true } : {}),
           });
           // O aviso com a data saiu quando ela pediu o cancelamento
           // (customer.subscription.updated). Aqui é o fim de verdade: texto
@@ -1373,11 +1416,12 @@ Deno.serve(async (req) => {
             .update({ status: "past_due" })
             .eq("stripe_subscription_id", subscriptionId)
             .in("status", ["active", "trialing", "past_due"])
-            .select("user_id");
+            .select("user_id, cortesia");
           const userId = data?.[0]?.user_id as string | undefined;
           if (userId) {
             await registrarFounderEvento("payment_failed", userId, event.id, {
               invoice: invoice.id,
+              ...(data?.[0]?.cortesia === true ? { cortesia: true } : {}),
             });
             const email = await buscarEmailPorUserId(userId);
             if (email) await enviarEmailPagamentoRecusado(email);

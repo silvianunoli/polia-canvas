@@ -1,5 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
+import { cortesiaDoContexto, montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
 import { MAX_TENTATIVAS, proximaTentativaEm } from "../_shared/reenvioEmail.ts";
 import { mascararEmail, semEmails } from "../_shared/stripeWebhookRegras.ts";
 
@@ -84,7 +84,8 @@ async function enviar(p: Pendente): Promise<{ ok: boolean; erro: string | null }
   if (p.regenerar_ativacao) {
     const link = await linkDeAtivacaoNovo(p.destinatario);
     if (!link) return { ok: false, erro: "não conseguiu gerar link de ativação novo" };
-    ({ assunto, texto, html } = montarEmailAtivacao(link));
+    // Cortesia volta como cortesia: o contexto guarda plano e data.
+    ({ assunto, texto, html } = montarEmailAtivacao(link, cortesiaDoContexto(p.contexto)));
   }
   try {
     const resp = await fetch("https://api.resend.com/emails", {
