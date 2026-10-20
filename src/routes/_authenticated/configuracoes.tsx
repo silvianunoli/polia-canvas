@@ -844,8 +844,8 @@ function ConfiguracoesPage() {
               onCheckedChange={(v) => toggleNotif("notif_resumo_semanal", v)}
             />
             <ToggleLinha
-              titulo="Novidades da Pólia One"
-              descricao="quando algo novo chega no app"
+              titulo="Diário da Pólia"
+              descricao="a newsletter de terça e quinta, com conteúdo e novidades"
               checked={notifNovidades}
               onCheckedChange={(v) => toggleNotif("notif_novidades", v)}
             />

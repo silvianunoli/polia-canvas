@@ -86,7 +86,7 @@ function PrivacidadePage() {
                 Política de Privacidade
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 06/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
+                Última atualização: 20/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
               </p>
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
                 Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -215,11 +215,12 @@ function PrivacidadePage() {
                   resposta usa.
                 </li>
                 <li>
-                  <strong className="text-[var(--ink)]">Enviar a newsletter</strong>, com novidades
-                  e conteúdo sobre a Pólia · base: consentimento. O cadastro na newsletter é
-                  opcional e separado da criação de conta: a titular escolhe ativamente receber, e
-                  cada e-mail enviado traz um link para descadastro imediato, sem precisar entrar em
-                  contato.
+                  <strong className="text-[var(--ink)]">Enviar o Diário da Pólia</strong>, a
+                  newsletter com conteúdo e novidades da Pólia, às terças e quintas · base: legítimo
+                  interesse, para quem tem conta na Pólia One, e consentimento, para quem pediu um
+                  material ou fez o quiz sem ter conta. A titular pode parar de receber quando
+                  quiser, pelo link "Não quero mais receber" que vai em todo e-mail ou em
+                  Configurações, na Pólia One. A saída não afeta a conta nem os avisos sobre ela.
                 </li>
                 <li>
                   <strong className="text-[var(--ink)]">
