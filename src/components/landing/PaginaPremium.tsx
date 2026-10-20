@@ -68,7 +68,7 @@ const dores: ItemLista[] = [
     icone: Tag,
     titulo: "O preço sai no susto.",
     texto:
-      "O orçamento chega no WhatsApp, o valor muda três vezes antes de ir, e o desconto sai do que ia sobrar.",
+      "O orçamento chega no WhatsApp, o valor muda três vezes antes de ir, e o desconto sai do lucro.",
   },
   {
     icone: Camera,
@@ -122,7 +122,7 @@ const planos: PlanoLanding[] = [
     itemForte: 2,
     itens: [
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite, cada produto com custo, preço e quanto sobra",
+      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
       "Financeiro com os três números que decidem o mês",
       "Clientes com o status de cada pedido, da espera à entrega",
       "Planner sem limite, e o Calendário com a agenda do Google junto",
@@ -167,7 +167,7 @@ const perguntas = [
   {
     pergunta: "A IA inventa o meu preço?",
     resposta:
-      "Não. O preço vem de conta: custo, taxas e quanto precisa sobrar. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
+      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
   },
   {
     pergunta: "É pra mim?",
@@ -275,7 +275,7 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
                 mock: <MockPerguntaMarca />,
               },
               {
-                titulo: "Cada produto com quanto sobra",
+                titulo: "Cada produto com quanto lucra",
                 texto:
                   "Catálogo sem limite, com custo, preço e o que fica em cada venda depois das taxas.",
                 nota: "No lugar da planilha perdida",
@@ -335,7 +335,7 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
             </div>
           </div>
           <p className={`mt-8 ${CORPO}`}>
-            A Pólia One mostra, antes do desconto sair, quanto ele tira do que sobra em cada venda.
+            A Pólia One mostra, antes do desconto sair, quanto ele tira do lucro de cada venda.
           </p>
           <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
         </Secao>
@@ -378,7 +378,7 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
             <div>
               <Rotulo>Quem fez</Rotulo>
               <h2 className={`mt-4 ${H2}`}>
-                Meu negócio vendia bem. Eu só não sabia quanto sobrava.
+                Meu negócio vendia bem. Eu só não sabia quanto lucrava.
               </h2>
               <p className={`mt-6 ${CORPO}`}>
                 Sou a Sil. Foram{" "}

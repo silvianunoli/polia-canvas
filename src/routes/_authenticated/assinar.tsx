@@ -26,6 +26,8 @@ import {
   TIERS_PAGOS,
   type TierPago,
 } from "@/lib/planos";
+import { testeAberto, testeDoBanco } from "@/lib/testePro";
+import { BlocoFundadora } from "@/components/planos/BlocoFundadora";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { fraseDoGanho } from "@/lib/ganhoDoUpgrade";
 
@@ -117,6 +119,14 @@ export const Route = createFileRoute("/_authenticated/assinar")({
       const ativa = status ? ["active", "past_due", "trialing"].includes(status) : false;
       if (ativa) return;
       if (plano === "controle" && search.plano === "projete") return;
+      // Teste de 7 dias do Pro (GRW-66): o plano é 'projete' sem assinatura, e
+      // é justamente quem precisa conseguir assinar aqui antes do teste acabar.
+      const { data: teste } = await supabase
+        .from("testes_pro" as never)
+        .select("fim, encerrado_em")
+        .eq("user_id", sess.session.user.id)
+        .maybeSingle();
+      if (testeAberto(testeDoBanco(teste ? { inicio: "-", ...(teste as object) } : null))) return;
       throw redirect({ to: "/painel" });
     }
   },
@@ -339,6 +349,8 @@ function AssinarPage() {
                 ? "O seu negócio já está montado. Escolhe o plano, que ele abre na sua conta assim que o pagamento entra."
                 : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
         </p>
+
+        {!assinante && <BlocoFundadora className="mx-auto mb-8 max-w-[640px]" />}
 
         {/* Ciclo mensal/anual. Assinante escolhe o ciclo no portal, na troca. */}
         <div

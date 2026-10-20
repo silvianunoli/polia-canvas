@@ -145,7 +145,7 @@ function ProdutosPage() {
       largura="larga"
       eyebrow="Produtos"
       titulo="Seus produtos."
-      subtitulo="O que você vende, quanto custa e quanto sobra em cada venda."
+      subtitulo="O que você vende, quanto custa e quanto lucra em cada venda."
     >
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={abrirAdicionar} disabled={cotaAtingida} className={BTN_ACAO}>
@@ -399,10 +399,10 @@ function ProdutoCard({
             }`}
           >
             {sobra == null
-              ? "sem custo cadastrado · cadastre o custo pra saber quanto sobra"
+              ? "sem custo cadastrado · cadastre o custo pra saber o lucro"
               : sobra.prejuizo
                 ? `custo ${fmt(custo)} · prejuízo de ${fmt(-sobra.valor)} por venda${temTaxas ? "" : " (sem taxa/imposto)"}`
-                : `custo ${fmt(custo)} · sobra ${sobra.pct}%${temTaxas ? "" : " (sem taxa/imposto)"}`}
+                : `custo ${fmt(custo)} · lucro de ${sobra.pct}%${temTaxas ? "" : " (sem taxa/imposto)"}`}
           </p>
         </>
       )}

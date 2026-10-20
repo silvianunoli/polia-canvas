@@ -441,7 +441,7 @@ export function MockCalculadora({ className }: { className?: string }) {
   return (
     <Janela
       url="one.usepolia.com.br/produtos"
-      label="Calculadora de preço da Pólia: a caixa com 12 aquarelas mini, com material, taxa da maquininha e envio somados, o preço de venda de R$ 49 e o destaque de que sobram R$ 18,90 por caixa."
+      label="Calculadora de preço da Pólia: a caixa com 12 aquarelas mini, com material, taxa da maquininha e envio somados, o preço de venda de R$ 49 e o destaque de R$ 18,90 de lucro por caixa."
       className={className}
     >
       <div className="flex items-center gap-3">
@@ -473,7 +473,7 @@ export function MockCalculadora({ className }: { className?: string }) {
 
       <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-[10px] bg-[var(--surface-pink)] px-3.5 py-3">
         <span className="font-accent text-[10.5px] font-bold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-          Sobra de verdade
+          Lucro de verdade
         </span>
         <span className="text-[19px] leading-none tracking-[-0.01em] text-[var(--ink)]">
           R$ 18,90 por caixa

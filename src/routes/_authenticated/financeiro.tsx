@@ -628,7 +628,7 @@ function FinanceiroPage() {
               <Vazio
                 icone={Wallet}
                 titulo="Nenhum lançamento ainda."
-                texto="Cada entrada e saída registrada aqui vira o número de quanto sobra no fim do mês."
+                texto="Cada entrada e saída registrada aqui vira o número de quanto a marca lucra no fim do mês."
                 acao={
                   <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
                     Quero registrar a primeira
@@ -868,7 +868,7 @@ function ModalRegistrarVendaProduto({
         ? `Venda de "${produto.nome}" registrada.`
         : sobra.prejuizo
           ? `Venda de "${produto.nome}" registrada. Essa venda ficou ${fmtCentavos(-sobra.valor)} abaixo do custo.`
-          : `Venda de "${produto.nome}" registrada. Dessa venda sobraram ${fmtCentavos(sobra.valor)}.`,
+          : `Venda de "${produto.nome}" registrada. Essa venda deu ${fmtCentavos(sobra.valor)} de lucro.`,
     );
   };
 
@@ -958,9 +958,9 @@ function ModalRegistrarVendaProduto({
           ) : produto ? (
             <div className="mb-4 rounded-lg bg-[var(--secondary-light)] px-3 py-2.5 text-[13px] text-[var(--secondary-text)]">
               {sobra != null ? (
-                <>Dessa venda sobram {fmtCentavos(sobra.valor)}, descontado o custo direto.</>
+                <>Essa venda dá {fmtCentavos(sobra.valor)} de lucro, descontado o custo direto.</>
               ) : (
-                <>Cadastre o custo desse produto pra ver quanto sobra.</>
+                <>Cadastre o custo desse produto pra ver o lucro de cada venda.</>
               )}
             </div>
           ) : null}

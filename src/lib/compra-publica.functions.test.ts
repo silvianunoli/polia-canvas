@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => {
@@ -210,6 +210,20 @@ describe("iniciarCompraPublica: sessão", () => {
 
 describe("iniciarCompraPublica: origem de campanha", () => {
   const base = { email: "ana@exemplo.com", plano: "controle_mensal", turnstileToken: TOKEN };
+  // Depois do prazo da fundadora (30/11/2026): a sessão sai como antes dela.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-12-05T12:00:00-03:00"));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("no prazo da fundadora, a assinatura sai marcada (GRW-66)", async () => {
+    vi.setSystemTime(new Date("2026-10-20T12:00:00-03:00"));
+    sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
+    await comprar({ data: base });
+    const args = sessionsCreate.mock.calls[0][0];
+    expect(args.subscription_data).toEqual({ metadata: { fundadora: "sim" } });
+  });
 
   it("sem origem, a sessão sai igual à de antes (sem subscription_data)", async () => {
     sessionsCreate.mockResolvedValue({ id: "cs_1", url: "https://checkout/1" });
@@ -460,9 +474,13 @@ describe("iniciarCompraPublica: código de cortesia (campanha UGC)", () => {
 
   it("cupom parcial ou vencido não vira cortesia", async () => {
     promotionCodesList.mockResolvedValue(promo(50));
-    expect(await comprar({ data: base })).toEqual(expect.objectContaining({ codigoInvalido: true }));
+    expect(await comprar({ data: base })).toEqual(
+      expect.objectContaining({ codigoInvalido: true }),
+    );
     promotionCodesList.mockResolvedValue(promo(100, false));
-    expect(await comprar({ data: base })).toEqual(expect.objectContaining({ codigoInvalido: true }));
+    expect(await comprar({ data: base })).toEqual(
+      expect.objectContaining({ codigoInvalido: true }),
+    );
     expect(sessionsCreate).not.toHaveBeenCalled();
   });
 

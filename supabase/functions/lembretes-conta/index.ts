@@ -1,5 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  ehTipoRegua,
+  montarEmailRegua,
+  type TipoRegua,
   lembreteDeConfirmacao,
   lembreteDePreco,
   montarEmailConfirmacao,
@@ -89,15 +92,25 @@ type ContaSemPreco = {
   utm_content: string | null;
   ja_recebeu: boolean;
 };
+type ContaRegua = {
+  user_id: string;
+  email: string;
+  tipo: string;
+  nome: string | null;
+  utm_content: string | null;
+  teste_fim: string | null;
+};
 type Email = { assunto: string; texto: string; html: string };
 type Envio = {
   user_id: string;
   email: string;
-  tipo: TipoLembrete;
+  tipo: TipoLembrete | TipoRegua;
   montar: () => Promise<Email | null>;
 };
 
-async function ler<T>(rpc: "contas_sem_confirmacao" | "contas_sem_preco"): Promise<T[] | null> {
+async function ler<T>(
+  rpc: "contas_sem_confirmacao" | "contas_sem_preco" | "contas_regua_ativacao",
+): Promise<T[] | null> {
   const { data, error } = await supabaseAdmin.rpc(rpc);
   if (error) {
     console.error(`[lembretes-conta] Falha ao ler ${rpc}:`, error.message);
@@ -114,12 +127,13 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: false, motivo: "sem_resend" }), { status: 500 });
   }
 
-  const [semConfirmacao, semPreco] = await Promise.all([
+  const [semConfirmacao, semPreco, regua] = await Promise.all([
     ler<ContaSemConfirmacao>("contas_sem_confirmacao"),
     ler<ContaSemPreco>("contas_sem_preco"),
+    ler<ContaRegua>("contas_regua_ativacao"),
   ]);
-  // Uma leitura que falha não segura a outra; as duas falhando é erro de verdade.
-  if (!semConfirmacao && !semPreco) {
+  // Uma leitura que falha não segura as outras; todas falhando é erro de verdade.
+  if (!semConfirmacao && !semPreco && !regua) {
     return new Response(JSON.stringify({ ok: false, motivo: "falha_leitura" }), { status: 500 });
   }
 
@@ -153,6 +167,20 @@ Deno.serve(async (req: Request) => {
       email: c.email,
       tipo,
       montar: () => Promise.resolve(montarEmailPreco(nichoDoAnuncio(c.utm_content))),
+    });
+  }
+
+  // Régua de ativação e do teste do Pro (GRW-66). O banco já escolheu um tipo
+  // por conta, o mais urgente, e tirou quem recebeu e-mail nas últimas 20 horas.
+  for (const c of regua ?? []) {
+    if (!ehTipoRegua(c.tipo)) continue;
+    const tipo = c.tipo;
+    envios.push({
+      user_id: c.user_id,
+      email: c.email,
+      tipo,
+      montar: () =>
+        Promise.resolve(montarEmailRegua(tipo, { nome: c.nome, testeFim: c.teste_fim, agora })),
     });
   }
 

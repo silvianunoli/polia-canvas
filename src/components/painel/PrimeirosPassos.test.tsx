@@ -23,6 +23,8 @@ function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
     nicho: null,
     escolhaSalva: null,
     onEscolherTipo: vi.fn(async () => true),
+    estagioSalvo: null,
+    onEscolherEstagio: vi.fn(async () => true),
     onSalvarNome: vi.fn(async () => true),
     ...over,
   };
@@ -31,6 +33,23 @@ function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
 }
 
 describe("PrimeirosPassos", () => {
+  it("pergunta do estágio só depois do primeiro preço, e some com resposta salva", async () => {
+    montar();
+    expect(screen.queryByText("E a marca, já vende?")).toBeNull();
+    cleanup();
+    const comPreco = progressoPrimeirosPassos({
+      temPreco: true,
+      modulo1Fechado: false,
+      temNome: false,
+    });
+    const props = montar({ progresso: comPreco });
+    await userEvent.click(screen.getByRole("button", { name: "Já vende" }));
+    expect(props.onEscolherEstagio).toHaveBeenCalledWith("ja_vendo");
+    cleanup();
+    montar({ progresso: comPreco, estagioSalvo: "ideia" });
+    expect(screen.queryByText("E a marca, já vende?")).toBeNull();
+  });
+
   it("rótulo, três passos e destaque no primeiro não feito", () => {
     montar();
     expect(screen.getByRole("heading", { name: "Primeiros passos" })).toBeTruthy();

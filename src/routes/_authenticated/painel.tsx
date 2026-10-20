@@ -482,8 +482,8 @@ function PainelPage() {
   // ── Primeiros passos (14/10/2026): a entrada da conta nova no lugar do
   // onboarding de 5 passos. Quem vê e o que está feito: lib/primeirosPassos.ts.
   // Leitura que falhou não mostra o bloco: o Painel segue como era.
-  const primeiros = usePrimeirosPassos(userId);
   const nichoPasso = useMemo(() => nichoDaConta(user?.user_metadata), [user?.user_metadata]);
+  const primeiros = usePrimeirosPassos(userId, nichoPasso);
   const modulo1Fechado = useMemo(() => moduloFechado(1, concluidas), [concluidas]);
   const progressoPassos = useMemo(
     () =>
@@ -583,7 +583,7 @@ function PainelPage() {
     // manchete volta a ser a mesma pra todo mundo: o número do mês, que é o que
     // a landing promete no card do grátis.
     if (receitaMes <= 0) {
-      return "Nenhuma venda registrada este mês. A primeira entrada já mostra quanto sobra.";
+      return "Nenhuma venda registrada este mês. A primeira entrada já mostra quanto a marca lucra.";
     }
     // "Quanto falta pra fechar as contas do mês" é literalmente o que a landing
     // promete no painel diário, e o número vem do módulo 4 do Planejamento
@@ -779,6 +779,8 @@ function PainelPage() {
               nicho={nichoPasso}
               escolhaSalva={primeiros.dados.escolhaTipo}
               onEscolherTipo={primeiros.salvarTipo}
+              estagioSalvo={primeiros.dados.estagio}
+              onEscolherEstagio={primeiros.salvarEstagio}
               onSalvarNome={async (nome) => {
                 const ok = await primeiros.salvarNome(nome);
                 // Era o último passo: o bloco sai e o foco iria pro <body>.

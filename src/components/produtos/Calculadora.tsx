@@ -568,9 +568,12 @@ export function Calculadora({
     );
   };
 
-  const abasDisponiveis: PerfilCalc[] = ehProjete
-    ? ["produto", "servico", "encomenda"]
-    : ["produto", "servico"];
+  // Desde 20/10/2026 (GRW-66) a aba Encomenda abre em todo plano: no Grátis e no
+  // Premium ela calcula o custo, mas o preço sugerido e o lucro ficam fechados
+  // atrás do Pro. Antes o clique levava direto pro /upgrade, e 4 das 7 contas do
+  // Grátis que viram a tela de preço chegaram por esse cadeado sem ver nada.
+  const abasDisponiveis: PerfilCalc[] = ["produto", "servico", "encomenda"];
+  const encomendaTravada = perfil === "encomenda" && !ehProjete;
   const aoTeclarNasAbas = (e: KeyboardEvent<HTMLDivElement>) => {
     const atual = abasDisponiveis.indexOf(perfil);
     const ultimo = abasDisponiveis.length - 1;
@@ -645,39 +648,35 @@ export function Calculadora({
               </button>
             );
           })}
-          {ehProjete ? (
-            <button
-              type="button"
-              id="calc-tab-encomenda"
-              role="tab"
-              aria-selected={perfil === "encomenda"}
-              tabIndex={perfil === "encomenda" ? 0 : -1}
-              aria-controls="calc-painel-encomenda"
-              onClick={() => setPerfil("encomenda")}
-              className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
-                perfil === "encomenda"
-                  ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                  : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
-              }`}
-            >
-              Encomenda (sob medida)
-            </button>
-          ) : null}
-        </div>
-        {/* A etiqueta "Pro" avisa antes do clique (14/10/2026): só o cadeado
-            não dizia de qual plano era, e o clique caía no /upgrade de surpresa. */}
-        {!ehProjete && (
-          <Link
-            to="/upgrade"
-            search={{ rota: "/calculadora", tier: "projete" }}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-[var(--line)] px-4 py-2 text-[13px] text-[var(--muted)] no-underline hover:border-[var(--secondary)]"
+          {/* A etiqueta "Pro" avisa antes do clique (14/10/2026). Fora do Pro a
+              aba abre mesmo assim: calcula o custo e fecha só o preço. */}
+          <button
+            type="button"
+            id="calc-tab-encomenda"
+            role="tab"
+            aria-selected={perfil === "encomenda"}
+            tabIndex={perfil === "encomenda" ? 0 : -1}
+            aria-controls="calc-painel-encomenda"
+            onClick={() => {
+              setPerfil("encomenda");
+              if (!ehProjete) track("encomenda_previa_aberta");
+            }}
+            className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] ${
+              perfil === "encomenda"
+                ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+            }`}
           >
-            <Lock size={13} aria-hidden="true" />
+            {!ehProjete && <Lock size={13} aria-hidden="true" />}
             Encomenda (sob medida)
-            <span className="sr-only">, do plano</span>
-            <EtiquetaPlano nome="Pro" />
-          </Link>
-        )}
+            {!ehProjete && (
+              <>
+                <span className="sr-only">, preço do plano</span>
+                <EtiquetaPlano nome="Pro" />
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Campos */}
@@ -931,8 +930,34 @@ export function Calculadora({
               Preço sugerido
             </p>
             <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
-              {calc.invalido ? "R$ --" : fmt(round2(calc.precoSugerido))}
+              {/* Travada: o número nem vai pro DOM, senão bastava inspecionar. */}
+              {encomendaTravada ? (
+                <span aria-label="Preço fechado, abre no plano Pro" className="select-none">
+                  R$ ···
+                </span>
+              ) : calc.invalido ? (
+                "R$ --"
+              ) : (
+                fmt(round2(calc.precoSugerido))
+              )}
             </p>
+            {encomendaTravada && (
+              <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-4">
+                <p className="text-[14px] text-[var(--ink)]">
+                  A Pólia One já somou o custo dessa encomenda:{" "}
+                  <b>{fmt(round2(encomendaCalc.custoTotal))}</b>. O preço sugerido e quanto a marca
+                  lucra nela abrem no Pro.
+                </p>
+                <Link
+                  to="/assinar"
+                  search={{ plano: "projete", rota: "/calculadora" }}
+                  onClick={() => track("encomenda_previa_cta")}
+                  className={`${BTN_ACAO} mt-3 no-underline`}
+                >
+                  Quero ver o preço da encomenda
+                </Link>
+              </div>
+            )}
             {calc.invalido && (
               <p className="mt-2 text-[13px] text-[var(--danger)]">
                 As porcentagens (taxas + impostos + lucro) somam 100% ou mais. Reduza alguma pra
@@ -994,14 +1019,60 @@ export function Calculadora({
                   taxa e lucro saíam calculados sobre esse preço de mentira. */}
               <LinhaCalc
                 label="Taxas e impostos"
-                valor={calc.invalido ? "R$ --" : fmt(round2(calc.taxasReais))}
+                valor={
+                  encomendaTravada
+                    ? "R$ ···"
+                    : calc.invalido
+                      ? "R$ --"
+                      : fmt(round2(calc.taxasReais))
+                }
               />
               <LinhaCalc
                 label="Seu lucro"
-                valor={calc.invalido ? "R$ --" : fmt(round2(calc.lucroReais))}
+                valor={
+                  encomendaTravada
+                    ? "R$ ···"
+                    : calc.invalido
+                      ? "R$ --"
+                      : fmt(round2(calc.lucroReais))
+                }
               />
             </div>
-            {vendasParaMetaBoa !== null && (
+            {/* Guardar é a ação principal (20/10/2026, GRW-66): 31 contas do Grátis
+                calcularam e só 3 guardaram. O botão morava no fim da página, depois
+                do simulador de desconto, e o preço calculado sumia ao sair. */}
+            {!encomendaTravada && (
+              <div className="mt-5 border-t border-[var(--line)] pt-4">
+                {calc.invalido && (
+                  <p id="calc-salvar-motivo" className="mb-3 text-[13px] text-[var(--ink-soft)]">
+                    Pra guardar, as porcentagens precisam somar menos de 100%.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!produtoRecalcular) track("calculadora_guardar_clicado", { perfil });
+                    void salvar();
+                  }}
+                  disabled={salvando || precoNaoSalvavel || (salvarBloqueado && !produtoRecalcular)}
+                  aria-describedby={calc.invalido ? "calc-salvar-motivo" : undefined}
+                  className={BTN_ACAO}
+                >
+                  {salvando
+                    ? "Guardando..."
+                    : produtoRecalcular
+                      ? "Guardar o preço novo"
+                      : "Guardar esse preço"}
+                </button>
+                {!produtoRecalcular && (
+                  <p className="mt-2 text-[12px] text-[var(--ink-soft)]">
+                    O preço vai pro seu catálogo com o custo e o lucro, e o Painel passa a usar esse
+                    número.
+                  </p>
+                )}
+              </div>
+            )}
+            {!encomendaTravada && vendasParaMetaBoa !== null && (
               <p className="mt-4 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
                 Pra entrar a Meta do mês ({fmt(metaBoa!)}) só com esse produto: {vendasParaMetaBoa}{" "}
                 {vendasParaMetaBoa === 1 ? "venda" : "vendas"} de {fmt(precoParaMeta)}.
@@ -1009,52 +1080,45 @@ export function Calculadora({
             )}
           </div>
 
-          {/* Simulador de desconto */}
-          <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-5">
-            <CampoNum
-              label="Simular com desconto de X% (opcional)"
-              value={desconto}
-              onChange={setDesconto}
-            />
-            {simulacaoDesconto && !calc.invalido && (
-              <p
-                className={`mt-3 text-[13px] ${
-                  simulacaoDesconto.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"
-                }`}
-              >
-                Com {descontoPct}% de desconto, o preço cai pra{" "}
-                {fmt(round2(simulacaoDesconto.precoComDesconto))} e sobram{" "}
-                {fmt(round2(simulacaoDesconto.lucroComDesconto))}.
-                {simulacaoDesconto.prejuizo && " Esse desconto dá prejuízo."}
-              </p>
-            )}
-          </div>
+          {/* Simulador de desconto (fora da Encomenda travada: revelaria o preço) */}
+          {!encomendaTravada && (
+            <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-5">
+              <CampoNum
+                label="Simular com desconto de X% (opcional)"
+                value={desconto}
+                onChange={setDesconto}
+              />
+              {simulacaoDesconto && !calc.invalido && (
+                <p
+                  className={`mt-3 text-[13px] ${
+                    simulacaoDesconto.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink-soft)]"
+                  }`}
+                >
+                  Com {descontoPct}% de desconto, o preço cai pra{" "}
+                  {fmt(round2(simulacaoDesconto.precoComDesconto))}
+                  {simulacaoDesconto.prejuizo ? (
+                    <>
+                      {" "}
+                      e cada venda fica {fmt(round2(-simulacaoDesconto.lucroComDesconto))} abaixo do
+                      custo. Esse desconto dá prejuízo.
+                    </>
+                  ) : (
+                    <>
+                      {" "}
+                      e a marca lucra {fmt(round2(simulacaoDesconto.lucroComDesconto))} em cada
+                      venda.
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+          )}
 
           {erro && (
             <p role="alert" className="mt-4 text-[13px] text-[var(--danger)]">
               {erro}
             </p>
           )}
-
-          {/* Salvar */}
-          {calc.invalido && (
-            <p id="calc-salvar-motivo" className="mt-4 text-[13px] text-[var(--muted)]">
-              Pra salvar, as porcentagens precisam somar menos de 100%.
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando || precoNaoSalvavel || (salvarBloqueado && !produtoRecalcular)}
-            aria-describedby={calc.invalido ? "calc-salvar-motivo" : undefined}
-            className={`${BTN_ACAO} mt-4`}
-          >
-            {salvando
-              ? "Salvando..."
-              : produtoRecalcular
-                ? "Salvar novo preço"
-                : "Salvar como produto"}
-          </button>
         </>
       )}
 

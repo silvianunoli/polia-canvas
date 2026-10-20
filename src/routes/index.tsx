@@ -17,7 +17,7 @@ import { PERGUNTAS_MARCA_B, PaginaMarcaB } from "@/components/landing/PaginaMarc
 //
 // Nomes de plano visíveis (Grátis, Premium, Pro) moram em PaginaMarcaB.tsx.
 
-const TITULO = "Pólia One · Preço, quanto sobra e o mês da sua marca";
+const TITULO = "Pólia One · Preço, lucro e o mês da sua marca";
 const DESCRICAO =
   "A Pólia One junta o que a sua marca é, a meta do mês e o custo de cada produto. Na hora do orçamento, o preço sai da conta. Comece no Grátis, sem cartão.";
 

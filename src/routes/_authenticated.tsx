@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { FaixaTestePro } from "@/components/layout/FaixaTestePro";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -179,6 +180,7 @@ function AuthenticatedLayout() {
           com o menu à vista dava pra sair no meio do fluxo. */}
         {pathname !== "/onboarding" && <Sidebar />}
         <div className="flex min-w-0 flex-1 flex-col">
+          {pathname !== "/onboarding" && <FaixaTestePro pathname={pathname} />}
           <main id="main-content" tabIndex={-1} className="flex-1">
             <Outlet />
           </main>

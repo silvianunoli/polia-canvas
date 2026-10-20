@@ -9,8 +9,12 @@ import {
   businessTypeDaEscolha,
   contaVeBloco,
   escolhaDoBusinessType,
+  escolhaDoNicho,
+  estagioDoBanco,
   limparNomeMarca,
   type EscolhaTipo,
+  type EstagioNegocio,
+  type NichoDoPasso,
 } from "@/lib/primeirosPassos";
 import { toastErro } from "@/lib/toast";
 
@@ -19,6 +23,8 @@ export interface DadosPrimeirosPassos {
   onboardingCompleted: boolean;
   onboardingCompletedAt: string | null;
   escolhaTipo: EscolhaTipo | null;
+  /** profiles.business_stage (null = nunca respondeu). */
+  estagio: EstagioNegocio | null;
   /** business_name sem espaço nas pontas ("" = sem nome). */
   nomeMarca: string;
   temPreco: boolean;
@@ -53,7 +59,7 @@ function marcarTentativaBoasVindas(uid: string) {
  * Founder Dashboard, pra o funil do office ("Completou onboarding") e as
  * métricas que leem a coluna continuarem contando a conta nova.
  */
-export function usePrimeirosPassos(userId: string | undefined) {
+export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPasso | null = null) {
   const qc = useQueryClient();
   const queryKey = ["primeiros-passos", userId];
 
@@ -65,7 +71,7 @@ export function usePrimeirosPassos(userId: string | undefined) {
         supabase
           .from("profiles")
           .select(
-            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_name",
+            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_stage, business_name",
           )
           .eq("id", userId!)
           .maybeSingle(),
@@ -84,6 +90,7 @@ export function usePrimeirosPassos(userId: string | undefined) {
         onboarding_completed: boolean | null;
         onboarding_completed_at: string | null;
         business_type: string | null;
+        business_stage: string | null;
         business_name: string | null;
       } | null;
       return {
@@ -91,6 +98,7 @@ export function usePrimeirosPassos(userId: string | undefined) {
         onboardingCompleted: !!p?.onboarding_completed,
         onboardingCompletedAt: p?.onboarding_completed_at ?? null,
         escolhaTipo: escolhaDoBusinessType(p?.business_type),
+        estagio: estagioDoBanco(p?.business_stage),
         nomeMarca: (p?.business_name ?? "").trim(),
         temPreco: (precoRes.count ?? 0) > 0,
       };
@@ -178,6 +186,50 @@ export function usePrimeirosPassos(userId: string | undefined) {
     [userId, atualizarCache],
   );
 
+  /** Grava profiles.business_stage. Devolve false (com toast) se falhar. */
+  const salvarEstagio = useCallback(
+    async (estagio: EstagioNegocio): Promise<boolean> => {
+      if (!userId) return false;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ business_stage: estagio } as never)
+        .eq("id", userId);
+      if (error) {
+        track("primeiros_passos_estagio_falhou", { motivo: error.message || "erro_desconhecido" });
+        toastErro("A Pólia One não conseguiu salvar essa resposta. Tenta de novo.");
+        return false;
+      }
+      atualizarCache({ estagio });
+      track("primeiros_passos_estagio", { estagio });
+      return true;
+    },
+    [userId, atualizarCache],
+  );
+
+  // ── Tipo de negócio vindo do anúncio ──
+  // Conta de anúncio de nicho não vê a pergunta "A sua marca vende o quê?", e
+  // por isso o business_type ficava vazio. Grava o tipo do nicho uma vez, em
+  // silêncio, só onde ainda está vazio (o update condicional protege uma
+  // escolha feita em Configurações numa outra aba).
+  const tipoDoNichoRef = useRef(false);
+  useEffect(() => {
+    const escolha = escolhaDoNicho(nicho);
+    if (!userId || !dados || dados.escolhaTipo || !escolha || tipoDoNichoRef.current) return;
+    tipoDoNichoRef.current = true;
+    void supabase
+      .from("profiles")
+      .update({ business_type: businessTypeDaEscolha(escolha) } as never)
+      .eq("id", userId)
+      .is("business_type", null)
+      .then(({ error }) => {
+        if (error) {
+          tipoDoNichoRef.current = false;
+          return;
+        }
+        atualizarCache({ escolhaTipo: escolha });
+      });
+  }, [userId, dados, nicho, atualizarCache]);
+
   /** Grava profiles.business_name, o mesmo campo do onboarding antigo e de Configurações. */
   const salvarNome = useCallback(
     async (bruto: string): Promise<boolean> => {
@@ -210,6 +262,7 @@ export function usePrimeirosPassos(userId: string | undefined) {
     carregando: !!userId && query.isPending,
     erro: query.isError,
     salvarTipo,
+    salvarEstagio,
     salvarNome,
   };
 }

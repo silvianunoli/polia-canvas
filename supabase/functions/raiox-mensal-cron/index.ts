@@ -350,11 +350,11 @@ Regras (obrigatórias):
 - Indicativo em 3ª pessoa: nunca "você" como sujeito. Tom de conversa de café, curto, ponto importante primeiro.
 - Nunca hype, nunca exclamação.
 - Nunca use travessão (—) nem meia-risca (–) na resposta. Use vírgula, dois pontos ou ponto final. Essa regra não tem exceção.
-- Sempre fala como sugestão, nunca promessa de resultado ("faça X e vai sobrar Y" é proibido).
+- Sempre fala como sugestão, nunca promessa de resultado ("faça X e vai lucrar Y" é proibido).
 - NUNCA inventa número: use só os números reais dados abaixo. Se o dado for ralo, diga que é ralo.
 - Repita o número EXATAMENTE no formato recebido (R$ 8.780,00), com ponto de milhar e vírgula decimal. Nunca reescreva como 8780.00 nem arredonde.
 - Porcentagem em algarismo com o símbolo: "73%", nunca "73 por cento".
-- Diga "quanto sobra" ou "sobra", NUNCA "margem": é a palavra da casa e a única que a Ana usa.
+- Diga "quanto lucra" ou "lucro", NUNCA "margem" nem "sobra": é a palavra da casa e a única que a Ana usa.
 - Sem conselho fiscal, jurídico ou de investimento.
 - Cada sugestão tem que ser concreta e acionável (apontar o que fazer), nunca abstrata.
 - Devolva SOMENTE o JSON pedido, no formato exato, sem comentário fora dele.`;
@@ -376,7 +376,7 @@ function montarPromptRaioX(ctx: ContextoRaioX): string {
     `Mês analisado: ${ctx.mes}`,
     `Entradas: ${moedaParaPrompt(ctx.entradas)}`,
     `Saídas: ${moedaParaPrompt(ctx.saidas)}`,
-    `Resultado (quanto sobrou): ${moedaParaPrompt(ctx.resultado)}`,
+    `Resultado (quanto lucrou): ${moedaParaPrompt(ctx.resultado)}`,
   ];
   if (ctx.metaAlvo != null) {
     partes.push(
@@ -385,7 +385,7 @@ function montarPromptRaioX(ctx: ContextoRaioX): string {
   }
   if (ctx.produtos.length > 0) {
     partes.push(
-      `Produtos por sobra (maior pra menor): ${ctx.produtos
+      `Produtos por lucro (maior pra menor): ${ctx.produtos
         .map((p) => `${p.nome} (${p.sobraPct}%)`)
         .join(", ")}`,
     );

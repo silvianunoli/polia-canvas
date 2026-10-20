@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispararAlerta } from "@/lib/alertas.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
+import { dentroDoPrazoFundadora } from "@/lib/fundadora";
 import {
   formatarDocumento,
   soDigitos,
@@ -209,6 +210,7 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       }
 
       const janela = janelaIdempotencia();
+      const fundadora = dentroDoPrazoFundadora();
       const customerId =
         existente?.stripe_customer_id ??
         (
@@ -226,6 +228,10 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
         {
           customer: customerId,
           items: [{ price: priceId }],
+          // Preço de fundadora (GRW-66): marca quem assinou dentro do prazo. As
+          // 50 vagas são controladas pela tela (o bloco some sem vaga) e, se
+          // precisar, conferidas depois pela ordem das assinaturas pagas.
+          metadata: { fundadora: fundadora ? "sim" : "nao" },
           payment_behavior: "default_incomplete",
           payment_settings: { save_default_payment_method: "on_subscription" },
           // confirmation_secret só volta quando é pedido pelo caminho inteiro.

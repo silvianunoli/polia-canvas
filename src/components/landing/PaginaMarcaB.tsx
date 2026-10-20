@@ -90,14 +90,13 @@ const oQueMuda: ItemLista[] = [
     icone: Calculator,
     titulo: "Orçamento sem chute.",
     texto:
-      "A Calculadora sugere o preço a partir do custo real, das taxas e de quanto precisa sobrar. Funciona pra produto e pra serviço cobrado por hora.",
+      "A Calculadora sugere o preço a partir do custo real, das taxas e do lucro que a marca precisa. Funciona pra produto e pra serviço cobrado por hora.",
     planos: ["Grátis"],
   },
   {
     icone: Percent,
     titulo: "Desconto com a conta feita.",
-    texto:
-      "Antes de ceder, a Pólia One mostra quanto aquele desconto tira do que ia sobrar pra você.",
+    texto: "Antes de ceder, a Pólia One mostra quanto aquele desconto tira do seu lucro.",
     planos: ["Grátis"],
   },
   {
@@ -203,7 +202,7 @@ const planos: PlanoLanding[] = [
     anual: precoBR(premium.precoAnual),
     itens: [
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite, cada produto com custo, preço e quanto sobra",
+      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
       "Financeiro com os três números que decidem o mês",
       "Clientes com o status de cada pedido, da espera à entrega",
       "Planner sem limite, e o Calendário com a agenda do Google junto",
@@ -404,8 +403,7 @@ export function PaginaMarcaB({
               <h2 className={`mt-4 ${H2}`}>O orçamento chega no WhatsApp. O preço sai no susto.</h2>
               <p className={`mt-6 ${CORPO}`}>
                 Você muda o valor umas três vezes antes de mandar. A cliente diz que tá caro, você
-                amolece, e o desconto sai do que ia sobrar pra você. Depois vem a noite remoendo se
-                cobrou certo.
+                amolece, e o desconto sai do seu lucro. Depois vem a noite remoendo se cobrou certo.
               </p>
             </div>
             <FotoLanding
@@ -512,7 +510,7 @@ export function PaginaMarcaB({
                 n: "02",
                 titulo: "O preço na conta",
                 texto:
-                  "Na Calculadora, o custo do produto, as taxas da maquininha ou do marketplace e quanto precisa sobrar viram um preço sugerido. O desconto pode ser simulado antes de ser dado.",
+                  "Na Calculadora, o custo do produto, as taxas da maquininha ou do marketplace e o lucro que a marca precisa viram um preço sugerido. O desconto pode ser simulado antes de ser dado.",
                 mock: <MockCalculadoraHero />,
               },
               {
@@ -536,10 +534,11 @@ export function PaginaMarcaB({
           <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[4fr_7fr]">
             <div>
               <Rotulo>Por dentro</Rotulo>
-              <h2 className={`mt-4 ${H2}`}>O preço, o que sobra e o mês, na mesma tela.</h2>
+              <h2 className={`mt-4 ${H2}`}>O preço, o lucro e o mês, na mesma tela.</h2>
               <p className={`mt-6 ${CORPO}`}>
                 Exemplo da Ana, que faz cadernos de aquarela: a Calculadora mostra o preço sugerido,
-                quanto sobra em cada venda e como esse preço conversa com a meta do mês dela.
+                quanto a marca lucra em cada venda e como esse preço conversa com a meta do mês
+                dela.
               </p>
               <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
             </div>
@@ -578,7 +577,7 @@ export function PaginaMarcaB({
             <div>
               <Rotulo>Quem fez</Rotulo>
               <h2 className={`mt-4 ${H2}`}>
-                Meu negócio vendia bem. Eu só não sabia quanto sobrava.
+                Meu negócio vendia bem. Eu só não sabia quanto lucrava.
               </h2>
               <p className={`mt-6 ${CORPO}`}>
                 Sou a Sil. Foram{" "}

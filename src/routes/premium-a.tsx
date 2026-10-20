@@ -16,7 +16,7 @@ export const Route = createFileRoute("/premium-a")({
       {
         name: "description",
         content:
-          "Preço, pedidos e o dinheiro do mês num lugar só. No Premium, a Pólia One mostra quanto sobra em cada venda e se o mês fechou.",
+          "Preço, pedidos e o dinheiro do mês num lugar só. No Premium, a Pólia One mostra quanto a marca lucra em cada venda e se o mês fechou.",
       },
       // Página de campanha: fora do índice e do sitemap.
       { name: "robots", content: "noindex, follow" },

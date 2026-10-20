@@ -155,6 +155,35 @@ export const ESCOLHAS_TIPO: readonly { valor: EscolhaTipo; rotulo: string }[] = 
 
 export const CTA_PRECO = "Quero calcular meu preço";
 
+// ── Estágio do negócio (20/10/2026, GRW-66) ──
+// Desde que o onboarding de 5 passos saiu (14/10), ninguém mais respondia o
+// estágio, e 58 das 80 contas do Grátis ficaram sem tipo nem estágio: sem isso a
+// régua de e-mail não separa quem já vende de quem ainda está na ideia.
+
+/** Valores aceitos pelo check de profiles.business_stage. */
+export type EstagioNegocio = "ja_vendo" | "comecei" | "ideia";
+
+export const ESCOLHAS_ESTAGIO: readonly { valor: EstagioNegocio; rotulo: string }[] = [
+  { valor: "ja_vendo", rotulo: "Já vende" },
+  { valor: "comecei", rotulo: "Começou agora" },
+  { valor: "ideia", rotulo: "Ainda é ideia" },
+];
+
+export function estagioDoBanco(v: unknown): EstagioNegocio | null {
+  return v === "ja_vendo" || v === "comecei" || v === "ideia" ? v : null;
+}
+
+/** A pergunta do estágio só aparece depois do primeiro preço: antes disso ela atrasaria a Calculadora. */
+export function perguntaEstagio(temPreco: boolean, estagio: EstagioNegocio | null): boolean {
+  return temPreco && estagio === null;
+}
+
+/** Conta que veio de anúncio de nicho já diz o que vende: grava sem perguntar. */
+export function escolhaDoNicho(nicho: NichoDoPasso | null): EscolhaTipo | null {
+  if (!nicho) return null;
+  return nicho.tipo === "servico" ? "servico" : "produto";
+}
+
 export interface TextoPassoPreco {
   titulo: string;
   subtitulo: string;

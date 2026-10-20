@@ -156,7 +156,26 @@ export function registrarAberturaDeTela(pathname: string): void {
   const feature = featureDaRota(pathname);
   if (!feature) return;
   ultimaAtividade = Date.now();
-  void registrar("feature_opened", { feature });
+  const origem =
+    feature === "upgrade" || feature === "assinar"
+      ? origemDaTelaDePreco(noBrowser() ? window.location.search : "")
+      : null;
+  void registrar("feature_opened", { feature, ...(origem ? { propriedades: origem } : {}) });
+}
+
+/**
+ * De onde a conta chegou na tela de preço (GRW-66): sem isso o /upgrade e o
+ * /assinar eram gravados sem a rota nem o plano, e não dava pra saber qual
+ * cadeado vende. Só valores conhecidos; a rota é caminho interno curto.
+ */
+export function origemDaTelaDePreco(search: string): Record<string, string> | null {
+  const p = new URLSearchParams(search);
+  const out: Record<string, string> = {};
+  const rota = p.get("rota");
+  if (rota && /^\/[a-z0-9\-/]{0,60}$/.test(rota)) out.rota = rota;
+  const tier = p.get("tier") ?? p.get("plano");
+  if (tier === "controle" || tier === "projete") out.tier = tier;
+  return Object.keys(out).length ? out : null;
 }
 
 export function montarHeartbeat(): () => void {

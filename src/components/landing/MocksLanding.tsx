@@ -46,7 +46,7 @@ function fraseDesconto(pct: number) {
   const prejuizo = lucroComDesconto < 0;
   return {
     prejuizo,
-    texto: `Com ${pct}% de desconto, o preço cai pra ${fmt(round2(precoComDesconto))} e sobram ${fmt(
+    texto: `Com ${pct}% de desconto, o preço cai pra ${fmt(round2(precoComDesconto))} e o lucro fica em ${fmt(
       round2(lucroComDesconto),
     )}.${prejuizo ? " Esse desconto dá prejuízo." : ""}`,
   };
@@ -81,7 +81,7 @@ function FaixaSobra() {
   return (
     <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md bg-[var(--surface-pink)] px-3.5 py-3">
       <span className="font-accent text-[12px] font-bold uppercase tracking-[0.08em] text-[var(--ink-soft)]">
-        Sobra de verdade
+        Lucro de verdade
       </span>
       <span className="text-[18px] leading-none tracking-[-0.01em] text-[var(--ink)]">
         R$ 19,60 por caderno
@@ -96,7 +96,7 @@ function FaixaSobra() {
 export function MockCalculadoraHero({ className }: { className?: string }) {
   return (
     <Cartela
-      label={`Calculadora da Pólia One: caderno de aquarela A5 a R$ 49, sobram R$ 19,60 por caderno. ${fraseMeta}`}
+      label={`Calculadora da Pólia One: caderno de aquarela A5 a R$ 49, R$ 19,60 de lucro por caderno. ${fraseMeta}`}
       className={className}
     >
       <CabecalhoProduto />
@@ -138,7 +138,7 @@ export function MockDescontoHero({ className }: { className?: string }) {
 
 const nosFluxo = [
   { rotulo: "Planejamento", texto: "Por que a sua marca existe" },
-  { rotulo: "Calculadora", texto: "R$ 49 · sobram R$ 19,60" },
+  { rotulo: "Calculadora", texto: "R$ 49 · lucra R$ 19,60" },
   { rotulo: "Painel", texto: "Falta R$ 430 para bater a meta do mês" },
 ];
 
@@ -148,7 +148,7 @@ export function MockFluxoMarcaPrecoMes({ className = "" }: { className?: string 
   return (
     <div
       role="img"
-      aria-label="Como a Pólia One liga as partes: o Planejamento guarda por que a marca existe, a Calculadora mostra o preço de R$ 49 com R$ 19,60 de sobra, e o Painel mostra que falta R$ 430 para bater a meta do mês."
+      aria-label="Como a Pólia One liga as partes: o Planejamento guarda por que a marca existe, a Calculadora mostra o preço de R$ 49 com R$ 19,60 de lucro, e o Painel mostra que falta R$ 430 para bater a meta do mês."
       className={className}
     >
       <motion.ol
@@ -349,7 +349,7 @@ export function MockDescontoSimulado({ className }: { className?: string }) {
     <div ref={ref}>
       <Janela
         url="one.usepolia.com.br/calculadora"
-        label={`Calculadora da Pólia One simulando desconto no caderno de aquarela A5 a R$ 49, que deixa R$ 19,60 de sobra. ${fraseDesconto(15).texto} ${fraseDesconto(45).texto}`}
+        label={`Calculadora da Pólia One simulando desconto no caderno de aquarela A5 a R$ 49, que dá R$ 19,60 de lucro. ${fraseDesconto(15).texto} ${fraseDesconto(45).texto}`}
         className={className}
       >
         <CabecalhoProduto />

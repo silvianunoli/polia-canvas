@@ -361,7 +361,7 @@ function ProjecaoPage() {
             <Vazio
               icone={Sparkles}
               titulo="Ainda não dá pra projetar."
-              texto="Pra projetar, a Pólia One precisa saber quanto sobra numa venda e quanto custa o seu mês. Comece precificando 1 produto."
+              texto="Pra projetar, a Pólia One precisa saber quanto uma venda dá de lucro e quanto custa o seu mês. Comece precificando 1 produto."
               acao={
                 <Link to="/produtos" className={BTN_ACAO}>
                   Ir pros Produtos
@@ -373,7 +373,7 @@ function ProjecaoPage() {
           <div className="mt-6">
             <Vazio
               icone={TrendingDown}
-              titulo="Nenhuma venda está deixando sobra."
+              titulo="Nenhuma venda está dando lucro."
               texto="Do jeito que está, cada venda não deixa nada, então não existe número de vendas que se pague. Reveja o preço ou o custo."
               acao={
                 <Link to="/calculadora" className={BTN_ACAO}>
@@ -401,7 +401,7 @@ function ProjecaoPage() {
                   avisa no lugar das linhas e mantém os campos na tela. */}
               {!projecao ? (
                 <p role="status" className="text-[15px] text-[var(--ink)]">
-                  Com esse ticket médio e esse custo, cada venda não deixa sobra, então não existe
+                  Com esse ticket médio e esse custo, cada venda não dá lucro, então não existe
                   número de vendas que se pague. Ajuste os valores abaixo ou volte ao valor real.
                 </p>
               ) : (

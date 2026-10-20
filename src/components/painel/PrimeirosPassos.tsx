@@ -5,15 +5,18 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_ACAO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import {
   CTA_PRECO,
+  ESCOLHAS_ESTAGIO,
   ESCOLHAS_TIPO,
   NOME_MARCA_MAX,
   ORDEM_PASSOS,
   PASSO_MODULO_1,
   PASSO_NOME,
   hrefCalculadora,
+  perguntaEstagio,
   textoPassoPreco,
   tipoPrecoDaEscolha,
   type EscolhaTipo,
+  type EstagioNegocio,
   type IdPasso,
   type NichoDoPasso,
   type ProgressoPrimeirosPassos,
@@ -33,12 +36,16 @@ export function PrimeirosPassos({
   nicho,
   escolhaSalva,
   onEscolherTipo,
+  estagioSalvo,
+  onEscolherEstagio,
   onSalvarNome,
 }: {
   progresso: ProgressoPrimeirosPassos;
   nicho: NichoDoPasso | null;
   escolhaSalva: EscolhaTipo | null;
   onEscolherTipo: (e: EscolhaTipo) => Promise<boolean>;
+  estagioSalvo: EstagioNegocio | null;
+  onEscolherEstagio: (e: EstagioNegocio) => Promise<boolean>;
   onSalvarNome: (nome: string) => Promise<boolean>;
 }) {
   const tituloId = useId();
@@ -146,7 +153,50 @@ export function PrimeirosPassos({
           );
         })}
       </ol>
+
+      {perguntaEstagio(progresso.feitos.preco, estagioSalvo) && (
+        <PerguntaEstagio onEscolher={onEscolherEstagio} />
+      )}
     </section>
+  );
+}
+
+/**
+ * Uma pergunta de um clique, fora da lista numerada (não é passo, não conta no
+ * "N de 3"). Some quando a resposta grava. Serve pra a Pólia One saber se fala
+ * com quem já vende ou com quem ainda está na ideia.
+ */
+function PerguntaEstagio({ onEscolher }: { onEscolher: (e: EstagioNegocio) => Promise<boolean> }) {
+  const [salvando, setSalvando] = useState<EstagioNegocio | null>(null);
+  const rotuloId = useId();
+
+  async function escolher(e: EstagioNegocio) {
+    if (salvando) return;
+    setSalvando(e);
+    const ok = await onEscolher(e);
+    if (!ok) setSalvando(null);
+  }
+
+  return (
+    <div className="mt-3 border-t border-[var(--line)] px-1 pt-4">
+      <p id={rotuloId} className="text-[14px] text-[var(--ink-soft)]">
+        E a marca, já vende?
+      </p>
+      <div role="group" aria-labelledby={rotuloId} className="mt-2 flex flex-wrap gap-2">
+        {ESCOLHAS_ESTAGIO.map((o) => (
+          <button
+            key={o.valor}
+            type="button"
+            aria-busy={salvando === o.valor || undefined}
+            disabled={!!salvando}
+            onClick={() => void escolher(o.valor)}
+            className={`${BTN_MIUDO_ACAO} bg-white`}
+          >
+            {salvando === o.valor ? "Salvando..." : o.rotulo}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 

@@ -16,9 +16,9 @@ import {
 } from "@/components/site/BlogBlocos";
 import type { Tables } from "@/integrations/supabase/types";
 
-const TITULO = "Blog da Pólia · Preço, marca e o que sobra no fim do mês";
+const TITULO = "Blog da Pólia · Preço, marca e o lucro do mês";
 const DESCRICAO =
-  "Textos curtos pra quem vende produto ou serviço: por que a cliente compra de você, quanto cobrar, quanto sobra e o que fazer primeiro. Escritos pela Sil.";
+  "Textos curtos pra quem vende produto ou serviço: por que a cliente compra de você, quanto cobrar, quanto a marca lucra e o que fazer primeiro. Escritos pela Sil.";
 
 export const Route = createFileRoute("/blog/")({
   // A busca mora no loader (e não num useEffect) pra que o HTML servido já
@@ -119,8 +119,8 @@ function BlogList() {
               <p className={`mt-6 ${CORPO}`}>
                 Textos curtos sobre as decisões do dia a dia de quem vende:{" "}
                 <b className="font-semibold text-[var(--ink)]">por que a cliente compra de você</b>,
-                quanto cobrar, quanto sobra e o que fazer primeiro. Escritos pela Sil, que passou
-                oito anos fazendo essa conta no próprio negócio.
+                quanto cobrar, quanto a marca lucra e o que fazer primeiro. Escritos pela Sil, que
+                passou oito anos fazendo essa conta no próprio negócio.
               </p>
             </div>
             <Link
@@ -176,7 +176,7 @@ function BlogList() {
             posts.length === 0 ? (
               <Aviso titulo="Os primeiros textos estão sendo escritos.">
                 <p className={`mt-2 ${CORPO}`}>
-                  Enquanto isso, a Pólia One já mostra quanto sobra em cada venda.
+                  Enquanto isso, a Pólia One já mostra quanto a marca lucra em cada venda.
                 </p>
                 <div className="mt-6">
                   <BotaoCadastro busca={{ origem: "blog" }} contexto="blog_vazio" />

@@ -294,3 +294,19 @@ describe("login pendente (OAuth Google)", () => {
     expect(sessionStorage.getItem("polia-founder-login-pendente")).toBeNull();
   });
 });
+
+describe("origemDaTelaDePreco (GRW-66)", async () => {
+  const { origemDaTelaDePreco } = await import("./founder-eventos");
+  it("guarda rota interna e tier conhecido", () => {
+    expect(origemDaTelaDePreco("?rota=%2Fcalculadora&tier=projete")).toEqual({
+      rota: "/calculadora",
+      tier: "projete",
+    });
+    expect(origemDaTelaDePreco("?plano=controle")).toEqual({ tier: "controle" });
+  });
+  it("ignora o que não conhece", () => {
+    expect(origemDaTelaDePreco("")).toBeNull();
+    expect(origemDaTelaDePreco("?rota=https://x.com&tier=ouro")).toBeNull();
+    expect(origemDaTelaDePreco("?rota=//x.com")).toBeNull();
+  });
+});

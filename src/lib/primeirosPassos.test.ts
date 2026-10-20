@@ -232,3 +232,23 @@ describe("textos", () => {
     expect(PASSO_MODULO_1.acao.startsWith("Quero")).toBe(true);
   });
 });
+
+describe("estágio do negócio (GRW-66)", async () => {
+  const { estagioDoBanco, perguntaEstagio, escolhaDoNicho } = await import("./primeirosPassos");
+  it("aceita só os valores do check do banco", () => {
+    expect(estagioDoBanco("ja_vendo")).toBe("ja_vendo");
+    expect(estagioDoBanco("ideia")).toBe("ideia");
+    expect(estagioDoBanco("outro")).toBeNull();
+    expect(estagioDoBanco(null)).toBeNull();
+  });
+  it("pergunta só com preço calculado e estágio vazio", () => {
+    expect(perguntaEstagio(false, null)).toBe(false);
+    expect(perguntaEstagio(true, null)).toBe(true);
+    expect(perguntaEstagio(true, "comecei")).toBe(false);
+  });
+  it("nicho de serviço vira serviço, de produto vira produto", () => {
+    expect(escolhaDoNicho(null)).toBeNull();
+    expect(escolhaDoNicho({ pessoa: "Trancista", tipo: "servico" })).toBe("servico");
+    expect(escolhaDoNicho({ pessoa: "Confeiteira", tipo: "produto" })).toBe("produto");
+  });
+});

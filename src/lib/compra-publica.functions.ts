@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { dentroDoPrazoFundadora } from "@/lib/fundadora";
 import { z } from "zod";
 import { stripeClient, precoParaPlano } from "@/lib/stripe.functions";
 import { dispararAlerta } from "@/lib/alertas.server";
@@ -183,6 +184,7 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
         payment_method_collection: "if_required" as const,
       };
 
+      const fundadora = dentroDoPrazoFundadora();
       const session = promoId
         ? // Cortesia (campanha UGC): o desconto já vem aplicado e sem CPF nem
           // endereço, que só existem pra nota fiscal, e fatura de R$ 0 não tem
@@ -224,7 +226,14 @@ export const iniciarCompraPublica = createServerFn({ method: "POST" })
             // (landing + UTMs) vai junto quando existe, pra saber qual landing vendeu;
             // na assinatura ela fica visível no painel do Stripe.
             metadata: { plano: data.plano, ...origem },
-            ...(comOrigem ? { subscription_data: { metadata: { ...origem } } } : {}),
+            // Preço de fundadora (GRW-66) marcado na assinatura, junto da origem.
+            ...(comOrigem || fundadora
+              ? {
+                  subscription_data: {
+                    metadata: { ...origem, ...(fundadora ? { fundadora: "sim" } : {}) },
+                  },
+                }
+              : {}),
           });
 
       if (!session.url) {

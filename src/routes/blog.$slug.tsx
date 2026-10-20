@@ -59,7 +59,7 @@ const PROSA = [
 // em string vazia: o link circulava no WhatsApp sem nada que fizesse clicar.
 const DESCRICAO_PADRAO =
   "Texto de quem toca o próprio negócio sobre as decisões que dá pra tomar com mais clareza.";
-const TITULO_PADRAO = "Blog da Pólia · Preço, marca e o que sobra no fim do mês";
+const TITULO_PADRAO = "Blog da Pólia · Preço, marca e o lucro do mês";
 
 /** Tela curta de aviso do blog, com as saídas que o estado de erro não tinha. */
 function BlogAviso({ titulo, corpo, acao }: { titulo: string; corpo: string; acao?: ReactNode }) {

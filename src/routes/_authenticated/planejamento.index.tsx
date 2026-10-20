@@ -1002,10 +1002,10 @@ function ProductCard({ produto }: { produto: ProdutoRow }) {
             }`}
           >
             {sobra == null
-              ? "sem custo cadastrado · cadastre o custo pra saber quanto sobra"
+              ? "sem custo cadastrado · cadastre o custo pra saber o lucro"
               : sobra.prejuizo
                 ? `custo ${fmt(Number(produto.preco_custo))} · prejuízo de ${fmt(-sobra.valor)} por venda`
-                : `custo ${fmt(Number(produto.preco_custo))} · sobram ${sobra.pct}%`}
+                : `custo ${fmt(Number(produto.preco_custo))} · lucro de ${sobra.pct}%`}
           </p>
         </>
       )}

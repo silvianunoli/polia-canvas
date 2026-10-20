@@ -61,7 +61,7 @@ export const Route = createFileRoute("/landing-a")({
       {
         name: "description",
         content:
-          "Custo do material, taxa da maquininha, quanto precisa sobrar: a Pólia One mostra o preço e o que sobra nele antes de você responder a cliente.",
+          "Custo do material, taxa da maquininha, o lucro que a marca precisa: a Pólia One mostra o preço e o lucro de cada venda antes de você responder a cliente.",
       },
       // Página de campanha: fora do índice e do sitemap, pra não competir com a home.
       { name: "robots", content: "noindex, follow" },
@@ -94,7 +94,7 @@ const contaNaHora: ItemLista[] = [
   {
     icone: BadgePercent,
     titulo: "O desconto dado na hora",
-    texto: "sai do que ia sobrar pra você, e quase ninguém faz essa conta antes de ceder.",
+    texto: "sai do seu lucro, e quase ninguém faz essa conta antes de ceder.",
   },
 ];
 
@@ -108,13 +108,13 @@ const oQueMuda: ItemLista[] = [
   {
     icone: Percent,
     titulo: "Desconto antes de ceder.",
-    texto: "O preço com desconto e o que sobra nele, antes de responder a cliente.",
+    texto: "O preço com desconto e o lucro que fica nele, antes de responder a cliente.",
     planos: ["Grátis"],
   },
   {
     icone: Archive,
     titulo: "O preço guardado.",
-    texto: "Cada produto com custo, preço, quanto sobra e o histórico de preço.",
+    texto: "Cada produto com custo, preço, lucro e o histórico de preço.",
     planos: ["Grátis até 5", "Premium sem limite"],
   },
   {
@@ -174,7 +174,7 @@ const planos: PlanoLanding[] = [
     mensal: precoBR(premium.precoMensal),
     anual: precoBR(premium.precoAnual),
     itens: [
-      "Catálogo sem limite, cada produto com custo, preço e quanto sobra",
+      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
       "Clientes com o status de cada pedido, da espera à entrega",
       "Financeiro com os três números que decidem o mês",
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
@@ -210,7 +210,7 @@ const perguntas = [
   {
     pergunta: "A Pólia One me diz o preço certo?",
     resposta:
-      "A Pólia One sugere um preço a partir dos seus custos e de quanto precisa sobrar. A decisão continua sua, agora com a conta na frente.",
+      "A Pólia One sugere um preço a partir dos seus custos e do lucro que a marca precisa. A decisão continua sua, agora com a conta na frente.",
   },
   {
     pergunta: "Serve pra serviço e pra encomenda?",
@@ -230,7 +230,7 @@ const perguntas = [
   {
     pergunta: "A IA inventa o meu preço?",
     resposta:
-      "Não. O preço vem de conta: custo, taxas e quanto precisa sobrar. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
+      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
   },
   {
     // Termos, seção 8 (06/10/2026): só na contratação, não na renovação.
@@ -297,7 +297,7 @@ function LandingA() {
           <p className={`mt-12 ${CORPO}`}>
             Quando o preço sai no susto, ele erra pros dois lados. Alto demais, a cliente some.{" "}
             <b className="font-semibold text-[var(--ink)]">
-              Baixo demais, a encomenda fecha e quase nada sobra.
+              Baixo demais, a encomenda fecha e quase não dá lucro.
             </b>{" "}
             E nos dois casos vem a noite remoendo.
           </p>
@@ -358,9 +358,9 @@ function LandingA() {
                 texto: (
                   <>
                     A Pólia One mostra o preço sugerido e{" "}
-                    <b className="font-semibold">quanto sobra em cada venda</b>. Pediram desconto?
-                    Coloque a porcentagem e ela mostra o que fica, e avisa se o desconto dá
-                    prejuízo.
+                    <b className="font-semibold">quanto a marca lucra em cada venda</b>. Pediram
+                    desconto? Coloque a porcentagem e ela mostra o que fica, e avisa se o desconto
+                    dá prejuízo.
                   </>
                 ),
                 mock: <MockDescontoHero />,
@@ -385,7 +385,8 @@ function LandingA() {
               <h2 className={`mt-4 ${H2}`}>Antes de dar o desconto, a conta do desconto.</h2>
               <p className={`mt-6 ${CORPO}`}>
                 Exemplo da Ana, que faz cadernos de aquarela. Com 15% de desconto, a Calculadora
-                mostra o preço novo e quanto ainda sobra. Se o desconto dá prejuízo, a tela avisa.
+                mostra o preço novo e o lucro que ainda fica. Se o desconto dá prejuízo, a tela
+                avisa.
               </p>
               <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
               <div className="mt-4">
@@ -459,7 +460,7 @@ function LandingA() {
             <div>
               <Rotulo>Quem fez</Rotulo>
               <h2 className={`mt-4 ${H2}`}>
-                Meu negócio vendia bem. Eu só não sabia quanto sobrava.
+                Meu negócio vendia bem. Eu só não sabia quanto lucrava.
               </h2>
               <p className={`mt-6 ${CORPO}`}>
                 Sou a Sil. Foram{" "}

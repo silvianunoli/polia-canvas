@@ -180,7 +180,7 @@ export const TIERS_PAGOS: Record<
     features: [
       "Tudo do Grátis, mais:",
       "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto sobra",
+      "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto a marca lucra",
       "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       "Clientes com o status de cada pedido, da espera à entrega",
       "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",

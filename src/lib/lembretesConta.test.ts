@@ -84,7 +84,7 @@ describe("montarEmailPreco", () => {
     expect(e.assunto).toBe("Confeiteira, ficou faltando a conta do seu produto");
     expect(e.html).toContain("A conta do seu produto ainda está em branco");
     expect(e.texto).toContain(
-      "A calculadora junta material, embalagem e o seu tempo e mostra o preço que deixa sobra de verdade. Leva uns 3 minutos.",
+      "A calculadora junta material, embalagem e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
     );
     expect(e.texto).toContain("https://one.usepolia.com.br/calculadora?tipo=produto");
   });
@@ -94,7 +94,7 @@ describe("montarEmailPreco", () => {
     expect(e.assunto).toBe("Falta o primeiro preço na sua Pólia One");
     expect(e.html).toContain("O primeiro preço ainda está em branco");
     expect(e.texto).toContain(
-      "A calculadora junta o custo real e o seu tempo e mostra o preço que deixa sobra de verdade. Leva uns 3 minutos.",
+      "A calculadora junta o custo real e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
     );
     expect(e.texto).toContain("https://one.usepolia.com.br/painel");
     expect(e.texto).not.toContain("calculadora?tipo");
@@ -109,5 +109,59 @@ describe("montarEmailPreco", () => {
       expect(e.texto).not.toMatch(/token|magiclink|verify/i);
       expect(`${e.assunto} ${e.texto}`).not.toMatch(/[—–!]/);
     }
+  });
+});
+
+describe("régua de ativação e do teste do Pro (GRW-66)", async () => {
+  const { montarEmailRegua, TIPOS_REGUA, ehTipoRegua } =
+    await import("../../supabase/functions/_shared/lembretesConta.ts");
+  const antes = new Date("2026-10-20T12:00:00-03:00");
+  const depois = new Date("2026-12-02T12:00:00-03:00");
+  const fim = "2026-10-27T15:00:00Z";
+
+  it("todos os tipos montam, sem travessão, exclamação nem promessa com você", () => {
+    for (const tipo of TIPOS_REGUA) {
+      const e = montarEmailRegua(tipo, { nome: "Ana", testeFim: fim, agora: antes });
+      expect(e.assunto.length).toBeGreaterThan(5);
+      expect(e.html).toContain("one.usepolia.com.br");
+      expect(`${e.assunto} ${e.texto}`).not.toMatch(
+        /[—–!]|você consegue|você merece|você vai|sobra/,
+      );
+    }
+  });
+
+  it("teste mostra a data do fim em dd/mm", () => {
+    expect(
+      montarEmailRegua("teste_fim_2d", { nome: null, testeFim: fim, agora: antes }).texto,
+    ).toContain("27/10");
+  });
+
+  it("preço de fundadora só antes do prazo", () => {
+    expect(
+      montarEmailRegua("teste_acabou", { nome: null, testeFim: fim, agora: antes }).texto,
+    ).toContain("fundadora");
+    expect(
+      montarEmailRegua("teste_acabou", { nome: null, testeFim: fim, agora: depois }).texto,
+    ).not.toContain("fundadora");
+  });
+
+  it("dica leva o jeito de desligar; aviso de conta não", () => {
+    expect(
+      montarEmailRegua("guardar_d2", { nome: null, testeFim: null, agora: antes }).texto,
+    ).toContain("desligar em Configurações");
+    expect(
+      montarEmailRegua("teste_fim_2d", { nome: null, testeFim: fim, agora: antes }).texto,
+    ).not.toContain("desligar");
+  });
+
+  it("assunto com nome quando há nome", () => {
+    expect(
+      montarEmailRegua("guardar_d2", { nome: "Ana", testeFim: null, agora: antes }).assunto,
+    ).toMatch(/^Ana, /);
+  });
+
+  it("tipo desconhecido não passa", () => {
+    expect(ehTipoRegua("preco_d1")).toBe(false);
+    expect(ehTipoRegua("teste_acabou")).toBe(true);
   });
 });

@@ -82,7 +82,7 @@ export const TEXTO_DICA_PLANEJAMENTO = {
 // Mexeu na tela, confere a dica: ela não pode prometer o que a tela não faz.
 export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
   produtos:
-    "Cada produto guarda preço e custo. É daqui que a Pólia One tira quanto sobra por venda.",
+    "Cada produto guarda preço e custo. É daqui que a Pólia One tira quanto a marca lucra por venda.",
   calculadora:
     "Entram os custos reais da marca e sai o preço que se paga. Sem copiar o preço da concorrente.",
   projecao:

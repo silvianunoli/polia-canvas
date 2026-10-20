@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BlocoFundadora } from "@/components/planos/BlocoFundadora";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
@@ -215,6 +216,8 @@ function PlanosPage() {
                 Cancelar é um clique, e o Planejamento continua seu.
               </p>
             </Reveal>
+
+            <BlocoFundadora className="mt-8 max-w-[640px]" />
 
             {/* Ciclo mensal/anual */}
             <div

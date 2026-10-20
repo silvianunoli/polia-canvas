@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/calculadora")({
       { title: "Calculadora de preço · Pólia One" },
       {
         name: "description",
-        content: "Quanto custa, quanto cobrar e quanto sobra em cada venda.",
+        content: "Quanto custa, quanto cobrar e quanto a marca lucra em cada venda.",
       },
     ],
   }),
@@ -162,7 +162,11 @@ function CalculadoraPage() {
 
   if (!pronto) {
     return (
-      <PaginaLogada largura="larga" eyebrow="Calculadora" titulo="Quanto sobra em cada venda.">
+      <PaginaLogada
+        largura="larga"
+        eyebrow="Calculadora"
+        titulo="Quanto a marca lucra em cada venda."
+      >
         <p className="text-[14px] text-[var(--muted)]">Carregando a calculadora…</p>
       </PaginaLogada>
     );
@@ -175,7 +179,7 @@ function CalculadoraPage() {
       dica="calculadora"
       largura="larga"
       eyebrow="Calculadora"
-      titulo="Quanto sobra em cada venda."
+      titulo="Quanto a marca lucra em cada venda."
       subtitulo="Coloque os custos e veja o preço de venda e quanto fica depois das taxas."
     >
       {produtoId && !produtoRecalcular && (

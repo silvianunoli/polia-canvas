@@ -214,7 +214,7 @@ const CHAMADAS: Record<string, Chamada> = {
     rotulo: "Calculadora",
     titulo: "O preço desse texto, feito com o seu custo.",
     frase:
-      "A Calculadora da Pólia One pega custo, taxas e quanto precisa sobrar e devolve o preço sugerido. Funciona no Grátis.",
+      "A Calculadora da Pólia One pega custo, taxas e o lucro que a marca precisa e devolve o preço sugerido. Funciona no Grátis.",
     botao: "Quero calcular meu preço",
     mock: <MockCalculadoraHero />,
   },
@@ -252,7 +252,7 @@ const CHAMADA_GERAL: Chamada = {
   rotulo: "Pólia One",
   titulo: "Da leitura pro seu próprio número.",
   frase:
-    "A Pólia One pergunta da marca primeiro e depois faz a conta: custo, taxas e quanto precisa sobrar viram um preço, e cada venda mostra quanto falta pro mês fechar.",
+    "A Pólia One pergunta da marca primeiro e depois faz a conta: custo, taxas e o lucro que a marca precisa viram um preço, e cada venda mostra quanto falta pro mês fechar.",
   botao: "Quero começar grátis",
   mock: <MockCalculadoraHero />,
 };

@@ -19,7 +19,7 @@ import { MockFluxoMarcaPrecoMes } from "@/components/landing/MocksLanding";
 
 const TITULO_SOBRE = "Sobre a Pólia One · Quem fez e por quê";
 const DESCRICAO_SOBRE =
-  "Meu negócio vendia bem. Eu só não sabia quanto sobrava. A história da Sil, no que a Pólia acredita e a empresa por trás da Pólia One.";
+  "Meu negócio vendia bem. Eu só não sabia quanto lucrava. A história da Sil, no que a Pólia acredita e a empresa por trás da Pólia One.";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({
@@ -103,7 +103,7 @@ const ordem = [
   {
     titulo: "Depois, o preço.",
     texto:
-      "A Calculadora pega o custo real, as taxas e quanto precisa sobrar, e devolve um preço sugerido, comparado com a meta do mês.",
+      "A Calculadora pega o custo real, as taxas e o lucro que a marca precisa, e devolve um preço sugerido, comparado com a meta do mês.",
   },
   {
     titulo: "Por fim, o mês.",
@@ -137,7 +137,7 @@ const principios = [
   {
     titulo: "O concreto vale mais que a promessa.",
     texto:
-      "O preço que saiu do chute. O quanto sobra que apareceu. A meta que fechou. É isso que a Pólia comemora, não número mágico nem dinheiro fácil.",
+      "O preço que saiu do chute. O lucro que apareceu. A meta que fechou. É isso que a Pólia comemora, não número mágico nem dinheiro fácil.",
   },
 ];
 
@@ -154,7 +154,7 @@ function SobrePage() {
             <div>
               <Rotulo>Quem fez a Pólia One</Rotulo>
               <h1 className="mt-4 text-[clamp(30px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance max-md:text-[32px]">
-                Meu negócio vendia bem. Eu só não sabia quanto sobrava.
+                Meu negócio vendia bem. Eu só não sabia quanto lucrava.
               </h1>
               <p className="mt-6 max-w-[52ch] text-[19px] leading-[1.6] text-[var(--ink-soft)] max-md:text-[17px]">
                 Sou a Sil. Foram oito anos com marca própria, do cosmético artesanal ao caderno

@@ -5,11 +5,13 @@
 
 // O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
 export const GANHO_POR_ROTA: Record<string, string> = {
-  "/financeiro": "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto sobrou no mês.",
+  "/financeiro":
+    "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto a marca lucrou no mês.",
   // Botão "Resumo pro contador" do Financeiro: a tela já abre no Premium, o
   // que é do Pro é o resumo (08/10/2026).
   "/financeiro/resumo": "O Pro monta o resumo do mês pro contador, em PDF e CSV.",
-  "/produtos": "O Premium solta o limite: cada produto com o custo, o preço e quanto sobra.",
+  "/produtos":
+    "O Premium solta o limite: cada produto com o custo, o preço e quanto a marca lucra.",
   "/calculadora":
     "O Pro abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
   // Raio-x é Pro, não Premium (ROTAS_PROJETE + o portão `temProjete` dentro
