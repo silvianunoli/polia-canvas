@@ -221,19 +221,41 @@ export interface NovaVenda {
   observacao: string | null;
   /** Veio do "Registrar venda" de Clientes: marca a cliente na mesma transação. */
   marcarCliente?: boolean;
+  /**
+   * Veio do "Virar venda" de um orçamento (ONE-129): converter_orcamento grava
+   * a venda e marca o orçamento como convertido na mesma transação.
+   */
+  orcamentoId?: string;
 }
 
 export async function registrarVenda(v: NovaVenda) {
+  const itens = v.itens.map((i) => ({
+    produto_id: i.produtoId,
+    sku_id: i.skuId,
+    quantidade: i.quantidade,
+    preco_unitario: i.precoUnitario,
+  })) as unknown as Json;
+  if (v.orcamentoId) {
+    return supabase.rpc("converter_orcamento", {
+      p_orcamento_id: v.orcamentoId,
+      p_venda_id: v.id,
+      p_data: v.data,
+      p_canal: v.canal,
+      p_itens: itens,
+      p_cliente_id: v.clienteId,
+      p_cliente_nome: v.clienteNome,
+      p_desconto: v.desconto,
+      p_frete: v.frete,
+      p_taxa_canal: v.taxaCanal,
+      p_recebida: v.recebida,
+      p_observacao: v.observacao,
+    });
+  }
   return supabase.rpc("registrar_venda", {
     p_id: v.id,
     p_data: v.data,
     p_canal: v.canal,
-    p_itens: v.itens.map((i) => ({
-      produto_id: i.produtoId,
-      sku_id: i.skuId,
-      quantidade: i.quantidade,
-      preco_unitario: i.precoUnitario,
-    })) as unknown as Json,
+    p_itens: itens,
     p_cliente_id: v.clienteId,
     p_cliente_nome: v.clienteNome,
     p_desconto: v.desconto,

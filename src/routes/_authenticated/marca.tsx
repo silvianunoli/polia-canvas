@@ -10,6 +10,7 @@ import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
 import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BlockError } from "@/components/ui/BlockError";
+import { IdentidadeVisual } from "@/components/orcamentos/IdentidadeVisual";
 
 export const Route = createFileRoute("/_authenticated/marca")({
   head: () => ({
@@ -58,6 +59,7 @@ function MarcaPage() {
         </LinkInterno>
       }
     >
+      {userId && <IdentidadeVisual userId={userId} />}
       {camposQuery.isError ? (
         <div role="alert">
           <BlockError

@@ -1357,6 +1357,50 @@ export type Database = {
         }
         Relationships: []
       }
+      orcamentos: {
+        Row: {
+          aprovado_em: string | null
+          cliente_id: string | null
+          cliente_nome: string | null
+          created_at: string
+          desconto: number
+          frete: number
+          id: string
+          itens: Json
+          link_token: string
+          numero: number
+          observacao: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+          user_id: string
+          validade: string
+          venda_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          desconto?: number
+          frete?: number
+          itens: Json
+          observacao?: string | null
+          user_id: string
+          validade: string
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          desconto?: number
+          frete?: number
+          itens?: Json
+          observacao?: string | null
+          status?: string
+          validade?: string
+          venda_id?: string | null
+        }
+        Relationships: []
+      }
       taxas_recebimento: {
         Row: {
           chave: string
@@ -2157,6 +2201,8 @@ export type Database = {
           brand_voice_finalized_at: string | null
           brand_voice_yes: string | null
           business_name: string | null
+          cor_marca: string | null
+          logo_path: string | null
           business_stage: string | null
           business_type: string | null
           business_why: string | null
@@ -2253,6 +2299,8 @@ export type Database = {
           brand_voice_finalized_at?: string | null
           brand_voice_yes?: string | null
           business_name?: string | null
+          cor_marca?: string | null
+          logo_path?: string | null
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
@@ -2349,6 +2397,8 @@ export type Database = {
           brand_voice_finalized_at?: string | null
           brand_voice_yes?: string | null
           business_name?: string | null
+          cor_marca?: string | null
+          logo_path?: string | null
           business_stage?: string | null
           business_type?: string | null
           business_why?: string | null
@@ -2901,6 +2951,23 @@ export type Database = {
       desfazer_pagamento: {
         Args: { p_conta_id: string }
         Returns: undefined
+      }
+      converter_orcamento: {
+        Args: {
+          p_orcamento_id: string
+          p_venda_id: string
+          p_data: string
+          p_canal: string
+          p_itens: Json
+          p_cliente_id?: string | null
+          p_cliente_nome?: string | null
+          p_desconto?: number
+          p_frete?: number
+          p_taxa_canal?: number
+          p_recebida?: boolean
+          p_observacao?: string | null
+        }
+        Returns: string
       }
     }
     Enums: {

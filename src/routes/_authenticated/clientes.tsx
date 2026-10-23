@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { AlertTriangle, Pencil, Trash2, Users } from "lucide-react";
+import { AlertTriangle, FileText, Pencil, Trash2, Users } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -19,6 +19,7 @@ import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
+import { ModalOrcamento } from "@/components/orcamentos/ModalOrcamento";
 import {
   emNegociacao,
   GRUPOS_STATUS,
@@ -273,6 +274,7 @@ function LinhaCliente({
   const [salvandoStatus, setSalvandoStatus] = useState(false);
   const [confirmarExcluir, setConfirmarExcluir] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
+  const [orcamentoAberto, setOrcamentoAberto] = useState(false);
 
   // QA-31 (07/10/2026): excluir a cliente apaga só a linha de `clientes`. O
   // lançamento que registrar_venda_cliente criou em `lancamentos` não tem FK pra
@@ -457,6 +459,7 @@ function LinhaCliente({
         <MenuOpcoes
           ariaLabel={`Opções da cliente ${cliente.nome}`}
           itens={[
+            { label: "Fazer orçamento", icone: FileText, onClick: () => setOrcamentoAberto(true) },
             { label: "Editar", icone: Pencil, onClick: onEditar },
             {
               label: "Excluir",
@@ -522,6 +525,19 @@ function LinhaCliente({
             setVendaAberta(false);
             onRegistrado();
           }}
+        />
+      )}
+      {orcamentoAberto && (
+        <ModalOrcamento
+          userId={userId}
+          prefill={{
+            clienteId: cliente.id,
+            clienteNome: cliente.nome,
+            clienteContato: cliente.contato,
+            clienteStatus: cliente.status_pedido,
+          }}
+          onClose={() => setOrcamentoAberto(false)}
+          onCriado={onRegistrado}
         />
       )}
     </div>

@@ -44,7 +44,7 @@ const ERRO_TEXTO: Record<ErroVenda, string> = {
   desconto_maior_que_venda: "O desconto ficou maior que o valor dos itens.",
 };
 
-interface LinhaItem {
+export interface LinhaItem {
   chave: number;
   produtoId: string;
   skuId: string;
@@ -59,6 +59,14 @@ export interface PrefillVenda {
   valor?: number | null;
   /** Vindo de Clientes: a RPC marca a venda como registrada na cliente. */
   marcarCliente?: boolean;
+  /**
+   * Vindo de um orçamento (ONE-129): os itens dele, e a venda grava pela
+   * converter_orcamento, que marca o orçamento na mesma transação.
+   */
+  itens?: { produtoId: string; skuId: string | null; quantidade: number; preco: number }[];
+  orcamentoId?: string;
+  desconto?: number;
+  frete?: number;
 }
 
 /** Variações com nome; produto sem nenhuma vende pela variação padrão. */
@@ -102,18 +110,28 @@ export function ModalRegistrarVenda({
   const [data, setData] = useState(hojeISO());
   const [canal, setCanal] = useState<CanalVenda>("instagram");
   const [clienteNome, setClienteNome] = useState(prefill?.clienteNome ?? "");
-  const [proximaChave, setProximaChave] = useState(2);
-  const [itens, setItens] = useState<LinhaItem[]>(() => [
-    {
-      chave: 1,
-      produtoId: prefill?.produtoId ?? "",
-      skuId: "",
-      quantidade: "1",
-      preco: prefill?.valor != null && prefill.valor > 0 ? String(prefill.valor) : "",
-    },
-  ]);
-  const [desconto, setDesconto] = useState("");
-  const [frete, setFrete] = useState("");
+  const [proximaChave, setProximaChave] = useState(() => (prefill?.itens?.length ?? 1) + 1);
+  const [itens, setItens] = useState<LinhaItem[]>(() =>
+    prefill?.itens?.length
+      ? prefill.itens.map((i, idx) => ({
+          chave: idx + 1,
+          produtoId: i.produtoId,
+          skuId: i.skuId ?? "",
+          quantidade: String(i.quantidade),
+          preco: String(i.preco),
+        }))
+      : [
+          {
+            chave: 1,
+            produtoId: prefill?.produtoId ?? "",
+            skuId: "",
+            quantidade: "1",
+            preco: prefill?.valor != null && prefill.valor > 0 ? String(prefill.valor) : "",
+          },
+        ],
+  );
+  const [desconto, setDesconto] = useState(prefill?.desconto ? String(prefill.desconto) : "");
+  const [frete, setFrete] = useState(prefill?.frete ? String(prefill.frete) : "");
   const [taxa, setTaxa] = useState("");
   // Taxa preenchida pela forma de recebimento (ONE-128) até ela digitar uma.
   const [forma, setForma] = useState<FormaRecebimento | "">("");
@@ -265,6 +283,7 @@ export function ModalRegistrarVenda({
       recebida,
       observacao: observacao.trim() || null,
       marcarCliente: prefill?.marcarCliente,
+      orcamentoId: prefill?.orcamentoId,
     });
     setSalvando(false);
     if (error) {
@@ -274,14 +293,16 @@ export function ModalRegistrarVenda({
           ? "Essa venda já foi registrada pra essa cliente. Atualize a página."
           : error.message?.startsWith("Escolha a variação")
             ? `${error.message}. Confira o estoque dele em Produtos.`
-            : "A Pólia One não conseguiu registrar a venda. Tenta de novo: se ela já tiver entrado, não duplica.",
+            : error.message?.includes("Orçamento encerrado")
+              ? "Esse orçamento foi cancelado. Atualize a página."
+              : "A Pólia One não conseguiu registrar a venda. Tenta de novo: se ela já tiver entrado, não duplica.",
       );
       return;
     }
     track("venda_registrada", {
       canal,
       itens: itensValidos.length,
-      origem: prefill?.marcarCliente ? "clientes" : "vendas",
+      origem: prefill?.orcamentoId ? "orcamento" : prefill?.marcarCliente ? "clientes" : "vendas",
     });
     void registrar("feature_completed", {
       feature: "vendas",
@@ -558,7 +579,7 @@ export function ModalRegistrarVenda({
   );
 }
 
-function ItemDaVenda({
+export function ItemDaVenda({
   indice,
   linha,
   produtos,

@@ -31,6 +31,8 @@ import {
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalVenda } from "@/components/vendas/ModalVenda";
 import { MaisVendidos } from "@/components/vendas/MaisVendidos";
+import { ListaOrcamentos } from "@/components/orcamentos/ListaOrcamentos";
+import { chaveOrcamentos, useOrcamentos } from "@/components/orcamentos/dados";
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   head: () => ({
@@ -42,6 +44,9 @@ export const Route = createFileRoute("/_authenticated/vendas")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { aba?: "orcamentos" } => ({
+    aba: search.aba === "orcamentos" ? "orcamentos" : undefined,
+  }),
   component: VendasPage,
 });
 
@@ -51,20 +56,26 @@ const PERIODOS: { id: PeriodoVendas; label: string }[] = [
   { id: "90dias", label: "Últimos 90 dias" },
 ];
 
-type Aba = "pedidos" | "ranking";
+type Aba = "pedidos" | "ranking" | "orcamentos";
 
 function VendasPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
+  const search = Route.useSearch();
 
-  const [aba, setAba] = useState<Aba>("pedidos");
+  // ?aba=orcamentos vem do e-mail de orçamento aprovado (ONE-129).
+  const [aba, setAba] = useState<Aba>(search.aba ?? "pedidos");
   const [periodo, setPeriodo] = useState<PeriodoVendas>("mes");
   const [canal, setCanal] = useState<CanalVenda | "todos">("todos");
   const [busca, setBusca] = useState("");
   const [registrarAberto, setRegistrarAberto] = useState(false);
   const [vendaAberta, setVendaAberta] = useState<VendaLinha | null>(null);
   const [taxasAbertas, setTaxasAbertas] = useState(false);
+  const [novoOrcamento, setNovoOrcamento] = useState(false);
+  // Aprovados pela cliente aparecem no rótulo da aba: é o que pede ação.
+  const orcamentosQuery = useOrcamentos(userId);
+  const aprovados = (orcamentosQuery.data ?? []).filter((o) => o.status === "aprovado").length;
 
   const { de, ate } = useMemo(() => intervaloDoPeriodo(periodo, new Date()), [periodo]);
   const vendasQuery = useVendas(userId, de, ate);
@@ -106,13 +117,21 @@ function VendasPage() {
     // O lançamento da venda entra no Financeiro e no Painel.
     void qc.invalidateQueries({ queryKey: ["financeiro", userId] });
     void qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
+    // Venda cancelada reabre o orçamento que virou ela (gatilho no banco).
+    void qc.invalidateQueries({ queryKey: chaveOrcamentos(userId) });
   };
 
   const acao = (
     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={() => setRegistrarAberto(true)} className={BTN_ACAO}>
-        + Registrar venda
-      </button>
+      {aba === "orcamentos" ? (
+        <button type="button" onClick={() => setNovoOrcamento(true)} className={BTN_ACAO}>
+          + Novo orçamento
+        </button>
+      ) : (
+        <button type="button" onClick={() => setRegistrarAberto(true)} className={BTN_ACAO}>
+          + Registrar venda
+        </button>
+      )}
       <button type="button" onClick={() => setTaxasAbertas(true)} className={BTN_ACAO_CONTORNO}>
         Taxas de recebimento
       </button>
@@ -147,6 +166,13 @@ function VendasPage() {
             [
               { id: "pedidos", label: "Todas as vendas" },
               { id: "ranking", label: "Mais vendidos" },
+              {
+                id: "orcamentos",
+                label:
+                  aprovados > 0
+                    ? `Orçamentos · ${aprovados} ${aprovados === 1 ? "aprovado" : "aprovados"}`
+                    : "Orçamentos",
+              },
             ] as { id: Aba; label: string }[]
           ).map((a) => (
             <button
@@ -160,7 +186,11 @@ function VendasPage() {
             </button>
           ))}
         </div>
-        <div role="group" aria-label="Período" className="flex flex-wrap gap-2 sm:ml-auto">
+        <div
+          role="group"
+          aria-label="Período"
+          className={`flex flex-wrap gap-2 sm:ml-auto ${aba === "orcamentos" ? "hidden" : ""}`}
+        >
           {PERIODOS.map((p) => (
             <button
               key={p.id}
@@ -175,106 +205,128 @@ function VendasPage() {
         </div>
       </div>
 
-      {/* Resumo do período (respeita o filtro de canal) */}
-      <dl className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Numero rotulo="Vendas" valor={vendasQuery.isLoading ? "…" : String(resumo.quantidade)} />
-        <Numero
-          rotulo="Entrou"
-          valor={vendasQuery.isLoading ? "…" : fmt(resumo.entrou)}
-          nota={resumo.aReceber > 0 ? `${fmt(resumo.aReceber)} a receber` : undefined}
-        />
-        <Numero
-          rotulo="A marca lucrou"
-          valor={vendasQuery.isLoading ? "…" : fmt(resumo.lucrou)}
-          nota={
-            resumo.semCusto > 0
-              ? `${resumo.semCusto} ${resumo.semCusto === 1 ? "venda sem custo cadastrado ficou" : "vendas sem custo cadastrado ficaram"} fora da conta`
-              : undefined
-          }
-        />
-        <div className="rounded-xl bg-[var(--surface)] p-4">
-          <dt className="text-[13px] text-[var(--muted)]">Estoque baixo</dt>
-          <dd className="font-cabinet mt-1 text-[24px] text-[var(--ink)]">
-            {estoqueQuery.isLoading
-              ? "…"
-              : estoqueQuery.isError
-                ? "não carregou"
-                : !estoqueLigado
-                  ? "desligado"
-                  : `${estoqueBaixo} ${estoqueBaixo === 1 ? "item" : "itens"}`}
-          </dd>
-          {!estoqueQuery.isLoading &&
-            !estoqueQuery.isError &&
-            (!estoqueLigado || estoqueBaixo > 0) && (
-              <Link
-                to="/produtos"
-                search={{ aba: "estoque" }}
-                className="mt-1 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
-              >
-                {estoqueLigado ? "Ver estoque" : "Ligar estoque"}
-              </Link>
-            )}
-        </div>
-      </dl>
-
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <label className="sr-only" htmlFor="vendas-canal">
-          Canal
-        </label>
-        <select
-          id="vendas-canal"
-          value={canal}
-          onChange={(e) => setCanal(e.target.value as CanalVenda | "todos")}
-          className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-3 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-        >
-          <option value="todos">Todos os canais</option>
-          {CANAIS_VENDA.filter((c) => canaisUsados.has(c) || c === canal).map((c) => (
-            <option key={c} value={c}>
-              {CANAL_LABEL[c]}
-            </option>
-          ))}
-        </select>
-        {aba === "pedidos" && (
-          <>
-            <label className="sr-only" htmlFor="vendas-busca">
-              Buscar cliente ou produto
-            </label>
-            <input
-              id="vendas-busca"
-              type="search"
-              value={busca}
-              onChange={(e) => setBusca(e.target.value)}
-              placeholder="Buscar cliente ou produto"
-              className="min-h-11 flex-1 rounded-lg border border-[var(--line)] bg-white px-3 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+      {aba === "orcamentos" ? (
+        userId && (
+          <div className="mt-6">
+            <ListaOrcamentos
+              userId={userId}
+              novoAberto={novoOrcamento}
+              onNovoAbertoChange={setNovoOrcamento}
+              onVendaRegistrada={recarregar}
             />
-          </>
-        )}
-      </div>
+          </div>
+        )
+      ) : (
+        <>
+          {/* Resumo do período (respeita o filtro de canal) */}
+          <dl className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Numero
+              rotulo="Vendas"
+              valor={vendasQuery.isLoading ? "…" : String(resumo.quantidade)}
+            />
+            <Numero
+              rotulo="Entrou"
+              valor={vendasQuery.isLoading ? "…" : fmt(resumo.entrou)}
+              nota={resumo.aReceber > 0 ? `${fmt(resumo.aReceber)} a receber` : undefined}
+            />
+            <Numero
+              rotulo="A marca lucrou"
+              valor={vendasQuery.isLoading ? "…" : fmt(resumo.lucrou)}
+              nota={
+                resumo.semCusto > 0
+                  ? `${resumo.semCusto} ${resumo.semCusto === 1 ? "venda sem custo cadastrado ficou" : "vendas sem custo cadastrado ficaram"} fora da conta`
+                  : undefined
+              }
+            />
+            <div className="rounded-xl bg-[var(--surface)] p-4">
+              <dt className="text-[13px] text-[var(--muted)]">Estoque baixo</dt>
+              <dd className="font-cabinet mt-1 text-[24px] text-[var(--ink)]">
+                {estoqueQuery.isLoading
+                  ? "…"
+                  : estoqueQuery.isError
+                    ? "não carregou"
+                    : !estoqueLigado
+                      ? "desligado"
+                      : `${estoqueBaixo} ${estoqueBaixo === 1 ? "item" : "itens"}`}
+              </dd>
+              {!estoqueQuery.isLoading &&
+                !estoqueQuery.isError &&
+                (!estoqueLigado || estoqueBaixo > 0) && (
+                  <Link
+                    to="/produtos"
+                    search={{ aba: "estoque" }}
+                    className="mt-1 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+                  >
+                    {estoqueLigado ? "Ver estoque" : "Ligar estoque"}
+                  </Link>
+                )}
+            </div>
+          </dl>
 
-      <div className="mt-4">
-        {vendasQuery.isLoading ? (
-          <p className="text-[14px] text-[var(--muted)]">Carregando suas vendas…</p>
-        ) : aba === "ranking" ? (
-          <MaisVendidos vendas={doCanal} />
-        ) : vendas.length === 0 ? (
-          <Vazio
-            icone={ShoppingBag}
-            titulo="Nenhuma venda nesse período."
-            texto="Registre a próxima: o estoque baixa sozinho e o dinheiro entra no Financeiro."
-            acao={
-              <button type="button" onClick={() => setRegistrarAberto(true)} className={BTN_ACAO}>
-                + Registrar venda
-              </button>
-            }
-          />
-        ) : filtradas.length === 0 ? (
-          <p className="rounded-xl border border-[var(--line)] bg-white p-6 text-[14px] text-[var(--ink-soft)]">
-            Nenhuma venda com esse filtro.
-          </p>
-        ) : (
-          <ListaVendas vendas={filtradas} onAbrir={setVendaAberta} />
-        )}
-      </div>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <label className="sr-only" htmlFor="vendas-canal">
+              Canal
+            </label>
+            <select
+              id="vendas-canal"
+              value={canal}
+              onChange={(e) => setCanal(e.target.value as CanalVenda | "todos")}
+              className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-3 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            >
+              <option value="todos">Todos os canais</option>
+              {CANAIS_VENDA.filter((c) => canaisUsados.has(c) || c === canal).map((c) => (
+                <option key={c} value={c}>
+                  {CANAL_LABEL[c]}
+                </option>
+              ))}
+            </select>
+            {aba === "pedidos" && (
+              <>
+                <label className="sr-only" htmlFor="vendas-busca">
+                  Buscar cliente ou produto
+                </label>
+                <input
+                  id="vendas-busca"
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar cliente ou produto"
+                  className="min-h-11 flex-1 rounded-lg border border-[var(--line)] bg-white px-3 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                />
+              </>
+            )}
+          </div>
+
+          <div className="mt-4">
+            {vendasQuery.isLoading ? (
+              <p className="text-[14px] text-[var(--muted)]">Carregando suas vendas…</p>
+            ) : aba === "ranking" ? (
+              <MaisVendidos vendas={doCanal} />
+            ) : vendas.length === 0 ? (
+              <Vazio
+                icone={ShoppingBag}
+                titulo="Nenhuma venda nesse período."
+                texto="Registre a próxima: o estoque baixa sozinho e o dinheiro entra no Financeiro."
+                acao={
+                  <button
+                    type="button"
+                    onClick={() => setRegistrarAberto(true)}
+                    className={BTN_ACAO}
+                  >
+                    + Registrar venda
+                  </button>
+                }
+              />
+            ) : filtradas.length === 0 ? (
+              <p className="rounded-xl border border-[var(--line)] bg-white p-6 text-[14px] text-[var(--ink-soft)]">
+                Nenhuma venda com esse filtro.
+              </p>
+            ) : (
+              <ListaVendas vendas={filtradas} onAbrir={setVendaAberta} />
+            )}
+          </div>
+        </>
+      )}
 
       {registrarAberto && userId && (
         <ModalRegistrarVenda
