@@ -32,6 +32,7 @@ import {
   type RegistrarTipo,
 } from "@/components/financeiro/ModalLancamento";
 import { ModalImportar } from "@/components/financeiro/ModalImportar";
+import { SecaoContasPagar } from "@/components/financeiro/SecaoContasPagar";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface FinanceiroSearch {
@@ -238,6 +239,18 @@ function FinanceiroPage() {
     }
     return maior?.categoria || (maior ? "Outros" : null);
   }, [lancamentosMes]);
+
+  // Categorias de saída que ela já usa, pras contas a pagar (ONE-127).
+  const categoriasDeSaida = useMemo(
+    () => [
+      ...new Set(
+        lancamentos
+          .filter((l) => l.tipo === "saida" && l.categoria && l.categoria.trim())
+          .map((l) => l.categoria!.trim()),
+      ),
+    ],
+    [lancamentos],
+  );
 
   // Mesma regra do Painel: mês que gastou mais do que entrou mostra o negativo.
   const margemPct = percentualDe(lucro, entradas);
@@ -547,6 +560,16 @@ function FinanceiroPage() {
             + Registrar saída
           </button>
         </section>
+
+        {/* ───────── Contas a pagar (ONE-127) ───────── */}
+        {userId && (
+          <SecaoContasPagar
+            userId={userId}
+            hoje={hojeISOStr}
+            categoriasDoHistorico={categoriasDeSaida}
+            onLancamentosMudaram={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
+          />
+        )}
 
         {/* ───────── 4. Histórico ───────── */}
         <section className="mt-12">

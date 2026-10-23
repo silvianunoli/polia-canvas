@@ -1323,6 +1323,40 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_pagar: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          descricao: string
+          dia_recorrencia: number | null
+          id: string
+          lancamento_id: string | null
+          pago_em: string | null
+          proxima_id: string | null
+          recorrencia: string
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+          vencimento: string
+        }
+        Insert: {
+          categoria?: string | null
+          descricao: string
+          recorrencia?: string
+          user_id: string
+          valor: number
+          vencimento: string
+        }
+        Update: {
+          categoria?: string | null
+          descricao?: string
+          recorrencia?: string
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: []
+      }
       lancamentos: {
         Row: {
           categoria: string | null
@@ -2834,6 +2868,14 @@ export type Database = {
       }
       cancelar_venda: {
         Args: { p_venda_id: string }
+        Returns: undefined
+      }
+      pagar_conta: {
+        Args: { p_conta_id: string; p_data: string }
+        Returns: string
+      }
+      desfazer_pagamento: {
+        Args: { p_conta_id: string }
         Returns: undefined
       }
     }

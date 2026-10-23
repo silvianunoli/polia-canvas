@@ -35,6 +35,7 @@ import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
+import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
 import {
   contaCriadaDepoisDoCorte,
   contaVeBloco,
@@ -1076,6 +1077,13 @@ function PainelPage() {
               {vendasLiberado && userId && (
                 <div className={SPAN_CLASS[12]}>
                   <CartaoVendasPainel userId={userId} />
+                </div>
+              )}
+
+              {/* Contas atrasadas e da semana (ONE-127). Some sem nada no prazo. */}
+              {financeiroLiberado && userId && clientReady && (
+                <div className={SPAN_CLASS[12]}>
+                  <CartaoContasPainel userId={userId} hoje={hojeISO()} />
                 </div>
               )}
 
