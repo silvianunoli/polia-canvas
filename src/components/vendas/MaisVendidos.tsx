@@ -4,6 +4,7 @@ import { fmt } from "@/components/produtos/tipos";
 import { campeaoDivergente, maisVendidos, type OrdemRanking } from "@/lib/vendas";
 import { curvaABC, type ClasseABC } from "@/lib/desempenho";
 import type { VendaLinha } from "./dados";
+import { PorCanal } from "./PorCanal";
 
 const COR_CLASSE: Record<ClasseABC, string> = {
   A: "border-transparent bg-[var(--secondary-light)] text-[var(--ink)]",
@@ -42,6 +43,7 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
 
   return (
     <div>
+      <PorCanal vendas={vendas} />
       <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Ordenar por">
         <span className="text-[13px] text-[var(--muted)]">Ordenar por</span>
         {ORDENS.map((o) => {

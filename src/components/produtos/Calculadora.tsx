@@ -30,6 +30,7 @@ import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO } from "@/lib/botoes";
 import { fmt, num, numInvalido, type Prefill, type Produto } from "./tipos";
+import { LucroPorCanal } from "./LucroPorCanal";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
 
@@ -1079,6 +1080,18 @@ export function Calculadora({
               </p>
             )}
           </div>
+
+          {/* Lucro por canal (VND-07): mesmo preço, taxa de cada canal. Fora da
+              Encomenda travada (revelaria o preço) e sem conta válida. */}
+          {!encomendaTravada && !calc.invalido && round2(calc.precoSugerido) > 0 && (
+            <LucroPorCanal
+              userId={userId}
+              preco={round2(calc.precoSugerido)}
+              custo={custoBase}
+              impostosPct={impostosPctAtual}
+              taxaContaPct={taxaVendaPctAtual}
+            />
+          )}
 
           {/* Simulador de desconto (fora da Encomenda travada: revelaria o preço) */}
           {!encomendaTravada && (
