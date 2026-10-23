@@ -6,7 +6,10 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { toastSucesso } from "@/lib/toast";
+import { ModalTaxas } from "@/components/vendas/ModalTaxas";
+import { chaveTaxas } from "@/components/vendas/taxasDados";
 import { fmt, fmtData } from "@/components/produtos/tipos";
 import {
   CANAIS_VENDA,
@@ -61,6 +64,7 @@ function VendasPage() {
   const [busca, setBusca] = useState("");
   const [registrarAberto, setRegistrarAberto] = useState(false);
   const [vendaAberta, setVendaAberta] = useState<VendaLinha | null>(null);
+  const [taxasAbertas, setTaxasAbertas] = useState(false);
 
   const { de, ate } = useMemo(() => intervaloDoPeriodo(periodo, new Date()), [periodo]);
   const vendasQuery = useVendas(userId, de, ate);
@@ -105,9 +109,14 @@ function VendasPage() {
   };
 
   const acao = (
-    <button type="button" onClick={() => setRegistrarAberto(true)} className={BTN_ACAO}>
-      + Registrar venda
-    </button>
+    <div className="flex flex-wrap gap-2">
+      <button type="button" onClick={() => setRegistrarAberto(true)} className={BTN_ACAO}>
+        + Registrar venda
+      </button>
+      <button type="button" onClick={() => setTaxasAbertas(true)} className={BTN_ACAO_CONTORNO}>
+        Taxas de recebimento
+      </button>
+    </div>
   );
 
   const cabecalho = {
@@ -274,6 +283,19 @@ function VendasPage() {
           onSaved={() => {
             setRegistrarAberto(false);
             recarregar();
+          }}
+        />
+      )}
+      {taxasAbertas && userId && (
+        <ModalTaxas
+          userId={userId}
+          onClose={() => setTaxasAbertas(false)}
+          onSaved={() => {
+            setTaxasAbertas(false);
+            void qc.invalidateQueries({ queryKey: chaveTaxas(userId) });
+            toastSucesso(
+              "Taxas salvas. Na venda, escolha a forma de recebimento e a Pólia One preenche a taxa.",
+            );
           }}
         />
       )}

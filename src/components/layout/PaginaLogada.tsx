@@ -109,7 +109,9 @@ export function PaginaLogada({
               </p>
             )}
           </div>
-          {acao && <div className="shrink-0 pt-1">{acao}</div>}
+          {/* max-w-full: com dois botões, o flex-wrap de dentro só quebra se a
+              caixa não passar da tela (ONE-128, 375px estourava). */}
+          {acao && <div className="max-w-full shrink-0 pt-1">{acao}</div>}
         </header>
         {dica && <DicaDaTela chave={dica} className="mb-6" />}
         {children}

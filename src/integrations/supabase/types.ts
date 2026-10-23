@@ -1357,6 +1357,30 @@ export type Database = {
         }
         Relationships: []
       }
+      taxas_recebimento: {
+        Row: {
+          chave: string
+          fixo: number
+          id: string
+          percentual: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chave: string
+          fixo?: number
+          id?: string
+          percentual?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chave?: string
+          fixo?: number
+          percentual?: number
+        }
+        Relationships: []
+      }
       lancamentos: {
         Row: {
           categoria: string | null

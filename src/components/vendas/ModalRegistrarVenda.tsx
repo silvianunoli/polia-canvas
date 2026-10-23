@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,17 @@ import {
   type CanalVenda,
   type ErroVenda,
 } from "@/lib/vendas";
+import {
+  FORMAS_RECEBIMENTO,
+  ROTULO_TAXA,
+  descreverRegra,
+  decidirTaxa,
+  regraEstaVazia,
+  type FormaRecebimento,
+} from "@/lib/taxas";
 import { registrarVenda, useProdutosComEstoque, type ProdutoVendavel } from "./dados";
+import { chaveTaxas, useTaxas } from "./taxasDados";
+import { ModalTaxas } from "./ModalTaxas";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
@@ -105,6 +115,13 @@ export function ModalRegistrarVenda({
   const [desconto, setDesconto] = useState("");
   const [frete, setFrete] = useState("");
   const [taxa, setTaxa] = useState("");
+  // Taxa preenchida pela forma de recebimento (ONE-128) até ela digitar uma.
+  const [forma, setForma] = useState<FormaRecebimento | "">("");
+  const [taxaManual, setTaxaManual] = useState(false);
+  const [taxaAutomatica, setTaxaAutomatica] = useState(false);
+  const [taxasAbertas, setTaxasAbertas] = useState(false);
+  const taxasQuery = useTaxas(userId);
+  const qc = useQueryClient();
   const [recebida, setRecebida] = useState(true);
   const [observacao, setObservacao] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -162,6 +179,44 @@ export function ModalRegistrarVenda({
   );
   const total = totalDaVenda(valores);
   const lucro = lucroDaVenda(valores);
+  const regraDaForma = forma ? taxasQuery.data?.[forma] : undefined;
+  const regraDaFormaTemValor = !regraEstaVazia(regraDaForma);
+  const temAlgumaTaxa = Object.values(taxasQuery.data ?? {}).some((r) => !regraEstaVazia(r));
+
+  // Regra em lib/taxas.ts (decidirTaxa): só reescreve taxa que veio da regra.
+  useEffect(() => {
+    const valor = decidirTaxa({
+      forma,
+      regra: regraDaForma,
+      regrasCarregadas: taxasQuery.isSuccess,
+      digitadaPorEla: taxaManual,
+      taxaEraAutomatica: taxaAutomatica,
+      total,
+    });
+    if (valor == null) return;
+    setTaxa(valor > 0 ? String(valor) : "");
+    setTaxaAutomatica(valor > 0);
+  }, [forma, regraDaForma, taxasQuery.isSuccess, taxaManual, taxaAutomatica, total]);
+
+  const dicaDaTaxa = !forma ? undefined : taxasQuery.isPending ? (
+    `Buscando a taxa de ${ROTULO_TAXA[forma]}…`
+  ) : taxasQuery.isError ? (
+    "A Pólia One não conseguiu ler as taxas agora. Digite o valor desta venda."
+  ) : taxaManual && regraDaFormaTemValor ? (
+    <button
+      type="button"
+      onClick={() => setTaxaManual(false)}
+      className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+    >
+      Usar a taxa de {ROTULO_TAXA[forma]} ({descreverRegra(regraDaForma)})
+    </button>
+  ) : taxaManual ? (
+    "Valor digitado por você."
+  ) : regraDaForma === undefined ? (
+    `Sem taxa cadastrada pra ${ROTULO_TAXA[forma]}.`
+  ) : (
+    `${ROTULO_TAXA[forma]}: ${descreverRegra(regraDaForma)}.`
+  );
 
   const atualizarItem = (chave: number, mudanca: Partial<LinhaItem>) => {
     setItens((atual) =>
@@ -353,7 +408,7 @@ export function ModalRegistrarVenda({
             </button>
           </fieldset>
 
-          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Campo label="Desconto (R$)">
               <input
                 type="number"
@@ -376,18 +431,51 @@ export function ModalRegistrarVenda({
                 placeholder="0"
               />
             </Campo>
-            <Campo label="Taxa do canal ou maquininha (R$)">
+            <Campo label="Forma de recebimento" hint="opcional, preenche a taxa">
+              <select
+                value={forma}
+                onChange={(e) => {
+                  setForma(e.target.value as FormaRecebimento | "");
+                  // Taxa que ela digitou fica; o "Usar a taxa de..." troca se ela quiser.
+                  if (!taxa.trim()) setTaxaManual(false);
+                }}
+                className={INPUT}
+              >
+                <option value="">Não informar</option>
+                {FORMAS_RECEBIMENTO.map((f) => (
+                  <option key={f} value={f}>
+                    {ROTULO_TAXA[f]}
+                  </option>
+                ))}
+              </select>
+            </Campo>
+            <Campo label="Taxa da maquininha ou do link (R$)" hint={dicaDaTaxa}>
               <input
                 type="number"
                 inputMode="decimal"
                 min="0"
                 value={taxa}
-                onChange={(e) => setTaxa(e.target.value)}
+                onChange={(e) => {
+                  setTaxa(e.target.value);
+                  setTaxaManual(true);
+                  setTaxaAutomatica(false);
+                }}
                 className={INPUT}
                 placeholder="0"
               />
             </Campo>
           </div>
+          {taxasQuery.isSuccess && (
+            <button
+              type="button"
+              onClick={() => setTaxasAbertas(true)}
+              className="mt-1 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              {temAlgumaTaxa
+                ? "Ajustar as taxas de recebimento"
+                : "Cadastrar as taxas de recebimento"}
+            </button>
+          )}
 
           <label className="mt-5 flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[var(--ink)]">
             <input
@@ -450,6 +538,21 @@ export function ModalRegistrarVenda({
             </p>
           )}
         </>
+      )}
+      {taxasAbertas && (
+        <ModalTaxas
+          userId={userId}
+          onClose={() => setTaxasAbertas(false)}
+          onSaved={() => {
+            setTaxasAbertas(false);
+            void qc.invalidateQueries({ queryKey: chaveTaxas(userId) });
+            toastSucesso(
+              forma
+                ? "Taxas salvas."
+                : "Taxas salvas. Escolha a forma de recebimento e a Pólia One preenche a taxa.",
+            );
+          }}
+        />
       )}
     </Modal>
   );

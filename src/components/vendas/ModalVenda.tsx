@@ -122,9 +122,7 @@ export function ModalVenda({
           {venda.desconto > 0 && <Linha rotulo="Desconto" valor={`-${fmt(venda.desconto)}`} />}
           {venda.frete > 0 && <Linha rotulo="Frete cobrado" valor={fmt(venda.frete)} />}
           <Linha rotulo="Total" valor={fmt(venda.total)} forte />
-          {venda.taxaCanal > 0 && (
-            <Linha rotulo="Taxa do canal" valor={`-${fmt(venda.taxaCanal)}`} />
-          )}
+          {venda.taxaCanal > 0 && <Linha rotulo="Taxa" valor={`-${fmt(venda.taxaCanal)}`} />}
           {venda.status !== "cancelada" && (
             <Linha
               rotulo={
