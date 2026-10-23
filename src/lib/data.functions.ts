@@ -20,6 +20,19 @@ export function diaLocalDe(isoOuDia: string): string {
   return dataISOLocal(new Date(isoOuDia));
 }
 
+/** AAAA-MM-DD somado de dias, sem fuso (data de calendário). */
+export function somarDias(iso: string, dias: number): string {
+  const [a, m, d] = iso.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10);
+}
+
+/** Dias de calendário de `de` até `ate` (AAAA-MM-DD), negativo se `ate` vem antes. */
+export function diasEntreDatas(de: string, ate: string): number {
+  const [a1, m1, d1] = de.split("-").map(Number);
+  const [a2, m2, d2] = ate.split("-").map(Number);
+  return Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86_400_000);
+}
+
 export function mesAnoDe(iso: string): { ano: number; mes: number } {
   const [ano, mes] = iso.split("-").map(Number);
   return { ano, mes };

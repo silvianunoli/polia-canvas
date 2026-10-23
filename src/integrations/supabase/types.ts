@@ -2952,6 +2952,10 @@ export type Database = {
         Args: { p_conta_id: string }
         Returns: undefined
       }
+      ultima_venda_por_produto: {
+        Args: Record<string, never>
+        Returns: { produto_id: string; ultima_venda: string }[]
+      }
       converter_orcamento: {
         Args: {
           p_orcamento_id: string

@@ -39,6 +39,8 @@ export interface ProdutoVendavel {
   precoVenda: number;
   precoCusto: number | null;
   controlaEstoque: boolean;
+  /** created_at do produto (produto recém-cadastrado não é "parado"). */
+  criadoEm: string;
   skus: SkuProduto[];
 }
 
@@ -141,7 +143,7 @@ export function useProdutosComEstoque(userId: string | undefined) {
       const [produtos, saldos] = await Promise.all([
         supabase
           .from("produtos")
-          .select("id, nome, tipo, preco_venda, preco_custo, controla_estoque")
+          .select("id, nome, tipo, preco_venda, preco_custo, controla_estoque, created_at")
           .eq("user_id", userId!)
           .eq("arquivado", false)
           .order("nome", { ascending: true }),
@@ -174,11 +176,29 @@ export function useProdutosComEstoque(userId: string | undefined) {
         precoVenda: n(p.preco_venda),
         precoCusto: nOuNull(p.preco_custo),
         controlaEstoque: !!p.controla_estoque,
+        criadoEm: p.created_at,
         // Padrão (sem nome) primeiro, depois as variações em ordem alfabética.
         skus: (porProduto.get(p.id) ?? []).sort((a, b) =>
           (a.variacao ?? "").localeCompare(b.variacao ?? "", "pt-BR"),
         ),
       }));
+    },
+  });
+}
+
+/**
+ * Data da última venda de cada produto (ONE-130), uma linha por produto.
+ * Agregado no banco: ler as vendas inteiras pra achar o max(data) batia no
+ * teto de 1.000 linhas do PostgREST.
+ */
+export function useUltimaVendaPorProduto(userId: string | undefined) {
+  return useQuery({
+    queryKey: [...chaveVendas(userId), "ultima-por-produto"],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ultima_venda_por_produto");
+      if (error) throw error;
+      return new Map((data ?? []).map((r) => [r.produto_id, r.ultima_venda] as const));
     },
   });
 }

@@ -31,6 +31,7 @@ import {
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalVenda } from "@/components/vendas/ModalVenda";
 import { MaisVendidos } from "@/components/vendas/MaisVendidos";
+import { ProdutosParados } from "@/components/vendas/ProdutosParados";
 import { ListaOrcamentos } from "@/components/orcamentos/ListaOrcamentos";
 import { chaveOrcamentos, useOrcamentos } from "@/components/orcamentos/dados";
 
@@ -301,7 +302,10 @@ function VendasPage() {
             {vendasQuery.isLoading ? (
               <p className="text-[14px] text-[var(--muted)]">Carregando suas vendas…</p>
             ) : aba === "ranking" ? (
-              <MaisVendidos vendas={doCanal} />
+              <>
+                <MaisVendidos vendas={doCanal} />
+                {userId && <ProdutosParados userId={userId} />}
+              </>
             ) : vendas.length === 0 ? (
               <Vazio
                 icone={ShoppingBag}

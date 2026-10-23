@@ -2,7 +2,16 @@ import { useMemo, useState } from "react";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { fmt } from "@/components/produtos/tipos";
 import { campeaoDivergente, maisVendidos, type OrdemRanking } from "@/lib/vendas";
+import { curvaABC, type ClasseABC } from "@/lib/desempenho";
 import type { VendaLinha } from "./dados";
+
+const COR_CLASSE: Record<ClasseABC, string> = {
+  A: "border-transparent bg-[var(--secondary-light)] text-[var(--ink)]",
+  B: "border-transparent bg-[var(--surface)] text-[var(--ink-soft)]",
+  C: "border-[var(--line)] bg-white text-[var(--muted)]",
+};
+
+const pct = (v: number) => `${Math.round(v * 100)}%`;
 
 const ORDENS: { id: OrdemRanking; label: string }[] = [
   { id: "unidades", label: "Unidades" },
@@ -15,6 +24,13 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
   const [ordem, setOrdem] = useState<OrdemRanking>("unidades");
   const linhas = useMemo(() => maisVendidos(vendas, ordem), [vendas, ordem]);
   const divergente = useMemo(() => campeaoDivergente(linhas), [linhas]);
+  // Curva ABC (ONE-130): quais produtos sustentam o período.
+  const curva = useMemo(() => curvaABC(linhas), [linhas]);
+  const doQue = curva.base === "lucrou" ? "do lucro" : "do que a marca vendeu";
+  const nomesSemCusto =
+    curva.semCusto.length <= 2
+      ? curva.semCusto.join(" e ")
+      : `${curva.semCusto.slice(0, 2).join(", ")} e mais ${curva.semCusto.length - 2}`;
 
   if (linhas.length === 0) {
     return (
@@ -54,6 +70,20 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
         </p>
       )}
 
+      {curva.resumo.A.produtos > 0 && linhas.length > 1 && (
+        <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
+          {curva.resumo.A.produtos === 1
+            ? `1 produto (curva A) faz ${pct(curva.resumo.A.parte)} ${doQue} do período`
+            : `${curva.resumo.A.produtos} produtos (curva A) fazem ${pct(curva.resumo.A.parte)} ${doQue} do período`}
+          {curva.resumo.C.produtos > 0
+            ? `; ${curva.resumo.C.produtos} ${curva.resumo.C.produtos === 1 ? "fica" : "ficam"} na curva C, com ${pct(curva.resumo.C.parte)}.`
+            : "."}
+          {curva.base === "entrou" &&
+            curva.semCusto.length > 0 &&
+            ` Falta custo em ${nomesSemCusto}, então a curva usa o que a marca vendeu. Com o custo cadastrado, ela passa a usar o lucro.`}
+        </p>
+      )}
+
       <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-white">
         <table className="w-full text-left text-[13px] sm:text-[14px]">
           <caption className="sr-only">Produtos mais vendidos no período</caption>
@@ -74,6 +104,10 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
               <th scope="col" className="px-3 py-3 sm:px-4 text-right">
                 Lucrou
               </th>
+              {/* No celular a curva vai como selo ao lado do nome: a sexta coluna estourava 375px. */}
+              <th scope="col" className="hidden px-3 py-3 sm:px-4 text-center sm:table-cell">
+                Curva
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -82,7 +116,17 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
                 <td className="hidden px-3 py-3 sm:px-4 text-[var(--muted)] sm:table-cell">
                   {idx + 1}
                 </td>
-                <td className="px-3 py-3 sm:px-4 text-[var(--ink)]">{l.produtoNome}</td>
+                <td className="px-3 py-3 sm:px-4 text-[var(--ink)]">
+                  {l.produtoNome}
+                  {curva.classes.get(l.chave) && (
+                    <span
+                      aria-label={`curva ${curva.classes.get(l.chave)}`}
+                      className={`ml-2 inline-block rounded-md border px-1.5 py-0.5 text-[11px] font-semibold sm:hidden ${COR_CLASSE[curva.classes.get(l.chave)!]}`}
+                    >
+                      {curva.classes.get(l.chave)}
+                    </span>
+                  )}
+                </td>
                 <td className="px-3 py-3 sm:px-4 text-right tabular-nums">{l.unidades}</td>
                 <td className="px-3 py-3 sm:px-4 text-right tabular-nums">{fmt(l.entrou)}</td>
                 <td
@@ -96,6 +140,15 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
                     fmt(l.lucrou)
                   )}
                 </td>
+                <td className="hidden px-3 py-3 sm:px-4 text-center sm:table-cell">
+                  {curva.classes.get(l.chave) && (
+                    <span
+                      className={`inline-block rounded-md border px-2 py-0.5 text-[11px] font-semibold ${COR_CLASSE[curva.classes.get(l.chave)!]}`}
+                    >
+                      {curva.classes.get(l.chave)}
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -103,7 +156,8 @@ export function MaisVendidos({ vendas }: { vendas: VendaLinha[] }) {
       </div>
       <p className="mt-2 text-[12px] text-[var(--muted)]">
         Desconto e taxa de cada venda são divididos entre os itens pelo valor de cada um. Vendas
-        canceladas não entram.
+        canceladas não entram. Curva A: os produtos que, somados, chegam a 80% {doQue}; B: os
+        seguintes, até 95%; C: o resto, incluindo quem deu prejuízo.
       </p>
     </div>
   );

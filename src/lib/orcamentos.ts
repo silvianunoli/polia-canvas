@@ -68,11 +68,8 @@ export function podeVirarVenda(o: Pick<Orcamento, "status">): boolean {
   return o.status === "enviado" || o.status === "aprovado";
 }
 
-/** AAAA-MM-DD somado de dias, sem fuso (data de calendário). */
-export function somarDias(iso: string, dias: number): string {
-  const [a, m, d] = iso.split("-").map(Number);
-  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10);
-}
+// Mora em data.functions desde o ONE-130; fica exportada daqui pra quem já usa.
+export { somarDias } from "./data.functions";
 
 export const VALIDADE_PADRAO_DIAS = 7;
 
