@@ -5,6 +5,7 @@ import {
   Copy,
   FileText,
   Gauge,
+  MessageSquareQuote,
   NotebookPen,
   PackageCheck,
   Percent,
@@ -85,46 +86,72 @@ const jeitoDeHoje: ItemLista[] = [
   },
 ];
 
-const oQueMuda: ItemLista[] = [
+/**
+ * Agrupado pela tríade do "Como funciona" (23/10/2026): a marca, o preço, o mês.
+ * As mesmas três palavras aparecem no subtítulo do topo e nos passos 01 a 03.
+ */
+const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
   {
-    icone: Calculator,
-    titulo: "Orçamento sem chute.",
-    texto:
-      "A Calculadora sugere o preço a partir do custo real, das taxas e do lucro que a marca precisa. Funciona pra produto e pra serviço cobrado por hora.",
-    planos: ["Grátis"],
+    grupo: "A marca",
+    itens: [
+      {
+        icone: MessageSquareQuote,
+        titulo: "A resposta pro “tá caro”.",
+        texto:
+          "O Planejamento pergunta por que a marca existe, pra quem ela é e o que entrega. No Premium, as respostas viram os documentos de Marca e Mercado.",
+        planos: ["Grátis", "Premium"],
+      },
+    ],
   },
   {
-    icone: Percent,
-    titulo: "Desconto com a conta feita.",
-    texto: "Antes de ceder, a Pólia One mostra quanto aquele desconto tira do seu lucro.",
-    planos: ["Grátis"],
+    grupo: "O preço",
+    itens: [
+      {
+        icone: Calculator,
+        titulo: "Orçamento sem chute.",
+        texto:
+          "A Calculadora sugere o preço a partir do custo real, das taxas e do lucro que a marca precisa. Funciona pra produto e pra serviço cobrado por hora.",
+        planos: ["Grátis"],
+      },
+      {
+        icone: Percent,
+        titulo: "Desconto com a conta feita.",
+        texto: "Antes de ceder, a Pólia One mostra quanto aquele desconto tira do seu lucro.",
+        planos: ["Grátis"],
+      },
+    ],
   },
   {
-    icone: Gauge,
-    titulo: "O mês em três números.",
-    texto:
-      "O mínimo pra fechar as contas, o mês bom e o mês de celebrar. O Financeiro mostra em qual deles você está.",
-    planos: ["Premium"],
-  },
-  {
-    icone: PackageCheck,
-    titulo: "Pedido por pedido.",
-    texto:
-      "Cada cliente com o status da encomenda, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
-    planos: ["Premium"],
-  },
-  {
-    icone: Wallet,
-    titulo: "O seu salário entra na conta.",
-    texto:
-      "A meta começa por quanto você quer receber. A Projeção mostra quantas vendas faltam pra empatar, pra se pagar e pra bater a meta.",
-    planos: ["Pro"],
-  },
-  {
-    icone: FileText,
-    titulo: "Contador sem caça ao papel.",
-    texto: "O resumo do mês sai em PDF e CSV, pronto pra mandar.",
-    planos: ["Pro"],
+    grupo: "O mês",
+    itens: [
+      {
+        icone: Gauge,
+        titulo: "O mês em três números.",
+        texto:
+          "O mínimo pra fechar as contas, o mês bom e o mês de celebrar. O Financeiro mostra em qual deles você está.",
+        planos: ["Premium"],
+      },
+      {
+        icone: PackageCheck,
+        titulo: "Pedido por pedido.",
+        texto:
+          "Cada cliente com o status da encomenda, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
+        planos: ["Premium"],
+      },
+      {
+        icone: Wallet,
+        titulo: "O seu salário entra na conta.",
+        texto:
+          "A meta começa por quanto você quer receber. A Projeção mostra quantas vendas faltam pra empatar, pra se pagar e pra bater a meta.",
+        planos: ["Pro"],
+      },
+      {
+        icone: FileText,
+        titulo: "Contador sem caça ao papel.",
+        texto: "O resumo do mês sai em PDF e CSV, pronto pra mandar.",
+        planos: ["Pro"],
+      },
+    ],
   },
 ];
 
@@ -316,6 +343,11 @@ export function PaginaMarcaB({
               nicho ? `Pólia One · ${nicho.rotulo}` : "Pólia One · para quem toca a própria marca"
             }
             titulo={nicho ? nicho.titulo : "Sua marca já vale mais do que você está cobrando."}
+            subtitulo={
+              nicho
+                ? nicho.subtitulo
+                : "A Pólia One liga a sua marca, o custo de cada produto e a meta do mês. Na hora do orçamento, o preço sai dessa conta."
+            }
           />
         ) : (
           <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
@@ -424,9 +456,6 @@ export function PaginaMarcaB({
             saiu, <b className="font-semibold text-[var(--ink)]">se misturou com a conta de casa</b>{" "}
             e ninguém sabe dizer quanto foi lucro.
           </p>
-          <FraseAncora className="mt-8">
-            Travar no orçamento não é falta de coragem. É falta do número.
-          </FraseAncora>
         </Secao>
 
         {/* B4 · O JEITO DE HOJE */}
@@ -438,10 +467,6 @@ export function PaginaMarcaB({
           <div className="mt-10 max-w-[820px]">
             <ListaEditorial itens={jeitoDeHoje} />
           </div>
-          <FraseAncora className="mt-8">
-            A Pólia One foi feita pra hora da decisão: o preço sai da sua marca e da sua conta, as
-            duas ligadas.
-          </FraseAncora>
         </Secao>
 
         {/* B5 · O MECANISMO */}
@@ -553,7 +578,16 @@ export function PaginaMarcaB({
             Cada decisão de dinheiro com um número do lado.
           </h2>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_5fr]">
-            <ListaEditorial itens={oQueMuda} />
+            <div className="flex flex-col gap-10">
+              {oQueMuda.map(({ grupo, itens }) => (
+                <div key={grupo}>
+                  <h3 className="mb-2 text-[20px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)]">
+                    {grupo}
+                  </h3>
+                  <ListaEditorial itens={itens} />
+                </div>
+              ))}
+            </div>
             <div className="md:sticky md:top-[112px]">
               <MockTresNumeros />
               <p className="mt-3 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
@@ -590,9 +624,6 @@ export function PaginaMarcaB({
                 A Pólia One é a ferramenta que eu queria ter aberto toda vez que um orçamento
                 chegava. Eu construo a Pólia usando a Pólia.
               </p>
-              <FraseAncora className="mt-8">
-                Amiga, não guru: aqui ninguém vende fórmula.
-              </FraseAncora>
               {linkSobre && (
                 <Link
                   to="/sobre"
@@ -639,9 +670,6 @@ export function PaginaMarcaB({
             <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
             <ParaQuem sim={praQuemSim} nao={praQuemNao} />
           </div>
-          <FraseAncora className="mt-10">
-            A Pólia One não decide por você. Ela mostra a conta pra decisão ser sua.
-          </FraseAncora>
         </Secao>
 
         {/* B11 · PLANOS */}

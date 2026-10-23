@@ -3,6 +3,7 @@ import { Play, VolumeX } from "lucide-react";
 import { track } from "@/lib/analytics";
 import {
   BotaoCadastro,
+  CORPO,
   Rotulo,
   Secao,
   type BuscaCadastro,
@@ -138,20 +139,23 @@ export function PlayerVsl({
 
 /**
  * Topo das landings de cadastro com o VSL (15/10/2026, pedidos da Sil): centralizado,
- * só o título e, logo embaixo, o vídeo grande; sem texto de apoio. O botão vem colado
- * no vídeo porque a narração termina com "toca no botão aqui embaixo". Título e botão
- * chegam no HTML do servidor.
+ * o título e, logo embaixo, o vídeo grande. O botão vem colado no vídeo porque a
+ * narração termina com "toca no botão aqui embaixo". Título, subtítulo e botão chegam
+ * no HTML do servidor. `subtitulo` (23/10/2026) é uma linha que diz o que a Pólia One
+ * faz antes do play; sem ele o topo fica como era.
  */
 export function HeroComVideo({
   busca,
   rotulo,
   titulo,
+  subtitulo,
   micro = "Sem cartão no Grátis.",
   botaoRef,
 }: {
   busca: BuscaCadastro;
   rotulo: string;
   titulo: ReactNode;
+  subtitulo?: ReactNode;
   micro?: string;
   botaoRef?: RefObject<HTMLAnchorElement | null>;
 }) {
@@ -164,6 +168,7 @@ export function HeroComVideo({
       <h1 className="mx-auto mt-4 max-w-[24ch] text-center text-[clamp(28px,3.2vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
         {titulo}
       </h1>
+      {subtitulo && <p className={`mx-auto mt-5 text-center ${CORPO}`}>{subtitulo}</p>}
       <PlayerVsl busca={busca} className="mx-auto mt-10 max-w-[1040px]" />
       <div className="mt-8 flex flex-col items-center text-center">
         <BotaoCadastro busca={busca} contexto="hero" botaoRef={botaoRef} />
