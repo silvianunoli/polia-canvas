@@ -10,6 +10,8 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type { CanalVenda, ItemVenda, StatusVenda, Venda } from "@/lib/vendas";
+import type { ComprasDoCliente } from "@/lib/recorrencia";
+import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 
 export interface VendaLinha extends Venda {
   id: string;
@@ -196,9 +198,36 @@ export function useUltimaVendaPorProduto(userId: string | undefined) {
     queryKey: [...chaveVendas(userId), "ultima-por-produto"],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("ultima_venda_por_produto");
-      if (error) throw error;
-      return new Map((data ?? []).map((r) => [r.produto_id, r.ultima_venda] as const));
+      // Uma linha por produto, mas o teto de 1.000 por chamada vale aqui também.
+      const linhas = await lerTodasAsPaginas((de, ate) =>
+        supabase.rpc("ultima_venda_por_produto").order("produto_id").range(de, ate),
+      );
+      return new Map(linhas.map((r) => [r.produto_id, r.ultima_venda] as const));
+    },
+  });
+}
+
+/**
+ * Resumo de compras por cliente com ficha (ONE-131): nome, primeira e última
+ * compra, quantas e quanto. Agregado no banco (compras_por_cliente) e lido
+ * página por página: o PostgREST corta em 1.000 linhas sem avisar.
+ */
+export function useComprasPorCliente(userId: string | undefined) {
+  return useQuery({
+    queryKey: [...chaveVendas(userId), "compras-por-cliente"],
+    enabled: !!userId,
+    queryFn: async (): Promise<ComprasDoCliente[]> => {
+      const linhas = await lerTodasAsPaginas((de, ate) =>
+        supabase.rpc("compras_por_cliente").order("cliente_id").range(de, ate),
+      );
+      return linhas.map((r) => ({
+        clienteId: r.cliente_id,
+        nome: r.nome,
+        primeiraCompra: r.primeira_compra,
+        ultimaCompra: r.ultima_compra,
+        compras: Number(r.compras),
+        total: Number(r.total),
+      }));
     },
   });
 }

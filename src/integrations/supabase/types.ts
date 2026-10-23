@@ -2952,6 +2952,17 @@ export type Database = {
         Args: { p_conta_id: string }
         Returns: undefined
       }
+      compras_por_cliente: {
+        Args: Record<string, never>
+        Returns: {
+          cliente_id: string
+          nome: string
+          primeira_compra: string
+          ultima_compra: string
+          compras: number
+          total: number
+        }[]
+      }
       ultima_venda_por_produto: {
         Args: Record<string, never>
         Returns: { produto_id: string; ultima_venda: string }[]

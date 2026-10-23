@@ -32,6 +32,7 @@ import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalVenda } from "@/components/vendas/ModalVenda";
 import { MaisVendidos } from "@/components/vendas/MaisVendidos";
 import { ProdutosParados } from "@/components/vendas/ProdutosParados";
+import { QuemCompra } from "@/components/vendas/QuemCompra";
 import { ListaOrcamentos } from "@/components/orcamentos/ListaOrcamentos";
 import { chaveOrcamentos, useOrcamentos } from "@/components/orcamentos/dados";
 
@@ -57,7 +58,7 @@ const PERIODOS: { id: PeriodoVendas; label: string }[] = [
   { id: "90dias", label: "Últimos 90 dias" },
 ];
 
-type Aba = "pedidos" | "ranking" | "orcamentos";
+type Aba = "pedidos" | "ranking" | "clientes" | "orcamentos";
 
 function VendasPage() {
   const { user } = useSupabaseSession();
@@ -167,6 +168,7 @@ function VendasPage() {
             [
               { id: "pedidos", label: "Todas as vendas" },
               { id: "ranking", label: "Mais vendidos" },
+              { id: "clientes", label: "Quem compra" },
               {
                 id: "orcamentos",
                 label:
@@ -306,6 +308,15 @@ function VendasPage() {
                 <MaisVendidos vendas={doCanal} />
                 {userId && <ProdutosParados userId={userId} />}
               </>
+            ) : aba === "clientes" ? (
+              userId && (
+                <QuemCompra
+                  userId={userId}
+                  vendas={doCanal}
+                  inicioDoPeriodo={de}
+                  canalFiltrado={canal !== "todos"}
+                />
+              )
             ) : vendas.length === 0 ? (
               <Vazio
                 icone={ShoppingBag}
