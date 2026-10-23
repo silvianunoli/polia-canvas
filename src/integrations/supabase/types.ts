@@ -1375,6 +1375,68 @@ export type Database = {
         }
         Relationships: []
       }
+      insumos: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          custo_unitario: number | null
+          estoque_minimo: number
+          id: string
+          nome: string
+          unidade: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      insumo_movimentos: {
+        Row: {
+          created_at: string
+          id: string
+          insumo_id: string
+          motivo: string | null
+          producao_id: string | null
+          quantidade: number
+          tipo: string
+          user_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      produto_insumos: {
+        Row: {
+          created_at: string
+          id: string
+          insumo_id: string
+          produto_id: string
+          quantidade: number
+          user_id: string
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      producoes: {
+        Row: {
+          created_at: string
+          data: string
+          desfeita_em: string | null
+          id: string
+          observacao: string | null
+          produto_id: string | null
+          produto_nome: string
+          quantidade: number
+          sku_id: string | null
+          user_id: string
+          variacao: string | null
+        }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
       produto_componentes: {
         Row: {
           componente_id: string
@@ -2853,6 +2915,18 @@ export type Database = {
       }
     }
     Views: {
+      insumo_saldos: {
+        Row: {
+          custo_unitario: number | null
+          estoque_minimo: number | null
+          id: string | null
+          nome: string | null
+          saldo: number | null
+          unidade: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       estoque_saldos: {
         Row: {
           estoque_minimo: number | null
@@ -3035,6 +3109,44 @@ export type Database = {
       }
       desfazer_pagamento: {
         Args: { p_conta_id: string }
+        Returns: undefined
+      }
+      salvar_insumo: {
+        Args: {
+          p_id: string | null
+          p_nome: string
+          p_unidade: string
+          p_custo?: number | null
+          p_minimo?: number
+          p_inicial?: number
+        }
+        Returns: string
+      }
+      arquivar_insumo: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      movimentar_insumo: {
+        Args: { p_insumo_id: string; p_tipo: string; p_quantidade: number; p_motivo?: string | null }
+        Returns: number
+      }
+      salvar_receita: {
+        Args: { p_produto_id: string; p_itens: Json }
+        Returns: undefined
+      }
+      registrar_producao: {
+        Args: {
+          p_id: string
+          p_produto_id: string
+          p_sku_id: string | null
+          p_quantidade: number
+          p_data: string
+          p_observacao?: string | null
+        }
+        Returns: string
+      }
+      desfazer_producao: {
+        Args: { p_id: string }
         Returns: undefined
       }
       salvar_kit: {

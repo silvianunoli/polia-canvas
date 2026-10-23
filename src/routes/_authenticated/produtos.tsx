@@ -22,10 +22,11 @@ import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { fmt, fmtData, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 import { AbaEstoque } from "@/components/produtos/AbaEstoque";
+import { AbaInsumos } from "@/components/produtos/AbaInsumos";
 import { useProdutosComEstoque, type SkuProduto } from "@/components/vendas/dados";
 import { estoqueBaixo } from "@/lib/vendas";
 
-type AbaProdutos = "catalogo" | "estoque";
+type AbaProdutos = "catalogo" | "estoque" | "insumos";
 
 interface ProdutosSearch {
   aba?: AbaProdutos;
@@ -33,7 +34,7 @@ interface ProdutosSearch {
 
 export const Route = createFileRoute("/_authenticated/produtos")({
   validateSearch: (search: Record<string, unknown>): ProdutosSearch => ({
-    aba: search.aba === "estoque" ? "estoque" : undefined,
+    aba: search.aba === "estoque" || search.aba === "insumos" ? search.aba : undefined,
   }),
   head: () => ({
     meta: [
@@ -62,7 +63,7 @@ function ProdutosPage() {
   const trocarAba = (nova: AbaProdutos) =>
     void navigate({
       to: "/produtos",
-      search: nova === "estoque" ? { aba: "estoque" } : {},
+      search: nova === "catalogo" ? {} : { aba: nova },
       replace: true,
     });
   const estoqueQuery = useProdutosComEstoque(userId);
@@ -172,11 +173,12 @@ function ProdutosPage() {
       titulo="Seus produtos."
       subtitulo="O que você vende, quanto custa e quanto lucra em cada venda."
     >
-      <div role="group" aria-label="Visão" className="mb-4 flex gap-2">
+      <div role="group" aria-label="Visão" className="mb-4 flex flex-wrap gap-2">
         {(
           [
             { id: "catalogo", label: "Catálogo" },
             { id: "estoque", label: "Estoque" },
+            { id: "insumos", label: "Insumos e produção" },
           ] as { id: AbaProdutos; label: string }[]
         ).map((a) => (
           <button
@@ -184,14 +186,16 @@ function ProdutosPage() {
             type="button"
             aria-pressed={aba === a.id}
             onClick={() => trocarAba(a.id)}
-            className={`${BTN_MIUDO} ${aba === a.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            className={`${BTN_MIUDO} min-h-11 ${aba === a.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             {a.label}
           </button>
         ))}
       </div>
 
-      {aba === "estoque" && userId ? (
+      {aba === "insumos" && userId ? (
+        <AbaInsumos userId={userId} onAbrirCatalogo={() => trocarAba("catalogo")} />
+      ) : aba === "estoque" && userId ? (
         <AbaEstoque
           userId={userId}
           onEditarProduto={(id) => {
