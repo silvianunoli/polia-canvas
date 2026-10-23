@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { linkCanonico } from "@/lib/seo";
 import { lerFbclidDaQuery, lerUtmsDaQuery } from "@/lib/origemCampanha";
-import { TIERS_PAGOS } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import {
@@ -159,13 +159,9 @@ const planos: PlanoLanding[] = [
     nome: "Grátis",
     praQuem: "Pra ter o próximo orçamento com a conta feita.",
     mensal: "R$ 0",
-    itemForte: 0,
-    itens: [
-      "Calculadora de preço, pra produto e serviço, com simulação de desconto",
-      "Até 5 produtos e 3 metas",
-      "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
-      "Assistente pra tirar dúvida, com limite por dia",
-    ],
+    // A landing-a vende a Calculadora: ela abre o card e vem em destaque.
+    itemForte: "calculadora",
+    itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
   },
   {
     nome: "Premium",
@@ -173,26 +169,16 @@ const planos: PlanoLanding[] = [
     praQuem: "Pra quem tem pedido toda semana e quer o mês sob controle.",
     mensal: precoBR(premium.precoMensal),
     anual: precoBR(premium.precoAnual),
-    itens: [
-      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
-      "Clientes com o status de cada pedido, da espera à entrega",
-      "Financeiro com os três números que decidem o mês",
-      "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Planner sem limite, e o Calendário com a agenda do Google junto",
-    ],
+    base: premium.base,
+    itens: beneficiosNaOrdem(premium.beneficios, ["catalogo", "taxas", "orcamento"]),
   },
   {
     nome: "Pro",
     praQuem: "Pra quem faz encomenda sob medida e quer saber quantas vendas faltam.",
     mensal: precoBR(pro.precoMensal),
     anual: precoBR(pro.precoAnual),
-    itens: [
-      "Calculadora de encomenda sob medida",
-      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Raio-x do mês: o que puxou o resultado e o que muda no mês seguinte",
-      "Resumo do mês pro contador, em PDF e CSV",
-      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
-    ],
+    base: pro.base,
+    itens: beneficiosNaOrdem(pro.beneficios, ["encomenda", "projecao"]),
   },
 ];
 

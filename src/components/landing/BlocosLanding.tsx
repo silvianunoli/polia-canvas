@@ -9,8 +9,10 @@ import {
 import { FOTOS_NICHOS } from "@/lib/nichosLanding";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Minus, type LucideIcon } from "lucide-react";
+import { Check, Clock, Minus, type LucideIcon } from "lucide-react";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { SeloDoBeneficio } from "@/components/planos/SeloDoBeneficio";
+import type { Beneficio } from "@/lib/planos";
 import { BTN_CONTORNO, BTN_PRIMARIO, CONTAINER, Eyebrow } from "@/components/site/Editorial";
 import { Reveal } from "@/components/site/Reveal";
 
@@ -644,9 +646,12 @@ export type PlanoLanding = {
   praQuem: string;
   mensal: string;
   anual?: string;
-  itens: string[];
-  /** Item que a página inteira prometeu, em destaque no card. */
-  itemForte?: number;
+  /** Linha de abertura ("Tudo do Grátis, mais:"), sem ícone. */
+  base?: string;
+  /** Vem de src/lib/planos.ts, a mesma lista de /planos e /assinar. */
+  itens: Beneficio[];
+  /** id do item que a página inteira prometeu, em destaque no card. */
+  itemForte?: string;
   etiqueta?: string;
 };
 
@@ -727,24 +732,37 @@ export function PlanosLanding({
               <p className="mt-4 text-[16px] font-semibold leading-[1.45] text-[var(--ink)]">
                 {p.praQuem}
               </p>
-              <ul className="mt-5 flex flex-1 list-none flex-col gap-3">
-                {p.itens.map((item, i) => (
-                  <li
-                    key={item}
-                    className={`flex items-start gap-2.5 text-[15px] leading-[1.5] ${
-                      p.itemForte === i
-                        ? "font-semibold text-[var(--ink)]"
-                        : "text-[var(--ink-soft)]"
-                    }`}
-                  >
-                    <Check
-                      aria-hidden="true"
-                      className="mt-0.5 h-4 w-4 flex-none"
-                      strokeWidth={2}
-                    />
-                    {item}
-                  </li>
-                ))}
+              {p.base && (
+                <p className="mt-5 text-[15px] font-semibold leading-[1.5] text-[var(--ink)]">
+                  {p.base}
+                </p>
+              )}
+              <ul className={`${p.base ? "mt-3" : "mt-5"} flex flex-1 list-none flex-col gap-3`}>
+                {p.itens.map((item) => {
+                  const Icone = item.emBreve ? Clock : Check;
+                  return (
+                    <li
+                      key={item.id}
+                      className={`flex items-start gap-2.5 text-[15px] leading-[1.5] ${
+                        item.emBreve
+                          ? "text-[var(--muted)]"
+                          : p.itemForte === item.id
+                            ? "font-semibold text-[var(--ink)]"
+                            : "text-[var(--ink-soft)]"
+                      }`}
+                    >
+                      <Icone
+                        aria-hidden="true"
+                        className="mt-0.5 h-4 w-4 flex-none"
+                        strokeWidth={2}
+                      />
+                      <span>
+                        {item.texto}
+                        <SeloDoBeneficio beneficio={item} />
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="mt-8">
                 {gratis && foco === "premium" ? (

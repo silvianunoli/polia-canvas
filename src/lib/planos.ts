@@ -148,18 +148,74 @@ export const MSG_LIMITE_CARTOES =
 // de ser verdade em 14/08/2026, e duplicava o teto do plano gratuito em dois
 // lugares que podiam divergir em silêncio.
 
-// O que o plano Grátis inclui. Fica aqui, ao lado dos pagos, pra /planos (público)
-// e /assinar (dentro do app) mostrarem sempre a mesma lista.
+// ── Lista de benefícios ──────────────────────────────────────────────────────
+// Fonte única da lista de cada plano (23/10/2026, pedido da Sil): /planos,
+// /assinar e as landings (home, /landing-a, /landing-b, /premium-a, /premium-b)
+// leem daqui. Antes cada landing tinha a própria cópia e todas pararam no que
+// existia em setembro, sem Vendas, Estoque, Orçamento nem Contas a pagar.
+//
+// Selo "Novo": recurso que entrou há pouco, até a data de `novoAte` (inclusive).
+// Vence sozinho pra não ficar "Novo" pra sempre.
+// Selo "Em breve": planejado e com card no Kanban, ainda não está no ar. O plano
+// de cada um segue a proposta de 23/10; o VND-01 (plano de cada parte do módulo
+// Vendas) ainda está aberto com a Sil.
+
+export type SeloBeneficio = "novo" | "em-breve";
+
+export type Beneficio = {
+  /** Estável, pra landing escolher a ordem e o item em destaque sem depender do texto. */
+  id: string;
+  texto: string;
+  emBreve?: boolean;
+  /** AAAA-MM-DD. Mostra "Novo" até esse dia. */
+  novoAte?: string;
+};
+
+// Vendas, Estoque, Orçamento, Taxas, Kit e combo, Clientes e Contas a pagar
+// entraram no ar em 23/10/2026. Trinta dias de "Novo".
+const NOVO_OUT_2026 = "2026-11-22";
+
+/** Data de hoje em Brasília, AAAA-MM-DD (o "Novo" vence à meia-noite daqui, não às 21h). */
+function hojeEmBrasilia(agora: Date): string {
+  return new Date(agora.getTime() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+export function seloDoBeneficio(b: Beneficio, agora: Date = new Date()): SeloBeneficio | null {
+  if (b.emBreve) return "em-breve";
+  if (b.novoAte && hojeEmBrasilia(agora) <= b.novoAte) return "novo";
+  return null;
+}
+
+/**
+ * A mesma lista com alguns itens na frente, pra cada landing abrir pelo que ela
+ * promete (a /landing-a vende a Calculadora, a /premium o Financeiro). Os "Em
+ * breve" ficam sempre por último, depois do que já está no ar.
+ */
+export function beneficiosNaOrdem(lista: Beneficio[], primeiros: string[] = []): Beneficio[] {
+  const frente = primeiros
+    .map((id) => lista.find((b) => b.id === id))
+    .filter((b): b is Beneficio => !!b);
+  const resto = lista.filter((b) => !primeiros.includes(b.id));
+  return [...frente, ...resto.filter((b) => !b.emBreve), ...resto.filter((b) => b.emBreve)];
+}
+
+// O que o plano Grátis inclui.
 // /marca e /mercado não estão em ROTAS_TIER, então são pagas: a lista avisa
 // (06/10/2026, decisão da Sil) em vez de prometer "Planejamento completo" e
 // mandar a usuária do Grátis pra uma tela de upgrade no fim do Módulo 1.
-export const FEATURES_GRATIS = [
-  "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
-  "Calculadora de preço",
-  "Catálogo de até 5 produtos",
-  "Até 3 metas ativas por vez",
-  "1 quadro no Planner (até 100 cartões) e 1 nota no Caderno",
-  "Assistente pra tirar dúvida, com teto diário",
+export const BENEFICIOS_GRATIS: Beneficio[] = [
+  {
+    id: "planejamento",
+    texto: "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
+  },
+  {
+    id: "calculadora",
+    texto: "Calculadora de preço, pra produto e serviço, com simulação de desconto",
+  },
+  { id: "catalogo", texto: "Catálogo de até 5 produtos" },
+  { id: "metas", texto: "Até 3 metas ativas por vez" },
+  { id: "planner", texto: "1 quadro no Planner (até 100 cartões) e 1 nota no Caderno" },
+  { id: "assistente", texto: "Assistente pra tirar dúvida, com teto diário" },
 ];
 
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
@@ -171,7 +227,9 @@ export const TIERS_PAGOS: Record<
     titulo: string;
     precoMensal: number;
     precoAnual: number;
-    features: string[];
+    /** Linha de abertura da lista, sem selo nem ícone. */
+    base: string;
+    beneficios: Beneficio[];
     destaque?: boolean;
   }
 > = {
@@ -179,13 +237,64 @@ export const TIERS_PAGOS: Record<
     titulo: "Premium",
     precoMensal: 29.9,
     precoAnual: 299,
-    features: [
-      "Tudo do Grátis, mais:",
-      "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite de produtos: cada um com o custo, o preço e quanto a marca lucra",
-      "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
-      "Clientes com o status de cada pedido, da espera à entrega",
-      "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",
+    base: "Tudo do Grátis, mais:",
+    beneficios: [
+      { id: "documentos", texto: "Documentos de Marca e Mercado, escritos a partir do Planejamento" },
+      {
+        id: "catalogo",
+        texto: "Catálogo sem limite: cada produto com o custo, o preço e quanto a marca lucra",
+      },
+      {
+        id: "vendas",
+        texto: "Vendas: cada venda registrada baixa o estoque e entra sozinha no Financeiro",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "estoque",
+        texto: "Estoque por variação, e kit ou combo que baixa cada item",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "mais-vendidos",
+        texto: "Mais vendidos, Curva ABC e os produtos parados na prateleira",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "taxas",
+        texto: "Taxa de cada forma de receber, e quanto o preço deixa no Pix, no cartão e no marketplace",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "orcamento",
+        texto: "Orçamento com a cara da marca, que a cliente aprova pelo link e vira venda",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "financeiro",
+        texto:
+          "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
+      },
+      {
+        id: "contas-pagar",
+        texto: "Contas a pagar com vencimento, e as que repetem todo mês",
+        novoAte: NOVO_OUT_2026,
+      },
+      { id: "clientes", texto: "Clientes com o status de cada pedido, da espera à entrega" },
+      {
+        id: "quem-compra",
+        texto: "Quem voltou a comprar, quem sumiu, e um link pra captar contatos novos",
+        novoAte: NOVO_OUT_2026,
+      },
+      {
+        id: "planner",
+        texto: "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",
+      },
+      {
+        // ONE-133
+        id: "insumos",
+        texto: "Insumos e produção: o material sai do estoque quando a peça fica pronta",
+        emBreve: true,
+      },
     ],
     destaque: true,
   },
@@ -193,13 +302,47 @@ export const TIERS_PAGOS: Record<
     titulo: "Pro",
     precoMensal: 47.9,
     precoAnual: 479,
-    features: [
-      "Tudo do Premium, mais:",
-      "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
-      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Calculadora de encomenda sob medida",
-      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
-      "Resumo do mês pro contador, em PDF e CSV",
+    base: "Tudo do Premium, mais:",
+    beneficios: [
+      {
+        id: "raiox",
+        texto: "Raio-x do mês: a leitura do que aconteceu e o que muda no mês que vem",
+      },
+      {
+        id: "projecao",
+        texto: "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
+      },
+      { id: "encomenda", texto: "Calculadora de encomenda sob medida" },
+      {
+        id: "plano-conteudo",
+        texto: "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
+      },
+      { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
+      { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
+      {
+        // VND-05 e VND-17
+        id: "marketplaces",
+        texto: "TikTok Shop e Shopee ligados à Pólia One: pedidos e estoque no mesmo lugar",
+        emBreve: true,
+      },
+      {
+        // VND-08
+        id: "whatsapp",
+        texto: "Mensagem de pós-venda pelo WhatsApp, no dia certo depois da entrega",
+        emBreve: true,
+      },
+      {
+        // ONE-134
+        id: "reposicao",
+        texto: "Sugestão de reposição: o que repor e quanto, pelo giro de cada produto",
+        emBreve: true,
+      },
+      {
+        // ONE-135
+        id: "conferencia",
+        texto: "Conferência do que o marketplace pagou em cada pedido",
+        emBreve: true,
+      },
     ],
   },
 };

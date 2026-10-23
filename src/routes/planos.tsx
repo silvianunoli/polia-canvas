@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BlocoFundadora } from "@/components/planos/BlocoFundadora";
+import { SeloDoBeneficio } from "@/components/planos/SeloDoBeneficio";
 import { useMemo, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { linkCanonico } from "@/lib/seo";
-import { FEATURES_GRATIS, TIERS_PAGOS, type TierPago } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem, type TierPago } from "@/lib/planos";
 import { iniciarCompraPublica } from "@/lib/compra-publica.functions";
 import { campoDeBusca, lerOrigemCampanha, temOrigemCampanha } from "@/lib/origemCampanha";
 import { useTurnstile } from "@/hooks/useTurnstile";
@@ -257,9 +258,10 @@ function PlanosPage() {
                 <p className="mt-1 font-cabinet text-[32px] leading-none">R$ 0</p>
                 <p className="mt-1 text-[13px] text-[var(--muted)]">sem cobrança</p>
                 <ul className="mt-4 space-y-2">
-                  {FEATURES_GRATIS.map((f) => (
-                    <li key={f} className="text-[14px] leading-snug text-[var(--ink-soft)]">
-                      {f}
+                  {BENEFICIOS_GRATIS.map((b) => (
+                    <li key={b.id} className="text-[14px] leading-snug text-[var(--ink-soft)]">
+                      {b.texto}
+                      <SeloDoBeneficio beneficio={b} />
                     </li>
                   ))}
                 </ul>
@@ -307,10 +309,19 @@ function PlanosPage() {
                       <p className="mt-1 text-[13px] text-[var(--muted)]">
                         {ciclo === "mensal" ? "por mês" : "por ano"}
                       </p>
-                      <ul className="mt-4 space-y-2">
-                        {t.features.map((f) => (
-                          <li key={f} className="text-[14px] leading-snug text-[var(--ink-soft)]">
-                            {f}
+                      <p className="mt-4 text-[14px] font-semibold leading-snug text-[var(--ink)]">
+                        {t.base}
+                      </p>
+                      <ul className="mt-2 space-y-2">
+                        {beneficiosNaOrdem(t.beneficios).map((b) => (
+                          <li
+                            key={b.id}
+                            className={`text-[14px] leading-snug ${
+                              b.emBreve ? "text-[var(--muted)]" : "text-[var(--ink-soft)]"
+                            }`}
+                          >
+                            {b.texto}
+                            <SeloDoBeneficio beneficio={b} />
                           </li>
                         ))}
                       </ul>

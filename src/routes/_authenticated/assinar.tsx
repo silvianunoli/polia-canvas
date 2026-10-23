@@ -22,12 +22,15 @@ import {
   tierDoPlano,
   valorDoPlano,
   resumoDoPlano,
-  FEATURES_GRATIS,
+  BENEFICIOS_GRATIS,
   TIERS_PAGOS,
+  beneficiosNaOrdem,
+  type Beneficio,
   type TierPago,
 } from "@/lib/planos";
 import { testeAberto, testeDoBanco } from "@/lib/testePro";
 import { BlocoFundadora } from "@/components/planos/BlocoFundadora";
+import { SeloDoBeneficio } from "@/components/planos/SeloDoBeneficio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { fraseDoGanho } from "@/lib/ganhoDoUpgrade";
 
@@ -388,7 +391,7 @@ function AssinarPage() {
             titulo="Grátis"
             preco="R$ 0"
             periodo="sem cobrança"
-            features={FEATURES_GRATIS}
+            beneficios={BENEFICIOS_GRATIS}
             botaoLabel={
               !assinante
                 ? "Continuar no Grátis"
@@ -413,7 +416,8 @@ function AssinarPage() {
               titulo={tier.titulo}
               preco={fmtPreco(ciclo === "mensal" ? tier.precoMensal : tier.precoAnual)}
               periodo={ciclo === "mensal" ? "por mês" : "por ano"}
-              features={tier.features}
+              base={tier.base}
+              beneficios={beneficiosNaOrdem(tier.beneficios)}
               destaque={assinante ? false : tier.destaque}
               carregando={assinante ? trocando === tierId : planoIniciando === `${tierId}_${ciclo}`}
               desabilitado={
@@ -522,7 +526,8 @@ function PlanoCard({
   titulo,
   preco,
   periodo,
-  features,
+  base,
+  beneficios,
   destaque,
   foco,
   carregando,
@@ -535,7 +540,9 @@ function PlanoCard({
   titulo: string;
   preco: string;
   periodo: string;
-  features: string[];
+  /** Linha de abertura ("Tudo do Grátis, mais:"). */
+  base?: string;
+  beneficios: Beneficio[];
   destaque?: boolean;
   foco?: boolean;
   carregando: boolean;
@@ -570,10 +577,21 @@ function PlanoCard({
       </p>
       <p className="mt-1 font-cabinet text-[32px] leading-none text-[var(--ink)]">{preco}</p>
       <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">{periodo}</p>
-      <ul className="mt-4 space-y-1.5">
-        {features.map((f) => (
-          <li key={f} className="font-sans text-[12.5px] leading-snug text-[var(--ink-soft)]">
-            {f}
+      {base && (
+        <p className="mt-4 font-sans text-[12.5px] font-semibold leading-snug text-[var(--ink)]">
+          {base}
+        </p>
+      )}
+      <ul className={`${base ? "mt-1.5" : "mt-4"} space-y-1.5`}>
+        {beneficios.map((b) => (
+          <li
+            key={b.id}
+            className={`font-sans text-[12.5px] leading-snug ${
+              b.emBreve ? "text-[var(--muted)]" : "text-[var(--ink-soft)]"
+            }`}
+          >
+            {b.texto}
+            <SeloDoBeneficio beneficio={b} />
           </li>
         ))}
       </ul>

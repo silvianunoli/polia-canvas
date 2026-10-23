@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { Archive, Camera, MousePointerClick, RotateCcw, Tag, Wallet } from "lucide-react";
-import { TIERS_PAGOS } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import {
   BarraCtaMobile,
@@ -107,11 +107,7 @@ const planos: PlanoLanding[] = [
     nome: "Grátis",
     praQuem: "Pra pôr a marca no papel e fazer os primeiros preços.",
     mensal: "R$ 0",
-    itens: [
-      "Calculadora de preço, pra produto e serviço, com simulação de desconto",
-      "Até 5 produtos e 3 metas",
-      "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
-    ],
+    itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
   },
   {
     nome: "Premium",
@@ -119,26 +115,18 @@ const planos: PlanoLanding[] = [
     praQuem: "Pra quem tem pedido toda semana e quer ver o lucro do mês.",
     mensal: precoBR(premium.precoMensal),
     anual: precoBR(premium.precoAnual),
-    itemForte: 2,
-    itens: [
-      "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
-      "Financeiro com os três números que decidem o mês",
-      "Clientes com o status de cada pedido, da espera à entrega",
-      "Planner sem limite, e o Calendário com a agenda do Google junto",
-    ],
+    base: premium.base,
+    // A página inteira vende o mês na mesma conta: Financeiro e Vendas na frente.
+    itemForte: "financeiro",
+    itens: beneficiosNaOrdem(premium.beneficios, ["financeiro", "vendas", "contas-pagar"]),
   },
   {
     nome: "Pro",
     praQuem: "Pra quem quer saber quantas vendas faltam pra marca pagar a dona.",
     mensal: precoBR(pro.precoMensal),
     anual: precoBR(pro.precoAnual),
-    itens: [
-      "Tudo do Premium",
-      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Raio-x do mês e resumo pro contador, em PDF e CSV",
-      "Calculadora de encomenda sob medida e plano de conteúdo do ano",
-    ],
+    base: pro.base,
+    itens: beneficiosNaOrdem(pro.beneficios, ["projecao"]),
   },
 ];
 

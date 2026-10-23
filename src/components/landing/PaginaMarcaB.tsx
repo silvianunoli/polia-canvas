@@ -12,7 +12,7 @@ import {
   Tag,
   Wallet,
 } from "lucide-react";
-import { TIERS_PAGOS } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
@@ -214,12 +214,7 @@ const planos: PlanoLanding[] = [
     nome: "Grátis",
     praQuem: "Pra quem está pondo a marca no papel.",
     mensal: "R$ 0",
-    itens: [
-      "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
-      "Calculadora de preço, pra produto e serviço",
-      "Até 5 produtos e 3 metas",
-      "Assistente pra tirar dúvida, com limite por dia",
-    ],
+    itens: BENEFICIOS_GRATIS,
   },
   {
     nome: "Premium",
@@ -227,26 +222,16 @@ const planos: PlanoLanding[] = [
     praQuem: "Pra quem já vende e quer o mês sob controle.",
     mensal: precoBR(premium.precoMensal),
     anual: precoBR(premium.precoAnual),
-    itens: [
-      "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      "Catálogo sem limite, cada produto com custo, preço e quanto lucra",
-      "Financeiro com os três números que decidem o mês",
-      "Clientes com o status de cada pedido, da espera à entrega",
-      "Planner sem limite, e o Calendário com a agenda do Google junto",
-    ],
+    base: premium.base,
+    itens: beneficiosNaOrdem(premium.beneficios),
   },
   {
     nome: "Pro",
     praQuem: "Pra quem quer saber quanto falta pra marca pagar a dona.",
     mensal: precoBR(pro.precoMensal),
     anual: precoBR(pro.precoAnual),
-    itens: [
-      "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
-      "Raio-x do mês: o que puxou o resultado e o que muda no mês seguinte",
-      "Calculadora de encomenda sob medida",
-      "Resumo do mês pro contador, em PDF e CSV",
-      "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
-    ],
+    base: pro.base,
+    itens: beneficiosNaOrdem(pro.beneficios, ["projecao"]),
   },
 ];
 

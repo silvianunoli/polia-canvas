@@ -175,3 +175,74 @@ describe("valorDoPlano", () => {
     expect(valorDoPlano(undefined)).toBeNull();
   });
 });
+
+import {
+  BENEFICIOS_GRATIS,
+  TIERS_PAGOS,
+  beneficiosNaOrdem,
+  seloDoBeneficio,
+  type Beneficio,
+} from "./planos";
+
+describe("seloDoBeneficio (selos Novo e Em breve da lista de planos)", () => {
+  const novo: Beneficio = { id: "x", texto: "X", novoAte: "2026-11-22" };
+
+  it("mostra Novo até o dia de novoAte, inclusive, no horário de Brasília", () => {
+    expect(seloDoBeneficio(novo, new Date("2026-11-22T12:00:00-03:00"))).toBe("novo");
+    // 22/11 às 23h em Brasília já é 23/11 em UTC: ainda é Novo.
+    expect(seloDoBeneficio(novo, new Date("2026-11-23T02:00:00Z"))).toBe("novo");
+  });
+
+  it("o Novo vence sozinho no dia seguinte", () => {
+    expect(seloDoBeneficio(novo, new Date("2026-11-23T08:00:00-03:00"))).toBeNull();
+  });
+
+  it("Em breve ganha de Novo e não vence", () => {
+    const b: Beneficio = { id: "y", texto: "Y", emBreve: true, novoAte: "2000-01-01" };
+    expect(seloDoBeneficio(b, new Date("2030-01-01"))).toBe("em-breve");
+  });
+
+  it("item sem marcação não tem selo", () => {
+    expect(seloDoBeneficio({ id: "z", texto: "Z" })).toBeNull();
+  });
+});
+
+describe("beneficiosNaOrdem", () => {
+  const lista: Beneficio[] = [
+    { id: "a", texto: "A" },
+    { id: "breve", texto: "Breve", emBreve: true },
+    { id: "b", texto: "B" },
+    { id: "c", texto: "C" },
+  ];
+
+  it("põe os escolhidos na frente e os Em breve por último", () => {
+    expect(beneficiosNaOrdem(lista, ["c"]).map((b) => b.id)).toEqual(["c", "a", "b", "breve"]);
+  });
+
+  it("id que não existe é ignorado", () => {
+    expect(beneficiosNaOrdem(lista, ["nao-existe"]).map((b) => b.id)).toEqual([
+      "a",
+      "b",
+      "c",
+      "breve",
+    ]);
+  });
+});
+
+describe("lista de benefícios dos planos", () => {
+  const todas = [
+    BENEFICIOS_GRATIS,
+    TIERS_PAGOS.controle.beneficios,
+    TIERS_PAGOS.projete.beneficios,
+  ];
+
+  it("ids únicos dentro de cada plano (a landing escolhe a ordem pelo id)", () => {
+    for (const lista of todas) {
+      expect(new Set(lista.map((b) => b.id)).size).toBe(lista.length);
+    }
+  });
+
+  it("o Grátis não promete nada Em breve", () => {
+    expect(BENEFICIOS_GRATIS.some((b) => b.emBreve)).toBe(false);
+  });
+});
