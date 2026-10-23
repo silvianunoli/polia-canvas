@@ -12,7 +12,11 @@ import { Modal } from "@/components/ui/Modal";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastSucesso } from "@/lib/toast";
 import { diferencaDoAjuste, estoqueBaixo } from "@/lib/vendas";
+import { hojeISO } from "@/lib/data.functions";
+import { diasDeHistorico, type ItemParaRepor } from "@/lib/reposicao";
 import { fmtData } from "./tipos";
+import { SugestaoReposicao } from "./SugestaoReposicao";
+import { useGiroPorSku } from "./reposicaoDados";
 import {
   chaveEstoque,
   movimentarEstoque,
@@ -41,6 +45,7 @@ export function AbaEstoque({
 }) {
   const qc = useQueryClient();
   const query = useProdutosComEstoque(userId);
+  const giro = useGiroPorSku(userId);
   const [soBaixo, setSoBaixo] = useState(false);
   const [movimentar, setMovimentar] = useState<LinhaEstoque | null>(null);
   const [historico, setHistorico] = useState<LinhaEstoque | null>(null);
@@ -66,6 +71,22 @@ export function AbaEstoque({
   const visiveis = soBaixo
     ? linhas.filter((l) => estoqueBaixo({ saldo: l.saldo, estoqueMinimo: l.minimo }))
     : linhas;
+  // Sugestão de reposição (ONE-134): giro de cada variação pela data da venda,
+  // contado desde o cadastro da variação ou da primeira venda.
+  const hoje = hojeISO();
+  const paraRepor: ItemParaRepor[] = comEstoque.flatMap((p) =>
+    p.skus.map((s) => {
+      const g = giro.data?.get(s.id);
+      return {
+        chave: s.id,
+        nome: s.variacao ? `${p.nome} · ${s.variacao}` : p.nome,
+        saldo: s.saldo,
+        minimo: s.estoqueMinimo,
+        saiu: g?.saiu ?? 0,
+        dias: diasDeHistorico(g?.inicio ?? p.criadoEm, hoje),
+      };
+    }),
+  );
   // Produto com estoque ligado e sem variação nenhuma (salvo pela metade).
   const semVariacao = comEstoque.filter((p) => p.skus.length === 0);
 
@@ -99,6 +120,18 @@ export function AbaEstoque({
 
   return (
     <div>
+      <SugestaoReposicao
+        id="repor-produtos"
+        titulo="O que repor"
+        acao="repor"
+        origem="venda"
+        itens={paraRepor}
+        inteiroDe={() => true}
+        carregando={giro.isLoading}
+        erro={giro.isError}
+        onTentarDeNovo={() => void giro.refetch()}
+      />
+      <h2 className="font-cabinet mb-1 text-[18px] font-semibold text-[var(--ink)]">Estoque</h2>
       <label className="flex min-h-11 w-fit cursor-pointer items-center gap-3 text-[14px] text-[var(--ink)]">
         <input
           type="checkbox"

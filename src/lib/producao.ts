@@ -11,6 +11,8 @@ export interface InsumoComSaldo {
   custoUnitario: number | null;
   minimo: number;
   saldo: number;
+  /** Data do cadastro (ONE-134: dias de histórico do giro). */
+  criadoEm?: string | null;
 }
 
 export interface LinhaReceita {

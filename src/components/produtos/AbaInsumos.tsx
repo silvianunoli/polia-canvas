@@ -30,6 +30,10 @@ import {
 } from "./insumosDados";
 import { ModalInsumo } from "./ModalInsumo";
 import { ReceitasProdutos } from "./ReceitasProdutos";
+import { SugestaoReposicao } from "./SugestaoReposicao";
+import { useGiroPorInsumo } from "./reposicaoDados";
+import { hojeISO } from "@/lib/data.functions";
+import { contaEmPeca, diasDeHistorico } from "@/lib/reposicao";
 import { ModalProducao, ProducoesRecentes } from "./ModalProducao";
 
 const INPUT =
@@ -44,12 +48,14 @@ export function AbaInsumos({
 }) {
   const qc = useQueryClient();
   const query = useInsumos(userId);
+  const giro = useGiroPorInsumo(userId);
   const [editar, setEditar] = useState<InsumoComSaldo | "novo" | null>(null);
   const [movimentar, setMovimentar] = useState<InsumoComSaldo | null>(null);
   const [historico, setHistorico] = useState<InsumoComSaldo | null>(null);
   const [produzir, setProduzir] = useState(false);
 
   const insumos = query.data ?? [];
+  const porIdInsumo = new Map(insumos.map((i) => [i.id, i]));
   const recarregar = () => {
     void qc.invalidateQueries({ queryKey: chaveInsumos(userId) });
     void qc.invalidateQueries({ queryKey: ["insumo-movimentos"] });
@@ -96,7 +102,36 @@ export function AbaInsumos({
             </button>
           </div>
 
-          <h2 className="font-cabinet mt-6 text-[18px] font-semibold text-[var(--ink)]">Insumos</h2>
+          {/* Mesma posição de "O que repor" na aba Estoque: no topo, recolhido. */}
+          <div className="mt-6">
+            <SugestaoReposicao
+              id="repor-insumos"
+              titulo="O que comprar"
+              acao="comprar"
+              origem="producao"
+              itens={insumos.map((i) => {
+                const g = giro.data?.get(i.id);
+                return {
+                  chave: i.id,
+                  nome: i.nome,
+                  saldo: i.saldo,
+                  minimo: i.minimo,
+                  saiu: g?.saiu ?? 0,
+                  dias: diasDeHistorico(g?.inicio ?? i.criadoEm, hojeISO()),
+                };
+              })}
+              unidadeDe={(id) => {
+                const un = porIdInsumo.get(id)?.unidade;
+                return un ? ` ${un}` : "";
+              }}
+              inteiroDe={(id) => contaEmPeca(porIdInsumo.get(id)?.unidade ?? "")}
+              carregando={giro.isLoading}
+              erro={giro.isError}
+              onTentarDeNovo={() => void giro.refetch()}
+            />
+          </div>
+
+          <h2 className="font-cabinet text-[18px] font-semibold text-[var(--ink)]">Insumos</h2>
           {/* Celular: cartão empilhado, a ação principal sempre à vista. */}
           <ul className="mt-3 flex flex-col gap-3 sm:hidden">
             {insumos.map((i) => (

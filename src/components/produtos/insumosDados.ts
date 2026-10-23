@@ -19,7 +19,7 @@ export function useInsumos(userId: string | undefined) {
       const linhas = await lerTodasAsPaginas((de, ate) =>
         supabase
           .from("insumo_saldos")
-          .select("id, nome, unidade, custo_unitario, estoque_minimo, saldo")
+          .select("id, nome, unidade, custo_unitario, estoque_minimo, saldo, created_at")
           .eq("user_id", userId!)
           .order("nome")
           .order("id")
@@ -35,6 +35,7 @@ export function useInsumos(userId: string | undefined) {
                 custoUnitario: i.custo_unitario == null ? null : Number(i.custo_unitario),
                 minimo: n(i.estoque_minimo),
                 saldo: n(i.saldo),
+                criadoEm: i.created_at,
               },
             ]
           : [],

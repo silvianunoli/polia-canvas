@@ -2917,6 +2917,7 @@ export type Database = {
     Views: {
       insumo_saldos: {
         Row: {
+          created_at: string | null
           custo_unitario: number | null
           estoque_minimo: number | null
           id: string | null
@@ -3110,6 +3111,14 @@ export type Database = {
       desfazer_pagamento: {
         Args: { p_conta_id: string }
         Returns: undefined
+      }
+      giro_por_sku: {
+        Args: { p_desde: string }
+        Returns: { sku_id: string; saiu: number; inicio: string | null }[]
+      }
+      giro_por_insumo: {
+        Args: { p_desde: string }
+        Returns: { insumo_id: string; consumo: number; inicio: string | null }[]
       }
       salvar_insumo: {
         Args: {
