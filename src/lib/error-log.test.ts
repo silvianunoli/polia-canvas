@@ -35,7 +35,18 @@ describe("logErroCliente", () => {
       stack: "Error: x\n  at a.js:1",
       pagina: "/",
       user_id: "u1",
+      contexto: { navegador: navigator.userAgent, versao: null },
     });
+  });
+
+  it("grava a versão do bundle principal no contexto", async () => {
+    const s = document.createElement("script");
+    s.type = "module";
+    s.src = "https://one.usepolia.com.br/assets/index-CEpy_wW5.js";
+    document.body.appendChild(s);
+    await logErroCliente("x");
+    expect(insertMock.mock.calls[0][0].contexto.versao).toBe("index-CEpy_wW5");
+    s.remove();
   });
 
   // LGPD-03: e-mail na mensagem e token na query nunca chegam ao banco.

@@ -15,7 +15,9 @@ import { campoDeBusca, lerOrigemCampanha } from "@/lib/origemCampanha";
 // errado? Corrigir" (15/10/2026), com a mesma campanha. Mesmo tratamento
 // tolerante do cadastro: valor estranho some, a rota não cai.
 const searchSchema = z.object({
-  email: z.string().email().optional(),
+  // E-mail malformado no link derrubava a rota inteira (FND-14): agora some,
+  // como os outros campos, e a tela segue sem o e-mail preenchido.
+  email: z.string().email().optional().catch(undefined),
   origem: campoDeBusca,
   utm_source: campoDeBusca,
   utm_medium: campoDeBusca,

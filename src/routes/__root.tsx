@@ -26,6 +26,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
+import { recarregarSeVersaoAntiga } from "@/lib/versao-antiga";
 import { toastInfo } from "@/lib/toast";
 import { lerLinkComErro } from "@/lib/linkComErro";
 import { urlCanonica } from "@/lib/seo";
@@ -226,11 +227,27 @@ function RootComponent() {
         reason instanceof Error ? reason.stack : undefined,
       );
     };
+    // Aba aberta antes de um deploy: o pedaço da página que ela pede não existe
+    // mais. Recarrega uma vez e pega a versão nova (FND-14).
+    const onPreloadError = (event: Event) => {
+      const storage = (() => {
+        try {
+          return window.sessionStorage;
+        } catch {
+          return undefined;
+        }
+      })();
+      if (recarregarSeVersaoAntiga(storage, () => window.location.reload())) {
+        event.preventDefault();
+      }
+    };
     window.addEventListener("error", onError);
     window.addEventListener("unhandledrejection", onRejection);
+    window.addEventListener("vite:preloadError", onPreloadError);
     return () => {
       window.removeEventListener("error", onError);
       window.removeEventListener("unhandledrejection", onRejection);
+      window.removeEventListener("vite:preloadError", onPreloadError);
     };
   }, []);
 
