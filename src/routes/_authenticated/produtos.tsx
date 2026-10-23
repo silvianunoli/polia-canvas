@@ -8,7 +8,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
@@ -21,8 +21,20 @@ import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { fmt, fmtData, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
+import { AbaEstoque } from "@/components/produtos/AbaEstoque";
+import { useProdutosComEstoque, type SkuProduto } from "@/components/vendas/dados";
+import { estoqueBaixo } from "@/lib/vendas";
+
+type AbaProdutos = "catalogo" | "estoque";
+
+interface ProdutosSearch {
+  aba?: AbaProdutos;
+}
 
 export const Route = createFileRoute("/_authenticated/produtos")({
+  validateSearch: (search: Record<string, unknown>): ProdutosSearch => ({
+    aba: search.aba === "estoque" ? "estoque" : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Produtos · Pólia One" },
@@ -45,6 +57,19 @@ function ProdutosPage() {
   // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
   const ehConfere = ehPlanoGratis(meta);
   const linkModulo3 = useLinkDoModulo(3);
+  const { aba: abaDaUrl } = Route.useSearch();
+  const aba: AbaProdutos = abaDaUrl ?? "catalogo";
+  const trocarAba = (nova: AbaProdutos) =>
+    void navigate({
+      to: "/produtos",
+      search: nova === "estoque" ? { aba: "estoque" } : {},
+      replace: true,
+    });
+  const estoqueQuery = useProdutosComEstoque(userId);
+  const skusPorProduto = useMemo(
+    () => new Map((estoqueQuery.data ?? []).map((p) => [p.id, p.skus])),
+    [estoqueQuery.data],
+  );
 
   // ── Modal ──
   const [modalAberto, setModalAberto] = useState(false);
@@ -60,7 +85,7 @@ function ProdutosPage() {
       const { data, error } = await supabase
         .from("produtos")
         .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
+          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
         )
         .eq("user_id", userId!)
         .eq("arquivado", false)
@@ -147,86 +172,125 @@ function ProdutosPage() {
       titulo="Seus produtos."
       subtitulo="O que você vende, quanto custa e quanto lucra em cada venda."
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <button type="button" onClick={abrirAdicionar} disabled={cotaAtingida} className={BTN_ACAO}>
-          + Adicionar produto
-        </button>
-        <button
-          type="button"
-          onClick={() => setImportarAberto(true)}
-          disabled={cotaAtingida}
-          className={BTN_ACAO_CONTORNO}
-        >
-          Importar planilha
-        </button>
-        <Link
-          to="/calculadora"
-          className="inline-flex min-h-11 items-center text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
-        >
-          Calcular um preço na Calculadora
-        </Link>
+      <div role="group" aria-label="Visão" className="mb-4 flex gap-2">
+        {(
+          [
+            { id: "catalogo", label: "Catálogo" },
+            { id: "estoque", label: "Estoque" },
+          ] as { id: AbaProdutos; label: string }[]
+        ).map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            aria-pressed={aba === a.id}
+            onClick={() => trocarAba(a.id)}
+            className={`${BTN_MIUDO} ${aba === a.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
+          >
+            {a.label}
+          </button>
+        ))}
       </div>
 
-      {cotaAtingida && (
-        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
-          No plano Grátis você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Premium pra
-          deixar ilimitado. {/* Botão de assinar leva ao checkout, não a outra tela de bloqueio. */}
-          <Link
-            to="/assinar"
-            search={{ plano: "controle" }}
-            className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
-          >
-            Assinar o Premium
-          </Link>
-        </div>
-      )}
-
-      {produtos.length === 0 ? (
-        <div className="mt-6">
-          <Vazio
-            icone={Package}
-            titulo="Nenhum produto ainda."
-            texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
-            acao={
-              // A ação do vazio é a da própria tela; o Planejamento é caminho
-              // secundário e só aponta pro Módulo 3 quando ele está liberado.
-              <>
-                <button
-                  type="button"
-                  onClick={abrirAdicionar}
-                  disabled={cotaAtingida}
-                  className={BTN_ACAO}
-                >
-                  + Adicionar produto
-                </button>
-                <p className="mt-3 text-[12px] text-[var(--muted)]">
-                  ou deixe o{" "}
-                  <LinkInterno
-                    href={linkModulo3.href}
-                    className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
-                  >
-                    {linkModulo3.liberado ? "Módulo 3 do Planejamento →" : "Planejamento →"}
-                  </LinkInterno>{" "}
-                  criar os primeiros
-                </p>
-              </>
-            }
-          />
-        </div>
+      {aba === "estoque" && userId ? (
+        <AbaEstoque
+          userId={userId}
+          onEditarProduto={(id) => {
+            const p = produtos.find((x) => x.id === id);
+            if (p) abrirEditar(p);
+          }}
+          onAbrirCatalogo={() => trocarAba("catalogo")}
+        />
       ) : (
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {produtos.map((p, i) => (
-            <ProdutoCard
-              key={p.id}
-              produto={p}
-              indice={i}
-              somenteLeitura={idsExcedentes.has(p.id)}
-              onEditar={() => abrirEditar(p)}
-              onArquivar={() => setProdutoParaArquivar(p)}
-              onRecalcular={() => abrirRecalcular(p)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={abrirAdicionar}
+              disabled={cotaAtingida}
+              className={BTN_ACAO}
+            >
+              + Adicionar produto
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportarAberto(true)}
+              disabled={cotaAtingida}
+              className={BTN_ACAO_CONTORNO}
+            >
+              Importar planilha
+            </button>
+            <Link
+              to="/calculadora"
+              className="inline-flex min-h-11 items-center text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+            >
+              Calcular um preço na Calculadora
+            </Link>
+          </div>
+
+          {cotaAtingida && (
+            <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4 text-[13px] text-[var(--ink-soft)]">
+              No plano Grátis você cria até {COTAS_CONFERE.produtos} produtos. Suba pro Premium pra
+              deixar ilimitado.{" "}
+              {/* Botão de assinar leva ao checkout, não a outra tela de bloqueio. */}
+              <Link
+                to="/assinar"
+                search={{ plano: "controle" }}
+                className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+              >
+                Assinar o Premium
+              </Link>
+            </div>
+          )}
+
+          {produtos.length === 0 ? (
+            <div className="mt-6">
+              <Vazio
+                icone={Package}
+                titulo="Nenhum produto ainda."
+                texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
+                acao={
+                  // A ação do vazio é a da própria tela; o Planejamento é caminho
+                  // secundário e só aponta pro Módulo 3 quando ele está liberado.
+                  <>
+                    <button
+                      type="button"
+                      onClick={abrirAdicionar}
+                      disabled={cotaAtingida}
+                      className={BTN_ACAO}
+                    >
+                      + Adicionar produto
+                    </button>
+                    <p className="mt-3 text-[12px] text-[var(--muted)]">
+                      ou deixe o{" "}
+                      <LinkInterno
+                        href={linkModulo3.href}
+                        className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                      >
+                        {linkModulo3.liberado ? "Módulo 3 do Planejamento →" : "Planejamento →"}
+                      </LinkInterno>{" "}
+                      criar os primeiros
+                    </p>
+                  </>
+                }
+              />
+            </div>
+          ) : (
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {produtos.map((p, i) => (
+                <ProdutoCard
+                  key={p.id}
+                  produto={p}
+                  indice={i}
+                  somenteLeitura={idsExcedentes.has(p.id)}
+                  onEditar={() => abrirEditar(p)}
+                  onArquivar={() => setProdutoParaArquivar(p)}
+                  onRecalcular={() => abrirRecalcular(p)}
+                  skus={p.controla_estoque ? skusPorProduto.get(p.id) : undefined}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* ───────── Modal ───────── */}
@@ -238,6 +302,8 @@ function ProdutosPage() {
           onClose={() => setModalAberto(false)}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["produtos", userId] });
+            qc.invalidateQueries({ queryKey: ["estoque", userId] });
+            qc.invalidateQueries({ queryKey: ["produto-skus"] });
             setModalAberto(false);
           }}
         />
@@ -278,7 +344,9 @@ function ProdutoCard({
   onEditar,
   onArquivar,
   onRecalcular,
+  skus,
 }: {
+  skus?: SkuProduto[];
   produto: Produto;
   indice: number;
   somenteLeitura?: boolean;
@@ -407,6 +475,9 @@ function ProdutoCard({
         </>
       )}
 
+      {/* Estoque (VND-03): soma das variações e quantas estão baixas */}
+      {skus && <LinhaEstoqueDoCard skus={skus} />}
+
       {/* Canal de venda */}
       {produto.canal && (
         <p className="mt-1 text-[12px] text-[var(--muted)]">onde compra: {produto.canal}</p>
@@ -419,5 +490,31 @@ function ProdutoCard({
         </p>
       )}
     </div>
+  );
+}
+
+function LinhaEstoqueDoCard({ skus }: { skus: SkuProduto[] }) {
+  if (skus.length === 0) {
+    return <p className="mt-1 text-[12px] text-[var(--muted)]">estoque ligado, sem quantidade</p>;
+  }
+  const total = skus.reduce((s, x) => s + x.saldo, 0);
+  const baixos = skus.filter((s) =>
+    estoqueBaixo({ saldo: s.saldo, estoqueMinimo: s.estoqueMinimo }),
+  );
+  const texto =
+    skus.length > 1 ? `${total} no estoque em ${skus.length} variações` : `${total} no estoque`;
+  return (
+    <p className="mt-1 text-[12px] text-[var(--ink-soft)]">
+      {texto}
+      {baixos.length > 0 && (
+        <span className="text-[var(--ink-soft)]">
+          {" "}
+          ·{" "}
+          {skus.length > 1
+            ? `${baixos.length} ${baixos.length === 1 ? "variação baixa" : "variações baixas"}`
+            : "estoque baixo"}
+        </span>
+      )}
+    </p>
   );
 }

@@ -90,6 +90,7 @@ const PREFIXOS_AUTENTICADOS = [
   "/projecao",
   "/raiox",
   "/upgrade",
+  "/vendas",
 ];
 
 function ehRotaAutenticada(pathname: string): boolean {

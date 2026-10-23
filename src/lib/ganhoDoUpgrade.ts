@@ -28,6 +28,8 @@ export const GANHO_POR_ROTA: Record<string, string> = {
   "/mercado": "O Premium monta o Mapa de Mercado a partir das respostas do Planejamento.",
   "/calendario": "O Premium abre o Calendário, com a agenda do Google junto.",
   "/clientes": "O Premium mostra cada cliente com o status do pedido, da espera à entrega.",
+  "/vendas":
+    "O Premium registra cada venda, baixa o estoque sozinho e mostra quais produtos mais vendem e mais lucram.",
   // Telas com cota no Grátis: a tela abre, o que o Premium muda é o limite.
   "/caderno": "O Premium tira o limite do Caderno: notas sem teto.",
   "/planner": "O Premium tira o limite do Planner: quadros sem teto.",

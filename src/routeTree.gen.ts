@@ -36,6 +36,7 @@ import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirad
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
 import { Route as AuthCriarSenhaRouteImport } from './routes/auth/criar-senha'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
+import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as AuthenticatedUpgradeRouteImport } from './routes/_authenticated/upgrade'
 import { Route as AuthenticatedRaioxRouteImport } from './routes/_authenticated/raiox'
 import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
@@ -196,6 +197,11 @@ const AuthCadastroRoute = AuthCadastroRouteImport.update({
   id: '/auth/cadastro',
   path: '/auth/cadastro',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
+  id: '/vendas',
+  path: '/vendas',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedUpgradeRoute = AuthenticatedUpgradeRouteImport.update({
   id: '/upgrade',
@@ -372,6 +378,7 @@ export interface FileRoutesByFullPath {
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/raiox': typeof AuthenticatedRaioxRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/vendas': typeof AuthenticatedVendasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -426,6 +433,7 @@ export interface FileRoutesByTo {
   '/projecao': typeof AuthenticatedProjecaoRoute
   '/raiox': typeof AuthenticatedRaioxRoute
   '/upgrade': typeof AuthenticatedUpgradeRoute
+  '/vendas': typeof AuthenticatedVendasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -482,6 +490,7 @@ export interface FileRoutesById {
   '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
   '/_authenticated/raiox': typeof AuthenticatedRaioxRoute
   '/_authenticated/upgrade': typeof AuthenticatedUpgradeRoute
+  '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
@@ -538,6 +547,7 @@ export interface FileRouteTypes {
     | '/projecao'
     | '/raiox'
     | '/upgrade'
+    | '/vendas'
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
@@ -592,6 +602,7 @@ export interface FileRouteTypes {
     | '/projecao'
     | '/raiox'
     | '/upgrade'
+    | '/vendas'
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
@@ -647,6 +658,7 @@ export interface FileRouteTypes {
     | '/_authenticated/projecao'
     | '/_authenticated/raiox'
     | '/_authenticated/upgrade'
+    | '/_authenticated/vendas'
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
@@ -888,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/vendas': {
+      id: '/_authenticated/vendas'
+      path: '/vendas'
+      fullPath: '/vendas'
+      preLoaderRoute: typeof AuthenticatedVendasRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/upgrade': {
       id: '/_authenticated/upgrade'
       path: '/upgrade'
@@ -1093,6 +1112,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedProjecaoRoute: typeof AuthenticatedProjecaoRoute
   AuthenticatedRaioxRoute: typeof AuthenticatedRaioxRoute
   AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
+  AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
@@ -1122,6 +1142,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedProjecaoRoute: AuthenticatedProjecaoRoute,
   AuthenticatedRaioxRoute: AuthenticatedRaioxRoute,
   AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
+  AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,

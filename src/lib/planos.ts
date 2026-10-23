@@ -94,6 +94,8 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   // vale pra todo plano e mora em LIMITE_METAS_ATIVAS (src/lib/metaDoMes.ts).
   { prefixo: "/metas", tier: "confere" },
   { prefixo: "/clientes", tier: "controle" },
+  // Vendas e Mais vendidos (VND-03): Premium até a Sil fechar o VND-01.
+  { prefixo: "/vendas", tier: "controle" },
   { prefixo: "/financeiro", tier: "controle" },
   { prefixo: "/calendario", tier: "controle" },
   { prefixo: "/mercado", tier: "controle" },

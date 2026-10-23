@@ -7,8 +7,11 @@ import { registrar } from "@/lib/founder-eventos";
 import { gtagEvent } from "@/lib/gtag";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
+import { toastErro } from "@/lib/toast";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
+import { EstoqueDoProduto } from "./EstoqueDoProduto";
+import { useEstoqueDoProduto } from "./useEstoqueDoProduto";
 
 /* ============== Modal: adicionar/editar produto ============== */
 export function ModalProduto({
@@ -52,6 +55,10 @@ export function ModalProduto({
   const [descricao, setDescricao] = useState(produtoEdit?.descricao ?? "");
   const [observacaoInterna, setObservacaoInterna] = useState(produtoEdit?.observacao_interna ?? "");
   const [canal, setCanal] = useState(produtoEdit?.canal ?? "");
+  const estoque = useEstoqueDoProduto(
+    produtoEdit?.id ?? null,
+    produtoEdit?.controla_estoque ?? false,
+  );
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -93,30 +100,48 @@ export function ModalProduto({
         .from("produtos")
         .update(update as never)
         .eq("id", produtoEdit.id);
-      setSalvando(false);
       if (error) {
+        setSalvando(false);
         console.error("produto_salvar", error);
         setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
+      const erroEstoque = await estoque.salvar(produtoEdit.id);
+      setSalvando(false);
+      if (erroEstoque) {
+        setErro(erroEstoque);
+        return;
+      }
       void registrar("edit_product", { feature: "produtos", propriedades: { tipo } });
     } else {
-      const { error } = await supabase.from("produtos").insert({
-        user_id: userId,
-        nome: nome.trim(),
-        tipo,
-        foto_url: fotoUrl.trim() || null,
-        preco_venda: precoVendaNum,
-        preco_custo: precoCustoNum,
-        descricao: descricao.trim() || null,
-        observacao_interna: observacaoInterna.trim() || null,
-        canal: canal.trim() || null,
-        calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
-      } as never);
-      setSalvando(false);
-      if (error) {
+      const { data: criado, error } = await supabase
+        .from("produtos")
+        .insert({
+          user_id: userId,
+          nome: nome.trim(),
+          tipo,
+          foto_url: fotoUrl.trim() || null,
+          preco_venda: precoVendaNum,
+          preco_custo: precoCustoNum,
+          descricao: descricao.trim() || null,
+          observacao_interna: observacaoInterna.trim() || null,
+          canal: canal.trim() || null,
+          calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
+        } as never)
+        .select("id")
+        .single();
+      if (error || !criado) {
+        setSalvando(false);
         console.error("produto_salvar", error);
         setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
+        return;
+      }
+      const erroEstoque = await estoque.salvar(criado.id);
+      setSalvando(false);
+      if (erroEstoque) {
+        // O produto já existe: ficar no modal duplicaria no próximo "Salvar".
+        toastErro(`O produto foi salvo, mas o estoque não. ${erroEstoque}`);
+        onSaved();
         return;
       }
       track("produto_criado", { tipo });
@@ -258,6 +283,13 @@ export function ModalProduto({
           />
         </Campo>
       </div>
+
+      <EstoqueDoProduto
+        estado={estoque.estado}
+        onMudar={estoque.setEstado}
+        carregando={estoque.carregando}
+        tipo={tipo}
+      />
 
       {/* Canal de venda */}
       <div>

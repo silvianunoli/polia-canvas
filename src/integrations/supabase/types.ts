@@ -1849,6 +1849,7 @@ export type Database = {
           arquivado: boolean
           calculadora_breakdown: Json | null
           canal: string | null
+          controla_estoque: boolean
           created_at: string
           da_jornada: boolean
           descricao: string | null
@@ -1868,6 +1869,7 @@ export type Database = {
           arquivado?: boolean
           calculadora_breakdown?: Json | null
           canal?: string | null
+          controla_estoque?: boolean
           created_at?: string
           da_jornada?: boolean
           descricao?: string | null
@@ -1887,6 +1889,7 @@ export type Database = {
           arquivado?: boolean
           calculadora_breakdown?: Json | null
           canal?: string | null
+          controla_estoque?: boolean
           created_at?: string
           da_jornada?: boolean
           descricao?: string | null
@@ -1899,6 +1902,186 @@ export type Database = {
           preco_custo?: number | null
           preco_venda?: number
           tipo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      estoque_movimentos: {
+        Row: {
+          created_at: string
+          id: string
+          motivo: string | null
+          quantidade: number
+          sku_id: string
+          tipo: string
+          user_id: string
+          venda_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          quantidade: number
+          sku_id: string
+          tipo: string
+          user_id: string
+          venda_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          motivo?: string | null
+          quantidade?: number
+          sku_id?: string
+          tipo?: string
+          user_id?: string
+          venda_id?: string | null
+        }
+        Relationships: []
+      }
+      produto_skus: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          estoque_minimo: number
+          id: string
+          produto_id: string
+          sku: string | null
+          updated_at: string
+          user_id: string
+          variacao: string | null
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          estoque_minimo?: number
+          id?: string
+          produto_id: string
+          sku?: string | null
+          updated_at?: string
+          user_id: string
+          variacao?: string | null
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          estoque_minimo?: number
+          id?: string
+          produto_id?: string
+          sku?: string | null
+          updated_at?: string
+          user_id?: string
+          variacao?: string | null
+        }
+        Relationships: []
+      }
+      venda_itens: {
+        Row: {
+          created_at: string
+          custo_unitario: number | null
+          id: string
+          preco_unitario: number
+          produto_id: string | null
+          produto_nome: string
+          quantidade: number
+          sku_id: string | null
+          user_id: string
+          variacao: string | null
+          venda_id: string
+        }
+        Insert: {
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          preco_unitario: number
+          produto_id?: string | null
+          produto_nome: string
+          quantidade: number
+          sku_id?: string | null
+          user_id: string
+          variacao?: string | null
+          venda_id: string
+        }
+        Update: {
+          created_at?: string
+          custo_unitario?: number | null
+          id?: string
+          preco_unitario?: number
+          produto_id?: string | null
+          produto_nome?: string
+          quantidade?: number
+          sku_id?: string | null
+          user_id?: string
+          variacao?: string | null
+          venda_id?: string
+        }
+        Relationships: []
+      }
+      vendas: {
+        Row: {
+          canal: string
+          categoria: string
+          cliente_id: string | null
+          cliente_nome: string | null
+          created_at: string
+          custo_total: number | null
+          data: string
+          desconto: number
+          frete: number
+          id: string
+          id_externo: string | null
+          lancamento_id: string | null
+          marcou_cliente: boolean
+          observacao: string | null
+          status: string
+          subtotal: number
+          taxa_canal: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canal: string
+          categoria: string
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          created_at?: string
+          custo_total?: number | null
+          data: string
+          desconto?: number
+          frete?: number
+          id?: string
+          id_externo?: string | null
+          lancamento_id?: string | null
+          marcou_cliente?: boolean
+          observacao?: string | null
+          status?: string
+          subtotal: number
+          taxa_canal?: number
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canal?: string
+          categoria?: string
+          cliente_id?: string | null
+          cliente_nome?: string | null
+          created_at?: string
+          custo_total?: number | null
+          data?: string
+          desconto?: number
+          frete?: number
+          id?: string
+          id_externo?: string | null
+          lancamento_id?: string | null
+          marcou_cliente?: boolean
+          observacao?: string | null
+          status?: string
+          subtotal?: number
+          taxa_canal?: number
+          total?: number
           updated_at?: string
           user_id?: string
         }
@@ -2492,7 +2675,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      estoque_saldos: {
+        Row: {
+          estoque_minimo: number | null
+          produto_id: string | null
+          saldo: number | null
+          sku: string | null
+          sku_id: string | null
+          user_id: string | null
+          variacao: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_limpar_logs_antigos: {
@@ -2608,6 +2802,39 @@ export type Database = {
       registrar_venda_cliente: {
         Args: { p_cliente_id: string }
         Returns: string
+      }
+      registrar_venda: {
+        Args: {
+          p_id: string
+          p_data: string
+          p_canal: string
+          p_itens: Json
+          p_cliente_id?: string | null
+          p_cliente_nome?: string | null
+          p_desconto?: number
+          p_frete?: number
+          p_taxa_canal?: number
+          p_recebida?: boolean
+          p_observacao?: string | null
+          p_marcar_cliente?: boolean
+        }
+        Returns: string
+      }
+      salvar_estoque_produto: {
+        Args: { p_produto_id: string; p_controla: boolean; p_variacoes?: Json }
+        Returns: undefined
+      }
+      movimentar_estoque: {
+        Args: { p_sku_id: string; p_tipo: string; p_quantidade: number; p_motivo?: string | null }
+        Returns: number
+      }
+      receber_venda: {
+        Args: { p_venda_id: string; p_data: string }
+        Returns: string
+      }
+      cancelar_venda: {
+        Args: { p_venda_id: string }
+        Returns: undefined
       }
     }
     Enums: {

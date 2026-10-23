@@ -34,6 +34,7 @@ import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
+import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import {
   contaCriadaDepoisDoCorte,
   contaVeBloco,
@@ -244,6 +245,7 @@ function PainelPage() {
   // fechado e leva pro /upgrade, igual à barra lateral.
   const financeiroLiberado = rotaLiberada("/financeiro", meta.plano);
   const clientesLiberado = rotaLiberada("/clientes", meta.plano);
+  const vendasLiberado = rotaLiberada("/vendas", meta.plano);
   const calendarioLiberado = rotaLiberada("/calendario", meta.plano);
   const destino = (rota: string, liberado: boolean) => (liberado ? rota : upgradeHref(rota));
 
@@ -1069,6 +1071,13 @@ function PainelPage() {
                   </p>
                 </CartaoFinanceiro>
               </div>
+
+              {/* Vendas do mês e estoque baixo (VND-03). Some sem venda nem estoque. */}
+              {vendasLiberado && userId && (
+                <div className={SPAN_CLASS[12]}>
+                  <CartaoVendasPainel userId={userId} />
+                </div>
+              )}
 
               {/* Registro mínimo de entrada e saída (COPY-04): é o que alimenta os
               três cartões acima pra quem não tem a tela /financeiro. Quem tem o

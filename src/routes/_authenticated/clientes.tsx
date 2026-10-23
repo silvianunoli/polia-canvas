@@ -18,6 +18,7 @@ import { gerarCsv, baixarCsv } from "@/lib/csv";
 import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
+import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import {
   emNegociacao,
   GRUPOS_STATUS,
@@ -263,6 +264,10 @@ function LinhaCliente({
   onEditar: () => void;
 }) {
   const [popAberto, setPopAberto] = useState(false);
+  // Cliente com produto vende pelo módulo Vendas (VND-03): baixa o estoque e o
+  // lucro sai certo. Sem produto continua o registro simples no Financeiro.
+  const [vendaAberta, setVendaAberta] = useState(false);
+  const vendePorProduto = !!cliente.produto_id;
   const [duplicataData, setDuplicataData] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
   const [salvandoStatus, setSalvandoStatus] = useState(false);
@@ -385,7 +390,7 @@ function LinhaCliente({
       </Link>
     </span>
   ) : mostrarAcaoRegistrar ? (
-    semValor ? (
+    semValor && !vendePorProduto ? (
       // Sem valor, registrar lançaria R$ 0 no caixa: o caminho é pôr o valor.
       <span className="font-sans text-[13px] text-[var(--ink-soft)]">
         Coloque o valor da venda pra registrar ·{" "}
@@ -398,7 +403,11 @@ function LinhaCliente({
         </button>
       </span>
     ) : (
-      <button type="button" onClick={abrirPopover} className={`${BTN_MIUDO_ACAO} w-full sm:w-auto`}>
+      <button
+        type="button"
+        onClick={vendePorProduto ? () => setVendaAberta(true) : abrirPopover}
+        className={`${BTN_MIUDO_ACAO} w-full sm:w-auto`}
+      >
         Registrar venda →
       </button>
     )
@@ -498,6 +507,23 @@ function LinhaCliente({
         onConfirmar={registrar}
         carregando={registrando}
       />
+      {vendaAberta && (
+        <ModalRegistrarVenda
+          userId={userId}
+          prefill={{
+            clienteId: cliente.id,
+            clienteNome: cliente.nome,
+            produtoId: cliente.produto_id,
+            valor: cliente.valor,
+            marcarCliente: true,
+          }}
+          onClose={() => setVendaAberta(false)}
+          onSaved={() => {
+            setVendaAberta(false);
+            onRegistrado();
+          }}
+        />
+      )}
     </div>
   );
 }
