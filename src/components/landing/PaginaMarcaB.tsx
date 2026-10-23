@@ -404,6 +404,43 @@ export function PaginaMarcaB({
           </Secao>
         )}
 
+        {/* B9b · PRA QUE NEGÓCIO: seção própria pra não espremer o "pra quem é". Desde
+            23/10/2026 (pedido da Sil) as duas vêm logo depois do topo, antes da prova. */}
+        <Secao fundo="surface-pink">
+          <Rotulo>Pra que negócio</Rotulo>
+          <h2 className={`mt-4 ${H2}`}>De confeitaria a consultório.</h2>
+          <Reveal className="mt-10">
+            <ul className="flex list-none flex-wrap gap-3">
+              {negocios.map((n) => (
+                <li
+                  key={n}
+                  className="rounded-full bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
+                >
+                  {n}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
+            Não achou o seu? Se tem custo, preço e cliente, a Pólia One é pra você.
+          </p>
+        </Secao>
+
+        {/* B10 · PRA QUEM É */}
+        <Secao>
+          <FotoLanding
+            nome="praquem-bancada-pedidos"
+            alt="Bancada com pedidos embalados em papel kraft, etiquetas escritas à mão e fita turquesa."
+            proporcao="21/9"
+            largura={2100}
+          />
+          <div className="mt-12">
+            <Rotulo>Pra quem é</Rotulo>
+            <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
+            <ParaQuem sim={praQuemSim} nao={praQuemNao} />
+          </div>
+        </Secao>
+
         {/* B2 · PROVA */}
         <Secao fundo="surface" className="!py-[clamp(48px,6vw,64px)]">
           <Rotulo>O que a pesquisa da Pólia ouviu</Rotulo>
@@ -595,8 +632,8 @@ export function PaginaMarcaB({
           </div>
         </Secao>
 
-        {/* B9 · QUEM FEZ */}
-        <Secao fundo="surface">
+        {/* B9 · QUEM FEZ: rosa porque agora encosta direto nos Planos, que são surface. */}
+        <Secao fundo="surface-pink">
           <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[5fr_6fr]">
             <figure>
               <FotoLanding
@@ -633,42 +670,6 @@ export function PaginaMarcaB({
                 </Link>
               )}
             </div>
-          </div>
-        </Secao>
-
-        {/* B9b · PRA QUE NEGÓCIO: seção própria pra não espremer o "pra quem é". */}
-        <Secao fundo="surface-pink">
-          <Rotulo>Pra que negócio</Rotulo>
-          <h2 className={`mt-4 ${H2}`}>De confeitaria a consultório.</h2>
-          <Reveal className="mt-10">
-            <ul className="flex list-none flex-wrap gap-3">
-              {negocios.map((n) => (
-                <li
-                  key={n}
-                  className="rounded-full bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
-                >
-                  {n}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
-            Não achou o seu? Se tem custo, preço e cliente, a Pólia One é pra você.
-          </p>
-        </Secao>
-
-        {/* B10 · PRA QUEM É */}
-        <Secao>
-          <FotoLanding
-            nome="praquem-bancada-pedidos"
-            alt="Bancada com pedidos embalados em papel kraft, etiquetas escritas à mão e fita turquesa."
-            proporcao="21/9"
-            largura={2100}
-          />
-          <div className="mt-12">
-            <Rotulo>Pra quem é</Rotulo>
-            <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
-            <ParaQuem sim={praQuemSim} nao={praQuemNao} />
           </div>
         </Secao>
 
