@@ -110,17 +110,21 @@ describe("progressoPrimeirosPassos", () => {
 
 describe("mostraBloco", () => {
   const nova = { createdAt: DEPOIS, onboardingCompleted: true, onboardingCompletedAt: DEPOIS };
-  it("some com os três feitos", () => {
-    expect(mostraBloco(nova, { temPreco: true, modulo1Fechado: true, temNome: true })).toBe(false);
+  const tudo = { temPreco: true, modulo1Fechado: true, temNome: true };
+  it("some com os três feitos e o nicho respondido", () => {
+    expect(mostraBloco(nova, tudo, true)).toBe(false);
   });
   it("aparece enquanto falta um", () => {
-    expect(mostraBloco(nova, { temPreco: true, modulo1Fechado: true, temNome: false })).toBe(true);
+    expect(mostraBloco(nova, { ...tudo, temNome: false }, true)).toBe(true);
+  });
+  it("nicho é obrigatório: com os três feitos e sem nicho, o bloco fica", () => {
+    expect(mostraBloco(nova, tudo, false)).toBe(true);
   });
   it("conta fora da regra nunca vê", () => {
     const antiga = { createdAt: ANTES, onboardingCompleted: true, onboardingCompletedAt: ANTES };
-    expect(mostraBloco(antiga, { temPreco: false, modulo1Fechado: false, temNome: false })).toBe(
-      false,
-    );
+    expect(
+      mostraBloco(antiga, { temPreco: false, modulo1Fechado: false, temNome: false }, false),
+    ).toBe(false);
   });
 });
 
@@ -161,11 +165,17 @@ describe("nichoDaConta", () => {
     expect(nichoDaConta({ origem_campanha: { utm_content: "N02-trancista" } })).toEqual({
       pessoa: "Trancista",
       tipo: "servico",
+      negocio: "bemestar",
     });
     expect(nichoDaConta({ origem_campanha: { utm_content: "N07-confeiteira" } })).toEqual({
       pessoa: "Confeiteira",
       tipo: "produto",
+      negocio: "comida",
     });
+  });
+
+  it("anúncio que não cai sem dúvida num nicho deixa a pergunta pra conta", () => {
+    expect(nichoDaConta({ origem_campanha: { utm_content: "N15-psicologa" } })?.negocio).toBeNull();
   });
 
   it("sem anúncio de nicho é null", () => {
@@ -178,12 +188,12 @@ describe("nichoDaConta", () => {
 
 describe("textos", () => {
   it("passo do preço por nicho e sem nicho", () => {
-    expect(textoPassoPreco({ pessoa: "Trancista", tipo: "servico" })).toEqual({
+    expect(textoPassoPreco({ pessoa: "Trancista", tipo: "servico", negocio: null })).toEqual({
       titulo: "Calcular o preço da sua hora",
       subtitulo: "Material e o seu tempo. Uns 3 minutos.",
       perguntaTipo: false,
     });
-    expect(textoPassoPreco({ pessoa: "Confeiteira", tipo: "produto" })).toEqual({
+    expect(textoPassoPreco({ pessoa: "Confeiteira", tipo: "produto", negocio: null })).toEqual({
       titulo: "Calcular o preço de um produto",
       subtitulo: "Material, embalagem e o seu tempo. Uns 3 minutos.",
       perguntaTipo: false,
@@ -196,12 +206,12 @@ describe("textos", () => {
   });
 
   it("manchete por nicho e sem nicho", () => {
-    expect(mancheteDoBloco({ pessoa: "Trancista", tipo: "servico" })).toBe(
+    expect(mancheteDoBloco({ pessoa: "Trancista", tipo: "servico", negocio: null })).toBe(
       "Trancista, o preço da sua hora começa por aqui.",
     );
-    expect(mancheteDoBloco({ pessoa: "Papelaria personalizada", tipo: "produto" })).toBe(
-      "Papelaria personalizada, o preço do seu produto começa por aqui.",
-    );
+    expect(
+      mancheteDoBloco({ pessoa: "Papelaria personalizada", tipo: "produto", negocio: null }),
+    ).toBe("Papelaria personalizada, o preço do seu produto começa por aqui.");
     expect(mancheteDoBloco(null)).toBe("Três passos e o Painel começa a mostrar o seu mês.");
   });
 
@@ -214,9 +224,9 @@ describe("textos", () => {
   it("copy sem travessão, exclamação nem emoji; CTA começa por Quero", () => {
     const textos = [
       mancheteDoBloco(null),
-      mancheteDoBloco({ pessoa: "Trancista", tipo: "servico" }),
+      mancheteDoBloco({ pessoa: "Trancista", tipo: "servico", negocio: null }),
       ...Object.values(textoPassoPreco(null)).filter((v) => typeof v === "string"),
-      ...Object.values(textoPassoPreco({ pessoa: "X", tipo: "servico" })).filter(
+      ...Object.values(textoPassoPreco({ pessoa: "X", tipo: "servico", negocio: null })).filter(
         (v) => typeof v === "string",
       ),
       PASSO_MODULO_1.titulo,
@@ -248,7 +258,9 @@ describe("estágio do negócio (GRW-66)", async () => {
   });
   it("nicho de serviço vira serviço, de produto vira produto", () => {
     expect(escolhaDoNicho(null)).toBeNull();
-    expect(escolhaDoNicho({ pessoa: "Trancista", tipo: "servico" })).toBe("servico");
-    expect(escolhaDoNicho({ pessoa: "Confeiteira", tipo: "produto" })).toBe("produto");
+    expect(escolhaDoNicho({ pessoa: "Trancista", tipo: "servico", negocio: null })).toBe("servico");
+    expect(escolhaDoNicho({ pessoa: "Confeiteira", tipo: "produto", negocio: null })).toBe(
+      "produto",
+    );
   });
 });

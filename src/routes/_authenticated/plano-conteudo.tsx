@@ -77,7 +77,26 @@ function PlanoConteudoPage() {
   const [mesAtivo, setMesAtivo] = useState(() => mesAnoAtual().mes);
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const [nichos, setNichos] = useState<string[]>([]);
+  // null = ela ainda não mexeu: vale o nicho do perfil (respondido no Painel
+  // desde 23/10/2026), se for um dos nichos do banco. "Outro" não marca nada.
+  const [nichosEscolhidos, setNichos] = useState<string[] | null>(null);
+  const nichoPerfilQuery = useQuery({
+    queryKey: ["perfil-nicho", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("nicho")
+        .eq("id", userId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.nicho ?? null;
+    },
+  });
+  const nichoPerfil = nichoPerfilQuery.data;
+  const nichos =
+    nichosEscolhidos ??
+    (nichoPerfil && NICHOS.some((n) => n.chave === nichoPerfil) ? [nichoPerfil] : []);
   const [trocando, setTrocando] = useState(false);
   // Refazer apaga e recria os dias de hoje em diante (montarPlanoConteudoDoBanco),
   // levando junto o que ela editou nesses dias: pede confirmação antes.

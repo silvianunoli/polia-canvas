@@ -29,6 +29,7 @@ import { Route as QuizIndexRouteImport } from './routes/quiz.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as QuizSplatRouteImport } from './routes/quiz.$'
 import { Route as OTokenRouteImport } from './routes/o.$token'
+import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirSenhaRouteImport } from './routes/auth/redefinir-senha'
@@ -162,6 +163,11 @@ const QuizSplatRoute = QuizSplatRouteImport.update({
 const OTokenRoute = OTokenRouteImport.update({
   id: '/o/$token',
   path: '/o/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LSlugRoute = LSlugRouteImport.update({
+  id: '/l/$slug',
+  path: '/l/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
@@ -393,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog/': typeof BlogIndexRoute
@@ -449,6 +456,7 @@ export interface FileRoutesByTo {
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog': typeof BlogIndexRoute
@@ -507,6 +515,7 @@ export interface FileRoutesById {
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/blog/': typeof BlogIndexRoute
@@ -565,6 +574,7 @@ export interface FileRouteTypes {
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
     | '/blog/$slug'
+    | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/blog/'
@@ -621,6 +631,7 @@ export interface FileRouteTypes {
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
     | '/blog/$slug'
+    | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/blog'
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/auth/redefinir-senha'
     | '/auth/verificacao'
     | '/blog/$slug'
+    | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/blog/'
@@ -716,6 +728,7 @@ export interface RootRouteChildren {
   AuthRedefinirSenhaRoute: typeof AuthRedefinirSenhaRoute
   AuthVerificacaoRoute: typeof AuthVerificacaoRoute
   BlogSlugRoute: typeof BlogSlugRoute
+  LSlugRoute: typeof LSlugRoute
   OTokenRoute: typeof OTokenRoute
   QuizSplatRoute: typeof QuizSplatRoute
   BlogIndexRoute: typeof BlogIndexRoute
@@ -862,6 +875,13 @@ declare module '@tanstack/react-router' {
       path: '/o/$token'
       fullPath: '/o/$token'
       preLoaderRoute: typeof OTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/l/$slug': {
+      id: '/l/$slug'
+      path: '/l/$slug'
+      fullPath: '/l/$slug'
+      preLoaderRoute: typeof LSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/$slug': {
@@ -1202,6 +1222,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRedefinirSenhaRoute: AuthRedefinirSenhaRoute,
   AuthVerificacaoRoute: AuthVerificacaoRoute,
   BlogSlugRoute: BlogSlugRoute,
+  LSlugRoute: LSlugRoute,
   OTokenRoute: OTokenRoute,
   QuizSplatRoute: QuizSplatRoute,
   BlogIndexRoute: BlogIndexRoute,

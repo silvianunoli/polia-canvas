@@ -25,6 +25,9 @@ function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
     onEscolherTipo: vi.fn(async () => true),
     estagioSalvo: null,
     onEscolherEstagio: vi.fn(async () => true),
+    // Respondido por padrão: os testes dos passos não dependem da pergunta.
+    nichoSalvo: "comida" as const,
+    onEscolherNicho: vi.fn(async () => true),
     onSalvarNome: vi.fn(async () => true),
     ...over,
   };
@@ -33,6 +36,20 @@ function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
 }
 
 describe("PrimeirosPassos", () => {
+  it("sem nicho, a pergunta vem antes e os passos ficam sem ação até responder", async () => {
+    const props = montar({ nichoSalvo: null });
+    expect(screen.getByText("Antes dos passos: qual é o nicho da marca?")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Produto" })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Quero calcular meu preço/ })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: /Comida e doces/ }));
+    expect(props.onEscolherNicho).toHaveBeenCalledWith("comida");
+  });
+
+  it("com nicho salvo, a pergunta não aparece", () => {
+    montar();
+    expect(screen.queryByText("Antes dos passos: qual é o nicho da marca?")).toBeNull();
+  });
+
   it("pergunta do estágio só depois do primeiro preço, e some com resposta salva", async () => {
     montar();
     expect(screen.queryByText("E a marca, já vende?")).toBeNull();
@@ -61,7 +78,7 @@ describe("PrimeirosPassos", () => {
   });
 
   it("com nicho de serviço, sem pergunta: o botão já leva à aba Serviço", () => {
-    montar({ nicho: { pessoa: "Trancista", tipo: "servico" } });
+    montar({ nicho: { pessoa: "Trancista", tipo: "servico", negocio: null } });
     expect(screen.getByText("Calcular o preço da sua hora")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Produto" })).toBeNull();
     const link = screen.getByRole("link", { name: /Quero calcular meu preço/ });

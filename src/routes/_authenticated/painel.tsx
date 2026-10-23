@@ -37,6 +37,7 @@ import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
 import {
+  blocoPendente,
   contaCriadaDepoisDoCorte,
   contaVeBloco,
   mancheteDoBloco,
@@ -504,7 +505,7 @@ function PainelPage() {
     !!primeiros.dados &&
     !!progressoPassos &&
     contaVeBloco(primeiros.dados) &&
-    !progressoPassos.completo;
+    blocoPendente(progressoPassos, !!primeiros.dados.nicho);
   // A manchete e o que vem colado nela esperam as duas leituras: sem isso a
   // conta nova via a manchete e o botão de sempre piscarem antes do bloco.
   const cabecalhoPronto = dadosQuery.isSuccess && !primeiros.carregando;
@@ -784,6 +785,15 @@ function PainelPage() {
               onEscolherTipo={primeiros.salvarTipo}
               estagioSalvo={primeiros.dados.estagio}
               onEscolherEstagio={primeiros.salvarEstagio}
+              nichoSalvo={primeiros.dados.nicho}
+              onEscolherNicho={async (n) => {
+                const ok = await primeiros.salvarNicho(n);
+                // Os três passos já estavam feitos: o bloco sai com a resposta.
+                if (ok && progressoPassos.completo) {
+                  requestAnimationFrame(() => document.getElementById("painel-manchete")?.focus());
+                }
+                return ok;
+              }}
               onSalvarNome={async (nome) => {
                 const ok = await primeiros.salvarNome(nome);
                 // Era o último passo: o bloco sai e o foco iria pro <body>.

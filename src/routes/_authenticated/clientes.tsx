@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { AlertTriangle, FileText, Pencil, Trash2, Users } from "lucide-react";
+import { AlertTriangle, FileText, Link2, Pencil, Trash2, Users } from "lucide-react";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -20,6 +20,21 @@ import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalOrcamento } from "@/components/orcamentos/ModalOrcamento";
+import { FichaCliente } from "@/components/clientes/FichaCliente";
+import { ModalLinkCaptura } from "@/components/clientes/ModalLinkCaptura";
+import { useCompradoPorCliente } from "@/components/clientes/dados";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import {
+  formatarWhatsapp,
+  noGrupo,
+  normalizarWhatsapp,
+  ORIGEM_LABEL,
+  ORIGENS,
+  ORIGENS_MANUAIS,
+  resumoLeads,
+  type FiltroGrupo,
+  type Origem,
+} from "@/lib/leads";
 import {
   emNegociacao,
   GRUPOS_STATUS,
@@ -31,7 +46,7 @@ import {
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
     meta: [
-      { title: "Seus clientes · Pólia One" },
+      { title: "Suas clientes · Pólia One" },
       { name: "description", content: "Suas clientes, do primeiro contato ao pós-venda." },
     ],
   }),
@@ -52,7 +67,17 @@ interface Cliente {
   created_at: string;
   updated_at: string | null;
   venda_registrada: boolean;
+  // Fase 2 (VND-04): leads.
+  origem: string | null;
+  whatsapp: string | null;
+  whatsapp_consentimento_em: string | null;
+  consentimento_origem: string | null;
+  interesse: string | null;
+  novo: boolean;
 }
+
+const origemLabel = (o: string | null) =>
+  o && o in ORIGEM_LABEL ? ORIGEM_LABEL[o as Origem] : null;
 
 interface Produto {
   id: string;
@@ -99,6 +124,11 @@ function ClientesPage() {
   const [modalAberto, setModalAberto] = useState(false);
   // QA-31 (07/10/2026): editar reaproveita o mesmo modal da criação.
   const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
+  const [grupo, setGrupo] = useState<FiltroGrupo>("todas");
+  const [origemFiltro, setOrigemFiltro] = useState<Origem | "todas">("todas");
+  const [linkAberto, setLinkAberto] = useState(false);
+  const meta = useUserMeta();
+  const compradoQuery = useCompradoPorCliente(userId);
 
   const dadosQuery = useQuery({
     queryKey: ["clientes-hub", userId],
@@ -131,6 +161,12 @@ function ClientesPage() {
 
   const clientes = dadosQuery.data?.clientes ?? [];
   const produtos = dadosQuery.data?.produtos ?? [];
+  const resumo = resumoLeads(clientes, hojeISO().slice(0, 7), compradoQuery.data);
+  const filtradas = clientes.filter(
+    (c) =>
+      noGrupo(c.status_pedido, grupo) && (origemFiltro === "todas" || c.origem === origemFiltro),
+  );
+  const recarregar = () => qc.invalidateQueries({ queryKey: ["clientes-hub", userId] });
 
   const nomeProduto = (produtoId: string | null) => {
     if (!produtoId) return "sem produto";
@@ -146,6 +182,10 @@ function ClientesPage() {
       "Valor",
       "Data de cadastro",
       "Venda registrada",
+      "WhatsApp",
+      "Origem",
+      "Autorizou WhatsApp em",
+      "Interesse",
     ];
     const linhas = clientes.map((c) => [
       c.nome,
@@ -155,6 +195,10 @@ function ClientesPage() {
       c.valor != null ? String(c.valor) : "",
       formatarDataCurta(c.created_at),
       c.venda_registrada ? "sim" : "não",
+      c.whatsapp ? formatarWhatsapp(c.whatsapp) : "",
+      origemLabel(c.origem) ?? "",
+      c.whatsapp_consentimento_em ? formatarDataCurta(c.whatsapp_consentimento_em) : "",
+      c.interesse ?? "",
     ]);
     baixarCsv(`clientes-polia-${hojeISO()}.csv`, gerarCsv(cabecalho, linhas));
     track("clientes_exportados", { total: clientes.length });
@@ -164,18 +208,22 @@ function ClientesPage() {
     <PaginaLogada
       dica="clientes"
       largura="larga"
-      eyebrow="Seus clientes"
+      eyebrow="Suas clientes"
       titulo="Do primeiro contato ao sim."
       subtitulo="Suas clientes e seus pedidos, num lugar só."
       acao={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {clientes.length > 0 && (
             <button type="button" onClick={exportarCsv} className={BTN_ACAO_CONTORNO}>
               Exportar CSV
             </button>
           )}
+          <button type="button" onClick={() => setLinkAberto(true)} className={BTN_ACAO_CONTORNO}>
+            <Link2 size={16} aria-hidden="true" />
+            Link de captura
+          </button>
           <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
-            + Adicionar cliente
+            + Adicionar
           </button>
         </div>
       }
@@ -200,23 +248,121 @@ function ClientesPage() {
             titulo="Nenhuma cliente cadastrada ainda."
             texto="Cada cliente guarda onde a conversa está, o pedido, o valor e o pós-venda. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
             acao={
-              <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
-                Adicionar a primeira cliente
-              </button>
+              <div className="flex flex-wrap justify-center gap-2">
+                <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
+                  Adicionar a primeira cliente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLinkAberto(true)}
+                  className={BTN_ACAO_CONTORNO}
+                >
+                  Criar link de captura
+                </button>
+              </div>
             }
           />
         ) : (
           <div>
-            {clientes.map((cliente) => (
-              <LinhaCliente
-                key={cliente.id}
-                cliente={cliente}
-                nomeProduto={nomeProduto(cliente.produto_id)}
-                userId={userId!}
-                onRegistrado={() => qc.invalidateQueries({ queryKey: ["clientes-hub", userId] })}
-                onEditar={() => setClienteEditando(cliente)}
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <NumeroLeads
+                rotulo="Novas fichas no mês"
+                valor={String(resumo.novosNoMes)}
+                nota={resumo.peloLink > 0 ? `${resumo.peloLink} pelo link` : undefined}
               />
-            ))}
+              <NumeroLeads
+                rotulo="Viraram pedido"
+                valor={`${resumo.viraramCliente} de ${resumo.novosNoMes}`}
+              />
+              <NumeroLeads
+                rotulo="De onde mais vem gente"
+                valor={resumo.origemMaisComum ? ORIGEM_LABEL[resumo.origemMaisComum] : "sem origem"}
+                nota={
+                  compradoQuery.isError
+                    ? "quem mais compra não carregou"
+                    : resumo.origemQueMaisCompra
+                      ? `quem mais compra: ${ORIGEM_LABEL[resumo.origemQueMaisCompra]}`
+                      : resumo.origemMaisComum
+                        ? undefined
+                        : "marque a origem no cadastro"
+                }
+              />
+            </dl>
+
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <div role="group" aria-label="Mostrar" className="flex flex-wrap gap-2">
+                {(
+                  [
+                    { id: "todas", label: "Todas" },
+                    {
+                      id: "leads",
+                      label: resumo.naoVistos > 0 ? `Leads (${resumo.naoVistos} novos)` : "Leads",
+                    },
+                    { id: "pedido", label: "Com pedido" },
+                    { id: "depois", label: "Depois da entrega" },
+                  ] as { id: FiltroGrupo; label: string }[]
+                ).map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    aria-pressed={grupo === g.id}
+                    onClick={() => setGrupo(g.id)}
+                    className={`${BTN_MIUDO} min-h-11 ${grupo === g.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+              <label className="sr-only" htmlFor="clientes-origem">
+                Origem
+              </label>
+              <select
+                id="clientes-origem"
+                value={origemFiltro}
+                onChange={(e) => setOrigemFiltro(e.target.value as Origem | "todas")}
+                className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-3 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none sm:ml-auto"
+              >
+                <option value="todas">Origem: todas</option>
+                {ORIGENS.map((o) => (
+                  <option key={o} value={o}>
+                    {ORIGEM_LABEL[o]}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mt-4">
+              {filtradas.length === 0 ? (
+                <div className="rounded-xl border border-[var(--line)] bg-white p-6 text-[14px] text-[var(--ink-soft)]">
+                  <p>
+                    {grupo === "leads"
+                      ? "Nenhuma interessada com esse filtro. O link de captura traz contatos direto pra cá."
+                      : "Nenhuma cliente com esse filtro."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGrupo("todas");
+                      setOrigemFiltro("todas");
+                    }}
+                    className="mt-2 inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+                  >
+                    Ver todas
+                  </button>
+                </div>
+              ) : (
+                filtradas.map((cliente) => (
+                  <LinhaCliente
+                    key={cliente.id}
+                    cliente={cliente}
+                    nomeProduto={nomeProduto(cliente.produto_id)}
+                    userId={userId!}
+                    onRegistrado={recarregar}
+                    onEditar={() => setClienteEditando(cliente)}
+                  />
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -229,6 +375,14 @@ function ClientesPage() {
             qc.invalidateQueries({ queryKey: ["clientes-hub", userId] });
             setModalAberto(false);
           }}
+        />
+      )}
+
+      {linkAberto && userId && (
+        <ModalLinkCaptura
+          userId={userId}
+          nomeDaMarca={meta.businessName}
+          onClose={() => setLinkAberto(false)}
         />
       )}
 
@@ -268,6 +422,10 @@ function LinhaCliente({
   // Cliente com produto vende pelo módulo Vendas (VND-03): baixa o estoque e o
   // lucro sai certo. Sem produto continua o registro simples no Financeiro.
   const [vendaAberta, setVendaAberta] = useState(false);
+  // Ficha (VND-04) e a venda que sai dela: a ficha registra venda a qualquer
+  // momento; marca a cliente só quando é a venda do pedido entregue.
+  const [fichaAberta, setFichaAberta] = useState(false);
+  const [vendaDaFicha, setVendaDaFicha] = useState(false);
   const vendePorProduto = !!cliente.produto_id;
   const [duplicataData, setDuplicataData] = useState<string | null>(null);
   const [registrando, setRegistrando] = useState(false);
@@ -424,11 +582,29 @@ function LinhaCliente({
           </span>
         </div>
         <div className="min-w-0">
-          <p className="truncate font-sans text-[15px] font-semibold text-[var(--ink)]">
-            {cliente.nome}
-          </p>
+          <button
+            type="button"
+            onClick={() => setFichaAberta(true)}
+            className="flex max-w-full items-center gap-2 text-left font-sans text-[15px] font-semibold text-[var(--ink)] underline-offset-2 hover:underline"
+          >
+            <span className="truncate">{cliente.nome}</span>
+            {cliente.novo && (
+              <span className="shrink-0 rounded border border-[var(--line)] px-1.5 py-0.5 text-[11px] font-normal text-[var(--ink-soft)]">
+                novo
+              </span>
+            )}
+            <span className="sr-only">, abrir ficha</span>
+          </button>
           <p className="truncate font-sans text-[12px] text-[var(--muted)]">
-            {cliente.contato || "sem contato"}
+            {[
+              cliente.whatsapp
+                ? formatarWhatsapp(cliente.whatsapp)
+                : cliente.contato || "sem contato",
+              origemLabel(cliente.origem),
+              cliente.interesse ? `"${cliente.interesse}"` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
           <p className="mt-0.5 truncate font-sans text-[13px] text-[var(--ink-soft)]">
             {nomeProduto}
@@ -459,6 +635,7 @@ function LinhaCliente({
         <MenuOpcoes
           ariaLabel={`Opções da cliente ${cliente.nome}`}
           itens={[
+            { label: "Abrir ficha", icone: Users, onClick: () => setFichaAberta(true) },
             { label: "Fazer orçamento", icone: FileText, onClick: () => setOrcamentoAberto(true) },
             { label: "Editar", icone: Pencil, onClick: onEditar },
             {
@@ -527,6 +704,43 @@ function LinhaCliente({
           }}
         />
       )}
+      {fichaAberta && (
+        <FichaCliente
+          cliente={cliente}
+          onClose={() => setFichaAberta(false)}
+          onVista={onRegistrado}
+          onRegistrarVenda={() => {
+            setFichaAberta(false);
+            setVendaDaFicha(true);
+          }}
+          onCriarOrcamento={() => {
+            setFichaAberta(false);
+            setOrcamentoAberto(true);
+          }}
+          onEditar={() => {
+            setFichaAberta(false);
+            onEditar();
+          }}
+        />
+      )}
+      {vendaDaFicha && (
+        <ModalRegistrarVenda
+          userId={userId}
+          prefill={{
+            clienteId: cliente.id,
+            clienteNome: cliente.nome,
+            produtoId: cliente.produto_id,
+            valor: cliente.valor,
+            // Só a venda do pedido entregue marca a cliente (é a que o botão da linha faria).
+            marcarCliente: mostrarAcaoRegistrar && vendePorProduto,
+          }}
+          onClose={() => setVendaDaFicha(false)}
+          onSaved={() => {
+            setVendaDaFicha(false);
+            onRegistrado();
+          }}
+        />
+      )}
       {orcamentoAberto && (
         <ModalOrcamento
           userId={userId}
@@ -545,6 +759,16 @@ function LinhaCliente({
 }
 
 /* ============== Modal: nova cliente / editar cliente ============== */
+function NumeroLeads({ rotulo, valor, nota }: { rotulo: string; valor: string; nota?: string }) {
+  return (
+    <div className="rounded-xl bg-[var(--surface)] p-4">
+      <dt className="text-[13px] text-[var(--muted)]">{rotulo}</dt>
+      <dd className="font-cabinet mt-1 text-[24px] text-[var(--ink)]">{valor}</dd>
+      {nota && <dd className="mt-1 text-[12px] text-[var(--muted)]">{nota}</dd>}
+    </div>
+  );
+}
+
 function ModalCliente({
   userId,
   cliente,
@@ -563,6 +787,19 @@ function ModalCliente({
   const editando = !!cliente;
   const [nome, setNome] = useState(cliente?.nome ?? "");
   const [contato, setContato] = useState(cliente?.contato ?? "");
+  const [whatsapp, setWhatsapp] = useState(
+    cliente?.whatsapp ? formatarWhatsapp(cliente.whatsapp) : "",
+  );
+  const [origem, setOrigem] = useState<string>(cliente?.origem ?? "");
+  const [autorizou, setAutorizou] = useState(!!cliente?.whatsapp_consentimento_em);
+  const [erroNome, setErroNome] = useState<string | undefined>();
+  const [erroWhats, setErroWhats] = useState<string | undefined>();
+  // Aceite dado pela própria cliente no link é prova dela: a dona não desmarca.
+  const whatsappAtual = whatsapp.trim() ? normalizarWhatsapp(whatsapp) : null;
+  const aceiteDoLink =
+    cliente?.consentimento_origem === "link" &&
+    !!cliente.whatsapp &&
+    whatsappAtual === cliente.whatsapp;
   const [statusPedido, setStatusPedido] = useState<StatusPedido | "">(cliente?.status_pedido ?? "");
   const [notas, setNotas] = useState(cliente?.notas ?? "");
   const [valor, setValor] = useState(cliente?.valor != null ? String(cliente.valor) : "");
@@ -592,8 +829,11 @@ function ModalCliente({
   };
 
   const salvar = async () => {
+    setErroNome(undefined);
+    setErroWhats(undefined);
     if (!nome.trim()) {
-      setErro("Nome é obrigatório.");
+      setErroNome("Escreva o nome.");
+      document.getElementById("cliente-nome")?.focus();
       return;
     }
     const valorNumero = valor.trim() === "" ? null : Number(valor);
@@ -601,36 +841,75 @@ function ModalCliente({
       setErro("O valor precisa ser um número igual ou maior que zero.");
       return;
     }
+    const whatsappNormal = whatsappAtual;
+    if (whatsapp.trim() && !whatsappNormal) {
+      setErroWhats("Confira o número, com DDD. Ex: (11) 98888-0000");
+      document.getElementById("cliente-whatsapp")?.focus();
+      return;
+    }
+    if (autorizou && !whatsappNormal && !aceiteDoLink) {
+      setErroWhats("Pra marcar a autorização, preencha o WhatsApp.");
+      document.getElementById("cliente-whatsapp")?.focus();
+      return;
+    }
     setSalvando(true);
     setErro(null);
     // Sem user_id nem venda_registrada no payload da edição: a dona não muda, e
-    // a marca de venda registrada só a RPC registrar_venda_cliente mexe.
-    const campos: Record<string, unknown> = {
+    // a marca de venda registrada só a RPC de venda mexe. O aceite de WhatsApp
+    // também fica fora: muda só pela registrar_consentimento (livro da LGPD), e
+    // o banco recusa escrita direta nessas colunas.
+    const campos = {
       nome: nome.trim(),
       contato: contato.trim() || null,
       status_pedido: statusPedido || null,
       notas: notas.trim() || null,
       valor: valorNumero,
       produto_id: produtoId || null,
+      whatsapp: whatsappNormal,
+      origem: origem || null,
     };
-    const tabela = supabase.from("clientes" as never) as unknown as {
-      insert: (p: Record<string, unknown>) => Promise<{ error: unknown }>;
-      update: (p: Record<string, unknown>) => {
-        eq: (c: string, v: string) => Promise<{ error: unknown }>;
-      };
-    };
-    const { error } = cliente
-      ? await tabela
-          .update({ ...campos, updated_at: new Date().toISOString() })
+    const resposta = cliente
+      ? await supabase
+          .from("clientes")
+          .update({ ...campos, updated_at: new Date().toISOString() } as never)
           .eq("id", cliente.id)
-      : await tabela.insert({ ...campos, user_id: userId });
-    setSalvando(false);
-    if (error) {
+          .select("id")
+          .single()
+      : await supabase
+          .from("clientes")
+          .insert({ ...campos, user_id: userId } as never)
+          .select("id")
+          .single();
+    if (resposta.error || !resposta.data) {
+      setSalvando(false);
       // Técnico no log, frase da Pólia na tela (mesmo padrão do modal de lançamento).
-      console.error(editando ? "cliente_editar" : "cliente_criar", error);
-      setErro("A Pólia One não conseguiu salvar a cliente agora. Tenta de novo.");
+      console.error(editando ? "cliente_editar" : "cliente_criar", resposta.error);
+      setErro(
+        resposta.error?.code === "23505"
+          ? "Já existe uma cliente com esse WhatsApp. Procure por ela na lista."
+          : "A Pólia One não conseguiu salvar a cliente agora. Tenta de novo.",
+      );
       return;
     }
+
+    // Aceite só é gravado quando a caixinha muda em relação ao banco. Número
+    // trocado já derrubou o aceite antigo no próprio banco (gatilho).
+    const mesmoNumero = !!cliente?.whatsapp && whatsappNormal === cliente.whatsapp;
+    const aceiteNoBanco = !!cliente?.whatsapp_consentimento_em && mesmoNumero;
+    if (!aceiteDoLink && whatsappNormal && autorizou !== aceiteNoBanco) {
+      const { error } = await supabase.rpc("registrar_consentimento", {
+        p_cliente_id: (resposta.data as { id: string }).id,
+        p_aceite: autorizou,
+      });
+      if (error) {
+        setSalvando(false);
+        console.error("cliente_consentimento", error);
+        toastErro("A cliente foi salva, mas a autorização não. Abra a cliente e salve de novo.");
+        onSaved();
+        return;
+      }
+    }
+    setSalvando(false);
     if (editando) {
       track("cliente_editado");
       onSaved();
@@ -657,13 +936,13 @@ function ModalCliente({
             Cancelar
           </button>
           <button type="button" onClick={salvar} disabled={salvando} className={BTN_ACAO}>
-            {salvando ? "Salvando..." : "Salvar"}
+            {salvando ? "Salvando…" : "Salvar"}
           </button>
         </>
       }
     >
       <div className="mb-4">
-        <Campo label="Nome" required>
+        <Campo label="Nome" required id="cliente-nome" error={erroNome}>
           <input
             value={nome}
             onChange={(e) => setNome(e.target.value)}
@@ -674,16 +953,77 @@ function ModalCliente({
         </Campo>
       </div>
 
-      <div className="mb-4">
-        <Campo label="Contato">
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <Campo label="WhatsApp" id="cliente-whatsapp" error={erroWhats}>
+          <input
+            type="tel"
+            inputMode="tel"
+            value={whatsapp}
+            onChange={(e) => {
+              setWhatsapp(e.target.value);
+              // Aceite é do número: trocou, a caixinha volta a ficar vazia.
+              setAutorizou(
+                !!cliente?.whatsapp_consentimento_em &&
+                  normalizarWhatsapp(e.target.value) === cliente.whatsapp,
+              );
+            }}
+            maxLength={30}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            placeholder="(11) 98888-0000"
+          />
+        </Campo>
+        <Campo label="Outro contato">
           <input
             value={contato}
             onChange={(e) => setContato(e.target.value)}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-            placeholder="@instagram ou telefone"
+            placeholder="@instagram ou e-mail"
           />
         </Campo>
       </div>
+
+      <div className="mb-4">
+        <Campo label="De onde veio">
+          <select
+            value={origem}
+            onChange={(e) => setOrigem(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          >
+            <option value="">Não sei</option>
+            {/* "Link de captura" só entra pelo próprio link, mas continua visível na edição. */}
+            {(origem === "link" ? ORIGENS : ORIGENS_MANUAIS).map((o) => (
+              <option key={o} value={o}>
+                {ORIGEM_LABEL[o]}
+              </option>
+            ))}
+          </select>
+        </Campo>
+      </div>
+
+      {aceiteDoLink ? (
+        <p className="mb-4 rounded-lg bg-[var(--bg)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+          Ela autorizou mensagens da marca pelo link em{" "}
+          {formatarDataCurta(cliente!.whatsapp_consentimento_em!)}. Esse aceite fica guardado.
+        </p>
+      ) : (
+        <label className="mb-4 flex min-h-11 cursor-pointer items-start gap-3 text-[14px] text-[var(--ink)]">
+          <input
+            type="checkbox"
+            checked={autorizou}
+            onChange={(e) => setAutorizou(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 accent-[var(--secondary-text)]"
+          />
+          <span>
+            Ela autorizou receber mensagens da marca no WhatsApp
+            {cliente?.whatsapp_consentimento_em && (
+              <span className="block text-[12px] text-[var(--muted)]">
+                desde {formatarDataCurta(cliente.whatsapp_consentimento_em)} (
+                {cliente.consentimento_origem === "link" ? "pelo link" : "no cadastro"})
+              </span>
+            )}
+          </span>
+        </label>
+      )}
 
       <div className="mb-4">
         <p id="cliente-status-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
@@ -694,7 +1034,7 @@ function ModalCliente({
             type="button"
             onClick={() => setStatusPedido("")}
             aria-pressed={statusPedido === ""}
-            className={`${BTN_MIUDO} ${statusPedido === "" ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            className={`${BTN_MIUDO} min-h-11 ${statusPedido === "" ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             Sem status
           </button>
@@ -708,7 +1048,7 @@ function ModalCliente({
                     type="button"
                     onClick={() => setStatusPedido(s)}
                     aria-pressed={statusPedido === s}
-                    className={`${BTN_MIUDO} ${statusPedido === s ? "!bg-[var(--secondary)]" : "bg-white"}`}
+                    className={`${BTN_MIUDO} min-h-11 ${statusPedido === s ? "!bg-[var(--secondary)]" : "bg-white"}`}
                   >
                     {s}
                   </button>

@@ -7,6 +7,7 @@
 // destaque, que texto aparece). A leitura e a gravação ficam no hook
 // usePrimeirosPassos; a tela, em components/painel/PrimeirosPassos.tsx.
 
+import { nichoNegocioDoAnuncio, type NichoNegocio } from "@/lib/nichoNegocio";
 import { nichoDaCampanha } from "@/lib/nichosLanding";
 
 /**
@@ -88,9 +89,22 @@ export function progressoPrimeirosPassos(f: FatosPrimeirosPassos): ProgressoPrim
   return { feitos, destaque, totalFeitos, completo: destaque === null };
 }
 
-/** O bloco aparece: a conta está na regra e ainda falta pelo menos um passo. */
-export function mostraBloco(p: PerfilPrimeirosPassos, f: FatosPrimeirosPassos): boolean {
-  return contaVeBloco(p) && !progressoPrimeirosPassos(f).completo;
+/**
+ * Ainda há o que fazer no bloco: falta um passo ou falta o nicho. O nicho é
+ * obrigatório (23/10/2026) mas não é passo (não conta no "N de 3"): conta com
+ * os três feitos e sem nicho ainda vê o bloco, só com a pergunta.
+ */
+export function blocoPendente(progresso: ProgressoPrimeirosPassos, temNicho: boolean): boolean {
+  return !progresso.completo || !temNicho;
+}
+
+/** O bloco aparece: a conta está na regra e ainda falta um passo ou o nicho. */
+export function mostraBloco(
+  p: PerfilPrimeirosPassos,
+  f: FatosPrimeirosPassos,
+  temNicho: boolean,
+): boolean {
+  return contaVeBloco(p) && blocoPendente(progressoPrimeirosPassos(f), temNicho);
 }
 
 // ── Tipo de negócio ──
@@ -133,6 +147,8 @@ export function tipoPrecoDaBusca(v: unknown): TipoPreco | undefined {
 export interface NichoDoPasso {
   pessoa: string;
   tipo: TipoPreco;
+  /** O nicho do negócio que o anúncio já responde (null quando fica em dúvida). */
+  negocio: NichoNegocio | null;
 }
 
 /**
@@ -143,8 +159,9 @@ export function nichoDaConta(userMetadata: unknown): NichoDoPasso | null {
   const origem = (userMetadata as { origem_campanha?: { utm_content?: unknown } } | null)
     ?.origem_campanha;
   const utm = origem?.utm_content;
-  const n = nichoDaCampanha(typeof utm === "string" ? utm : undefined);
-  return n ? { pessoa: n.pessoa, tipo: n.tipo } : null;
+  const chave = typeof utm === "string" ? utm : undefined;
+  const n = nichoDaCampanha(chave);
+  return n ? { pessoa: n.pessoa, tipo: n.tipo, negocio: nichoNegocioDoAnuncio(chave) } : null;
 }
 
 export const ESCOLHAS_TIPO: readonly { valor: EscolhaTipo; rotulo: string }[] = [

@@ -16,6 +16,7 @@ import {
   type EstagioNegocio,
   type NichoDoPasso,
 } from "@/lib/primeirosPassos";
+import { businessTypeDoNicho, nichoDoBanco, type NichoNegocio } from "@/lib/nichoNegocio";
 import { toastErro } from "@/lib/toast";
 
 export interface DadosPrimeirosPassos {
@@ -25,6 +26,8 @@ export interface DadosPrimeirosPassos {
   escolhaTipo: EscolhaTipo | null;
   /** profiles.business_stage (null = nunca respondeu). */
   estagio: EstagioNegocio | null;
+  /** profiles.nicho (null = ainda não respondeu; obrigatório no bloco). */
+  nicho: NichoNegocio | null;
   /** business_name sem espaço nas pontas ("" = sem nome). */
   nomeMarca: string;
   temPreco: boolean;
@@ -71,7 +74,7 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
         supabase
           .from("profiles")
           .select(
-            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_stage, business_name",
+            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_stage, business_name, nicho",
           )
           .eq("id", userId!)
           .maybeSingle(),
@@ -92,6 +95,7 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
         business_type: string | null;
         business_stage: string | null;
         business_name: string | null;
+        nicho: string | null;
       } | null;
       return {
         createdAt: p?.created_at ?? null,
@@ -99,6 +103,7 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
         onboardingCompletedAt: p?.onboarding_completed_at ?? null,
         escolhaTipo: escolhaDoBusinessType(p?.business_type),
         estagio: estagioDoBanco(p?.business_stage),
+        nicho: nichoDoBanco(p?.nicho),
         nomeMarca: (p?.business_name ?? "").trim(),
         temPreco: (precoRes.count ?? 0) > 0,
       };
@@ -206,6 +211,55 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
     [userId, atualizarCache],
   );
 
+  /**
+   * Grava profiles.nicho. Sem tipo de negócio ainda, o nicho já responde o tipo
+   * (menos "outro"), e a conta não precisa responder "vende o quê?" de novo.
+   * Devolve false (com toast) se falhar.
+   */
+  const salvarNicho = useCallback(
+    async (nicho: NichoNegocio): Promise<boolean> => {
+      if (!userId) return false;
+      const tipo = dados?.escolhaTipo ? null : businessTypeDoNicho(nicho);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ nicho, ...(tipo ? { business_type: tipo } : {}) } as never)
+        .eq("id", userId);
+      if (error) {
+        track("primeiros_passos_nicho_falhou", { motivo: error.message || "erro_desconhecido" });
+        toastErro(
+          "A Pólia One não conseguiu salvar o nicho. Tenta de novo, a escolha continua aqui.",
+        );
+        return false;
+      }
+      atualizarCache({ nicho, ...(tipo ? { escolhaTipo: escolhaDoBusinessType(tipo) } : {}) });
+      track("primeiros_passos_nicho", { nicho });
+      return true;
+    },
+    [userId, dados?.escolhaTipo, atualizarCache],
+  );
+
+  // ── Nicho vindo do anúncio ──
+  // Mesma ideia do tipo logo abaixo: anúncio que já diz o nicho grava sem
+  // perguntar, uma vez, só onde ainda está vazio.
+  const nichoDoAnuncioRef = useRef(false);
+  useEffect(() => {
+    const doAnuncio = nicho?.negocio ?? null;
+    if (!userId || !dados || dados.nicho || !doAnuncio || nichoDoAnuncioRef.current) return;
+    nichoDoAnuncioRef.current = true;
+    void supabase
+      .from("profiles")
+      .update({ nicho: doAnuncio } as never)
+      .eq("id", userId)
+      .is("nicho", null)
+      .then(({ error }) => {
+        if (error) {
+          nichoDoAnuncioRef.current = false;
+          return;
+        }
+        atualizarCache({ nicho: doAnuncio });
+      });
+  }, [userId, dados, nicho, atualizarCache]);
+
   // ── Tipo de negócio vindo do anúncio ──
   // Conta de anúncio de nicho não vê a pergunta "A sua marca vende o quê?", e
   // por isso o business_type ficava vazio. Grava o tipo do nicho uma vez, em
@@ -263,6 +317,7 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
     erro: query.isError,
     salvarTipo,
     salvarEstagio,
+    salvarNicho,
     salvarNome,
   };
 }

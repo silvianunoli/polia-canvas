@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { normalizarTelefone, mascararTelefone } from "./telefone";
+import {
+  normalizarTelefone,
+  mascararTelefone,
+  whatsappDaConta,
+  whatsappParaCampo,
+} from "./telefone";
 
 describe("normalizarTelefone", () => {
   it("aceita o que a pessoa digita de verdade", () => {
@@ -38,5 +43,30 @@ describe("mascararTelefone", () => {
 
   it("ignora o que passa de 11 dígitos em vez de deixar crescer", () => {
     expect(mascararTelefone("119999988889999")).toBe("(11) 99999-8888");
+  });
+});
+
+describe("whatsappDaConta", () => {
+  it("aceita o número como a pessoa digita", () => {
+    expect(whatsappDaConta("(11) 98888-0000")).toBe("5511988880000");
+    expect(whatsappDaConta("+55 21 98888 0000")).toBe("5521988880000");
+    expect(whatsappDaConta("011 98888-0000")).toBe("5511988880000");
+    expect(whatsappDaConta("(31) 3333-4444")).toBe("553133334444");
+  });
+
+  it("recusa o que não chega a ser um WhatsApp brasileiro", () => {
+    expect(whatsappDaConta("")).toBeNull();
+    expect(whatsappDaConta("98888-0000")).toBeNull(); // sem DDD
+    expect(whatsappDaConta("(10) 98888-0000")).toBeNull(); // DDD que não existe
+    expect(whatsappDaConta("(11) 88888-0000")).toBeNull(); // 11 dígitos sem o 9
+    expect(whatsappDaConta("(11) 1888-0000")).toBeNull();
+    expect(whatsappDaConta("5511988880000123")).toBeNull();
+  });
+});
+
+describe("whatsappParaCampo", () => {
+  it("mostra o número salvo com máscara", () => {
+    expect(whatsappParaCampo("5511988880000")).toBe("(11) 98888-0000");
+    expect(whatsappParaCampo(null)).toBe("");
   });
 });

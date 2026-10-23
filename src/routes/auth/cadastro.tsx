@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Mail, User } from "lucide-react";
+import { Mail, Phone, User } from "lucide-react";
 import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +27,7 @@ import { sugerirEmail } from "@/lib/sugestaoEmail";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
 import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
 import { senhaCumpreRequisitos } from "@/lib/senha";
+import { whatsappDaConta } from "@/lib/telefone";
 import { emailJaTemConta } from "@/lib/signup";
 import { ehErroDeCaptcha, MSG_CAPTCHA, tokenCaptcha } from "@/lib/captcha";
 import { TurnstileCampo, useCaptcha } from "@/components/TurnstileCampo";
@@ -82,8 +83,13 @@ function CadastroPage() {
   const navigate = useNavigate();
   const { email: emailConvite, fbclid, ...buscaCampanha } = Route.useSearch();
   const origemCampanha = lerOrigemCampanha(buscaCampanha);
-  const [values, setValues] = useState({ nome: "", email: emailConvite ?? "", senha: "" });
-  const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode }>({});
+  const [values, setValues] = useState({
+    nome: "",
+    email: emailConvite ?? "",
+    whatsapp: "",
+    senha: "",
+  });
+  const [errors, setErrors] = useState<{ nome?: string; email?: ReactNode; whatsapp?: string }>({});
   const [senhaInvalida, setSenhaInvalida] = useState(false);
   const [loading, setLoading] = useState(false);
   const captcha = useCaptcha();
@@ -92,6 +98,7 @@ function CadastroPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const nomeRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
+  const whatsappRef = useRef<HTMLInputElement>(null);
   const senhaRef = useRef<HTMLInputElement>(null);
   const caps = useCapsLockWarning();
   // "Você quis dizer fulana@gmail.com?" (15/10/2026): calculada ao sair do
@@ -101,7 +108,8 @@ function CadastroPage() {
 
   function set<K extends keyof typeof values>(key: K, v: string) {
     setValues((s) => ({ ...s, [key]: v }));
-    if (errors[key as "nome" | "email"]) setErrors((e) => ({ ...e, [key]: undefined }));
+    if (errors[key as "nome" | "email" | "whatsapp"])
+      setErrors((e) => ({ ...e, [key]: undefined }));
     if (key === "senha") setSenhaInvalida(false);
     if (key === "email") setSugestaoEmail(null);
   }
@@ -115,6 +123,10 @@ function CadastroPage() {
     e.preventDefault();
     const nome = values.nome.trim();
     const email = values.email.trim();
+    // WhatsApp é opcional (23/10/2026): vazio passa; preenchido precisa fechar,
+    // porque é por ele que a Pólia manda lembrete de tarefa.
+    const whatsappDigitado = values.whatsapp.trim();
+    const whatsapp = whatsappDigitado ? whatsappDaConta(whatsappDigitado) : null;
     setSugestaoEmail(sugerirEmail(email));
 
     const fieldErrors: typeof errors = {};
@@ -123,13 +135,17 @@ function CadastroPage() {
     else if (!z.string().email().safeParse(email).success) {
       fieldErrors.email = "E-mail inválido. Confere o @.";
     }
+    if (whatsappDigitado && !whatsapp) {
+      fieldErrors.whatsapp = "Confere o número com DDD, tipo (11) 98888-0000.";
+    }
     const senhaOk = senhaCumpreRequisitos(values.senha);
     if (!senhaOk) setSenhaInvalida(true);
     if (Object.keys(fieldErrors).length || !senhaOk) {
       setErrors(fieldErrors);
-      // Foca sempre o primeiro campo com erro, na ordem visual: nome → e-mail → senha.
+      // Foca sempre o primeiro campo com erro, na ordem visual: nome → e-mail → WhatsApp → senha.
       if (fieldErrors.nome) nomeRef.current?.focus();
       else if (fieldErrors.email) emailRef.current?.focus();
+      else if (fieldErrors.whatsapp) whatsappRef.current?.focus();
       else if (!senhaOk) senhaRef.current?.focus();
       return;
     }
@@ -146,10 +162,14 @@ function CadastroPage() {
           // o Painel abre com o bloco "Primeiros passos").
           emailRedirectTo: `${window.location.origin}/painel`,
           captchaToken: tokenCaptcha(captcha.token),
-          // origem_campanha só entra quando veio de landing com tag válida.
-          data: temOrigemCampanha(origemCampanha)
-            ? { full_name: nome, origem_campanha: origemCampanha }
-            : { full_name: nome },
+          // origem_campanha só entra quando veio de landing com tag válida. O
+          // whatsapp vai normalizado e o handle_new_user copia pro perfil
+          // (migration 20261023250000), que grava a data do aceite.
+          data: {
+            full_name: nome,
+            ...(whatsapp ? { whatsapp } : {}),
+            ...(temOrigemCampanha(origemCampanha) ? { origem_campanha: origemCampanha } : {}),
+          },
         },
       });
       if (emailJaTemConta(data, error)) {
@@ -189,6 +209,7 @@ function CadastroPage() {
       track("cadastro_concluido", {
         via_convite: !!emailConvite,
         precisa_verificacao: !data.session,
+        com_whatsapp: !!whatsapp,
         ...origemCampanha,
       });
       void registrar("signup", {
@@ -297,6 +318,29 @@ function CadastroPage() {
             sugestao={sugestaoVisivel}
             onAceitar={aceitarSugestao}
           />
+        </div>
+        <div>
+          <CosmicInput
+            ref={whatsappRef}
+            label="Seu WhatsApp"
+            hint={<span className="text-[12px] text-[var(--muted)]">opcional</span>}
+            name="whatsapp"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel-national"
+            placeholder="(11) 98888-0000"
+            icon={<Phone size={18} />}
+            value={values.whatsapp}
+            onChange={(e) => set("whatsapp", e.target.value)}
+            error={errors.whatsapp}
+            {...(errors.whatsapp ? {} : { "aria-describedby": "whatsapp-uso" })}
+            disabled={loading}
+          />
+          {!errors.whatsapp && (
+            <p id="whatsapp-uso" className="mt-1.5 text-[12px] text-[var(--muted)]">
+              Pra Pólia mandar lembrete de tarefa por lá. Dá pra tirar em Configurações.
+            </p>
+          )}
         </div>
         <div>
           <CosmicInput

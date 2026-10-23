@@ -259,6 +259,12 @@ export type Database = {
       }
       clientes: {
         Row: {
+          consentimento_origem: string | null
+          interesse: string | null
+          novo: boolean
+          origem: string | null
+          whatsapp: string | null
+          whatsapp_consentimento_em: string | null
           contato: string | null
           created_at: string
           id: string
@@ -272,6 +278,12 @@ export type Database = {
           venda_registrada: boolean
         }
         Insert: {
+          consentimento_origem?: string | null
+          interesse?: string | null
+          novo?: boolean
+          origem?: string | null
+          whatsapp?: string | null
+          whatsapp_consentimento_em?: string | null
           contato?: string | null
           created_at?: string
           id?: string
@@ -285,6 +297,12 @@ export type Database = {
           venda_registrada?: boolean
         }
         Update: {
+          consentimento_origem?: string | null
+          interesse?: string | null
+          novo?: boolean
+          origem?: string | null
+          whatsapp?: string | null
+          whatsapp_consentimento_em?: string | null
           contato?: string | null
           created_at?: string
           id?: string
@@ -2189,6 +2207,36 @@ export type Database = {
         }
         Relationships: []
       }
+      links_captura: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          pergunta: string | null
+          slug: string
+          titulo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          pergunta?: string | null
+          slug: string
+          titulo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          pergunta?: string | null
+          slug?: string
+          titulo?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           action_triggers: string | null
@@ -2939,6 +2987,21 @@ export type Database = {
       receber_venda: {
         Args: { p_venda_id: string; p_data: string }
         Returns: string
+      }
+      capturar_lead: {
+        Args: {
+          p_slug: string
+          p_nome: string
+          p_whatsapp: string
+          p_interesse?: string | null
+          p_consentimento?: boolean
+          p_ip_hash?: string | null
+        }
+        Returns: string
+      }
+      registrar_consentimento: {
+        Args: { p_cliente_id: string; p_aceite: boolean }
+        Returns: undefined
       }
       cancelar_venda: {
         Args: { p_venda_id: string }

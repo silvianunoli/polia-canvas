@@ -14,6 +14,8 @@ import { registrar, registrarEAguardar } from "@/lib/founder-eventos";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { cnpjValido, formatarCnpj } from "@/lib/cnpj";
+import { whatsappDaConta, whatsappParaCampo } from "@/lib/telefone";
+import { ESCOLHAS_NICHO, nichoDoBanco, type NichoNegocio } from "@/lib/nichoNegocio";
 import { hrefUpgrade, rotaLiberada } from "@/lib/planos";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,7 +86,7 @@ function ConfiguracoesPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "full_name, business_name, business_type, razao_social, cnpj, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
+          "full_name, business_name, business_type, razao_social, cnpj, whatsapp, nicho, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
         )
         .eq("id", userId!)
         .maybeSingle();
@@ -113,6 +115,15 @@ function ConfiguracoesPage() {
   const [razaoSocialSalvo, setRazaoSocialSalvo] = useState(false);
   const [cnpjSalvo, setCnpjSalvo] = useState(false);
   const [erroCnpj, setErroCnpj] = useState<string | null>(null);
+
+  // WhatsApp (23/10/2026): o mesmo do cadastro, opcional. É por onde a Pólia
+  // manda lembrete de tarefa; quem entrou pelo Google só consegue pôr aqui.
+  // Apagar o número tira o aceite (o banco zera whatsapp_consentimento_em).
+  const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappSalvo, setWhatsappSalvo] = useState(false);
+  const [erroWhatsapp, setErroWhatsapp] = useState<string | null>(null);
+  const [nicho, setNicho] = useState<NichoNegocio | "">("");
+  const [nichoSalvo, setNichoSalvo] = useState(false);
 
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
@@ -261,6 +272,7 @@ function ConfiguracoesPage() {
   const nomeNegocioTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const razaoSocialTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cnpjTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const whatsappTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // QA-37 (08/10/2026): o perfil enche o formulário UMA vez por conta. Antes
   // este efeito rodava a cada refetch (o React Query recarrega ao voltar pra
@@ -269,7 +281,13 @@ function ConfiguracoesPage() {
   // autosave só grava quando o campo difere dele. Sem isso, encher o
   // formulário no carregamento já disparava a gravação dos quatro campos.
   const carregadoParaRef = useRef<string | null>(null);
-  const persistidoRef = useRef({ full_name: "", business_name: "", razao_social: "", cnpj: "" });
+  const persistidoRef = useRef({
+    full_name: "",
+    business_name: "",
+    razao_social: "",
+    cnpj: "",
+    whatsapp: "",
+  });
   useEffect(() => {
     const p = profileQuery.data;
     if (!p || !userId || carregadoParaRef.current === userId) return;
@@ -279,11 +297,14 @@ function ConfiguracoesPage() {
       business_name: p.business_name ?? "",
       razao_social: p.razao_social ?? "",
       cnpj: p.cnpj ?? "",
+      whatsapp: p.whatsapp ?? "",
     };
     setNome(p.full_name ?? "");
     setNomeNegocio(p.business_name ?? "");
     setRazaoSocial(p.razao_social ?? "");
     setCnpj(p.cnpj ?? "");
+    setWhatsapp(whatsappParaCampo(p.whatsapp));
+    setNicho(nichoDoBanco(p.nicho) ?? "");
     setNotifResumo(p.notif_resumo_semanal ?? true);
     setNotifNovidades(p.notif_novidades ?? true);
     setNotifDicas(p.notif_dicas ?? true);
@@ -373,6 +394,50 @@ function ConfiguracoesPage() {
       if (cnpjTimer.current) clearTimeout(cnpjTimer.current);
     };
   }, [cnpj, userId]);
+
+  useEffect(() => {
+    if (!userId || !carregouInicial.current) return;
+    if (whatsappTimer.current) clearTimeout(whatsappTimer.current);
+    whatsappTimer.current = setTimeout(async () => {
+      const digitado = whatsapp.trim();
+      const valor = digitado ? whatsappDaConta(digitado) : null;
+      if (digitado && !valor) {
+        setErroWhatsapp("Confere o número com DDD, tipo (11) 98888-0000.");
+        return;
+      }
+      setErroWhatsapp(null);
+      if ((valor ?? "") === persistidoRef.current.whatsapp) return;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ whatsapp: valor })
+        .eq("id", userId);
+      if (error) return toastErro(ERRO_AUTOSAVE);
+      persistidoRef.current.whatsapp = valor ?? "";
+      const comMascara = whatsappParaCampo(valor);
+      if (comMascara !== whatsapp) setWhatsapp(comMascara);
+      setWhatsappSalvo(true);
+      setTimeout(() => setWhatsappSalvo(false), 1600);
+    }, 800);
+    return () => {
+      if (whatsappTimer.current) clearTimeout(whatsappTimer.current);
+    };
+  }, [whatsapp, userId]);
+
+  // Select grava na hora, sem debounce: é um clique, não digitação.
+  const salvarNicho = async (novo: NichoNegocio) => {
+    if (!userId) return;
+    const anterior = nicho;
+    setNicho(novo);
+    const { error } = await supabase.from("profiles").update({ nicho: novo }).eq("id", userId);
+    if (error) {
+      setNicho(anterior);
+      return toastErro(ERRO_AUTOSAVE);
+    }
+    // O bloco "Primeiros passos" do Painel lê o nicho da cache dele.
+    void queryClient.invalidateQueries({ queryKey: ["primeiros-passos", userId] });
+    setNichoSalvo(true);
+    setTimeout(() => setNichoSalvo(false), 1600);
+  };
 
   const toggleNotif = async (
     campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas",
@@ -643,6 +708,24 @@ function ConfiguracoesPage() {
                 </p>
               )}
             </Campo>
+            <Campo label="WHATSAPP" saved={whatsappSalvo} error={erroWhatsapp ?? undefined}>
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel-national"
+                value={whatsapp}
+                onChange={(e) => {
+                  setWhatsapp(e.target.value);
+                  if (erroWhatsapp) setErroWhatsapp(null);
+                }}
+                maxLength={20}
+                placeholder="(11) 98888-0000"
+                className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
+              />
+              <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
+                opcional. A Pólia usa pra lembrete de tarefa. Sem número, sem lembrete.
+              </p>
+            </Campo>
           </div>
         </Secao>
 
@@ -663,6 +746,29 @@ function ConfiguracoesPage() {
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
               aparece no topo do seu planejamento
             </p>
+          </Campo>
+
+          <Campo label="NICHO" saved={nichoSalvo}>
+            <select
+              value={nicho}
+              onChange={(e) => {
+                const novo = nichoDoBanco(e.target.value);
+                if (novo) void salvarNicho(novo);
+              }}
+              className="w-full h-[48px] border border-[var(--line)] rounded-xl bg-white px-4 font-sans text-[var(--ink)] text-[15px] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
+            >
+              {/* Conta antiga pode não ter nicho ainda; depois de escolher não volta a vazio. */}
+              {nicho === "" && (
+                <option value="" disabled>
+                  Escolha o nicho da marca
+                </option>
+              )}
+              {ESCOLHAS_NICHO.map((o) => (
+                <option key={o.valor} value={o.valor}>
+                  {o.rotulo}
+                </option>
+              ))}
+            </select>
           </Campo>
 
           <Campo label="RAZÃO SOCIAL" saved={razaoSocialSalvo}>

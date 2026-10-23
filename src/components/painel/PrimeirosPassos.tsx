@@ -21,6 +21,7 @@ import {
   type NichoDoPasso,
   type ProgressoPrimeirosPassos,
 } from "@/lib/primeirosPassos";
+import { ESCOLHAS_NICHO, type NichoNegocio } from "@/lib/nichoNegocio";
 
 const ROTULO = "font-accent text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]";
 
@@ -30,6 +31,10 @@ const ROTULO = "font-accent text-[11px] font-bold uppercase tracking-[0.12em] te
  * destaque (fundo, sem faixa lateral) e é o único com ação, pra a tela ter um
  * recado só. Feito ganha o check e o destaque desce. Com os três feitos o
  * Painel deixa de renderizar o bloco.
+ *
+ * Nicho obrigatório (23/10/2026, pedido da Sil): sem nicho salvo, a pergunta
+ * abre o bloco e os passos ficam sem ação até ela responder. Não é passo, não
+ * conta no "N de 3".
  */
 export function PrimeirosPassos({
   progresso,
@@ -38,6 +43,8 @@ export function PrimeirosPassos({
   onEscolherTipo,
   estagioSalvo,
   onEscolherEstagio,
+  nichoSalvo,
+  onEscolherNicho,
   onSalvarNome,
 }: {
   progresso: ProgressoPrimeirosPassos;
@@ -46,6 +53,8 @@ export function PrimeirosPassos({
   onEscolherTipo: (e: EscolhaTipo) => Promise<boolean>;
   estagioSalvo: EstagioNegocio | null;
   onEscolherEstagio: (e: EstagioNegocio) => Promise<boolean>;
+  nichoSalvo: NichoNegocio | null;
+  onEscolherNicho: (n: NichoNegocio) => Promise<boolean>;
   onSalvarNome: (nome: string) => Promise<boolean>;
 }) {
   const tituloId = useId();
@@ -106,6 +115,18 @@ export function PrimeirosPassos({
         </span>
       </div>
 
+      {!nichoSalvo && (
+        <PerguntaNicho
+          onEscolher={async (n) => {
+            const ok = await onEscolherNicho(n);
+            // Com os três passos feitos o bloco sai e o Painel cuida do foco;
+            // senão a pergunta some e o foco vai pro rótulo do bloco.
+            if (ok && !progresso.completo) requestAnimationFrame(() => tituloRef.current?.focus());
+            return ok;
+          }}
+        />
+      )}
+
       <ol className="mt-3 space-y-1">
         {ORDEM_PASSOS.map((id, i) => {
           const feito = progresso.feitos[id];
@@ -147,7 +168,7 @@ export function PrimeirosPassos({
                     {textos[id].subtitulo}
                   </p>
                 )}
-                {emDestaque && acao(id)}
+                {emDestaque && nichoSalvo && acao(id)}
               </div>
             </li>
           );
@@ -158,6 +179,50 @@ export function PrimeirosPassos({
         <PerguntaEstagio onEscolher={onEscolherEstagio} />
       )}
     </section>
+  );
+}
+
+/**
+ * "Qual é o nicho da marca?" em um clique, antes dos passos. Obrigatória: não
+ * tem "pular", e os passos só ganham ação depois dela. Grava na hora e some.
+ */
+function PerguntaNicho({ onEscolher }: { onEscolher: (n: NichoNegocio) => Promise<boolean> }) {
+  const [salvando, setSalvando] = useState<NichoNegocio | null>(null);
+  const rotuloId = useId();
+
+  async function escolher(n: NichoNegocio) {
+    if (salvando) return;
+    setSalvando(n);
+    const ok = await onEscolher(n);
+    if (!ok) setSalvando(null);
+  }
+
+  return (
+    <div className="mt-3 rounded-lg bg-[var(--surface)] p-3 sm:p-4">
+      <h3 id={rotuloId} className="font-cabinet text-[17px] leading-tight text-[var(--ink)]">
+        Antes dos passos: qual é o nicho da marca?
+      </h3>
+      <p className="mt-1 text-[14px] leading-snug text-[var(--ink-soft)]">
+        A Pólia One usa o nicho pra separar as ideias de post do seu ramo.
+      </p>
+      <div role="group" aria-labelledby={rotuloId} className="mt-3 grid gap-2 sm:grid-cols-2">
+        {ESCOLHAS_NICHO.map((o) => (
+          <button
+            key={o.valor}
+            type="button"
+            aria-busy={salvando === o.valor || undefined}
+            disabled={!!salvando}
+            onClick={() => void escolher(o.valor)}
+            className="flex min-h-11 flex-col items-start rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-left transition-colors hover:border-[var(--ink-soft)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="text-[14px] font-medium text-[var(--ink)]">
+              {salvando === o.valor ? "Salvando..." : o.rotulo}
+            </span>
+            <span className="text-[12px] text-[var(--muted)]">{o.exemplos}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
