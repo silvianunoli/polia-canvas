@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import type { CanalVenda, ItemVenda, StatusVenda, Venda } from "@/lib/vendas";
 import type { ComprasDoCliente } from "@/lib/recorrencia";
+import type { ComponenteKit } from "@/lib/kits";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 
 export interface VendaLinha extends Venda {
@@ -44,6 +45,8 @@ export interface ProdutoVendavel {
   /** created_at do produto (produto recém-cadastrado não é "parado"). */
   criadoEm: string;
   skus: SkuProduto[];
+  /** Componentes quando o produto é kit (ONE-132); vazio nos outros. */
+  componentes: ComponenteKit[];
 }
 
 export interface MovimentoEstoque {
@@ -142,7 +145,7 @@ export function useProdutosComEstoque(userId: string | undefined) {
     queryKey: chaveEstoque(userId),
     enabled: !!userId,
     queryFn: async (): Promise<ProdutoVendavel[]> => {
-      const [produtos, saldos] = await Promise.all([
+      const [produtos, saldos, componentes] = await Promise.all([
         supabase
           .from("produtos")
           .select("id, nome, tipo, preco_venda, preco_custo, controla_estoque, created_at")
@@ -153,9 +156,21 @@ export function useProdutosComEstoque(userId: string | undefined) {
           .from("estoque_saldos")
           .select("sku_id, produto_id, variacao, sku, estoque_minimo, saldo")
           .eq("user_id", userId!),
+        supabase
+          .from("produto_componentes")
+          .select("kit_id, componente_id, sku_id, quantidade")
+          .eq("user_id", userId!),
       ]);
       if (produtos.error) throw produtos.error;
       if (saldos.error) throw saldos.error;
+      if (componentes.error) throw componentes.error;
+
+      const porKit = new Map<string, ComponenteKit[]>();
+      for (const c of componentes.data ?? []) {
+        const lista = porKit.get(c.kit_id) ?? [];
+        lista.push({ componenteId: c.componente_id, skuId: c.sku_id, quantidade: c.quantidade });
+        porKit.set(c.kit_id, lista);
+      }
 
       const porProduto = new Map<string, SkuProduto[]>();
       for (const s of saldos.data ?? []) {
@@ -183,6 +198,7 @@ export function useProdutosComEstoque(userId: string | undefined) {
         skus: (porProduto.get(p.id) ?? []).sort((a, b) =>
           (a.variacao ?? "").localeCompare(b.variacao ?? "", "pt-BR"),
         ),
+        componentes: porKit.get(p.id) ?? [],
       }));
     },
   });
@@ -313,6 +329,18 @@ export async function registrarVenda(v: NovaVenda) {
     p_recebida: v.recebida,
     p_observacao: v.observacao,
     p_marcar_cliente: v.marcarCliente ?? false,
+  });
+}
+
+/** Grava a lista inteira de componentes do kit (vazia desfaz o kit). */
+export async function salvarKit(kitId: string, componentes: readonly ComponenteKit[]) {
+  return supabase.rpc("salvar_kit", {
+    p_kit_id: kitId,
+    p_componentes: componentes.map((c) => ({
+      componente_id: c.componenteId,
+      sku_id: c.skuId,
+      quantidade: c.quantidade,
+    })) as unknown as Json,
   });
 }
 

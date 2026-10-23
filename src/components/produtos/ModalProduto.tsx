@@ -9,9 +9,11 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { toastErro } from "@/lib/toast";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
-import { num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
+import { fmt, num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
 import { EstoqueDoProduto } from "./EstoqueDoProduto";
 import { useEstoqueDoProduto } from "./useEstoqueDoProduto";
+import { KitDoProduto } from "./KitDoProduto";
+import { useKitDoProduto } from "./useKitDoProduto";
 
 /* ============== Modal: adicionar/editar produto ============== */
 export function ModalProduto({
@@ -59,15 +61,38 @@ export function ModalProduto({
     produtoEdit?.id ?? null,
     produtoEdit?.controla_estoque ?? false,
   );
+  // Kit e combo (ONE-132): kit não tem estoque próprio, a venda baixa os itens.
+  const kit = useKitDoProduto(userId, produtoEdit?.id ?? null);
+  const ehKit = tipo === "fisico" && kit.estado.ehKit;
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const precoVendaNum = num(precoVenda);
-  const precoCustoNum = precoCusto.trim() ? num(precoCusto) : null;
+  // Kit com todos os itens custeados: o custo é a soma, a mesma conta que a
+  // venda faz no banco (custo_do_item). Com item sem custo, vale o digitado.
+  const custoSomado = ehKit ? kit.custo : null;
+  const precoCustoNum =
+    custoSomado != null ? custoSomado : precoCusto.trim() ? num(precoCusto) : null;
   const podeSalvar = nome.trim().length > 0 && precoVendaNum > 0;
+
+  /** Kit ligado: grava os itens (e desliga o estoque próprio). Senão, o estoque. */
+  const salvarEstoqueOuKit = async (id: string): Promise<string | null> => {
+    if (ehKit) return kit.salvar(id);
+    // Era kit e deixou de ser (ou virou serviço/digital): desfaz o kit antes,
+    // porque o banco não deixa kit ligar estoque próprio.
+    const erroKit = await kit.salvar(id, true);
+    if (erroKit) return erroKit;
+    return estoque.salvar(id);
+  };
 
   const salvar = async () => {
     if (!podeSalvar) return;
+    // O botão fica ligado e o motivo aparece no clique: botão apagado sem
+    // explicação deixava a pessoa procurando o que faltava.
+    if (ehKit && kit.erro) {
+      setErro(kit.erro);
+      return;
+    }
     setSalvando(true);
     setErro(null);
 
@@ -106,7 +131,7 @@ export function ModalProduto({
         setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
-      const erroEstoque = await estoque.salvar(produtoEdit.id);
+      const erroEstoque = await salvarEstoqueOuKit(produtoEdit.id);
       setSalvando(false);
       if (erroEstoque) {
         setErro(erroEstoque);
@@ -136,11 +161,15 @@ export function ModalProduto({
         setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
-      const erroEstoque = await estoque.salvar(criado.id);
+      const erroEstoque = await salvarEstoqueOuKit(criado.id);
       setSalvando(false);
       if (erroEstoque) {
         // O produto já existe: ficar no modal duplicaria no próximo "Salvar".
-        toastErro(`O produto foi salvo, mas o estoque não. ${erroEstoque}`);
+        toastErro(
+          ehKit
+            ? `O produto foi salvo, mas os itens do kit não. ${erroEstoque}`
+            : `O produto foi salvo, mas o estoque não. ${erroEstoque}`,
+        );
         onSaved();
         return;
       }
@@ -243,13 +272,23 @@ export function ModalProduto({
 
       {/* Preço de custo */}
       <div className="mb-4">
-        <Campo label="Custo de produção (R$)">
+        <Campo
+          label={ehKit ? "Custo do kit (R$)" : "Custo de produção (R$)"}
+          hint={
+            !ehKit
+              ? undefined
+              : custoSomado != null
+                ? `Nas vendas, a Pólia One usa a soma dos itens: ${fmt(custoSomado)}. Pra mudar, mude o custo de cada item.`
+                : "Enquanto algum item estiver sem custo, as vendas usam este valor."
+          }
+        >
           <input
             type="number"
             inputMode="decimal"
-            value={precoCusto}
+            value={custoSomado != null ? String(custoSomado) : precoCusto}
+            readOnly={custoSomado != null}
             onChange={(e) => setPrecoCusto(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] read-only:bg-[var(--surface)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
         </Campo>
@@ -284,12 +323,21 @@ export function ModalProduto({
         </Campo>
       </div>
 
-      <EstoqueDoProduto
-        estado={estoque.estado}
-        onMudar={estoque.setEstado}
-        carregando={estoque.carregando}
-        tipo={tipo}
-      />
+      {tipo === "fisico" && <KitDoProduto produtoId={produtoEdit?.id ?? null} kit={kit} />}
+      {tipo !== "fisico" && kit.eraKit && (
+        <p className="mb-4 rounded-lg bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+          Kit só existe em produto físico. Salvando assim, os itens do kit saem.
+        </p>
+      )}
+
+      {!ehKit && (
+        <EstoqueDoProduto
+          estado={estoque.estado}
+          onMudar={estoque.setEstado}
+          carregando={estoque.carregando}
+          tipo={tipo}
+        />
+      )}
 
       {/* Canal de venda */}
       <div>

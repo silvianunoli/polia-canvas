@@ -1375,6 +1375,28 @@ export type Database = {
         }
         Relationships: []
       }
+      produto_componentes: {
+        Row: {
+          componente_id: string
+          created_at: string
+          id: string
+          kit_id: string
+          quantidade: number
+          sku_id: string | null
+          user_id: string
+        }
+        Insert: {
+          componente_id: string
+          kit_id: string
+          quantidade: number
+          sku_id?: string | null
+          user_id: string
+        }
+        Update: {
+          quantidade?: number
+        }
+        Relationships: []
+      }
       orcamentos: {
         Row: {
           aprovado_em: string | null
@@ -3013,6 +3035,10 @@ export type Database = {
       }
       desfazer_pagamento: {
         Args: { p_conta_id: string }
+        Returns: undefined
+      }
+      salvar_kit: {
+        Args: { p_kit_id: string; p_componentes: Json }
         Returns: undefined
       }
       compras_por_cliente: {

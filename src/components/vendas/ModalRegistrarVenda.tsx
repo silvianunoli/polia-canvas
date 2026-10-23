@@ -30,6 +30,7 @@ import {
   type FormaRecebimento,
 } from "@/lib/taxas";
 import { registrarVenda, useProdutosComEstoque, type ProdutoVendavel } from "./dados";
+import { custoDoKit, kitsQueDaPraMontar } from "@/lib/kits";
 import { chaveTaxas, useTaxas } from "./taxasDados";
 import { ModalTaxas } from "./ModalTaxas";
 
@@ -69,9 +70,27 @@ export interface PrefillVenda {
   frete?: number;
 }
 
-/** Variações com nome; produto sem nenhuma vende pela variação padrão. */
+/** Kit (ONE-132): a venda baixa os itens; aqui só diz quantos dá pra montar. */
+function textoDoKit(kit: ProdutoVendavel, porId: Map<string, ProdutoVendavel>): string {
+  const n = kitsQueDaPraMontar(kit.componentes, porId);
+  if (n == null) return "kit · itens sem estoque ligado";
+  return n === 0 ? "kit · os itens acabaram" : `kit · dá pra montar ${n}`;
+}
+
+/**
+ * Variações com nome; produto sem nenhuma vende pela variação padrão. Kit não
+ * tem variação: as que sobraram de antes de virar kit ficam de fora.
+ */
 function variacoesNomeadas(p: ProdutoVendavel | undefined) {
+  if (p?.componentes.length) return [];
   return (p?.skus ?? []).filter((s) => s.variacao != null);
+}
+
+/** Mesma regra do banco (custo_do_item): kit = soma dos itens, senão o custo dele. */
+function custoUnitario(p: ProdutoVendavel | undefined, porId: Map<string, ProdutoVendavel>) {
+  if (!p) return null;
+  if (p.componentes.length) return custoDoKit(p.componentes, porId) ?? p.precoCusto;
+  return p.precoCusto;
 }
 
 export function ModalRegistrarVenda({
@@ -180,7 +199,7 @@ export function ModalRegistrarVenda({
       produtoNome: p?.nome ?? "",
       quantidade: Number(i.quantidade),
       precoUnitario: num(i.preco),
-      custoUnitario: p?.precoCusto ?? null,
+      custoUnitario: custoUnitario(p, porId),
     };
   });
   const valores = {
@@ -642,11 +661,13 @@ export function ItemDaVenda({
           </Campo>
         ) : (
           <p className="pb-2 text-[13px] text-[var(--muted)]">
-            {produto?.controlaEstoque && skuEscolhido
-              ? `${skuEscolhido.saldo} no estoque`
-              : produto
-                ? "sem controle de estoque"
-                : ""}
+            {produto && produto.componentes.length > 0
+              ? textoDoKit(produto, new Map(produtos.map((p) => [p.id, p])))
+              : produto?.controlaEstoque && skuEscolhido
+                ? `${skuEscolhido.saldo} no estoque`
+                : produto
+                  ? "sem controle de estoque"
+                  : ""}
           </p>
         )}
         <Campo
@@ -711,6 +732,21 @@ function ResumoEstoque({
 }) {
   const linhas = itens.flatMap((i) => {
     const p = porId.get(i.produtoId);
+    const qtdKit = Number(i.quantidade);
+    // Kit: quem perde estoque são os itens dele.
+    if (p?.componentes.length && Number.isInteger(qtdKit) && qtdKit > 0) {
+      return p.componentes.flatMap((c) => {
+        const comp = porId.get(c.componenteId);
+        if (!comp?.controlaEstoque) return [];
+        const sku = c.skuId
+          ? comp.skus.find((s) => s.id === c.skuId)
+          : comp.skus.find((s) => s.variacao == null);
+        if (!sku) return [];
+        const nome = sku.variacao ? `${comp.nome} ${sku.variacao}` : comp.nome;
+        const baixa = qtdKit * c.quantidade;
+        return [{ chave: `${i.chave}-${sku.id}`, nome, de: sku.saldo, para: sku.saldo - baixa }];
+      });
+    }
     if (!p?.controlaEstoque) return [];
     const variacoes = variacoesNomeadas(p);
     const sku = i.skuId
@@ -721,7 +757,7 @@ function ResumoEstoque({
     const qtd = Number(i.quantidade);
     if (!sku || !Number.isInteger(qtd) || qtd <= 0) return [];
     const nome = sku.variacao ? `${p.nome} ${sku.variacao}` : p.nome;
-    return [{ chave: i.chave, nome, de: sku.saldo, para: sku.saldo - qtd }];
+    return [{ chave: String(i.chave), nome, de: sku.saldo, para: sku.saldo - qtd }];
   });
   if (linhas.length === 0) return null;
   return (
