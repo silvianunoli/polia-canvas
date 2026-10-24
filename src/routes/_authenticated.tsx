@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import { useBonusPrimeirosPassos } from "@/hooks/useBonusPrimeirosPassos";
 import { FaixaTestePro } from "@/components/layout/FaixaTestePro";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,6 +126,8 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // +7 dias de Pro ao fechar os primeiros passos (ONE-136), pedido de qualquer tela.
+  useBonusPrimeirosPassos(pathname);
   // Pulso de relacionamento: fora das rotas isentas de assinatura (funil de
   // pagamento — onboarding, assinar, upgrade —, que tem público e propósito
   // diferente do resto da área logada).

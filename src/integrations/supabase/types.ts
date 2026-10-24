@@ -3120,6 +3120,10 @@ export type Database = {
         Args: { p_desde: string }
         Returns: { insumo_id: string; consumo: number; inicio: string | null }[]
       }
+      resgatar_bonus_primeiros_passos: {
+        Args: Record<string, never>
+        Returns: string | null
+      }
       salvar_insumo: {
         Args: {
           p_id: string | null

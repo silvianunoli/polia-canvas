@@ -45,6 +45,14 @@ describe("PrimeirosPassos", () => {
     expect(props.onEscolherNicho).toHaveBeenCalledWith("comida");
   });
 
+  it("fala do bônus de 7 dias só quando o teste do Pro está aberto (ONE-136)", () => {
+    montar({ bonusDias: 7 });
+    expect(screen.getByText("Com os três feitos, o teste do Pro ganha mais 7 dias.")).toBeTruthy();
+    cleanup();
+    montar();
+    expect(screen.queryByText(/o teste do Pro ganha mais/)).toBeNull();
+  });
+
   it("com nicho salvo, a pergunta não aparece", () => {
     montar();
     expect(screen.queryByText("Antes dos passos: qual é o nicho da marca?")).toBeNull();

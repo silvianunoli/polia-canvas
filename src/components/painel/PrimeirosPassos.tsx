@@ -46,6 +46,7 @@ export function PrimeirosPassos({
   nichoSalvo,
   onEscolherNicho,
   onSalvarNome,
+  bonusDias = null,
 }: {
   progresso: ProgressoPrimeirosPassos;
   nicho: NichoDoPasso | null;
@@ -56,6 +57,8 @@ export function PrimeirosPassos({
   nichoSalvo: NichoNegocio | null;
   onEscolherNicho: (n: NichoNegocio) => Promise<boolean>;
   onSalvarNome: (nome: string) => Promise<boolean>;
+  /** Dias que o teste do Pro ganha ao completar os três (ONE-136). null = não oferece. */
+  bonusDias?: number | null;
 }) {
   const tituloId = useId();
   const tituloRef = useRef<HTMLHeadingElement>(null);
@@ -114,6 +117,11 @@ export function PrimeirosPassos({
           {progresso.totalFeitos} de {ORDEM_PASSOS.length}
         </span>
       </div>
+      {bonusDias != null && (
+        <p className="mt-1 px-1 text-[14px] text-[var(--ink-soft)]">
+          Com os três feitos, o teste do Pro ganha mais {bonusDias} dias.
+        </p>
+      )}
 
       {!nichoSalvo && (
         <PerguntaNicho

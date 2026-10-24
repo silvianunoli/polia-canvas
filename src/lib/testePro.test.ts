@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   diasRestantes,
+  podeGanharBonus,
   testeAberto,
   testeAcabouHaPouco,
   testeDoBanco,
@@ -15,6 +16,8 @@ const teste = (fimEmDias: number, extra: Partial<TestePro> = {}): TestePro => ({
   fim: new Date(agora + fimEmDias * DIA).toISOString(),
   encerradoEm: null,
   resultado: null,
+  bonusPassosEm: null,
+  origem: "cadastro",
   ...extra,
 });
 
@@ -74,5 +77,21 @@ describe("testePro", () => {
     expect(
       testeDoBanco({ inicio: "a", fim: "b", encerrado_em: null, resultado: "xpto" })?.resultado,
     ).toBeNull();
+  });
+
+  it("bônus dos primeiros passos: só com teste aberto e uma vez", () => {
+    expect(podeGanharBonus(teste(3), agora)).toBe(true);
+    expect(podeGanharBonus(teste(3, { bonusPassosEm: "2026-10-19" }), agora)).toBe(false);
+    expect(podeGanharBonus(teste(-1), agora)).toBe(false);
+    expect(podeGanharBonus(null, agora)).toBe(false);
+    // Reativação não vê o convite (decisão da Sil, 24/10).
+    expect(podeGanharBonus(teste(3, { origem: "reativacao" }), agora)).toBe(false);
+    expect(testeDoBanco({ inicio: "a", fim: "b", bonus_passos_em: "c" })?.bonusPassosEm).toBe("c");
+  });
+
+  it("faixa diz que o teste cresceu com o bônus", () => {
+    const f = textoFaixaTeste(teste(9, { bonusPassosEm: "2026-10-19" }), agora)!;
+    expect(f.texto).toContain("já com os 7 dias dos primeiros passos");
+    expect(textoFaixaTeste(teste(9), agora)!.texto).not.toContain("primeiros passos");
   });
 });

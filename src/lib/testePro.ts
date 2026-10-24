@@ -8,6 +8,21 @@ export interface TestePro {
   fim: string;
   encerradoEm: string | null;
   resultado: "voltou_gratis" | "assinou" | null;
+  /** Quando ganhou os 7 dias por completar os primeiros passos (ONE-136). */
+  bonusPassosEm: string | null;
+  /** "cadastro" (conta nova) ou "reativacao" (conta antiga liberada em 21/10). */
+  origem?: string | null;
+}
+
+/** Dias que completar os primeiros passos soma no teste (resgatar_bonus_primeiros_passos). */
+export const DIAS_BONUS_PASSOS = 7;
+
+/**
+ * Ainda dá pra ganhar o bônus: conta nova (decisão da Sil, 24/10/2026: a de
+ * reativação não vê o convite), teste aberto e bônus não usado.
+ */
+export function podeGanharBonus(t: TestePro | null, agora: number = Date.now()): boolean {
+  return testeAberto(t, agora) && t!.origem === "cadastro" && !t!.bonusPassosEm;
 }
 
 const DIA_MS = 24 * 60 * 60 * 1000;
@@ -53,8 +68,12 @@ export function textoFaixaTeste(
   if (testeAberto(t, agora)) {
     const dias = diasRestantes(t, agora);
     const quando = dias === 1 ? "Último dia" : `Faltam ${dias} dias`;
+    // Sem dizer por quê, "Faltam 9" depois de "Faltam 2" parecia erro.
+    const bonus = t!.bonusPassosEm
+      ? `, já com os ${DIAS_BONUS_PASSOS} dias dos primeiros passos`
+      : "";
     return {
-      texto: `${quando} do teste do Pro. Depois a conta volta pro Grátis, e o que a marca guardou aqui continua guardado.`,
+      texto: `${quando} do teste do Pro${bonus}. Depois a conta volta pro Grátis, e o que a marca guardou aqui continua guardado.`,
       cta: "Quero assinar",
       urgente: dias <= 2,
     };
@@ -77,6 +96,8 @@ export function testeDoBanco(row: unknown): TestePro | null {
     fim?: string;
     encerrado_em?: string | null;
     resultado?: string | null;
+    bonus_passos_em?: string | null;
+    origem?: string | null;
   } | null;
   if (!r?.fim || !r.inicio) return null;
   return {
@@ -84,5 +105,7 @@ export function testeDoBanco(row: unknown): TestePro | null {
     fim: r.fim,
     encerradoEm: r.encerrado_em ?? null,
     resultado: r.resultado === "voltou_gratis" || r.resultado === "assinou" ? r.resultado : null,
+    bonusPassosEm: r.bonus_passos_em ?? null,
+    origem: r.origem ?? null,
   };
 }

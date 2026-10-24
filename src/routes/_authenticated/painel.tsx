@@ -33,6 +33,8 @@ import {
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
+import { useTestePro } from "@/hooks/useTestePro";
+import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
@@ -500,6 +502,10 @@ function PainelPage() {
         : null,
     [primeiros.dados, modulo1Fechado],
   );
+  // Bônus dos primeiros passos (ONE-136): o pedido mora no layout; aqui só o
+  // convite no bloco, enquanto o teste está aberto e o bônus não foi usado.
+  const testePro = useTestePro();
+  const convidaBonus = podeGanharBonus(testePro.data ?? null);
   const blocoVisivel =
     dadosQuery.isSuccess &&
     !!primeiros.dados &&
@@ -794,6 +800,7 @@ function PainelPage() {
                 }
                 return ok;
               }}
+              bonusDias={convidaBonus ? DIAS_BONUS_PASSOS : null}
               onSalvarNome={async (nome) => {
                 const ok = await primeiros.salvarNome(nome);
                 // Era o último passo: o bloco sai e o foco iria pro <body>.
