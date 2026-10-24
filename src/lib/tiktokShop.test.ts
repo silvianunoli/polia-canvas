@@ -3,6 +3,10 @@ import { createHmac } from "node:crypto";
 import {
   anunciosDoProduto,
   assinarChamada,
+  dataDoPedido,
+  itensDoPedido,
+  pedidoDoWebhook,
+  taxaEstimada,
   precisaDetalhe,
   statusVendaDoPedido,
   sugerirVinculos,
@@ -12,6 +16,7 @@ import {
   type AnuncioCanal,
   type SkuPolia,
 } from "../../supabase/functions/_shared/tiktokShop.ts";
+import { taxaDaVenda } from "./taxas";
 
 const SECRET = "segredo-de-teste";
 
@@ -236,5 +241,79 @@ describe("anúncios do TikTok", () => {
         ],
       }),
     ).toBe(false);
+  });
+});
+
+describe("pedido do TikTok → venda", () => {
+  const vinculos = new Map([["sk-az", "polia-az"]]);
+
+  it("agrupa unidades do mesmo SKU e tira o desconto que a vendedora deu", () => {
+    const itens = itensDoPedido(
+      {
+        line_items: [
+          {
+            sku_id: "sk-az",
+            product_name: "Caneca Gato",
+            sku_name: "Azul",
+            original_price: "39.90",
+            seller_discount: "5",
+          },
+          {
+            sku_id: "sk-az",
+            product_name: "Caneca Gato",
+            sku_name: "Azul",
+            original_price: "39.90",
+            seller_discount: "5",
+          },
+          { sku_id: "sk-x", product_name: "Ecobag", original_price: "20", sale_price: "15" },
+        ],
+      },
+      vinculos,
+    );
+    expect(itens).toEqual([
+      {
+        sku_id: "polia-az",
+        nome: "Caneca Gato",
+        variacao: "Azul",
+        quantidade: 2,
+        preco_unitario: 34.9,
+      },
+      { sku_id: null, nome: "Ecobag", variacao: null, quantidade: 1, preco_unitario: 20 },
+    ]);
+  });
+
+  it("usa a quantidade quando a linha traz", () => {
+    const [i] = itensDoPedido(
+      { line_items: [{ sku_id: "sk-az", original_price: "10", quantity: 3 }] },
+      vinculos,
+    );
+    expect(i.quantidade).toBe(3);
+  });
+
+  it("data no horário de Brasília", () => {
+    // 2026-10-25 01:30 UTC = 24/10 22:30 em Brasília
+    expect(dataDoPedido(Date.UTC(2026, 9, 25, 1, 30) / 1000)).toBe("2026-10-24");
+  });
+
+  it("taxa estimada bate com a taxaDaVenda da tela", () => {
+    const regras = [
+      { percentual: 3.19, fixo: 0.5 },
+      { percentual: 12, fixo: 4 },
+      { percentual: 0, fixo: 2 },
+    ];
+    for (const r of regras)
+      for (const total of [1, 50, 39.9, 129.75])
+        expect(taxaEstimada(total, r)).toBe(taxaDaVenda(total, r));
+    expect(taxaEstimada(10, null)).toBe(0);
+  });
+
+  it("webhook: só o aviso de status de pedido", () => {
+    expect(pedidoDoWebhook({ type: 1, shop_id: "7000", data: { order_id: 5770 } })).toEqual({
+      shopId: "7000",
+      pedidoId: "5770",
+    });
+    expect(pedidoDoWebhook({ type: 6, shop_id: "7000", data: {} })).toBeNull();
+    expect(pedidoDoWebhook({ type: 1, data: { order_id: "1" } })).toBeNull();
+    expect(pedidoDoWebhook("x")).toBeNull();
   });
 });

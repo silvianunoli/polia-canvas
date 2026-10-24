@@ -249,3 +249,113 @@ export function precisaDetalhe(p: ProdutoApiTiktok): boolean {
   const skus = p.skus ?? [];
   return skus.length > 1 && skus.some((s) => !(s.sales_attributes ?? []).length);
 }
+
+// ── Pedido do TikTok → venda da Pólia ─────────────────────────────────────
+
+/** Pedido como vem do Get Order Detail / Search Orders (202309). Tudo opcional: a API muda. */
+export interface PedidoApiTiktok {
+  id?: string;
+  status?: string;
+  create_time?: number;
+  paid_time?: number;
+  line_items?: Array<{
+    sku_id?: string;
+    product_name?: string;
+    sku_name?: string;
+    seller_sku?: string;
+    original_price?: string;
+    sale_price?: string;
+    seller_discount?: string;
+    /** No 202309 cada unidade é uma linha; se um dia vier quantidade, ela vale. */
+    quantity?: number;
+  }>;
+}
+
+export interface ItemVendaCanal {
+  sku_id: string | null;
+  nome: string;
+  variacao: string | null;
+  quantidade: number;
+  preco_unitario: number;
+}
+
+const numero = (v: string | number | undefined | null): number => {
+  const n = typeof v === "number" ? v : v != null && v !== "" ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : 0;
+};
+const centavos = (v: number) => Math.round(v * 100) / 100;
+
+/**
+ * Quanto a vendedora recebe por unidade: preço original menos o desconto que
+ * ELA deu. Desconto da plataforma o TikTok cobre e repassa, então não entra.
+ * Unidades do mesmo SKU pelo mesmo preço viram um item com quantidade.
+ */
+export function itensDoPedido(
+  pedido: PedidoApiTiktok,
+  vinculos: Map<string, string>,
+): ItemVendaCanal[] {
+  const grupos = new Map<string, ItemVendaCanal>();
+  for (const l of pedido.line_items ?? []) {
+    const original = numero(l.original_price) || numero(l.sale_price);
+    const preco = centavos(Math.max(0, original - numero(l.seller_discount)));
+    const qtd = Math.max(1, Math.floor(numero(l.quantity) || 1));
+    const skuExterno = l.sku_id ?? "";
+    const chave = `${skuExterno}|${preco}`;
+    const atual = grupos.get(chave);
+    if (atual) {
+      atual.quantidade += qtd;
+      continue;
+    }
+    grupos.set(chave, {
+      sku_id: (skuExterno && vinculos.get(skuExterno)) || null,
+      nome: l.product_name?.trim() || "Anúncio do TikTok Shop",
+      variacao: l.sku_name?.trim() || null,
+      quantidade: qtd,
+      preco_unitario: preco,
+    });
+  }
+  return [...grupos.values()];
+}
+
+/** Dia da venda no horário de Brasília (o Worker e o Deno rodam em UTC). */
+export function dataDoPedido(segundosUnix: number | undefined, agora: Date = new Date()): string {
+  const quando = segundosUnix ? new Date(segundosUnix * 1000) : agora;
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(quando);
+}
+
+/**
+ * Taxa estimada pela regra que ela cadastrou para o TikTok Shop (percentual +
+ * fixo), nunca maior que o total. Mesma conta de taxaDaVenda em src/lib/taxas.ts
+ * (centavos inteiros, meio centavo para cima); o teste confere que as duas batem.
+ */
+export function taxaEstimada(
+  total: number,
+  regra: { percentual: number; fixo: number } | null | undefined,
+): number {
+  if (!regra || !(total > 0)) return 0;
+  const totalCents = Math.round(total * 100);
+  const taxaCents =
+    Math.round((totalCents * Math.round(regra.percentual * 100)) / 10_000) +
+    Math.round(regra.fixo * 100);
+  return Math.min(Math.max(taxaCents, 0), totalCents) / 100;
+}
+
+/** Aviso de mudança de status de pedido (type 1). Qualquer outro aviso é ignorado. */
+export function pedidoDoWebhook(corpo: unknown): { shopId: string; pedidoId: string } | null {
+  if (!corpo || typeof corpo !== "object") return null;
+  const c = corpo as {
+    type?: number;
+    shop_id?: string | number;
+    data?: { order_id?: string | number };
+  };
+  if (c.type !== 1) return null;
+  const shopId = c.shop_id != null ? String(c.shop_id) : "";
+  const pedidoId = c.data?.order_id != null ? String(c.data.order_id) : "";
+  if (!shopId || !pedidoId || shopId.length > 100 || pedidoId.length > 100) return null;
+  return { shopId, pedidoId };
+}

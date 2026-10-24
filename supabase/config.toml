@@ -6,8 +6,9 @@ project_id = "egzwkyqpkexgrhbxwcvb"
 #     raiox-mensal-cron (RAIOX_CRON_SECRET), social-publisher /
 #     social-metricas / social-token-renovar (SOCIAL_CRON_SECRET),
 #     founder-monitor (FOUNDER_MONITOR_SECRET ou JWT de admin conferido no código),
-#     reenviar-emails (segredo só no Vault, conferido por RPC; PAY-27)
-#   assinatura do provedor: stripe-webhook (HMAC do Stripe)
+#     reenviar-emails (segredo só no Vault, conferido por RPC; PAY-27),
+#     tiktok-sync (segredo só no Vault, conferido por RPC; VND-05)
+#   assinatura do provedor: stripe-webhook (HMAC do Stripe), tiktok-webhook (HMAC do TikTok)
 #   token de verificação da Meta: ig-webhook (bot desativado, só responde o desafio)
 #   JWT conferido no código (auth.getUser + is_admin): social-ia
 # Função que não está listada aqui sobe com verify_jwt = true no próximo
@@ -44,4 +45,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.lembretes-conta]
+verify_jwt = false
+
+[functions.tiktok-webhook]
+verify_jwt = false
+
+[functions.tiktok-sync]
 verify_jwt = false

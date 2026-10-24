@@ -242,3 +242,14 @@ A 3a.1 conectou a loja de teste de ponta a ponta. Esta etapa: a Pólia lista os 
 
 - Token renovado sozinho quando falta menos de 5 minutos para vencer (`tiktokShopAcesso.server.ts`); se o TikTok recusar, a conexão vira "erro" e o card pede para conectar de novo.
 - Criar produto e ligar estoque usam o cliente com a sessão dela (`context.supabase`), pelas mesmas RPCs da tela de Produtos: valem as travas e o RLS de sempre.
+
+## 2026-10-24 — TikTok Shop direto, etapa 3a.3 (VND-05)
+
+A 3a.2 foi conferida na loja de teste (VND-25). Esta etapa: pedido pago no TikTok vira venda "a receber" na Pólia, sozinho.
+
+- Migration `20261024140000_tiktok_pedidos_vendas.sql`: fila `canal_eventos` (um pedido por linha, só service role), `registrar_venda_canal` (dona por parâmetro, idempotente pelo pedido, item ligado baixa estoque e leva custo, item sem vínculo entra sem produto e sem mexer no estoque), `cancelar_venda_canal` (devolve o estoque e tira do Financeiro), segredo do cron no Vault e `disparar_tiktok_sync()` agendado a cada minuto, que só chama a edge function quando há evento pendente ou loja há 15 minutos sem varredura. Testada numa transação desfeita.
+- Edge function `tiktok-webhook`: confere a assinatura (HMAC de app_key + corpo cru) e enfileira o pedido; responde na hora (o TikTok exige 3 s).
+- Edge function `tiktok-sync`: varredura de 15 min (Search Orders desde o último sync, menos 5 min de folga), processa a fila (Get Order Detail em lotes de 50), renova o token quando falta pouco, desiste depois de 5 tentativas guardando o erro. Só para conta Pro.
+- Taxa estimada pela regra do TikTok Shop em `taxas_recebimento` (`taxaEstimada`, mesma conta de `taxaDaVenda`, teste confere as duas).
+- Cliente HTTP do TikTok foi para `_shared/tiktokShopCliente.ts` (credenciais por parâmetro), usado pelo Worker e pelo Deno.
+- Edge functions precisam dos segredos `TIKTOK_SHOP_APP_KEY` e `TIKTOK_SHOP_APP_SECRET` no Supabase; o webhook precisa ser cadastrado no app do Partner Center.
