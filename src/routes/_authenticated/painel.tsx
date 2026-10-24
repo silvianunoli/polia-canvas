@@ -995,6 +995,12 @@ function PainelPage() {
               </CartaoFinanceiro>
             </div>
 
+            {/* Consultoria no WhatsApp. Morava no fim do bento e sumia (24/10/2026):
+            subiu pra logo depois do número principal, ainda na primeira tela. */}
+            <div className="mt-6">
+              <CartaoConsultoria />
+            </div>
+
             {/* Bento de dados */}
             <div className="mt-6 grid grid-cols-12 gap-4">
               <div className={SPAN_CLASS[4]}>
@@ -1292,11 +1298,6 @@ function PainelPage() {
                     </span>
                   )}
                 </LinkInterno>
-              </div>
-
-              {/* Consultoria no WhatsApp: fecha o bento, depois do que é rotina. */}
-              <div className={SPAN_CLASS[12]}>
-                <CartaoConsultoria />
               </div>
             </div>
           </>
