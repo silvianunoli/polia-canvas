@@ -171,8 +171,8 @@ export type Beneficio = {
   novoAte?: string;
 };
 
-// Vendas, Estoque, Orçamento, Taxas, Kit e combo, Clientes e Contas a pagar
-// entraram no ar em 23/10/2026. Trinta dias de "Novo".
+// Vendas, Estoque, Orçamento, Taxas, Kit e combo, Clientes, Contas a pagar e
+// Insumos entraram no ar em 23/10/2026. Trinta dias de "Novo".
 const NOVO_OUT_2026 = "2026-11-22";
 
 /** Data de hoje em Brasília, AAAA-MM-DD (o "Novo" vence à meia-noite daqui, não às 21h). */
@@ -290,10 +290,10 @@ export const TIERS_PAGOS: Record<
         texto: "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",
       },
       {
-        // ONE-133
+        // ONE-133, no ar desde 23/10 (7430af6)
         id: "insumos",
         texto: "Insumos e produção: o material sai do estoque quando a peça fica pronta",
-        emBreve: true,
+        novoAte: NOVO_OUT_2026,
       },
     ],
     destaque: true,
