@@ -1,14 +1,18 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  corpoAtualizarEstoque,
   dataDoPedido,
+  depositosDoProduto,
   itensDoPedido,
   statusVendaDoPedido,
   taxaEstimada,
   type PedidoApiTiktok,
 } from "../_shared/tiktokShop.ts";
 import {
+  atualizarEstoqueTiktok,
   buscarPedidosAlterados,
   detalhePedidos,
+  detalheProdutoTiktok,
   pedirTokenTiktok,
   type CredenciaisTiktok,
 } from "../_shared/tiktokShopCliente.ts";
@@ -22,6 +26,10 @@ import {
 //    desde a última vez e põe na fila (cobre webhook perdido).
 // 2. Fila: busca cada pedido completo e registra a venda (pago) ou cancela
 //    (cancelado). Não pago não entra; quando pagar, o TikTok avisa de novo.
+// 3. Estoque (etapa 3a.4): variação ligada que mexeu na Pólia, com "A Pólia cuida
+//    do estoque" ligado, manda o saldo para o TikTok (canal_fila_estoque,
+//    migração 20261024180000). Roda depois dos pedidos: a baixa da venda que
+//    acabou de entrar já vai junto.
 // Token renovado aqui quando falta menos de 5 minutos para vencer.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -43,6 +51,7 @@ type Conexao = {
   shop_id: string;
   shop_cipher: string | null;
   ultimo_sync: string | null;
+  cuida_estoque: boolean;
 };
 type Acesso = { accessToken: string; shopCipher: string };
 
@@ -198,6 +207,99 @@ async function processarPedido(
   return error ? error.message : null;
 }
 
+async function marcarFilaEstoque(skuIds: string[], erro: string | null) {
+  if (!skuIds.length) return;
+  if (!erro) {
+    await supabaseAdmin
+      .from("canal_fila_estoque")
+      .update({ pendente: false, enviado_em: new Date().toISOString(), erro: null })
+      .eq("canal", CANAL)
+      .in("sku_id", skuIds);
+    return;
+  }
+  const { data } = await supabaseAdmin
+    .from("canal_fila_estoque")
+    .select("sku_id, tentativas")
+    .eq("canal", CANAL)
+    .in("sku_id", skuIds);
+  for (const f of (data as { sku_id: string; tentativas: number }[]) ?? []) {
+    const tentativas = f.tentativas + 1;
+    await supabaseAdmin
+      .from("canal_fila_estoque")
+      .update({ tentativas, erro: erro.slice(0, 500), pendente: tentativas < MAX_TENTATIVAS })
+      .eq("canal", CANAL)
+      .eq("sku_id", f.sku_id);
+  }
+}
+
+/** Manda o saldo da Pólia de cada variação da fila; devolve quantas foram enviadas. */
+async function enviarEstoque(
+  conexoes: Conexao[],
+  acessoDe: (c: Conexao) => Promise<Acesso | null>,
+): Promise<number> {
+  const { data: filaData } = await supabaseAdmin
+    .from("canal_fila_estoque")
+    .select("user_id, sku_id")
+    .eq("canal", CANAL)
+    .eq("pendente", true)
+    .lt("tentativas", MAX_TENTATIVAS)
+    .order("pedido_em")
+    .limit(200);
+  const fila = (filaData as { user_id: string; sku_id: string }[] | null) ?? [];
+  const porDona = new Map<string, string[]>();
+  for (const f of fila) porDona.set(f.user_id, [...(porDona.get(f.user_id) ?? []), f.sku_id]);
+
+  let enviados = 0;
+  for (const [userId, skuIds] of porDona) {
+    const c = conexoes.find((x) => x.user_id === userId);
+    const acesso = c?.cuida_estoque ? await acessoDe(c) : null;
+    if (!c || !acesso) {
+      await marcarFilaEstoque(
+        skuIds,
+        "sem acesso à loja (plano, autorização ou estoque desligado)",
+      );
+      continue;
+    }
+    const [{ data: vinc }, { data: saldos }] = await Promise.all([
+      supabaseAdmin
+        .from("anuncio_vinculos")
+        .select("sku_id, produto_externo_id, sku_externo_id")
+        .eq("user_id", userId)
+        .eq("canal", CANAL)
+        .eq("sincroniza_estoque", true)
+        .in("sku_id", skuIds),
+      supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
+    ]);
+    const saldoDe = new Map(
+      ((saldos as { sku_id: string; saldo: number }[]) ?? []).map((s) => [
+        s.sku_id,
+        Number(s.saldo),
+      ]),
+    );
+    const vinculos =
+      (vinc as { sku_id: string; produto_externo_id: string; sku_externo_id: string }[]) ?? [];
+    const porProduto = new Map<string, typeof vinculos>();
+    for (const v of vinculos)
+      porProduto.set(v.produto_externo_id, [...(porProduto.get(v.produto_externo_id) ?? []), v]);
+
+    const semVinculo = skuIds.filter((id) => !vinculos.some((v) => v.sku_id === id));
+    await marcarFilaEstoque(semVinculo, null); // desligou ou apagou o vínculo: nada a mandar
+
+    for (const [produtoId, lista] of porProduto) {
+      const { produto } = await detalheProdutoTiktok(cred, { ...acesso, produtoId });
+      const corpo = corpoAtualizarEstoque(
+        lista.map((v) => ({ skuExternoId: v.sku_externo_id, saldo: saldoDe.get(v.sku_id) ?? 0 })),
+        produto ? depositosDoProduto(produto) : new Map(),
+      );
+      const { error } = await atualizarEstoqueTiktok(cred, { ...acesso, produtoId, corpo });
+      const ids = [...new Set(lista.map((v) => v.sku_id))];
+      await marcarFilaEstoque(ids, error ? `estoque: ${error}` : null);
+      if (!error) enviados += ids.length;
+    }
+  }
+  return enviados;
+}
+
 Deno.serve(async (req: Request) => {
   if (!(await autenticado(req))) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
@@ -208,7 +310,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: conexoesData } = await supabaseAdmin
     .from("canal_conexoes")
-    .select("id, user_id, shop_id, shop_cipher, ultimo_sync")
+    .select("id, user_id, shop_id, shop_cipher, ultimo_sync, cuida_estoque")
     .eq("canal", CANAL)
     .eq("status", "conectada");
   const conexoes = (conexoesData as Conexao[] | null) ?? [];
@@ -314,7 +416,13 @@ Deno.serve(async (req: Request) => {
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, varridos, eventos: eventos.length, vendas }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  // 3. Estoque Pólia → TikTok.
+  const estoque = await enviarEstoque(conexoes, acessoDe);
+
+  return new Response(
+    JSON.stringify({ ok: true, varridos, eventos: eventos.length, vendas, estoque }),
+    {
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 });

@@ -9,6 +9,7 @@ import {
 } from "../../supabase/functions/_shared/tiktokShop.ts";
 import {
   chamarApiTiktok,
+  detalheProdutoTiktok,
   pedirTokenTiktok,
   type TokensTiktok,
 } from "../../supabase/functions/_shared/tiktokShopCliente.ts";
@@ -97,11 +98,7 @@ export async function detalheProduto(p: {
   shopCipher: string;
   produtoId: string;
 }) {
-  const r = await chamarApi<ProdutoApiTiktok>({
-    metodo: "GET",
-    path: `/product/202309/products/${encodeURIComponent(p.produtoId)}`,
-    accessToken: p.accessToken,
-    shopCipher: p.shopCipher,
-  });
-  return { produto: r.data, error: r.error };
+  const cred = credenciais();
+  if (!cred) return { produto: null, error: SEM_CONFIG };
+  return detalheProdutoTiktok(cred, p);
 }

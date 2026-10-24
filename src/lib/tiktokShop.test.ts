@@ -3,6 +3,8 @@ import { createHmac } from "node:crypto";
 import {
   anunciosDoProduto,
   assinarChamada,
+  corpoAtualizarEstoque,
+  depositosDoProduto,
   dataDoPedido,
   itensDoPedido,
   pedidoDoWebhook,
@@ -315,5 +317,33 @@ describe("pedido do TikTok → venda", () => {
     expect(pedidoDoWebhook({ type: 6, shop_id: "7000", data: {} })).toBeNull();
     expect(pedidoDoWebhook({ type: 1, data: { order_id: "1" } })).toBeNull();
     expect(pedidoDoWebhook("x")).toBeNull();
+  });
+});
+
+describe("estoque Pólia → TikTok", () => {
+  it("manda o saldo, com o depósito de cada SKU; negativo vira zero", () => {
+    const depositos = depositosDoProduto({
+      skus: [
+        { id: "s1", inventory: [{ quantity: 3, warehouse_id: "W1" }] },
+        { id: "s2", inventory: [{ quantity: 1 }] },
+      ],
+    });
+    expect(depositos).toEqual(new Map([["s1", "W1"]]));
+    expect(
+      corpoAtualizarEstoque(
+        [
+          { skuExternoId: "s1", saldo: 4 },
+          { skuExternoId: "s2", saldo: -2 },
+          { skuExternoId: "s3", saldo: 2.7 },
+        ],
+        depositos,
+      ),
+    ).toEqual({
+      skus: [
+        { id: "s1", inventory: [{ warehouse_id: "W1", quantity: 4 }] },
+        { id: "s2", inventory: [{ quantity: 0 }] },
+        { id: "s3", inventory: [{ quantity: 2 }] },
+      ],
+    });
   });
 });

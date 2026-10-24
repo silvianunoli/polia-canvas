@@ -359,3 +359,39 @@ export function pedidoDoWebhook(corpo: unknown): { shopId: string; pedidoId: str
   if (!shopId || !pedidoId || shopId.length > 100 || pedidoId.length > 100) return null;
   return { shopId, pedidoId };
 }
+
+// ── Estoque Pólia → TikTok ─────────────────────────────────────────────────
+
+/**
+ * Corpo do Update Inventory de um produto: o SALDO da Pólia de cada SKU ligado
+ * (negativo vai como zero, fração arredonda para baixo), no depósito que o
+ * próprio TikTok mostra no detalhe do produto. Sem depósito conhecido, manda só
+ * a quantidade e o TikTok usa o padrão da loja.
+ */
+export function corpoAtualizarEstoque(
+  itens: Array<{ skuExternoId: string; saldo: number }>,
+  depositoPorSku: Map<string, string>,
+): { skus: Array<{ id: string; inventory: Array<{ warehouse_id?: string; quantity: number }> }> } {
+  return {
+    skus: itens.map((i) => {
+      const deposito = depositoPorSku.get(i.skuExternoId);
+      const quantidade = Math.max(0, Math.floor(Number.isFinite(i.saldo) ? i.saldo : 0));
+      return {
+        id: i.skuExternoId,
+        inventory: [
+          deposito ? { warehouse_id: deposito, quantity: quantidade } : { quantity: quantidade },
+        ],
+      };
+    }),
+  };
+}
+
+/** Depósito de cada SKU, lido do Get Product (o primeiro que aparecer). */
+export function depositosDoProduto(p: ProdutoApiTiktok): Map<string, string> {
+  const m = new Map<string, string>();
+  for (const s of p.skus ?? []) {
+    const w = (s.inventory ?? []).find((i) => i.warehouse_id)?.warehouse_id;
+    if (s.id && w) m.set(s.id, w);
+  }
+  return m;
+}

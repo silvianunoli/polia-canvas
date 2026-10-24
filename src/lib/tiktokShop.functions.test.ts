@@ -41,6 +41,7 @@ import {
   finalizarConexaoTiktok,
   desconectarTiktok,
   confirmarConexaoTiktok,
+  alternarCuidaEstoqueTiktok,
 } from "./tiktokShop.functions";
 
 type Chamavel = (opts?: { data?: unknown; context?: unknown }) => Promise<unknown>;
@@ -335,5 +336,37 @@ describe("confirmarConexaoTiktok", () => {
     const r = (await confirmar({ context })) as { ok: boolean };
     expect(r.ok).toBe(false);
     expect(consultas.canal_conexoes).toHaveLength(1);
+  });
+});
+
+describe("alternarCuidaEstoqueTiktok", () => {
+  const alternar = alternarCuidaEstoqueTiktok as unknown as Chamavel;
+  const conectada = { ...conexaoPendente, status: "conectada", state_pendente: null };
+
+  it("ao ligar, salva e põe todas as variações ligadas na fila do estoque", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", { data: conectada }, { error: null });
+    responder("anuncio_vinculos", { data: [{ sku_id: "a" }, { sku_id: "b" }, { sku_id: "a" }] });
+    expect(await alternar({ data: { ligar: true }, context })).toEqual({ ok: true, error: null });
+    expect(consultas.canal_conexoes[1].update.mock.calls[0][0]).toMatchObject({
+      cuida_estoque: true,
+    });
+    expect(rpc).toHaveBeenCalledWith("enfileirar_estoque_canal", { p_sku_ids: ["a", "b"] });
+  });
+
+  it("ao desligar, só salva; fora do Pro ainda pode desligar", async () => {
+    responder("canal_conexoes", { data: conectada }, { error: null });
+    expect(await alternar({ data: { ligar: false }, context })).toEqual({ ok: true, error: null });
+    expect(consultas.canal_conexoes[1].update.mock.calls[0][0]).toMatchObject({
+      cuida_estoque: false,
+    });
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("sem loja conectada, não liga", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", { data: null });
+    const r = (await alternar({ data: { ligar: true }, context })) as { ok: boolean };
+    expect(r.ok).toBe(false);
   });
 });

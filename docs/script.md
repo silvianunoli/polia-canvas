@@ -253,3 +253,11 @@ A 3a.2 foi conferida na loja de teste (VND-25). Esta etapa: pedido pago no TikTo
 - Taxa estimada pela regra do TikTok Shop em `taxas_recebimento` (`taxaEstimada`, mesma conta de `taxaDaVenda`, teste confere as duas).
 - Cliente HTTP do TikTok foi para `_shared/tiktokShopCliente.ts` (credenciais por parâmetro), usado pelo Worker e pelo Deno.
 - Edge functions precisam dos segredos `TIKTOK_SHOP_APP_KEY` e `TIKTOK_SHOP_APP_SECRET` no Supabase; o webhook precisa ser cadastrado no app do Partner Center.
+
+## 2026-10-24 — TikTok Shop direto, etapa 3a.4 (VND-05)
+
+A 3a.3 foi conferida com pedidos de teste (webhook → venda em menos de 1 min). Esta etapa: com "A Pólia cuida do estoque" ligado no card, o saldo da Pólia atualiza o TikTok.
+
+- Migration `20261024180000_tiktok_estoque_fila.sql`: `canal_fila_estoque` (uma linha por variação e canal, só service role), `enfileirar_estoque_canal()` (só variação ligada, de loja conectada com cuida_estoque), gatilhos em `estoque_movimentos` (todo movimento: venda, entrada, perda, contagem, cancelamento) e em `anuncio_vinculos` (ligou depois), e `disparar_tiktok_sync()` olhando também a fila de estoque. Testada numa transação desfeita.
+- `tiktok-sync` manda o SALDO (não a diferença) por produto, no depósito que o Get Product mostra, depois de processar os pedidos; negativo vai como zero; 5 tentativas.
+- Card: liga/desliga "A Pólia cuida do estoque" (`alternarCuidaEstoqueTiktok`); ao ligar, enfileira todas as variações ligadas para o TikTok começar igual à Pólia.

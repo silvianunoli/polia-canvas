@@ -30,6 +30,7 @@ import {
   statusConexaoTiktok,
   iniciarConexaoTiktok,
   desconectarTiktok,
+  alternarCuidaEstoqueTiktok,
 } from "@/lib/tiktokShop.functions";
 import {
   statusConexaoGoogle,
@@ -206,6 +207,23 @@ function ConfiguracoesPage() {
       window.location.href = res.url;
     },
     onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o TikTok Shop."),
+  });
+
+  const cuidaEstoqueMutation = useMutation({
+    mutationFn: (ligar: boolean) => alternarCuidaEstoqueTiktok({ data: { ligar } }),
+    onSuccess: (res, ligar) => {
+      if (!res.ok) {
+        toastErro(res.error ?? "A Pólia One não conseguiu salvar agora.");
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: ["tiktok-status", userId] });
+      toastSucesso(
+        ligar
+          ? "A Pólia passa a cuidar do estoque do TikTok. As quantidades sobem em até 1 minuto."
+          : "O estoque do TikTok volta a ser cuidado só no TikTok.",
+      );
+    },
+    onError: () => toastErro("A Pólia One não conseguiu salvar agora."),
   });
 
   const desconectarTiktokMutation = useMutation({
@@ -963,6 +981,25 @@ function ConfiguracoesPage() {
                     >
                       Ligar anúncios
                     </LinkInterno>
+                  </div>
+                )}
+                {tiktok.conectada && (
+                  <div className="mt-3 flex items-start justify-between gap-4 border-t border-[var(--line)] pt-3">
+                    <div>
+                      <p className="font-sans text-[var(--ink)] text-[13px] font-medium mb-0.5">
+                        A Pólia cuida do estoque
+                      </p>
+                      <p className="font-sans text-[var(--ink-soft)] text-[12px]">
+                        Toda venda, entrada ou ajuste na Pólia atualiza a quantidade dos anúncios
+                        ligados no TikTok.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={tiktok.cuidaEstoque}
+                      disabled={cuidaEstoqueMutation.isPending}
+                      onCheckedChange={(ligar) => cuidaEstoqueMutation.mutate(ligar)}
+                      aria-label="A Pólia cuida do estoque do TikTok Shop"
+                    />
                   </div>
                 )}
               </div>

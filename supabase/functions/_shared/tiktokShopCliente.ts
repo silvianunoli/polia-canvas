@@ -8,6 +8,7 @@ import {
   TIKTOK_OPEN_API,
   assinarChamada,
   type PedidoApiTiktok,
+  type ProdutoApiTiktok,
 } from "./tiktokShop.ts";
 
 export type CredenciaisTiktok = { appKey: string; appSecret: string };
@@ -147,4 +148,33 @@ export async function buscarPedidosAlterados(
     proximaPagina: r.data?.next_page_token || null,
     error: r.error,
   };
+}
+
+/** Get Product: variações com nome e depósito de cada SKU. */
+export async function detalheProdutoTiktok(
+  cred: CredenciaisTiktok,
+  p: { accessToken: string; shopCipher: string; produtoId: string },
+) {
+  const r = await chamarApiTiktok<ProdutoApiTiktok>(cred, {
+    metodo: "GET",
+    path: `/product/202309/products/${encodeURIComponent(p.produtoId)}`,
+    accessToken: p.accessToken,
+    shopCipher: p.shopCipher,
+  });
+  return { produto: r.data, error: r.error };
+}
+
+/** Update Inventory de um produto (todos os SKUs dele numa chamada). */
+export async function atualizarEstoqueTiktok(
+  cred: CredenciaisTiktok,
+  p: { accessToken: string; shopCipher: string; produtoId: string; corpo: unknown },
+) {
+  const r = await chamarApiTiktok<unknown>(cred, {
+    metodo: "POST",
+    path: `/product/202309/products/${encodeURIComponent(p.produtoId)}/inventory/update`,
+    accessToken: p.accessToken,
+    shopCipher: p.shopCipher,
+    corpo: p.corpo,
+  });
+  return { error: r.error };
 }

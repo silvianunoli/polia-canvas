@@ -268,3 +268,40 @@ export const desconectarTiktok = createServerFn({ method: "POST" })
       .eq("canal", CANAL);
     return { ok: true, error: null };
   });
+
+const cuidaEstoqueInput = z.object({ ligar: z.boolean() });
+
+/**
+ * "A Pólia cuida do estoque" (etapa 3a.4): ligado, todo movimento de estoque de
+ * variação ligada manda o saldo para o TikTok. Ao ligar, manda já o saldo de
+ * todas as variações ligadas, para o TikTok começar igual à Pólia.
+ */
+export const alternarCuidaEstoqueTiktok = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => cuidaEstoqueInput.parse(input))
+  .handler(async ({ data, context }) => {
+    if (data.ligar && !(await temPro(context.userId)))
+      return { ok: false, error: "A integração com o TikTok Shop é do plano Pro." };
+    const conexao = await lerConexao(context.userId);
+    if (conexao?.status !== "conectada")
+      return { ok: false, error: "O TikTok Shop não está conectado." };
+    const { error } = await supabaseAdmin
+      .from("canal_conexoes" as never)
+      .update({ cuida_estoque: data.ligar, updated_at: new Date().toISOString() } as never)
+      .eq("id", conexao.id);
+    if (error)
+      return { ok: false, error: "A Pólia One não conseguiu salvar agora. Tenta de novo." };
+    if (!data.ligar) return { ok: true, error: null };
+
+    const { data: vinculos } = await supabaseAdmin
+      .from("anuncio_vinculos" as never)
+      .select("sku_id")
+      .eq("user_id", context.userId)
+      .eq("canal", CANAL);
+    const skuIds = [
+      ...new Set(((vinculos as unknown as { sku_id: string }[]) ?? []).map((v) => v.sku_id)),
+    ];
+    if (skuIds.length)
+      await supabaseAdmin.rpc("enfileirar_estoque_canal" as never, { p_sku_ids: skuIds } as never);
+    return { ok: true, error: null };
+  });
