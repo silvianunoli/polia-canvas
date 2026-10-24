@@ -1,4 +1,5 @@
 import { TIERS_PAGOS, valorDoPlano } from "@/lib/planos";
+import { urlComCodigoDeAutorizacao } from "@/lib/metaPixel";
 
 declare global {
   interface Window {
@@ -93,6 +94,7 @@ export function carregarTiktokPixel(pixelId: string) {
 
 export function tiktokPageView(pathname: string) {
   if (typeof window === "undefined" || !window.ttq) return;
+  if (urlComCodigoDeAutorizacao()) return;
   if (ultimaPagePathname === pathname) return;
   ultimaPagePathname = pathname;
   window.ttq.page();

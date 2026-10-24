@@ -3,8 +3,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import {
+  cancelarConfirmacaoTiktok,
   confirmarConexaoTiktok,
-  desconectarTiktok,
   finalizarConexaoTiktok,
 } from "@/lib/tiktokShop.functions";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
@@ -93,7 +93,7 @@ function RetornoTiktok() {
   const cancelar = async () => {
     setSalvando(true);
     try {
-      await desconectarTiktok();
+      await cancelarConfirmacaoTiktok();
     } finally {
       voltar();
     }

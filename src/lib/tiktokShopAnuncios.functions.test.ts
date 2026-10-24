@@ -180,6 +180,46 @@ describe("salvarVinculosTiktok", () => {
     expect(r.avisos[0]).toMatch(/Bolsa/);
   });
 
+  it("produto sem estoque ligado ganha a variação padrão e liga", async () => {
+    pro();
+    conectada();
+    const produtoId = "22222222-2222-2222-2222-222222222222";
+    responder("produto_skus", { count: 0 }, { data: { id: "sk-padrao" } });
+    const r = (await salvar({
+      context,
+      data: {
+        itens: [{ produtoExternoId: "p1", skuExternoId: "t1", destino: `produto:${produtoId}` }],
+      },
+    })) as { ok: boolean; ligados: number };
+    expect(r).toMatchObject({ ok: true, ligados: 1 });
+    expect(rpcUsuaria).toHaveBeenCalledWith("salvar_estoque_produto", {
+      p_produto_id: produtoId,
+      p_controla: true,
+      p_variacoes: [{ variacao: null, sku: null }],
+    });
+  });
+
+  it("produto que já tem variações não é refeito com a padrão", async () => {
+    pro();
+    conectada();
+    responder("produto_skus", { count: 2 });
+    const r = (await salvar({
+      context,
+      data: {
+        itens: [
+          {
+            produtoExternoId: "p1",
+            skuExternoId: "t1",
+            destino: "produto:22222222-2222-2222-2222-222222222222",
+          },
+        ],
+      },
+    })) as { ok: boolean; ligados: number; avisos: string[] };
+    expect(rpcUsuaria).not.toHaveBeenCalled();
+    expect(r.ligados).toBe(0);
+    expect(r.avisos[0]).toMatch(/variação/);
+  });
+
   it("não ligar apaga a ligação daquele anúncio", async () => {
     pro();
     conectada();

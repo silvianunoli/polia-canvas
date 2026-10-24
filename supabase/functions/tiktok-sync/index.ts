@@ -51,6 +51,7 @@ type Conexao = {
   shop_id: string;
   shop_cipher: string | null;
   ultimo_sync: string | null;
+  varredura_tentada_em: string | null;
   cuida_estoque: boolean;
 };
 type Acesso = { accessToken: string; shopCipher: string };
@@ -307,10 +308,30 @@ Deno.serve(async (req: Request) => {
   if (!APP_KEY || !APP_SECRET) {
     return new Response(JSON.stringify({ ok: false, motivo: "sem_credenciais" }), { status: 500 });
   }
+  // O cron dispara todo minuto e uma rodada pode passar disso: duas ao mesmo
+  // tempo renovariam o mesmo refresh_token. A trava vence sozinha em 2 minutos.
+  const { data: pegou } = await supabaseAdmin.rpc("pegar_trava_sync", {
+    p_canal: CANAL,
+    p_segundos: 120,
+  });
+  if (pegou !== true) {
+    return new Response(JSON.stringify({ ok: true, motivo: "em_andamento" }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  try {
+    return new Response(JSON.stringify({ ok: true, ...(await sincronizar()) }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } finally {
+    await supabaseAdmin.rpc("soltar_trava_sync", { p_canal: CANAL });
+  }
+});
 
+async function sincronizar() {
   const { data: conexoesData } = await supabaseAdmin
     .from("canal_conexoes")
-    .select("id, user_id, shop_id, shop_cipher, ultimo_sync, cuida_estoque")
+    .select("id, user_id, shop_id, shop_cipher, ultimo_sync, varredura_tentada_em, cuida_estoque")
     .eq("canal", CANAL)
     .eq("status", "conectada");
   const conexoes = (conexoesData as Conexao[] | null) ?? [];
@@ -326,7 +347,17 @@ Deno.serve(async (req: Request) => {
   let varridos = 0;
   const limite = Date.now() - 15 * 60 * 1000;
   for (const c of conexoes) {
-    if (c.ultimo_sync && Date.parse(c.ultimo_sync) > limite) continue;
+    const ultimaTentativa = Math.max(
+      c.ultimo_sync ? Date.parse(c.ultimo_sync) : 0,
+      c.varredura_tentada_em ? Date.parse(c.varredura_tentada_em) : 0,
+    );
+    if (ultimaTentativa > limite) continue;
+    // Marca a tentativa antes: sem Pro ou com erro do TikTok, a próxima espera
+    // 15 minutos (o ultimo_sync, que é o "desde" da varredura, só anda se der certo).
+    await supabaseAdmin
+      .from("canal_conexoes")
+      .update({ varredura_tentada_em: new Date().toISOString() })
+      .eq("id", c.id);
     const acesso = await acessoDe(c);
     if (acesso) varridos += Math.max(0, await varrer(c, acesso));
   }
@@ -419,10 +450,5 @@ Deno.serve(async (req: Request) => {
   // 3. Estoque Pólia → TikTok.
   const estoque = await enviarEstoque(conexoes, acessoDe);
 
-  return new Response(
-    JSON.stringify({ ok: true, varridos, eventos: eventos.length, vendas, estoque }),
-    {
-      headers: { "Content-Type": "application/json" },
-    },
-  );
-});
+  return { varridos, eventos: eventos.length, vendas, estoque };
+}

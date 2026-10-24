@@ -40,6 +40,7 @@ import {
   iniciarConexaoTiktok,
   finalizarConexaoTiktok,
   desconectarTiktok,
+  cancelarConfirmacaoTiktok,
   confirmarConexaoTiktok,
   alternarCuidaEstoqueTiktok,
 } from "./tiktokShop.functions";
@@ -307,6 +308,54 @@ describe("autorização que começa no TikTok (sem state)", () => {
     expect(r.ok).toBe(false);
     expect(r.error).toMatch(/Desconecta antes/);
     expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("link com o code de outra pessoa não mexe na conexão em erro (nem nos tokens)", async () => {
+    const emErro = { ...conexaoPendente, status: "erro", state_pendente: null, shop_id: "s-dela" };
+    responder("canal_conexoes", { data: emErro }, { data: null });
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await finalizar({ data: entrada, context })) as { ok: boolean; error: string };
+    expect(r.ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(consultas.canal_conexoes).toHaveLength(2); // só leituras, nenhum update
+  });
+
+  it("a mesma loja em erro, reautorizada pelo TikTok, volta sem pedir confirmação", async () => {
+    const emErro = { ...conexaoPendente, status: "erro", state_pendente: null, shop_id: "s-br" };
+    responder("canal_conexoes", { data: emErro }, { data: null }, { error: null });
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await finalizar({ data: entrada, context })) as { ok: boolean; confirmar?: boolean };
+    expect(r).toMatchObject({ ok: true });
+    expect(r.confirmar).toBeUndefined();
+    const update = consultas.canal_conexoes[2].update.mock.calls[0][0] as Record<string, unknown>;
+    expect(update.status).toBe("conectada");
+  });
+});
+
+describe("cancelarConfirmacaoTiktok", () => {
+  const cancelar = cancelarConfirmacaoTiktok as unknown as Chamavel;
+
+  it("descarta só a loja esperando confirmação e não toca nos anúncios ligados", async () => {
+    expect(await cancelar({ context })).toEqual({ ok: true, error: null });
+    const q = consultas.canal_conexoes[0];
+    expect(q.delete).toHaveBeenCalled();
+    expect(q.eq).toHaveBeenCalledWith("user_id", "u-1");
+    expect(q.eq).toHaveBeenCalledWith("status", "aguardando_confirmacao");
+    expect(consultas.anuncio_vinculos).toBeUndefined();
+  });
+});
+
+describe("iniciarConexaoTiktok com loja esperando confirmação", () => {
+  it("descarta a loja que chegou do TikTok antes de começar pela Pólia", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", {
+      data: { ...conexaoPendente, status: "aguardando_confirmacao", shop_id: "s-x" },
+    });
+    api.montarUrlAutorizacao.mockReturnValue({ url: "https://tt/", error: null });
+    await iniciar({ context });
+    expect(consultas.canal_conexoes[1].delete).toHaveBeenCalled();
+    expect(consultas.canal_conexoes[1].eq).toHaveBeenCalledWith("status", "aguardando_confirmacao");
+    expect(consultas.canal_conexoes[2].upsert).toHaveBeenCalled();
   });
 });
 

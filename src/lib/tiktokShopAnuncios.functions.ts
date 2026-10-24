@@ -240,6 +240,20 @@ export const salvarVinculosTiktok = createServerFn({ method: "POST" })
       ),
     ];
     for (const produtoId of idsProduto) {
+      // Só produto sem variação ativa: com variações, salvar_estoque_produto([padrão])
+      // arquivaria todas. Tela desatualizada cai aqui e ela escolhe a variação.
+      const { count: ativas } = await supabaseAdmin
+        .from("produto_skus")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", context.userId)
+        .eq("produto_id", produtoId)
+        .eq("arquivado", false);
+      if (ativas) {
+        avisos.push(
+          "Um produto escolhido já tem estoque por variação. Escolhe a variação na lista e salva de novo.",
+        );
+        continue;
+      }
       const { error } = await context.supabase.rpc("salvar_estoque_produto", {
         p_produto_id: produtoId,
         p_controla: true,

@@ -261,3 +261,14 @@ A 3a.3 foi conferida com pedidos de teste (webhook → venda em menos de 1 min).
 - Migration `20261024180000_tiktok_estoque_fila.sql`: `canal_fila_estoque` (uma linha por variação e canal, só service role), `enfileirar_estoque_canal()` (só variação ligada, de loja conectada com cuida_estoque), gatilhos em `estoque_movimentos` (todo movimento: venda, entrada, perda, contagem, cancelamento) e em `anuncio_vinculos` (ligou depois), e `disparar_tiktok_sync()` olhando também a fila de estoque. Testada numa transação desfeita.
 - `tiktok-sync` manda o SALDO (não a diferença) por produto, no depósito que o Get Product mostra, depois de processar os pedidos; negativo vai como zero; 5 tentativas.
 - Card: liga/desliga "A Pólia cuida do estoque" (`alternarCuidaEstoqueTiktok`); ao ligar, enfileira todas as variações ligadas para o TikTok começar igual à Pólia.
+
+## 2026-10-24 — TikTok Shop direto, etapa 3a.5 (VND-26)
+
+Revisão de segurança da Fase 3a (agente só de leitura, conferiu as permissões no banco de produção): nenhum achado alto, um médio, o resto baixo. Corrigido:
+
+- **Médio, autorização sem state:** um link com o `code` de outra pessoa trocava a loja da conexão em erro ou pendente antes da confirmação, e o "Cancelar" chamava o desconectar (apagava os anúncios ligados). Agora a volta sem state nunca troca a loja que já está na conta, em nenhum status; a mesma loja já confirmada volta sem perguntar; "Cancelar" usa `cancelarConfirmacaoTiktok`, que só descarta a loja esperando confirmação; começar pela Pólia descarta a loja não confirmada.
+- Ligar a "produto sem estoque" recusa produto que já tem variação ativa (a RPC arquivaria todas).
+- Pixels da Meta e do TikTok não mandam PageView em URL com `?code=` (volta do TikTok e do Google Agenda).
+- Migration `20261024200000_tiktok_revisao_seguranca.sql`, testada numa transação desfeita: FK composta `anuncio_vinculos (sku_id, user_id)` → `produto_skus (id, user_id)`; `varredura_tentada_em` (sem Pro ou com erro do TikTok, o cron não chama o sync todo minuto, e o "desde" da varredura continua no último sync certo); trava `pegar_trava_sync`/`soltar_trava_sync` (arrendamento de 2 min, duas rodadas não renovam o mesmo token); cron diário `limpar-canal-eventos` (7 dias, o que o plano e o questionário prometem); `search_path = public, pg_temp` nas funções security definer da 3a.
+- Aceitos, sem ação: webhook sem checar timestamp (replay só recoloca o pedido na fila, idempotente); `app_secret` na query do token (é a especificação do TikTok, não é logado); teto de 1.000 itens em `salvarVinculosTiktok` (só afeta a própria conta); conexão de quem perde o Pro continua guardada.
+- ADR `docs/adr/0002-marketplaces-conexao-direta.md` e rascunho do anúncio na loja de apps `docs/tiktok-shop-anuncio-app-store.md` (decisões da Sil antes de preencher).

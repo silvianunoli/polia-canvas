@@ -66,6 +66,17 @@ describe("tiktokPageView", () => {
     mod.tiktokPageView("/planos");
     expect(fila().filter((c) => c[0] === "page")).toHaveLength(2);
   });
+
+  it("volta de autorização com ?code= não manda page (a URL levaria o code)", () => {
+    window.history.replaceState(null, "", "/configuracoes/integracoes/tiktok?code=abc&state=x");
+    try {
+      mod.carregarTiktokPixel("ABC");
+      mod.tiktokPageView(window.location.pathname);
+      expect(fila().filter((c) => c[0] === "page")).toHaveLength(0);
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
 });
 
 describe("tiktokViewContent", () => {

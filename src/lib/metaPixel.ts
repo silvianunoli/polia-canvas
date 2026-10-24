@@ -50,8 +50,16 @@ export function carregarPixel(pixelId: string) {
   pixelPageView(window.location.pathname);
 }
 
+// Volta de autorização (TikTok Shop, Google Agenda) traz ?code= na URL, e o
+// pixel manda a URL inteira. O code é de uso único, mas não sai da Pólia.
+export function urlComCodigoDeAutorizacao(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).has("code");
+}
+
 export function pixelPageView(pathname: string) {
   if (typeof window === "undefined" || !window.fbq) return;
+  if (urlComCodigoDeAutorizacao()) return;
   if (ultimaPageViewPathname === pathname) return;
   ultimaPageViewPathname = pathname;
   window.fbq("track", "PageView");

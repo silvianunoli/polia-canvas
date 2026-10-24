@@ -86,6 +86,9 @@ export const iniciarConexaoTiktok = createServerFn({ method: "POST" })
         url: null,
         error: "O TikTok Shop já está conectado. Desconecta antes de trocar de loja.",
       };
+    // Loja que chegou do TikTok e ela não confirmou: começar pela Pólia descarta.
+    if (atual?.status === "aguardando_confirmacao")
+      await apagarPendenteDeConfirmacao(context.userId);
 
     const state = crypto.randomUUID();
     const { error } = await supabaseAdmin.from("canal_conexoes" as never).upsert(
@@ -165,11 +168,13 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
       };
 
     if (!iniciadaNaPolia) {
-      // Já conectada: a mesma loja só renova os tokens; outra loja não troca sozinha.
-      if (conexao?.status === "conectada" && conexao.shop_id !== loja.id)
+      // Sem state, nada prova que foi ela quem autorizou (pode ser um link com o
+      // code de outra pessoa). Então essa volta nunca troca a loja que já está na
+      // conta, em nenhum status: a mesma loja só renova os tokens.
+      if (conexao?.shop_id && conexao.shop_id !== loja.id)
         return {
           ok: false,
-          error: "Já existe outra loja do TikTok Shop conectada. Desconecta antes de trocar.",
+          error: "Já existe outra loja do TikTok Shop nesta conta. Desconecta antes de trocar.",
         };
       if (!conexao) {
         const { data: criada } = await supabaseAdmin
@@ -189,7 +194,10 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
           };
       }
     }
-    const jaConectada = conexao!.status === "conectada";
+    // Mesma loja que ela já confirmou antes (conectada, ou em erro e reautorizando):
+    // não precisa perguntar de novo.
+    const jaConectada =
+      conexao!.shop_id === loja.id && conexao!.status !== "aguardando_confirmacao";
 
     const { error: erroTokens } = await supabaseAdmin.rpc(
       "canal_token_salvar" as never,
@@ -246,6 +254,29 @@ export const confirmarConexaoTiktok = createServerFn({ method: "POST" })
     if (error)
       return { ok: false, error: "A Pólia One não conseguiu conectar agora. Tenta de novo." };
     return { ok: true, error: null, lojaNome: conexao.loja_nome };
+  });
+
+/** Some só a loja que esperava confirmação (o gatilho leva os tokens do Vault). */
+async function apagarPendenteDeConfirmacao(userId: string) {
+  return supabaseAdmin
+    .from("canal_conexoes" as never)
+    .delete()
+    .eq("user_id", userId)
+    .eq("canal", CANAL)
+    .eq("status", "aguardando_confirmacao");
+}
+
+/**
+ * "Cancelar" da tela de confirmação. Diferente de desconectar: não toca em
+ * conexão confirmada nem nos anúncios ligados, só descarta a loja que chegou.
+ */
+export const cancelarConfirmacaoTiktok = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { error } = await apagarPendenteDeConfirmacao(context.userId);
+    if (error)
+      return { ok: false, error: "A Pólia One não conseguiu cancelar agora. Tenta de novo." };
+    return { ok: true, error: null };
   });
 
 export const desconectarTiktok = createServerFn({ method: "POST" })
