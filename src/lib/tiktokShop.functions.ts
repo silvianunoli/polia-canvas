@@ -19,8 +19,9 @@ const CANAL = "tiktok_shop";
 
 interface ConexaoRow {
   id: string;
-  status: "pendente" | "conectada" | "erro";
+  status: "pendente" | "aguardando_confirmacao" | "conectada" | "erro";
   state_pendente: string | null;
+  shop_id: string | null;
   loja_nome: string | null;
   ultimo_sync: string | null;
   ultimo_erro: string | null;
@@ -30,7 +31,9 @@ interface ConexaoRow {
 async function lerConexao(userId: string): Promise<ConexaoRow | null> {
   const { data } = await supabaseAdmin
     .from("canal_conexoes" as never)
-    .select("id, status, state_pendente, loja_nome, ultimo_sync, ultimo_erro, cuida_estoque")
+    .select(
+      "id, status, state_pendente, shop_id, loja_nome, ultimo_sync, ultimo_erro, cuida_estoque",
+    )
     .eq("user_id", userId)
     .eq("canal", CANAL)
     .maybeSingle();
@@ -102,15 +105,26 @@ export const iniciarConexaoTiktok = createServerFn({ method: "POST" })
 
 const finalizarInput = z.object({
   code: z.string().min(1).max(500),
-  state: z.string().min(1).max(100),
+  // Sem state quando a autorização começou no TikTok (botão "Autorizar aplicativo"
+  // da conta de teste, loja de apps do TikTok). Aí a conexão pede confirmação.
+  state: z.string().min(1).max(100).optional(),
 });
+
+type ResultadoFinalizar = {
+  ok: boolean;
+  error: string | null;
+  lojaNome?: string;
+  /** Autorização veio do TikTok: a tela pergunta antes de ligar a loja à conta. */
+  confirmar?: boolean;
+};
 
 export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => finalizarInput.parse(input))
-  .handler(async ({ data, context }) => {
-    const conexao = await lerConexao(context.userId);
-    if (!conexao || conexao.state_pendente !== data.state)
+  .handler(async ({ data, context }): Promise<ResultadoFinalizar> => {
+    let conexao = await lerConexao(context.userId);
+    const iniciadaNaPolia = !!data.state;
+    if (iniciadaNaPolia && (!conexao || conexao.state_pendente !== data.state))
       return { ok: false, error: "Essa conexão expirou ou não é sua. Tenta conectar de novo." };
     if (!(await temPro(context.userId)))
       return { ok: false, error: "A integração com o TikTok Shop é do plano Pro." };
@@ -150,10 +164,37 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
         error: "Essa loja do TikTok Shop já está conectada em outra conta da Pólia One.",
       };
 
+    if (!iniciadaNaPolia) {
+      // Já conectada: a mesma loja só renova os tokens; outra loja não troca sozinha.
+      if (conexao?.status === "conectada" && conexao.shop_id !== loja.id)
+        return {
+          ok: false,
+          error: "Já existe outra loja do TikTok Shop conectada. Desconecta antes de trocar.",
+        };
+      if (!conexao) {
+        const { data: criada } = await supabaseAdmin
+          .from("canal_conexoes" as never)
+          .upsert({ user_id: context.userId, canal: CANAL, status: "pendente" } as never, {
+            onConflict: "user_id,canal",
+          })
+          .select(
+            "id, status, state_pendente, shop_id, loja_nome, ultimo_sync, ultimo_erro, cuida_estoque",
+          )
+          .maybeSingle();
+        conexao = (criada as unknown as ConexaoRow) ?? null;
+        if (!conexao)
+          return {
+            ok: false,
+            error: "A Pólia One não conseguiu iniciar a conexão. Tenta de novo.",
+          };
+      }
+    }
+    const jaConectada = conexao!.status === "conectada";
+
     const { error: erroTokens } = await supabaseAdmin.rpc(
       "canal_token_salvar" as never,
       {
-        p_conexao_id: conexao.id,
+        p_conexao_id: conexao!.id,
         p_access: tokens.accessToken,
         p_refresh: tokens.refreshToken,
         p_access_expira: tokens.accessExpiraEm,
@@ -169,7 +210,7 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
     const { error: erroSalvar } = await supabaseAdmin
       .from("canal_conexoes" as never)
       .update({
-        status: "conectada",
+        status: iniciadaNaPolia || jaConectada ? "conectada" : "aguardando_confirmacao",
         state_pendente: null,
         shop_id: loja.id,
         shop_cipher: loja.cipher,
@@ -178,13 +219,33 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
         ultimo_erro: null,
         updated_at: new Date().toISOString(),
       } as never)
-      .eq("id", conexao.id);
+      .eq("id", conexao!.id);
     if (erroSalvar)
       return {
         ok: false,
         error: "A Pólia One conectou com o TikTok Shop, mas não conseguiu salvar. Tenta de novo.",
       };
+    if (!iniciadaNaPolia && !jaConectada)
+      return { ok: true, error: null, lojaNome: loja.name, confirmar: true };
     return { ok: true, error: null, lojaNome: loja.name };
+  });
+
+export const confirmarConexaoTiktok = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    if (!(await temPro(context.userId)))
+      return { ok: false, error: "A integração com o TikTok Shop é do plano Pro." };
+    const conexao = await lerConexao(context.userId);
+    if (conexao?.status !== "aguardando_confirmacao")
+      return { ok: false, error: "Não há loja esperando confirmação. Tenta conectar de novo." };
+    const { error } = await supabaseAdmin
+      .from("canal_conexoes" as never)
+      .update({ status: "conectada", updated_at: new Date().toISOString() } as never)
+      .eq("id", conexao.id)
+      .eq("status", "aguardando_confirmacao");
+    if (error)
+      return { ok: false, error: "A Pólia One não conseguiu conectar agora. Tenta de novo." };
+    return { ok: true, error: null, lojaNome: conexao.loja_nome };
   });
 
 export const desconectarTiktok = createServerFn({ method: "POST" })

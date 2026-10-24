@@ -40,6 +40,7 @@ import {
   iniciarConexaoTiktok,
   finalizarConexaoTiktok,
   desconectarTiktok,
+  confirmarConexaoTiktok,
 } from "./tiktokShop.functions";
 
 type Chamavel = (opts?: { data?: unknown; context?: unknown }) => Promise<unknown>;
@@ -241,5 +242,98 @@ describe("desconectarTiktok", () => {
     expect(consultas.canal_conexoes[0].eq).toHaveBeenCalledWith("user_id", "u-1");
     expect(consultas.anuncio_vinculos[0].delete).toHaveBeenCalled();
     expect(consultas.anuncio_vinculos[0].eq).toHaveBeenCalledWith("user_id", "u-1");
+  });
+});
+
+describe("autorização que começa no TikTok (sem state)", () => {
+  const entrada = { code: "code-1" };
+  const lojaBr = { id: "s-br", name: "Loja da Ana", region: "BR", cipher: "C-BR" };
+
+  beforeEach(() => {
+    api.trocarCodigoPorTokens.mockResolvedValue({ tokens, error: null });
+    api.lojasAutorizadas.mockResolvedValue({ lojas: [lojaBr], error: null });
+  });
+
+  it("sem conexão, cria a linha e espera a confirmação dela", async () => {
+    responder(
+      "canal_conexoes",
+      { data: null },
+      { data: null },
+      { data: conexaoPendente },
+      { error: null },
+    );
+    responder("profiles", { data: { plano: "projete" } });
+    expect(await finalizar({ data: entrada, context })).toEqual({
+      ok: true,
+      error: null,
+      lojaNome: "Loja da Ana",
+      confirmar: true,
+    });
+    const update = consultas.canal_conexoes[3].update.mock.calls[0][0] as Record<string, unknown>;
+    expect(update.status).toBe("aguardando_confirmacao");
+    expect(rpc).toHaveBeenCalledWith(
+      "canal_token_salvar",
+      expect.objectContaining({ p_conexao_id: "c-1" }),
+    );
+  });
+
+  it("a mesma loja já conectada só renova os tokens, sem pedir confirmação", async () => {
+    const conectada = {
+      ...conexaoPendente,
+      status: "conectada",
+      state_pendente: null,
+      shop_id: "s-br",
+    };
+    responder("canal_conexoes", { data: conectada }, { data: null }, { error: null });
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await finalizar({ data: entrada, context })) as { ok: boolean; confirmar?: boolean };
+    expect(r.ok).toBe(true);
+    expect(r.confirmar).toBeUndefined();
+    const update = consultas.canal_conexoes[2].update.mock.calls[0][0] as Record<string, unknown>;
+    expect(update.status).toBe("conectada");
+  });
+
+  it("outra loja não troca a que está conectada", async () => {
+    const conectada = {
+      ...conexaoPendente,
+      status: "conectada",
+      state_pendente: null,
+      shop_id: "s-outra",
+    };
+    responder("canal_conexoes", { data: conectada }, { data: null });
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await finalizar({ data: entrada, context })) as { ok: boolean; error: string };
+    expect(r.ok).toBe(false);
+    expect(r.error).toMatch(/Desconecta antes/);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe("confirmarConexaoTiktok", () => {
+  const confirmar = confirmarConexaoTiktok as unknown as Chamavel;
+
+  it("liga a loja que estava esperando", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder(
+      "canal_conexoes",
+      { data: { ...conexaoPendente, status: "aguardando_confirmacao", loja_nome: "Loja da Ana" } },
+      { error: null },
+    );
+    expect(await confirmar({ context })).toEqual({
+      ok: true,
+      error: null,
+      lojaNome: "Loja da Ana",
+    });
+    const q = consultas.canal_conexoes[1];
+    expect(q.update.mock.calls[0][0]).toMatchObject({ status: "conectada" });
+    expect(q.eq).toHaveBeenCalledWith("status", "aguardando_confirmacao");
+  });
+
+  it("sem loja esperando, não conecta nada", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", { data: conexaoPendente });
+    const r = (await confirmar({ context })) as { ok: boolean };
+    expect(r.ok).toBe(false);
+    expect(consultas.canal_conexoes).toHaveLength(1);
   });
 });
