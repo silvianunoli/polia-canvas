@@ -8,6 +8,7 @@ import {
   TIKTOK_OPEN_API,
   assinarChamada,
   urlDeAutorizacao,
+  type ProdutoApiTiktok,
 } from "../../supabase/functions/_shared/tiktokShop.ts";
 
 // Id do app "Pólia One" no Partner Center (App & Service). Não é segredo: vai na
@@ -144,4 +145,40 @@ export async function lojasAutorizadas(accessToken: string) {
     accessToken,
   });
   return { lojas: r.data?.shops ?? [], error: r.error };
+}
+
+/** Uma página de produtos ativos da loja (Search Products 202502, até 100 por página). */
+export async function buscarProdutos(p: {
+  accessToken: string;
+  shopCipher: string;
+  pageToken?: string;
+}) {
+  const r = await chamarApi<{ products?: ProdutoApiTiktok[]; next_page_token?: string }>({
+    metodo: "POST",
+    path: "/product/202502/products/search",
+    accessToken: p.accessToken,
+    shopCipher: p.shopCipher,
+    query: { page_size: "100", ...(p.pageToken ? { page_token: p.pageToken } : {}) },
+    corpo: { status: "ACTIVATE" },
+  });
+  return {
+    produtos: r.data?.products ?? [],
+    proximaPagina: r.data?.next_page_token || null,
+    error: r.error,
+  };
+}
+
+/** Get Product: traz o nome de cada variação (sales_attributes) que a busca às vezes não traz. */
+export async function detalheProduto(p: {
+  accessToken: string;
+  shopCipher: string;
+  produtoId: string;
+}) {
+  const r = await chamarApi<ProdutoApiTiktok>({
+    metodo: "GET",
+    path: `/product/202309/products/${encodeURIComponent(p.produtoId)}`,
+    accessToken: p.accessToken,
+    shopCipher: p.shopCipher,
+  });
+  return { produto: r.data, error: r.error };
 }

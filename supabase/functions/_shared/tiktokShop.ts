@@ -196,3 +196,56 @@ export function sugerirVinculos(anuncios: AnuncioCanal[], skus: SkuPolia[]): Sug
   );
   return resultado;
 }
+
+// ── Anúncios do TikTok → linhas da prévia ─────────────────────────────────
+
+/** Produto como vem do Search Products (202502) ou do Get Product (202309). Tudo opcional: a API muda. */
+export interface ProdutoApiTiktok {
+  id?: string;
+  title?: string;
+  status?: string;
+  skus?: Array<{
+    id?: string;
+    seller_sku?: string;
+    price?: { sale_price?: string; tax_exclusive_price?: string; currency?: string };
+    inventory?: Array<{ quantity?: number; warehouse_id?: string }>;
+    sales_attributes?: Array<{ name?: string; value_name?: string }>;
+  }>;
+}
+
+export interface AnuncioLinha extends AnuncioCanal {
+  preco: number | null;
+  quantidade: number;
+  status: string | null;
+}
+
+/** Um produto do TikTok vira uma linha por SKU (variação). SKU sem id é descartado. */
+export function anunciosDoProduto(p: ProdutoApiTiktok): AnuncioLinha[] {
+  if (!p.id) return [];
+  const skus = p.skus ?? [];
+  return skus
+    .filter((s) => !!s.id)
+    .map((s) => {
+      const atributos = (s.sales_attributes ?? [])
+        .map((a) => a.value_name?.trim())
+        .filter((v): v is string => !!v);
+      const precoTexto = s.price?.sale_price ?? s.price?.tax_exclusive_price;
+      const preco = precoTexto != null && precoTexto !== "" ? Number(precoTexto) : null;
+      return {
+        produtoExternoId: p.id!,
+        skuExternoId: s.id!,
+        codigo: s.seller_sku?.trim() || null,
+        titulo: p.title?.trim() || "Anúncio sem título",
+        variacao: atributos.length ? atributos.join(" / ") : null,
+        preco: preco != null && Number.isFinite(preco) ? preco : null,
+        quantidade: (s.inventory ?? []).reduce((t, i) => t + Math.max(0, i.quantity ?? 0), 0),
+        status: p.status ?? null,
+      };
+    });
+}
+
+/** Produto com mais de uma variação e sem o nome delas na busca: precisa do Get Product. */
+export function precisaDetalhe(p: ProdutoApiTiktok): boolean {
+  const skus = p.skus ?? [];
+  return skus.length > 1 && skus.some((s) => !(s.sales_attributes ?? []).length);
+}

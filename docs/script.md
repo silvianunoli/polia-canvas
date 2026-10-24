@@ -235,3 +235,10 @@ Plano aprovado pela Sil em 24/10 (`docs/plano-fase3a-tiktok-shop.md`, card VND-2
 
 - Diferente do Google Agenda: o token não fica em coluna aberta. Fica no Vault, lido e gravado só por RPC de service role (promessa da política de segurança v1.0 e do questionário do TikTok).
 - Desconectar apaga a conexão, os segredos do Vault (gatilho) e os vínculos de anúncio na hora.
+
+## 2026-10-24 — TikTok Shop direto, etapa 3a.2 (VND-05)
+
+A 3a.1 conectou a loja de teste de ponta a ponta. Esta etapa: a Pólia lista os anúncios da loja (Search Products 202502 + detalhe quando falta a variação), sugere o par com as variações da Pólia (`sugerirVinculos`, pelo código e depois pelo nome) e a usuária aprova numa tela própria (`/configuracoes/integracoes/tiktok/anuncios`, wireframe 6.3 aprovado). Cada linha pode: ligar a uma variação existente, ligar a um produto sem estoque ligado (liga o estoque com uma variação padrão), criar produto novo na Pólia (nome, preço e quantidade do TikTok) ou não ligar.
+
+- Token renovado sozinho quando falta menos de 5 minutos para vencer (`tiktokShopAcesso.server.ts`); se o TikTok recusar, a conexão vira "erro" e o card pede para conectar de novo.
+- Criar produto e ligar estoque usam o cliente com a sessão dela (`context.supabase`), pelas mesmas RPCs da tela de Produtos: valem as travas e o RLS de sempre.

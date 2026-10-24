@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { createHmac } from "node:crypto";
 import {
+  anunciosDoProduto,
   assinarChamada,
+  precisaDetalhe,
   statusVendaDoPedido,
   sugerirVinculos,
   textoDaAssinatura,
@@ -171,5 +173,68 @@ describe("sugestão de vínculo", () => {
       skus,
     );
     expect(r.map((x) => x.skuId)).toEqual([null, null]);
+  });
+});
+
+describe("anúncios do TikTok", () => {
+  it("vira uma linha por variação, com preço, quantidade somada e nome da variação", () => {
+    const linhas = anunciosDoProduto({
+      id: "p1",
+      title: " Caneca Gato ",
+      status: "ACTIVATE",
+      skus: [
+        {
+          id: "s1",
+          seller_sku: "CAN-AZ",
+          price: { sale_price: "39.90", currency: "BRL" },
+          inventory: [{ quantity: 3 }, { quantity: 2 }],
+          sales_attributes: [
+            { name: "Cor", value_name: "Azul" },
+            { name: "Tamanho", value_name: "350ml" },
+          ],
+        },
+        { id: "s2", price: { tax_exclusive_price: "x" } },
+        { seller_sku: "sem-id" },
+      ],
+    });
+    expect(linhas).toEqual([
+      {
+        produtoExternoId: "p1",
+        skuExternoId: "s1",
+        codigo: "CAN-AZ",
+        titulo: "Caneca Gato",
+        variacao: "Azul / 350ml",
+        preco: 39.9,
+        quantidade: 5,
+        status: "ACTIVATE",
+      },
+      {
+        produtoExternoId: "p1",
+        skuExternoId: "s2",
+        codigo: null,
+        titulo: "Caneca Gato",
+        variacao: null,
+        preco: null,
+        quantidade: 0,
+        status: "ACTIVATE",
+      },
+    ]);
+  });
+
+  it("produto sem id não vira linha", () => {
+    expect(anunciosDoProduto({ title: "x", skus: [{ id: "s" }] })).toEqual([]);
+  });
+
+  it("pede o detalhe só quando há várias variações sem nome", () => {
+    expect(precisaDetalhe({ skus: [{ id: "a" }] })).toBe(false);
+    expect(precisaDetalhe({ skus: [{ id: "a" }, { id: "b" }] })).toBe(true);
+    expect(
+      precisaDetalhe({
+        skus: [
+          { id: "a", sales_attributes: [{ value_name: "P" }] },
+          { id: "b", sales_attributes: [{ value_name: "M" }] },
+        ],
+      }),
+    ).toBe(false);
   });
 });

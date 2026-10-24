@@ -951,11 +951,19 @@ function ConfiguracoesPage() {
                   </ul>
                 )}
                 {tiktok.conectada && (
-                  <p className="font-sans text-[var(--ink-soft)] text-[12px] mt-3">
-                    {tiktok.anunciosLigados === 0
-                      ? "Nenhum anúncio ligado a produto da Pólia ainda."
-                      : `${tiktok.anunciosLigados} ${tiktok.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
-                  </p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="font-sans text-[var(--ink-soft)] text-[12px]">
+                      {tiktok.anunciosLigados === 0
+                        ? "Nenhum anúncio ligado a produto da Pólia ainda."
+                        : `${tiktok.anunciosLigados} ${tiktok.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
+                    </p>
+                    <LinkInterno
+                      href="/configuracoes/integracoes/tiktok/anuncios"
+                      className={BTN_MIUDO}
+                    >
+                      Ligar anúncios
+                    </LinkInterno>
+                  </div>
                 )}
               </div>
             )}

@@ -66,6 +66,7 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
+import { Route as AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok_.anuncios'
 
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
@@ -361,6 +362,12 @@ const AuthenticatedConfiguracoesIntegracoesTiktokRoute =
     path: '/configuracoes/integracoes/tiktok',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute =
+  AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport.update({
+    id: '/configuracoes_/integracoes/tiktok_/anuncios',
+    path: '/configuracoes/integracoes/tiktok/anuncios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByFullPath {
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -477,6 +485,7 @@ export interface FileRoutesByTo {
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -537,6 +546,7 @@ export interface FileRoutesById {
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -597,6 +607,7 @@ export interface FileRouteTypes {
     | '/planner/'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/configuracoes/integracoes/tiktok/anuncios'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -655,6 +666,7 @@ export interface FileRouteTypes {
     | '/planner'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/configuracoes/integracoes/tiktok/anuncios'
   id:
     | '__root__'
     | '/'
@@ -714,6 +726,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planner/'
     | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
+    | '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1149,6 +1162,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': {
+      id: '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
+      path: '/configuracoes/integracoes/tiktok/anuncios'
+      fullPath: '/configuracoes/integracoes/tiktok/anuncios'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1181,6 +1201,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
   AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
+  AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -1214,6 +1235,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConfiguracoesIntegracoesTiktokRoute:
     AuthenticatedConfiguracoesIntegracoesTiktokRoute,
   AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
+  AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute:
+    AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
