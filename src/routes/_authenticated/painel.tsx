@@ -38,6 +38,7 @@ import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
+import { CartaoConsultoria } from "@/components/painel/CartaoConsultoria";
 import {
   blocoPendente,
   contaCriadaDepoisDoCorte,
@@ -1291,6 +1292,11 @@ function PainelPage() {
                     </span>
                   )}
                 </LinkInterno>
+              </div>
+
+              {/* Consultoria no WhatsApp: fecha o bento, depois do que é rotina. */}
+              <div className={SPAN_CLASS[12]}>
+                <CartaoConsultoria />
               </div>
             </div>
           </>
