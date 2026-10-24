@@ -4,7 +4,6 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { hrefUpgrade, recursoLiberado } from "@/lib/planos";
-import { descreverRegra } from "@/lib/taxas";
 import { canalQueMaisPesa, linhasPorCanal, lucroDaConta } from "@/lib/precoPorCanal";
 import { chaveTaxas, useTaxas } from "@/components/vendas/taxasDados";
 import { ModalTaxas } from "@/components/vendas/ModalTaxas";
@@ -138,11 +137,11 @@ export function LucroPorCanal({
                   <td className="py-2 pr-2 text-[var(--ink)]">
                     {l.rotulo}
                     <span className="block text-[12px] text-[var(--muted)] sm:hidden">
-                      {descreverRegra(l.regra)}
+                      {l.descricaoTaxa}
                     </span>
                   </td>
                   <td className="hidden py-2 pr-2 text-[var(--ink-soft)] sm:table-cell">
-                    {descreverRegra(l.regra)}
+                    {l.descricaoTaxa}
                   </td>
                   <td
                     className={`py-2 pr-2 text-right tabular-nums ${l.lucro < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"}`}

@@ -5,7 +5,17 @@
 // Na Calculadora, o imposto é o que ela pôs na conta e vale igual em todo
 // canal; o que muda de um canal pro outro é só a taxa.
 
-import { taxaDaVenda, ROTULO_TAXA, type ChaveTaxa, type RegraTaxa } from "@/lib/taxas";
+import {
+  descreverRegra,
+  taxaDaVenda,
+  ROTULO_TAXA,
+  type ChaveTaxa,
+  type RegraTaxa,
+} from "@/lib/taxas";
+import {
+  descreverTabelaTiktok,
+  taxaTiktokDoItem,
+} from "../../supabase/functions/_shared/taxaTiktokShop";
 import { lucroDaVenda, type CanalVenda, type Venda } from "@/lib/vendas";
 
 const centavos = (v: number) => Math.round(v * 100) / 100;
@@ -22,16 +32,39 @@ export const ORDEM_CHAVES: ChaveTaxa[] = [
   "tiktok_shop",
 ];
 
+/** Taxa de uma venda a esse preço quando o canal não é percentual + fixo (TikTok Shop). */
+export type TaxaPorPreco = (preco: number) => number;
+
 /** O que fica de uma venda a esse preço no canal: preço - custo - imposto - taxa. */
 export function lucroNoCanal(p: {
   preco: number;
   custo: number;
   impostosPct: number;
   regra: RegraTaxa | null | undefined;
+  taxa?: TaxaPorPreco;
 }): number {
-  return centavos(
-    p.preco - p.custo - (p.preco * p.impostosPct) / 100 - taxaDaVenda(p.preco, p.regra),
-  );
+  const taxa = p.taxa ? p.taxa(p.preco) : taxaDaVenda(p.preco, p.regra);
+  return centavos(p.preco - p.custo - (p.preco * p.impostosPct) / 100 - taxa);
+}
+
+/**
+ * Menor preço em centavos por busca binária, para taxa em faixas (TikTok Shop):
+ * o lucro só cresce com o preço depois que passa a cobrir a taxa, então basta
+ * achar o primeiro centavo que chega. null quando nem R$ 1 milhão chega.
+ */
+function menorPrecoQueChega(chega: (preco: number) => boolean): number | null {
+  let hi = 100;
+  while (!chega(hi / 100)) {
+    hi *= 2;
+    if (hi > 100_000_000) return null;
+  }
+  let lo = 0;
+  while (lo < hi) {
+    const meio = Math.floor((lo + hi) / 2);
+    if (chega(meio / 100)) hi = meio;
+    else lo = meio + 1;
+  }
+  return lo / 100;
 }
 
 /**
@@ -43,7 +76,12 @@ export function precoParaLucrar(p: {
   custo: number;
   impostosPct: number;
   regra: RegraTaxa | null | undefined;
+  taxa?: TaxaPorPreco;
 }): number | null {
+  if (p.taxa) {
+    const alvo = centavos(p.lucroAlvo);
+    return menorPrecoQueChega((v) => lucroNoCanal({ ...p, preco: v }) >= alvo);
+  }
   const pct = (p.regra?.percentual ?? 0) + p.impostosPct;
   if (pct >= 100) return null;
   const fixo = p.regra?.fixo ?? 0;
@@ -63,8 +101,23 @@ export interface LinhaCanal {
   chave: ChaveTaxa;
   rotulo: string;
   regra: RegraTaxa;
+  /** "3,99% + R$ 0,50" ou, no TikTok Shop, as faixas da tabela oficial. */
+  descricaoTaxa: string;
   lucro: number;
   precoParaMesmoLucro: number | null;
+}
+
+/** TikTok Shop cobra pela tabela oficial, por item; o resto, pela regra cadastrada. */
+function taxaDoCanal(
+  chave: ChaveTaxa,
+  regra: RegraTaxa & { freteGratis?: boolean },
+): { taxa?: TaxaPorPreco; descricao: string } {
+  if (chave !== "tiktok_shop") return { descricao: descreverRegra(regra) };
+  const freteGratis = regra.freteGratis === true;
+  return {
+    taxa: (preco) => taxaTiktokDoItem(preco, { freteGratis }),
+    descricao: descreverTabelaTiktok(freteGratis),
+  };
 }
 
 /** Uma linha por taxa cadastrada (inclusive as cadastradas como sem taxa). */
@@ -73,15 +126,23 @@ export function linhasPorCanal(p: {
   custo: number;
   impostosPct: number;
   lucroBase: number;
-  taxas: Partial<Record<ChaveTaxa, RegraTaxa>>;
+  taxas: Partial<Record<ChaveTaxa, RegraTaxa & { freteGratis?: boolean }>>;
 }): LinhaCanal[] {
   return ORDEM_CHAVES.filter((c) => p.taxas[c]).map((chave) => {
     const regra = p.taxas[chave]!;
+    const { taxa, descricao } = taxaDoCanal(chave, regra);
     return {
       chave,
       rotulo: ROTULO_TAXA[chave],
       regra,
-      lucro: lucroNoCanal({ preco: p.preco, custo: p.custo, impostosPct: p.impostosPct, regra }),
+      descricaoTaxa: descricao,
+      lucro: lucroNoCanal({
+        preco: p.preco,
+        custo: p.custo,
+        impostosPct: p.impostosPct,
+        regra,
+        taxa,
+      }),
       // Sem lucro na conta não há "o mesmo lucro" pra buscar (a tela já avisa o piso).
       precoParaMesmoLucro:
         p.lucroBase > 0
@@ -90,6 +151,7 @@ export function linhasPorCanal(p: {
               custo: p.custo,
               impostosPct: p.impostosPct,
               regra,
+              taxa,
             })
           : null,
     };

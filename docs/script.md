@@ -272,3 +272,13 @@ Revisão de segurança da Fase 3a (agente só de leitura, conferiu as permissõe
 - Migration `20261024200000_tiktok_revisao_seguranca.sql`, testada numa transação desfeita: FK composta `anuncio_vinculos (sku_id, user_id)` → `produto_skus (id, user_id)`; `varredura_tentada_em` (sem Pro ou com erro do TikTok, o cron não chama o sync todo minuto, e o "desde" da varredura continua no último sync certo); trava `pegar_trava_sync`/`soltar_trava_sync` (arrendamento de 2 min, duas rodadas não renovam o mesmo token); cron diário `limpar-canal-eventos` (7 dias, o que o plano e o questionário prometem); `search_path = public, pg_temp` nas funções security definer da 3a.
 - Aceitos, sem ação: webhook sem checar timestamp (replay só recoloca o pedido na fila, idempotente); `app_secret` na query do token (é a especificação do TikTok, não é logado); teto de 1.000 itens em `salvarVinculosTiktok` (só afeta a própria conta); conexão de quem perde o Pro continua guardada.
 - ADR `docs/adr/0002-marketplaces-conexao-direta.md` e rascunho do anúncio na loja de apps `docs/tiktok-shop-anuncio-app-store.md` (decisões da Sil antes de preencher).
+
+## 2026-10-24 — Taxa do TikTok Shop pela tabela oficial (VND-05)
+
+A Pólia guardava uma regra só por canal (percentual + fixo por venda), mas o TikTok cobra por item e por faixa de preço desde 15/07/2026: abaixo de R$ 50, 10% + R$ 4 por item; de R$ 50 pra cima, 6% + R$ 6; quem participa do Frete Grátis paga mais 6% do item, até R$ 50. Decisão da Sil: tabela oficial para todo mundo, Frete Grátis como opção.
+
+- `_shared/taxaTiktokShop.ts` (puro, Worker e Deno, + 7 testes): `taxaTiktokDoItem`, `taxaTiktokDaVenda` (soma por unidade, cada uma na faixa do próprio preço, nunca acima do preço), `descreverTabelaTiktok`.
+- Migration `20261024233000_taxa_tiktok_frete_gratis.sql`: `taxas_recebimento.frete_gratis`. Na linha `tiktok_shop`, percentual e fixo deixam de valer.
+- `tiktok-sync` calcula a taxa do pedido pela tabela, com o Frete Grátis da conta.
+- Modal de taxas: bloco "TikTok Shop" com a tabela e a caixa "Participo do Programa de Frete Grátis do TikTok".
+- Lucro por canal: a linha do TikTok usa a tabela (busca binária para o menor preço que lucra o mesmo, porque a taxa muda de faixa) e mostra as faixas no lugar do percentual.

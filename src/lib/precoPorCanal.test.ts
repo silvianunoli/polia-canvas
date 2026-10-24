@@ -78,6 +78,38 @@ describe("linhasPorCanal e canalQueMaisPesa", () => {
   });
 });
 
+describe("TikTok Shop pela tabela oficial", () => {
+  // Caneca de R$ 39,90 com custo de R$ 15: 10% + R$ 4 = R$ 7,99 de taxa.
+  const base = { preco: 39.9, custo: 15, impostosPct: 0, lucroBase: 24.9 };
+
+  it("ignora o percentual cadastrado e usa a faixa do preço", () => {
+    const [l] = linhasPorCanal({ ...base, taxas: { tiktok_shop: { percentual: 50, fixo: 0 } } });
+    expect(l.lucro).toBe(16.91);
+    expect(l.descricaoTaxa).toMatch(/^10% \+ R\$ 4 por item abaixo de R\$ 50/);
+  });
+
+  it("Frete Grátis soma 6% do item", () => {
+    const [l] = linhasPorCanal({
+      ...base,
+      taxas: { tiktok_shop: { percentual: 0, fixo: 0, freteGratis: true } },
+    });
+    expect(l.lucro).toBe(14.52); // 39,90 - 15 - (3,99 + 4 + 2,39)
+    expect(l.descricaoTaxa).toMatch(/Frete Grátis/);
+  });
+
+  it("preço pra lucrar o mesmo é o menor centavo que chega", () => {
+    const [l] = linhasPorCanal({ ...base, taxas: { tiktok_shop: { percentual: 0, fixo: 0 } } });
+    const preco = l.precoParaMesmoLucro!;
+    // Abaixo de R$ 50 não chega (0,9p - 4 - 15 >= 24,90 pede p >= 48,78; aí lucra 24,90).
+    expect(preco).toBe(48.78);
+    const lucro = (v: number) =>
+      linhasPorCanal({ ...base, preco: v, taxas: { tiktok_shop: { percentual: 0, fixo: 0 } } })[0]
+        .lucro;
+    expect(lucro(preco)).toBeGreaterThanOrEqual(24.9);
+    expect(lucro(preco - 0.01)).toBeLessThan(24.9);
+  });
+});
+
 describe("resumoPorCanal", () => {
   const v = (canal: "instagram" | "whatsapp", extra: Partial<Venda> & { total: number }) => ({
     canal,

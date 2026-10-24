@@ -5,9 +5,9 @@ import {
   depositosDoProduto,
   itensDoPedido,
   statusVendaDoPedido,
-  taxaEstimada,
   type PedidoApiTiktok,
 } from "../_shared/tiktokShop.ts";
+import { taxaTiktokDaVenda } from "../_shared/taxaTiktokShop.ts";
 import {
   atualizarEstoqueTiktok,
   buscarPedidosAlterados,
@@ -174,7 +174,7 @@ async function processarPedido(
   c: Conexao,
   pedido: PedidoApiTiktok,
   vinculos: Map<string, string>,
-  regra: { percentual: number; fixo: number } | null,
+  freteGratis: boolean,
 ): Promise<string | null> {
   const status = statusVendaDoPedido(pedido.status);
   if (status === null) return null; // ainda não pago: quando pagar, o TikTok avisa de novo
@@ -188,7 +188,6 @@ async function processarPedido(
   }
   const itens = itensDoPedido(pedido, vinculos);
   if (!itens.length) return "pedido sem itens";
-  const total = itens.reduce((t, i) => t + i.quantidade * i.preco_unitario, 0);
   const semVinculo = itens.filter((i) => !i.sku_id).map((i) => i.nome);
   const observacao = [
     `Pedido ${pedido.id} do TikTok Shop`,
@@ -202,7 +201,8 @@ async function processarPedido(
     p_id_externo: String(pedido.id),
     p_data: dataDoPedido(pedido.paid_time ?? pedido.create_time),
     p_itens: itens,
-    p_taxa_canal: taxaEstimada(total, regra),
+    // Tabela oficial do TikTok, por item e por faixa de preço (_shared/taxaTiktokShop.ts).
+    p_taxa_canal: taxaTiktokDaVenda(itens, { freteGratis }),
     p_observacao: observacao,
   });
   return error ? error.message : null;
@@ -402,7 +402,7 @@ async function sincronizar() {
         .eq("canal", CANAL),
       supabaseAdmin
         .from("taxas_recebimento")
-        .select("percentual, fixo")
+        .select("frete_gratis")
         .eq("user_id", c.user_id)
         .eq("chave", CANAL)
         .maybeSingle(),
@@ -413,12 +413,7 @@ async function sincronizar() {
         v.sku_id,
       ]),
     );
-    const regra = taxa
-      ? {
-          percentual: Number((taxa as { percentual: number }).percentual),
-          fixo: Number((taxa as { fixo: number }).fixo),
-        }
-      : null;
+    const freteGratis = (taxa as { frete_gratis: boolean } | null)?.frete_gratis === true;
 
     for (let i = 0; i < lista.length; i += 50) {
       const lote = lista.slice(i, i + 50);
@@ -440,7 +435,7 @@ async function sincronizar() {
           await marcarEventos([e.id], "pedido não veio no detalhe");
           continue;
         }
-        const erro = await processarPedido(c, pedido, vinculos, regra);
+        const erro = await processarPedido(c, pedido, vinculos, freteGratis);
         if (!erro && statusVendaDoPedido(pedido.status) === "a_receber") vendas++;
         await marcarEventos([e.id], erro);
       }

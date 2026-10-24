@@ -1507,6 +1507,7 @@ export type Database = {
         Row: {
           chave: string
           fixo: number
+          frete_gratis: boolean
           id: string
           percentual: number
           updated_at: string
@@ -1515,6 +1516,7 @@ export type Database = {
         Insert: {
           chave: string
           fixo?: number
+          frete_gratis?: boolean
           id?: string
           percentual?: number
           updated_at?: string
@@ -1523,6 +1525,7 @@ export type Database = {
         Update: {
           chave?: string
           fixo?: number
+          frete_gratis?: boolean
           percentual?: number
         }
         Relationships: []

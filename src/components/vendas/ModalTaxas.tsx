@@ -10,7 +10,8 @@ import {
   validarRegra,
   type FormaRecebimento,
 } from "@/lib/taxas";
-import { salvarTaxas, useTaxas, type TaxasDaConta } from "./taxasDados";
+import { descreverTabelaTiktok } from "../../../supabase/functions/_shared/taxaTiktokShop";
+import { salvarFreteGratisTiktok, salvarTaxas, useTaxas, type TaxasDaConta } from "./taxasDados";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-right text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] aria-[invalid=true]:border-[var(--danger)]";
@@ -71,6 +72,8 @@ function FormularioTaxas({
       r[f] = { percentual: paraTexto(taxas[f]?.percentual), fixo: paraTexto(taxas[f]?.fixo) };
     return r;
   });
+  const freteGratisAntes = taxas.tiktok_shop?.freteGratis === true;
+  const [freteGratis, setFreteGratis] = useState(freteGratisAntes);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const ajudaId = useId();
@@ -90,7 +93,9 @@ function FormularioTaxas({
     setErro(null);
     const novas: TaxasDaConta = {};
     for (const { forma, regra } of regras) novas[forma] = regra;
-    const { error } = await salvarTaxas(userId, novas);
+    let { error } = await salvarTaxas(userId, novas);
+    if (!error && freteGratis !== freteGratisAntes)
+      ({ error } = await salvarFreteGratisTiktok(userId, freteGratis));
     setSalvando(false);
     if (error) {
       console.error("taxas_salvar", error);
@@ -177,6 +182,22 @@ function FormularioTaxas({
           })}
         </tbody>
       </table>
+
+      <fieldset className="mt-5 border-t border-[var(--line)] pt-4">
+        <legend className="text-[14px] font-medium text-[var(--ink)]">TikTok Shop</legend>
+        <p className="mt-1 text-[13px] text-[var(--muted)]">
+          A Pólia One usa a tarifa oficial do TikTok, por item: {descreverTabelaTiktok()}.
+        </p>
+        <label className="mt-2 flex min-h-11 items-center gap-2 text-[14px] text-[var(--ink-soft)]">
+          <input
+            type="checkbox"
+            checked={freteGratis}
+            onChange={(e) => setFreteGratis(e.target.checked)}
+            className="h-4 w-4 accent-[var(--secondary-text)]"
+          />
+          Participo do Programa de Frete Grátis do TikTok (mais 6% por item, até R$ 50)
+        </label>
+      </fieldset>
 
       <p id={ajudaId} aria-live="polite" className="mt-3 text-[13px] text-[var(--muted)]">
         {comErro.length > 0
