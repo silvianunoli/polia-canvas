@@ -40,7 +40,7 @@ export function CartaoConsultoria() {
         href={LINK_WHATSAPP_CONSULTORIA}
         target="_blank"
         rel="noopener noreferrer"
-        className={`${BTN_ACAO} min-h-11 shrink-0 self-start focus-visible:outline-[var(--bg)]! md:self-center`}
+        className={`${BTN_ACAO} min-h-11 shrink-0 self-start focus-visible:!outline-[var(--bg)] md:self-center`}
       >
         Quero a Consultoria <span aria-hidden="true">→</span>
         <span className="sr-only">(abre o WhatsApp em outra aba)</span>
