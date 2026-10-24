@@ -65,6 +65,7 @@ import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
+import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
 
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
@@ -354,6 +355,12 @@ const AuthenticatedPlanejamentoModuloNRoute =
     path: '/planejamento/modulo/$n',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedConfiguracoesIntegracoesTiktokRoute =
+  AuthenticatedConfiguracoesIntegracoesTiktokRouteImport.update({
+    id: '/configuracoes_/integracoes/tiktok',
+    path: '/configuracoes/integracoes/tiktok',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -410,6 +417,7 @@ export interface FileRoutesByFullPath {
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
 }
 export interface FileRoutesByTo {
@@ -467,6 +475,7 @@ export interface FileRoutesByTo {
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
+  '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
 }
 export interface FileRoutesById {
@@ -526,6 +535,7 @@ export interface FileRoutesById {
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
 }
 export interface FileRouteTypes {
@@ -585,6 +595,7 @@ export interface FileRouteTypes {
     | '/chamados/'
     | '/planejamento/'
     | '/planner/'
+    | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -642,6 +653,7 @@ export interface FileRouteTypes {
     | '/chamados'
     | '/planejamento'
     | '/planner'
+    | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
   id:
     | '__root__'
@@ -700,6 +712,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chamados/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
+    | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
   fileRoutesById: FileRoutesById
 }
@@ -1129,6 +1142,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanejamentoModuloNRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/configuracoes_/integracoes/tiktok': {
+      id: '/_authenticated/configuracoes_/integracoes/tiktok'
+      path: '/configuracoes/integracoes/tiktok'
+      fullPath: '/configuracoes/integracoes/tiktok'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1159,6 +1179,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
+  AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
 }
 
@@ -1190,6 +1211,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
+  AuthenticatedConfiguracoesIntegracoesTiktokRoute:
+    AuthenticatedConfiguracoesIntegracoesTiktokRoute,
   AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
 }
 

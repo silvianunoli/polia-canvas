@@ -77,7 +77,7 @@ que o Google Agenda já usa hoje (`calendarGoogle.functions.ts`).
 | Dado | Direção | Quando |
 |---|---|---|
 | Anúncios e variações | canal → Pólia | ao conectar e uma vez por dia |
-| Pedidos e status | canal → Pólia | webhook em tempo real + varredura de segurança a cada 15 min (pelo hub, se não houver webhook, consulta a cada poucos minutos) |
+| Pedidos e status | canal → Pólia | webhook do canal em tempo real + varredura de segurança a cada 15 min |
 | Estoque | Pólia → canal | a cada venda ou ajuste |
 | Preço | Pólia → canal | só quando ela mandar (botão), nunca automático |
 | Taxas e repasse | canal → Pólia | junto com o pedido, vira lançamento no Financeiro |
@@ -88,15 +88,42 @@ Usar esse telefone para pós-venda no WhatsApp pode suspender a loja da usuária
 - pedidos de marketplace entram em Vendas e Estoque, mas **não** viram contato de WhatsApp;
 - pós-venda no WhatsApp vale para venda direta (Instagram, WhatsApp, indicação, encomenda, loja própria).
 
-### Acesso às APIs (o gargalo real)
+### Acesso às APIs (o gargalo real, e por que a ordem é TikTok antes de Shopee)
 - **TikTok Shop:** o Partner Center tem categoria oficial de app de ERP, com lojas de teste para desenvolver.
   Caminho mais aberto.
 - **Shopee:** para ser "plataforma parceira" (atender lojas de terceiros) pede CNPJ ativo, inscrição e,
   segundo a página de requisitos, **já ter integrações de e-commerce ativas**. Pode demorar ou ser negado
   na primeira tentativa.
 
-### Caminho escolhido (23/10): Plug4Market para produtos, estoque e pedidos
-Decisão da Sil: se o hub for mais fácil, segue por ele. É mais fácil para a Shopee, então:
+### Caminho escolhido (23/10, revisado à noite): conexão direta, TikTok Shop primeiro, Shopee depois
+A proposta do Plug4Market veio perto de **R$ 1.000 por mês**, o equivalente a umas 21 assinaturas do Pro só para
+pagar o hub. Decisão da Sil: trocar para conexão direta com as APIs oficiais, que não cobram mensalidade.
+
+**Ordem:**
+1. **TikTok Shop direto (Fase 3a).** App na categoria de gestão (ERP) do TikTok Shop Partner Center, com lojas de
+   teste para desenvolver. É o canal mais aberto, e a mesma conexão serve de base para o chat (seção 5.1).
+2. **Shopee direto (Fase 3b).** A Shopee pede que a plataforma parceira já tenha integrações de e-commerce
+   ativas. Com o TikTok Shop no ar, a Pólia cumpre esse requisito e pede o acesso como Third-party Partner
+   Platform (CNPJ ativo, produto no ar com URL HTTPS, conta de teste para a Shopee avaliar).
+
+**O que muda em relação ao hub:**
+- Mensalidade zero. O custo vira desenvolvimento: dois adaptadores em vez de um, renovação de token da Shopee a
+  cada 4h, limite de chamadas de cada canal.
+- Os canais têm webhook de pedido próprio, então a sincronização fica em tempo real, sem esperar consulta
+  periódica.
+- O pedido não fica preso à nota fiscal como no hub. MEI e quem vende como pessoa física entram também (a regra
+  de nota de cada canal continua valendo).
+- A autorização da loja acontece na tela oficial de cada canal, sem a vendedora criar conta em terceiro.
+
+**Plano B:** se a Shopee negar ou demorar demais, a Shopee entra por hub (Plug4Market, Hub2b ou Gubee, pedindo
+proposta de novo) só para esse canal, pelo mesmo adaptador. O TikTok continua direto.
+
+**Complemento opcional:** quem já usa Bling pode conectar o Bling e a Pólia lê pedidos e estoque pela API v3
+dele, sem custo para a Pólia. Não substitui a conexão direta, porque só serve para quem paga o Bling.
+
+Comparação completa das opções (hubs, Bling, APIs unificadas de fora) no card VND-16.
+
+#### Registro: o que se sabia do Plug4Market (antes da troca)
 
 **Como o Plug4Market funciona.** É um hub da TecnoSpeed feito só para software house. A Pólia integra uma
 vez com a API REST dele e o hub conversa com mais de 80 canais, Shopee e TikTok Shop inclusos. Tem
@@ -117,13 +144,7 @@ cresce junto com as vendas das usuárias, o que encaixa no preço do Pro.
 - **Como a vendedora autoriza a loja:** não está descrito. Precisa ser um fluxo em que ela autoriza dentro
   da Pólia, sem ter que criar conta no Plug4Market.
 
-**Desenho resultante (híbrido):**
-- Shopee: via Plug4Market (produtos, estoque, pedidos).
-- TikTok Shop: via Plug4Market também, para ter um adaptador só. Conexão direta com o TikTok só para o
-  chat (seção 5.1), que o hub não cobre.
-- Com integrações ativas pelo hub, a Pólia passa a cumprir o requisito da Shopee e pode pedir acesso direto
-  mais tarde, se o custo por pedido ficar alto.
-- O adaptador por canal da seção 8 continua: trocar hub por conexão direta não mexe na regra.
+**Preço da proposta (23/10):** cerca de R$ 1.000 por mês. Foi o que levou à troca para conexão direta.
 
 ### 5.1 Mensagens das compradoras dentro da Pólia
 Pedido da Sil (23/10): ver as mensagens que as compradoras mandam, mesmo sem ver o contato delas. Dá, com
@@ -196,16 +217,17 @@ Decisão da Sil (23/10): **API oficial (Cloud API da Meta), sem fase por link.**
 - **Domínio em `src/lib/*.functions.ts`**, um adaptador por canal com a mesma interface
   (`listarAnuncios`, `buscarPedidos`, `atualizarEstoque`), para entrar Mercado Livre ou Nuvemshop depois
   sem mexer na regra.
-- ADR para: fonte da verdade do estoque, direto vs hub, quem paga o WhatsApp.
+- ADR para: fonte da verdade do estoque, conexão direta em vez de hub (decidida 23/10), quem paga o WhatsApp.
 
 ## 9. Fases e ordem
 
 | Fase | Entrega | Depende de fora? | Tamanho |
 |---|---|---|---|
-| 0 | Proposta do Plug4Market (com as perguntas da seção 5), cadastro de Tech Provider na Meta, pedido da permissão de atendimento no TikTok Shop, pergunta à Shopee sobre o chat. Atualizar Política de Privacidade e Termos | sim, começa já | dias de você, semanas de espera |
+| 0 | Cadastro da Pólia no TikTok Shop Partner Center (app de gestão + permissão de atendimento), cadastro de Tech Provider na Meta, pergunta à Shopee sobre o chat. Atualizar Política de Privacidade e Termos | sim, começa já | dias de você, semanas de espera |
 | 1 | Estoque (SKU, movimentos, mínimo) + Vendas manual + Mais vendidos + cards no Painel + lançamento automático no Financeiro | não | 2 a 3 semanas |
 | 2 | Clientes e leads (origem, consentimento, captura) | não | 1 semana |
-| 3 | Shopee e TikTok Shop via Plug4Market: conectar, importar anúncios com vínculo, pedidos entrando, estoque sincronizado (começa no sandbox antes do contrato) | proposta TecnoSpeed | 3 a 4 semanas |
+| 3a | TikTok Shop direto: conectar, importar anúncios com vínculo, pedidos entrando, estoque sincronizado (começa nas lojas de teste do Partner Center) | app aprovado no TikTok | 3 a 4 semanas |
+| 3b | Shopee direto, mesmo escopo da 3a. Pedido de acesso como Third-party Partner sai assim que a 3a estiver no ar | aprovação Shopee | 2 a 3 semanas depois do acesso |
 | 4 | WhatsApp pela API oficial: conexão do número, régua de pós-venda, modelos, Caixa de mensagens | aprovação Meta | 3 semanas |
 | 5 | Calculadora com preço por canal + lucro por canal no Raio-x | não | 1 semana |
 | 6 | Chat do TikTok Shop (e da Shopee, se liberar) na Caixa de mensagens | aprovação TikTok / resposta Shopee | 2 semanas |
@@ -220,15 +242,17 @@ sair.
    - Grátis: estoque manual dentro da cota de 5 produtos, vendas manuais.
    - Premium: estoque completo, Vendas, Mais vendidos, Clientes e leads, Pós-venda por link.
    - Pro: Shopee + TikTok Shop, WhatsApp automático, preço e lucro por canal.
-2. ~~Shopee direto ou via hub~~ **Decidido 23/10: via Plug4Market**, se a proposta responder bem às
-   perguntas da seção 5 (principalmente a nota fiscal obrigatória).
+2. ~~Shopee direto ou via hub~~ **Decidido 23/10 (revisado à noite): conexão direta, TikTok Shop primeiro,
+   Shopee depois.** O Plug4Market saiu perto de R$ 1.000 por mês; hub fica só como plano B para a Shopee.
 3. ~~WhatsApp por link ou API~~ **Decidido 23/10: API oficial.** Continua aberto **quem paga a mensagem**:
    a usuária cadastra o cartão dela na Meta (Pólia fora do custo) ou a Pólia inclui uma franquia no Pro.
 4. **Nome visível do módulo.** "Vendas" é o mais claro; alternativa "Pedidos".
 
 ## 11. Riscos
 
-- Aprovação da Shopee pode atrasar meses (requisito de já ter integrações).
+- Aprovação da Shopee pode atrasar meses ou ser negada na primeira tentativa. Mitigado pela ordem (TikTok no
+  ar antes do pedido) e pelo plano B de hub só para a Shopee.
+- Manter dois adaptadores diretos dá mais trabalho que um hub: mudança de API de cada canal cai na Pólia.
 - Venda dupla se a sincronização atrasar: mitigado com webhook + fila + varredura, e com estoque de
   segurança opcional por SKU.
 - LGPD: a Pólia vira operadora de dados de compradoras. Política, termos e minimização (guardar só o
@@ -247,4 +271,8 @@ sair.
 - Plug4Market, página do produto (canais, sandbox, só software house): https://tecnospeed.com.br/en/plug4market/
 - TikTok Shop, API de atendimento: https://partner.tiktokshop.com/docv2/page/customer-service-api-overview
 - TikTok Shop, aprovação da permissão de atendimento (terceiro): https://www.unifyport.ai/blog/tiktok-shop-customer-service-api-approval-checklist/
+- Shopee, programa de parceiros ERP/HUB: https://seller.br.shopee.cn/edu/article/14952/o-que-e-o-programa-de-parceiros-ERP-Shopee
+- Guia de terceiro do Open Platform da Shopee (requisitos de ISV): https://rollout.com/integration-guides/shopee/api-essentials
+- Hubs com preços, out/2026 (comparação do VND-16): https://nacao.digital/blog/integrador-de-marketplace/
+- API do Bling (ponte opcional): https://blog.bling.com.br/api-bling/
 - Preço da API do WhatsApp em out/2026: https://www.connectweek.com.br/artigo/custo-whatsapp-business-api-2026 e https://www.dragapp.com/pt-br/blog/api-oficial-do-whatsapp/

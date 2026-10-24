@@ -228,3 +228,10 @@ Com o TikTok Shop e o WhatsApp oficial esperando os acessos da Sil (VND-02) e o 
 - `lib/precoPorCanal.ts` (+ 9 testes), usando as taxas do ONE-128 (`lib/taxas.ts`): lucro no canal, menor preço que devolve o mesmo lucro (ajuste de centavo pelo arredondamento da taxa), linhas por taxa cadastrada, canal que mais derruba o lucro, resumo de vendas por canal. Sem migration.
 - A outra sessão está editando `ModalRegistrarVenda.tsx` e `vendas/dados.ts`: a Fase 5 não mexe neles.
 - **Telas (mesma data).** Wireframe aprovado pela Sil (VND-20). `LucroPorCanal` na Calculadora, logo abaixo do preço sugerido: "Quanto esse preço deixa em cada forma de receber" (taxa, lucra, pra lucrar o mesmo, frase da forma que mais pesa, cadastrar/editar taxas pelo mesmo `ModalTaxas` de Vendas; no Grátis, uma linha com o Premium). `PorCanal` no topo de Vendas > Mais vendidos (vendas, vendeu, taxa paga, lucrou, nota do que entra no lucro). Revisão corrigiu: o lucro de base é recalculado no preço arredondado com a taxa da conta (antes 1 centavo de diferença em 1 de cada 4 contas e frase errada), comparação em centavos inteiros, sem lucro na conta some a coluna "pra lucrar o mesmo", canal só com vendas sem custo mostra "sem custo" em vez de R$ 0,00. 11 testes.
+
+## 2026-10-24 — TikTok Shop direto, etapa 3a.1 (VND-05)
+
+Plano aprovado pela Sil em 24/10 (`docs/plano-fase3a-tiktok-shop.md`, card VND-22): só no Pro; item sem vínculo entra sem baixar estoque e avisa. Esta etapa: banco da conexão, tokens no Supabase Vault, regras puras do TikTok com testes, cliente da API, conectar e desconectar, card em Configurações > Integrações e a rota de volta da autorização (`/configuracoes/integracoes/tiktok`, a mesma cadastrada no app do Partner Center e no secret `TIKTOK_SHOP_REDIRECT_URI`).
+
+- Diferente do Google Agenda: o token não fica em coluna aberta. Fica no Vault, lido e gravado só por RPC de service role (promessa da política de segurança v1.0 e do questionário do TikTok).
+- Desconectar apaga a conexão, os segredos do Vault (gatilho) e os vínculos de anúncio na hora.

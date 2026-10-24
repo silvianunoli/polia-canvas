@@ -27,6 +27,11 @@ import { statusAssinatura, cancelarAssinatura, abrirPortalCobranca } from "@/lib
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import {
+  statusConexaoTiktok,
+  iniciarConexaoTiktok,
+  desconectarTiktok,
+} from "@/lib/tiktokShop.functions";
+import {
   statusConexaoGoogle,
   iniciarConexaoGoogle,
   desconectarGoogle,
@@ -178,6 +183,41 @@ function ConfiguracoesPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["google-status", userId] });
       toastSucesso("Google Calendar desconectado.");
+    },
+    onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
+  });
+
+  // ── TikTok Shop (VND-05): só no Pro; escondido se o servidor não tiver as credenciais ──
+  const statusTiktokQuery = useQuery({
+    queryKey: ["tiktok-status", userId],
+    enabled: !!userId,
+    queryFn: () => statusConexaoTiktok(),
+  });
+  const tiktok = statusTiktokQuery.data?.configurado ? statusTiktokQuery.data : null;
+  const [confirmandoDesconectarTiktok, setConfirmandoDesconectarTiktok] = useState(false);
+
+  const conectarTiktokMutation = useMutation({
+    mutationFn: () => iniciarConexaoTiktok(),
+    onSuccess: (res) => {
+      if (res.error || !res.url) {
+        toastErro(res.error ?? "A Pólia One não conseguiu conectar com o TikTok Shop agora.");
+        return;
+      }
+      window.location.href = res.url;
+    },
+    onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o TikTok Shop."),
+  });
+
+  const desconectarTiktokMutation = useMutation({
+    mutationFn: () => desconectarTiktok(),
+    onSuccess: (res) => {
+      if (!res.ok) {
+        toastErro(res.error ?? "A Pólia One não conseguiu desconectar agora.");
+        return;
+      }
+      setConfirmandoDesconectarTiktok(false);
+      queryClient.invalidateQueries({ queryKey: ["tiktok-status", userId] });
+      toastSucesso("TikTok Shop desconectado.");
     },
     onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
   });
@@ -849,6 +889,89 @@ function ConfiguracoesPage() {
                 </button>
               )}
             </div>
+            {tiktok && (
+              <div className="p-4 border border-[var(--line)] rounded-xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
+                      TikTok Shop
+                      {tiktok.conectada && tiktok.lojaNome ? ` · ${tiktok.lojaNome}` : ""}
+                    </p>
+                    <p className="font-sans text-[var(--ink-soft)] text-[12px]">
+                      {tiktok.conectada
+                        ? tiktok.ultimoSync
+                          ? `conectada · última sincronização ${new Date(tiktok.ultimoSync).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}`
+                          : "conectada · os pedidos começam a chegar depois que os anúncios forem ligados"
+                        : "pedidos pagos viram venda na Pólia e o estoque fica igual nos dois lugares"}
+                    </p>
+                  </div>
+                  {!tiktok.conectada && !tiktok.liberado ? (
+                    <LinkInterno
+                      href={`/upgrade?rota=${encodeURIComponent("/configuracoes")}&tier=projete`}
+                      className={BTN_MIUDO}
+                    >
+                      <Lock size={13} aria-hidden="true" /> Abre no Pro
+                    </LinkInterno>
+                  ) : tiktok.conectada ? (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmandoDesconectarTiktok(true)}
+                      className={`${BTN_MIUDO} hover:border-[var(--danger)] hover:text-[var(--danger)]`}
+                    >
+                      Desconectar
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => conectarTiktokMutation.mutate()}
+                      disabled={conectarTiktokMutation.isPending}
+                      className={BTN_MIUDO}
+                    >
+                      {conectarTiktokMutation.isPending
+                        ? "Conectando..."
+                        : tiktok.erro
+                          ? "Conectar de novo"
+                          : "Conectar"}
+                    </button>
+                  )}
+                </div>
+                {tiktok.erro && !tiktok.conectada && (
+                  <p className="font-sans text-[var(--danger)] text-[12px] mt-2" role="alert">
+                    {tiktok.erro}
+                  </p>
+                )}
+                {!tiktok.conectada && (
+                  <ul className="font-sans text-[var(--ink-soft)] text-[12px] mt-3 space-y-1">
+                    <li>A Pólia importa: anúncios, pedidos e quantidades.</li>
+                    <li>
+                      A Pólia não faz: criar anúncio, responder compradora, guardar dados de quem
+                      comprou.
+                    </li>
+                    <li>Antes de conectar: ter a loja aprovada no TikTok Shop.</li>
+                  </ul>
+                )}
+                {tiktok.conectada && (
+                  <p className="font-sans text-[var(--ink-soft)] text-[12px] mt-3">
+                    {tiktok.anunciosLigados === 0
+                      ? "Nenhum anúncio ligado a produto da Pólia ainda."
+                      : `${tiktok.anunciosLigados} ${tiktok.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
+                  </p>
+                )}
+              </div>
+            )}
+            <ConfirmarAcao
+              open={confirmandoDesconectarTiktok}
+              onOpenChange={(aberto) => {
+                if (!desconectarTiktokMutation.isPending) setConfirmandoDesconectarTiktok(aberto);
+              }}
+              titulo="Desconectar o TikTok Shop?"
+              descricao="Os pedidos param de chegar e as ligações entre anúncios e produtos são apagadas. As vendas que já entraram continuam na Pólia."
+              textoConfirmar="Desconectar"
+              textoCarregando="Desconectando..."
+              destrutivo
+              carregando={desconectarTiktokMutation.isPending}
+              onConfirmar={() => desconectarTiktokMutation.mutateAsync()}
+            />
             <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
               <p className="font-sans text-[var(--muted)] text-[13px]">
                 Mais integrações em breve.
