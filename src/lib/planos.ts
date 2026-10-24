@@ -295,6 +295,13 @@ export const TIERS_PAGOS: Record<
         texto: "Insumos e produção: o material sai do estoque quando a peça fica pronta",
         novoAte: NOVO_OUT_2026,
       },
+      {
+        // ONE-134, no ar desde 23/10 (0003d40), na aba Estoque e na de Insumos,
+        // sem trava de Pro. Até 24/10 esta lista dizia "Em breve" no Pro (COPY-33).
+        id: "reposicao",
+        texto: "Sugestão de reposição: o que repor e quanto, pelo giro de cada produto e insumo",
+        novoAte: NOVO_OUT_2026,
+      },
     ],
     destaque: true,
   },
@@ -329,12 +336,6 @@ export const TIERS_PAGOS: Record<
         // VND-08
         id: "whatsapp",
         texto: "Mensagem de pós-venda pelo WhatsApp, no dia certo depois da entrega",
-        emBreve: true,
-      },
-      {
-        // ONE-134
-        id: "reposicao",
-        texto: "Sugestão de reposição: o que repor e quanto, pelo giro de cada produto",
         emBreve: true,
       },
       {
