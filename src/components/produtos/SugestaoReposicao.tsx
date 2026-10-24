@@ -88,7 +88,9 @@ export function SugestaoReposicao({
           ? "acabou"
           : `tem ${fmtQtd(s.saldo)}${un}`,
       s.saiu > 0
-        ? `${origem === "venda" ? "saíram" : "foram pra produção"} ${fmtQtd(s.saiu)}${un} em ${s.dias} dias`
+        ? origem === "venda"
+          ? `saíram ${fmtQtd(s.saiu)}${un} em ${s.dias} dias`
+          : `saíram ${fmtQtd(s.saiu)}${un} em ${s.dias} dias, entre produção e perda`
         : null,
       s.saldo > 0 && s.acabaEm != null
         ? Math.floor(s.acabaEm) < 1
@@ -198,7 +200,7 @@ export function SugestaoReposicao({
                 ? `Nada pra ${acao} nos próximos ${cobertura} dias, pelo ritmo de saída de agora.`
                 : origem === "venda"
                   ? `A conta usa as vendas registradas, e ainda não tem nenhuma nos últimos ${JANELA_DIAS} dias. Por enquanto, só entra aqui o que já está abaixo do mínimo.`
-                  : `A conta usa as produções feitas em Registrar produção, e ainda não tem nenhuma nos últimos ${JANELA_DIAS} dias. Por enquanto, só entra aqui o que já está abaixo do mínimo.`}
+                  : `A conta usa as produções feitas em Registrar produção e as perdas registradas, e ainda não tem nenhuma nos últimos ${JANELA_DIAS} dias. Por enquanto, só entra aqui o que já está abaixo do mínimo.`}
             </p>
           ) : (
             <>

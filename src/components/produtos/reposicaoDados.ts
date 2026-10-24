@@ -37,7 +37,7 @@ export function useGiroPorSku(userId: string | undefined) {
   });
 }
 
-/** insumo_id → giro (o que foi pra produção). Uma linha por insumo ativo. */
+/** insumo_id → giro (produção mais perda; decisão da Sil, 24/10). Uma linha por insumo ativo. */
 export function useGiroPorInsumo(userId: string | undefined) {
   return useQuery({
     queryKey: [...chaveInsumos(userId), "giro"],
