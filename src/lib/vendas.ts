@@ -15,6 +15,7 @@ export const CANAIS_VENDA = [
   "site",
   "shopee",
   "tiktok_shop",
+  "mercado_livre",
   "outro",
 ] as const;
 export type CanalVenda = (typeof CANAIS_VENDA)[number];
@@ -27,10 +28,11 @@ export const CANAL_LABEL: Record<CanalVenda, string> = {
   site: "Site",
   shopee: "Shopee",
   tiktok_shop: "TikTok Shop",
+  mercado_livre: "Mercado Livre",
   outro: "Outro",
 };
 
-/** Canais que a usuária escolhe ao registrar à mão; Shopee e TikTok entram pela integração. */
+/** Canais que a usuária escolhe ao registrar à mão; Shopee, TikTok e Mercado Livre entram pela integração. */
 export const CANAIS_MANUAIS: CanalVenda[] = [
   "instagram",
   "whatsapp",

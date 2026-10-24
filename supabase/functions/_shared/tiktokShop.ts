@@ -5,6 +5,24 @@
 // Assinatura e webhook seguem a doc do Partner Center lida em 23/10/2026
 // ("Sign your API request" e "Webhooks > Configuration guide").
 
+import {
+  diaEmBrasilia,
+  type AnuncioCanal,
+  type ItemVendaCanal,
+  type StatusVendaCanal,
+} from "./canais.ts";
+
+// O que vale para todo canal mora em canais.ts; continua saindo daqui para quem
+// já importava do TikTok.
+export { sugerirVinculos } from "./canais.ts";
+export type {
+  AnuncioCanal,
+  ItemVendaCanal,
+  SkuPolia,
+  StatusVendaCanal,
+  SugestaoVinculo,
+} from "./canais.ts";
+
 export const TIKTOK_AUTORIZAR_URL = "https://services.tiktokshop.com/open/authorize";
 export const TIKTOK_AUTH_API = "https://auth.tiktok-shops.com";
 export const TIKTOK_OPEN_API = "https://open-api.tiktokglobalshop.com";
@@ -86,9 +104,6 @@ export function urlDeAutorizacao(serviceId: string, state: string): string {
 
 // ── Pedido → venda ─────────────────────────────────────────────────────────
 
-/** Status de venda na Pólia que um pedido do TikTok gera, ou null quando ainda não é venda. */
-export type StatusVendaCanal = "a_receber" | "cancelada" | null;
-
 const PEDIDO_PAGO = new Set([
   // ON_HOLD: pago, no prazo em que a compradora ainda pode cancelar. O estoque já
   // está reservado no TikTok, então baixa na Pólia também; se cancelar, devolve.
@@ -110,91 +125,6 @@ export function statusVendaDoPedido(statusTikTok: string | null | undefined): St
   if (statusTikTok === "CANCELLED") return "cancelada";
   if (PEDIDO_PAGO.has(statusTikTok)) return "a_receber";
   return null;
-}
-
-// ── Sugestão de vínculo anúncio ↔ produto ──────────────────────────────────
-
-export interface AnuncioCanal {
-  produtoExternoId: string;
-  skuExternoId: string;
-  /** Código que a vendedora deu à variação no TikTok (seller_sku). */
-  codigo: string | null;
-  titulo: string;
-  variacao: string | null;
-}
-
-export interface SkuPolia {
-  skuId: string;
-  codigo: string | null;
-  produtoNome: string;
-  variacao: string | null;
-}
-
-export interface SugestaoVinculo {
-  skuExternoId: string;
-  skuId: string | null;
-  motivo: "codigo" | "nome" | null;
-}
-
-function normalizar(texto: string | null | undefined): string {
-  return (texto ?? "")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/**
- * Pelo código (SKU) primeiro; sem código igual, pelo nome do produto + variação.
- * Só sugere quando o par é único dos dois lados: duas variações da Pólia com o
- * mesmo nome não viram palpite. Quem decide é ela, na prévia.
- */
-export function sugerirVinculos(anuncios: AnuncioCanal[], skus: SkuPolia[]): SugestaoVinculo[] {
-  const porCodigo = new Map<string, SkuPolia[]>();
-  const porNome = new Map<string, SkuPolia[]>();
-  for (const s of skus) {
-    const c = normalizar(s.codigo);
-    if (c) porCodigo.set(c, [...(porCodigo.get(c) ?? []), s]);
-    const n = `${normalizar(s.produtoNome)}|${normalizar(s.variacao)}`;
-    porNome.set(n, [...(porNome.get(n) ?? []), s]);
-  }
-
-  const usados = new Set<string>();
-  const resultado: SugestaoVinculo[] = anuncios.map((a) => ({
-    skuExternoId: a.skuExternoId,
-    skuId: null,
-    motivo: null,
-  }));
-
-  const passar = (
-    motivo: "codigo" | "nome",
-    chave: (a: AnuncioCanal) => string,
-    mapa: Map<string, SkuPolia[]>,
-  ) => {
-    const contagem = new Map<string, number>();
-    for (const a of anuncios) {
-      const k = chave(a);
-      if (k) contagem.set(k, (contagem.get(k) ?? 0) + 1);
-    }
-    anuncios.forEach((a, i) => {
-      if (resultado[i].skuId) return;
-      const k = chave(a);
-      if (!k || contagem.get(k) !== 1) return;
-      const candidatos = (mapa.get(k) ?? []).filter((s) => !usados.has(s.skuId));
-      if (candidatos.length !== 1) return;
-      resultado[i] = { skuExternoId: a.skuExternoId, skuId: candidatos[0].skuId, motivo };
-      usados.add(candidatos[0].skuId);
-    });
-  };
-
-  passar("codigo", (a) => normalizar(a.codigo), porCodigo);
-  passar(
-    "nome",
-    (a) => (normalizar(a.titulo) ? `${normalizar(a.titulo)}|${normalizar(a.variacao)}` : ""),
-    porNome,
-  );
-  return resultado;
 }
 
 // ── Anúncios do TikTok → linhas da prévia ─────────────────────────────────
@@ -271,14 +201,6 @@ export interface PedidoApiTiktok {
   }>;
 }
 
-export interface ItemVendaCanal {
-  sku_id: string | null;
-  nome: string;
-  variacao: string | null;
-  quantidade: number;
-  preco_unitario: number;
-}
-
 const numero = (v: string | number | undefined | null): number => {
   const n = typeof v === "number" ? v : v != null && v !== "" ? Number(v) : NaN;
   return Number.isFinite(n) ? n : 0;
@@ -317,15 +239,9 @@ export function itensDoPedido(
   return [...grupos.values()];
 }
 
-/** Dia da venda no horário de Brasília (o Worker e o Deno rodam em UTC). */
+/** Dia da venda no horário de Brasília. */
 export function dataDoPedido(segundosUnix: number | undefined, agora: Date = new Date()): string {
-  const quando = segundosUnix ? new Date(segundosUnix * 1000) : agora;
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(quando);
+  return diaEmBrasilia(segundosUnix ? new Date(segundosUnix * 1000) : agora);
 }
 
 /**

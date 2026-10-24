@@ -115,6 +115,10 @@ pagar o hub. Decisão da Sil: trocar para conexão direta com as APIs oficiais, 
   de nota de cada canal continua valendo).
 - A autorização da loja acontece na tela oficial de cada canal, sem a vendedora criar conta em terceiro.
 
+**Revisão de 24/10 (decisão da Sil):** o **Mercado Livre direto (Fase 3c)** entra antes da Shopee. O app do
+Mercado Livre não depende de aprovação de parceiro e a comissão real vem no pedido. Plano em
+`docs/plano-fase3c-mercado-livre.md`. O pedido de acesso à Shopee segue em paralelo.
+
 **Plano B:** se a Shopee negar ou demorar demais, a Shopee entra por hub (Plug4Market, Hub2b ou Gubee, pedindo
 proposta de novo) só para esse canal, pelo mesmo adaptador. O TikTok continua direto.
 
@@ -227,6 +231,7 @@ Decisão da Sil (23/10): **API oficial (Cloud API da Meta), sem fase por link.**
 | 1 | Estoque (SKU, movimentos, mínimo) + Vendas manual + Mais vendidos + cards no Painel + lançamento automático no Financeiro | não | 2 a 3 semanas |
 | 2 | Clientes e leads (origem, consentimento, captura) | não | 1 semana |
 | 3a | TikTok Shop direto: conectar, importar anúncios com vínculo, pedidos entrando, estoque sincronizado (começa nas lojas de teste do Partner Center) | app aprovado no TikTok | 3 a 4 semanas |
+| 3c | Mercado Livre direto, mesmo escopo da 3a, com tarifa real e frete da vendedora. Entra antes da 3b (decisão 24/10) | app no DevCenter, sem aprovação | 2 a 3 semanas |
 | 3b | Shopee direto, mesmo escopo da 3a. Pedido de acesso como Third-party Partner sai assim que a 3a estiver no ar | aprovação Shopee | 2 a 3 semanas depois do acesso |
 | 4 | WhatsApp pela API oficial: conexão do número, régua de pós-venda, modelos, Caixa de mensagens | aprovação Meta | 3 semanas |
 | 5 | Calculadora com preço por canal + lucro por canal no Raio-x | não | 1 semana |

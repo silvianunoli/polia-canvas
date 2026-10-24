@@ -30,6 +30,7 @@ export const ORDEM_CHAVES: ChaveTaxa[] = [
   "link",
   "shopee",
   "tiktok_shop",
+  "mercado_livre",
 ];
 
 /** Taxa de uma venda a esse preço quando o canal não é percentual + fixo (TikTok Shop). */

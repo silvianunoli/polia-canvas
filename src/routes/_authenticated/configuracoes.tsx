@@ -38,6 +38,7 @@ import {
   desconectarGoogle,
 } from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
 import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
@@ -1017,6 +1018,7 @@ function ConfiguracoesPage() {
               carregando={desconectarTiktokMutation.isPending}
               onConfirmar={() => desconectarTiktokMutation.mutateAsync()}
             />
+            <CardMercadoLivre userId={userId} />
             <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
               <p className="font-sans text-[var(--muted)] text-[13px]">
                 Mais integrações em breve.

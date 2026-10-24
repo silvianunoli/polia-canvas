@@ -3,7 +3,7 @@
 // chaves num check (migration 20261023190000): chave nova aqui pede migration.
 //
 // Na venda manual quem cobra é a forma de recebimento (maquininha, link), não o
-// Instagram. Shopee e TikTok Shop cobram pelo canal; ficam aqui pra a
+// Instagram. Shopee, TikTok Shop e Mercado Livre cobram pelo canal; ficam aqui pra a
 // integração (VND-05) e o lucro por canal (VND-07) usarem a mesma regra.
 
 export const FORMAS_RECEBIMENTO = [
@@ -14,7 +14,7 @@ export const FORMAS_RECEBIMENTO = [
   "credito_parcelado",
   "link",
 ] as const;
-export const MARKETPLACES_COM_TAXA = ["shopee", "tiktok_shop"] as const;
+export const MARKETPLACES_COM_TAXA = ["shopee", "tiktok_shop", "mercado_livre"] as const;
 
 export type FormaRecebimento = (typeof FORMAS_RECEBIMENTO)[number];
 export type ChaveTaxa = FormaRecebimento | (typeof MARKETPLACES_COM_TAXA)[number];
@@ -28,6 +28,7 @@ export const ROTULO_TAXA: Record<ChaveTaxa, string> = {
   link: "Link de pagamento",
   shopee: "Shopee",
   tiktok_shop: "TikTok Shop",
+  mercado_livre: "Mercado Livre",
 };
 
 export interface RegraTaxa {

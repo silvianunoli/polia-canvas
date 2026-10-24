@@ -282,3 +282,17 @@ A Pólia guardava uma regra só por canal (percentual + fixo por venda), mas o T
 - `tiktok-sync` calcula a taxa do pedido pela tabela, com o Frete Grátis da conta.
 - Modal de taxas: bloco "TikTok Shop" com a tabela e a caixa "Participo do Programa de Frete Grátis do TikTok".
 - Lucro por canal: a linha do TikTok usa a tabela (busca binária para o menor preço que lucra o mesmo, porque a taxa muda de faixa) e mostra as faixas no lugar do percentual.
+
+## 2026-10-24 — Mercado Livre direto, etapa 3c.1 (VND-30)
+
+Plano `docs/plano-fase3c-mercado-livre.md`, aprovado pela Sil em 24/10 (Mercado Livre antes da Shopee, só Pro, frete em coluna própria, Full só leitura). Esta etapa: base de banco, regras e conectar/desconectar.
+
+- Migration `20261024220000_mercado_livre_canal.sql`, testada numa transação desfeita (venda do TikTok igual, venda do ML com tarifa 3,60 e frete 24,90, pedido repetido não duplica, verificador curto recusado, uma assinatura só da RPC). **Aplicada pelo MCP com autorização da Sil** (o classificador tinha barrado a primeira tentativa) e conferida: 6 checks com `mercado_livre`, as 2 colunas novas, uma assinatura só da RPC, só o service role executa. Conteúdo: `mercado_livre` nos checks de canal (`vendas`, `taxas_recebimento`, `canal_conexoes`, `anuncio_vinculos`, `canal_eventos`, `canal_fila_estoque`), `canal_conexoes.verificador_pendente` (PKCE), `vendas.custo_envio` e `registrar_venda_canal` com `p_custo_envio` (a assinatura antiga sai; o tiktok-sync chama por nome e fica com 0).
+- `_shared/canais.ts`: saíram do `tiktokShop.ts` `sugerirVinculos`, os tipos de anúncio, SKU, item e status, e `diaEmBrasilia`. O `tiktokShop.ts` reexporta, então nenhum import mudou; os 54 testes do TikTok continuam verdes.
+- `_shared/mercadoLivre.ts` (regras puras, 16 testes em `src/lib/mercadoLivre.test.ts`): PKCE S256 (confere com o exemplo da RFC 7636), URL de autorização, tokens da resposta (6 h; sem refresh_token não conecta), status do pedido (paid e partially_refunded viram venda, cancelled e fraud_risk_detected cancelam), itens com chave `item:variação`, tarifa real (`sale_fee` × quantidade), dia em Brasília, aviso `orders_v2` só do próprio app, anúncio no Full.
+- `_shared/mercadoLivreCliente.ts`: troca do code com o verificador, renovação, GET autenticado com token no cabeçalho, `/users/me`.
+- `src/lib/mercadoLivreApi.ts` (lê `MERCADO_LIVRE_CLIENT_ID/_CLIENT_SECRET/_REDIRECT_URI`) e `mercadoLivre.functions.ts` (14 testes): status, iniciar (state + verificador), finalizar (state obrigatório, zerado antes da troca; conta do ML em outra conta da Pólia recusada; trocar de conta do ML apaga as ligações antigas; sem apelido conecta com nome padrão e registra a falha), desconectar.
+- Rota de volta `configuracoes_.integracoes.mercado-livre.tsx` e `components/configuracoes/CardMercadoLivre.tsx` (card 6.1/6.2 sem "Ligar anúncios" e sem "cuida do estoque", que entram na 3c.2 e 3c.4).
+- `mercado_livre` em `taxas.ts`, `vendas.ts` (rótulo "Mercado Livre", fora dos canais manuais) e na ordem da calculadora por canal.
+- **Fica para a 3c.3:** ler `custo_envio` em Vendas e tirar do lucro (ler a coluna antes da migration quebraria a tela); `disparar_tiktok_sync` hoje dispara com evento pendente de qualquer canal.
+- Suíte inteira: 1.923 testes verdes, tipos e build ok.

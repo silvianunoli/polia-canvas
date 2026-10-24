@@ -66,6 +66,7 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
+import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok_.anuncios'
 
 const TutorialRoute = TutorialRouteImport.update({
@@ -362,6 +363,12 @@ const AuthenticatedConfiguracoesIntegracoesTiktokRoute =
     path: '/configuracoes/integracoes/tiktok',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute =
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport.update({
+    id: '/configuracoes_/integracoes/mercado-livre',
+    path: '/configuracoes/integracoes/mercado-livre',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute =
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport.update({
     id: '/configuracoes_/integracoes/tiktok_/anuncios',
@@ -424,6 +431,7 @@ export interface FileRoutesByFullPath {
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
@@ -483,6 +491,7 @@ export interface FileRoutesByTo {
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
+  '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
@@ -544,6 +553,7 @@ export interface FileRoutesById {
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/_authenticated/configuracoes_/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
   '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
@@ -605,6 +615,7 @@ export interface FileRouteTypes {
     | '/chamados/'
     | '/planejamento/'
     | '/planner/'
+    | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
     | '/configuracoes/integracoes/tiktok/anuncios'
@@ -664,6 +675,7 @@ export interface FileRouteTypes {
     | '/chamados'
     | '/planejamento'
     | '/planner'
+    | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
     | '/configuracoes/integracoes/tiktok/anuncios'
@@ -724,6 +736,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chamados/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
+    | '/_authenticated/configuracoes_/integracoes/mercado-livre'
     | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
     | '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
@@ -1162,6 +1175,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/configuracoes_/integracoes/mercado-livre': {
+      id: '/_authenticated/configuracoes_/integracoes/mercado-livre'
+      path: '/configuracoes/integracoes/mercado-livre'
+      fullPath: '/configuracoes/integracoes/mercado-livre'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': {
       id: '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
       path: '/configuracoes/integracoes/tiktok/anuncios'
@@ -1199,6 +1219,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
@@ -1232,6 +1253,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute:
+    AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute,
   AuthenticatedConfiguracoesIntegracoesTiktokRoute:
     AuthenticatedConfiguracoesIntegracoesTiktokRoute,
   AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
