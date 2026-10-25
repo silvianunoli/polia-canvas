@@ -204,6 +204,38 @@ export async function pedidosAlteradosMl(p: {
   };
 }
 
+/** Só o que o envio de estoque precisa saber do anúncio: se está no Full. */
+export async function estadoAnuncioMl(p: { accessToken: string; itemId: string }) {
+  const r = await chamarApiMl<AnuncioApiMl>({
+    path: `/items/${encodeURIComponent(p.itemId)}`,
+    accessToken: p.accessToken,
+    query: { attributes: "id,status,shipping" },
+  });
+  return { anuncio: r.data?.id ? r.data : null, error: r.error };
+}
+
+/**
+ * Quantidade de um anúncio ou de UMA variação. A variação vai pelo endereço dela:
+ * mandar a lista de variações no PUT do anúncio apagaria as que ficassem de fora.
+ */
+export async function atualizarEstoqueMl(p: {
+  accessToken: string;
+  itemId: string;
+  variacaoId: string | null;
+  quantidade: number;
+}): Promise<{ error: string | null }> {
+  const path = p.variacaoId
+    ? `/items/${encodeURIComponent(p.itemId)}/variations/${encodeURIComponent(p.variacaoId)}`
+    : `/items/${encodeURIComponent(p.itemId)}`;
+  const r = await chamarApiMl<unknown>({
+    metodo: "PUT",
+    path,
+    accessToken: p.accessToken,
+    corpo: { available_quantity: p.quantidade },
+  });
+  return { error: r.error };
+}
+
 export type VendedoraMl = { id: string; apelido: string };
 
 /** Quem autorizou: id e apelido (nickname) que aparecem no card. */

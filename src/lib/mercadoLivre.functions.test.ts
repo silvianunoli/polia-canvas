@@ -36,6 +36,7 @@ const api = vi.hoisted(() => ({
 vi.mock("./mercadoLivreApi", () => api);
 
 import {
+  alternarCuidaEstoqueMercadoLivre,
   desconectarMercadoLivre,
   finalizarConexaoMercadoLivre,
   iniciarConexaoMercadoLivre,
@@ -47,6 +48,7 @@ const statusFn = statusConexaoMercadoLivre as unknown as Chamavel;
 const iniciar = iniciarConexaoMercadoLivre as unknown as Chamavel;
 const finalizar = finalizarConexaoMercadoLivre as unknown as Chamavel;
 const desconectar = desconectarMercadoLivre as unknown as Chamavel;
+const alternar = alternarCuidaEstoqueMercadoLivre as unknown as Chamavel;
 
 const METODOS = ["select", "eq", "neq", "maybeSingle", "upsert", "update", "delete"] as const;
 type Consulta = {
@@ -125,6 +127,7 @@ describe("statusConexaoMercadoLivre", () => {
       lojaNome: "LOJADAANA",
       ultimoSync: null,
       erro: null,
+      cuidaEstoque: false,
       anunciosLigados: 2,
     });
     expect(consultas.canal_conexoes[0].eq).toHaveBeenCalledWith("canal", "mercado_livre");
@@ -272,5 +275,41 @@ describe("desconectarMercadoLivre", () => {
     expect(consultas.canal_conexoes[0].delete).toHaveBeenCalled();
     expect(consultas.canal_conexoes[0].eq).toHaveBeenCalledWith("canal", "mercado_livre");
     expect(consultas.anuncio_vinculos[0].eq).toHaveBeenCalledWith("canal", "mercado_livre");
+  });
+});
+
+describe("alternarCuidaEstoqueMercadoLivre", () => {
+  const conectada = { ...conexaoPendente, status: "conectada", state_pendente: null };
+
+  it("ligar fora do Pro não mexe em nada", async () => {
+    responder("profiles", { data: { plano: "controle" } });
+    const r = (await alternar({ data: { ligar: true }, context })) as { ok: boolean };
+    expect(r.ok).toBe(false);
+    expect(consultas.canal_conexoes).toBeUndefined();
+  });
+
+  it("sem conexão conectada recusa", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", { data: conexaoPendente });
+    const r = (await alternar({ data: { ligar: true }, context })) as { ok: boolean };
+    expect(r.ok).toBe(false);
+  });
+
+  it("ligar grava e põe na fila todas as variações ligadas do Mercado Livre", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    responder("canal_conexoes", { data: conectada }, { error: null });
+    responder("anuncio_vinculos", { data: [{ sku_id: "s1" }, { sku_id: "s2" }, { sku_id: "s1" }] });
+    expect(await alternar({ data: { ligar: true }, context })).toEqual({ ok: true, error: null });
+    expect(consultas.canal_conexoes[1].update.mock.calls[0][0]).toMatchObject({
+      cuida_estoque: true,
+    });
+    expect(consultas.anuncio_vinculos[0].eq).toHaveBeenCalledWith("canal", "mercado_livre");
+    expect(rpc).toHaveBeenCalledWith("enfileirar_estoque_canal", { p_sku_ids: ["s1", "s2"] });
+  });
+
+  it("desligar grava sem enfileirar e funciona mesmo sem Pro", async () => {
+    responder("canal_conexoes", { data: conectada }, { error: null });
+    expect(await alternar({ data: { ligar: false }, context })).toEqual({ ok: true, error: null });
+    expect(rpc).not.toHaveBeenCalled();
   });
 });

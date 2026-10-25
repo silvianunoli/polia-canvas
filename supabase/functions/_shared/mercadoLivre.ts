@@ -320,3 +320,23 @@ export function anunciosDoItem(a: AnuncioApiMl): AnuncioLinha[] {
     };
   });
 }
+
+// ── Estoque Pólia → Mercado Livre (etapa 3c.4) ────────────────────────────
+
+/** Desfaz a chave do vínculo: anúncio e, se tiver, a variação. Chave estranha vira null. */
+export function alvoDoEstoque(
+  skuExternoId: string,
+): { itemId: string; variacaoId: string | null } | null {
+  const m = /^(MLB\d{1,20})(?::(\d{1,20}))?$/.exec(skuExternoId.trim());
+  if (!m) return null;
+  return { itemId: m[1], variacaoId: m[2] ?? null };
+}
+
+/**
+ * Quantidade que vai para o anúncio: o SALDO da Pólia (não a diferença), negativo
+ * como zero, fração para baixo. Zero pausa o anúncio no Mercado Livre e acima de
+ * zero reativa: a tela avisa antes de ela ligar.
+ */
+export function quantidadeParaCanal(saldo: number): number {
+  return Math.max(0, Math.floor(Number.isFinite(saldo) ? saldo : 0));
+}

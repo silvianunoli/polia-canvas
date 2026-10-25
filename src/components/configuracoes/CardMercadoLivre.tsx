@@ -2,18 +2,19 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Lock } from "lucide-react";
 import {
+  alternarCuidaEstoqueMercadoLivre,
   desconectarMercadoLivre,
   iniciarConexaoMercadoLivre,
   statusConexaoMercadoLivre,
 } from "@/lib/mercadoLivre.functions";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
+import { Switch } from "@/components/ui/switch";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 
 // Card do Mercado Livre em Configurações > Integrações (Fase 3c, VND-30). Só no
 // Pro; some quando o servidor não tem as credenciais. Plano §6.1 e §6.2.
-// "A Pólia cuida do estoque" entra na 3c.4.
 
 export const CHAVE_STATUS_ML = "mercado-livre-status";
 
@@ -37,6 +38,23 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
       window.location.href = res.url;
     },
     onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o Mercado Livre."),
+  });
+
+  const cuidaEstoque = useMutation({
+    mutationFn: (ligar: boolean) => alternarCuidaEstoqueMercadoLivre({ data: { ligar } }),
+    onSuccess: (res, ligar) => {
+      if (!res.ok) {
+        toastErro(res.error ?? "A Pólia One não conseguiu salvar agora.");
+        return;
+      }
+      queryClient.invalidateQueries({ queryKey: [CHAVE_STATUS_ML, userId] });
+      toastSucesso(
+        ligar
+          ? "A Pólia passa a cuidar do estoque do Mercado Livre. As quantidades sobem em até 1 minuto."
+          : "O estoque do Mercado Livre volta a ser cuidado só no Mercado Livre.",
+      );
+    },
+    onError: () => toastErro("A Pólia One não conseguiu salvar agora."),
   });
 
   const desconectar = useMutation({
@@ -125,6 +143,26 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
             >
               Ligar anúncios
             </LinkInterno>
+          </div>
+        )}
+        {ml.conectada && (
+          <div className="mt-3 flex items-start justify-between gap-4 border-t border-[var(--line)] pt-3">
+            <div>
+              <p className="font-sans text-[var(--ink)] text-[13px] font-medium mb-0.5">
+                A Pólia cuida do estoque
+              </p>
+              <p className="font-sans text-[var(--ink-soft)] text-[12px]">
+                Toda venda, entrada ou ajuste na Pólia atualiza a quantidade dos anúncios ligados no
+                Mercado Livre. Quantidade zero pausa o anúncio. Anúncio no Full fica com o Mercado
+                Livre.
+              </p>
+            </div>
+            <Switch
+              checked={ml.cuidaEstoque}
+              disabled={cuidaEstoque.isPending}
+              onCheckedChange={(ligar) => cuidaEstoque.mutate(ligar)}
+              aria-label="A Pólia cuida do estoque do Mercado Livre"
+            />
           </div>
         )}
       </div>

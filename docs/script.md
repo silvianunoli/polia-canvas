@@ -322,3 +322,15 @@ A 3c.2 subiu (commit d1734ee). Esta etapa: pedido pago no Mercado Livre vira ven
 - Vendas: `custoEnvio` sai do lucro, do resumo, do rateio dos mais vendidos e do "vai entrar no Financeiro"; a venda mostra "Frete do envio" (4 testes). `config.toml` com as duas funções sem verify_jwt.
 - As edge functions foram conferidas com tsc e um shim do Deno (sem Deno na máquina), junto com as do TikTok.
 - Suíte inteira: 1.965 testes verdes, tipos, lint e build ok.
+
+## 2026-10-25 — Mercado Livre direto, etapa 3c.4 (VND-30)
+
+A 3c.3 subiu (commit a6674c0, migration e edge functions no ar). Esta etapa: com "A Pólia cuida do estoque" ligado no card, o saldo da Pólia atualiza os anúncios ligados no Mercado Livre.
+
+- `alternarCuidaEstoqueMercadoLivre` (4 testes): ligar só no Pro e com a conta conectada; ao ligar, enfileira todas as variações ligadas para o Mercado Livre começar igual à Pólia. O status devolve `cuidaEstoque`.
+- Card: switch "A Pólia cuida do estoque", avisando que quantidade zero pausa o anúncio e que anúncio no Full fica com o Mercado Livre.
+- `ml-sync`, passo 3: lê a fila `canal_fila_estoque` do canal, manda o SALDO (negativo como zero) por anúncio (`PUT /items/{id}`) ou por variação (`PUT /items/{id}/variations/{var}`; mandar a lista de variações no PUT do anúncio apagaria as que ficassem de fora). Anúncio no Full fica de fora (uma consulta por anúncio na rodada). Mesma variação ligada a mais de um anúncio: todos recebem. 5 tentativas.
+- `alvoDoEstoque` e `quantidadeParaCanal` (3 testes); `estadoAnuncioMl` e `atualizarEstoqueMl` no cliente.
+- Migration `20261025110000_mercado_livre_estoque_fila.sql`, testada numa transação desfeita (ligar anúncio com "cuida do estoque" ligado põe a variação na fila do canal): `disparar_ml_sync` passa a olhar também a fila de estoque. **Aplicada pelo MCP com autorização da Sil** e conferida; ml-sync publicado pela CLI.
+- Edge functions conferidas com tsc e o shim do Deno. Suíte inteira: 1.972 testes verdes, tipos, lint e build ok.
+- Conferir com a conta de teste: se o PUT por variação funciona em anúncio do modelo novo (User Products).

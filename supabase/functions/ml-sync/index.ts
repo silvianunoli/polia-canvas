@@ -6,6 +6,9 @@ import {
   observacaoDoPedido,
   statusVendaDoPedido,
   tarifaDoPedido,
+  alvoDoEstoque,
+  anuncioNoFull,
+  quantidadeParaCanal,
   type PedidoApiMl,
 } from "../_shared/mercadoLivre.ts";
 import { MSG_RECONECTAR_ML, tokenComTrava, type RpcBanco } from "../_shared/mercadoLivreAcesso.ts";
@@ -14,6 +17,8 @@ import {
   pedidoMl,
   pedidosAlteradosMl,
   pedirTokenMl,
+  atualizarEstoqueMl,
+  estadoAnuncioMl,
   type CredenciaisMl,
 } from "../_shared/mercadoLivreCliente.ts";
 
@@ -28,7 +33,10 @@ import {
 //    frete que a vendedora pagou, ou cancela (cancelado ou fraude).
 // Token: _shared/mercadoLivreAcesso.ts, com a trava por conexão (o de renovação
 // é de uso único; o Worker renova pela mesma trava).
-// Estoque Pólia → Mercado Livre fica para a etapa 3c.4.
+// 3. Estoque (etapa 3c.4): variação ligada que mexeu na Pólia, com "A Pólia cuida
+//    do estoque" ligado, manda o saldo para o anúncio (canal_fila_estoque). Roda
+//    depois dos pedidos: a baixa da venda que acabou de entrar já vai junto.
+//    Anúncio no Full fica de fora: o estoque é do galpão do Mercado Livre.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -48,6 +56,7 @@ type Conexao = {
   shop_id: string;
   ultimo_sync: string | null;
   varredura_tentada_em: string | null;
+  cuida_estoque: boolean;
 };
 type Acesso = { accessToken: string; vendedoraId: string };
 
@@ -219,7 +228,7 @@ Deno.serve(async (req: Request) => {
 async function sincronizar() {
   const { data: conexoesData } = await supabaseAdmin
     .from("canal_conexoes")
-    .select("id, user_id, shop_id, ultimo_sync, varredura_tentada_em")
+    .select("id, user_id, shop_id, ultimo_sync, varredura_tentada_em, cuida_estoque")
     .eq("canal", CANAL)
     .eq("status", "conectada");
   const conexoes = ((conexoesData as Conexao[] | null) ?? []).filter((c) => !!c.shop_id);
@@ -306,5 +315,117 @@ async function sincronizar() {
     }
   }
 
-  return { varridos, eventos: eventos.length, vendas };
+  // 3. Estoque Pólia → Mercado Livre.
+  const estoque = await enviarEstoque(conexoes, acessoDe);
+
+  return { varridos, eventos: eventos.length, vendas, estoque };
+}
+
+async function marcarFilaEstoque(skuIds: string[], erro: string | null) {
+  if (!skuIds.length) return;
+  if (!erro) {
+    await supabaseAdmin
+      .from("canal_fila_estoque")
+      .update({ pendente: false, enviado_em: new Date().toISOString(), erro: null })
+      .eq("canal", CANAL)
+      .in("sku_id", skuIds);
+    return;
+  }
+  const { data } = await supabaseAdmin
+    .from("canal_fila_estoque")
+    .select("sku_id, tentativas")
+    .eq("canal", CANAL)
+    .in("sku_id", skuIds);
+  for (const f of (data as { sku_id: string; tentativas: number }[]) ?? []) {
+    const tentativas = f.tentativas + 1;
+    await supabaseAdmin
+      .from("canal_fila_estoque")
+      .update({ tentativas, erro: erro.slice(0, 500), pendente: tentativas < MAX_TENTATIVAS })
+      .eq("canal", CANAL)
+      .eq("sku_id", f.sku_id);
+  }
+}
+
+/** Manda o saldo da Pólia de cada variação da fila; devolve quantas foram enviadas. */
+async function enviarEstoque(
+  conexoes: Conexao[],
+  acessoDe: (c: Conexao) => Promise<Acesso | null>,
+): Promise<number> {
+  const { data: filaData } = await supabaseAdmin
+    .from("canal_fila_estoque")
+    .select("user_id, sku_id")
+    .eq("canal", CANAL)
+    .eq("pendente", true)
+    .lt("tentativas", MAX_TENTATIVAS)
+    .order("pedido_em")
+    .limit(200);
+  const fila = (filaData as { user_id: string; sku_id: string }[] | null) ?? [];
+  const porDona = new Map<string, string[]>();
+  for (const f of fila) porDona.set(f.user_id, [...(porDona.get(f.user_id) ?? []), f.sku_id]);
+
+  let enviados = 0;
+  for (const [userId, skuIds] of porDona) {
+    const c = conexoes.find((x) => x.user_id === userId);
+    const acesso = c?.cuida_estoque ? await acessoDe(c) : null;
+    if (!c || !acesso) {
+      await marcarFilaEstoque(
+        skuIds,
+        "sem acesso à conta (plano, autorização ou estoque desligado)",
+      );
+      continue;
+    }
+    const [{ data: vinc }, { data: saldos }] = await Promise.all([
+      supabaseAdmin
+        .from("anuncio_vinculos")
+        .select("sku_id, sku_externo_id")
+        .eq("user_id", userId)
+        .eq("canal", CANAL)
+        .eq("sincroniza_estoque", true)
+        .in("sku_id", skuIds),
+      supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
+    ]);
+    const saldoDe = new Map(
+      ((saldos as { sku_id: string; saldo: number }[]) ?? []).map((s) => [
+        s.sku_id,
+        Number(s.saldo),
+      ]),
+    );
+    const vinculos = (vinc as { sku_id: string; sku_externo_id: string }[]) ?? [];
+    const semVinculo = skuIds.filter((id) => !vinculos.some((v) => v.sku_id === id));
+    await marcarFilaEstoque(semVinculo, null); // desligou ou apagou o vínculo: nada a mandar
+
+    // Uma consulta por anúncio para saber se está no Full (cache na rodada).
+    const noFull = new Map<string, boolean | null>();
+    const estaNoFull = async (itemId: string) => {
+      if (!noFull.has(itemId)) {
+        const { anuncio } = await estadoAnuncioMl({ ...acesso, itemId });
+        noFull.set(itemId, anuncio ? anuncioNoFull(anuncio) : null);
+      }
+      return noFull.get(itemId) ?? null;
+    };
+
+    // A mesma variação da Pólia pode estar ligada a mais de um anúncio: todos recebem.
+    const porSku = new Map<string, string[]>();
+    for (const v of vinculos)
+      porSku.set(v.sku_id, [...(porSku.get(v.sku_id) ?? []), v.sku_externo_id]);
+    for (const [skuId, externos] of porSku) {
+      const quantidade = quantidadeParaCanal(saldoDe.get(skuId) ?? 0);
+      let erro: string | null = null;
+      for (const externo of externos) {
+        const alvo = alvoDoEstoque(externo);
+        if (!alvo) continue; // vínculo fora do formato: nada a mandar
+        const full = await estaNoFull(alvo.itemId);
+        if (full === null) {
+          erro = "estoque: anúncio não encontrado no Mercado Livre";
+          continue;
+        }
+        if (full) continue;
+        const { error } = await atualizarEstoqueMl({ ...acesso, ...alvo, quantidade });
+        if (error) erro = `estoque: ${error}`;
+      }
+      await marcarFilaEstoque([skuId], erro);
+      if (!erro) enviados++;
+    }
+  }
+  return enviados;
 }

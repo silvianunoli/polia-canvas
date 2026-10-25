@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import {
+  alvoDoEstoque,
+  quantidadeParaCanal,
   anuncioNoFull,
   anunciosDoItem,
   custoEnvioDaVendedora,
@@ -324,5 +326,25 @@ describe("observação da venda", () => {
     expect(observacaoDoPedido("9", [item("Caneca", "s1")], false)).toBe(
       "Pedido 9 do Mercado Livre",
     );
+  });
+});
+
+describe("estoque Pólia → Mercado Livre", () => {
+  it("chave do vínculo volta a anúncio e variação", () => {
+    expect(alvoDoEstoque("MLB123:456")).toEqual({ itemId: "MLB123", variacaoId: "456" });
+    expect(alvoDoEstoque("MLB123")).toEqual({ itemId: "MLB123", variacaoId: null });
+  });
+
+  it("chave fora do formato não vira chamada", () => {
+    expect(alvoDoEstoque("MLB123/../users")).toBeNull();
+    expect(alvoDoEstoque("123:4")).toBeNull();
+    expect(alvoDoEstoque("MLB1:abc")).toBeNull();
+  });
+
+  it("manda o saldo, negativo como zero e fração para baixo", () => {
+    expect(quantidadeParaCanal(7)).toBe(7);
+    expect(quantidadeParaCanal(2.9)).toBe(2);
+    expect(quantidadeParaCanal(-3)).toBe(0);
+    expect(quantidadeParaCanal(Number.NaN)).toBe(0);
   });
 });

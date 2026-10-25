@@ -34,13 +34,14 @@ interface ConexaoRow {
   loja_nome: string | null;
   ultimo_sync: string | null;
   ultimo_erro: string | null;
+  cuida_estoque: boolean;
 }
 
 async function lerConexao(userId: string): Promise<ConexaoRow | null> {
   const { data } = await supabaseAdmin
     .from("canal_conexoes" as never)
     .select(
-      "id, status, state_pendente, verificador_pendente, shop_id, loja_nome, ultimo_sync, ultimo_erro",
+      "id, status, state_pendente, verificador_pendente, shop_id, loja_nome, ultimo_sync, ultimo_erro, cuida_estoque",
     )
     .eq("user_id", userId)
     .eq("canal", CANAL)
@@ -78,6 +79,7 @@ export const statusConexaoMercadoLivre = createServerFn({ method: "GET" })
       lojaNome: conectada ? conexao!.loja_nome : null,
       ultimoSync: conectada ? conexao!.ultimo_sync : null,
       erro: conexao?.status === "erro" ? conexao.ultimo_erro : null,
+      cuidaEstoque: conexao?.cuida_estoque ?? false,
       anunciosLigados: vinculos.count ?? 0,
     };
   });
@@ -235,5 +237,42 @@ export const desconectarMercadoLivre = createServerFn({ method: "POST" })
       .delete()
       .eq("user_id", context.userId)
       .eq("canal", CANAL);
+    return { ok: true, error: null };
+  });
+
+const cuidaEstoqueInput = z.object({ ligar: z.boolean() });
+
+/**
+ * "A Pólia cuida do estoque" (etapa 3c.4): ligado, todo movimento de estoque de
+ * variação ligada manda o saldo para o Mercado Livre (o ml-sync manda; anúncio no
+ * Full fica de fora). Ao ligar, enfileira todas as variações ligadas, para o
+ * Mercado Livre começar igual à Pólia.
+ */
+export const alternarCuidaEstoqueMercadoLivre = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => cuidaEstoqueInput.parse(input))
+  .handler(async ({ data, context }) => {
+    if (data.ligar && !(await temPro(context.userId))) return { ok: false, error: SO_PRO };
+    const conexao = await lerConexao(context.userId);
+    if (conexao?.status !== "conectada")
+      return { ok: false, error: "O Mercado Livre não está conectado." };
+    const { error } = await supabaseAdmin
+      .from("canal_conexoes" as never)
+      .update({ cuida_estoque: data.ligar, updated_at: new Date().toISOString() } as never)
+      .eq("id", conexao.id);
+    if (error)
+      return { ok: false, error: "A Pólia One não conseguiu salvar agora. Tenta de novo." };
+    if (!data.ligar) return { ok: true, error: null };
+
+    const { data: vinculos } = await supabaseAdmin
+      .from("anuncio_vinculos" as never)
+      .select("sku_id")
+      .eq("user_id", context.userId)
+      .eq("canal", CANAL);
+    const skuIds = [
+      ...new Set(((vinculos as unknown as { sku_id: string }[]) ?? []).map((v) => v.sku_id)),
+    ];
+    if (skuIds.length)
+      await supabaseAdmin.rpc("enfileirar_estoque_canal" as never, { p_sku_ids: skuIds } as never);
     return { ok: true, error: null };
   });
