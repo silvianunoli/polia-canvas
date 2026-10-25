@@ -296,3 +296,16 @@ Plano `docs/plano-fase3c-mercado-livre.md`, aprovado pela Sil em 24/10 (Mercado 
 - `mercado_livre` em `taxas.ts`, `vendas.ts` (rótulo "Mercado Livre", fora dos canais manuais) e na ordem da calculadora por canal.
 - **Fica para a 3c.3:** ler `custo_envio` em Vendas e tirar do lucro (ler a coluna antes da migration quebraria a tela); `disparar_tiktok_sync` hoje dispara com evento pendente de qualquer canal.
 - Suíte inteira: 1.923 testes verdes, tipos e build ok.
+
+## 2026-10-24 — Mercado Livre direto, etapa 3c.2 (VND-30)
+
+A 3c.1 subiu (commit 89b63e3). Esta etapa: a tela "Ligar anúncios" do Mercado Livre.
+
+- `canalVinculos.server.ts`: a prévia (variações da Pólia, ligações atuais, sugestões) e a gravação das ligações saíram de `tiktokShopAnuncios.functions.ts` para um módulo comum, com o canal e o nome do canal por parâmetro. O TikTok só busca os próprios anúncios e chama o comum; os testes dele continuam verdes sem mudança.
+- `components/configuracoes/LigarAnunciosCanal.tsx`: a tela de "Ligar anúncios" virou componente; a rota do TikTok e a nova do Mercado Livre (`configuracoes_.integracoes.mercado-livre_.anuncios.tsx`) só passam nome e funções. Anúncio no Full aparece com "no Full" e a etiqueta "Full", com um aviso de que a quantidade no galpão é do Mercado Livre.
+- `mercadoLivreAcesso.server.ts` (10 testes): token válido sai direto; perto de vencer (menos de 10 min), renova pela trava `ml_token:<conexão>` em `canal_sync_travas` (a mesma do tiktok-sync, sem migration nova); quem não pega a trava espera o token novo; recusa 400/401 marca erro, rede não; par novo tenta gravar 3 vezes. Ajuste no plano §5: o Worker também renova, pela mesma trava.
+- `mercadoLivreCliente.ts`: ids dos anúncios ativos (`/users/{id}/items/search`, 100 por página, até 500) e detalhe em multiget de 20 com `include_attributes=all` (SELLER_SKU das variações, conferir com a conta de teste). `pedirTokenMl` devolve `recusado`.
+- `anunciosDoItem` (4 testes): uma linha por variação com a chave `anúncio:variação`, código pelo SELLER_SKU ou `seller_custom_field`, preço da variação ou do anúncio, Full marcado.
+- `mercadoLivreAnuncios.functions.ts` (7 testes): paginação, lotes de 20, aviso acima de 500, erro do Mercado Livre vira "tenta de novo", gravação com canal e nome certos.
+- Card: contagem de anúncios ligados e botão "Ligar anúncios".
+- Suíte inteira: 1.954 testes verdes, tipos, lint e build ok.

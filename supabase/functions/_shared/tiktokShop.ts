@@ -7,7 +7,7 @@
 
 import {
   diaEmBrasilia,
-  type AnuncioCanal,
+  type AnuncioLinha,
   type ItemVendaCanal,
   type StatusVendaCanal,
 } from "./canais.ts";
@@ -17,6 +17,7 @@ import {
 export { sugerirVinculos } from "./canais.ts";
 export type {
   AnuncioCanal,
+  AnuncioLinha,
   ItemVendaCanal,
   SkuPolia,
   StatusVendaCanal,
@@ -141,12 +142,6 @@ export interface ProdutoApiTiktok {
     inventory?: Array<{ quantity?: number; warehouse_id?: string }>;
     sales_attributes?: Array<{ name?: string; value_name?: string }>;
   }>;
-}
-
-export interface AnuncioLinha extends AnuncioCanal {
-  preco: number | null;
-  quantidade: number;
-  status: string | null;
 }
 
 /** Um produto do TikTok vira uma linha por SKU (variação). SKU sem id é descartado. */

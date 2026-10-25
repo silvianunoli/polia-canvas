@@ -13,7 +13,7 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 
 // Card do Mercado Livre em Configurações > Integrações (Fase 3c, VND-30). Só no
 // Pro; some quando o servidor não tem as credenciais. Plano §6.1 e §6.2.
-// "Ligar anúncios" entra na 3c.2 e "A Pólia cuida do estoque" na 3c.4.
+// "A Pólia cuida do estoque" entra na 3c.4.
 
 export const CHAVE_STATUS_ML = "mercado-livre-status";
 
@@ -111,6 +111,21 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
             </li>
             <li>Antes de conectar: entrar com a conta dona da loja, não com a de colaboradora.</li>
           </ul>
+        )}
+        {ml.conectada && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="font-sans text-[var(--ink-soft)] text-[12px]">
+              {ml.anunciosLigados === 0
+                ? "Nenhum anúncio ligado a produto da Pólia ainda."
+                : `${ml.anunciosLigados} ${ml.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
+            </p>
+            <LinkInterno
+              href="/configuracoes/integracoes/mercado-livre/anuncios"
+              className={BTN_MIUDO}
+            >
+              Ligar anúncios
+            </LinkInterno>
+          </div>
         )}
       </div>
       <ConfirmarAcao

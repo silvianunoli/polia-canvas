@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import {
   anuncioNoFull,
+  anunciosDoItem,
   dataDoPedido,
   desafioPkce,
   gerarVerificadorPkce,
@@ -198,5 +199,72 @@ describe("anúncio no Full", () => {
     expect(anuncioNoFull({ shipping: { logistic_type: "fulfillment" } })).toBe(true);
     expect(anuncioNoFull({ shipping: { logistic_type: "cross_docking" } })).toBe(false);
     expect(anuncioNoFull({})).toBe(false);
+  });
+});
+
+describe("anúncios do Mercado Livre → linhas da prévia", () => {
+  it("anúncio sem variação vira uma linha com o código do SELLER_SKU", () => {
+    expect(
+      anunciosDoItem({
+        id: "MLB1",
+        title: " Bolsa Lona ",
+        status: "active",
+        price: 80,
+        available_quantity: 3,
+        seller_custom_field: "ANTIGO",
+        attributes: [{ id: "SELLER_SKU", value_name: "BOL-01" }],
+        shipping: { logistic_type: "cross_docking" },
+      }),
+    ).toEqual([
+      {
+        produtoExternoId: "MLB1",
+        skuExternoId: "MLB1",
+        codigo: "BOL-01",
+        titulo: "Bolsa Lona",
+        variacao: null,
+        preco: 80,
+        quantidade: 3,
+        status: "active",
+        estoqueDoCanal: false,
+      },
+    ]);
+  });
+
+  it("sem SELLER_SKU usa o campo antigo; sem nada fica sem código", () => {
+    expect(anunciosDoItem({ id: "MLB1", seller_custom_field: " X1 " })[0].codigo).toBe("X1");
+    expect(anunciosDoItem({ id: "MLB1" })[0].codigo).toBeNull();
+  });
+
+  it("uma linha por variação, com a chave anúncio:variação e o preço da variação", () => {
+    const linhas = anunciosDoItem({
+      id: "MLB2",
+      title: "Caneca Gato",
+      price: 39.9,
+      shipping: { logistic_type: "fulfillment" },
+      variations: [
+        {
+          id: 101,
+          available_quantity: 4,
+          attribute_combinations: [
+            { name: "Cor", value_name: "Azul" },
+            { name: "Tamanho", value_name: "350 ml" },
+          ],
+          attributes: [{ id: "SELLER_SKU", value_name: "CAN-AZ" }],
+        },
+        { id: 102, price: 42, available_quantity: -1, seller_custom_field: "CAN-RS" },
+        { price: 10 },
+      ],
+    });
+    expect(
+      linhas.map((l) => [l.skuExternoId, l.codigo, l.variacao, l.preco, l.quantidade]),
+    ).toEqual([
+      ["MLB2:101", "CAN-AZ", "Azul / 350 ml", 39.9, 4],
+      ["MLB2:102", "CAN-RS", null, 42, 0],
+    ]);
+    expect(linhas.every((l) => l.estoqueDoCanal)).toBe(true);
+  });
+
+  it("anúncio sem id é descartado", () => {
+    expect(anunciosDoItem({ title: "sem id" })).toEqual([]);
   });
 });

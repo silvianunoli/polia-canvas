@@ -5,6 +5,8 @@
 
 import { desafioPkce, urlDeAutorizacao } from "../../supabase/functions/_shared/mercadoLivre.ts";
 import {
+  buscarIdsAnunciosMl,
+  detalhesAnunciosMl,
   lerVendedoraMl,
   pedirTokenMl,
 } from "../../supabase/functions/_shared/mercadoLivreCliente.ts";
@@ -43,7 +45,7 @@ export async function montarUrlAutorizacao(
 
 export async function trocarCodigoPorTokens(code: string, verificador: string) {
   const cred = credenciais();
-  if (!cred) return { tokens: null, error: SEM_CONFIG };
+  if (!cred) return { tokens: null, error: SEM_CONFIG, recusado: false };
   return pedirTokenMl(cred, {
     grant: "authorization_code",
     code,
@@ -52,4 +54,16 @@ export async function trocarCodigoPorTokens(code: string, verificador: string) {
   });
 }
 
+/** Uso único: quem chama grava o par novo antes de qualquer outra coisa. */
+export async function renovarTokens(refreshToken: string) {
+  const cred = credenciais();
+  if (!cred) return { tokens: null, error: SEM_CONFIG, recusado: false };
+  return pedirTokenMl(cred, { grant: "refresh_token", refreshToken });
+}
+
 export const lerVendedora = lerVendedoraMl;
+
+/** Anúncios ativos da vendedora, uma página de ids. */
+export const buscarIdsAnuncios = buscarIdsAnunciosMl;
+/** Detalhe de até 20 anúncios por chamada, com as variações. */
+export const detalhesAnuncios = detalhesAnunciosMl;

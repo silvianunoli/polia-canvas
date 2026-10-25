@@ -6,7 +6,12 @@
 // 24/10/2026; a leitura direta devolveu 403). O que está marcado "conferir" se
 // confirma com os usuários de teste na 3c.3.
 
-import { diaEmBrasilia, type ItemVendaCanal, type StatusVendaCanal } from "./canais.ts";
+import {
+  diaEmBrasilia,
+  type AnuncioLinha,
+  type ItemVendaCanal,
+  type StatusVendaCanal,
+} from "./canais.ts";
 
 export const ML_AUTORIZAR_URL = "https://auth.mercadolivre.com.br/authorization";
 export const ML_API = "https://api.mercadolibre.com";
@@ -224,4 +229,57 @@ export interface AnuncioApiMl {
 /** Full: o estoque fica no galpão do Mercado Livre e a API não deixa mexer. */
 export function anuncioNoFull(a: Pick<AnuncioApiMl, "shipping">): boolean {
   return a.shipping?.logistic_type === "fulfillment";
+}
+
+type Atributos = Array<{ id?: string; value_name?: string | null }> | undefined;
+
+/** Código que a vendedora deu (atributo SELLER_SKU, ou o campo antigo seller_custom_field). */
+function codigoDe(atributos: Atributos, campoAntigo: string | null | undefined): string | null {
+  const sku = (atributos ?? []).find((a) => a.id === "SELLER_SKU")?.value_name?.trim();
+  return (sku || campoAntigo?.trim() || "").slice(0, 60) || null;
+}
+
+const precoOuNulo = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+const qtd = (v: unknown): number =>
+  typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.floor(v)) : 0;
+
+/**
+ * Um anúncio vira uma linha por variação; sem variação, uma linha com o próprio
+ * anúncio. A chave (skuExternoDe) é a mesma que o pedido usa para achar o vínculo.
+ * Anúncio no Full sai marcado: a Pólia mostra o estoque, mas não manda quantidade.
+ */
+export function anunciosDoItem(a: AnuncioApiMl): AnuncioLinha[] {
+  if (!a.id) return [];
+  const base = {
+    produtoExternoId: a.id,
+    titulo: a.title?.trim() || "Anúncio sem título",
+    status: a.status ?? null,
+    estoqueDoCanal: anuncioNoFull(a),
+  };
+  const variacoes = (a.variations ?? []).filter((v) => v.id != null && v.id !== "");
+  if (!variacoes.length)
+    return [
+      {
+        ...base,
+        skuExternoId: skuExternoDe(a.id, null),
+        codigo: codigoDe(a.attributes, a.seller_custom_field),
+        variacao: null,
+        preco: precoOuNulo(a.price),
+        quantidade: qtd(a.available_quantity),
+      },
+    ];
+  return variacoes.map((v) => {
+    const nomes = (v.attribute_combinations ?? [])
+      .map((c) => c.value_name?.trim())
+      .filter((n): n is string => !!n);
+    return {
+      ...base,
+      skuExternoId: skuExternoDe(a.id!, v.id),
+      codigo: codigoDe(v.attributes, v.seller_custom_field),
+      variacao: nomes.length ? nomes.join(" / ").slice(0, 80) : null,
+      preco: precoOuNulo(v.price) ?? precoOuNulo(a.price),
+      quantidade: qtd(v.available_quantity),
+    };
+  });
 }

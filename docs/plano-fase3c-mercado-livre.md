@@ -94,10 +94,12 @@ Worker e nas Edge Functions. Integração escondida quando faltar alguma, como a
 - **Estoque Pólia → Mercado Livre:** manda o saldo absoluto (`available_quantity`), por anúncio ou por variação.
   Saldo zero pausa o anúncio no Mercado Livre e saldo acima de zero reativa. A tela avisa isso antes de ela
   ligar. **Anúncio Full fica de fora**: a Pólia lê o estoque do galpão e mostra, mas não envia.
-- **Renovação do token (o ponto mais delicado):** como o token de renovação só vale uma vez, só o `ml-sync`
-  renova, nunca o Worker. Ele renova quando falta menos de 1 hora, pegando a trava da RPC
-  `canal_token_reservar_renovacao`. Quem não pega a trava espera o token novo. Se a renovação falhar, a conexão
-  vai para `erro` e o card pede para conectar de novo, sem tentar em laço.
+- **Renovação do token (o ponto mais delicado):** como o token de renovação só vale uma vez, toda
+  renovação passa por uma trava por conexão (`canal_sync_travas`, chave `ml_token:<conexão>`, 30 s). Quem pega a
+  trava renova e grava o par novo (3 tentativas); quem não pega espera o token novo aparecer, sem gastar o de
+  renovação. Ajuste da 3c.2: o Worker também precisa de token para listar anúncios, então renova pela mesma
+  trava em vez de deixar só o `ml-sync`. Renova quando faltam menos de 10 minutos. Recusa do Mercado Livre
+  (400/401) põe a conexão em `erro` e o card pede para conectar de novo; falha de rede não derruba.
 - **Desconectar:** apaga a conexão, os tokens do Vault e os vínculos na hora. A Pólia também tenta tirar a
   autorização do lado do Mercado Livre pela API **(conferir a chamada na conta de teste)**. As vendas ficam.
 

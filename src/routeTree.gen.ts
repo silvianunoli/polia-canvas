@@ -68,6 +68,7 @@ import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
 import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok_.anuncios'
+import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre_.anuncios'
 
 const TutorialRoute = TutorialRouteImport.update({
   id: '/tutorial',
@@ -375,6 +376,12 @@ const AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute =
     path: '/configuracoes/integracoes/tiktok/anuncios',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute =
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRouteImport.update({
+    id: '/configuracoes_/integracoes/mercado-livre_/anuncios',
+    path: '/configuracoes/integracoes/mercado-livre/anuncios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -434,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/configuracoes/integracoes/mercado-livre/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRoutesByTo {
@@ -494,6 +502,7 @@ export interface FileRoutesByTo {
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/configuracoes/integracoes/mercado-livre/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRoutesById {
@@ -556,6 +565,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes_/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 export interface FileRouteTypes {
@@ -618,6 +628,7 @@ export interface FileRouteTypes {
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/configuracoes/integracoes/mercado-livre/anuncios'
     | '/configuracoes/integracoes/tiktok/anuncios'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -678,6 +689,7 @@ export interface FileRouteTypes {
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/configuracoes/integracoes/mercado-livre/anuncios'
     | '/configuracoes/integracoes/tiktok/anuncios'
   id:
     | '__root__'
@@ -739,6 +751,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes_/integracoes/mercado-livre'
     | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
+    | '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios'
     | '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
   fileRoutesById: FileRoutesById
 }
@@ -1189,6 +1202,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios': {
+      id: '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios'
+      path: '/configuracoes/integracoes/mercado-livre/anuncios'
+      fullPath: '/configuracoes/integracoes/mercado-livre/anuncios'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -1222,6 +1242,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
 
@@ -1258,6 +1279,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConfiguracoesIntegracoesTiktokRoute:
     AuthenticatedConfiguracoesIntegracoesTiktokRoute,
   AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
+  AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute:
+    AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute,
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute:
     AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute,
 }

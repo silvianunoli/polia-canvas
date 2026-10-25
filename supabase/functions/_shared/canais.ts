@@ -17,6 +17,15 @@ export interface AnuncioCanal {
   variacao: string | null;
 }
 
+/** Uma linha da prévia de "Ligar anúncios": uma variação de anúncio do canal. */
+export interface AnuncioLinha extends AnuncioCanal {
+  preco: number | null;
+  quantidade: number;
+  status: string | null;
+  /** Estoque cuidado pelo próprio canal (Full do Mercado Livre): a Pólia só lê. */
+  estoqueDoCanal?: boolean;
+}
+
 export interface SkuPolia {
   skuId: string;
   codigo: string | null;
