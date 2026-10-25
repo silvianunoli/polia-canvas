@@ -178,6 +178,43 @@ export function dataDoPedido(pedido: PedidoApiMl, agora: Date = new Date()): str
   return diaEmBrasilia(Number.isNaN(quando.getTime()) ? agora : quando);
 }
 
+/** Resposta do GET /shipments/{id}/costs. Tudo opcional: a API muda. */
+export interface CustosEnvioApiMl {
+  senders?: Array<{ user_id?: number | string; cost?: number }>;
+}
+
+/**
+ * O que o envio custou para a vendedora: a parte dela (sender) nos custos do
+ * envio. Frete grátis para a compradora costuma cair aqui; frete pago pela
+ * compradora não passa pelo caixa dela. null quando a resposta não diz.
+ */
+export function custoEnvioDaVendedora(
+  custos: CustosEnvioApiMl | null | undefined,
+  vendedoraId: string,
+): number | null {
+  const senders = custos?.senders;
+  if (!Array.isArray(senders)) return null;
+  const dela = senders.filter((s) => s.user_id == null || String(s.user_id) === vendedoraId);
+  if (!dela.length) return 0;
+  return centavos(dela.reduce((t, s) => t + Math.max(0, numero(s.cost)), 0));
+}
+
+/** Observação da venda: o número do pedido e os anúncios ainda sem produto ligado. */
+export function observacaoDoPedido(
+  pedidoId: string,
+  itens: ItemVendaCanal[],
+  freteNaoLido: boolean,
+): string {
+  const semVinculo = [...new Set(itens.filter((i) => !i.sku_id).map((i) => i.nome))];
+  return [
+    `Pedido ${pedidoId} do Mercado Livre`,
+    semVinculo.length ? `sem produto ligado: ${semVinculo.join(", ")}` : null,
+    freteNaoLido ? "frete do envio não lido, confere no Mercado Livre" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
 // ── Aviso (notificação) ───────────────────────────────────────────────────
 
 /**

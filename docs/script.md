@@ -309,3 +309,16 @@ A 3c.1 subiu (commit 89b63e3). Esta etapa: a tela "Ligar anúncios" do Mercado L
 - `mercadoLivreAnuncios.functions.ts` (7 testes): paginação, lotes de 20, aviso acima de 500, erro do Mercado Livre vira "tenta de novo", gravação com canal e nome certos.
 - Card: contagem de anúncios ligados e botão "Ligar anúncios".
 - Suíte inteira: 1.954 testes verdes, tipos, lint e build ok.
+
+## 2026-10-24 — Mercado Livre direto, etapa 3c.3 (VND-30)
+
+A 3c.2 subiu (commit d1734ee). Esta etapa: pedido pago no Mercado Livre vira venda na Pólia, com a tarifa real e o frete que a vendedora pagou.
+
+- Migration `20261025100000_mercado_livre_sync.sql`, testada numa transação desfeita (venda de R$ 100 com tarifa 12 e frete 20 lança R$ 68 no Financeiro ao receber; segredo confere; cron criado). **Aplicada pelo MCP com autorização da Sil** e conferida (cron ativo, segredo criado, receber_venda e disparar_tiktok_sync novos). Edge functions publicadas pela CLI. Conteúdo: `disparar_tiktok_sync` só olha a fila do TikTok; `receber_venda` tira também `custo_envio` do lançamento; segredo `ml_sync_secret` no Vault, `conferir_segredo_ml_sync`, `disparar_ml_sync()` e cron `ml-sync` a cada minuto (só chama quando há pedido na fila ou conta há 15 min sem varredura).
+- Edge function `ml-webhook`: aviso `orders_v2` do próprio app e de vendedora conectada vira id na fila; o resto recebe 200 e é ignorado (o aviso não é assinado; a venda só nasce do pedido buscado com o token dela).
+- Edge function `ml-sync`: varredura de 15 min (`/orders/search` por `order.date_last_updated.from`, até 200 pedidos), fila (`/orders/{id}`), venda com `tarifaDoPedido` e frete de `/shipments/{id}/costs` (parte da vendedora); frete não lido entra como zero com aviso na observação. Pago e devolução parcial viram venda; cancelado e fraude cancelam. Só Pro. `missed_feeds` ficou de fora: a varredura por data já cobre o aviso perdido.
+- `_shared/mercadoLivreAcesso.ts`: a renovação travada saiu do Worker para o comum; Worker e ml-sync usam a mesma regra e a mesma trava.
+- `custoEnvioDaVendedora` e `observacaoDoPedido` (5 testes).
+- Vendas: `custoEnvio` sai do lucro, do resumo, do rateio dos mais vendidos e do "vai entrar no Financeiro"; a venda mostra "Frete do envio" (4 testes). `config.toml` com as duas funções sem verify_jwt.
+- As edge functions foram conferidas com tsc e um shim do Deno (sem Deno na máquina), junto com as do TikTok.
+- Suíte inteira: 1.965 testes verdes, tipos, lint e build ok.

@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import {
   anuncioNoFull,
   anunciosDoItem,
+  custoEnvioDaVendedora,
+  observacaoDoPedido,
   dataDoPedido,
   desafioPkce,
   gerarVerificadorPkce,
@@ -266,5 +268,61 @@ describe("anúncios do Mercado Livre → linhas da prévia", () => {
 
   it("anúncio sem id é descartado", () => {
     expect(anunciosDoItem({ title: "sem id" })).toEqual([]);
+  });
+});
+
+describe("frete pago pela vendedora", () => {
+  it("soma a parte dela nos custos do envio", () => {
+    expect(
+      custoEnvioDaVendedora(
+        {
+          senders: [
+            { user_id: 468424240, cost: 24.9 },
+            { user_id: 1, cost: 99 },
+          ],
+        },
+        "468424240",
+      ),
+    ).toBe(24.9);
+  });
+
+  it("sender sem id conta como dela; sem a parte dela, zero", () => {
+    expect(custoEnvioDaVendedora({ senders: [{ cost: 12.5 }] }, "1")).toBe(12.5);
+    expect(custoEnvioDaVendedora({ senders: [{ user_id: 2, cost: 9 }] }, "1")).toBe(0);
+    expect(custoEnvioDaVendedora({ senders: [] }, "1")).toBe(0);
+  });
+
+  it("resposta sem senders não diz nada: null", () => {
+    expect(custoEnvioDaVendedora({}, "1")).toBeNull();
+    expect(custoEnvioDaVendedora(null, "1")).toBeNull();
+  });
+
+  it("custo negativo vira zero", () => {
+    expect(custoEnvioDaVendedora({ senders: [{ user_id: 1, cost: -5 }] }, "1")).toBe(0);
+  });
+});
+
+describe("observação da venda", () => {
+  const item = (nome: string, sku_id: string | null) => ({
+    sku_id,
+    nome,
+    variacao: null,
+    quantidade: 1,
+    preco_unitario: 10,
+  });
+
+  it("leva o pedido, os anúncios sem produto (sem repetir) e o aviso do frete", () => {
+    expect(
+      observacaoDoPedido(
+        "2000001",
+        [item("Bolsa", null), item("Bolsa", null), item("Caneca", "s1")],
+        true,
+      ),
+    ).toBe(
+      "Pedido 2000001 do Mercado Livre · sem produto ligado: Bolsa · frete do envio não lido, confere no Mercado Livre",
+    );
+    expect(observacaoDoPedido("9", [item("Caneca", "s1")], false)).toBe(
+      "Pedido 9 do Mercado Livre",
+    );
   });
 });

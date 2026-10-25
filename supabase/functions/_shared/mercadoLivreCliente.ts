@@ -9,6 +9,8 @@ import {
   ML_API,
   tokensDaResposta,
   type AnuncioApiMl,
+  type CustosEnvioApiMl,
+  type PedidoApiMl,
   type RespostaTokenMl,
   type TokensMl,
 } from "./mercadoLivre.ts";
@@ -150,6 +152,55 @@ export async function detalhesAnunciosMl(p: {
   return {
     anuncios: r.data.filter((x) => x.code === 200 && x.body?.id).map((x) => x.body!),
     error: null,
+  };
+}
+
+/** Pedido completo (GET /orders/{id}). */
+export async function pedidoMl(p: { accessToken: string; pedidoId: string }) {
+  const r = await chamarApiMl<PedidoApiMl>({
+    path: `/orders/${encodeURIComponent(p.pedidoId)}`,
+    accessToken: p.accessToken,
+  });
+  return { pedido: r.data?.id != null ? r.data : null, status: r.status, error: r.error };
+}
+
+/** Custos do envio (GET /shipments/{id}/costs), para achar o que a vendedora pagou. */
+export async function custosEnvioMl(p: { accessToken: string; envioId: string }) {
+  const r = await chamarApiMl<CustosEnvioApiMl>({
+    path: `/shipments/${encodeURIComponent(p.envioId)}/costs`,
+    accessToken: p.accessToken,
+  });
+  return { custos: r.data, error: r.error };
+}
+
+/**
+ * Pedidos da vendedora alterados desde uma data (varredura que cobre aviso
+ * perdido). Só os ids: o detalhe vem depois, pela fila.
+ */
+export async function pedidosAlteradosMl(p: {
+  accessToken: string;
+  vendedoraId: string;
+  desdeIso: string;
+  offset: number;
+}): Promise<{ ids: string[]; total: number; error: string | null }> {
+  const r = await chamarApiMl<{
+    results?: Array<{ id?: number | string }>;
+    paging?: { total?: number };
+  }>({
+    path: "/orders/search",
+    accessToken: p.accessToken,
+    query: {
+      seller: p.vendedoraId,
+      "order.date_last_updated.from": p.desdeIso,
+      sort: "date_desc",
+      limit: "50",
+      offset: String(p.offset),
+    },
+  });
+  return {
+    ids: (r.data?.results ?? []).filter((o) => o.id != null).map((o) => String(o.id)),
+    total: r.data?.paging?.total ?? 0,
+    error: r.error,
   };
 }
 

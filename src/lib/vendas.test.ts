@@ -228,3 +228,37 @@ describe("diferencaDoAjuste", () => {
     expect(diferencaDoAjuste(5, 5)).toBe(0);
   });
 });
+
+describe("frete pago pela vendedora (Mercado Livre)", () => {
+  it("sai do lucro, como a taxa", () => {
+    const v = venda([item("a", 2, 50, 20)], { taxaCanal: 12, custoEnvio: 20 });
+    expect(lucroDaVenda(v)).toBe(100 - 12 - 20 - 40);
+  });
+
+  it("sai do que entra no Financeiro, igual à RPC receber_venda", () => {
+    expect(
+      valorRecebidoDaVenda({
+        itens: [item("a", 2, 50)],
+        desconto: 0,
+        frete: 0,
+        taxaCanal: 12,
+        custoEnvio: 20,
+      }),
+    ).toBe(68);
+  });
+
+  it("entra no resumo e no rateio dos mais vendidos", () => {
+    const v = {
+      ...venda([item("a", 1, 60, 10), item("b", 1, 40, 10)], { custoEnvio: 10 }),
+      total: 100,
+    };
+    expect(resumoVendas([v])).toMatchObject({ entrou: 90, lucrou: 70 });
+    const linhas = maisVendidos([v], "lucrou");
+    expect(linhas.find((l) => l.chave === "a")?.lucrou).toBe(60 - 6 - 10);
+    expect(linhas.find((l) => l.chave === "b")?.lucrou).toBe(40 - 4 - 10);
+  });
+
+  it("venda sem o campo continua como antes", () => {
+    expect(lucroDaVenda(venda([item("a", 1, 50, 20)], { taxaCanal: 5 }))).toBe(25);
+  });
+});

@@ -80,6 +80,7 @@ type VendaBanco = {
   desconto: number;
   frete: number;
   taxa_canal: number;
+  custo_envio?: number | null;
   total: number;
   observacao: string | null;
   venda_itens: ItemBanco[] | null;
@@ -97,6 +98,7 @@ export function vendaDoBanco(v: VendaBanco): VendaLinha {
     desconto: n(v.desconto),
     frete: n(v.frete),
     taxaCanal: n(v.taxa_canal),
+    custoEnvio: n(v.custo_envio ?? 0),
     total: n(v.total),
     observacao: v.observacao,
     itens: (v.venda_itens ?? []).map((i) => ({
@@ -122,7 +124,7 @@ export function useVendas(userId: string | undefined, de: string, ate: string) {
       const { data, error } = await supabase
         .from("vendas")
         .select(
-          "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, total, observacao, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)",
+          "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)",
         )
         .eq("user_id", userId!)
         .gte("data", de)

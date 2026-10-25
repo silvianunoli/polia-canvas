@@ -57,6 +57,8 @@ export interface Venda {
   status: StatusVenda;
   desconto: number;
   taxaCanal: number;
+  /** Frete que o canal cobrou DELA pelo envio (Mercado Livre). Sai do lucro, como a taxa. */
+  custoEnvio?: number;
   itens: ItemVenda[];
 }
 
@@ -78,27 +80,36 @@ export function totalDaVenda(params: {
   );
 }
 
-/** O que entra na conta e vira lançamento no Financeiro: total - taxa do canal. */
+/** O que entra na conta e vira lançamento no Financeiro: total - taxa - frete pago por ela (igual à RPC receber_venda). */
 export function valorRecebidoDaVenda(params: {
   itens: readonly Pick<ItemVenda, "quantidade" | "precoUnitario">[];
   desconto: number;
   frete: number;
   taxaCanal: number;
+  custoEnvio?: number;
 }) {
-  return centavos(totalDaVenda(params) - centavos(params.taxaCanal));
+  return centavos(
+    totalDaVenda(params) - centavos(params.taxaCanal) - centavos(params.custoEnvio ?? 0),
+  );
 }
 
 /**
- * Quanto a venda deixou: itens - desconto - taxa - custo. Frete fica de fora
- * (é repasse). null quando algum item não tem custo: a tela pede o custo em
+ * Quanto a venda deixou: itens - desconto - taxa - frete pago por ela - custo.
+ * Frete cobrado da cliente fica de fora (é repasse). null quando algum item não tem custo: a tela pede o custo em
  * vez de mostrar um lucro inventado.
  */
 export function lucroDaVenda(
-  venda: Pick<Venda, "desconto" | "taxaCanal" | "itens">,
+  venda: Pick<Venda, "desconto" | "taxaCanal" | "custoEnvio" | "itens">,
 ): number | null {
   if (venda.itens.some((i) => i.custoUnitario == null)) return null;
   const custo = venda.itens.reduce((s, i) => s + i.quantidade * (i.custoUnitario ?? 0), 0);
-  return centavos(subtotalDaVenda(venda.itens) - venda.desconto - venda.taxaCanal - custo);
+  return centavos(
+    subtotalDaVenda(venda.itens) -
+      venda.desconto -
+      venda.taxaCanal -
+      (venda.custoEnvio ?? 0) -
+      custo,
+  );
 }
 
 export type ErroVenda =
@@ -137,7 +148,7 @@ export interface LinhaRanking {
 export type OrdemRanking = "unidades" | "entrou" | "lucrou";
 
 /**
- * Mais vendidos. Desconto e taxa da venda são rateados entre os itens pelo
+ * Mais vendidos. Desconto, taxa e frete pago por ela são rateados entre os itens pelo
  * valor de cada um, senão o produto que divide pedido com outro levaria a
  * taxa inteira. Venda cancelada não conta; a receber conta (saiu da prateleira).
  */
@@ -157,7 +168,7 @@ export function maisVendidos(
       const lucro =
         i.custoUnitario == null
           ? null
-          : entrou - v.taxaCanal * peso - i.quantidade * i.custoUnitario;
+          : entrou - (v.taxaCanal + (v.custoEnvio ?? 0)) * peso - i.quantidade * i.custoUnitario;
 
       const chave = i.produtoId ?? `nome:${i.produtoNome}`;
       const atual = porProduto.get(chave) ?? {
@@ -217,7 +228,7 @@ export function contarEstoqueBaixo(saldos: readonly SaldoSku[]): number {
 export interface ResumoVendas {
   /** Vendas que valem (sem as canceladas). */
   quantidade: number;
-  /** O que já entrou na conta: total - taxa das recebidas (bate com o Financeiro). */
+  /** O que já entrou na conta: total - taxa - frete pago por ela, das recebidas (bate com o Financeiro). */
   entrou: number;
   /** Lucro das vendas com custo conhecido. */
   lucrou: number;
@@ -233,7 +244,7 @@ export function resumoVendas(vendas: readonly (Venda & { total: number })[]): Re
   for (const v of vendas) {
     if (v.status === "cancelada") continue;
     r.quantidade += 1;
-    const liquido = v.total - v.taxaCanal;
+    const liquido = v.total - v.taxaCanal - (v.custoEnvio ?? 0);
     if (v.status === "a_receber") r.aReceber += liquido;
     else r.entrou += liquido;
     const lucro = lucroDaVenda(v);
