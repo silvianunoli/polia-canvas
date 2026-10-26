@@ -208,16 +208,23 @@ async function processarPedido(
   return error ? error.message : null;
 }
 
-async function marcarFilaEstoque(skuIds: string[], erro: string | null) {
-  if (!skuIds.length) return;
-  if (!erro) {
+/**
+ * Fecha a linha da fila só se ela não foi pedida de novo depois da leitura: uma
+ * venda que entrou no meio do envio marca pedido_em mais novo, e o saldo dela
+ * sobe na próxima rodada em vez de se perder (revisão 3c.5, mesmo caso do ML).
+ */
+async function concluirFilaEstoque(skuIds: string[], pedidoEmDe: Map<string, string>) {
+  for (const skuId of skuIds)
     await supabaseAdmin
       .from("canal_fila_estoque")
       .update({ pendente: false, enviado_em: new Date().toISOString(), erro: null })
       .eq("canal", CANAL)
-      .in("sku_id", skuIds);
-    return;
-  }
+      .eq("sku_id", skuId)
+      .lte("pedido_em", pedidoEmDe.get(skuId)!);
+}
+
+async function marcarFilaEstoque(skuIds: string[], erro: string) {
+  if (!skuIds.length) return;
   const { data } = await supabaseAdmin
     .from("canal_fila_estoque")
     .select("sku_id, tentativas")
@@ -240,13 +247,14 @@ async function enviarEstoque(
 ): Promise<number> {
   const { data: filaData } = await supabaseAdmin
     .from("canal_fila_estoque")
-    .select("user_id, sku_id")
+    .select("user_id, sku_id, pedido_em")
     .eq("canal", CANAL)
     .eq("pendente", true)
     .lt("tentativas", MAX_TENTATIVAS)
     .order("pedido_em")
     .limit(200);
-  const fila = (filaData as { user_id: string; sku_id: string }[] | null) ?? [];
+  const fila = (filaData as { user_id: string; sku_id: string; pedido_em: string }[] | null) ?? [];
+  const pedidoEmDe = new Map(fila.map((f) => [f.sku_id, f.pedido_em]));
   const porDona = new Map<string, string[]>();
   for (const f of fila) porDona.set(f.user_id, [...(porDona.get(f.user_id) ?? []), f.sku_id]);
 
@@ -261,41 +269,54 @@ async function enviarEstoque(
       );
       continue;
     }
-    const [{ data: vinc }, { data: saldos }] = await Promise.all([
-      supabaseAdmin
-        .from("anuncio_vinculos")
-        .select("sku_id, produto_externo_id, sku_externo_id")
-        .eq("user_id", userId)
-        .eq("canal", CANAL)
-        .eq("sincroniza_estoque", true)
-        .in("sku_id", skuIds),
-      supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
-    ]);
+    const [{ data: vinc, error: erroVinc }, { data: saldos, error: erroSaldos }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("anuncio_vinculos")
+          .select("sku_id, produto_externo_id, sku_externo_id")
+          .eq("user_id", userId)
+          .eq("canal", CANAL)
+          .eq("sincroniza_estoque", true)
+          .in("sku_id", skuIds),
+        supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
+      ]);
+    // Leitura que falha não pode virar quantidade zero (revisão 3c.5).
+    const erroLeitura = erroVinc ?? erroSaldos;
+    if (erroLeitura) {
+      await marcarFilaEstoque(skuIds, `estoque: leitura da Pólia falhou (${erroLeitura.message})`);
+      continue;
+    }
     const saldoDe = new Map(
       ((saldos as { sku_id: string; saldo: number }[]) ?? []).map((s) => [
         s.sku_id,
         Number(s.saldo),
       ]),
     );
-    const vinculos =
-      (vinc as { sku_id: string; produto_externo_id: string; sku_externo_id: string }[]) ?? [];
+    // Variação sem saldo na Pólia (arquivada) não manda nada, nunca zero.
+    const vinculos = (
+      (vinc as { sku_id: string; produto_externo_id: string; sku_externo_id: string }[]) ?? []
+    ).filter((v) => saldoDe.has(v.sku_id));
     const porProduto = new Map<string, typeof vinculos>();
     for (const v of vinculos)
       porProduto.set(v.produto_externo_id, [...(porProduto.get(v.produto_externo_id) ?? []), v]);
 
     const semVinculo = skuIds.filter((id) => !vinculos.some((v) => v.sku_id === id));
-    await marcarFilaEstoque(semVinculo, null); // desligou ou apagou o vínculo: nada a mandar
+    await concluirFilaEstoque(semVinculo, pedidoEmDe); // sem vínculo ou sem saldo: nada a mandar
 
     for (const [produtoId, lista] of porProduto) {
       const { produto } = await detalheProdutoTiktok(cred, { ...acesso, produtoId });
       const corpo = corpoAtualizarEstoque(
-        lista.map((v) => ({ skuExternoId: v.sku_externo_id, saldo: saldoDe.get(v.sku_id) ?? 0 })),
+        lista.map((v) => ({ skuExternoId: v.sku_externo_id, saldo: saldoDe.get(v.sku_id)! })),
         produto ? depositosDoProduto(produto) : new Map(),
       );
       const { error } = await atualizarEstoqueTiktok(cred, { ...acesso, produtoId, corpo });
       const ids = [...new Set(lista.map((v) => v.sku_id))];
-      await marcarFilaEstoque(ids, error ? `estoque: ${error}` : null);
-      if (!error) enviados += ids.length;
+      if (error) {
+        await marcarFilaEstoque(ids, `estoque: ${error}`);
+        continue;
+      }
+      await concluirFilaEstoque(ids, pedidoEmDe);
+      enviados += ids.length;
     }
   }
   return enviados;

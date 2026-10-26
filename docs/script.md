@@ -334,3 +334,21 @@ A 3c.3 subiu (commit a6674c0, migration e edge functions no ar). Esta etapa: com
 - Migration `20261025110000_mercado_livre_estoque_fila.sql`, testada numa transação desfeita (ligar anúncio com "cuida do estoque" ligado põe a variação na fila do canal): `disparar_ml_sync` passa a olhar também a fila de estoque. **Aplicada pelo MCP com autorização da Sil** e conferida; ml-sync publicado pela CLI.
 - Edge functions conferidas com tsc e o shim do Deno. Suíte inteira: 1.972 testes verdes, tipos, lint e build ok.
 - Conferir com a conta de teste: se o PUT por variação funciona em anúncio do modelo novo (User Products).
+
+## 2026-10-25 — Mercado Livre direto, etapa 3c.5 (VND-30)
+
+A 3c.4 subiu (commit 54fb676). Esta etapa: revisão de segurança da Fase 3c, ADR e lista de lançamento.
+
+Revisão de segurança por um agente só de leitura sobre o código (2 altos, 4 médios), mais a conferência das permissões no banco de produção (todas as funções do canal só para o service role; tabelas do canal sem acesso do navegador; `vendas` só leitura). Corrigido:
+
+- **Alto, saldo zerado:** leitura de `estoque_saldos` ou dos vínculos que falhava virava quantidade 0 e pausava os anúncios. Agora erro de leitura marca a fila com erro, e variação sem saldo (arquivada) não manda nada. Mesmo conserto no `tiktok-sync`, que tinha o mesmo padrão.
+- **Alto, trava do token vencendo no meio:** `pegar_trava_com_dono`/`soltar_trava_com_dono` (só quem pegou solta), trava de 60 s, prazo de 10 s em toda chamada ao Mercado Livre (`AbortSignal.timeout`), espera de 12 s, e releitura do token antes de marcar erro quando o Mercado Livre recusa. O `ml-sync` também usa a trava com dono (300 s).
+- **Médio, pedido de outra vendedora:** venda e cancelamento só se `seller.id` do pedido for a vendedora conectada; senão o evento é descartado sem nova tentativa.
+- **Médio, aviso enchendo a fila:** `enfileirar_evento_canal` não zera tentativas, não ressuscita evento morto e para em 500 pendentes por vendedora; id de pedido e vendedora até 20 dígitos.
+- **Médio, corrida na fila de estoque:** a linha só fecha se `pedido_em` não mudou desde a leitura (ML e TikTok).
+- **Médio, frete em dobro no carrinho:** a observação leva `envio <id>`; pedido do mesmo envio entra sem frete.
+- Baixos: `receber_venda` com `pg_temp`; prévia busca anúncios ativos e pausados; prévia não fica em cache depois de sair da tela; comentário sobre quem renova corrigido.
+- Desconectar tenta revogar a autorização no Mercado Livre (melhor esforço, conferir com a conta de teste).
+- Aceitos, sem ação: varredura limitada a 200 pedidos alterados por 15 minutos (fora do volume da persona); a mesma variação ligada a vários anúncios manda o saldo inteiro para cada um (decisão de desenho).
+- Migration `20261025120000_mercado_livre_revisao_seguranca.sql`, testada numa transação desfeita (trava pega, recusa ocupada, outro dono não solta, dono solta; evento reaberto mantém tentativas; morto não volta; teto de 500). **Aplicada pelo MCP com autorização da Sil** e conferida; ml-webhook, ml-sync e tiktok-sync publicados pela CLI.
+- ADR `docs/adr/0003-mercado-livre-token-de-uso-unico.md` e lista `docs/mercado-livre-lancamento.md` (ligar, usuários de teste, roteiro de 10 passos, pontos a conferir, teste de 7 dias, antes de abrir).

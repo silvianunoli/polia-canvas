@@ -32,8 +32,11 @@ const api = vi.hoisted(() => ({
   montarUrlAutorizacao: vi.fn(),
   trocarCodigoPorTokens: vi.fn(),
   lerVendedora: vi.fn(),
+  revogarAutorizacao: vi.fn(),
 }));
 vi.mock("./mercadoLivreApi", () => api);
+const acessoMl = vi.hoisted(() => ({ obterAcessoMercadoLivre: vi.fn() }));
+vi.mock("./mercadoLivreAcesso.server", () => acessoMl);
 
 import {
   alternarCuidaEstoqueMercadoLivre,
@@ -100,6 +103,8 @@ beforeEach(() => {
   registrarEventoSistema.mockReset();
   for (const fn of Object.values(api)) fn.mockReset();
   api.mercadoLivreConfigurado.mockReturnValue(true);
+  acessoMl.obterAcessoMercadoLivre.mockReset();
+  acessoMl.obterAcessoMercadoLivre.mockResolvedValue({ acesso: null, error: "x" });
 });
 
 describe("statusConexaoMercadoLivre", () => {
@@ -270,6 +275,17 @@ describe("finalizarConexaoMercadoLivre", () => {
 });
 
 describe("desconectarMercadoLivre", () => {
+  it("com acesso, tenta revogar no Mercado Livre antes de apagar", async () => {
+    acessoMl.obterAcessoMercadoLivre.mockResolvedValue({
+      acesso: { conexaoId: "c-1", accessToken: "at", vendedoraId: "468424240" },
+      error: null,
+    });
+    api.revogarAutorizacao.mockResolvedValue({ error: "HTTP 404" });
+    expect(await desconectar({ context })).toEqual({ ok: true, error: null });
+    expect(api.revogarAutorizacao).toHaveBeenCalledWith("at", "468424240");
+    expect(consultas.canal_conexoes[0].delete).toHaveBeenCalled();
+  });
+
   it("apaga a conexão e as ligações só do Mercado Livre", async () => {
     expect(await desconectar({ context })).toEqual({ ok: true, error: null });
     expect(consultas.canal_conexoes[0].delete).toHaveBeenCalled();

@@ -73,19 +73,23 @@ describe("listarAnunciosMercadoLivre", () => {
   it("pagina os ids, busca o detalhe em lotes de 20 e monta a prévia do canal certo", async () => {
     api.buscarIdsAnuncios
       .mockResolvedValueOnce({ ids: ids(0, 100), total: 130, error: null })
-      .mockResolvedValueOnce({ ids: ids(100, 130), total: 130, error: null });
+      .mockResolvedValueOnce({ ids: ids(100, 130), total: 130, error: null })
+      .mockResolvedValueOnce({ ids: ["MLB900"], total: 1, error: null });
     api.detalhesAnuncios.mockImplementation(async ({ ids: lote }: { ids: string[] }) => ({
       anuncios: lote.map((id) => ({ id, title: id })),
       error: null,
     }));
     const r = (await listar({ context })) as { ok: boolean; incompleto: boolean };
     expect(r).toMatchObject({ ok: true, incompleto: false });
-    expect(api.buscarIdsAnuncios).toHaveBeenCalledTimes(2);
+    expect(api.buscarIdsAnuncios).toHaveBeenCalledTimes(3);
     expect(api.buscarIdsAnuncios.mock.calls[1][0]).toMatchObject({
       vendedoraId: "468424240",
+      status: "active",
       offset: 100,
       limite: 100,
     });
+    // Pausados também entram: o que a Pólia pausou ao zerar o estoque.
+    expect(api.buscarIdsAnuncios.mock.calls[2][0]).toMatchObject({ status: "paused", offset: 0 });
     expect(api.detalhesAnuncios).toHaveBeenCalledTimes(7);
     expect(
       api.detalhesAnuncios.mock.calls.every((c) => (c[0] as { ids: string[] }).ids.length <= 20),
@@ -93,7 +97,7 @@ describe("listarAnunciosMercadoLivre", () => {
     const [userId, canal, linhas] = vinculos.montarPrevia.mock.calls[0];
     expect(userId).toBe("u-1");
     expect(canal).toBe("mercado_livre");
-    expect((linhas as unknown[]).length).toBe(130);
+    expect((linhas as unknown[]).length).toBe(131);
   });
 
   it("mais de 500 anúncios: para nos 500 e avisa", async () => {

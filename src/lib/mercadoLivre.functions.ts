@@ -9,8 +9,10 @@ import {
   lerVendedora,
   mercadoLivreConfigurado,
   montarUrlAutorizacao,
+  revogarAutorizacao,
   trocarCodigoPorTokens,
 } from "./mercadoLivreApi";
+import { obterAcessoMercadoLivre } from "./mercadoLivreAcesso.server";
 
 // Conexão com o Mercado Livre (Fase 3c, VND-30). Mesmo desenho do TikTok Shop
 // (state guardado e conferido na volta, token no Supabase Vault), com PKCE: o
@@ -19,8 +21,8 @@ import {
 // Diferente do TikTok, a autorização sempre começa na Pólia: volta sem state ou
 // com state que não bate é recusada, sem tela de confirmação.
 //
-// Só o ml-sync renova o token (o de renovação é de uso único; plano §5). Aqui o
-// token só é gravado ao conectar.
+// Aqui o token só é gravado ao conectar. Renovar fica com mercadoLivreAcesso.server.ts
+// e o ml-sync, pela mesma trava (o de renovação é de uso único; ADR-003).
 
 const CANAL = "mercado_livre";
 const SO_PRO = "A integração com o Mercado Livre é do plano Pro.";
@@ -222,9 +224,11 @@ export const finalizarConexaoMercadoLivre = createServerFn({ method: "POST" })
 export const desconectarMercadoLivre = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // Apaga a conexão (o gatilho leva os tokens do Vault) e os vínculos. Tirar a
-    // autorização do lado do Mercado Livre pela API fica para a 3c.5 (plano §5).
-    // Vendas já registradas ficam: são dela.
+    // Tenta tirar a autorização do lado do Mercado Livre (melhor esforço: falhou,
+    // segue). Depois apaga a conexão (o gatilho leva os tokens do Vault) e os
+    // vínculos. Vendas já registradas ficam: são dela.
+    const { acesso } = await obterAcessoMercadoLivre(context.userId);
+    if (acesso) await revogarAutorizacao(acesso.accessToken, acesso.vendedoraId);
     const { error } = await supabaseAdmin
       .from("canal_conexoes" as never)
       .delete()

@@ -96,6 +96,8 @@ export interface PedidoApiMl {
   date_created?: string;
   date_closed?: string;
   tags?: string[];
+  /** Quem vendeu. A venda só entra se for a vendedora conectada (revisão 3c.5). */
+  seller?: { id?: number | string | null } | null;
   shipping?: { id?: number | string | null } | null;
   order_items?: Array<{
     item?: {
@@ -203,16 +205,35 @@ export function custoEnvioDaVendedora(
 export function observacaoDoPedido(
   pedidoId: string,
   itens: ItemVendaCanal[],
-  freteNaoLido: boolean,
+  frete: { naoLido: boolean; envioId: string | null },
 ): string {
   const semVinculo = [...new Set(itens.filter((i) => !i.sku_id).map((i) => i.nome))];
   return [
     `Pedido ${pedidoId} do Mercado Livre`,
+    frete.envioId ? marcaDoEnvio(frete.envioId) : null,
     semVinculo.length ? `sem produto ligado: ${semVinculo.join(", ")}` : null,
-    freteNaoLido ? "frete do envio não lido, confere no Mercado Livre" : null,
+    frete.naoLido ? "frete do envio não lido, confere no Mercado Livre" : null,
   ]
     .filter(Boolean)
     .join(" · ");
+}
+
+/**
+ * Marca do envio na observação da venda. Pedidos do mesmo carrinho (pack) podem
+ * dividir um envio: o frete entra só na primeira venda com essa marca, para não
+ * contar duas vezes.
+ */
+export function marcaDoEnvio(envioId: string): string {
+  return `envio ${envioId}`;
+}
+
+/** O pedido é da vendedora conectada? Pedido em que ela é a compradora não vira venda. */
+export function pedidoDaVendedora(
+  pedido: Pick<PedidoApiMl, "seller">,
+  vendedoraId: string,
+): boolean {
+  const id = pedido.seller?.id;
+  return id != null && String(id) === vendedoraId;
 }
 
 // ── Aviso (notificação) ───────────────────────────────────────────────────
@@ -236,8 +257,8 @@ export function pedidoDoAviso(
   if (c.topic !== "orders_v2") return null;
   if (c.application_id == null || String(c.application_id) !== appId) return null;
   const vendedoraId = c.user_id != null ? String(c.user_id) : "";
-  const m = /^\/orders\/(\d{1,30})$/.exec(c.resource ?? "");
-  if (!/^\d{1,30}$/.test(vendedoraId) || !m) return null;
+  const m = /^\/orders\/(\d{1,20})$/.exec(c.resource ?? "");
+  if (!/^\d{1,20}$/.test(vendedoraId) || !m) return null;
   return { vendedoraId, pedidoId: m[1] };
 }
 

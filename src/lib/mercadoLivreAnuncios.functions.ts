@@ -50,20 +50,26 @@ export const listarAnunciosMercadoLivre = createServerFn({ method: "GET" })
         error: "O Mercado Livre não devolveu os anúncios agora. Tenta de novo.",
       };
 
-      // Ids dos anúncios ativos, página por página, até 500.
+      // Ids dos anúncios ativos e pausados (o que a Pólia pausou ao zerar o estoque
+      // também precisa aparecer), página por página, até 500 no total.
       const ids: string[] = [];
       let total = 0;
-      for (let offset = 0; offset < MAX_ANUNCIOS; offset += POR_PAGINA) {
-        const r = await buscarIdsAnuncios({
-          accessToken: acesso.accessToken,
-          vendedoraId: acesso.vendedoraId,
-          offset,
-          limite: POR_PAGINA,
-        });
-        if (r.error) return falhou;
-        ids.push(...r.ids);
-        total = r.total;
-        if (r.ids.length < POR_PAGINA || ids.length >= total) break;
+      for (const status of ["active", "paused"] as const) {
+        let lidos = 0;
+        for (let offset = 0; ids.length < MAX_ANUNCIOS; offset += POR_PAGINA) {
+          const r = await buscarIdsAnuncios({
+            accessToken: acesso.accessToken,
+            vendedoraId: acesso.vendedoraId,
+            status,
+            offset,
+            limite: Math.min(POR_PAGINA, MAX_ANUNCIOS - ids.length),
+          });
+          if (r.error) return falhou;
+          ids.push(...r.ids);
+          lidos += r.ids.length;
+          if (offset === 0) total += r.total;
+          if (r.ids.length < POR_PAGINA || lidos >= r.total) break;
+        }
       }
 
       // Detalhe com as variações, 20 por chamada, 5 chamadas por vez.

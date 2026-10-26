@@ -4,6 +4,11 @@
 //
 // Token de renovação de USO ÚNICO: cada renovação devolve um novo e o antigo
 // morre. Quem renova precisa gravar o novo antes de qualquer outra coisa.
+//
+// Toda chamada tem prazo de 10 s: a renovação roda dentro de uma trava de 60 s
+// (_shared/mercadoLivreAcesso.ts) e não pode passar dela.
+
+export const PRAZO_CHAMADA_MS = 10_000;
 
 import {
   ML_API,
@@ -46,6 +51,7 @@ export async function pedirTokenMl(
         "content-type": "application/x-www-form-urlencoded",
       },
       body: corpo.toString(),
+      signal: AbortSignal.timeout(PRAZO_CHAMADA_MS),
     });
     const resposta = (await res.json().catch(() => ({}))) as RespostaTokenMl & {
       error?: string;
@@ -74,7 +80,7 @@ export async function pedirTokenMl(
 
 /** GET autenticado na API. O token vai no cabeçalho, nunca na URL. */
 export async function chamarApiMl<T>(p: {
-  metodo?: "GET" | "PUT";
+  metodo?: "GET" | "PUT" | "DELETE";
   path: string;
   accessToken: string;
   query?: Record<string, string>;
@@ -90,6 +96,7 @@ export async function chamarApiMl<T>(p: {
         ...(p.corpo !== undefined ? { "content-type": "application/json" } : {}),
       },
       body: p.corpo === undefined ? undefined : JSON.stringify(p.corpo),
+      signal: AbortSignal.timeout(PRAZO_CHAMADA_MS),
     });
     const resposta = (await res.json().catch(() => null)) as
       | (T & { error?: string; message?: string })
@@ -105,19 +112,21 @@ export async function chamarApiMl<T>(p: {
 }
 
 /**
- * Uma página de ids de anúncios ATIVOS da vendedora. Sem search_type=scan o
+ * Uma página de ids de anúncios da vendedora num status (ativo ou pausado; o
+ * pausado inclui o que a própria Pólia pausou ao zerar o estoque). Sem search_type=scan o
  * Mercado Livre limita o offset a 1.000, mais que os 500 que a prévia mostra.
  */
 export async function buscarIdsAnunciosMl(p: {
   accessToken: string;
   vendedoraId: string;
+  status: "active" | "paused";
   offset: number;
   limite: number;
 }): Promise<{ ids: string[]; total: number; error: string | null }> {
   const r = await chamarApiMl<{ results?: string[]; paging?: { total?: number } }>({
     path: `/users/${encodeURIComponent(p.vendedoraId)}/items/search`,
     accessToken: p.accessToken,
-    query: { status: "active", offset: String(p.offset), limit: String(p.limite) },
+    query: { status: p.status, offset: String(p.offset), limit: String(p.limite) },
   });
   return {
     ids: (r.data?.results ?? []).filter((id) => typeof id === "string"),
@@ -232,6 +241,24 @@ export async function atualizarEstoqueMl(p: {
     path,
     accessToken: p.accessToken,
     corpo: { available_quantity: p.quantidade },
+  });
+  return { error: r.error };
+}
+
+/**
+ * Tira a autorização do app na conta da vendedora (ao desconectar). Melhor
+ * esforço: a Pólia apaga os tokens de qualquer jeito (conferir a chamada com a
+ * conta de teste).
+ */
+export async function revogarAutorizacaoMl(p: {
+  accessToken: string;
+  vendedoraId: string;
+  appId: string;
+}): Promise<{ error: string | null }> {
+  const r = await chamarApiMl<unknown>({
+    metodo: "DELETE",
+    path: `/users/${encodeURIComponent(p.vendedoraId)}/applications/${encodeURIComponent(p.appId)}`,
+    accessToken: p.accessToken,
   });
   return { error: r.error };
 }

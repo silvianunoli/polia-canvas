@@ -11,8 +11,10 @@
 import type { TokensMl } from "./mercadoLivre.ts";
 
 const MARGEM_MS = 10 * 60 * 1000;
-const TRAVA_SEGUNDOS = 30;
-const ESPERAS = 5;
+// A renovação chama o Mercado Livre com prazo de 10 s (PRAZO_CHAMADA_MS) e grava em
+// até 3 tentativas: 60 s de trava sobra. Quem espera olha por 12 s, mais que o prazo.
+const TRAVA_SEGUNDOS = 60;
+const ESPERAS = 12;
 export const MSG_RECONECTAR_ML = "A autorização do Mercado Livre venceu. Conecta de novo.";
 const MSG_OCUPADO = "O Mercado Livre está renovando o acesso. Tenta de novo em instantes.";
 
@@ -60,11 +62,12 @@ export async function tokenComTrava(
   if (valido(token)) return ok(token.access_token);
 
   const chave = chaveTravaToken(conexaoId);
-  const { data: pegou } = await deps.rpc("pegar_trava_sync", {
-    p_canal: chave,
+  // Trava com dono: só quem pegou solta (revisão 3c.5).
+  const { data: dono } = await deps.rpc("pegar_trava_com_dono", {
+    p_chave: chave,
     p_segundos: TRAVA_SEGUNDOS,
   });
-  if (pegou !== true) {
+  if (typeof dono !== "string" || !dono) {
     // Outra chamada está renovando: espera o token novo, sem gastar o de renovação.
     for (let i = 0; i < ESPERAS; i++) {
       await esperar(1000);
@@ -80,9 +83,16 @@ export async function tokenComTrava(
     if (valido(token)) return ok(token!.access_token!);
     if (!token?.refresh_token) return falha(MSG_RECONECTAR_ML);
 
-    const { tokens, recusado } = await deps.renovar(token.refresh_token);
+    const usado = token.refresh_token;
+    const { tokens, recusado } = await deps.renovar(usado);
     if (!tokens) {
       if (recusado) {
+        // Antes de derrubar: se outra parte renovou e gravou nesse meio-tempo, o
+        // token de renovação mudou e a conexão está de pé.
+        const agoraToken = await lerToken();
+        if (valido(agoraToken)) return ok(agoraToken!.access_token!);
+        if (agoraToken?.refresh_token && agoraToken.refresh_token !== usado)
+          return falha(MSG_OCUPADO);
         await deps.marcarErro(conexaoId, "refresh_token_recusado");
         return falha(MSG_RECONECTAR_ML);
       }
@@ -103,6 +113,6 @@ export async function tokenComTrava(
     await deps.marcarErro(conexaoId, "token_novo_nao_salvo");
     return falha(MSG_RECONECTAR_ML);
   } finally {
-    await deps.rpc("soltar_trava_sync", { p_canal: chave });
+    await deps.rpc("soltar_trava_com_dono", { p_chave: chave, p_dono: dono });
   }
 }

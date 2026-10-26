@@ -57,7 +57,7 @@ beforeEach(() => {
   rpc.mockReset();
   rpc.mockImplementation(async (nome: string) => {
     if (nome === "canal_token_ler") return { data: [leituras.shift() ?? null], error: null };
-    if (nome === "pegar_trava_sync") return { data: trava, error: null };
+    if (nome === "pegar_trava_com_dono") return { data: trava ? "dono-1" : null, error: null };
     if (nome === "canal_token_salvar") return { error: salvarErros.shift() ?? null };
     return { data: null, error: null };
   });
@@ -76,7 +76,7 @@ describe("obterAcessoMercadoLivre", () => {
       acesso: { conexaoId: "c-1", accessToken: "at-60", vendedoraId: "468424240" },
       error: null,
     });
-    expect(chamadas("pegar_trava_sync")).toHaveLength(0);
+    expect(chamadas("pegar_trava_com_dono")).toHaveLength(0);
     expect(api.renovarTokens).not.toHaveBeenCalled();
   });
 
@@ -93,16 +93,16 @@ describe("obterAcessoMercadoLivre", () => {
     const r = await obterAcessoMercadoLivre("u-1", { agora, esperar });
     expect(r.acesso?.accessToken).toBe("at-novo");
     expect(api.renovarTokens).toHaveBeenCalledWith("rt-velho");
-    expect(chamadas("pegar_trava_sync")[0][1]).toEqual({
-      p_canal: chaveTravaToken("c-1"),
-      p_segundos: 30,
+    expect(chamadas("pegar_trava_com_dono")[0][1]).toEqual({
+      p_chave: chaveTravaToken("c-1"),
+      p_segundos: 60,
     });
     expect(chamadas("canal_token_salvar")[0][1]).toMatchObject({
       p_access: "at-novo",
       p_refresh: "rt-novo",
       p_refresh_expira: null,
     });
-    expect(chamadas("soltar_trava_sync")).toHaveLength(1);
+    expect(chamadas("soltar_trava_com_dono")).toHaveLength(1);
   });
 
   it("renovação que outra chamada terminou antes da trava não gasta o token de renovação", async () => {
@@ -110,7 +110,7 @@ describe("obterAcessoMercadoLivre", () => {
     const r = await obterAcessoMercadoLivre("u-1", { agora, esperar });
     expect(r.acesso?.accessToken).toBe("at-360");
     expect(api.renovarTokens).not.toHaveBeenCalled();
-    expect(chamadas("soltar_trava_sync")).toHaveLength(1);
+    expect(chamadas("soltar_trava_com_dono")).toHaveLength(1);
   });
 
   it("trava ocupada: espera o token novo aparecer, sem renovar", async () => {
@@ -120,7 +120,7 @@ describe("obterAcessoMercadoLivre", () => {
     expect(r.acesso?.accessToken).toBe("at-360");
     expect(esperar).toHaveBeenCalledTimes(2);
     expect(api.renovarTokens).not.toHaveBeenCalled();
-    expect(chamadas("soltar_trava_sync")).toHaveLength(0);
+    expect(chamadas("soltar_trava_com_dono")).toHaveLength(0);
   });
 
   it("trava ocupada que não libera a tempo pede para tentar de novo", async () => {
@@ -129,7 +129,7 @@ describe("obterAcessoMercadoLivre", () => {
     const r = await obterAcessoMercadoLivre("u-1", { agora, esperar });
     expect(r.acesso).toBeNull();
     expect(r.error).toContain("renovando");
-    expect(esperar).toHaveBeenCalledTimes(5);
+    expect(esperar).toHaveBeenCalledTimes(12);
   });
 
   it("Mercado Livre recusou a renovação: conexão vira erro e pede para conectar de novo", async () => {
@@ -140,7 +140,24 @@ describe("obterAcessoMercadoLivre", () => {
     const marcou = updates.find((q) => q.update.mock.calls.length);
     expect(marcou?.update.mock.calls[0][0]).toMatchObject({ status: "erro" });
     expect(registrarEventoSistema).toHaveBeenCalled();
-    expect(chamadas("soltar_trava_sync")).toHaveLength(1);
+    expect(chamadas("soltar_trava_com_dono")).toHaveLength(1);
+  });
+
+  it("recusa depois que outra parte já renovou não derruba a conexão", async () => {
+    leituras = [tokenEm(5), tokenEm(5), { ...tokenEm(360), refresh_token: "rt-outro" }];
+    api.renovarTokens.mockResolvedValue({ tokens: null, error: "x", recusado: true });
+    const r = await obterAcessoMercadoLivre("u-1", { agora, esperar });
+    expect(r.acesso?.accessToken).toBe("at-360");
+    expect(updates.some((q) => q.update.mock.calls.length)).toBe(false);
+  });
+
+  it("solta só a própria trava", async () => {
+    leituras = [tokenEm(5), tokenEm(360)];
+    await obterAcessoMercadoLivre("u-1", { agora, esperar });
+    expect(chamadas("soltar_trava_com_dono")[0][1]).toEqual({
+      p_chave: chaveTravaToken("c-1"),
+      p_dono: "dono-1",
+    });
   });
 
   it("falha de rede na renovação não derruba a conexão", async () => {

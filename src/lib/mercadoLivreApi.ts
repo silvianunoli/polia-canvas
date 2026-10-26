@@ -9,6 +9,7 @@ import {
   detalhesAnunciosMl,
   lerVendedoraMl,
   pedirTokenMl,
+  revogarAutorizacaoMl,
 } from "../../supabase/functions/_shared/mercadoLivreCliente.ts";
 
 function credenciais() {
@@ -67,3 +68,10 @@ export const lerVendedora = lerVendedoraMl;
 export const buscarIdsAnuncios = buscarIdsAnunciosMl;
 /** Detalhe de até 20 anúncios por chamada, com as variações. */
 export const detalhesAnuncios = detalhesAnunciosMl;
+
+/** Tira a autorização do app na conta dela (melhor esforço, ao desconectar). */
+export async function revogarAutorizacao(accessToken: string, vendedoraId: string) {
+  const cred = credenciais();
+  if (!cred) return { error: SEM_CONFIG };
+  return revogarAutorizacaoMl({ accessToken, vendedoraId, appId: cred.clientId });
+}

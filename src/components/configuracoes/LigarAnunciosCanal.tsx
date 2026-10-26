@@ -79,6 +79,8 @@ export function LigarAnunciosCanal({
     queryKey: [chaveAnuncios],
     queryFn: () => listar(),
     staleTime: 0,
+    // A prévia é de uma conta só: não fica guardada depois de sair da tela.
+    gcTime: 0,
   });
   const dados = consulta.data?.ok ? consulta.data : null;
   const [destinos, setDestinos] = useState<Record<string, string>>({});

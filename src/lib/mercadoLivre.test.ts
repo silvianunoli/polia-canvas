@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import {
+  pedidoDaVendedora,
   alvoDoEstoque,
   quantidadeParaCanal,
   anuncioNoFull,
@@ -318,12 +319,12 @@ describe("observação da venda", () => {
       observacaoDoPedido(
         "2000001",
         [item("Bolsa", null), item("Bolsa", null), item("Caneca", "s1")],
-        true,
+        { naoLido: true, envioId: "777" },
       ),
     ).toBe(
-      "Pedido 2000001 do Mercado Livre · sem produto ligado: Bolsa · frete do envio não lido, confere no Mercado Livre",
+      "Pedido 2000001 do Mercado Livre · envio 777 · sem produto ligado: Bolsa · frete do envio não lido, confere no Mercado Livre",
     );
-    expect(observacaoDoPedido("9", [item("Caneca", "s1")], false)).toBe(
+    expect(observacaoDoPedido("9", [item("Caneca", "s1")], { naoLido: false, envioId: null })).toBe(
       "Pedido 9 do Mercado Livre",
     );
   });
@@ -346,5 +347,14 @@ describe("estoque Pólia → Mercado Livre", () => {
     expect(quantidadeParaCanal(2.9)).toBe(2);
     expect(quantidadeParaCanal(-3)).toBe(0);
     expect(quantidadeParaCanal(Number.NaN)).toBe(0);
+  });
+});
+
+describe("pedido da vendedora conectada", () => {
+  it("só o pedido em que ela é a vendedora vira venda", () => {
+    expect(pedidoDaVendedora({ seller: { id: 468424240 } }, "468424240")).toBe(true);
+    expect(pedidoDaVendedora({ seller: { id: 1 } }, "468424240")).toBe(false);
+    expect(pedidoDaVendedora({}, "468424240")).toBe(false);
+    expect(pedidoDaVendedora({ seller: null }, "468424240")).toBe(false);
   });
 });

@@ -46,19 +46,14 @@ Deno.serve(async (req: Request) => {
     .maybeSingle();
   if (!conexao) return new Response(null, { status: 200 });
 
-  // Pedido já na fila volta a ficar pendente; sem dado de compradora aqui.
-  const { error } = await supabaseAdmin.from("canal_eventos").upsert(
-    {
-      canal: "mercado_livre",
-      shop_id: pedido.vendedoraId,
-      id_externo: pedido.pedidoId,
-      recebido_em: new Date().toISOString(),
-      processado_em: null,
-      tentativas: 0,
-      erro: null,
-    },
-    { onConflict: "canal,shop_id,id_externo" },
-  );
+  // Pedido já na fila volta a ficar pendente sem zerar as tentativas, o que já
+  // desistiu continua desistido e a fila para em 500 pendentes por vendedora
+  // (enfileirar_evento_canal, revisão 3c.5). Sem dado de compradora aqui.
+  const { error } = await supabaseAdmin.rpc("enfileirar_evento_canal", {
+    p_canal: "mercado_livre",
+    p_shop_id: pedido.vendedoraId,
+    p_id_externo: pedido.pedidoId,
+  });
   if (error) {
     console.error("[ml-webhook] Falha ao enfileirar:", error.message);
     // 500 faz o Mercado Livre tentar de novo; a varredura de 15 minutos também cobre.

@@ -6,6 +6,8 @@ import {
   observacaoDoPedido,
   statusVendaDoPedido,
   tarifaDoPedido,
+  marcaDoEnvio,
+  pedidoDaVendedora,
   alvoDoEstoque,
   anuncioNoFull,
   quantidadeParaCanal,
@@ -101,6 +103,18 @@ async function temPro(userId: string): Promise<boolean> {
   return plano === "projete" || plano === "beta";
 }
 
+/** Evento que não deve ser tentado de novo: fecha com o motivo guardado. */
+async function descartarEvento(id: number, motivo: string) {
+  await supabaseAdmin
+    .from("canal_eventos")
+    .update({
+      processado_em: new Date().toISOString(),
+      tentativas: MAX_TENTATIVAS,
+      erro: motivo.slice(0, 500),
+    })
+    .eq("id", id);
+}
+
 async function marcarEventos(ids: number[], erro: string | null) {
   if (!ids.length) return;
   if (!erro) {
@@ -155,14 +169,41 @@ async function varrer(c: Conexao, acesso: Acesso): Promise<number> {
   return total;
 }
 
-/** Frete que a vendedora pagou; null quando o Mercado Livre não respondeu. */
-async function freteDaVendedora(acesso: Acesso, pedido: PedidoApiMl): Promise<number | null> {
-  const envioId = pedido.shipping?.id;
-  if (envioId == null || envioId === "") return 0; // sem envio do Mercado Livre (retirada, a combinar)
-  const { custos, error } = await custosEnvioMl({ ...acesso, envioId: String(envioId) });
-  if (error) return null;
-  return custoEnvioDaVendedora(custos, acesso.vendedoraId);
+/**
+ * Frete que a vendedora pagou (valor null quando o Mercado Livre não respondeu).
+ * Pedidos do mesmo carrinho podem dividir um envio: se outra venda já levou esse
+ * envio, este pedido entra sem frete, para não contar duas vezes.
+ */
+async function freteDaVendedora(
+  c: Conexao,
+  acesso: Acesso,
+  pedido: PedidoApiMl,
+): Promise<{ valor: number | null; envioId: string | null }> {
+  const bruto = pedido.shipping?.id;
+  if (bruto == null || bruto === "") return { valor: 0, envioId: null }; // retirada, a combinar
+  const envioId = String(bruto);
+  // Só número entra no filtro; a marca vem seguida de " ·" ou no fim do texto, para
+  // "envio 12" não casar com "envio 123".
+  if (!/^\d{1,20}$/.test(envioId)) return { valor: null, envioId: null };
+  const marca = marcaDoEnvio(envioId);
+  for (const padrao of [`%${marca} ·%`, `%${marca}`]) {
+    const { data: jaContado } = await supabaseAdmin
+      .from("vendas")
+      .select("id")
+      .eq("user_id", c.user_id)
+      .eq("canal", CANAL)
+      .neq("id_externo", String(pedido.id))
+      .like("observacao", padrao)
+      .limit(1);
+    if ((jaContado as unknown[] | null)?.length) return { valor: 0, envioId };
+  }
+  const { custos, error } = await custosEnvioMl({ ...acesso, envioId });
+  if (error) return { valor: null, envioId };
+  return { valor: custoEnvioDaVendedora(custos, acesso.vendedoraId), envioId };
 }
+
+/** Pedido que não é da vendedora conectada: descarta sem tentar de novo. */
+const OUTRA_VENDEDORA = "pedido de outra vendedora, ignorado";
 
 async function processarPedido(
   c: Conexao,
@@ -171,6 +212,9 @@ async function processarPedido(
   vinculos: Map<string, string>,
 ): Promise<string | null> {
   const pedidoId = String(pedido.id);
+  // O aviso não é assinado: alguém pode pôr na fila um pedido em que ela é a
+  // compradora. Só pedido em que ela é a vendedora vira venda (revisão 3c.5).
+  if (!pedidoDaVendedora(pedido, acesso.vendedoraId)) return OUTRA_VENDEDORA;
   const status = statusVendaDoPedido(pedido);
   if (status === null) return null; // pagamento pendente: quando pagar, o Mercado Livre avisa de novo
   if (status === "cancelada") {
@@ -184,7 +228,7 @@ async function processarPedido(
   const itens = itensDoPedido(pedido, vinculos);
   if (!itens.length) return "pedido sem itens";
   // Frete não lido não segura a venda: entra com zero e a observação avisa.
-  const frete = await freteDaVendedora(acesso, pedido);
+  const frete = await freteDaVendedora(c, acesso, pedido);
   const { error } = await supabaseAdmin.rpc("registrar_venda_canal", {
     p_user_id: c.user_id,
     p_canal: CANAL,
@@ -192,8 +236,11 @@ async function processarPedido(
     p_data: dataDoPedido(pedido),
     p_itens: itens,
     p_taxa_canal: tarifaDoPedido(pedido),
-    p_observacao: observacaoDoPedido(pedidoId, itens, frete === null),
-    p_custo_envio: frete ?? 0,
+    p_observacao: observacaoDoPedido(pedidoId, itens, {
+      naoLido: frete.valor === null,
+      envioId: frete.envioId,
+    }),
+    p_custo_envio: frete.valor ?? 0,
   });
   return error ? error.message : null;
 }
@@ -206,12 +253,13 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: false, motivo: "sem_credenciais" }), { status: 500 });
   }
   // O cron dispara todo minuto e uma rodada pode passar disso. A trava vence
-  // sozinha em 2 minutos. (A renovação de token tem trava própria por conexão.)
-  const { data: pegou } = await supabaseAdmin.rpc("pegar_trava_sync", {
-    p_canal: CANAL,
-    p_segundos: 120,
+  // sozinha em 5 minutos e tem dono: só esta rodada solta a própria. (A renovação
+  // de token tem trava própria por conexão.)
+  const { data: dono } = await supabaseAdmin.rpc("pegar_trava_com_dono", {
+    p_chave: CANAL,
+    p_segundos: 300,
   });
-  if (pegou !== true) {
+  if (typeof dono !== "string" || !dono) {
     return new Response(JSON.stringify({ ok: true, motivo: "em_andamento" }), {
       headers: { "Content-Type": "application/json" },
     });
@@ -221,7 +269,7 @@ Deno.serve(async (req: Request) => {
       headers: { "Content-Type": "application/json" },
     });
   } finally {
-    await supabaseAdmin.rpc("soltar_trava_sync", { p_canal: CANAL });
+    await supabaseAdmin.rpc("soltar_trava_com_dono", { p_chave: CANAL, p_dono: dono });
   }
 });
 
@@ -310,6 +358,10 @@ async function sincronizar() {
         continue;
       }
       const erro = await processarPedido(c, acesso, pedido, vinculos);
+      if (erro === OUTRA_VENDEDORA) {
+        await descartarEvento(e.id, erro);
+        continue;
+      }
       if (!erro && statusVendaDoPedido(pedido) === "a_receber") vendas++;
       await marcarEventos([e.id], erro);
     }
@@ -321,16 +373,22 @@ async function sincronizar() {
   return { varridos, eventos: eventos.length, vendas, estoque };
 }
 
-async function marcarFilaEstoque(skuIds: string[], erro: string | null) {
+/**
+ * Fecha a linha da fila só se ela não foi pedida de novo depois da leitura: uma
+ * venda que entrou no meio do envio marca pedido_em mais novo, e o saldo dela
+ * sobe na próxima rodada em vez de se perder (revisão 3c.5).
+ */
+async function concluirFilaEstoque(skuId: string, pedidoEm: string) {
+  await supabaseAdmin
+    .from("canal_fila_estoque")
+    .update({ pendente: false, enviado_em: new Date().toISOString(), erro: null })
+    .eq("canal", CANAL)
+    .eq("sku_id", skuId)
+    .lte("pedido_em", pedidoEm);
+}
+
+async function marcarFilaEstoque(skuIds: string[], erro: string) {
   if (!skuIds.length) return;
-  if (!erro) {
-    await supabaseAdmin
-      .from("canal_fila_estoque")
-      .update({ pendente: false, enviado_em: new Date().toISOString(), erro: null })
-      .eq("canal", CANAL)
-      .in("sku_id", skuIds);
-    return;
-  }
   const { data } = await supabaseAdmin
     .from("canal_fila_estoque")
     .select("sku_id, tentativas")
@@ -353,13 +411,14 @@ async function enviarEstoque(
 ): Promise<number> {
   const { data: filaData } = await supabaseAdmin
     .from("canal_fila_estoque")
-    .select("user_id, sku_id")
+    .select("user_id, sku_id, pedido_em")
     .eq("canal", CANAL)
     .eq("pendente", true)
     .lt("tentativas", MAX_TENTATIVAS)
     .order("pedido_em")
     .limit(200);
-  const fila = (filaData as { user_id: string; sku_id: string }[] | null) ?? [];
+  const fila = (filaData as { user_id: string; sku_id: string; pedido_em: string }[] | null) ?? [];
+  const pedidoEmDe = new Map(fila.map((f) => [f.sku_id, f.pedido_em]));
   const porDona = new Map<string, string[]>();
   for (const f of fila) porDona.set(f.user_id, [...(porDona.get(f.user_id) ?? []), f.sku_id]);
 
@@ -374,16 +433,23 @@ async function enviarEstoque(
       );
       continue;
     }
-    const [{ data: vinc }, { data: saldos }] = await Promise.all([
-      supabaseAdmin
-        .from("anuncio_vinculos")
-        .select("sku_id, sku_externo_id")
-        .eq("user_id", userId)
-        .eq("canal", CANAL)
-        .eq("sincroniza_estoque", true)
-        .in("sku_id", skuIds),
-      supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
-    ]);
+    const [{ data: vinc, error: erroVinc }, { data: saldos, error: erroSaldos }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("anuncio_vinculos")
+          .select("sku_id, sku_externo_id")
+          .eq("user_id", userId)
+          .eq("canal", CANAL)
+          .eq("sincroniza_estoque", true)
+          .in("sku_id", skuIds),
+        supabaseAdmin.from("estoque_saldos").select("sku_id, saldo").in("sku_id", skuIds),
+      ]);
+    // Leitura que falha não pode virar quantidade zero: zero pausa o anúncio.
+    const erroLeitura = erroVinc ?? erroSaldos;
+    if (erroLeitura) {
+      await marcarFilaEstoque(skuIds, `estoque: leitura da Pólia falhou (${erroLeitura.message})`);
+      continue;
+    }
     const saldoDe = new Map(
       ((saldos as { sku_id: string; saldo: number }[]) ?? []).map((s) => [
         s.sku_id,
@@ -392,7 +458,8 @@ async function enviarEstoque(
     );
     const vinculos = (vinc as { sku_id: string; sku_externo_id: string }[]) ?? [];
     const semVinculo = skuIds.filter((id) => !vinculos.some((v) => v.sku_id === id));
-    await marcarFilaEstoque(semVinculo, null); // desligou ou apagou o vínculo: nada a mandar
+    // Desligou ou apagou o vínculo: nada a mandar.
+    for (const id of semVinculo) await concluirFilaEstoque(id, pedidoEmDe.get(id)!);
 
     // Uma consulta por anúncio para saber se está no Full (cache na rodada).
     const noFull = new Map<string, boolean | null>();
@@ -409,7 +476,12 @@ async function enviarEstoque(
     for (const v of vinculos)
       porSku.set(v.sku_id, [...(porSku.get(v.sku_id) ?? []), v.sku_externo_id]);
     for (const [skuId, externos] of porSku) {
-      const quantidade = quantidadeParaCanal(saldoDe.get(skuId) ?? 0);
+      // Sem saldo na Pólia (variação arquivada): não manda nada, nunca zero.
+      if (!saldoDe.has(skuId)) {
+        await concluirFilaEstoque(skuId, pedidoEmDe.get(skuId)!);
+        continue;
+      }
+      const quantidade = quantidadeParaCanal(saldoDe.get(skuId)!);
       let erro: string | null = null;
       for (const externo of externos) {
         const alvo = alvoDoEstoque(externo);
@@ -423,8 +495,12 @@ async function enviarEstoque(
         const { error } = await atualizarEstoqueMl({ ...acesso, ...alvo, quantidade });
         if (error) erro = `estoque: ${error}`;
       }
-      await marcarFilaEstoque([skuId], erro);
-      if (!erro) enviados++;
+      if (erro) {
+        await marcarFilaEstoque([skuId], erro);
+        continue;
+      }
+      await concluirFilaEstoque(skuId, pedidoEmDe.get(skuId)!);
+      enviados++;
     }
   }
   return enviados;
