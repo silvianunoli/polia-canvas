@@ -1,22 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LigarAnunciosCanal } from "@/components/configuracoes/LigarAnunciosCanal";
-import { listarAnunciosTiktok, salvarVinculosTiktok } from "@/lib/tiktokShopAnuncios.functions";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// Prévia de ligar anúncios do TikTok Shop aos produtos da Pólia (wireframe 6.3 do
-// plano da Fase 3a, aprovado em 24/10). A tela é a mesma do Mercado Livre.
+// "Ligar anúncios" do TikTok Shop mudou para Produtos > Anúncios nos canais
+// (VND-39). Este endereço fica só para link antigo e favorito não quebrarem.
 
 export const Route = createFileRoute("/_authenticated/configuracoes_/integracoes/tiktok_/anuncios")(
   {
-    head: () => ({ meta: [{ title: "Ligar anúncios do TikTok Shop · Pólia One" }] }),
-    component: () => (
-      <LigarAnunciosCanal
-        nomeCanal="TikTok Shop"
-        nomeCurto="TikTok"
-        chaveAnuncios="tiktok-anuncios"
-        chaveStatus="tiktok-status"
-        listar={() => listarAnunciosTiktok()}
-        salvar={salvarVinculosTiktok}
-      />
-    ),
+    beforeLoad: () => {
+      throw redirect({ to: "/produtos/anuncios/tiktok", replace: true });
+    },
   },
 );

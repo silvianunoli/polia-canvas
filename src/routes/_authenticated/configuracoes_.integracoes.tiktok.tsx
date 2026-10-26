@@ -10,6 +10,7 @@ import {
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
+import { CHAVE_STATUS_TIKTOK } from "@/hooks/useCanaisConectados";
 
 // Volta da autorização do TikTok Shop (Redirect URL cadastrada no app do Partner
 // Center). Fora do layout de Configurações (o "_" no nome do arquivo): é só uma
@@ -40,9 +41,11 @@ function RetornoTiktok() {
   const [lojaParaConfirmar, setLojaParaConfirmar] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
 
-  const voltar = () => {
-    qc.invalidateQueries({ queryKey: ["tiktok-status"] });
-    navigate({ to: "/configuracoes", replace: true });
+  // Conectou: vai direto para Ligar anúncios, o próximo passo (VND-39); falhou ou
+  // cancelou: volta para Integrações.
+  const voltar = (conectou = false) => {
+    qc.invalidateQueries({ queryKey: [CHAVE_STATUS_TIKTOK] });
+    navigate({ to: conectou ? "/produtos/anuncios/tiktok" : "/configuracoes", replace: true });
   };
 
   useEffect(() => {
@@ -62,12 +65,12 @@ function RetornoTiktok() {
         }
         if (res.ok) {
           track("evento_tiktok_conectado");
-          toastSucesso("TikTok Shop conectado.");
+          toastSucesso("TikTok Shop conectado. Agora liga os anúncios aos produtos da Pólia.");
         } else
           toastErro(
             res.error ?? "A Pólia One não conseguiu confirmar a conexão com o TikTok Shop.",
           );
-        voltar();
+        voltar(res.ok);
       })
       .catch(() => {
         toastErro("A Pólia One não conseguiu confirmar a conexão com o TikTok Shop.");
@@ -82,8 +85,11 @@ function RetornoTiktok() {
       const res = await confirmarConexaoTiktok();
       if (res.ok) {
         track("evento_tiktok_conectado", { origem: "tiktok" });
-        toastSucesso("TikTok Shop conectado.");
-      } else toastErro(res.error ?? "A Pólia One não conseguiu conectar agora.");
+        toastSucesso("TikTok Shop conectado. Agora liga os anúncios aos produtos da Pólia.");
+        voltar(true);
+        return;
+      }
+      toastErro(res.error ?? "A Pólia One não conseguiu conectar agora.");
     } catch {
       toastErro("A Pólia One não conseguiu conectar agora.");
     }

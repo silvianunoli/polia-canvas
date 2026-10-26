@@ -61,9 +61,12 @@ import { Route as AuthenticatedAimerRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
+import { Route as AuthenticatedProdutosAnunciosRouteImport } from './routes/_authenticated/produtos_.anuncios'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
+import { Route as AuthenticatedProdutosAnunciosTiktokRouteImport } from './routes/_authenticated/produtos_.anuncios_.tiktok'
+import { Route as AuthenticatedProdutosAnunciosMercadoLivreRouteImport } from './routes/_authenticated/produtos_.anuncios_.mercado-livre'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
 import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre'
@@ -335,6 +338,12 @@ const AuthenticatedChamadosIndexRoute =
     path: '/chamados/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedProdutosAnunciosRoute =
+  AuthenticatedProdutosAnunciosRouteImport.update({
+    id: '/produtos_/anuncios',
+    path: '/produtos/anuncios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPlannerSlugRoute =
   AuthenticatedPlannerSlugRouteImport.update({
     id: '/planner/$slug',
@@ -352,6 +361,18 @@ const AuthenticatedChamadosIdRoute = AuthenticatedChamadosIdRouteImport.update({
   path: '/chamados/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedProdutosAnunciosTiktokRoute =
+  AuthenticatedProdutosAnunciosTiktokRouteImport.update({
+    id: '/produtos_/anuncios_/tiktok',
+    path: '/produtos/anuncios/tiktok',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProdutosAnunciosMercadoLivreRoute =
+  AuthenticatedProdutosAnunciosMercadoLivreRouteImport.update({
+    id: '/produtos_/anuncios_/mercado-livre',
+    path: '/produtos/anuncios/mercado-livre',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPlanejamentoModuloNRoute =
   AuthenticatedPlanejamentoModuloNRouteImport.update({
     id: '/planejamento/modulo/$n',
@@ -435,12 +456,15 @@ export interface FileRoutesByFullPath {
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/produtos/anuncios/mercado-livre': typeof AuthenticatedProdutosAnunciosMercadoLivreRoute
+  '/produtos/anuncios/tiktok': typeof AuthenticatedProdutosAnunciosTiktokRoute
   '/configuracoes/integracoes/mercado-livre/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
@@ -496,12 +520,15 @@ export interface FileRoutesByTo {
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/produtos/anuncios/mercado-livre': typeof AuthenticatedProdutosAnunciosMercadoLivreRoute
+  '/produtos/anuncios/tiktok': typeof AuthenticatedProdutosAnunciosTiktokRoute
   '/configuracoes/integracoes/mercado-livre/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/configuracoes/integracoes/tiktok/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
@@ -559,12 +586,15 @@ export interface FileRoutesById {
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/_authenticated/produtos_/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/configuracoes_/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
+  '/_authenticated/produtos_/anuncios_/mercado-livre': typeof AuthenticatedProdutosAnunciosMercadoLivreRoute
+  '/_authenticated/produtos_/anuncios_/tiktok': typeof AuthenticatedProdutosAnunciosTiktokRoute
   '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
@@ -622,12 +652,15 @@ export interface FileRouteTypes {
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
+    | '/produtos/anuncios'
     | '/chamados/'
     | '/planejamento/'
     | '/planner/'
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/produtos/anuncios/mercado-livre'
+    | '/produtos/anuncios/tiktok'
     | '/configuracoes/integracoes/mercado-livre/anuncios'
     | '/configuracoes/integracoes/tiktok/anuncios'
   fileRoutesByTo: FileRoutesByTo
@@ -683,12 +716,15 @@ export interface FileRouteTypes {
     | '/chamados/$id'
     | '/planejamento/completo'
     | '/planner/$slug'
+    | '/produtos/anuncios'
     | '/chamados'
     | '/planejamento'
     | '/planner'
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
+    | '/produtos/anuncios/mercado-livre'
+    | '/produtos/anuncios/tiktok'
     | '/configuracoes/integracoes/mercado-livre/anuncios'
     | '/configuracoes/integracoes/tiktok/anuncios'
   id:
@@ -745,12 +781,15 @@ export interface FileRouteTypes {
     | '/_authenticated/chamados/$id'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
+    | '/_authenticated/produtos_/anuncios'
     | '/_authenticated/chamados/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
     | '/_authenticated/configuracoes_/integracoes/mercado-livre'
     | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
+    | '/_authenticated/produtos_/anuncios_/mercado-livre'
+    | '/_authenticated/produtos_/anuncios_/tiktok'
     | '/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios'
     | '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
   fileRoutesById: FileRoutesById
@@ -1153,6 +1192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChamadosIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/produtos_/anuncios': {
+      id: '/_authenticated/produtos_/anuncios'
+      path: '/produtos/anuncios'
+      fullPath: '/produtos/anuncios'
+      preLoaderRoute: typeof AuthenticatedProdutosAnunciosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/planner/$slug': {
       id: '/_authenticated/planner/$slug'
       path: '/planner/$slug'
@@ -1172,6 +1218,20 @@ declare module '@tanstack/react-router' {
       path: '/chamados/$id'
       fullPath: '/chamados/$id'
       preLoaderRoute: typeof AuthenticatedChamadosIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/produtos_/anuncios_/tiktok': {
+      id: '/_authenticated/produtos_/anuncios_/tiktok'
+      path: '/produtos/anuncios/tiktok'
+      fullPath: '/produtos/anuncios/tiktok'
+      preLoaderRoute: typeof AuthenticatedProdutosAnunciosTiktokRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/produtos_/anuncios_/mercado-livre': {
+      id: '/_authenticated/produtos_/anuncios_/mercado-livre'
+      path: '/produtos/anuncios/mercado-livre'
+      fullPath: '/produtos/anuncios/mercado-livre'
+      preLoaderRoute: typeof AuthenticatedProdutosAnunciosMercadoLivreRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planejamento/modulo/$n': {
@@ -1236,12 +1296,15 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
+  AuthenticatedProdutosAnunciosRoute: typeof AuthenticatedProdutosAnunciosRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
+  AuthenticatedProdutosAnunciosMercadoLivreRoute: typeof AuthenticatedProdutosAnunciosMercadoLivreRoute
+  AuthenticatedProdutosAnunciosTiktokRoute: typeof AuthenticatedProdutosAnunciosTiktokRoute
   AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute
 }
@@ -1271,6 +1334,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
+  AuthenticatedProdutosAnunciosRoute: AuthenticatedProdutosAnunciosRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
@@ -1279,6 +1343,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConfiguracoesIntegracoesTiktokRoute:
     AuthenticatedConfiguracoesIntegracoesTiktokRoute,
   AuthenticatedPlanejamentoModuloNRoute: AuthenticatedPlanejamentoModuloNRoute,
+  AuthenticatedProdutosAnunciosMercadoLivreRoute:
+    AuthenticatedProdutosAnunciosMercadoLivreRoute,
+  AuthenticatedProdutosAnunciosTiktokRoute:
+    AuthenticatedProdutosAnunciosTiktokRoute,
   AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute:
     AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute,
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute:

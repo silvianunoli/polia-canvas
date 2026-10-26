@@ -1,27 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { LigarAnunciosCanal } from "@/components/configuracoes/LigarAnunciosCanal";
-import { CHAVE_STATUS_ML } from "@/components/configuracoes/CardMercadoLivre";
-import {
-  listarAnunciosMercadoLivre,
-  salvarVinculosMercadoLivre,
-} from "@/lib/mercadoLivreAnuncios.functions";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-// Prévia de ligar anúncios do Mercado Livre aos produtos da Pólia (plano da Fase
-// 3c, §6.3). Mesma tela do TikTok Shop, com a marca "Full" nos anúncios cujo
-// estoque o Mercado Livre cuida.
+// "Ligar anúncios" do Mercado Livre mudou para Produtos > Anúncios nos canais
+// (VND-39). Este endereço fica só para link antigo e favorito não quebrarem.
 
 export const Route = createFileRoute(
   "/_authenticated/configuracoes_/integracoes/mercado-livre_/anuncios",
 )({
-  head: () => ({ meta: [{ title: "Ligar anúncios do Mercado Livre · Pólia One" }] }),
-  component: () => (
-    <LigarAnunciosCanal
-      nomeCanal="Mercado Livre"
-      nomeCurto="Mercado Livre"
-      chaveAnuncios="mercado-livre-anuncios"
-      chaveStatus={CHAVE_STATUS_ML}
-      listar={() => listarAnunciosMercadoLivre()}
-      salvar={salvarVinculosMercadoLivre}
-    />
-  ),
+  beforeLoad: () => {
+    throw redirect({ to: "/produtos/anuncios/mercado-livre", replace: true });
+  },
 });

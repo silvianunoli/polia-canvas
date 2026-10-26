@@ -12,11 +12,12 @@ import { Switch } from "@/components/ui/switch";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
+import { CHAVE_STATUS_ML } from "@/hooks/useCanaisConectados";
 
 // Card do Mercado Livre em Configurações > Integrações (Fase 3c, VND-30). Só no
 // Pro; some quando o servidor não tem as credenciais. Plano §6.1 e §6.2.
 
-export const CHAVE_STATUS_ML = "mercado-livre-status";
+export { CHAVE_STATUS_ML };
 
 export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
   const queryClient = useQueryClient();
@@ -137,10 +138,7 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
                 ? "Nenhum anúncio ligado a produto da Pólia ainda."
                 : `${ml.anunciosLigados} ${ml.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
             </p>
-            <LinkInterno
-              href="/configuracoes/integracoes/mercado-livre/anuncios"
-              className={BTN_MIUDO}
-            >
+            <LinkInterno href="/produtos/anuncios/mercado-livre" className={BTN_MIUDO}>
               Ligar anúncios
             </LinkInterno>
           </div>

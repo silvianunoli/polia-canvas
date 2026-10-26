@@ -22,6 +22,7 @@ import {
   Megaphone,
   Calculator,
   ShoppingBag,
+  Link2,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
@@ -32,6 +33,11 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
+import { useCanaisConectados } from "@/hooks/useCanaisConectados";
+
+// Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
+// conectado, pra quem não vende em marketplace não ver um item vazio.
+const ANUNCIOS_CANAIS = "/produtos/anuncios";
 
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
@@ -98,6 +104,8 @@ function Body({
   // diário era um modal em qualquer tela; o selo lembra onde parou sem
   // interromper. Some com os 6 módulos fechados.
   const { progresso } = useProgressoPlanejamento();
+  const { canais } = useCanaisConectados();
+  const anunciosAtivo = isActive(ANUNCIOS_CANAIS, pathname);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -168,7 +176,9 @@ function Body({
           className="flex flex-1 flex-col gap-1 px-2 py-2 md:gap-0"
         >
           {NAV.map((item) => {
-            const active = isActive(item.to, pathname);
+            // Em "Anúncios nos canais" o destaque fica no subnível, não em Produtos.
+            const active =
+              isActive(item.to, pathname) && !(item.to === "/produtos" && anunciosAtivo);
             const Icon = item.icon;
             // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
             // de conteúdo passam pelo guard de tier (são "controle") e só são
@@ -247,7 +257,7 @@ function Body({
             const tooltipLabel = liberado
               ? item.label
               : `${item.label}: abre no ${TIERS_PAGOS[tierNecessario].titulo}`;
-            return compact ? (
+            const principal = compact ? (
               <Tooltip key={item.to}>
                 <TooltipTrigger asChild>{content}</TooltipTrigger>
                 <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
@@ -256,6 +266,42 @@ function Body({
               </Tooltip>
             ) : (
               content
+            );
+            if (item.to !== "/produtos" || !liberado || canais.length === 0) return principal;
+            const sub = (
+              <Link
+                key={ANUNCIOS_CANAIS}
+                to={ANUNCIOS_CANAIS}
+                onClick={onNavigate}
+                data-track="nav_clicado"
+                data-track-props={JSON.stringify({ destino: ANUNCIOS_CANAIS })}
+                aria-current={anunciosAtivo ? "page" : undefined}
+                className={`flex min-h-11 md:min-h-[24px] md:max-h-9 md:flex-[1_1_0] items-center gap-2 rounded-lg text-[12px] no-underline transition-colors ${
+                  compact ? "justify-center px-3" : "pl-9 pr-3"
+                } ${
+                  anunciosAtivo
+                    ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                    : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
+                }`}
+              >
+                <Link2 size={compact ? 16 : 14} aria-hidden="true" />
+                <span className={compact ? "sr-only" : undefined}>Anúncios nos canais</span>
+              </Link>
+            );
+            return (
+              <div key={item.to} className="contents">
+                {principal}
+                {compact ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>{sub}</TooltipTrigger>
+                    <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                      Anúncios nos canais
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  sub
+                )}
+              </div>
             );
           })}
         </nav>

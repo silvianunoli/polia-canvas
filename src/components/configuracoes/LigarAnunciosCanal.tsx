@@ -133,14 +133,14 @@ export function LigarAnunciosCanal({
       toastSucesso(`${partes.join(", ")}.`);
       qc.invalidateQueries({ queryKey: [chaveStatus] });
       qc.invalidateQueries({ queryKey: [chaveAnuncios] });
-      navigate({ to: "/configuracoes" });
+      navigate({ to: "/produtos/anuncios" });
     },
     onError: () => toastErro("A Pólia One não conseguiu salvar as ligações. Tenta de novo."),
   });
 
   const voltar = (
-    <LinkInterno href="/configuracoes" className={BTN_ACAO_CONTORNO}>
-      Voltar para Configurações
+    <LinkInterno href="/produtos/anuncios" className={BTN_ACAO_CONTORNO}>
+      Voltar para Anúncios nos canais
     </LinkInterno>
   );
 

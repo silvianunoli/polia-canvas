@@ -53,6 +53,12 @@ const DADOS = [
       "Páginas acessadas e ações no app (medição própria, sem IP, sem identificador de dispositivo e sem localização)",
     origem: "Coleta automática, só com consentimento",
   },
+  {
+    categoria: "Mensagens pelo Instagram e pelo WhatsApp",
+    exemplos:
+      "Nome de exibição, @ ou número de telefone, identificador da conta no canal e o conteúdo da conversa (texto, fotos, áudios e arquivos), quando alguém escreve, comenta, responde ou menciona a Pólia",
+    origem: "Enviado pela própria pessoa no Instagram ou no WhatsApp",
+  },
 ];
 
 /** Leitura confortável pro texto corrido do documento jurídico. */
@@ -86,7 +92,7 @@ function PrivacidadePage() {
                 Política de Privacidade
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 20/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
+                Última atualização: 26/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
               </p>
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
                 Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -241,6 +247,13 @@ function PrivacidadePage() {
                   serviço contratado.
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">
+                    Responder quem procura a Pólia pelo Instagram ou pelo WhatsApp
+                  </strong>{" "}
+                  e acompanhar a conversa · base: legítimo interesse e procedimentos preliminares a
+                  contrato. Essas mensagens não são usadas para publicidade nem vendidas.
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">Cumprir obrigações legais</strong> · base:
                   obrigação legal.
                 </li>
@@ -318,6 +331,13 @@ function PrivacidadePage() {
                   cadastra, assina ou deixa o contato, o e-mail, o telefone e o id da conta vão
                   apenas como código irreversível (hash SHA-256), nunca em texto
                 </li>
+                <li>
+                  <strong className="text-[var(--ink)]">
+                    Meta Platforms (Instagram e WhatsApp)
+                  </strong>
+                  : entrega das mensagens trocadas com a Pólia nesses canais, que passam pela
+                  infraestrutura da própria Meta
+                </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
               <p>Esses parceiros tratam os dados como operadores, seguindo as nossas instruções.</p>
@@ -351,15 +371,19 @@ function PrivacidadePage() {
                 podem ser mantidos por prazos legais, como documentos fiscais e financeiros, por até
                 5 anos, conforme exige a legislação tributária brasileira.
               </p>
+              <p>
+                As conversas pelo Instagram e pelo WhatsApp ficam guardadas enquanto houver
+                relacionamento com a pessoa e são apagadas a pedido, pelo contato da seção 12.
+              </p>
 
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
                 East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics, Ads e
-                Gemini), Meta (Meta Ads) e TikTok (TikTok Ads) também podem processar dados fora do
-                Brasil. Nesses casos, a transferência se apoia nas garantias adequadas previstas na
-                LGPD (art. 33), como as cláusulas contratuais e os acordos de tratamento de dados
-                (DPA) desses provedores.
+                Gemini), Meta (Meta Ads, Instagram e WhatsApp) e TikTok (TikTok Ads) também podem
+                processar dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias
+                adequadas previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos de
+                tratamento de dados (DPA) desses provedores.
               </p>
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>

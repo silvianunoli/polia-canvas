@@ -352,3 +352,13 @@ Revisão de segurança por um agente só de leitura sobre o código (2 altos, 4 
 - Aceitos, sem ação: varredura limitada a 200 pedidos alterados por 15 minutos (fora do volume da persona); a mesma variação ligada a vários anúncios manda o saldo inteiro para cada um (decisão de desenho).
 - Migration `20261025120000_mercado_livre_revisao_seguranca.sql`, testada numa transação desfeita (trava pega, recusa ocupada, outro dono não solta, dono solta; evento reaberto mantém tentativas; morto não volta; teto de 500). **Aplicada pelo MCP com autorização da Sil** e conferida; ml-webhook, ml-sync e tiktok-sync publicados pela CLI.
 - ADR `docs/adr/0003-mercado-livre-token-de-uso-unico.md` e lista `docs/mercado-livre-lancamento.md` (ligar, usuários de teste, roteiro de 10 passos, pontos a conferir, teste de 7 dias, antes de abrir).
+
+## 2026-10-26 — Anúncios nos canais na sidebar (VND-39)
+
+A integração do Mercado Livre está conectada e os anúncios de teste foram ligados. Faltava um caminho até a tela Ligar anúncios, que só existia dentro de Configurações > Integrações. Plano e wireframe aprovados pela Sil com três decisões: o subnível só aparece com canal conectado, as telas passam para /produtos/anuncios e, depois de conectar, a Pólia leva direto para Ligar anúncios.
+
+- `useCanaisConectados`: junta o status do Mercado Livre e do TikTok Shop (mesmas chaves de cache dos cards) e devolve só canal configurado, conectado e liberado no plano.
+- Sidebar: subnível "Anúncios nos canais" abaixo de Produtos, recuado, só quando há canal conectado; no modo compacto vira ícone com dica.
+- `/produtos/anuncios`: uma seção por canal com quantos anúncios estão ligados, última sincronização e "Ligar anúncios"; estados de carregando, erro e vazio (vazio leva para Integrações).
+- `/produtos/anuncios/mercado-livre` e `/produtos/anuncios/tiktok` usam a mesma `LigarAnunciosCanal`; as rotas antigas em Configurações redirecionam (links velhos continuam funcionando). Salvar e Voltar levam para /produtos/anuncios.
+- Retorno da autorização (ML e TikTok): conectou, vai para Ligar anúncios do canal; falhou ou cancelou, volta para Integrações.

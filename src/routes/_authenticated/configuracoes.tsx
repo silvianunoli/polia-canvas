@@ -976,10 +976,7 @@ function ConfiguracoesPage() {
                         ? "Nenhum anúncio ligado a produto da Pólia ainda."
                         : `${tiktok.anunciosLigados} ${tiktok.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
                     </p>
-                    <LinkInterno
-                      href="/configuracoes/integracoes/tiktok/anuncios"
-                      className={BTN_MIUDO}
-                    >
+                    <LinkInterno href="/produtos/anuncios/tiktok" className={BTN_MIUDO}>
                       Ligar anúncios
                     </LinkInterno>
                   </div>
