@@ -362,3 +362,10 @@ A integração do Mercado Livre está conectada e os anúncios de teste foram li
 - `/produtos/anuncios`: uma seção por canal com quantos anúncios estão ligados, última sincronização e "Ligar anúncios"; estados de carregando, erro e vazio (vazio leva para Integrações).
 - `/produtos/anuncios/mercado-livre` e `/produtos/anuncios/tiktok` usam a mesma `LigarAnunciosCanal`; as rotas antigas em Configurações redirecionam (links velhos continuam funcionando). Salvar e Voltar levam para /produtos/anuncios.
 - Retorno da autorização (ML e TikTok): conectou, vai para Ligar anúncios do canal; falhou ou cancelou, volta para Integrações.
+
+## 2026-10-26 — Nome do canal no lançamento de venda (VND-40)
+
+No teste do Mercado Livre (VND-37, passo 9), a venda recebida entrou no Financeiro com o valor certo (R$ 57,32 = 79,80 - 22,48), mas com a descrição "Venda · mercado_livre": `registrar_venda` e `receber_venda` usavam a chave interna do canal.
+
+- Migration `20261026200000_venda_nome_do_canal.sql`: `canal_venda_nome` (mesmos nomes de `CANAL_LABEL`), as duas funções trocam só a linha da descrição, e as descrições já gravadas que ainda estão como a função escreveu passam para o nome (texto editado à mão fica). Testada numa transação desfeita (corpo igual ao do banco fora a linha; "Venda · WhatsApp", "Venda · Presencial ou feira · Ana", "Venda · Mercado Livre"; função sem acesso do navegador). **Aplicada pelo MCP com autorização da Sil** e conferida.
+- `src/lib/canalVendaNome.test.ts` (9 testes): os nomes da migration batem com `CANAL_LABEL`.
