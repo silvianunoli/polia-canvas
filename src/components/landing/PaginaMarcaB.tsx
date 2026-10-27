@@ -39,6 +39,7 @@ import {
   NumeroProva,
   ParaQuem,
   PlanosLanding,
+  Ponte,
   Rotulo,
   Secao,
   type BuscaCadastro,
@@ -119,6 +120,13 @@ const jeitoDeHojeEscritorio: ItemLista[] = [
     titulo: "O preço da concorrente",
     texto: "vem de uma conta que não é a sua.",
   },
+];
+
+/** O teto (COPY-39): cada venda nova multiplica a bagunça do escritório improvisado. */
+const tetoDoImproviso = [
+  "Mais pedido, mais conversa pra caçar no WhatsApp.",
+  "Mais produto, mais estoque pra contar no olho.",
+  "Mais venda, mais Pix misturado com a conta de casa.",
 ];
 
 const operacao: ItemLista[] = [
@@ -472,6 +480,25 @@ export function PaginaMarcaB({
   const zonaFinal = useRef<HTMLDivElement>(null);
   const zonaRodape = useRef<HTMLDivElement>(null);
 
+  // O mesmo bloco em dois lugares: logo depois do topo na /landing-b, perto dos
+  // planos na home (COPY-39).
+  const blocoPraQuem = (
+    <Secao>
+      <FotoLanding
+        nome="praquem-bancada-pedidos"
+        alt="Bancada com pedidos embalados em papel kraft, etiquetas escritas à mão e fita turquesa."
+        proporcao="21/9"
+        largura={2100}
+      />
+      <div className="mt-12">
+        <Rotulo>Pra quem é</Rotulo>
+        <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
+        <ParaQuem sim={escritorio ? praQuemSimEscritorio : praQuemSim} nao={praQuemNao} />
+      </div>
+      {escritorio && <Ponte>E foi feita por quem viveu essa mesma conta.</Ponte>}
+    </Secao>
+  );
+
   return (
     <>
       <main id="conteudo">
@@ -562,67 +589,61 @@ export function PaginaMarcaB({
         )}
 
         {/* B9b · PRA QUE NEGÓCIO: seção própria pra não espremer o "pra quem é". Desde
-            23/10/2026 (pedido da Sil) as duas vêm logo depois do topo, antes da prova. */}
-        <Secao fundo="surface-pink">
-          <Rotulo>Pra que negócio</Rotulo>
-          <h2 className={`mt-4 ${H2}`}>De confeitaria a consultório.</h2>
-          <Reveal className="mt-10">
-            <ul className="flex list-none flex-wrap gap-3">
-              {negocios.map((n) => (
-                <li
-                  key={n}
-                  className="rounded-full bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
-                >
-                  {n}
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-          <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
-            Não achou o seu? Se tem custo, preço e cliente, a Pólia One é pra você.
-          </p>
-        </Secao>
+            23/10/2026 (pedido da Sil) as duas vêm logo depois do topo, antes da prova.
+            Fora da home desde 27/10/2026 (pedido da Sil, COPY-38), junto com a Prova. */}
+        {!escritorio && (
+          <Secao fundo="surface-pink">
+            <Rotulo>Pra que negócio</Rotulo>
+            <h2 className={`mt-4 ${H2}`}>De confeitaria a consultório.</h2>
+            <Reveal className="mt-10">
+              <ul className="flex list-none flex-wrap gap-3">
+                {negocios.map((n) => (
+                  <li
+                    key={n}
+                    className="rounded-full bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
+                  >
+                    {n}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+            <p className={`mt-10 ${CORPO} !text-[var(--ink)]`}>
+              Não achou o seu? Se tem custo, preço e cliente, a Pólia One é pra você.
+            </p>
+          </Secao>
+        )}
 
-        {/* B10 · PRA QUEM É */}
-        <Secao>
-          <FotoLanding
-            nome="praquem-bancada-pedidos"
-            alt="Bancada com pedidos embalados em papel kraft, etiquetas escritas à mão e fita turquesa."
-            proporcao="21/9"
-            largura={2100}
-          />
-          <div className="mt-12">
-            <Rotulo>Pra quem é</Rotulo>
-            <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
-            <ParaQuem sim={escritorio ? praQuemSimEscritorio : praQuemSim} nao={praQuemNao} />
-          </div>
-        </Secao>
+        {/* B10 · PRA QUEM É: aqui só na /landing-b. Na home ele desce pra depois do
+            O que muda (COPY-39): o filtro perto da decisão, como no Carrossel Perpétuo. */}
+        {!escritorio && blocoPraQuem}
 
-        {/* B2 · PROVA */}
-        <Secao fundo="surface" className="!py-[clamp(48px,6vw,64px)]">
-          <Rotulo>O que a pesquisa da Pólia ouviu</Rotulo>
-          <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-[3fr_4fr_5fr] md:items-start">
-            <NumeroProva
-              numero="44%"
-              texto="não fazem ideia de quanto tiram pra si no fim do mês."
-            />
-            <div className="md:border-l md:border-[var(--line)] md:pl-8">
-              <NumeroProva numero="57%" texto="misturam o dinheiro da casa com o do negócio." />
+        {/* B2 · PROVA: fora da home desde 27/10/2026 (COPY-38). */}
+        {!escritorio && (
+          <Secao fundo="surface" className="!py-[clamp(48px,6vw,64px)]">
+            <Rotulo>O que a pesquisa da Pólia ouviu</Rotulo>
+            <div className="mt-8 grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-[3fr_4fr_5fr] md:items-start">
+              <NumeroProva
+                numero="44%"
+                texto="não fazem ideia de quanto tiram pra si no fim do mês."
+              />
+              <div className="md:border-l md:border-[var(--line)] md:pl-8">
+                <NumeroProva numero="57%" texto="misturam o dinheiro da casa com o do negócio." />
+              </div>
+              <NotaPesquisa
+                fundo="branco"
+                className="col-span-2 md:col-span-1"
+                texto="...entra e sai dinheiro e eu não enxergo se lucro ou só fico girando"
+              />
             </div>
-            <NotaPesquisa
-              fundo="branco"
-              className="col-span-2 md:col-span-1"
-              texto="...entra e sai dinheiro e eu não enxergo se lucro ou só fico girando"
-            />
-          </div>
-          <FontePesquisa>
-            Pesquisa da Pólia com empreendedoras de grupos de negócio, julho de 2026. Respostas
-            anônimas.
-          </FontePesquisa>
-        </Secao>
+            <FontePesquisa>
+              Pesquisa da Pólia com empreendedoras de grupos de negócio, julho de 2026. Respostas
+              anônimas.
+            </FontePesquisa>
+          </Secao>
+        )}
 
-        {/* B3 · O PROBLEMA */}
-        <Secao>
+        {/* B3 · O PROBLEMA: surface na home, que agora encosta direto no topo (bg). */}
+        <Secao fundo={escritorio ? "surface" : "bg"}>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[6fr_5fr]">
             {escritorio ? (
               <div>
@@ -660,7 +681,7 @@ export function PaginaMarcaB({
           <div className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-5">
             {(escritorio ? notasEscritorio : notasProblema).map((n, i) => (
               <Reveal key={n} delay={i * 0.08} className={["", "md:mt-6", "md:mt-12"][i]}>
-                <NotaPesquisa texto={n} />
+                <NotaPesquisa texto={n} fundo={escritorio ? "branco" : "surface"} />
               </Reveal>
             ))}
           </div>
@@ -669,10 +690,14 @@ export function PaginaMarcaB({
             saiu, <b className="font-semibold text-[var(--ink)]">se misturou com a conta de casa</b>{" "}
             e ninguém sabe dizer quanto foi lucro.
           </p>
+          {escritorio && (
+            <Ponte>E quanto mais a marca vende, mais comprida fica essa semana.</Ponte>
+          )}
         </Secao>
 
-        {/* B4 · O JEITO DE HOJE (na home, com o diagnóstico fechando o bloco) */}
-        <Secao fundo="surface" respiro>
+        {/* B4 · O JEITO DE HOJE (na home, com o diagnóstico e o teto fechando o bloco;
+            bg, porque a Cena virou surface) */}
+        <Secao fundo={escritorio ? "bg" : "surface"} respiro>
           <Rotulo>O jeito de hoje</Rotulo>
           <h2 className={`mt-4 max-w-[24ch] ${H2}`}>
             {escritorio
@@ -687,6 +712,27 @@ export function PaginaMarcaB({
               Não é falta de organização. Quem não se organiza não dá conta de 50 peças numa semana.
               É uma marca que virou empresa e um escritório que ficou no caderno.
             </FraseAncora>
+          )}
+          {/* O teto (COPY-39): por que o escritório improvisado trava o crescimento. */}
+          {escritorio && (
+            <div className="mt-16 border-t border-[var(--line)] pt-12">
+              <Rotulo>O teto</Rotulo>
+              <h3 className="mt-4 max-w-[26ch] text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-[var(--ink)]">
+                Uma marca não cresce mais do que o escritório dela aguenta.
+              </h3>
+              <ul className="mt-6 flex list-none flex-col gap-2">
+                {tetoDoImproviso.map((linha) => (
+                  <li key={linha} className={CORPO}>
+                    {linha}
+                  </li>
+                ))}
+              </ul>
+              <p className={`mt-6 ${CORPO}`}>
+                No improviso, vender mais é trabalhar mais pra lucrar o mesmo.{" "}
+                <b className="font-semibold text-[var(--ink)]">Às vezes, menos.</b>
+              </p>
+              <Ponte>Por isso a Pólia One não começa pela planilha. Começa pela marca.</Ponte>
+            </div>
           )}
         </Secao>
 
@@ -735,6 +781,11 @@ export function PaginaMarcaB({
           <FraseAncora className="mt-10">
             A marca dá coragem pro preço. O número prova que a coragem tinha razão.
           </FraseAncora>
+          {escritorio && (
+            <Ponte>
+              Só que marca forte e preço certo se perdem se a venda não chega inteira no fim do mês.
+            </Ponte>
+          )}
         </Secao>
 
         {/* B5b · O ESCRITÓRIO: só na home. Depois da marca (eixo marca primeiro), o que a
@@ -777,6 +828,7 @@ export function PaginaMarcaB({
                 </span>
               </div>
             </div>
+            <Ponte>Parece muita coisa. Na prática, são quatro passos.</Ponte>
           </Secao>
         )}
 
@@ -830,6 +882,18 @@ export function PaginaMarcaB({
             ]}
           />
           <p className="mt-6 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
+          {/* Home (COPY-39): o único botão entre o topo e os planos no desktop. */}
+          {escritorio && (
+            <>
+              <div className="mt-12">
+                <BotaoCadastro busca={busca} contexto="como-funciona" />
+                <p className="mt-3 text-[13px] text-[var(--muted)]">
+                  Sem cartão. Conta nova começa com 7 dias de Pro.
+                </p>
+              </div>
+              <Ponte>E é isso que muda no dia a dia da marca.</Ponte>
+            </>
+          )}
         </Secao>
 
         {/* B7 · POR DENTRO: sai da home (COPY-37), repetia o escritório e o como funciona.
@@ -857,7 +921,9 @@ export function PaginaMarcaB({
         <Secao fundo={escritorio ? "surface" : "bg"}>
           <Rotulo>O que muda</Rotulo>
           <h2 className={`mt-4 mb-10 max-w-[24ch] ${H2}`}>
-            Cada decisão de dinheiro com um número do lado.
+            {escritorio
+              ? "A marca cresce, e o escritório cresce junto."
+              : "Cada decisão de dinheiro com um número do lado."}
           </h2>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_5fr]">
             <div className="flex flex-col gap-10">
@@ -875,7 +941,13 @@ export function PaginaMarcaB({
               <p className="mt-3 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
             </div>
           </div>
+          {escritorio && (
+            <Ponte>Se você se reconheceu até aqui, a Pólia One foi feita pra sua marca.</Ponte>
+          )}
         </Secao>
+
+        {/* B10 na home (COPY-39): o filtro perto da decisão. */}
+        {escritorio && blocoPraQuem}
 
         {/* B9 · QUEM FEZ: rosa porque agora encosta direto nos Planos, que são surface. */}
         <Secao fundo="surface-pink">
@@ -918,6 +990,7 @@ export function PaginaMarcaB({
               )}
             </div>
           </div>
+          {escritorio && <Ponte>Dá pra começar hoje, sem pagar nada.</Ponte>}
         </Secao>
 
         {/* B11 · PLANOS */}
@@ -954,7 +1027,7 @@ export function PaginaMarcaB({
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
                   {escritorio
-                    ? "Começa no Grátis, com 7 dias de Pro pra usar tudo."
+                    ? "A marca já cresceu. Agora o escritório acompanha. Começa no Grátis, com 7 dias de Pro."
                     : "A Pólia One deixa o preço pronto antes dele."}
                 </p>
                 <div className="mt-8">

@@ -9,7 +9,7 @@ import {
 import { FOTOS_NICHOS } from "@/lib/nichosLanding";
 import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, Clock, Minus, type LucideIcon } from "lucide-react";
+import { ArrowDown, Check, Clock, Minus, type LucideIcon } from "lucide-react";
 import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { SeloDoBeneficio } from "@/components/planos/SeloDoBeneficio";
 import type { Beneficio } from "@/lib/planos";
@@ -285,6 +285,26 @@ export function FraseAncora({
       className={`font-fraunces max-w-[40ch] text-[clamp(19px,1.8vw,22px)] italic leading-[1.45] text-[var(--ink)] ${className}`}
     >
       {children}
+    </p>
+  );
+}
+
+/**
+ * Linha-ponte no pé da seção (COPY-39, 27/10/2026): abre a próxima, pra nenhuma
+ * seção terminar fechada. Sempre igual (seta e frase em negrito), pra a leitora
+ * aprender o padrão e seguir descendo.
+ */
+export function Ponte({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return (
+    <p
+      className={`mt-12 flex max-w-[56ch] items-start gap-3 text-[18px] font-semibold leading-[1.5] text-[var(--ink)] max-md:text-[17px] ${className}`}
+    >
+      <ArrowDown
+        aria-hidden="true"
+        className="mt-[3px] h-5 w-5 flex-none text-[var(--secondary-text)]"
+        strokeWidth={2}
+      />
+      <span>{children}</span>
     </p>
   );
 }
