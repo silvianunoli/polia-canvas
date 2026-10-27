@@ -104,7 +104,7 @@ export function itensPraAcender(
     {
       id: "entrada",
       texto: "Registrar a primeira entrada",
-      acende: "Acende quanto sobrou este mês",
+      acende: "Acende quanto lucrou este mês",
       feito: temEntrada,
     },
     {

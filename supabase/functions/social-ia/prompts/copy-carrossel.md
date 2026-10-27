@@ -20,7 +20,7 @@ Você escreve um carrossel do @hub.polia a partir de um item de pauta. A arte é
 
 ## Tipos de slide (contrato com templates/carrossel.html; não inventar tipos)
 - {"tipo":"capa","texto":"linha 1\nlinha 2"}
-- {"tipo":"conta","titulo":"...","linhas":[["rótulo","R$ 120"],["rótulo","- R$ 70"],["Sobrou","R$ 50"]],"nota":"frase opcional"}
+- {"tipo":"conta","titulo":"...","linhas":[["rótulo","R$ 120"],["rótulo","- R$ 70"],["Lucro","R$ 50"]],"nota":"frase opcional"}
 - {"tipo":"texto","texto":"...","destaque":"frase marcada opcional"}
 - {"tipo":"cta","texto":"o CTA"}
 

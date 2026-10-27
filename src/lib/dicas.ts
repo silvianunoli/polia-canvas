@@ -88,7 +88,7 @@ export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
   projecao:
     "E se o preço subir? E se o custo cair? Os cenários mostram quantas vendas faltam pra empatar, se pagar e bater a meta do mês.",
   financeiro:
-    "Entrou, saiu, anota aqui. Com isso o mês mostra quanto sobrou e quanto falta pra meta.",
+    "Entrou, saiu, anota aqui. Com isso o mês mostra quanto lucrou e quanto falta pra meta.",
   raiox:
     "Mês fechado, o Raio-x lê entradas, saídas, meta e produtos e mostra o que puxou o resultado.",
   clientes: "Cada cliente com contato, pedido e status da entrega, tudo num lugar só.",

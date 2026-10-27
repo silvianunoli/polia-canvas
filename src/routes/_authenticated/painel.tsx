@@ -962,7 +962,7 @@ function PainelPage() {
               <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined} padding="p-6">
                 <div className="flex items-start justify-between gap-3">
                   <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                    Quanto sobrou · mês
+                    Quanto lucrou · mês
                   </TituloCartao>
                   {!financeiroLiberado && <SeloControle />}
                 </div>

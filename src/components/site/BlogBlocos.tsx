@@ -221,7 +221,7 @@ const CHAMADAS: Record<string, Chamada> = {
   "Gestão financeira": {
     chave: "financeiro",
     rotulo: "Financeiro",
-    titulo: "O que entrou e o que sobrou, mês a mês.",
+    titulo: "O que entrou e quanto lucrou, mês a mês.",
     frase:
       "A Pólia One compara cada venda com a meta do mês e mostra quanto falta pra fechar as contas.",
     botao: "Quero ver o meu mês",

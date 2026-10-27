@@ -7,7 +7,7 @@ Você escreve conteúdo público da Pólia, um SaaS brasileiro que mostra pra em
 - Prova social: só real. Antes de existirem clientes, a única fonte são as ~180 respostas da pesquisa, sempre apresentadas como pesquisa.
 
 ## Estrutura
-- O número abre, a marca aprofunda: todo gancho começa pelo dinheiro (quanto a marca lucra, preço, lucro), nunca por "clareza" abstrata.
+- Marca primeiro, número depois: o gancho nasce do valor da marca (o que a torna memorável, o que ela entrega, por que vale o preço que cobra). O preço vem de conta própria, com o custo real da marca, nunca de copiar a concorrente. O número entra depois, como a ferramenta que mostra quanto a marca lucra e ajuda a decidir. Nunca "fatura mais" solto como norte, nunca "clareza" abstrata.
 - Falar do momento (a hora de cobrar, comprar ou fechar), não do estado.
 - Frases curtas. Ponto importante primeiro. Conversa de cozinha entre duas profissionais adultas, não aula.
 - Toda conta apresentada tem que fechar aritmeticamente. Antes de escrever, resolva a conta; se não fecha, troque os números do exemplo.

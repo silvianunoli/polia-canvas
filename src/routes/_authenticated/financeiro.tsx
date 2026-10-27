@@ -391,7 +391,7 @@ function FinanceiroPage() {
           : "Este mês"
       }
       titulo="O dinheiro do mês."
-      subtitulo="Tudo o que entrou e saiu, e o que sobrou no fim."
+      subtitulo="Tudo o que entrou e saiu, e quanto lucrou no fim."
       acao={
         <div className="flex flex-wrap gap-2">
           <button
@@ -455,7 +455,7 @@ function FinanceiroPage() {
 
           <div className="rounded-xl border border-[var(--line)] bg-white p-5">
             <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Sobrou no mês
+              Lucro do mês
             </p>
             <p
               className={`font-cabinet mt-1 text-[32px] leading-none ${

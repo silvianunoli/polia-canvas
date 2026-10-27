@@ -274,7 +274,7 @@ describe("montarPromptAimer", () => {
     const { prompt, systemInstruction } = montarPromptAimer({
       pergunta: "quanto sobrou esse mês?",
       historico: [],
-      contextoProjete: "Resultado do mês (quanto sobrou): R$ 600.00",
+      contextoProjete: "Resultado do mês (quanto lucrou): R$ 600.00",
     });
     expect(prompt).toContain("R$ 600.00");
     expect(systemInstruction).toContain("NUNCA inventa número");

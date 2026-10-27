@@ -473,7 +473,7 @@ async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
         from: "Pólia <naoresponda@usepolia.com.br>",
         to: paraEmail,
         subject: `Seu raio-x de ${mesLabel} está pronto`,
-        text: `A Pólia One já organizou os números de ${mesLabel}.\n\nAgora você pode ver o que entrou, o que saiu, quanto sobrou e o que merece sua atenção.\n\n${url}`,
+        text: `A Pólia One já organizou os números de ${mesLabel}.\n\nAgora você pode ver o que entrou, o que saiu, quanto lucrou e o que merece sua atenção.\n\n${url}`,
         // Este e-mail saía só como texto puro, com a URL solta no corpo — sem
         // marca e sem botão, no aviso do recurso mais caro do produto.
         html: emailPolia({
@@ -481,7 +481,7 @@ async function enviarEmailAviso(paraEmail: string, mesLabel: string) {
           headline: "Seu raio-x está pronto",
           paragrafos: [
             `A Pólia One já organizou os números de ${mesLabel}.`,
-            "Agora você pode ver o que entrou, o que saiu, quanto sobrou e o que merece sua atenção.",
+            "Agora você pode ver o que entrou, o que saiu, quanto lucrou e o que merece sua atenção.",
           ],
           ctaLabel: "Ver meu raio-x",
           ctaUrl: url,

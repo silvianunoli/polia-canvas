@@ -8,7 +8,7 @@ import { useAssistente } from "./AssistenteContext";
 const EXEMPLOS = [
   "Como eu preencho o Planejamento?",
   "Meu preço cobre os custos?",
-  "Por que sobrou tão pouco esse mês?",
+  "Por que lucrei tão pouco esse mês?",
 ];
 
 /**

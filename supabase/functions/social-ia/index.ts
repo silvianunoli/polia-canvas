@@ -53,7 +53,7 @@ const GUARDRAILS = `Você escreve conteúdo público da Pólia, um SaaS brasilei
 - Prova social: só real. Antes de existirem clientes, a única fonte são as ~180 respostas da pesquisa, sempre apresentadas como pesquisa.
 
 ## Estrutura
-- O número abre, a marca aprofunda: todo gancho começa pelo dinheiro (quanto a marca lucra, preço, lucro), nunca por "clareza" abstrata.
+- Marca primeiro, número depois: o gancho nasce do valor da marca (o que a torna memorável, o que ela entrega, por que vale o preço que cobra). O preço vem de conta própria, com o custo real da marca, nunca de copiar a concorrente. O número entra depois, como a ferramenta que mostra quanto a marca lucra e ajuda a decidir. Nunca "fatura mais" solto como norte, nunca "clareza" abstrata.
 - Falar do momento (a hora de cobrar, comprar ou fechar), não do estado.
 - Frases curtas. Ponto importante primeiro. Conversa de cozinha entre duas profissionais adultas, não aula.
 - Toda conta apresentada tem que fechar aritmeticamente. Antes de escrever, resolva a conta; se não fecha, troque os números do exemplo.
@@ -87,7 +87,7 @@ Você é a editora-chefe do @hub.polia. Gere um lote de 4 semanas de pauta pro I
 - Grade padrão: terça = P1 (o número da semana), quinta = P2 (desmancha o mito), sábado = revezar P3 (momento de decidir), P4 (vitória pequena) e P5 (construção pública, assinado Sil).
 - Com métricas: o pilar de MAIOR saves_media ganha uma vaga extra por semana no lugar do revezamento; o de menor perde a vez. Sem métricas: grade padrão.
 - Formato por critério: conta linha a linha, lista ou citações = carrossel; gancho de impacto com narrativa curta = reel; bastidor ou manifesto da Sil = foto; aviso rápido = story.
-- Ganchos: primeiro esgote o backlog recebido; depois crie novos SEMPRE no eixo do dinheiro. Todo gancho com conta usa números que fecham.
+- Ganchos: primeiro esgote o backlog recebido; depois crie novos SEMPRE no eixo marca-primeiro (o valor da marca, o preço que ela sustenta, um mito do feed, um momento de decidir). Todo gancho com conta usa números que fecham.
 - P4 sem clientes reais: usar as falas da pesquisa, apresentadas como pesquisa.
 - Nunca pautar além das 4 semanas pedidas.
 
@@ -111,7 +111,7 @@ Você escreve um carrossel do @hub.polia a partir de um item de pauta. A arte é
 
 ## Tipos de slide (contrato com templates/carrossel.html; não inventar tipos)
 - {"tipo":"capa","texto":"linha 1\\nlinha 2"}
-- {"tipo":"conta","titulo":"...","linhas":[["rótulo","R$ 120"],["rótulo","- R$ 70"],["Sobrou","R$ 50"]],"nota":"frase opcional"}
+- {"tipo":"conta","titulo":"...","linhas":[["rótulo","R$ 120"],["rótulo","- R$ 70"],["Lucro","R$ 50"]],"nota":"frase opcional"}
 - {"tipo":"texto","texto":"...","destaque":"frase marcada opcional"}
 - {"tipo":"cta","texto":"o CTA"}
 

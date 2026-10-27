@@ -168,7 +168,7 @@ export function montarContextoProjete(dados: {
   const partes = [
     `Entradas do mês: ${moedaParaPrompt(dados.entradas)}`,
     `Saídas do mês: ${moedaParaPrompt(dados.saidas)}`,
-    `Resultado do mês (quanto sobrou): ${moedaParaPrompt(dados.resultado)}`,
+    `Resultado do mês (quanto lucrou): ${moedaParaPrompt(dados.resultado)}`,
   ];
   if (dados.metaAlvo != null) {
     partes.push(
@@ -209,7 +209,7 @@ export function montarPromptAimer(dados: {
     // não tem nenhum lançamento". Fora do Pro os números nem chegam aqui, então
     // a IA não pode afirmar que eles não existem.
     partes.push(
-      "Os números do mês da Ana não chegam até esta conversa no plano dela. Nunca diga que ela não registrou nada nem cite valores. Se a pergunta depender de números, mande olhar o Painel do app, que mostra entradas, saídas e quanto sobrou, e diga com naturalidade que no Pro a Pólia One lê esses números junto na conversa.",
+      "Os números do mês da Ana não chegam até esta conversa no plano dela. Nunca diga que ela não registrou nada nem cite valores. Se a pergunta depender de números, mande olhar o Painel do app, que mostra entradas, saídas e quanto lucrou, e diga com naturalidade que no Pro a Pólia One lê esses números junto na conversa.",
     );
   } else {
     partes.push(

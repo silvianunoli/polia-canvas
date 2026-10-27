@@ -152,7 +152,7 @@ const CATEGORIAS = [
       {
         pergunta: "Entender o resumo do mês",
         resposta:
-          "No plano Grátis, o Painel mostra o que entrou e o que saiu no mês. No Premium, o Financeiro mostra entradas, saídas e o que sobrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
+          "No plano Grátis, o Painel mostra o que entrou e o que saiu no mês. No Premium, o Financeiro mostra entradas, saídas e quanto lucrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
       },
       {
         pergunta: "De onde vêm esses valores",
