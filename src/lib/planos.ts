@@ -327,9 +327,10 @@ export const TIERS_PAGOS: Record<
       { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
       {
-        // VND-05 e VND-17
+        // VND-05 (TikTok Shop), VND-30 (Mercado Livre) e VND-17 (Shopee). COPY-34, 27/10/2026.
         id: "marketplaces",
-        texto: "TikTok Shop e Shopee ligados à Pólia One: pedidos e estoque no mesmo lugar",
+        texto:
+          "TikTok Shop, Mercado Livre e Shopee ligados à Pólia One: o pedido vira venda, o estoque baixa e a taxa entra na conta",
         emBreve: true,
       },
       {

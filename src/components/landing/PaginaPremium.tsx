@@ -150,7 +150,7 @@ const perguntas = [
   {
     pergunta: "Conecta com banco, marketplace ou Instagram?",
     resposta:
-      "Ainda não. As vendas entram à mão, uma linha por venda. No Premium, a agenda do Google aparece junto das tarefas.",
+      "Com o banco, dá pra importar o extrato (OFX ou CSV) no Financeiro do Premium. Com marketplace, ainda não: as vendas entram à mão, uma linha por venda, e a ligação com TikTok Shop, Mercado Livre e Shopee vem em breve no Pro. Com o Instagram, não. No Premium, a agenda do Google aparece junto das tarefas.",
   },
   {
     pergunta: "A IA inventa o meu preço?",

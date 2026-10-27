@@ -17,9 +17,10 @@ import { PERGUNTAS_MARCA_B, PaginaMarcaB } from "@/components/landing/PaginaMarc
 //
 // Nomes de plano visíveis (Grátis, Premium, Pro) moram em PaginaMarcaB.tsx.
 
-const TITULO = "Pólia One · Preço, lucro e o mês da sua marca";
+// Topo "o escritório da sua marca" desde 27/10/2026 (COPY-34, POSICIONAMENTO-POLIA-ONE.md).
+const TITULO = "Pólia One · O escritório da sua marca";
 const DESCRICAO =
-  "A Pólia One junta o que a sua marca é, a meta do mês e o custo de cada produto. Na hora do orçamento, o preço sai da conta. Comece no Grátis, sem cartão.";
+  "A Pólia One é o escritório da sua marca: preço, estoque, vendas e dinheiro no mesmo lugar. Comece no Grátis, sem cartão.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -28,7 +29,8 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESCRICAO },
       {
         property: "og:title",
-        content: "Pólia One · Sua marca já vale mais do que você está cobrando",
+        content:
+          "Pólia One · Sua marca cresceu. O escritório dela continua sendo o caderno, a planilha perdida e o WhatsApp.",
       },
       { property: "og:description", content: DESCRICAO },
     ],
@@ -58,7 +60,7 @@ function HomePage() {
       </AnimatePresence>
       <SiteHeader />
       {/* Desde 16/10/2026 a home tem o mesmo topo da /landing-b: título e o VSL logo embaixo. */}
-      <PaginaMarcaB busca={busca} linkSobre vsl />
+      <PaginaMarcaB busca={busca} linkSobre vsl escritorio />
     </div>
   );
 }

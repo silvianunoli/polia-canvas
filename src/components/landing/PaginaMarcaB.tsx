@@ -1,6 +1,8 @@
 import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import {
+  BarChart3,
+  Boxes,
   Calculator,
   Copy,
   FileText,
@@ -21,6 +23,7 @@ import {
   BotaoCadastro,
   ComoFuncionaPassos,
   CORPO,
+  EtiquetaPlano,
   FaqLanding,
   FontePesquisa,
   FotoLanding,
@@ -155,6 +158,41 @@ const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
   },
 ];
 
+/**
+ * O escritório da marca (COPY-34, 27/10/2026): o que um ERP faz, dito pelo efeito.
+ * Os quatro lugares são os que a venda registrada já atualiza hoje (src/lib/vendas.ts).
+ * Texto em POSICIONAMENTO-POLIA-ONE.md, seção 6, na raiz do workspace.
+ */
+const quatroLugares: ItemLista[] = [
+  {
+    icone: Boxes,
+    titulo: "O estoque.",
+    texto: "A peça vendida sai da prateleira, e o kit ou combo baixa cada item.",
+    planos: ["Premium"],
+  },
+  {
+    icone: Wallet,
+    titulo: "O Financeiro.",
+    texto: "O dinheiro entra no mês certo, já sem a taxa da maquininha ou do marketplace.",
+    planos: ["Premium"],
+  },
+  {
+    icone: BarChart3,
+    titulo: "Os mais vendidos.",
+    texto: "A venda entra na Curva ABC, e o que está parado na prateleira aparece.",
+    planos: ["Premium"],
+  },
+  {
+    icone: Gauge,
+    titulo: "O Painel.",
+    texto: "A meta do mês anda, e o Painel mostra quanto falta pra fechar as contas.",
+    planos: ["Premium"],
+  },
+];
+
+/** Em breve no Pro (VND-05, VND-17, VND-30). Sem data até o primeiro canal abrir pra cliente. */
+const canaisEmBreve = ["TikTok Shop", "Mercado Livre", "Shopee"];
+
 const praQuemSim = [
   "Vende produto ou serviço, físico ou digital, sozinha ou com alguém ajudando.",
   "Passa orçamento toda semana e às vezes trava no valor.",
@@ -260,7 +298,7 @@ export const PERGUNTAS_MARCA_B = [
   {
     pergunta: "Conecta com o banco, com marketplace ou com o Instagram?",
     resposta:
-      "Ainda não. As vendas entram à mão, uma linha por venda. Dá pra entrar com a conta Google, e no Premium a agenda do Google aparece junto das tarefas.",
+      "Com o banco, dá pra importar o extrato (OFX ou CSV) no Financeiro, no Premium. Com marketplace, ainda não: as vendas entram à mão, uma linha por venda, e a ligação com TikTok Shop, Mercado Livre e Shopee vem em breve no Pro. Com o Instagram, não. Dá pra entrar com a conta Google, e no Premium a agenda do Google aparece junto das tarefas.",
   },
   {
     pergunta: "A IA inventa o meu preço?",
@@ -302,9 +340,16 @@ export function PaginaMarcaB({
   linkSobre = false,
   nicho = null,
   vsl = false,
+  escritorio = false,
 }: {
   busca: BuscaCadastro;
   linkSobre?: boolean;
+  /**
+   * Só a home (COPY-34, 27/10/2026): topo "o escritório da sua marca" e a seção dos
+   * quatro lugares com os canais em breve. A /landing-b fica como está, pra não mexer
+   * no teste de campanha no meio.
+   */
+  escritorio?: boolean;
   /** Topo com o VSL no lugar da foto (home e /landing-b desde 16/10/2026); false volta pra foto com o mock. */
   vsl?: boolean;
   /** Topo do nicho do anúncio (só /landing-b); null mostra o topo padrão. */
@@ -325,13 +370,25 @@ export function PaginaMarcaB({
             busca={busca}
             botaoRef={heroCta}
             rotulo={
-              nicho ? `Pólia One · ${nicho.rotulo}` : "Pólia One · para quem toca a própria marca"
+              nicho
+                ? `Pólia One · ${nicho.rotulo}`
+                : escritorio
+                  ? "Pólia One · o escritório da sua marca"
+                  : "Pólia One · para quem toca a própria marca"
             }
-            titulo={nicho ? nicho.titulo : "Sua marca já vale mais do que você está cobrando."}
+            titulo={
+              nicho
+                ? nicho.titulo
+                : escritorio
+                  ? "Sua marca cresceu. O escritório dela continua sendo o caderno, a planilha perdida e o WhatsApp."
+                  : "Sua marca já vale mais do que você está cobrando."
+            }
             subtitulo={
               nicho
                 ? nicho.subtitulo
-                : "A Pólia One liga a sua marca, o custo de cada produto e a meta do mês. Na hora do orçamento, o preço sai dessa conta."
+                : escritorio
+                  ? "A Pólia One é o escritório da sua marca: preço, estoque, vendas e dinheiro no mesmo lugar."
+                  : "A Pólia One liga a sua marca, o custo de cada produto e a meta do mês. Na hora do orçamento, o preço sai dessa conta."
             }
           />
         ) : (
@@ -537,6 +594,49 @@ export function PaginaMarcaB({
             A marca dá coragem pro preço. O número prova que a coragem tinha razão.
           </FraseAncora>
         </Secao>
+
+        {/* B5b · O ESCRITÓRIO: só na home. Depois da marca (eixo marca primeiro), o que a
+            venda faz sozinha e o que vem aí nos canais. */}
+        {escritorio && (
+          <Secao fundo="surface">
+            <Rotulo>O escritório da marca</Rotulo>
+            <h2 className={`mt-4 ${H2}`}>Uma venda. Quatro lugares em dia.</h2>
+            <p className={`mt-6 max-w-[60ch] ${CORPO}`}>
+              A venda entra uma vez. A Pólia One leva ela pra cada lugar que depende dela, e ninguém
+              digita a mesma coisa duas vezes.
+            </p>
+            <div className="mt-10">
+              <ListaEditorial itens={quatroLugares} colunas={2} />
+            </div>
+
+            <div className="mt-16 border-t border-[var(--line)] pt-12">
+              <Rotulo>O que vem aí</Rotulo>
+              <h3 className="mt-4 max-w-[30ch] text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-[var(--ink)]">
+                Vendeu no TikTok Shop, no Mercado Livre ou na Shopee. A conta fecha num lugar só.
+              </h3>
+              <p className={`mt-5 max-w-[60ch] ${CORPO}`}>
+                O pedido do canal vira venda na Pólia One, com a taxa daquele canal já descontada, e
+                o estoque baixa nos dois lados.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <ul className="flex list-none flex-wrap gap-3">
+                  {canaisEmBreve.map((c) => (
+                    <li
+                      key={c}
+                      className="rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[16px] leading-[1.4] text-[var(--ink)] max-md:text-[15px]"
+                    >
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+                <span className="flex items-center gap-2 text-[14px] text-[var(--muted)]">
+                  <EtiquetaPlano nome="Pro" />
+                  Em breve
+                </span>
+              </div>
+            </div>
+          </Secao>
+        )}
 
         {/* B6 · COMO FUNCIONA */}
         <Secao id="como-funciona" className="scroll-mt-[88px]">
