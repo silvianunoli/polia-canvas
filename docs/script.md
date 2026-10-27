@@ -369,3 +369,8 @@ No teste do Mercado Livre (VND-37, passo 9), a venda recebida entrou no Financei
 
 - Migration `20261026200000_venda_nome_do_canal.sql`: `canal_venda_nome` (mesmos nomes de `CANAL_LABEL`), as duas funções trocam só a linha da descrição, e as descrições já gravadas que ainda estão como a função escreveu passam para o nome (texto editado à mão fica). Testada numa transação desfeita (corpo igual ao do banco fora a linha; "Venda · WhatsApp", "Venda · Presencial ou feira · Ana", "Venda · Mercado Livre"; função sem acesso do navegador). **Aplicada pelo MCP com autorização da Sil** e conferida.
 - `src/lib/canalVendaNome.test.ts` (9 testes): os nomes da migration batem com `CANAL_LABEL`.
+
+## 2026-10-26 — Exclusão de conta em ordem de dependência (CRM-18) e faxina do pg_cron (FND-11)
+
+- **CRM-18:** a migration `20261012150000_exclusao_ordem_de_dependencia.sql` (de 12/10, barrada na época pela trava automática) foi retestada contra o banco de hoje, numa transação desfeita: com a função antiga, excluir a Silvia Teste 2 dá "Este quadro passou do limite do plano Grátis"; com a nova, ela e a oi@usepolia.com.br (vendas, estoque, Mercado Livre e TikTok) saem por inteiro. **Aplicada pelo MCP com autorização da Sil** e conferida (função nova, sem acesso do navegador).
+- **FND-11:** migration `20261026220000_faxina_historico_cron.sql`: `faxina_historico_cron` apaga execução do pg_cron com mais de 8 dias (raiox-mensal com mais de 40) e o job `faxina-historico-cron` roda todo dia às 04:37 UTC. **Aplicada pelo MCP com autorização da Sil**: o histórico foi de 308.117 para 35.257 linhas. O arquivo continua em 54 MB até o Postgres reaproveitar o espaço; daqui pra frente ele não cresce.
