@@ -391,7 +391,7 @@ function AssinarPage() {
             titulo="Grátis"
             preco="R$ 0"
             periodo="sem cobrança"
-            beneficios={BENEFICIOS_GRATIS}
+            beneficios={BENEFICIOS_GRATIS.filter((b) => !b.soParaVisitante)}
             botaoLabel={
               !assinante
                 ? "Continuar no Grátis"

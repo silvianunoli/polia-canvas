@@ -169,6 +169,8 @@ export type Beneficio = {
   emBreve?: boolean;
   /** AAAA-MM-DD. Mostra "Novo" até esse dia. */
   novoAte?: string;
+  /** Só pra quem ainda não tem conta (o teste do Pro): a /assinar, logada, não mostra. */
+  soParaVisitante?: boolean;
 };
 
 // Vendas, Estoque, Orçamento, Taxas, Kit e combo, Clientes, Contas a pagar e
@@ -203,19 +205,41 @@ export function beneficiosNaOrdem(lista: Beneficio[], primeiros: string[] = []):
 // /marca e /mercado não estão em ROTAS_TIER, então são pagas: a lista avisa
 // (06/10/2026, decisão da Sil) em vez de prometer "Planejamento completo" e
 // mandar a usuária do Grátis pra uma tela de upgrade no fim do Módulo 1.
+// Recursos no ar que faltavam na lista entraram em 27/10/2026 (COPY-36): teste do
+// Pro, cota de IA, Calculadora detalhada, importar planilha, tutorial e chamados.
 export const BENEFICIOS_GRATIS: Beneficio[] = [
+  {
+    // GRW-66 e ONE-136 (src/lib/testePro.ts): conta nova nasce no Pro por 7 dias.
+    id: "teste-pro",
+    texto: "Conta nova começa com 7 dias de Pro. Completou os primeiros passos, ganha mais 7.",
+    soParaVisitante: true,
+  },
   {
     id: "planejamento",
     texto: "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
   },
   {
+    // ONE-107 e ONE-109. A Encomenda é a única parte que trava (Pro).
     id: "calculadora",
-    texto: "Calculadora de preço, pra produto e serviço, com simulação de desconto",
+    texto:
+      "Calculadora de preço pra produto e serviço: material pelo pacote, mão de obra pelo tempo, custo fixo rateado e o seu salário na conta, com simulação de desconto",
   },
   { id: "catalogo", texto: "Catálogo de até 5 produtos" },
+  {
+    // ONE-121. Só .csv: o card fala em XLSX, o código não aceita.
+    id: "importar-produtos",
+    texto: "Produtos entram de uma planilha (CSV), com revisão antes de gravar",
+  },
   { id: "metas", texto: "Até 3 metas ativas por vez" },
   { id: "planner", texto: "1 quadro no Planner (até 100 cartões) e 1 nota no Caderno" },
   { id: "assistente", texto: "Assistente pra tirar dúvida, com teto diário" },
+  // Cota em CONFIG_POR_PLANO (src/lib/planejamentoIa.functions.ts): 1, 30 e 60.
+  { id: "ia", texto: "1 rascunho por mês com a IA no Planejamento" },
+  {
+    // /como-usar e /chamados abrem em todo plano (ROTAS_TIER).
+    id: "tutorial-suporte",
+    texto: "Tutorial narrado de cada parte e suporte por chamado, direto na ferramenta",
+  },
 ];
 
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
@@ -239,7 +263,10 @@ export const TIERS_PAGOS: Record<
     precoAnual: 299,
     base: "Tudo do Grátis, mais:",
     beneficios: [
-      { id: "documentos", texto: "Documentos de Marca e Mercado, escritos a partir do Planejamento" },
+      {
+        id: "documentos",
+        texto: "Documentos de Marca e Mercado, escritos a partir do Planejamento",
+      },
       {
         id: "catalogo",
         texto: "Catálogo sem limite: cada produto com o custo, o preço e quanto a marca lucra",
@@ -261,7 +288,8 @@ export const TIERS_PAGOS: Record<
       },
       {
         id: "taxas",
-        texto: "Taxa de cada forma de receber, e quanto o preço deixa no Pix, no cartão e no marketplace",
+        texto:
+          "Taxa de cada forma de receber, e quanto o preço deixa no Pix, no cartão e no marketplace",
         novoAte: NOVO_OUT_2026,
       },
       {
@@ -275,11 +303,22 @@ export const TIERS_PAGOS: Record<
           "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
       },
       {
+        // ONE-124, no ar desde 11/10 (6fa92f8).
+        id: "importar-extrato",
+        texto:
+          "Extrato do banco (OFX ou CSV) e nota fiscal (XML) entram no Financeiro sem digitar, com revisão linha a linha antes",
+      },
+      {
         id: "contas-pagar",
         texto: "Contas a pagar com vencimento, e as que repetem todo mês",
         novoAte: NOVO_OUT_2026,
       },
-      { id: "clientes", texto: "Clientes com o status de cada pedido, da espera à entrega" },
+      {
+        // ONE-123 (status da negociação ao pós-venda) e o Exportar CSV de /clientes.
+        id: "clientes",
+        texto:
+          "Clientes com o status de cada pedido, da negociação ao pós-venda, e a lista em CSV quando precisar",
+      },
       {
         id: "quem-compra",
         texto: "Quem voltou a comprar, quem sumiu, e um link pra captar contatos novos",
@@ -287,8 +326,10 @@ export const TIERS_PAGOS: Record<
       },
       {
         id: "planner",
-        texto: "Quadros ilimitados no Planner, e o Calendário com a agenda do Google junto",
+        texto:
+          "Quadros ilimitados no Planner, notas sem limite no Caderno e o Calendário com a agenda do Google junto",
       },
+      { id: "ia", texto: "Até 30 rascunhos por mês com a IA no Planejamento" },
       {
         // ONE-133, no ar desde 23/10 (7430af6)
         id: "insumos",
@@ -326,6 +367,7 @@ export const TIERS_PAGOS: Record<
       },
       { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
+      { id: "ia", texto: "Até 60 rascunhos por mês com a IA no Planejamento" },
       {
         // VND-05 (TikTok Shop), VND-30 (Mercado Livre) e VND-17 (Shopee). COPY-34, 27/10/2026.
         id: "marketplaces",

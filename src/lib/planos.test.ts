@@ -245,4 +245,11 @@ describe("lista de benefícios dos planos", () => {
   it("o Grátis não promete nada Em breve", () => {
     expect(BENEFICIOS_GRATIS.some((b) => b.emBreve)).toBe(false);
   });
+
+  it("o teste do Pro é só pra visitante e só no Grátis (a /assinar logada filtra)", () => {
+    expect(BENEFICIOS_GRATIS.find((b) => b.id === "teste-pro")?.soParaVisitante).toBe(true);
+    for (const lista of [TIERS_PAGOS.controle.beneficios, TIERS_PAGOS.projete.beneficios]) {
+      expect(lista.some((b) => b.soParaVisitante)).toBe(false);
+    }
+  });
 });
