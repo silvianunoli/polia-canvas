@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Information Security and Data Protection Policy · Pólia One</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 20mm; }
+  :root { --ink:#0A0A0A; --muted:#6B6B6B; --line:#E6E6E6; --bg:#FFFFFF; }
+  body { background:var(--bg); color:var(--ink); font-family: Inter, "Segoe UI", Arial, sans-serif; font-size:10pt; line-height:1.5; margin:0; }
+  h1 { font-size:18pt; letter-spacing:-0.02em; margin:0 0 4pt; }
+  h2 { font-size:11.5pt; letter-spacing:-0.02em; margin:16pt 0 4pt; page-break-after:avoid; }
+  p, li { margin:0 0 5pt; }
+  ul, ol { margin:0 0 6pt; padding-left:16pt; }
+  .meta { color:var(--muted); font-size:9pt; margin-bottom:14pt; border-bottom:1px solid var(--line); padding-bottom:10pt; }
+  table { width:100%; border-collapse:collapse; margin:4pt 0 8pt; font-size:9pt; page-break-inside:avoid; }
+  th, td { border:1px solid var(--line); padding:4pt 6pt; text-align:left; vertical-align:top; }
+  th { font-weight:600; }
+  .sign { margin-top:22pt; border-top:1px solid var(--line); padding-top:10pt; font-size:9pt; }
+</style>
+</head>
+<body>
+
+<h1>Information Security and Data Protection Policy</h1>
+<div class="meta">
+  Nunoli Soluções Digitais Ltda (Pólia One) · Brazil<br>
+  Version 1.0 · Effective October 23, 2026 · Approved by Silvia Nunes de Oliveira, Managing Partner
+</div>
+
+<h2>1. Purpose and scope</h2>
+<p>This policy defines how Pólia protects the information it handles: company data, data of Pólia One users,
+and third-party data received through users, such as their customers and orders from sales channels
+(TikTok Shop, Shopee). It applies to every system, account and device used to operate Pólia, and to anyone
+who is granted access to them.</p>
+
+<h2>2. Roles</h2>
+<ul>
+  <li><strong>Security and Privacy Officer and Data Protection Officer (DPO):</strong> Silvia Nunes de Oliveira,
+  privacidade@usepolia.com.br. Approves this policy, grants and revokes access, coordinates incident response
+  and answers data subjects and authorities.</li>
+  <li><strong>Anyone with access</strong> (staff or contractors, when applicable): follows this policy, signs a
+  confidentiality agreement before first access and reports any suspected incident to the Officer.</li>
+</ul>
+
+<h2>3. Data classification</h2>
+<table>
+  <tr><th>Level</th><th>Examples</th><th>Rule</th></tr>
+  <tr><td>Restricted</td><td>Sales channel access tokens, API keys, passwords, payment data</td><td>Only in a secret manager or encrypted; never in source code, logs, spreadsheets or chat</td></tr>
+  <tr><td>Confidential</td><td>Personal data of users and their customers, orders, users' financial records</td><td>Access limited to the account owner and server-side processes; encrypted in transit and at rest</td></tr>
+  <tr><td>Internal</td><td>Product documents, aggregated metrics</td><td>Access limited to people working at Pólia</td></tr>
+  <tr><td>Public</td><td>Website, blog, privacy policy</td><td>No restriction</td></tr>
+</table>
+
+<h2>4. Access control</h2>
+<ul>
+  <li>Least privilege: every person and process accesses only what is required.</li>
+  <li>In the product, every table holding user data enforces row-level security: an account can only read and
+  write its own data. The database service key is used only on the server, never in the browser.</li>
+  <li>Administrative functions require an admin role, checked on every request.</li>
+  <li>Multi-factor authentication is mandatory on all administrative accounts (cloud infrastructure, database,
+  source code repository, payment provider, email and partner portals).</li>
+  <li>Production access is currently limited to the Officer. New access is individual (no shared accounts),
+  recorded, reviewed every 6 months and revoked on the day it is no longer needed.</li>
+</ul>
+
+<h2>5. Encryption and secrets</h2>
+<ul>
+  <li>All traffic uses TLS (HTTPS).</li>
+  <li>The database (Supabase managed PostgreSQL) is encrypted at rest (AES-256).</li>
+  <li>Sales channel access tokens are stored in Supabase Vault, encrypted and readable only by server-side code.</li>
+  <li>Production secrets are kept only in platform secret managers (Cloudflare Workers and Supabase secrets),
+  never in source code, repositories, logs or conversations.</li>
+</ul>
+
+<h2>6. Endpoint and daily security baseline</h2>
+<ul>
+  <li>Automatic screen lock; strong, unique passwords per service, stored in a password manager.</li>
+  <li>Antivirus with real-time protection (Microsoft Defender) and automatic operating system updates.</li>
+  <li>Clean desk: no secrets or customer data on paper or visible on shared screens.</li>
+  <li>Customer data is not downloaded to devices unless necessary, and is deleted after use.</li>
+</ul>
+
+<h2>7. Network and infrastructure</h2>
+<ul>
+  <li>The application runs on Cloudflare Workers behind Cloudflare's network (DDoS protection, TLS).</li>
+  <li>The database is not exposed directly: access goes through authenticated APIs with row-level security.</li>
+  <li>Restricted CORS, rate limiting on login and expensive operations, and bot verification (Cloudflare
+  Turnstile) on public forms.</li>
+</ul>
+
+<h2>8. Secure development</h2>
+<ul>
+  <li>Every release passes a security checklist before deployment: secrets, input validation, object-level
+  authorization, field exposure and dependencies.</li>
+  <li>Database queries are always parameterized; output is escaped against XSS.</li>
+  <li>Database changes are made through versioned migrations; database security advisors are reviewed after
+  every schema change.</li>
+</ul>
+
+<h2>9. Vulnerability management</h2>
+<ul>
+  <li>Dependency scanning for known vulnerabilities before each release.</li>
+  <li>Full application security review at least once a year and after major changes (the latest, in July 2026,
+  produced 14 findings, all fixed and verified in production).</li>
+  <li>Remediation deadlines: critical within 7 days, high within 30 days, medium and low in the regular cycle.</li>
+</ul>
+
+<h2>10. Logging and monitoring</h2>
+<ul>
+  <li>Application errors are logged without sensitive data.</li>
+  <li>Automated production alerts (payment webhook failures, error rate spikes, site downtime) reach the Officer
+  in real time.</li>
+</ul>
+
+<h2>11. Incident response</h2>
+<ol>
+  <li><strong>Detect:</strong> automated alert, or report from a user, partner or provider.</li>
+  <li><strong>Contain:</strong> revoke affected tokens and keys, block access, fix the cause.</li>
+  <li><strong>Assess:</strong> which data, whose, how much and for how long.</li>
+  <li><strong>Notify:</strong> affected sellers and the originating partner (for example, TikTok Shop) by email
+  within 48 hours of confirmation; data subjects and the Brazilian data protection authority (ANPD) when there
+  is relevant risk or harm, as required by the LGPD (art. 48).</li>
+  <li><strong>Record and improve:</strong> what happened, root cause, actions taken and changes to prevent
+  recurrence.</li>
+</ol>
+
+<h2>12. Personal data protection (LGPD)</h2>
+<ul>
+  <li>Pólia is the controller of its users' data. For data about users' customers and marketplace orders, Pólia
+  is a <strong>processor</strong> and processes it only to provide the service the user subscribed to.</li>
+  <li><strong>Minimization:</strong> from marketplace orders, Pólia keeps only what is needed to record the sale,
+  stock movement and fees. The buyer's full address is not stored.</li>
+  <li><strong>Marketplace buyer data</strong> is not used for marketing, is never sold, and is never used to
+  contact buyers outside the originating platform.</li>
+  <li><strong>Retention:</strong> account data is kept while the account exists, and users can delete their
+  account and data themselves inside the product, with immediate deletion; marketplace access tokens are deleted
+  upon disconnection; other marketplace data is deleted within 30 days after disconnection or account closure;
+  records required by law (tax and financial) are kept for up to 5 years.</li>
+  <li><strong>Data subject requests</strong> (access, correction, deletion, portability) are handled through
+  privacidade@usepolia.com.br within 15 days, including requests forwarded by partners such as TikTok Shop.</li>
+  <li><strong>Sub-processors:</strong> Supabase (database, United States), Cloudflare (application), Stripe
+  (payments), Resend (email), Google (Calendar, Analytics, Gemini). A new sub-processor is added only with a data
+  processing agreement and an update to the privacy policy.</li>
+  <li><strong>International transfer:</strong> data is stored in the United States (Supabase, us-east-2), based
+  on the safeguards of LGPD art. 33 (contractual clauses and providers' data processing agreements).</li>
+</ul>
+
+<h2>13. Review</h2>
+<p>This policy is reviewed once a year, and earlier whenever the law changes, a new sub-processor is added or an
+incident occurs. The public privacy policy (usepolia.com.br/privacidade) follows the same rules.</p>
+
+<table>
+  <tr><th>Version</th><th>Date</th><th>Change</th></tr>
+  <tr><td>1.0</td><td>October 23, 2026</td><td>First version</td></tr>
+</table>
+
+<div class="sign">
+  Approved by Silvia Nunes de Oliveira, Managing Partner and Data Protection Officer<br>
+  Nunoli Soluções Digitais Ltda · privacidade@usepolia.com.br · October 23, 2026
+</div>
+
+</body>
+</html>

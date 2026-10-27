@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Personal Information Protection Standard · Pólia One</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 20mm; }
+  :root { --ink:#0A0A0A; --muted:#6B6B6B; --line:#E6E6E6; --bg:#FFFFFF; }
+  body { background:var(--bg); color:var(--ink); font-family: Inter, "Segoe UI", Arial, sans-serif; font-size:10pt; line-height:1.5; margin:0; }
+  h1 { font-size:18pt; letter-spacing:-0.02em; margin:0 0 4pt; }
+  h2 { font-size:11.5pt; letter-spacing:-0.02em; margin:16pt 0 4pt; page-break-after:avoid; }
+  p, li { margin:0 0 5pt; }
+  ul, ol { margin:0 0 6pt; padding-left:16pt; }
+  .meta { color:var(--muted); font-size:9pt; margin-bottom:14pt; border-bottom:1px solid var(--line); padding-bottom:10pt; }
+  table { width:100%; border-collapse:collapse; margin:4pt 0 8pt; font-size:9pt; page-break-inside:avoid; }
+  th, td { border:1px solid var(--line); padding:4pt 6pt; text-align:left; vertical-align:top; }
+  th { font-weight:600; }
+  .note { color:var(--muted); font-size:9pt; }
+  .break { page-break-before:always; }
+  .sign { margin-top:22pt; border-top:1px solid var(--line); padding-top:10pt; font-size:9pt; }
+</style>
+</head>
+<body>
+
+<h1>Personal Information Protection Standard</h1>
+<div class="meta">
+  Nunoli Soluções Digitais Ltda (Pólia One) · Brazil<br>
+  Version 1.0 · Effective October 27, 2026 · Approved by Silvia Nunes de Oliveira, Managing Partner and Data Protection Officer<br>
+  Complements the Information Security and Data Protection Policy v1.0 (October 23, 2026)
+</div>
+
+<h2>1. Purpose and scope</h2>
+<p>This standard sets the mandatory rules for how Pólia One collects, uses, stores, shares and deletes personal
+information. It covers personal information of Pólia One users (sellers) and any personal information received
+from sales channels connected by those users, including TikTok Shop. It applies to all Pólia systems, to the
+people who operate them and to every sub-processor. It follows the Brazilian General Data Protection Law
+(LGPD, Law 13,709/2018) and the TikTok Shop Partner data requirements.</p>
+
+<h2>2. Roles and accountability</h2>
+<ul>
+  <li><strong>Data Protection Officer (DPO):</strong> Silvia Nunes de Oliveira, privacidade@usepolia.com.br.
+  Owns this standard, approves any new use of personal information, handles data subject and partner requests,
+  and leads breach response.</li>
+  <li><strong>Controller and processor:</strong> Pólia is the controller of sellers' account data. For data
+  received from TikTok Shop on a seller's behalf, Pólia acts as a processor and uses it only to deliver the
+  service the seller enabled.</li>
+  <li><strong>Anyone with access</strong> signs a confidentiality agreement before first access, follows this
+  standard and reports any suspected incident to the DPO immediately.</li>
+</ul>
+
+<h2>3. Principles</h2>
+<ol>
+  <li><strong>Purpose limitation:</strong> personal information is used only for the purpose stated in section 4.</li>
+  <li><strong>Minimization:</strong> only the fields needed for that purpose are stored; everything else is discarded.</li>
+  <li><strong>Transparency:</strong> the public privacy policy (usepolia.com.br/privacidade) describes every use.</li>
+  <li><strong>Security:</strong> encryption in transit and at rest, least-privilege access, no secrets in code (section 6).</li>
+  <li><strong>Limited retention:</strong> data is deleted when its purpose ends (section 7).</li>
+  <li><strong>Accountability:</strong> every rule here is enforced in code or in a documented process, and checked (Appendix A).</li>
+</ol>
+
+<h2>4. Inventory: TikTok Shop data and why it is used</h2>
+<table>
+  <tr><th>Authorized scope</th><th>What Pólia reads</th><th>Purpose</th><th>What is stored</th></tr>
+  <tr><td>Shop Authorized Information, Global Shop Information</td><td>Shop ID, shop name, region, shop cipher</td><td>Identify which shop belongs to which seller account</td><td>Shop ID, name, region, cipher</td></tr>
+  <tr><td>Product Basic</td><td>Product and SKU IDs, titles, seller SKU codes</td><td>Let the seller link each listing to a product in Pólia One</td><td>Product ID, SKU ID and the link to the seller's own product</td></tr>
+  <tr><td>Product Modify</td><td>(write only) available stock per SKU</td><td>Update listing stock when the seller turns on stock sync</td><td>Nothing additional</td></tr>
+  <tr><td>Order Information</td><td>Order ID, status, paid time, line items (SKU, name, quantity, price after seller discount)</td><td>Record the sale, move stock and calculate the TikTok fee for the seller</td><td>Order ID, date, items, quantities, prices, calculated fee</td></tr>
+  <tr><td>Finance Information</td><td>Not called in the current release</td><td>Reserved for future fee reconciliation</td><td>Nothing</td></tr>
+</table>
+<p><strong>Buyer personal information is not stored.</strong> Order payloads are processed in memory; the buyer's
+name, address, phone number, email and any other buyer identifier are discarded and never written to the database,
+to logs or to backups. Pólia does not use TikTok Shop data for advertising, profiling, model training or contacting
+buyers, does not sell or share it, and does not combine it with data from other sources about the same buyer.</p>
+
+<h2>5. Seller (user) personal information</h2>
+<ul>
+  <li>Collected: name, email, login data, business information the seller types in, subscription and payment
+  status (card data is handled only by Stripe and never reaches Pólia).</li>
+  <li>Legal basis (LGPD art. 7): performance of the contract with the seller; legal obligation for tax records;
+  consent for optional marketing email, which can be withdrawn at any time.</li>
+</ul>
+
+<h2>6. Security controls applied to personal information</h2>
+<ul>
+  <li><strong>Encryption:</strong> TLS on every connection; database encrypted at rest (AES-256, Supabase managed
+  PostgreSQL); TikTok Shop access and refresh tokens stored in Supabase Vault, encrypted and readable only by
+  server-side code.</li>
+  <li><strong>Isolation:</strong> row-level security is enabled on every table. Tables holding TikTok Shop
+  connection, events, listing links and sync queues allow no access from the browser at all: only server-side
+  processes can read them.</li>
+  <li><strong>Least privilege:</strong> production access limited to the DPO, with multi-factor authentication on
+  every administrative account; no shared accounts.</li>
+  <li><strong>Integrity of incoming data:</strong> TikTok Shop webhooks are accepted only with a valid HMAC
+  signature; a shop is linked to an account only after the seller confirms it on screen.</li>
+  <li><strong>Logs:</strong> errors are logged without personal information or tokens.</li>
+  <li><strong>Development:</strong> every release passes a security checklist; database security advisors are
+  checked after each schema change; a dedicated security review of the TikTok Shop integration was completed on
+  October 24, 2026, before release.</li>
+</ul>
+
+<h2>7. Retention and deletion</h2>
+<table>
+  <tr><th>Data</th><th>Retention</th><th>How it is deleted</th></tr>
+  <tr><td>TikTok Shop access and refresh tokens</td><td>While the shop is connected</td><td>Deleted immediately on disconnection (Vault secrets removed by database trigger)</td></tr>
+  <tr><td>Shop connection and listing links</td><td>While the shop is connected</td><td>Deleted immediately on disconnection</td></tr>
+  <tr><td>Webhook event records (order ID only)</td><td>7 days</td><td>Automatic daily cleanup job</td></tr>
+  <tr><td>Sales recorded from orders (no buyer data)</td><td>While the seller account exists; up to 5 years when tax law requires</td><td>Deleted with the account, or on seller request</td></tr>
+  <tr><td>Seller account and all its data</td><td>While the account exists</td><td>Seller deletes it in the product (Settings, delete account); all rows are removed by cascade</td></tr>
+  <tr><td>Any remaining TikTok Shop data after the partnership ends</td><td>Up to 30 days</td><td>Deleted by the DPO, except records required by law</td></tr>
+</table>
+
+<h2>8. Data subject and partner requests</h2>
+<ul>
+  <li>Rights under LGPD art. 18 (confirmation, access, correction, deletion, portability, information about
+  sharing, withdrawal of consent) are handled through privacidade@usepolia.com.br within 15 days.</li>
+  <li>Requests from TikTok Shop or from a seller to delete, update or provide data received from TikTok Shop are
+  handled through the same channel, with the same deadline. The seller can also disconnect the shop in Pólia One
+  or revoke authorization in TikTok Shop Seller Center at any time.</li>
+  <li>The requester's identity is verified before data is provided or deleted.</li>
+</ul>
+
+<h2>9. Sharing, sub-processors and international transfer</h2>
+<ul>
+  <li>Sub-processors: Supabase (database, United States, us-east-2), Cloudflare (application hosting), Stripe
+  (payments), Resend (transactional email), Google (Analytics, Calendar and Gemini, for seller-provided data only).
+  TikTok Shop data is processed only by Supabase and Cloudflare.</li>
+  <li>Each sub-processor is bound by a data processing agreement. A new sub-processor requires DPO approval and an
+  update to the privacy policy before it receives any data.</li>
+  <li>Transfer to the United States relies on the safeguards of LGPD art. 33 (contractual clauses in the
+  providers' data processing agreements).</li>
+</ul>
+
+<h2>10. Breach notification</h2>
+<ol>
+  <li>Contain: revoke affected tokens and keys, block access, fix the cause.</li>
+  <li>Assess: which data, whose, how much and for how long.</li>
+  <li>Notify affected sellers and TikTok Shop by email within <strong>48 hours</strong> of a suspected or confirmed
+  breach involving TikTok Shop data; notify data subjects and the ANPD when there is relevant risk or harm (LGPD
+  art. 48).</li>
+  <li>Record the incident, root cause and corrective actions.</li>
+</ol>
+
+<h2>11. Awareness and review</h2>
+<p>Anyone granted access reads this standard and the security policy before first access and again after every
+update. The standard is reviewed at least once a year, and earlier when the law changes, a new data type or
+sub-processor is added, or an incident occurs.</p>
+
+<table>
+  <tr><th>Version</th><th>Date</th><th>Change</th></tr>
+  <tr><td>1.0</td><td>October 27, 2026</td><td>First version</td></tr>
+</table>
+
+<div class="sign">
+  Approved by Silvia Nunes de Oliveira, Managing Partner and Data Protection Officer<br>
+  Nunoli Soluções Digitais Ltda · privacidade@usepolia.com.br · October 27, 2026
+</div>
+
+<h2 class="break">Appendix A. Evidence (checked in production on October 27, 2026)</h2>
+<table>
+  <tr><th>Control</th><th>Evidence</th></tr>
+  <tr><td>Row-level security on every table</td><td>107 of 107 tables in the application database have row-level security enabled.</td></tr>
+  <tr><td>TikTok Shop tables are server-only</td><td>canal_conexoes, canal_eventos, anuncio_vinculos, canal_fila_estoque and canal_sync_travas: row-level security enabled with no access policy, so no browser session can read or write them.</td></tr>
+  <tr><td>Seller data scoped to the owner</td><td>Sales and fee tables allow read and update only where user_id equals the authenticated user.</td></tr>
+  <tr><td>Tokens encrypted</td><td>The connection table holds only references (access_secret_id, refresh_secret_id) to Supabase Vault secrets; tokens are never stored in plain columns.</td></tr>
+  <tr><td>No buyer data</td><td>The sale stored from a TikTok order contains: order ID, date, items, quantities, prices, fee and the note "Order [ID] from TikTok Shop". No buyer field exists in the schema.</td></tr>
+  <tr><td>Deletion on disconnection</td><td>Disconnecting deletes the connection row (a trigger removes the Vault secrets) and all listing links for that channel.</td></tr>
+  <tr><td>Automatic cleanup</td><td>Scheduled job "limpar-canal-eventos" runs daily and removes webhook event records older than 7 days.</td></tr>
+  <tr><td>Webhook authenticity</td><td>Incoming TikTok Shop webhooks are rejected unless the HMAC signature matches the app secret.</td></tr>
+  <tr><td>Account self-deletion</td><td>Available to every seller in Settings; user-linked tables reference the account with ON DELETE CASCADE.</td></tr>
+</table>
+
+<h2>Appendix B. Where each "Yes" answer of the questionnaire is supported</h2>
+<table>
+  <tr><th>Questionnaire topic</th><th>Section</th></tr>
+  <tr><td>Information security policy or program</td><td>Security Policy v1.0; this standard, section 6</td></tr>
+  <tr><td>Network segregation and threat protection</td><td>Security Policy section 7; this standard, section 6</td></tr>
+  <tr><td>Endpoint antivirus and security baseline (screen lock, passwords, clean desk, MFA)</td><td>Security Policy section 6; this standard, section 6</td></tr>
+  <tr><td>Access control and least privilege</td><td>Section 6; Appendix A</td></tr>
+  <tr><td>Data classification and encryption in transit and at rest</td><td>Security Policy section 3; this standard, section 6</td></tr>
+  <tr><td>Incident response policy</td><td>Section 10; Security Policy section 11</td></tr>
+  <tr><td>Vulnerability management</td><td>Section 6; Security Policy section 9</td></tr>
+  <tr><td>Internal data protection policy, regularly updated</td><td>This standard (sections 1 to 11, annual review)</td></tr>
+  <tr><td>Helping sellers and TikTok Shop delete, update or provide data</td><td>Section 8</td></tr>
+  <tr><td>Privacy policy, regularly updated</td><td>usepolia.com.br/privacidade; section 3</td></tr>
+  <tr><td>Data Protection Officer</td><td>Section 2</td></tr>
+  <tr><td>Breach notification to TikTok Shop and sellers</td><td>Section 10 (48 hours)</td></tr>
+  <tr><td>Deletion at the end of the relationship</td><td>Section 7</td></tr>
+</table>
+
+</body>
+</html>

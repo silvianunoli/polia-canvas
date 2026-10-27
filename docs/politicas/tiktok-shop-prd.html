@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pólia One for TikTok Shop · Product Requirements</title>
+<style>
+  @page { size: A4; margin: 18mm 18mm 20mm; }
+  :root { --ink:#0A0A0A; --ink-soft:#2C2C2C; --muted:#6B6B6B; --line:#E6E6E6; --surface:#F2F0ED; --bg:#FFFFFF; }
+  body { background:var(--bg); color:var(--ink); font-family: Inter, "Segoe UI", Arial, sans-serif; font-size:10pt; line-height:1.5; margin:0; }
+  h1 { font-size:18pt; letter-spacing:-0.02em; margin:0 0 4pt; }
+  h2 { font-size:11.5pt; letter-spacing:-0.02em; margin:16pt 0 4pt; page-break-after:avoid; }
+  h3 { font-size:10pt; margin:10pt 0 3pt; page-break-after:avoid; }
+  p, li { margin:0 0 5pt; }
+  ul, ol { margin:0 0 6pt; padding-left:16pt; }
+  .meta { color:var(--muted); font-size:9pt; margin-bottom:14pt; border-bottom:1px solid var(--line); padding-bottom:10pt; }
+  table { width:100%; border-collapse:collapse; margin:4pt 0 8pt; font-size:9pt; page-break-inside:avoid; }
+  th, td { border:1px solid var(--line); padding:4pt 6pt; text-align:left; vertical-align:top; }
+  th { font-weight:600; background:var(--surface); }
+  code { font-family: Consolas, "Courier New", monospace; font-size:8.5pt; }
+  .flow { border:1px solid var(--line); background:var(--surface); padding:8pt 10pt; margin:4pt 0 8pt; page-break-inside:avoid; }
+  .flow p { margin:0 0 4pt; font-size:9pt; }
+  .flow strong { display:inline-block; min-width:92pt; }
+  .small { color:var(--muted); font-size:8.5pt; }
+</style>
+</head>
+<body>
+
+<h1>Pólia One for TikTok Shop</h1>
+<div class="meta">
+  Product requirements document for app review · App ID 7699576083930793735 · Category: Enterprise Resource Planning (ERP) · Market: Brazil, local sellers<br>
+  Nunoli Soluções Digitais Ltda · Version 1.0 · October 24, 2026 · Owner: Silvia Nunes de Oliveira
+</div>
+
+<h2>1. Product overview</h2>
+<p>Pólia One (one.usepolia.com.br) is a back-office web app for small Brazilian brands that sell physical
+products. It keeps products, stock, sales, finances, pricing and goals in one place. Most of our sellers sell on
+several channels at once (Instagram, WhatsApp, fairs, their own site and marketplaces) and lose track of stock
+and real profit because each channel lives in a different spreadsheet.</p>
+<p>The TikTok Shop integration connects a seller's shop to her Pólia One account so that:</p>
+<ol>
+  <li>every paid TikTok Shop order becomes a sale in Pólia One automatically, with items, price, date and an estimated channel fee;</li>
+  <li>stock stays the same in both places: a sale on any channel lowers the Pólia One stock, and Pólia One sends the new quantity to the TikTok listing;</li>
+  <li>the seller sees what each TikTok sale actually earned after fees and product cost, next to her other channels.</li>
+</ol>
+<p>The integration is available on the Pólia One <strong>Pro</strong> plan. It is live in production and has been tested end to end with
+the Partner Center development shop.</p>
+
+<h2>2. Users and use cases</h2>
+<table>
+  <tr><th style="width:30%">Use case</th><th>What the seller does</th><th style="width:30%">Result</th></tr>
+  <tr><td>Connect the shop</td><td>Settings &gt; Integrations &gt; TikTok Shop &gt; Connect. Authorizes on the TikTok page and returns to Pólia One.</td><td>Shop name and status shown on the card.</td></tr>
+  <tr><td>Link listings to products</td><td>Opens "Ligar anúncios" (link listings). Pólia One lists the shop's products and suggests a match for each SKU, first by seller SKU, then by name. She reviews and saves.</td><td>Each TikTok SKU is linked to a Pólia One product variation, or a new product is created from the listing.</td></tr>
+  <tr><td>Receive orders</td><td>Nothing. Orders arrive on their own.</td><td>Paid order appears in Sales as "a receber" (receivable) within about one minute; linked items lower stock.</td></tr>
+  <tr><td>Cancelled orders</td><td>Nothing.</td><td>The sale is marked cancelled and the stock goes back.</td></tr>
+  <tr><td>Keep stock in sync</td><td>Turns on "A Pólia cuida do estoque" (Pólia One manages stock).</td><td>Any stock change in Pólia One (sale on another channel, purchase, loss, count) updates the TikTok listing quantity.</td></tr>
+  <tr><td>Disconnect</td><td>Clicks Disconnect on the card.</td><td>Tokens and listing links are deleted at once; past sales stay as her own financial records.</td></tr>
+</table>
+
+<h2>3. Data flow</h2>
+<div class="flow">
+  <p><strong>Authorization</strong> Pólia One &rarr; TikTok authorization page (with a random <code>state</code>) &rarr; redirect to one.usepolia.com.br/configuracoes/integracoes/tiktok with <code>code</code> &rarr; server exchanges the code for tokens &rarr; tokens stored encrypted in the Supabase Vault. When the authorization starts on TikTok's side (no <code>state</code>), the seller must confirm the shop name in Pólia One before it is linked.</p>
+  <p><strong>Orders</strong> TikTok webhook (order status change) &rarr; <code>tiktok-webhook</code> function verifies the signature and queues the order ID, answering in under 3 seconds &rarr; scheduled job every minute &rarr; <code>tiktok-sync</code> fetches the order detail and records or cancels the sale. A sweep every 15 minutes searches orders updated since the last sync, so a missed webhook is recovered.</p>
+  <p><strong>Stock</strong> stock movement in Pólia One &rarr; database trigger queues the linked SKUs &rarr; <code>tiktok-sync</code> reads the product's warehouse and sends the absolute available quantity with Update Inventory. Sending the absolute value makes retries safe.</p>
+  <p><strong>Tokens</strong> the access token is renewed with the refresh token before it expires. If TikTok refuses the renewal, the connection is marked as error and the seller is asked to reconnect.</p>
+</div>
+
+<h2>4. TikTok Shop APIs and scopes</h2>
+<table>
+  <tr><th>API</th><th>Version</th><th>Used for</th><th>Scope package</th></tr>
+  <tr><td>Get Access Token / Refresh Token</td><td>v2</td><td>Authorization and renewal</td><td>n/a</td></tr>
+  <tr><td>Get Authorized Shops</td><td>202309</td><td>Shop ID, cipher, name and region after authorization</td><td>Shop Authorized Information</td></tr>
+  <tr><td>Search Products</td><td>202502</td><td>List the shop's products and SKUs for linking</td><td>Product Basic</td></tr>
+  <tr><td>Get Product</td><td>202309</td><td>SKU details and warehouse IDs</td><td>Product Basic</td></tr>
+  <tr><td>Update Inventory</td><td>202309</td><td>Send Pólia One stock to linked SKUs (only when the seller turns it on)</td><td>Product Modify</td></tr>
+  <tr><td>Get Order Detail</td><td>202309</td><td>Items, prices, discounts, status and date of an order</td><td>Order Information</td></tr>
+  <tr><td>Search Orders</td><td>202309</td><td>15-minute recovery sweep by update time</td><td>Order Information</td></tr>
+  <tr><td>Webhook: order status change</td><td>type 1</td><td>Near real-time order notification</td><td>Order Information</td></tr>
+</table>
+<p class="small">Global Shop Information is part of the shop authorization. Finance Information is requested for the next
+release, which will replace the estimated fee with the real settlement amount; the current version does not call finance APIs.
+Pólia One does not create or edit listings, prices or orders, and does not message buyers.</p>
+
+<h2>5. Business rules</h2>
+<ul>
+  <li><strong>When an order becomes a sale:</strong> statuses ON_HOLD, AWAITING_SHIPMENT, PARTIALLY_SHIPPING, AWAITING_COLLECTION,
+  IN_TRANSIT, DELIVERED and COMPLETED create the sale as receivable. UNPAID orders are ignored until paid.</li>
+  <li><strong>Cancelled</strong> (CANCELLED) after the sale exists: the sale is cancelled and linked stock is returned.</li>
+  <li><strong>Idempotency:</strong> one sale per order ID per account, enforced by a unique index. Webhook repeats and sweeps never duplicate a sale.</li>
+  <li><strong>Item price:</strong> original price minus seller discount, grouped by SKU and price.</li>
+  <li><strong>Unlinked item:</strong> the sale is still recorded, without changing stock, and the order note lists the unlinked products.</li>
+  <li><strong>Fee:</strong> estimated from the TikTok Shop fee rule the seller registers in Pólia One (percentage plus fixed amount).</li>
+  <li><strong>Stock to TikTok:</strong> only linked SKUs, only while the seller keeps the option on; negative stock is sent as zero; up to 5 attempts per change, with the error kept for review.</li>
+</ul>
+
+<h2>6. Data handling and privacy</h2>
+<table>
+  <tr><th style="width:28%">Data</th><th>Stored</th><th style="width:30%">Retention</th></tr>
+  <tr><td>Shop</td><td>Shop ID, cipher, name, region, connection status, last sync time</td><td>Until the seller disconnects or deletes her account</td></tr>
+  <tr><td>Tokens</td><td>Access and refresh tokens, encrypted in Supabase Vault; the table keeps only the secret IDs</td><td>Deleted with the connection (database trigger)</td></tr>
+  <tr><td>Listing links</td><td>TikTok product ID and SKU ID mapped to a Pólia One variation</td><td>Deleted on disconnect</td></tr>
+  <tr><td>Orders</td><td>Sale record: order ID, date, item names, quantities, prices, estimated fee</td><td>Seller's own financial record, kept until she deletes it or her account</td></tr>
+  <tr><td>Webhook queue</td><td>Shop ID and order ID only; the webhook payload is not stored</td><td>Deleted 7 days after processing</td></tr>
+  <tr><td>Buyer data</td><td><strong>Not stored.</strong> No buyer name, phone, e-mail, address or tax ID is saved</td><td>n/a</td></tr>
+</table>
+
+<h2>7. Security</h2>
+<ul>
+  <li>Tokens never reach the browser; all TikTok calls run on the server (Cloudflare Workers and Supabase Edge Functions). App key and secret live in environment secrets, never in source code.</li>
+  <li>Every API request is signed with HMAC-SHA256 as specified. Webhooks are accepted only with a valid signature (HMAC of app key plus raw body), compared in constant time.</li>
+  <li>OAuth <code>state</code> is a random UUID stored per account and cleared after use. A shop already linked to another Pólia One account cannot be linked again (unique index).</li>
+  <li>Database tables of the integration have row-level security on and no access for browser roles; sales are written by server-only functions that check the account owner of every product variation.</li>
+  <li>A lock prevents two sync runs at the same time. Errors are logged without tokens or buyer data.</li>
+  <li>The company's Information Security and Data Protection Policy (submitted with the security questionnaire) covers access control, MFA on administrative accounts, incident response and data subject requests under Brazil's LGPD.</li>
+</ul>
+
+<h2>8. Screens</h2>
+<ul>
+  <li><strong>Settings &gt; Integrations, TikTok Shop card:</strong> what Pólia One imports and what it does not do; Connect button (Pro only). When connected: shop name, last sync, number of linked listings, "Ligar anúncios", the stock option and Disconnect.</li>
+  <li><strong>Authorization return:</strong> confirms the connection, or asks "Connect this shop?" with the shop name when the authorization started on TikTok.</li>
+  <li><strong>Ligar anúncios:</strong> one row per TikTok SKU with the suggested Pólia One variation and the reason (SKU, name, none); options per row: link to a variation, link to a product without stock control, create a new product, or do not link.</li>
+  <li><strong>Sales:</strong> TikTok orders appear with the "TikTok Shop" channel label, like any other channel.</li>
+</ul>
+
+<h2>9. How to test</h2>
+<ol>
+  <li>Log in at https://one.usepolia.com.br with the test account provided in the review form (Pro plan).</li>
+  <li>Settings &gt; Integrations &gt; TikTok Shop &gt; Conectar. Authorize your test shop.</li>
+  <li>Click "Ligar anúncios", review the suggestions and save.</li>
+  <li>Place a test order in the shop. Within about one minute it appears in Vendas as "a receber" and the linked stock goes down.</li>
+  <li>Turn on "A Pólia cuida do estoque" and change a quantity in Produtos: the TikTok listing updates within about one minute.</li>
+  <li>Cancel the test order: the sale becomes "cancelada" and the stock returns.</li>
+</ol>
+
+<h2>10. Out of scope in this version</h2>
+<ul>
+  <li>Creating or editing listings and prices on TikTok Shop.</li>
+  <li>Buyer messaging and customer service.</li>
+  <li>Fulfillment, shipping labels and returns handling.</li>
+  <li>Reconciliation with real settlement amounts (planned, using Finance Information).</li>
+</ul>
+
+<p class="small" style="margin-top:14pt">Security and privacy contact: privacidade@usepolia.com.br · Website: https://usepolia.com.br · Privacy policy: https://usepolia.com.br/privacidade</p>
+
+</body>
+</html>
