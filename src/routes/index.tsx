@@ -7,7 +7,7 @@ import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import type { BuscaCadastro } from "@/components/landing/BlocosLanding";
-import { PERGUNTAS_MARCA_B, PaginaMarcaB } from "@/components/landing/PaginaMarcaB";
+import { PERGUNTAS_HOME, PaginaMarcaB } from "@/components/landing/PaginaMarcaB";
 
 // Home V6 (07/10/2026): a copy aprovada em 06/10 (Ângulo B, "a marca sustenta o
 // preço"), a mesma página da /landing-b com o menu do site, o link pro Sobre e
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/")({
     links: [linkCanonico("/")],
     // Gerado do mesmo array que a página mostra, nunca copiado à mão: FAQ
     // estruturado que não bate com o texto visível vale menos que nenhum.
-    scripts: [tagJsonLd(jsonLdFaq(PERGUNTAS_MARCA_B))],
+    scripts: [tagJsonLd(jsonLdFaq(PERGUNTAS_HOME))],
   }),
   component: HomePage,
 });

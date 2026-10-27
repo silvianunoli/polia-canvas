@@ -3,10 +3,15 @@ import { Link } from "@tanstack/react-router";
 import {
   BarChart3,
   Boxes,
+  Building2,
   Calculator,
+  CalendarClock,
+  ClipboardCheck,
   Copy,
+  FileSpreadsheet,
   FileText,
   Gauge,
+  LayoutGrid,
   MessageSquareQuote,
   NotebookPen,
   PackageCheck,
@@ -47,6 +52,7 @@ import {
   MockFraseMes,
   MockPerguntaMarca,
   MockTresNumeros,
+  MockVendaEstoque,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
 import { HeroComVideo } from "@/components/landing/VideoVsl";
@@ -63,6 +69,79 @@ import type { NichoLanding } from "@/lib/nichosLanding";
  */
 
 /* ───────────────────────────── conteúdo ───────────────────────────── */
+
+/*
+ * Home reestruturada pro escritório da marca (COPY-37, aprovada em 27/10/2026).
+ * Proposta bloco a bloco na seção 8 de POSICIONAMENTO-POLIA-ONE.md, na raiz do
+ * workspace. Tudo o que tem "Escritorio" no nome vale só com `escritorio` (home);
+ * a /landing-b segue com o conteúdo original até o teste de campanha acabar.
+ */
+
+/** A semana da dona, com o preço como uma das cenas, não a única. */
+const semanaDaCena = [
+  "Segunda, o pedido fica anotado na conversa.",
+  "Terça, o estoque é conferido no caderno.",
+  "Quarta, o Pix da cliente cai na conta de casa.",
+  "Sexta, o orçamento sai no chute, porque não deu tempo de fazer a conta.",
+];
+
+/** Falas literais da pesquisa (leva 2): dinheiro, estoque e preço. */
+const notasEscritorio = [
+  "vendo bastante mas é a maior bagunça, dinheiro tudo misturado e eu sem saber quanto de fato é meu",
+  "comprei um lote grande de bolsa achando que ia voar e ficou meses parado",
+  "mandei um valor meio no chute e a cliente sumiu",
+];
+
+const jeitoDeHojeEscritorio: ItemLista[] = [
+  {
+    icone: NotebookPen,
+    titulo: "O caderno",
+    texto: "guarda o que aconteceu, mas não soma sozinho e some na bolsa.",
+  },
+  {
+    icone: FileSpreadsheet,
+    titulo: "A planilha",
+    texto: "funciona até a primeira fórmula quebrar. Aí vira planilha perdida.",
+  },
+  {
+    icone: LayoutGrid,
+    titulo: "Um app pra cada coisa:",
+    texto: "o estoque num, o pedido no WhatsApp, o dinheiro no banco.",
+  },
+  {
+    icone: Building2,
+    titulo: "O programa de gestão de empresa grande",
+    texto:
+      "é feito pra quem tem contador e estoquista. Assusta no primeiro dia e fica pago e parado.",
+  },
+  {
+    icone: Tag,
+    titulo: "O preço da concorrente",
+    texto: "vem de uma conta que não é a sua.",
+  },
+];
+
+const operacao: ItemLista[] = [
+  {
+    icone: Boxes,
+    titulo: "O estoque que se conta sozinho.",
+    texto:
+      "Cada venda baixa a peça, o kit baixa cada item, e a Pólia One mostra o que repor e quanto.",
+    planos: ["Premium"],
+  },
+  {
+    icone: ClipboardCheck,
+    titulo: "O orçamento que vira venda.",
+    texto: "Com a cara da marca, aprovado pela cliente no link.",
+    planos: ["Premium"],
+  },
+  {
+    icone: CalendarClock,
+    titulo: "O boleto que não vence esquecido.",
+    texto: "Contas a pagar com vencimento, e as que repetem todo mês.",
+    planos: ["Premium"],
+  },
+];
 
 const notasProblema = [
   "um cliente me pediu orçamento e eu mudei o preço umas três vezes antes de mandar, de tão insegura que eu tava",
@@ -159,6 +238,18 @@ const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
 ];
 
 /**
+ * Home: entra o grupo "A operação" entre o preço e o mês, e o "Pedido por pedido."
+ * sai do mês, porque o orçamento e a venda agora moram na operação.
+ */
+const oQueMudaEscritorio: Array<{ grupo: string; itens: ItemLista[] }> = [
+  ...oQueMuda.filter((g) => g.grupo !== "O mês"),
+  { grupo: "A operação", itens: operacao },
+  ...oQueMuda
+    .filter((g) => g.grupo === "O mês")
+    .map((g) => ({ ...g, itens: g.itens.filter((i) => i.titulo !== "Pedido por pedido.") })),
+];
+
+/**
  * O escritório da marca (COPY-34, 27/10/2026): o que um ERP faz, dito pelo efeito.
  * Os quatro lugares são os que a venda registrada já atualiza hoje (src/lib/vendas.ts).
  * Texto em POSICIONAMENTO-POLIA-ONE.md, seção 6, na raiz do workspace.
@@ -236,6 +327,12 @@ const negocios = [
   "Fotografia",
   "Cursos online",
   "Templates",
+];
+
+/** Home: a primeira linha do "sim" fala da operação espalhada. */
+const praQuemSimEscritorio = [
+  "Vende pelo WhatsApp, Instagram, feira ou marketplace, e anota cada venda num lugar diferente.",
+  ...praQuemSim,
 ];
 
 const praQuemNao = [
@@ -328,6 +425,21 @@ export const PERGUNTAS_MARCA_B = [
   },
 ];
 
+/**
+ * FAQ da home: a mesma lista com "A Pólia One é um ERP?" logo depois do "curso".
+ * É o único lugar da home onde a palavra aparece (COPY-37). Exportado pro FAQPage
+ * (JSON-LD) da home, pelo mesmo motivo do PERGUNTAS_MARCA_B.
+ */
+export const PERGUNTAS_HOME = [
+  PERGUNTAS_MARCA_B[0],
+  {
+    pergunta: "A Pólia One é um ERP?",
+    resposta:
+      "Pra quem conhece o termo, funciona como um. Estoque por variação, vendas que baixam o estoque e entram no Financeiro, contas a pagar, clientes e orçamento, tudo ligado. A diferença é a ordem: um ERP começa pelo estoque, a Pólia One começa pela marca e pelo preço.",
+  },
+  ...PERGUNTAS_MARCA_B.slice(1),
+];
+
 /* ───────────────────────────── página ───────────────────────────── */
 
 /**
@@ -389,6 +501,9 @@ export function PaginaMarcaB({
                 : escritorio
                   ? "A Pólia One é o escritório da sua marca: preço, estoque, vendas e dinheiro no mesmo lugar."
                   : "A Pólia One liga a sua marca, o custo de cada produto e a meta do mês. Na hora do orçamento, o preço sai dessa conta."
+            }
+            micro={
+              escritorio && !nicho ? "Sem cartão. Conta nova começa com 7 dias de Pro." : undefined
             }
           />
         ) : (
@@ -479,7 +594,7 @@ export function PaginaMarcaB({
           <div className="mt-12">
             <Rotulo>Pra quem é</Rotulo>
             <h2 className={`mt-4 mb-8 ${H2}`}>Feita pra quem toca a própria marca.</h2>
-            <ParaQuem sim={praQuemSim} nao={praQuemNao} />
+            <ParaQuem sim={escritorio ? praQuemSimEscritorio : praQuemSim} nao={praQuemNao} />
           </div>
         </Secao>
 
@@ -509,14 +624,33 @@ export function PaginaMarcaB({
         {/* B3 · O PROBLEMA */}
         <Secao>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[6fr_5fr]">
-            <div>
-              <Rotulo>A cena</Rotulo>
-              <h2 className={`mt-4 ${H2}`}>O orçamento chega no WhatsApp. O preço sai no susto.</h2>
-              <p className={`mt-6 ${CORPO}`}>
-                Você muda o valor umas três vezes antes de mandar. A cliente diz que tá caro, você
-                amolece, e o desconto sai do seu lucro. Depois vem a noite remoendo se cobrou certo.
-              </p>
-            </div>
+            {escritorio ? (
+              <div>
+                <Rotulo>A cena</Rotulo>
+                <h2 className={`mt-4 ${H2}`}>
+                  O pedido chega no WhatsApp. A conta se espalha pela semana.
+                </h2>
+                <ul className="mt-6 flex list-none flex-col gap-2">
+                  {semanaDaCena.map((linha) => (
+                    <li key={linha} className={CORPO}>
+                      {linha}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <div>
+                <Rotulo>A cena</Rotulo>
+                <h2 className={`mt-4 ${H2}`}>
+                  O orçamento chega no WhatsApp. O preço sai no susto.
+                </h2>
+                <p className={`mt-6 ${CORPO}`}>
+                  Você muda o valor umas três vezes antes de mandar. A cliente diz que tá caro, você
+                  amolece, e o desconto sai do seu lucro. Depois vem a noite remoendo se cobrou
+                  certo.
+                </p>
+              </div>
+            )}
             <FotoLanding
               nome="problema-caderno-contas"
               alt="Caderno aberto com contas a lápis riscadas e refeitas, calculadora do celular e embalagens de papel kraft."
@@ -524,7 +658,7 @@ export function PaginaMarcaB({
             />
           </div>
           <div className="mt-12 grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-5">
-            {notasProblema.map((n, i) => (
+            {(escritorio ? notasEscritorio : notasProblema).map((n, i) => (
               <Reveal key={n} delay={i * 0.08} className={["", "md:mt-6", "md:mt-12"][i]}>
                 <NotaPesquisa texto={n} />
               </Reveal>
@@ -537,15 +671,23 @@ export function PaginaMarcaB({
           </p>
         </Secao>
 
-        {/* B4 · O JEITO DE HOJE */}
+        {/* B4 · O JEITO DE HOJE (na home, com o diagnóstico fechando o bloco) */}
         <Secao fundo="surface" respiro>
           <Rotulo>O jeito de hoje</Rotulo>
           <h2 className={`mt-4 max-w-[24ch] ${H2}`}>
-            O caderno guarda o que aconteceu. Não diz se o próximo preço fecha o mês.
+            {escritorio
+              ? "Cada ferramenta resolve um pedaço. Nenhuma conversa com a outra."
+              : "O caderno guarda o que aconteceu. Não diz se o próximo preço fecha o mês."}
           </h2>
           <div className="mt-10 max-w-[820px]">
-            <ListaEditorial itens={jeitoDeHoje} />
+            <ListaEditorial itens={escritorio ? jeitoDeHojeEscritorio : jeitoDeHoje} />
           </div>
+          {escritorio && (
+            <FraseAncora className="mt-12 !max-w-[44ch]">
+              Não é falta de organização. Quem não se organiza não dá conta de 50 peças numa semana.
+              É uma marca que virou empresa e um escritório que ficou no caderno.
+            </FraseAncora>
+          )}
         </Secao>
 
         {/* B5 · O MECANISMO */}
@@ -598,7 +740,7 @@ export function PaginaMarcaB({
         {/* B5b · O ESCRITÓRIO: só na home. Depois da marca (eixo marca primeiro), o que a
             venda faz sozinha e o que vem aí nos canais. */}
         {escritorio && (
-          <Secao fundo="surface">
+          <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
             <Rotulo>O escritório da marca</Rotulo>
             <h2 className={`mt-4 ${H2}`}>Uma venda. Quatro lugares em dia.</h2>
             <p className={`mt-6 max-w-[60ch] ${CORPO}`}>
@@ -642,7 +784,9 @@ export function PaginaMarcaB({
         <Secao id="como-funciona" className="scroll-mt-[88px]">
           <Rotulo>Como funciona</Rotulo>
           <h2 className={`mt-4 mb-10 max-w-[26ch] ${H2}`}>
-            Da razão de existir da marca ao preço que fecha o mês.
+            {escritorio
+              ? "Da razão de existir da marca ao mês que fecha."
+              : "Da razão de existir da marca ao preço que fecha o mês."}
           </h2>
           <ComoFuncionaPassos
             passos={[
@@ -660,8 +804,20 @@ export function PaginaMarcaB({
                   "Na Calculadora, o custo do produto, as taxas da maquininha ou do marketplace e o lucro que a marca precisa viram um preço sugerido. O desconto pode ser simulado antes de ser dado.",
                 mock: <MockCalculadoraHero />,
               },
+              // Home (COPY-37): o caminho passa pela venda antes do mês.
+              ...(escritorio
+                ? [
+                    {
+                      n: "03",
+                      titulo: "A venda num lugar só",
+                      texto:
+                        "O orçamento que a cliente aprova pelo link vira venda. A venda baixa o estoque, o kit baixa cada item e o dinheiro entra no Financeiro, já sem a taxa.",
+                      mock: <MockVendaEstoque />,
+                    },
+                  ]
+                : []),
               {
-                n: "03",
+                n: escritorio ? "04" : "03",
                 titulo: "O mês à vista",
                 texto: (
                   <>
@@ -676,32 +832,36 @@ export function PaginaMarcaB({
           <p className="mt-6 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
         </Secao>
 
-        {/* B7 · POR DENTRO */}
-        <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
-          <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[4fr_7fr]">
-            <div>
-              <Rotulo>Por dentro</Rotulo>
-              <h2 className={`mt-4 ${H2}`}>O preço, o lucro e o mês, na mesma tela.</h2>
-              <p className={`mt-6 ${CORPO}`}>
-                Exemplo da Ana, que faz cadernos de aquarela: a Calculadora mostra o preço sugerido,
-                quanto a marca lucra em cada venda e como esse preço conversa com a meta do mês
-                dela.
-              </p>
-              <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
+        {/* B7 · POR DENTRO: sai da home (COPY-37), repetia o escritório e o como funciona.
+            A âncora #produto do menu foi pro bloco do escritório. */}
+        {!escritorio && (
+          <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
+            <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[4fr_7fr]">
+              <div>
+                <Rotulo>Por dentro</Rotulo>
+                <h2 className={`mt-4 ${H2}`}>O preço, o lucro e o mês, na mesma tela.</h2>
+                <p className={`mt-6 ${CORPO}`}>
+                  Exemplo da Ana, que faz cadernos de aquarela: a Calculadora mostra o preço
+                  sugerido, quanto a marca lucra em cada venda e como esse preço conversa com a meta
+                  do mês dela.
+                </p>
+                <p className="mt-4 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
+              </div>
+              <MockDescontoSimulado />
             </div>
-            <MockDescontoSimulado />
-          </div>
-        </Secao>
+          </Secao>
+        )}
 
-        {/* B8 · O QUE MUDA */}
-        <Secao>
+        {/* B8 · O QUE MUDA: na home vira surface, porque sem o "Por dentro" encostaria
+            no Como funciona, que é bg. */}
+        <Secao fundo={escritorio ? "surface" : "bg"}>
           <Rotulo>O que muda</Rotulo>
           <h2 className={`mt-4 mb-10 max-w-[24ch] ${H2}`}>
             Cada decisão de dinheiro com um número do lado.
           </h2>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_5fr]">
             <div className="flex flex-col gap-10">
-              {oQueMuda.map(({ grupo, itens }) => (
+              {(escritorio ? oQueMudaEscritorio : oQueMuda).map(({ grupo, itens }) => (
                 <div key={grupo}>
                   <h3 className="mb-2 text-[20px] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)]">
                     {grupo}
@@ -743,8 +903,10 @@ export function PaginaMarcaB({
                 que eu vivia.
               </p>
               <p className={`mt-4 ${CORPO}`}>
-                A Pólia One é a ferramenta que eu queria ter aberto toda vez que um orçamento
-                chegava. Eu construo a Pólia usando a Pólia.
+                {escritorio
+                  ? "A Pólia One é o escritório que eu queria ter tido quando a minha marca cresceu."
+                  : "A Pólia One é a ferramenta que eu queria ter aberto toda vez que um orçamento chegava."}{" "}
+                Eu construo a Pólia usando a Pólia.
               </p>
               {linkSobre && (
                 <Link
@@ -778,7 +940,7 @@ export function PaginaMarcaB({
         {/* B12 · FAQ */}
         <Secao id="perguntas" className="scroll-mt-[88px]">
           <h2 className={`mb-8 ${H2}`}>Perguntas frequentes</h2>
-          <FaqLanding perguntas={PERGUNTAS_MARCA_B} />
+          <FaqLanding perguntas={escritorio ? PERGUNTAS_HOME : PERGUNTAS_MARCA_B} />
         </Secao>
         <div ref={zonaFinal}>
           {/* B13 · CTA FINAL */}
@@ -786,10 +948,14 @@ export function PaginaMarcaB({
             <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_4fr]">
               <div>
                 <h2 className="text-[clamp(30px,3.6vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance text-[var(--ink)]">
-                  O próximo orçamento vai chegar de qualquer jeito.
+                  {escritorio
+                    ? "Por fora, a marca que a cliente lembra. Por dentro, o escritório que fecha a conta."
+                    : "O próximo orçamento vai chegar de qualquer jeito."}
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
-                  A Pólia One deixa o preço pronto antes dele.
+                  {escritorio
+                    ? "Começa no Grátis, com 7 dias de Pro pra usar tudo."
+                    : "A Pólia One deixa o preço pronto antes dele."}
                 </p>
                 <div className="mt-8">
                   <BotaoCadastro busca={busca} contexto="final" invertido />

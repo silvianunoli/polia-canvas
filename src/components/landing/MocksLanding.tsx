@@ -245,6 +245,81 @@ export function MockFraseMes({ className }: { className?: string }) {
   );
 }
 
+/* ───────────────────── Como funciona (home, escritório) ───────────────────── */
+
+// Dois cadernos no cartão (taxa de 5%): é a venda que leva o Painel do MockFraseMes
+// (R$ 2.570) pra perto da meta. Mesmas contas da venda real (src/lib/vendas.ts):
+// o que entra no Financeiro é o total menos a taxa do canal.
+const VENDA_QTD = 2;
+const VENDA_TOTAL = PRECO * VENDA_QTD;
+const VENDA_TAXA = round2((VENDA_TOTAL * TAXA_PCT) / 100);
+const VENDA_ENTRA = round2(VENDA_TOTAL - VENDA_TAXA);
+const REGISTRADO_ANTES = 2570;
+const FALTA_DEPOIS = round2(META_DO_MES - (REGISTRADO_ANTES + VENDA_ENTRA));
+
+const efeitosDaVenda = [
+  { onde: "Estoque", antes: "14", depois: "12", detalhe: "cadernos A5 na prateleira" },
+  {
+    onde: "Financeiro",
+    antes: null,
+    depois: `+ ${fmt(VENDA_ENTRA)}`,
+    detalhe: `já sem a taxa de ${fmt(VENDA_TAXA)}`,
+  },
+  {
+    onde: "Painel",
+    antes: null,
+    depois: fmt(FALTA_DEPOIS),
+    detalhe: "pra bater a meta do mês",
+  },
+];
+
+/** Passo 03 da home (COPY-37): uma venda registrada e os lugares que ela atualiza. */
+export function MockVendaEstoque({ className }: { className?: string }) {
+  return (
+    <Cartela
+      label={`Venda registrada na Pólia One: ${VENDA_QTD} cadernos de aquarela A5, ${fmt(VENDA_TOTAL)} no cartão. O estoque passa de 14 pra 12, o Financeiro recebe ${fmt(VENDA_ENTRA)} já sem a taxa de ${fmt(VENDA_TAXA)}, e o Painel mostra que faltam ${fmt(FALTA_DEPOIS)} pra meta do mês.`}
+      className={className}
+    >
+      <Label>Vendas · venda registrada</Label>
+      <div className="mt-3 flex items-baseline justify-between gap-3">
+        <p className="min-w-0 truncate text-[14px] font-semibold text-[var(--ink)]">
+          {VENDA_QTD} cadernos de aquarela A5
+        </p>
+        <p className="flex-none text-[14px] font-semibold text-[var(--ink)]">{fmt(VENDA_TOTAL)}</p>
+      </div>
+      <p className="text-[12px] text-[var(--muted)]">Cartão · Júlia Prado</p>
+      <ul className="mt-3 flex list-none flex-col border-t border-[var(--line)]">
+        {efeitosDaVenda.map((e) => (
+          <li
+            key={e.onde}
+            className="flex items-center gap-3 border-b border-dashed border-[var(--line)] py-2.5 last:border-b-0"
+          >
+            <span className="w-[76px] flex-none font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+              {e.onde}
+            </span>
+            <span className="min-w-0 flex-1 text-[12.5px] leading-[1.45] text-[var(--ink-soft)]">
+              <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--ink)]">
+                {e.antes && (
+                  <>
+                    {e.antes}
+                    <ArrowRight aria-hidden="true" className="h-3 w-3" strokeWidth={2} />
+                  </>
+                )}
+                {e.depois}
+              </span>{" "}
+              {e.detalhe}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-[var(--muted)]">
+        <span className="h-1.5 w-1.5 rounded-full bg-[var(--secondary)]" />
+        atualizado agora, sem digitar de novo
+      </p>
+    </Cartela>
+  );
+}
+
 /* ───────────────────── Como funciona (landing A) ───────────────────── */
 
 const custosProduto = [
