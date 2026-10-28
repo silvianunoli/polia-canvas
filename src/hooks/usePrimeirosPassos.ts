@@ -17,6 +17,8 @@ import {
   type NichoDoPasso,
 } from "@/lib/primeirosPassos";
 import { businessTypeDoNicho, nichoDoBanco, type NichoNegocio } from "@/lib/nichoNegocio";
+import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
+import { lucroDoProdutoCalculado } from "@/lib/primeiroPreco";
 import { toastErro } from "@/lib/toast";
 
 export interface DadosPrimeirosPassos {
@@ -31,6 +33,38 @@ export interface DadosPrimeirosPassos {
   /** business_name sem espaço nas pontas ("" = sem nome). */
   nomeMarca: string;
   temPreco: boolean;
+  /** O primeiro produto guardado pela Calculadora, pra o passo feito mostrar o número dela (GRW-90). */
+  primeiroPreco: PrimeiroPrecoDoPasso | null;
+}
+
+export interface PrimeiroPrecoDoPasso {
+  id: string;
+  nome: string;
+  preco: number;
+  lucro: number;
+}
+
+function primeiroPrecoDaLinha(linha: unknown): PrimeiroPrecoDoPasso | null {
+  const l = linha as {
+    id?: string;
+    nome?: string | null;
+    preco_venda?: number | string | null;
+    preco_custo?: number | string | null;
+    calculadora_breakdown?: CalculadoraBreakdown | null;
+  } | null;
+  if (!l?.id) return null;
+  const preco = Number(l.preco_venda ?? 0);
+  const custo = l.preco_custo == null ? null : Number(l.preco_custo);
+  return {
+    id: l.id,
+    nome: (l.nome ?? "").trim(),
+    preco,
+    lucro: lucroDoProdutoCalculado({
+      precoVenda: preco,
+      precoCusto: custo,
+      breakdown: l.calculadora_breakdown ?? null,
+    }),
+  };
 }
 
 // Uma tentativa por aba: garantirBoasVindas já é idempotente no servidor (só
@@ -79,12 +113,15 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
           .eq("id", userId!)
           .maybeSingle(),
         // Mesma régua de "calculou o preço" do office (campanhas.functions):
-        // produto salvo pela Calculadora tem calculadora_breakdown.
+        // produto salvo pela Calculadora tem calculadora_breakdown. Traz o
+        // primeiro, pra o passo feito mostrar o preço e o lucro dele.
         supabase
           .from("produtos")
-          .select("id", { count: "exact", head: true })
+          .select("id, nome, preco_venda, preco_custo, calculadora_breakdown")
           .eq("user_id", userId!)
-          .not("calculadora_breakdown", "is", null),
+          .not("calculadora_breakdown", "is", null)
+          .order("created_at", { ascending: true })
+          .limit(1),
       ]);
       if (perfilRes.error) throw perfilRes.error;
       if (precoRes.error) throw precoRes.error;
@@ -105,7 +142,8 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
         estagio: estagioDoBanco(p?.business_stage),
         nicho: nichoDoBanco(p?.nicho),
         nomeMarca: (p?.business_name ?? "").trim(),
-        temPreco: (precoRes.count ?? 0) > 0,
+        temPreco: (precoRes.data ?? []).length > 0,
+        primeiroPreco: primeiroPrecoDaLinha(precoRes.data?.[0]),
       };
     },
   });

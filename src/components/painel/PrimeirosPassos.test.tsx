@@ -53,6 +53,25 @@ describe("PrimeirosPassos", () => {
     expect(screen.queryByText(/o teste do Pro ganha mais/)).toBeNull();
   });
 
+  it("passo do preço feito mostra o número dela e leva pra Calculadora (GRW-90)", () => {
+    const comPreco = progressoPrimeirosPassos({
+      temPreco: true,
+      modulo1Fechado: false,
+      temNome: false,
+    });
+    montar({
+      progresso: comPreco,
+      primeiroPreco: { id: "p1", nome: "Bolo de pote", preco: 18, lucro: 7 },
+    });
+    const linha = screen.getByText(/Bolo de pote:/);
+    // formatarReais tira os centavos de valor redondo (padrão do Painel).
+    expect(linha.textContent).toMatch(/R\$\s?18 ·/);
+    expect(linha.textContent).toMatch(/lucra R\$\s?7 por venda/);
+    expect(screen.getByRole("link", { name: "Ver na Calculadora" }).getAttribute("href")).toBe(
+      "/calculadora?produto=p1",
+    );
+  });
+
   it("com nicho salvo, a pergunta não aparece", () => {
     montar();
     expect(screen.queryByText("Antes dos passos: qual é o nicho da marca?")).toBeNull();

@@ -22,6 +22,8 @@ import {
   type ProgressoPrimeirosPassos,
 } from "@/lib/primeirosPassos";
 import { ESCOLHAS_NICHO, type NichoNegocio } from "@/lib/nichoNegocio";
+import { formatarReais } from "@/lib/formatarReais";
+import type { PrimeiroPrecoDoPasso } from "@/hooks/usePrimeirosPassos";
 
 const ROTULO = "font-accent text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]";
 
@@ -47,6 +49,7 @@ export function PrimeirosPassos({
   onEscolherNicho,
   onSalvarNome,
   bonusDias = null,
+  primeiroPreco = null,
 }: {
   progresso: ProgressoPrimeirosPassos;
   nicho: NichoDoPasso | null;
@@ -59,6 +62,11 @@ export function PrimeirosPassos({
   onSalvarNome: (nome: string) => Promise<boolean>;
   /** Dias que o teste do Pro ganha ao completar os três (ONE-136). null = não oferece. */
   bonusDias?: number | null;
+  /**
+   * O primeiro preço guardado (GRW-90). Com ele, o passo feito mostra o
+   * número dela em vez de só o check: é a primeira coisa que ela vê na volta.
+   */
+  primeiroPreco?: PrimeiroPrecoDoPasso | null;
 }) {
   const tituloId = useId();
   const tituloRef = useRef<HTMLHeadingElement>(null);
@@ -175,6 +183,23 @@ export function PrimeirosPassos({
                   >
                     {textos[id].subtitulo}
                   </p>
+                )}
+                {feito && id === "preco" && primeiroPreco && (
+                  <div className="mt-1 text-[14px] leading-snug">
+                    <p className="text-[var(--ink)]">
+                      {primeiroPreco.nome || "Primeiro preço"}: {formatarReais(primeiroPreco.preco)}{" "}
+                      <span aria-hidden="true">·</span>{" "}
+                      {primeiroPreco.lucro >= 0
+                        ? `lucra ${formatarReais(primeiroPreco.lucro)} por venda`
+                        : "abaixo do custo"}
+                    </p>
+                    <LinkInterno
+                      href={`/calculadora?produto=${primeiroPreco.id}`}
+                      className="mt-1 inline-block text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+                    >
+                      Ver na Calculadora
+                    </LinkInterno>
+                  </div>
                 )}
                 {emDestaque && nichoSalvo && acao(id)}
               </div>

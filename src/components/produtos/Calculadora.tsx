@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { hojeISO } from "@/lib/data.functions";
 import { Link } from "@tanstack/react-router";
-import { Lock, Copy, Plus, Trash2 } from "lucide-react";
+import { Lock, Copy, Plus, Trash2, Check } from "lucide-react";
 import { EtiquetaPlano } from "@/components/landing/BlocosLanding";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
+import { registrar } from "@/lib/founder-eventos";
 import { toastErro } from "@/lib/toast";
+import { useGuardarPrimeiroPreco, type EstadoPrimeiroPreco } from "@/hooks/useGuardarPrimeiroPreco";
+import {
+  NOME_PRODUTO_MAX,
+  deveGuardarSozinho,
+  nomeProvisorio,
+  resultadoProntoPraGuardar,
+} from "@/lib/primeiroPreco";
 import {
   calcularQuantoSobra,
   calcularPrecoSugerido,
@@ -28,7 +36,7 @@ import { BlocoInsumos, BlocoMaoDeObra } from "./BlocoInsumos";
 import { totalDosInsumos, type ItemInsumo } from "./insumos";
 import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { fmt, num, numInvalido, type Prefill, type Produto } from "./tipos";
 import { LucroPorCanal } from "./LucroPorCanal";
 
@@ -72,6 +80,9 @@ export function Calculadora({
   onAtualizado,
   fixosDoFinanceiro = null,
   perfilInicial,
+  temPreco = true,
+  onPrimeiroPrecoGuardado,
+  onCompletarCadastro,
 }: {
   onSalvarComoProduto: (pf: Prefill) => void;
   /** Cota do catálogo cheia: calcular segue livre, só o "Salvar como produto" fecha. */
@@ -91,6 +102,16 @@ export function Calculadora({
    * Painel). O produto recalculado tem prioridade: a aba dele é a do breakdown.
    */
   perfilInicial?: "produto" | "servico";
+  /**
+   * A conta já tem preço calculado (produto com breakdown). Sem preço, o
+   * primeiro resultado é guardado sozinho (GRW-90). Padrão true: quem não
+   * passa a leitura fica com o botão de sempre.
+   */
+  temPreco?: boolean;
+  /** O primeiro preço foi guardado ou teve o nome trocado: hora de reler o catálogo. */
+  onPrimeiroPrecoGuardado?: () => void;
+  /** "Completar o cadastro" do primeiro preço guardado: abre o modal do catálogo. */
+  onCompletarCadastro?: (produtoId: string) => void;
 }) {
   const bk = produtoRecalcular?.calculadora_breakdown ?? null;
   const v = (campo: string) => bk?.valores?.[campo] ?? "";
@@ -524,6 +545,67 @@ export function Calculadora({
     onAtualizado?.();
   };
 
+  // ── Primeiro preço guardado sozinho (GRW-90) ──
+  // "Visto" = o bloco do resultado entrou na tela pelo menos uma vez. Sem isso
+  // o primeiro campo preenchido já daria um preço válido e gravaria a conta
+  // pela metade. Sem IntersectionObserver (teste, navegador antigo), conta como visto.
+  const resultadoRef = useRef<HTMLDivElement>(null);
+  const [resultadoVisto, setResultadoVisto] = useState(false);
+  const temResultadoNaTela = !encomendaVazia;
+  useEffect(() => {
+    if (resultadoVisto || !temResultadoNaTela) return;
+    const el = resultadoRef.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setResultadoVisto(true);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) setResultadoVisto(true);
+      },
+      // 25%: no celular o bloco do resultado pode passar da metade da tela.
+      { threshold: 0.25 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [resultadoVisto, temResultadoNaTela]);
+
+  const resultadoPronto = resultadoProntoPraGuardar({ precoNaoSalvavel, resultadoVisto });
+
+  // Chegou ao preço: uma vez por montagem (mede quantas chegam ao resultado).
+  // Encomenda travada (sem Pro) não mostra o preço: não conta como resultado.
+  const resultadoRegistradoRef = useRef(false);
+  const precoFechadoNoPlano = perfil === "encomenda" && !ehProjete;
+  useEffect(() => {
+    if (!resultadoPronto || precoFechadoNoPlano || resultadoRegistradoRef.current) return;
+    resultadoRegistradoRef.current = true;
+    void registrar("feature_completed", {
+      feature: "calculadora",
+      propriedades: { passo: "resultado", perfil },
+    });
+  }, [resultadoPronto, precoFechadoNoPlano, perfil]);
+
+  const primeiroPreco = useGuardarPrimeiroPreco({
+    userId,
+    ativo: deveGuardarSozinho({ temPreco, recalculando: !!produtoRecalcular, perfil }),
+    pronto: resultadoPronto && perfil !== "encomenda" && !produtoRecalcular,
+    valores: {
+      perfil,
+      precoVenda: round2(calc.precoSugerido),
+      precoCusto: round2(custoBase) || null,
+      breakdown: buildBreakdown(),
+    },
+    onCriado: onPrimeiroPrecoGuardado,
+  });
+  // O bloco automático fica no lugar do botão enquanto a conta está na regra,
+  // e continua depois de guardar (a releitura de "tem preço" já vê o produto).
+  const modoPrimeiroPreco =
+    perfil !== "encomenda" &&
+    !produtoRecalcular &&
+    (primeiroPreco.produtoId !== null ||
+      deveGuardarSozinho({ temPreco, recalculando: false, perfil }));
+
   // Valor da sua hora: o MESMO estado em Produto (mão de obra pelo tempo),
   // Serviço e Encomenda. Desde 09/10/2026 o "usar como meu valor-hora padrão"
   // aparece nos três e em todo plano (antes só na Encomenda, Pro).
@@ -926,7 +1008,7 @@ export function Calculadora({
       {/* Resultado — na Encomenda, só aparece com algo lançado (estado "vazio" não calcula) */}
       {!encomendaVazia && (
         <>
-          <div className="mt-8 rounded-xl bg-[var(--secondary-light)] p-5">
+          <div ref={resultadoRef} className="mt-8 rounded-xl bg-[var(--secondary-light)] p-5">
             <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--secondary-text)]">
               Preço sugerido
             </p>
@@ -1042,7 +1124,23 @@ export function Calculadora({
             {/* Guardar é a ação principal (20/10/2026, GRW-66): 31 contas do Grátis
                 calcularam e só 3 guardaram. O botão morava no fim da página, depois
                 do simulador de desconto, e o preço calculado sumia ao sair. */}
-            {!encomendaTravada && (
+            {modoPrimeiroPreco && (
+              <BlocoPrimeiroPreco
+                estado={primeiroPreco.estado}
+                erro={primeiroPreco.erro}
+                erroNome={primeiroPreco.erroNome}
+                produtoId={primeiroPreco.produtoId}
+                invalido={calc.invalido}
+                nome={primeiroPreco.nome}
+                placeholderNome={nomeProvisorio(perfil)}
+                rotuloNome={perfil === "servico" ? "Nome do serviço" : "Nome do produto"}
+                onNome={primeiroPreco.setNome}
+                onSalvarNome={primeiroPreco.salvarNome}
+                onTentarDeNovo={primeiroPreco.tentarDeNovo}
+                onCompletarCadastro={onCompletarCadastro}
+              />
+            )}
+            {!encomendaTravada && !modoPrimeiroPreco && (
               <div className="mt-5 border-t border-[var(--line)] pt-4">
                 {calc.invalido && (
                   <p id="calc-salvar-motivo" className="mb-3 text-[13px] text-[var(--ink-soft)]">
@@ -1139,6 +1237,122 @@ export function Calculadora({
         Esses são valores de referência. Considere também o mercado e o posicionamento da sua marca.
       </p>
     </section>
+  );
+}
+
+/**
+ * Primeiro preço guardado sozinho (GRW-90, wireframe em cinza aprovado em
+ * docs/plano-primeiro-preco-guardado.md). Fica no lugar do "Guardar esse
+ * preço": esperando a conta parar, guardando, guardado (com o nome ali mesmo)
+ * ou erro com "Tentar de novo". Os números nunca saem da tela.
+ */
+function BlocoPrimeiroPreco({
+  estado,
+  erro,
+  erroNome,
+  produtoId,
+  invalido,
+  nome,
+  placeholderNome,
+  rotuloNome,
+  onNome,
+  onSalvarNome,
+  onTentarDeNovo,
+  onCompletarCadastro,
+}: {
+  estado: EstadoPrimeiroPreco;
+  erro: string | null;
+  erroNome: string | null;
+  produtoId: string | null;
+  invalido: boolean;
+  nome: string;
+  placeholderNome: string;
+  rotuloNome: string;
+  onNome: (v: string) => void;
+  onSalvarNome: () => Promise<boolean>;
+  onTentarDeNovo: () => void;
+  onCompletarCadastro?: (produtoId: string) => void;
+}) {
+  const guardado = produtoId !== null;
+
+  let recado: ReactNode;
+  if (estado === "erro" && erro) {
+    recado = (
+      <div role="alert">
+        <p className="text-[13px] text-[var(--danger)]">{erro}</p>
+        <button type="button" onClick={onTentarDeNovo} className={`${BTN_ACAO_CONTORNO} mt-3`}>
+          Tentar de novo
+        </button>
+      </div>
+    );
+  } else if (invalido && !guardado) {
+    recado = (
+      <p className="text-[13px] text-[var(--ink-soft)]">
+        Pra guardar, as porcentagens precisam somar menos de 100%.
+      </p>
+    );
+  } else if (!guardado) {
+    recado = (
+      <p className="text-[13px] text-[var(--ink-soft)]">
+        {estado === "guardando"
+          ? "Guardando esse preço..."
+          : "Com a conta parada, a Pólia One guarda esse preço no seu catálogo."}
+      </p>
+    );
+  } else {
+    recado = (
+      <p className="flex items-start gap-2 text-[14px] text-[var(--ink)]">
+        <Check size={16} strokeWidth={2.5} aria-hidden="true" className="mt-0.5 shrink-0" />
+        {estado === "guardando"
+          ? "Atualizando o preço guardado..."
+          : "A Pólia One guardou esse preço no catálogo."}
+      </p>
+    );
+  }
+
+  return (
+    <div className="mt-5 border-t border-[var(--line)] pt-4">
+      <div aria-live="polite">{recado}</div>
+      {guardado && (
+        <>
+          <form
+            className="mt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void onSalvarNome();
+            }}
+          >
+            <Campo label={rotuloNome} error={erroNome ?? undefined}>
+              <input
+                value={nome}
+                onChange={(e) => onNome(e.target.value.slice(0, NOME_PRODUTO_MAX))}
+                onBlur={() => void onSalvarNome()}
+                maxLength={NOME_PRODUTO_MAX}
+                placeholder={placeholderNome}
+                className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus:outline-none sm:text-[14px]"
+              />
+            </Campo>
+          </form>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+            {onCompletarCadastro && (
+              <button
+                type="button"
+                onClick={() => onCompletarCadastro(produtoId)}
+                className={BTN_ACAO}
+              >
+                Completar o cadastro
+              </button>
+            )}
+            <Link
+              to="/produtos"
+              className="text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+            >
+              Ver no catálogo
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 

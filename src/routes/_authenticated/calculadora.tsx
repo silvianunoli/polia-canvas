@@ -15,6 +15,10 @@ import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
 import { tipoPrecoDaBusca, type TipoPreco } from "@/lib/primeirosPassos";
+import { toastErro } from "@/lib/toast";
+
+const COLUNAS_PRODUTO =
+  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
 
 interface CalculadoraSearch {
   produto?: string;
@@ -135,6 +139,46 @@ function CalculadoraPage() {
   });
   const cotaAtingida = ehConfere && (totalProdutosQuery.data ?? 0) >= COTAS_CONFERE.produtos;
 
+  // Já tem preço calculado? Mesma régua do passo dos Primeiros passos (produto
+  // com calculadora_breakdown). Sem preço, o primeiro resultado é guardado
+  // sozinho (GRW-90). Leitura que falhou fica com o botão de sempre.
+  const temPrecoQuery = useQuery({
+    queryKey: ["calculadora-tem-preco", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("produtos")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId!)
+        .not("calculadora_breakdown", "is", null);
+      if (error) throw error;
+      return (count ?? 0) > 0;
+    },
+  });
+
+  // "Completar o cadastro" do primeiro preço guardado: o modal do catálogo em edição.
+  const [produtoCompletar, setProdutoCompletar] = useState<Produto | null>(null);
+  const abrirCompletarCadastro = async (id: string) => {
+    if (!userId) return;
+    const { data, error } = await supabase
+      .from("produtos")
+      .select(COLUNAS_PRODUTO)
+      .eq("id", id)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (error || !data) {
+      toastErro("A Pólia One não conseguiu abrir o cadastro agora. O preço continua guardado.");
+      return;
+    }
+    setProdutoCompletar(data as unknown as Produto);
+  };
+  const recarregarCatalogo = () => {
+    void qc.invalidateQueries({ queryKey: ["produtos", userId] });
+    void qc.invalidateQueries({ queryKey: ["produtos-total-ativos", userId] });
+    void qc.invalidateQueries({ queryKey: ["calculadora-tem-preco", userId] });
+    void qc.invalidateQueries({ queryKey: ["primeiros-passos", userId] });
+  };
+
   // Recalcular um produto existente: carrega só esse produto, da própria dona.
   const produtoQuery = useQuery({
     queryKey: ["produto-recalcular", userId, produtoId],
@@ -142,9 +186,7 @@ function CalculadoraPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("produtos")
-        .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
-        )
+        .select(COLUNAS_PRODUTO)
         .eq("id", produtoId!)
         .eq("user_id", userId!)
         .maybeSingle();
@@ -158,6 +200,7 @@ function CalculadoraPage() {
     !!userId &&
     !valorHoraPadraoQuery.isLoading &&
     !metaBoaQuery.isLoading &&
+    !temPrecoQuery.isLoading &&
     !(produtoId && produtoQuery.isLoading);
 
   if (!pronto) {
@@ -226,6 +269,11 @@ function CalculadoraPage() {
         valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
         fixosDoFinanceiro={fixosFinanceiroQuery.data ?? null}
         produtoRecalcular={produtoRecalcular}
+        // Catálogo do Grátis cheio (produtos vindos do Planejamento, sem
+        // breakdown): o insert seria recusado, fica o fluxo de sempre com o aviso.
+        temPreco={(temPrecoQuery.data ?? true) || cotaAtingida}
+        onPrimeiroPrecoGuardado={recarregarCatalogo}
+        onCompletarCadastro={(id) => void abrirCompletarCadastro(id)}
         onCancelarRecalculo={irParaProdutos}
         onAtualizado={() => {
           qc.invalidateQueries({ queryKey: ["produtos", userId] });
@@ -243,6 +291,20 @@ function CalculadoraPage() {
             qc.invalidateQueries({ queryKey: ["produtos", userId] });
             qc.invalidateQueries({ queryKey: ["produtos-total-ativos", userId] });
             setModalAberto(false);
+            irParaProdutos();
+          }}
+        />
+      )}
+
+      {produtoCompletar && userId && (
+        <ModalProduto
+          userId={userId}
+          prefill={null}
+          produtoEdit={produtoCompletar}
+          onClose={() => setProdutoCompletar(null)}
+          onSaved={() => {
+            recarregarCatalogo();
+            setProdutoCompletar(null);
             irParaProdutos();
           }}
         />

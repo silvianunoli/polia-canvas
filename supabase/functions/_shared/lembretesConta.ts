@@ -274,20 +274,23 @@ export function montarEmailRegua(
         url: `${SITE}/assinar`,
       };
       break;
+    // Desde GRW-90 (27/10/2026) o primeiro preço é guardado sozinho quando o
+    // resultado aparece. Quem cai aqui abriu a Calculadora e não chegou ao
+    // preço: o texto antigo ("o preço não ficou guardado") deixou de ser verdade.
     case "guardar_d2":
       c = {
         assunto: d.nome
-          ? `${d.nome}, o preço que você calculou não ficou guardado`
-          : "O preço calculado na Pólia One não ficou guardado",
-        headline: "O preço não ficou guardado",
-        preheader: "Um clique e ele vai pro catálogo, com o custo e o lucro.",
+          ? `${d.nome}, a conta do preço ficou no meio`
+          : "A conta do preço ficou no meio",
+        headline: "A conta do preço ficou no meio",
+        preheader: "Quando o resultado aparece, a Pólia One já guarda o preço no catálogo.",
         paragrafos: [
-          "A Calculadora fez a conta, mas o preço não foi guardado. Fechou a aba, ele foi junto.",
-          "Guardar é um clique: o botão Guardar esse preço fica logo abaixo do resultado. O produto vai pro catálogo com o custo e o lucro, e o Painel passa a usar esse número.",
+          "A Calculadora foi aberta, mas a conta parou antes do preço aparecer.",
+          "Com os custos e o tempo preenchidos, o preço aparece embaixo, e a Pólia One guarda esse preço no catálogo na hora, com o custo e o lucro. Não precisa de botão.",
           "Com um preço guardado, a Pólia One mostra quantas vendas a Meta do mês pede.",
           RODAPE_DICAS,
         ],
-        ctaLabel: "Quero guardar meu preço",
+        ctaLabel: "Quero terminar a conta",
         url: `${SITE}/calculadora`,
       };
       break;

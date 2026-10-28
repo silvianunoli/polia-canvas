@@ -154,6 +154,12 @@ describe("régua de ativação e do teste do Pro (GRW-66)", async () => {
     ).not.toContain("desligar");
   });
 
+  it("guardar_d2 fala da conta que parou no meio, não de preço calculado (GRW-90)", () => {
+    const e = montarEmailRegua("guardar_d2", { nome: null, testeFim: null, agora: antes });
+    expect(e.assunto).toBe("A conta do preço ficou no meio");
+    expect(e.texto).not.toMatch(/não ficou guardado|Guardar esse preço/);
+  });
+
   it("assunto com nome quando há nome", () => {
     expect(
       montarEmailRegua("guardar_d2", { nome: "Ana", testeFim: null, agora: antes }).assunto,

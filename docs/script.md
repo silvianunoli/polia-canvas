@@ -399,3 +399,17 @@ Fase 2, app (mesmo dia):
 - `types.ts`: colunas `notif_push_*` e as duas RPCs. `AndroidManifest.xml`: `POST_NOTIFICATIONS`.
 - `src/lib/push.test.ts` (3 testes). Suíte inteira: 2000 testes passando, lint e tipos limpos.
 - Pendente: ícone monocromático do aviso (hoje o Android usa o ícone padrão do app; entra com AND-01).
+
+## 2026-10-27 — A Calculadora guarda o primeiro preço sozinha (GRW-90)
+
+Diagnóstico GRW-89: 87 contas novas abriram a Calculadora e 9 guardaram preço; guardar abria um modal de 9 campos e a conta sumia ao fechar a aba. Plano `docs/plano-primeiro-preco-guardado.md`, aprovado pela Sil em 27/10 com as recomendações D1 a D4 (produto real no catálogo, nome provisório editável, passo do preço conta como feito, texto novo do `guardar_d2`). Sem commit nem deploy até ela conferir.
+
+- `lib/primeiroPreco.ts` (regra pura, 10 testes): só o primeiro preço, Produto ou Serviço, fora do recálculo; nome provisório "Primeiro produto"/"Primeiro serviço"; erro de cota reconhecido; lucro pelo breakdown.
+- `hooks/useGuardarPrimeiroPreco.ts` (8 testes): resultado válido, já visto na tela e parado por 2 s faz o insert; dali em diante atualiza a mesma linha; sair da tela no meio da espera grava na hora; resultado que fica inválido só cancela; nome trocado ao sair do campo.
+- Calculadora: o bloco do resultado é observado (IntersectionObserver, 25%) pra saber que o preço apareceu; o "Guardar esse preço" dá lugar ao bloco automático (esperando, guardando, guardado com o nome e "Completar o cadastro", erro com "Tentar de novo"). Segundo preço em diante, Encomenda e recálculo seguem no botão + modal.
+- Rota `/calculadora`: lê se a conta já tem preço (produto com breakdown); catálogo do Grátis cheio fica no fluxo de sempre; "Completar o cadastro" abre o `ModalProduto` em edição.
+- **Ajuste ao plano:** `founder_eventos.evento` tem check de lista fechada (nome novo derruba o lote). O resultado na tela vira `feature_completed` com `feature: calculadora` e `passo: resultado`; o guardado sozinho vira `create_product` com `auto: true`. Sem migration.
+- `avisarAtivacaoNoGA` saiu do `ModalProduto` pra `lib/ativacaoPreco.ts`, chamado também pelo guardado sozinho.
+- Painel: `usePrimeirosPassos` traz o primeiro produto com breakdown; o passo feito mostra "nome: R$ X · lucra R$ Y por venda" e "Ver na Calculadora" (1 teste).
+- E-mail `guardar_d2`: texto novo "A conta do preço ficou no meio" (1 teste). Só muda no ar depois de publicar a edge function `lembretes-conta`.
+- Suíte inteira verde (2.020 testes), tipos, lint e build ok.

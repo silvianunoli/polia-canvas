@@ -802,6 +802,7 @@ function PainelPage() {
                 return ok;
               }}
               bonusDias={convidaBonus ? DIAS_BONUS_PASSOS : null}
+              primeiroPreco={primeiros.dados.primeiroPreco}
               onSalvarNome={async (nome) => {
                 const ok = await primeiros.salvarNome(nome);
                 // Era o último passo: o bloco sai e o foco iria pro <body>.
