@@ -37,6 +37,7 @@ import { useTestePro } from "@/hooks/useTestePro";
 import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
+import { CartaoPedidosPainel } from "@/components/pedidos/CartaoPedidosPainel";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
 import { CartaoConsultoria } from "@/components/painel/CartaoConsultoria";
 import {
@@ -1097,6 +1098,13 @@ function PainelPage() {
                   </p>
                 </CartaoFinanceiro>
               </div>
+
+              {/* Entregas de hoje e da semana (GRW-93). Some sem pedido aberto. */}
+              {userId && clientReady && (
+                <div className={SPAN_CLASS[12]}>
+                  <CartaoPedidosPainel userId={userId} hoje={hojeISO()} />
+                </div>
+              )}
 
               {/* Vendas do mês e estoque baixo (VND-03). Some sem venda nem estoque. */}
               {vendasLiberado && userId && (

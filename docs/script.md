@@ -424,3 +424,23 @@ Wireframe em cinza aprovado pela Sil (v2, com Calculadora e Planner). Só dentro
 - `routeTree.gen.ts` regenerado (só a rota /mais; o bloco do Start foi mantido).
 - `BarraAbasApp.test.tsx` (5 testes). Suíte: 2046 passando; a única falha é do vocabulário em `src/components/pedidos` (trabalho de outra sessão, fora deste commit).
 - Fase 2: Hoje enxuto (números do mês, meta, tarefas de hoje, post do dia) e Planner de uma coluna por vez. Tutorial do app entra quando ele for pra loja (hoje só a Sil instala).
+
+## 2026-10-28 — Quadro de Pedidos, fase 1 (GRW-93)
+
+Plano `docs/plano-quadro-de-pedidos.md`, aprovado pela Sil em 28/10 com D1 a D7 (pedido mora em Vendas; Grátis com até 15 abertos; quadro fixo no Planner fora da cota; colunas fixas; sem sinal; estoque baixa na criação; véspera na Fase 2). Sem commit, deploy nem migration aplicada até ela conferir.
+
+- Migration `20261028140443_pedidos_quadro.sql` (**aplicada pelo MCP com autorização da Sil** em 28/10, conferida: colunas, checks, funções só pra `authenticated`): `vendas.andamento` (a_fazer, em_producao, pronto, entregue) e `vendas.entrega_em`, check de que os dois andam juntos, índice parcial; RPCs `registrar_pedido` (registrar_venda no canal encomenda + andamento e entrega na mesma transação, teto de 15 abertos no Grátis com a linha do perfil travada) e `atualizar_pedido` (move e remarca; cancelado não se move). Testada duas vezes numa transação desfeita, com a conta oi@usepolia.com.br: criar, repetir sem duplicar, mover, remarcar, receber, andamento inválido, sem data, pedido sem entrega pelo check, teto do Grátis no 16º, cancelado não se move, outra conta não mexe.
+- Nome `andamento`, não `etapa`: o teste de marca lê nome de coluna entre aspas e "etapa" é proibida. Rótulo na tela: "Andamento".
+- `lib/pedidos.ts` (9 testes): ordem das colunas, atraso, "entrega hoje/amanhã/sex 30/10/atrasado desde", o que fica no quadro (Entregue só 7 dias), resumo do dia e da semana, teto.
+- `components/pedidos`: `dados.ts` (leitura e RPCs), `ModalNovoPedido` (cliente com lista, itens pelo `ItemDaVenda` de Vendas, entrega, "Já pagou?"; catálogo vazio leva pra Calculadora; teto explica e leva pro Premium), `CartaoPedido` (4 testes; "Entregue. O dinheiro já entrou?"), `ModalPedido` (andamento, nova data, receber, cancelar com confirmação), `CartaoPedidosPainel` ("Entregas", porque o Painel já tem "Pedidos · mês").
+- Rota `/planner/pedidos`: quatro colunas, arrastar (HTML5 como o Planner) e seta de avançar; no celular, abas por coluna; estados de carregando, erro, vazio e teto.
+- Planner: card fixo "Pedidos" no topo. Vendas: "Ver como quadro". Painel: cartão "Entregas" só com pedido aberto.
+- Tutoriais (regra de 28/10): novo `pedidos` (ícone ClipboardList); `planner`, `painel`, `vendas` e `planos` ganharam a linha do quadro. Nenhum `trecho` de vídeo mudou.
+- `routeTree.gen.ts` regenerado pelo build (só a rota nova entra deste trabalho).
+
+## 2026-10-28 — App Android resumido, fase 2: Hoje enxuto e Planner de uma coluna (AND-07)
+
+- Rota `/hoje` (aba Hoje do app): saudação, "Entrou no mês" e "Quanto lucrou" (numerosDoMes sobre os lançamentos do mês, mesma conta do Painel), barra da Meta do mês (buscarMetaDoMes), tarefas atrasadas e de hoje com botão de concluir, post do dia do Plano de conteúdo (só se o plano abre a tela) e link pro Painel completo. O app abre direto nela (`useAppEntryGate`), e o Painel também acende a aba Hoje.
+- `planner.$slug.tsx`: no app, uma coluna por vez, trocada por botões com a contagem; a coluna ocupa a largura toda. Mudar de coluna continua pelo campo "Coluna" do detalhe do cartão. No navegador nada muda.
+- **Correção da fase 1:** `/mais` não estava em `ROTAS_TIER` e caía no padrão "controle", então o Grátis ia pro upgrade ao abrir a aba Mais. `/hoje` e `/mais` agora são "confere" (teste em `planos.test.ts`).
+- `tutoriais.test.ts`: `/hoje` em SEM_TUTORIAL (resumo do Painel, que tem tutorial).

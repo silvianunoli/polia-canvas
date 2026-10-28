@@ -65,6 +65,7 @@ import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_au
 import { Route as AuthenticatedComoUsarIndexRouteImport } from './routes/_authenticated/como-usar.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
 import { Route as AuthenticatedProdutosAnunciosRouteImport } from './routes/_authenticated/produtos_.anuncios'
+import { Route as AuthenticatedPlannerPedidosRouteImport } from './routes/_authenticated/planner.pedidos'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
 import { Route as AuthenticatedComoUsarTourRouteImport } from './routes/_authenticated/como-usar.tour'
@@ -365,6 +366,12 @@ const AuthenticatedProdutosAnunciosRoute =
     path: '/produtos/anuncios',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPlannerPedidosRoute =
+  AuthenticatedPlannerPedidosRouteImport.update({
+    id: '/planner/pedidos',
+    path: '/planner/pedidos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPlannerSlugRoute =
   AuthenticatedPlannerSlugRouteImport.update({
     id: '/planner/$slug',
@@ -493,6 +500,7 @@ export interface FileRoutesByFullPath {
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/como-usar/': typeof AuthenticatedComoUsarIndexRoute
@@ -562,6 +570,7 @@ export interface FileRoutesByTo {
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/como-usar': typeof AuthenticatedComoUsarIndexRoute
@@ -633,6 +642,7 @@ export interface FileRoutesById {
   '/_authenticated/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
+  '/_authenticated/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/_authenticated/produtos_/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/como-usar/': typeof AuthenticatedComoUsarIndexRoute
@@ -704,6 +714,7 @@ export interface FileRouteTypes {
     | '/como-usar/tour'
     | '/planejamento/completo'
     | '/planner/$slug'
+    | '/planner/pedidos'
     | '/produtos/anuncios'
     | '/chamados/'
     | '/como-usar/'
@@ -773,6 +784,7 @@ export interface FileRouteTypes {
     | '/como-usar/tour'
     | '/planejamento/completo'
     | '/planner/$slug'
+    | '/planner/pedidos'
     | '/produtos/anuncios'
     | '/chamados'
     | '/como-usar'
@@ -843,6 +855,7 @@ export interface FileRouteTypes {
     | '/_authenticated/como-usar/tour'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
+    | '/_authenticated/planner/pedidos'
     | '/_authenticated/produtos_/anuncios'
     | '/_authenticated/chamados/'
     | '/_authenticated/como-usar/'
@@ -1285,6 +1298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProdutosAnunciosRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/planner/pedidos': {
+      id: '/_authenticated/planner/pedidos'
+      path: '/planner/pedidos'
+      fullPath: '/planner/pedidos'
+      preLoaderRoute: typeof AuthenticatedPlannerPedidosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/planner/$slug': {
       id: '/_authenticated/planner/$slug'
       path: '/planner/$slug'
@@ -1398,6 +1418,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedComoUsarTourRoute: typeof AuthenticatedComoUsarTourRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
+  AuthenticatedPlannerPedidosRoute: typeof AuthenticatedPlannerPedidosRoute
   AuthenticatedProdutosAnunciosRoute: typeof AuthenticatedProdutosAnunciosRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedComoUsarIndexRoute: typeof AuthenticatedComoUsarIndexRoute
@@ -1439,6 +1460,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
+  AuthenticatedPlannerPedidosRoute: AuthenticatedPlannerPedidosRoute,
   AuthenticatedProdutosAnunciosRoute: AuthenticatedProdutosAnunciosRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedComoUsarIndexRoute: AuthenticatedComoUsarIndexRoute,

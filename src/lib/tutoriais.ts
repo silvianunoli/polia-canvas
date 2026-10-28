@@ -109,6 +109,7 @@ const LISTA = [
           "O botão logo abaixo é o próximo passo: continuar um módulo ou registrar uma entrada.",
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
           '"Suas tarefas" traz do Planner o que passou do prazo, o que vence hoje e o que vence nos próximos 7 dias.',
+          'Com pedido aberto no quadro de Pedidos, o cartão "Entregas" mostra as de hoje, as de amanhã, as atrasadas e quanto entra na semana. "Abrir o quadro" leva pra ele.',
         ],
       },
       {
@@ -280,8 +281,8 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Metas, Planner (1 quadro), Caderno (1 nota) e Assistente.",
-      "Premium, R$ 29,90 por mês: Produtos, Planner e Caderno sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
+      "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Metas, Planner (1 quadro), quadro de Pedidos (até 15 abertos), Caderno (1 nota) e Assistente.",
+      "Premium, R$ 29,90 por mês: Produtos, Planner, Pedidos e Caderno sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
       "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo e a conexão com Mercado Livre e TikTok Shop.",
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
@@ -496,11 +497,13 @@ const LISTA = [
           'Use as abas "Todas as vendas", "Mais vendidos", "Quem compra" e "Orçamentos".',
           'Abra uma venda pra "Marcar como recebida" ou "Cancelar venda". Cancelada, os itens voltam pro estoque e o lançamento sai do Financeiro.',
           'Em "Taxas de recebimento", salve a porcentagem de cada forma de pagamento. A Pólia One usa esses números no lucro de cada venda.',
+          '"Ver como quadro" abre o quadro de Pedidos, com os pedidos que têm dia de entrega.',
         ],
       },
     ],
     bomSaber: [
       "Vendas é do Premium e do Pro.",
+      'Pedido anotado no quadro de Pedidos também é venda: aparece aqui pelo canal "Encomenda", no dia em que foi anotado.',
       "A venda daqui baixa o estoque e entra no Financeiro assim que o dinheiro é recebido.",
       'Pedidos do Mercado Livre e do TikTok Shop entram sozinhos, como "a receber", quando o canal está conectado e os anúncios ligados.',
       "A venda sai de um produto do catálogo. Sem produto cadastrado, a tela pede pra ir em Produtos antes.",
@@ -807,6 +810,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
+      'O quadro "Pedidos" já vem pronto, é sempre o primeiro da lista e não conta no limite de quadros. Ele tem tutorial próprio.',
       "No plano Grátis cabe 1 quadro e até 100 cartões. No Premium e no Pro, sem limite.",
       "As colunas podem ser renomeadas no lápis, mas são sempre seis.",
       "Todo cartão com prazo aparece no Calendário.",
@@ -821,6 +825,59 @@ const LISTA = [
       {
         pergunta: "Ligar o cartão a uma meta muda o progresso dela",
         resposta: "Não. A ligação serve pra lembrar a que meta o cartão responde.",
+      },
+    ],
+  },
+  {
+    slug: "pedidos",
+    nome: "Pedidos",
+    grupo: "Clientes e rotina",
+    rota: "/planner/pedidos",
+    abrir: "Abrir os Pedidos",
+    resumo:
+      "Um quadro pronto com cada pedido: a cliente, o que ela pediu, o dia da entrega e se já pagou. Na entrega, o dinheiro entra no Financeiro.",
+    passos: [
+      {
+        titulo: "Anotar um pedido",
+        itens: [
+          'No Planner, abra o quadro "Pedidos" e clique em "Novo pedido".',
+          'Em "Cliente", escolha da lista ou digite um nome novo.',
+          'Escolha o produto do catálogo, a variação (quando tiver) e a quantidade. O preço vem do catálogo. "+ mais um produto" põe outro item no mesmo pedido.',
+          'Escolha o dia em "Entrega" e responda "Já pagou?".',
+          'Clique em "Anotar pedido". Ele entra em "A fazer".',
+        ],
+      },
+      {
+        titulo: "Mover o pedido até a entrega",
+        itens: [
+          'As colunas são "A fazer", "Em produção", "Pronto" e "Entregue". Arraste o cartão ou use a seta dele.',
+          'Clique no cartão pra abrir o pedido. Em "Andamento" dá pra trocar a coluna; ali também se muda o dia da entrega ou se cancela.',
+          'Quando um pedido não pago chega em "Entregue", o cartão pergunta "O dinheiro já entrou?". "Sim, lançar no Financeiro" lança o valor.',
+          "No topo, a Pólia One mostra as entregas de hoje, as de amanhã, as atrasadas e quanto entra na semana.",
+        ],
+      },
+    ],
+    bomSaber: [
+      "O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal Encomenda.",
+      'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
+      "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
+      '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
+      "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
+    ],
+    duvidas: [
+      {
+        pergunta: "Cancelei um pedido. O que acontece",
+        resposta:
+          "Os itens voltam pro estoque, o valor sai do Financeiro e o pedido sai do quadro. Em Vendas, ele fica como cancelado.",
+      },
+      {
+        pergunta: 'Por que o botão "Novo pedido" está apagado',
+        resposta:
+          'No Grátis, o quadro já tem 15 pedidos abertos. Mova pra "Entregue" os que já saíram e o botão volta.',
+      },
+      {
+        pergunta: "Combinei outro dia com a cliente",
+        resposta: 'Abra o pedido, troque a data em "Entrega" e clique em "Salvar a nova data".',
       },
     ],
   },

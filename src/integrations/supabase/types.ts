@@ -2235,6 +2235,8 @@ export type Database = {
           custo_total: number | null
           data: string
           desconto: number
+          entrega_em: string | null
+          andamento: string | null
           frete: number
           id: string
           id_externo: string | null
@@ -2257,6 +2259,8 @@ export type Database = {
           custo_total?: number | null
           data: string
           desconto?: number
+          entrega_em?: string | null
+          andamento?: string | null
           frete?: number
           id?: string
           id_externo?: string | null
@@ -2279,6 +2283,8 @@ export type Database = {
           custo_total?: number | null
           data?: string
           desconto?: number
+          entrega_em?: string | null
+          andamento?: string | null
           frete?: number
           id?: string
           id_externo?: string | null
@@ -3107,6 +3113,22 @@ export type Database = {
       receber_venda: {
         Args: { p_venda_id: string; p_data: string }
         Returns: string
+      }
+      registrar_pedido: {
+        Args: {
+          p_id: string
+          p_entrega_em: string
+          p_itens: Json
+          p_cliente_id?: string | null
+          p_cliente_nome?: string | null
+          p_recebida?: boolean
+          p_observacao?: string | null
+        }
+        Returns: string
+      }
+      atualizar_pedido: {
+        Args: { p_venda_id: string; p_andamento?: string | null; p_entrega_em?: string | null }
+        Returns: undefined
       }
       capturar_lead: {
         Args: {

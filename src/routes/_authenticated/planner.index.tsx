@@ -7,7 +7,7 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO } from "@/lib/botoes";
-import { LayoutGrid, Plus, ArrowRight, Lock } from "lucide-react";
+import { LayoutGrid, Plus, ArrowRight, Lock, ClipboardList } from "lucide-react";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { COTAS_CONFERE } from "@/lib/planos";
@@ -248,8 +248,32 @@ function PlannerIndex() {
           </section>
         )}
 
+        {/* Quadro de Pedidos (GRW-93): fixo, sempre o primeiro e fora da cota
+            de 1 quadro do Grátis. Lê vendas, não cartões. */}
+        <Link
+          to="/planner/pedidos"
+          className="group mt-8 flex items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
+        >
+          <div className="flex items-center gap-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--secondary-light)] text-[var(--secondary-text)]">
+              <ClipboardList size={20} aria-hidden="true" />
+            </span>
+            <div>
+              <p className="text-[18px] text-[var(--ink)]">Pedidos</p>
+              <p className="text-[13px] text-[var(--muted)]">
+                cliente, dia da entrega e pagamento · já vem pronto
+              </p>
+            </div>
+          </div>
+          <ArrowRight
+            size={18}
+            aria-hidden="true"
+            className="shrink-0 text-[var(--muted)] transition-colors group-hover:text-[var(--secondary-text)]"
+          />
+        </Link>
+
         {quadrosQuery.isLoading ? (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[0, 1].map((i) => (
               <div key={i} className="h-[88px] animate-pulse rounded-xl bg-[var(--surface)]" />
             ))}
@@ -273,7 +297,7 @@ function PlannerIndex() {
             }
           />
         ) : (
-          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {quadros.map((q) => {
               const statusMap = distribuicao.get(q.id);
               const valores = ORDEM_STATUS.map((s) => statusMap?.get(s) ?? 0);

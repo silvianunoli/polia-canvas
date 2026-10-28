@@ -1,6 +1,7 @@
 import {
   Calculator,
   CalendarDays,
+  ClipboardList,
   CreditCard,
   DoorOpen,
   LayoutDashboard,
@@ -40,6 +41,7 @@ export const ICONE_TUTORIAL: Record<SlugTutorial, LucideIcon> = {
   raiox: Stethoscope,
   clientes: Users,
   planner: LayoutList,
+  pedidos: ClipboardList,
   calendario: CalendarDays,
   caderno: Notebook,
   "plano-de-conteudo": Megaphone,

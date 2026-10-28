@@ -134,6 +134,12 @@ function VendasPage() {
           + Registrar venda
         </button>
       )}
+      {/* Pedidos com dia de entrega (GRW-93) moram no quadro do Planner. */}
+      {aba !== "orcamentos" && (
+        <Link to="/planner/pedidos" className={`${BTN_ACAO_CONTORNO} no-underline`}>
+          Ver como quadro
+        </Link>
+      )}
       <button type="button" onClick={() => setTaxasAbertas(true)} className={BTN_ACAO_CONTORNO}>
         Taxas de recebimento
       </button>

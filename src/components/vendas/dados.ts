@@ -69,7 +69,7 @@ type ItemBanco = {
   custo_unitario: number | null;
 };
 
-type VendaBanco = {
+export type VendaBanco = {
   id: string;
   canal: string;
   data: string;
