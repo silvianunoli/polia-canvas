@@ -1,4 +1,11 @@
-import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
+import { iniciarPush } from "@/lib/push";
 import { useBonusPrimeirosPassos } from "@/hooks/useBonusPrimeirosPassos";
 import { FaixaTestePro } from "@/components/layout/FaixaTestePro";
 import { useEffect } from "react";
@@ -168,6 +175,23 @@ function AuthenticatedLayout() {
     registrarAberturaDeTela(pathname);
   }, [pathname]);
   useEffect(() => montarHeartbeat(), []);
+  // Avisos push (AND-06): só faz algo dentro do app Android. Tocar no aviso
+  // abre a tela dele (/vendas, /painel).
+  const router = useRouter();
+  useEffect(() => {
+    let desligar: (() => void) | undefined;
+    let desmontou = false;
+    void iniciarPush((rota) => router.history.push(rota))
+      .then((d) => {
+        if (desmontou) d();
+        else desligar = d;
+      })
+      .catch((e: Error) => console.error("[push] Falha ao iniciar:", e.message));
+    return () => {
+      desmontou = true;
+      desligar?.();
+    };
+  }, [router]);
   // Cadastro pelo Google vindo de landing de campanha: grava a origem na conta.
   useEffect(() => {
     void gravarOrigemDoOAuth();

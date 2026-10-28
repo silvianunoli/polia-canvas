@@ -12,6 +12,8 @@ project_id = "egzwkyqpkexgrhbxwcvb"
 #   aviso sem assinatura, só põe id na fila de vendedora conectada: ml-webhook (VND-30)
 #   token de verificação da Meta: ig-webhook (bot desativado, só responde o desafio)
 #   JWT conferido no código (auth.getUser + is_admin): social-ia
+#   segredo só no Vault, conferido por RPC: push-lembretes (AND-06)
+#   JWT conferido no código (auth.getUser, só os aparelhos da própria conta): push-teste
 # Função que não está listada aqui sobe com verify_jwt = true no próximo
 # deploy: quem é chamada por cron/webhook sem JWT passaria a tomar 401.
 
@@ -58,4 +60,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ml-sync]
+verify_jwt = false
+
+[functions.push-lembretes]
+verify_jwt = false
+
+[functions.push-teste]
 verify_jwt = false

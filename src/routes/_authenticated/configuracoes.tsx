@@ -39,6 +39,8 @@ import {
 } from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
+import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
+import { isNativeApp } from "@/lib/platform";
 import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
@@ -135,6 +137,10 @@ function ConfiguracoesPage() {
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
   const [notifDicas, setNotifDicas] = useState(true);
+  // Avisos no celular só existem no app Android; decidido depois de montar
+  // pra não divergir do HTML do servidor.
+  const [appNativo, setAppNativo] = useState(false);
+  useEffect(() => setAppNativo(isNativeApp()), []);
   // Sem default (QA-37): o "beta" de antes fazia a seção Assinatura mostrar
   // "Plano de lançamento" pra quem é Grátis ou Premium enquanto o perfil
   // carregava. null = ainda não se sabe.
@@ -1130,6 +1136,12 @@ function ConfiguracoesPage() {
             />
           </div>
         </Secao>
+
+        {appNativo && userId && (
+          <Secao titulo="Avisos no celular" subtitulo="o que a Pólia One avisa neste app.">
+            <AvisosNoCelular userId={userId} />
+          </Secao>
+        )}
 
         {/* SEÇÃO 6 — ASSINATURA */}
         <Secao titulo="Assinatura">

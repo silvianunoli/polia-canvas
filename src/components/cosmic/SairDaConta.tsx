@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { registrarEAguardar } from "@/lib/founder-eventos";
+import { esquecerAparelhoPush } from "@/lib/push";
 import { toastErro } from "@/lib/toast";
 
 // Mesma chave do guard da área logada (_authenticated.tsx). Fica marcada
@@ -19,6 +20,7 @@ async function sairDaConta(): Promise<void> {
   } catch {
     // evento de métrica não segura a saída
   }
+  await esquecerAparelhoPush();
   const { error } = await supabase.auth.signOut();
   if (error) await supabase.auth.signOut({ scope: "local" });
   try {

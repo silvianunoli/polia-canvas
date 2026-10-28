@@ -2370,8 +2370,11 @@ export type Database = {
           main_channel: string | null
           mini_pitch: string | null
           network_finalized_at: string | null
+          nicho: string | null
           notif_dicas: boolean
           notif_novidades: boolean
+          notif_push_resumo: boolean
+          notif_push_vendas: boolean
           notif_resumo_semanal: boolean
           onboarding_completed: boolean
           onboarding_completed_at: string | null
@@ -2422,6 +2425,8 @@ export type Database = {
           valor_hora_padrao: number | null
           visual_presence: string | null
           welcome_protocol: string | null
+          whatsapp: string | null
+          whatsapp_consentimento_em: string | null
         }
         Insert: {
           action_triggers?: string | null
@@ -2468,8 +2473,11 @@ export type Database = {
           main_channel?: string | null
           mini_pitch?: string | null
           network_finalized_at?: string | null
+          nicho?: string | null
           notif_dicas?: boolean
           notif_novidades?: boolean
+          notif_push_resumo?: boolean
+          notif_push_vendas?: boolean
           notif_resumo_semanal?: boolean
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
@@ -2520,6 +2528,8 @@ export type Database = {
           valor_hora_padrao?: number | null
           visual_presence?: string | null
           welcome_protocol?: string | null
+          whatsapp?: string | null
+          whatsapp_consentimento_em?: string | null
         }
         Update: {
           action_triggers?: string | null
@@ -2566,8 +2576,11 @@ export type Database = {
           main_channel?: string | null
           mini_pitch?: string | null
           network_finalized_at?: string | null
+          nicho?: string | null
           notif_dicas?: boolean
           notif_novidades?: boolean
+          notif_push_resumo?: boolean
+          notif_push_vendas?: boolean
           notif_resumo_semanal?: boolean
           onboarding_completed?: boolean
           onboarding_completed_at?: string | null
@@ -2618,6 +2631,8 @@ export type Database = {
           valor_hora_padrao?: number | null
           visual_presence?: string | null
           welcome_protocol?: string | null
+          whatsapp?: string | null
+          whatsapp_consentimento_em?: string | null
         }
         Relationships: []
       }
@@ -3055,6 +3070,11 @@ export type Database = {
       parse_primeiro_numero: { Args: { p: string }; Returns: number }
       publicar_artigos_comunidade_agendados: { Args: never; Returns: undefined }
       publish_due_posts: { Args: never; Returns: undefined }
+      registrar_aparelho_push: {
+        Args: { p_token: string; p_plataforma?: string }
+        Returns: undefined
+      }
+      esquecer_aparelho_push: { Args: { p_token: string }; Returns: undefined }
       registrar_venda_cliente: {
         Args: { p_cliente_id: string }
         Returns: string

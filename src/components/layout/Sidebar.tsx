@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
+import { esquecerAparelhoPush } from "@/lib/push";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,6 +75,7 @@ const TEVE_SESSAO_KEY = "polia-teve-sessao";
 
 async function signOut() {
   await registrarEAguardar("logout", { feature: "conta" });
+  await esquecerAparelhoPush();
   await supabase.auth.signOut();
   try {
     localStorage.removeItem(TEVE_SESSAO_KEY);

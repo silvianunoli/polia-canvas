@@ -380,3 +380,22 @@ No teste do Mercado Livre (VND-37, passo 9), a venda recebida entrou no Financei
 - **COPY-26:** a regra "quanto lucra, nunca quanto sobra" (18/10) passa a valer dentro do produto, com o ok da Sil. Painel ("Quanto lucrou · mês"), Financeiro ("Lucro do mês" e subtítulo), dica do Financeiro, marco do Painel ("Acende quanto lucrou este mês"), contexto e instrução da assistente, pergunta sugerida da conversa ("Por que lucrei tão pouco esse mês?"), /ajuda, bloco do blog e o aviso do Raio-X mensal (edge function raiox-mensal-cron). Ficam: o tutorial narrado (áudio gravado), os testes de linguagem da usuária e identificadores de código.
 - **COPY-28:** social-ia trocava o gancho pelo eixo número-primeiro ("o número abre, a marca aprofunda"), revertido em 25/09. Agora: marca primeiro, preço por conta própria, número depois como ferramenta de decisão (guardrails.md, pauta.md e o texto inlinado em index.ts, nos dois lugares). Exemplo de carrossel com "Lucro" no lugar de "Sobrou".
 - As duas edge functions (raiox-mensal-cron e social-ia) só mudam no ar depois de publicadas pela CLI.
+
+## 2026-10-27 — Notificações push no app Android, fase 1: servidor (AND-06)
+
+Pedido da Sil: avisos push no app Android. Projeto Firebase `polia-7134a` (conta da Play), app `br.com.usepolia.app` cadastrado, `android/app/google-services.json` no lugar (fora do git por enquanto). Chave da conta de serviço gravada pela Sil como `FIREBASE_SERVICE_ACCOUNT_B64` nos secrets das Edge Functions.
+
+- Migration `20261027230000_push_aparelhos.sql`: tabela `push_aparelhos` (token por aparelho, sem policy; o app grava pelas RPCs `registrar_aparelho_push` e `esquecer_aparelho_push`), colunas `notif_push_vendas` e `notif_push_resumo` em `profiles`, RPCs de alvo só pra service role, segredo `push_lembretes_secret` no Vault e dois crons: `push-vendas-do-dia` (20h de Brasília, conta que vendeu nos últimos 30 dias e nada hoje) e `push-resumo-semana` (segunda 9h, total e quantidade da semana que fechou; semana sem venda não recebe).
+- `_shared/fcm.ts`: FCM HTTP v1 (JWT RS256 da conta de serviço trocado por access token); token recusado pelo Firebase sai da tabela. `_shared/pushLembretes.ts`: datas de Brasília e texto dos avisos.
+- Edge functions `push-lembretes` (cron, segredo conferido por RPC) e `push-teste` (botão de teste, JWT conferido no código, só os aparelhos da própria conta). As duas com `verify_jwt = false` no config.toml.
+- `src/lib/pushLembretes.test.ts` (9 testes).
+- **Aplicada pelo MCP com autorização da Sil** (nome `push_aparelhos`) e conferida: tabela com RLS, dois crons, segredo no Vault, RPCs com as permissões certas. Funções `push-lembretes` e `push-teste` publicadas pela CLI. Teste sem celular: token falso na conta oi@usepolia.com.br, `disparar_push_lembretes('vendas_do_dia')` voltou `contas 1, falhas 0, removidos 1` (o Google aceitou a chave e recusou o token falso, que saiu da tabela). As duas funções devolvem 401 sem segredo ou sem sessão.
+
+Fase 2, app (mesmo dia):
+
+- `src/lib/push.ts`: permissão, registro do aparelho pela RPC, abrir a tela do aviso tocado (só rota interna, `rotaSegura`), esquecer o aparelho antes do signOut. Fora do app Android tudo vira "indisponivel".
+- `_authenticated.tsx` liga os ouvintes; na primeira abertura logada no app pede a permissão do Android uma vez. `SairDaConta` e `Sidebar` esquecem o aparelho antes de sair.
+- Configurações: seção "Avisos no celular" (`AvisosNoCelular.tsx`), só dentro do app: ligar avisos, como reativar se o Android negou, interruptores de lembrete de vendas e resumo da semana, botão de aviso de teste.
+- `types.ts`: colunas `notif_push_*` e as duas RPCs. `AndroidManifest.xml`: `POST_NOTIFICATIONS`.
+- `src/lib/push.test.ts` (3 testes). Suíte inteira: 2000 testes passando, lint e tipos limpos.
+- Pendente: ícone monocromático do aviso (hoje o Android usa o ícone padrão do app; entra com AND-01).

@@ -38,4 +38,6 @@
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Avisos push (AND-06): Android 13+ pede essa permissão na hora de ligar os avisos. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>
