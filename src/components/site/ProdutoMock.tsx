@@ -108,9 +108,9 @@ const navPainel = [
   "Vendas e clientes",
   "Produtos",
   "Financeiro",
-  "Planner",
+  // Planner e Caderno saíram das usuárias em 28/10/2026; Pedidos entrou.
+  "Pedidos",
   "Metas",
-  "Caderno",
 ];
 
 const tarefas = [
@@ -395,7 +395,7 @@ const modulosFerramenta = [
   { nome: "Quem a marca serve", ferramenta: "Mercado", estado: "feito" },
   { nome: "O que vende", ferramenta: "Catálogo", estado: "feito" },
   { nome: "Quanto vale", ferramenta: "Financeiro", estado: "atual" },
-  { nome: "Como os clientes te encontram", ferramenta: "Caderno", estado: "fechado" },
+  { nome: "Como os clientes te encontram", ferramenta: "Guia de presença", estado: "fechado" },
   { nome: "Onde a marca vai", ferramenta: "Metas", estado: "fechado" },
 ];
 

@@ -251,7 +251,7 @@ function PlannerIndex() {
         {/* Quadro de Pedidos (GRW-93): fixo, sempre o primeiro e fora da cota
             de 1 quadro do Grátis. Lê vendas, não cartões. */}
         <Link
-          to="/planner/pedidos"
+          to="/pedidos"
           className="group mt-8 flex items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-white p-5 transition-colors hover:border-[var(--secondary)] hover:bg-[var(--secondary-light)]"
         >
           <div className="flex items-center gap-4">

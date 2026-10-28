@@ -672,12 +672,14 @@ export const FERRAMENTAS: Record<number, FerramentaPlan> = {
     abrirLabel: "Abrir meu financeiro",
     tags: "custo fixo, metas do mês",
   },
+  // A rota continua /caderno: as notas ficaram só pra conta interna em
+  // 28/10/2026 e, pra todas, a tela é só este guia (lib/ferramentasInternas).
   5: {
-    nome: "Caderno",
+    nome: "Guia de presença",
     nasceu: "Acabou de nascer o",
     rota: "/caderno",
-    desbloqueioSub: "Seu guia de presença: canais, voz e bio.",
-    abrirLabel: "Abrir meu caderno",
+    desbloqueioSub: "Canais, voz e bio da marca.",
+    abrirLabel: "Abrir meu guia de presença",
     tags: "canais, voz, bio, caminho da cliente",
   },
   6: {

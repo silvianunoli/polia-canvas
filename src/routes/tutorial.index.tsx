@@ -9,7 +9,7 @@ import { linkCanonico } from "@/lib/seo";
 
 const TITULO = "Tutoriais · Pólia One";
 const DESCRICAO =
-  "Um tutorial curto pra cada ferramenta da Pólia One: Planejamento, Calculadora, Produtos, Vendas, Financeiro, Metas, Planner e as outras telas, com clipe narrado e passo a passo.";
+  "Um tutorial curto pra cada ferramenta da Pólia One: Planejamento, Calculadora, Produtos, Vendas, Financeiro, Metas, Pedidos e as outras telas, com clipe narrado e passo a passo.";
 
 // Tutoriais públicos, um por ferramenta (28/10/2026). Dá pra mandar o link pra
 // quem ainda não tem conta; quem já está dentro vê a mesma lista em /como-usar.

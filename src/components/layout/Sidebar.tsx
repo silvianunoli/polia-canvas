@@ -7,6 +7,7 @@ import {
   Package,
   Wallet,
   LayoutList,
+  ClipboardList,
   Target,
   Notebook,
   Menu,
@@ -35,6 +36,8 @@ import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
 import { useCanaisConectados } from "@/hooks/useCanaisConectados";
+import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
+import { rotaVisivel } from "@/lib/ferramentasInternas";
 
 // Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
 // conectado, pra quem não vende em marketplace não ver um item vazio.
@@ -49,6 +52,8 @@ const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
   { to: "/planejamento", label: "Planejamento", icon: Map },
   { to: "/produtos", label: "Produtos", icon: Package },
+  // Pedidos (GRW-93) no lugar do Planner, que ficou só pra conta interna.
+  { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
   { to: "/calculadora", label: "Calculadora", icon: Calculator },
   { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
@@ -108,6 +113,8 @@ function Body({
   const { progresso } = useProgressoPlanejamento();
   const { canais } = useCanaisConectados();
   const anunciosAtivo = isActive(ANUNCIOS_CANAIS, pathname);
+  // Planner e Caderno só pra conta interna (28/10/2026).
+  const acessoInterno = useFerramentasInternas();
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -177,7 +184,7 @@ function Body({
           aria-label="Navegação principal"
           className="flex flex-1 flex-col gap-1 px-2 py-2 md:gap-0"
         >
-          {NAV.map((item) => {
+          {NAV.filter((item) => rotaVisivel(item.to, acessoInterno)).map((item) => {
             // Em "Anúncios nos canais" o destaque fica no subnível, não em Produtos.
             const active =
               isActive(item.to, pathname) && !(item.to === "/produtos" && anunciosAtivo);

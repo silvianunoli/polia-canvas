@@ -30,7 +30,7 @@ export function CartaoPedidosPainel({ userId, hoje }: { userId: string; hoje: st
       <p className="mt-2 text-[13px] text-[var(--muted)]">
         {resumo.entraNaSemana > 0 && <>Esta semana entram {fmt(resumo.entraNaSemana)} · </>}
         <LinkInterno
-          href="/planner/pedidos"
+          href="/pedidos"
           className="font-medium text-[var(--secondary-text)] hover:underline"
         >
           Abrir o quadro

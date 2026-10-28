@@ -31,6 +31,8 @@ export const GANHO_POR_ROTA: Record<string, string> = {
   "/vendas":
     "O Premium registra cada venda, baixa o estoque sozinho e mostra quais produtos mais vendem e mais lucram.",
   // Telas com cota no Grátis: a tela abre, o que o Premium muda é o limite.
+  "/pedidos": "O Premium tira o limite dos Pedidos: abertos sem teto.",
+  // Planner e Caderno: só a conta interna desde 28/10/2026 (ficam pra ela).
   "/caderno": "O Premium tira o limite do Caderno: notas sem teto.",
   "/planner": "O Premium tira o limite do Planner: quadros sem teto.",
   "/aimer": "O Premium aumenta o teto diário do Assistente.",
@@ -39,7 +41,14 @@ export const GANHO_POR_ROTA: Record<string, string> = {
 // Telas que abrem no Grátis com limite. Sem frase própria, o fallback não
 // pode dizer "essa tela abre": ela já está aberta, o que muda é o limite
 // ("aumenta", não "tira": a IA do Planejamento tem teto até no Pro).
-export const ROTAS_COM_COTA = ["/caderno", "/planner", "/produtos", "/planejamento", "/aimer"];
+export const ROTAS_COM_COTA = [
+  "/pedidos",
+  "/caderno",
+  "/planner",
+  "/produtos",
+  "/planejamento",
+  "/aimer",
+];
 
 /** O ganho concreto pra tela de onde ela veio, no nome do plano que a tela pede. */
 export function fraseDoGanho(rota: string | undefined, tituloDoPlano: string): string {

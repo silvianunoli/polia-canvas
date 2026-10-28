@@ -82,6 +82,9 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   // Ferramenta independente do catálogo. Calcular é livre no Grátis; a cota só
   // pega ao guardar o resultado como produto.
   { prefixo: "/calculadora", tier: "confere" },
+  // Quadro de Pedidos (GRW-93): todo plano; o Grátis tem até 15 abertos (banco).
+  { prefixo: "/pedidos", tier: "confere" },
+  // Planner e Caderno: só a conta interna desde 28/10/2026 (lib/ferramentasInternas).
   { prefixo: "/planner", tier: "confere" }, // cotada
   { prefixo: "/caderno", tier: "confere" }, // cotada
   { prefixo: "/como-usar", tier: "confere" }, // tutorial narrado: todo plano assiste
@@ -231,7 +234,8 @@ export const BENEFICIOS_GRATIS: Beneficio[] = [
     texto: "Produtos entram de uma planilha (CSV), com revisão antes de gravar",
   },
   { id: "metas", texto: "Até 3 metas ativas por vez" },
-  { id: "planner", texto: "1 quadro no Planner (até 100 cartões) e 1 nota no Caderno" },
+  // Planner e Caderno saíram das usuárias em 28/10/2026; Pedidos entrou no lugar.
+  { id: "pedidos", texto: "Quadro de Pedidos com até 15 pedidos abertos" },
   { id: "assistente", texto: "Assistente pra tirar dúvida, com teto diário" },
   // Cota em CONFIG_POR_PLANO (src/lib/planejamentoIa.functions.ts): 1, 30 e 60.
   { id: "ia", texto: "1 rascunho por mês com a IA no Planejamento" },
@@ -325,9 +329,8 @@ export const TIERS_PAGOS: Record<
         novoAte: NOVO_OUT_2026,
       },
       {
-        id: "planner",
-        texto:
-          "Quadros ilimitados no Planner, notas sem limite no Caderno e o Calendário com a agenda do Google junto",
+        id: "pedidos",
+        texto: "Pedidos sem limite e o Calendário das entregas com a agenda do Google junto",
       },
       { id: "ia", texto: "Até 30 rascunhos por mês com a IA no Planejamento" },
       {

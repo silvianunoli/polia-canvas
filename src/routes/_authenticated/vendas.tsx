@@ -134,9 +134,9 @@ function VendasPage() {
           + Registrar venda
         </button>
       )}
-      {/* Pedidos com dia de entrega (GRW-93) moram no quadro do Planner. */}
+      {/* Pedidos com dia de entrega (GRW-93) moram no quadro de Pedidos. */}
       {aba !== "orcamentos" && (
-        <Link to="/planner/pedidos" className={`${BTN_ACAO_CONTORNO} no-underline`}>
+        <Link to="/pedidos" className={`${BTN_ACAO_CONTORNO} no-underline`}>
           Ver como quadro
         </Link>
       )}

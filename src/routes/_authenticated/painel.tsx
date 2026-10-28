@@ -38,6 +38,7 @@ import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import { CartaoPedidosPainel } from "@/components/pedidos/CartaoPedidosPainel";
+import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
 import { CartaoConsultoria } from "@/components/painel/CartaoConsultoria";
 import {
@@ -527,6 +528,8 @@ function PainelPage() {
   // ao fechar os três passos o modal de boas-vindas abriria por cima de quem
   // já está usando o Painel.
   const dicas = useDicasVistas();
+  // Planner só pra conta interna (28/10/2026): "Suas tarefas" e a semana somem.
+  const acessoInterno = useFerramentasInternas();
   useEffect(() => {
     if (!blocoVisivel || !dicas.pronto) return;
     if (dicas.mostrar("boas-vindas")) dicas.marcar("boas-vindas");
@@ -1134,158 +1137,167 @@ function PainelPage() {
                 </div>
               )}
 
-              {/* Tarefas de hoje */}
-              <div className={SPAN_CLASS[6]}>
-                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
-                      <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <TituloCartao className="text-[18px] text-[var(--ink)]">
-                        Suas tarefas
-                      </TituloCartao>
-                      <p className="text-[13px] text-[var(--muted)]">
-                        do Planner · {gruposTarefas.atrasadas.length}{" "}
-                        {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
-                        {gruposTarefas.hoje.length} pra hoje · {gruposTarefas.proximas.length}{" "}
-                        {gruposTarefas.proximas.length === 1 ? "próxima" : "próximas"}
+              {/* Tarefas e semana de trabalho leem os cartões do Planner, que
+                  desde 28/10/2026 é só da conta interna (lib/ferramentasInternas).
+                  Pra quem tem pedido, o cartão "Entregas" faz esse papel. */}
+              {acessoInterno.planner && (
+                <>
+                  {/* Tarefas de hoje */}
+                  <div className={SPAN_CLASS[6]}>
+                    <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
+                          <Pencil size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                        </span>
+                        <div>
+                          <TituloCartao className="text-[18px] text-[var(--ink)]">
+                            Suas tarefas
+                          </TituloCartao>
+                          <p className="text-[13px] text-[var(--muted)]">
+                            do Planner · {gruposTarefas.atrasadas.length}{" "}
+                            {gruposTarefas.atrasadas.length === 1 ? "atrasada" : "atrasadas"} ·{" "}
+                            {gruposTarefas.hoje.length} pra hoje · {gruposTarefas.proximas.length}{" "}
+                            {gruposTarefas.proximas.length === 1 ? "próxima" : "próximas"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {totalTarefasPainel === 0 ? (
+                        /* `semBorda`: já estamos dentro de um cartão, caixa tracejada
+                   aqui viraria caixa dentro de caixa. A saída fica no link
+                   "Abrir no Planner" logo abaixo, que vale pros dois estados. */
+                        <div className="mt-4">
+                          <Vazio
+                            semBorda
+                            titulo="Nenhuma tarefa com prazo nos próximos 7 dias."
+                            texto="A próxima nasce no Planner."
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-3">
+                          {gruposTarefas.atrasadas.length > 0 && (
+                            <GrupoTarefasPainel
+                              titulo="Passou do prazo"
+                              corTitulo="text-[var(--danger)]"
+                              itens={gruposTarefas.atrasadas}
+                              rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}
+                              corRotulo="text-[var(--danger)]"
+                              destacarAte={3}
+                              linkTarefa={linkTarefa}
+                              link={`${quadroPendentesLink}?filtro=all`}
+                              linkTitulo="Abrir o Planner"
+                              rotuloMais={(n) => `mais ${n} ${n === 1 ? "atrasada" : "atrasadas"}`}
+                            />
+                          )}
+                          {gruposTarefas.hoje.length > 0 && (
+                            <GrupoTarefasPainel
+                              titulo="Hoje"
+                              itens={gruposTarefas.hoje}
+                              rotulo={(t) => (t.horario ? `hoje · ${t.horario}` : "prazo hoje")}
+                              linkTarefa={linkTarefa}
+                              link={`${quadroPendentesLink}?filtro=today`}
+                              linkTitulo="Abrir o Planner filtrado em Hoje"
+                              rotuloMais={(n) => `mais ${n} pra hoje`}
+                            />
+                          )}
+                          {gruposTarefas.proximas.length > 0 && (
+                            <GrupoTarefasPainel
+                              titulo="Próximos 7 dias"
+                              itens={gruposTarefas.proximas}
+                              rotulo={(t) => `até ${fmtDDMM(t.prazo!)}`}
+                              linkTarefa={linkTarefa}
+                              link={`${quadroPendentesLink}?filtro=7`}
+                              linkTitulo="Abrir o Planner filtrado em 7 dias"
+                              rotuloMais={(n) => `mais ${n} nos próximos dias`}
+                            />
+                          )}
+                        </div>
+                      )}
+
+                      <p className="mt-3 text-[13px]">
+                        <LinkInterno
+                          href={quadroPendentesLink}
+                          className="inline-flex min-h-6 items-center text-[var(--secondary-text)] hover:underline"
+                        >
+                          Abrir no Planner →
+                        </LinkInterno>
                       </p>
                     </div>
                   </div>
 
-                  {totalTarefasPainel === 0 ? (
-                    /* `semBorda`: já estamos dentro de um cartão, caixa tracejada
-                   aqui viraria caixa dentro de caixa. A saída fica no link
-                   "Abrir no Planner" logo abaixo, que vale pros dois estados. */
-                    <div className="mt-4">
-                      <Vazio
-                        semBorda
-                        titulo="Nenhuma tarefa com prazo nos próximos 7 dias."
-                        texto="A próxima nasce no Planner."
-                      />
-                    </div>
-                  ) : (
-                    <div className="mt-3">
-                      {gruposTarefas.atrasadas.length > 0 && (
-                        <GrupoTarefasPainel
-                          titulo="Passou do prazo"
-                          corTitulo="text-[var(--danger)]"
-                          itens={gruposTarefas.atrasadas}
-                          rotulo={(t) => `era pra ${fmtDDMM(t.prazo!)}`}
-                          corRotulo="text-[var(--danger)]"
-                          destacarAte={3}
-                          linkTarefa={linkTarefa}
-                          link={`${quadroPendentesLink}?filtro=all`}
-                          linkTitulo="Abrir o Planner"
-                          rotuloMais={(n) => `mais ${n} ${n === 1 ? "atrasada" : "atrasadas"}`}
-                        />
-                      )}
-                      {gruposTarefas.hoje.length > 0 && (
-                        <GrupoTarefasPainel
-                          titulo="Hoje"
-                          itens={gruposTarefas.hoje}
-                          rotulo={(t) => (t.horario ? `hoje · ${t.horario}` : "prazo hoje")}
-                          linkTarefa={linkTarefa}
-                          link={`${quadroPendentesLink}?filtro=today`}
-                          linkTitulo="Abrir o Planner filtrado em Hoje"
-                          rotuloMais={(n) => `mais ${n} pra hoje`}
-                        />
-                      )}
-                      {gruposTarefas.proximas.length > 0 && (
-                        <GrupoTarefasPainel
-                          titulo="Próximos 7 dias"
-                          itens={gruposTarefas.proximas}
-                          rotulo={(t) => `até ${fmtDDMM(t.prazo!)}`}
-                          linkTarefa={linkTarefa}
-                          link={`${quadroPendentesLink}?filtro=7`}
-                          linkTitulo="Abrir o Planner filtrado em 7 dias"
-                          rotuloMais={(n) => `mais ${n} nos próximos dias`}
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  <p className="mt-3 text-[13px]">
-                    <LinkInterno
-                      href={quadroPendentesLink}
-                      className="inline-flex min-h-6 items-center text-[var(--secondary-text)] hover:underline"
-                    >
-                      Abrir no Planner →
-                    </LinkInterno>
-                  </p>
-                </div>
-              </div>
-
-              {/* Semana de trabalho */}
-              <div className={SPAN_CLASS[6]}>
-                <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
-                      <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
-                    </span>
-                    <div>
-                      <TituloCartao className="text-[18px] text-[var(--ink)]">
-                        Sua semana de trabalho
-                      </TituloCartao>
-                      <p className="text-[13px] text-[var(--muted)]">tarefas concluídas por dia</p>
-                    </div>
-                  </div>
-                  {semanaVazia ? (
-                    /* Semana sem nenhuma conclusão desenhava 150px de altura com
+                  {/* Semana de trabalho */}
+                  <div className={SPAN_CLASS[6]}>
+                    <div className="rounded-xl border border-[var(--line)] bg-[var(--surface)] p-5">
+                      <div className="flex items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white">
+                          <BarChart3 size={19} className="text-[var(--ink)]" aria-hidden="true" />
+                        </span>
+                        <div>
+                          <TituloCartao className="text-[18px] text-[var(--ink)]">
+                            Sua semana de trabalho
+                          </TituloCartao>
+                          <p className="text-[13px] text-[var(--muted)]">
+                            tarefas concluídas por dia
+                          </p>
+                        </div>
+                      </div>
+                      {semanaVazia ? (
+                        /* Semana sem nenhuma conclusão desenhava 150px de altura com
                    quatro zeros e barras de 2px. Um gráfico que não desenha nada
                    é pior que uma frase que explica o que falta. */
-                    <div className="mt-5">
-                      <Vazio
-                        semBorda
-                        titulo="Nenhuma tarefa concluída nesta semana ainda."
-                        texto="O gráfico aparece assim que a primeira fechar."
-                        acao={
-                          <LinkInterno
-                            href={quadroPendentesLink}
-                            className="inline-flex min-h-6 items-center gap-1 text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
-                          >
-                            Abrir o Planner <span aria-hidden="true">→</span>
-                          </LinkInterno>
-                        }
-                      />
+                        <div className="mt-5">
+                          <Vazio
+                            semBorda
+                            titulo="Nenhuma tarefa concluída nesta semana ainda."
+                            texto="O gráfico aparece assim que a primeira fechar."
+                            acao={
+                              <LinkInterno
+                                href={quadroPendentesLink}
+                                className="inline-flex min-h-6 items-center gap-1 text-[13px] text-[var(--secondary-text)] no-underline hover:underline"
+                              >
+                                Abrir o Planner <span aria-hidden="true">→</span>
+                              </LinkInterno>
+                            }
+                          />
+                        </div>
+                      ) : (
+                        <div className="mt-5 flex h-[150px] items-end gap-2">
+                          {dias.map((d, i) => {
+                            const alturaPx = d.tarefas > 0 ? 10 + (d.tarefas / maxSemana) * 70 : 2;
+                            return (
+                              <div
+                                key={i}
+                                className="flex h-full flex-1 flex-col items-center justify-end gap-2"
+                              >
+                                <span className="text-[13px] font-semibold text-[var(--ink)]">
+                                  {d.tarefas > 0 ? d.tarefas : d.isFuturo ? "" : "0"}
+                                </span>
+                                <span
+                                  className="w-full max-w-[72px] rounded-t-md"
+                                  style={{
+                                    height: `${alturaPx}px`,
+                                    background: d.tarefas === 0 ? "var(--line)" : "var(--accent)",
+                                    border: d.isHoje ? "2px solid var(--ink)" : undefined,
+                                    borderBottom: d.isHoje ? "0" : undefined,
+                                  }}
+                                />
+                                <span
+                                  className={`text-[12px] ${d.isHoje ? "font-semibold text-[var(--ink)]" : "text-[var(--muted)]"}`}
+                                >
+                                  {d.abrev}
+                                  {d.isHoje ? " · hoje" : ""}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
-                  ) : (
-                    <div className="mt-5 flex h-[150px] items-end gap-2">
-                      {dias.map((d, i) => {
-                        const alturaPx = d.tarefas > 0 ? 10 + (d.tarefas / maxSemana) * 70 : 2;
-                        return (
-                          <div
-                            key={i}
-                            className="flex h-full flex-1 flex-col items-center justify-end gap-2"
-                          >
-                            <span className="text-[13px] font-semibold text-[var(--ink)]">
-                              {d.tarefas > 0 ? d.tarefas : d.isFuturo ? "" : "0"}
-                            </span>
-                            <span
-                              className="w-full max-w-[72px] rounded-t-md"
-                              style={{
-                                height: `${alturaPx}px`,
-                                background: d.tarefas === 0 ? "var(--line)" : "var(--accent)",
-                                border: d.isHoje ? "2px solid var(--ink)" : undefined,
-                                borderBottom: d.isHoje ? "0" : undefined,
-                              }}
-                            />
-                            <span
-                              className={`text-[12px] ${d.isHoje ? "font-semibold text-[var(--ink)]" : "text-[var(--muted)]"}`}
-                            >
-                              {d.abrev}
-                              {d.isHoje ? " · hoje" : ""}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
 
-              {/* Agenda: link pro calendário mensal (Planner + Google, quando conectado) */}
+              {/* Agenda: link pro calendário mensal (entregas + Google, quando conectado) */}
               <div className={SPAN_CLASS[12]}>
                 <LinkInterno
                   href={destino("/calendario", calendarioLiberado)}
@@ -1296,8 +1308,8 @@ function PainelPage() {
                   </span>
                   <span>
                     {calendarioLiberado
-                      ? "Veja o mês inteiro: tarefas do Planner e, se conectar, seus compromissos do Google."
-                      : "no Premium, o mês inteiro aparece num só calendário: tarefas do Planner e, se conectar, os compromissos do Google."}
+                      ? "Veja o mês inteiro: as entregas dos pedidos e, se conectar, seus compromissos do Google."
+                      : "no Premium, o mês inteiro aparece num só calendário: as entregas dos pedidos e, se conectar, os compromissos do Google."}
                   </span>
                   {calendarioLiberado ? (
                     <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>

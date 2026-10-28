@@ -29,6 +29,8 @@ import { AssistenteProvider } from "@/components/assistente/AssistenteContext";
 import { AssistenteFlutuante } from "@/components/assistente/AssistenteFlutuante";
 import { useCsatTrigger } from "@/hooks/useCsatTrigger";
 import { rotaLiberada, tierPagoDaRota } from "@/lib/planos";
+import { flagAtiva } from "@/lib/flags";
+import { DESTINO_SEM_ACESSO, rotaBloqueadaSemFlag } from "@/lib/ferramentasInternas";
 import { precisaCriarSenha } from "@/lib/senha";
 import { gravarOrigemDoOAuth } from "@/lib/gravarOrigemOAuth";
 import { lerLinkComErro } from "@/lib/linkComErro";
@@ -97,6 +99,13 @@ export const Route = createFileRoute("/_authenticated")({
             search: { rota: location.pathname, tier: tierPagoDaRota(location.pathname) },
           });
         }
+      }
+
+      // Planner só pra conta interna (28/10/2026, lib/ferramentasInternas): sem
+      // a flag, leva pros Pedidos. O Caderno abre pra todas (só o guia do Módulo 5).
+      const bloqueada = rotaBloqueadaSemFlag(location.pathname);
+      if (bloqueada && !(await flagAtiva(bloqueada, data.session.user.id, false))) {
+        throw redirect({ to: DESTINO_SEM_ACESSO[bloqueada] });
       }
       return;
     }

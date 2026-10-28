@@ -29,7 +29,7 @@ import {
   MockCustosProduto,
   MockPedidos,
   MockPerguntaMarca,
-  MockPlannerSemana,
+  MockSemanaEntregas,
   MockTresNumeros,
 } from "@/components/landing/MocksLanding";
 import { PlayerVsl } from "@/components/landing/VideoVsl";
@@ -284,9 +284,9 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
               },
               {
                 titulo: "A semana no mesmo lugar",
-                texto: "Planner sem limite, com a agenda do Google junto das tarefas do ateliê.",
-                nota: "No lugar do app de tarefas e do planner bonito",
-                mock: <MockPlannerSemana />,
+                texto: "As entregas dos pedidos no Calendário, com a agenda do Google junto.",
+                nota: "No lugar da agenda de papel e do lembrete no celular",
+                mock: <MockSemanaEntregas />,
               },
             ]}
           />

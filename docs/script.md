@@ -444,3 +444,19 @@ Plano `docs/plano-quadro-de-pedidos.md`, aprovado pela Sil em 28/10 com D1 a D7 
 - `planner.$slug.tsx`: no app, uma coluna por vez, trocada por botões com a contagem; a coluna ocupa a largura toda. Mudar de coluna continua pelo campo "Coluna" do detalhe do cartão. No navegador nada muda.
 - **Correção da fase 1:** `/mais` não estava em `ROTAS_TIER` e caía no padrão "controle", então o Grátis ia pro upgrade ao abrir a aba Mais. `/hoje` e `/mais` agora são "confere" (teste em `planos.test.ts`).
 - `tutoriais.test.ts`: `/hoje` em SEM_TUTORIAL (resumo do Painel, que tem tutorial).
+
+## 2026-10-28 — Planner e Caderno saem das usuárias; Pedidos com rota própria (GRW-97)
+
+Decisão da Sil no chat: o Planner fica só pra conta oi@usepolia.com.br e o Caderno é ocultado. Pergunta feita sobre o Módulo 5 (que abre o Caderno): "Só o guia fica". Sem commit nem deploy até ela conferir.
+
+- Flags `planner` e `caderno` em `founder_flags` (prod e preview, estado beta, beta_user_ids só a conta oi@usepolia.com.br), gravadas pelo MCP. Os dados de quem usou ficam guardados (58 cartões e 6 notas da conta pessoal silnu, 4 cartões de duas usuárias).
+- `lib/ferramentasInternas.ts` (3 testes) e `hooks/useFerramentasInternas.ts`: o Planner é bloqueado na guarda de `_authenticated` (leva pra /pedidos); o Caderno não, porque o fim do Módulo 5 abre /caderno. Menu esconde os dois sem a flag.
+- `/pedidos`: o quadro mudou de `/planner/pedidos` pra rota própria (o endereço antigo redireciona); item "Pedidos" no menu, depois de Produtos; `ROTAS_TIER` e `FEATURES_POR_ROTA` com `/pedidos`; linha `pedidos` em `founder_features`.
+- Caderno sem a flag: a tela mostra só o guia de presença (ou o vazio com "Quero abrir o Módulo 5"). Módulo 5: "Acabou de nascer o Guia de presença", "Abrir meu guia de presença".
+- Painel: "Suas tarefas" e "Sua semana de trabalho" só com a flag do Planner; o link do Calendário fala de entregas; "Pra o Painel acender" sem Caderno.
+- Calendário: entregas dos pedidos como fonte (`usePedidosDoPeriodo`, filtro "Entregas", "Anotar um pedido" no dia); Planner, quadros e "Nova tarefa nesse dia" só com a flag.
+- Planos, upgrade, /assinar: Grátis "Quadro de Pedidos com até 15 pedidos abertos"; Premium "Pedidos sem limite e o Calendário das entregas com a agenda do Google junto"; ganho de upgrade de `/pedidos`.
+- Copy pública: /sobre (o Planner da linha "Por fim, o mês" virou o quadro de Pedidos; "os mesmos nomes que hoje batizam duas áreas da Pólia One" saiu), /ajuda ("Pedidos e rotina"), página do Premium (semana das entregas, `MockSemanaEntregas`), bloco "Organização" do blog (Pedidos), mocks do site.
+- Tutoriais: Planner `interno` (fora da lista e da busca); Caderno virou "Guia de presença"; Calendário e Painel reescritos; Planos sem Planner e Caderno. Saíram os clipes de Planos, Calendário e Caderno: o vídeo mostra Planner e notas. O vídeo inteiro (/tour) ainda mostra os dois e precisa de narração nova.
+- App Android (BarraAbasApp, +, /mais, /hoje) fica com a sessão do app, avisada.
+- **Pedidos no lugar do Planner (mesmo dia, decisão da Sil):** Planner e Caderno viraram ferramentas internas (flags, sessão "Aderência", GRW-93). No app: a aba Planner virou **Pedidos** (/pedidos); no +, entrou "Novo pedido" (ModalNovoPedido) e "Nova tarefa" só aparece com a flag planner; /mais esconde Planner e Caderno sem a flag; /hoje troca as tarefas pelo cartão "Entregas" (usePedidos, resumoDoDia, rotuloEntrega), com as de hoje e as atrasadas. O commit vem depois do da sessão "Aderência", porque depende de useFerramentasInternas e da rota /pedidos.

@@ -46,6 +46,7 @@ import { Route as AuthenticatedRaioxRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedProjecaoRouteImport } from './routes/_authenticated/projecao'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPlanoConteudoRouteImport } from './routes/_authenticated/plano-conteudo'
+import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedPainelRouteImport } from './routes/_authenticated/painel'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/metas'
@@ -264,6 +265,11 @@ const AuthenticatedPlanoConteudoRoute =
     path: '/plano-conteudo',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedPainelRoute = AuthenticatedPainelRouteImport.update({
   id: '/painel',
   path: '/painel',
@@ -473,6 +479,7 @@ export interface FileRoutesByFullPath {
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
   '/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
@@ -543,6 +550,7 @@ export interface FileRoutesByTo {
   '/metas': typeof AuthenticatedMetasRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/painel': typeof AuthenticatedPainelRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
   '/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/projecao': typeof AuthenticatedProjecaoRoute
@@ -615,6 +623,7 @@ export interface FileRoutesById {
   '/_authenticated/metas': typeof AuthenticatedMetasRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/painel': typeof AuthenticatedPainelRoute
+  '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/plano-conteudo': typeof AuthenticatedPlanoConteudoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/_authenticated/projecao': typeof AuthenticatedProjecaoRoute
@@ -687,6 +696,7 @@ export interface FileRouteTypes {
     | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/pedidos'
     | '/plano-conteudo'
     | '/produtos'
     | '/projecao'
@@ -757,6 +767,7 @@ export interface FileRouteTypes {
     | '/metas'
     | '/onboarding'
     | '/painel'
+    | '/pedidos'
     | '/plano-conteudo'
     | '/produtos'
     | '/projecao'
@@ -828,6 +839,7 @@ export interface FileRouteTypes {
     | '/_authenticated/metas'
     | '/_authenticated/onboarding'
     | '/_authenticated/painel'
+    | '/_authenticated/pedidos'
     | '/_authenticated/plano-conteudo'
     | '/_authenticated/produtos'
     | '/_authenticated/projecao'
@@ -1165,6 +1177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanoConteudoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pedidos': {
+      id: '/_authenticated/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/painel': {
       id: '/_authenticated/painel'
       path: '/painel'
@@ -1407,6 +1426,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMetasRoute: typeof AuthenticatedMetasRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPainelRoute: typeof AuthenticatedPainelRoute
+  AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPlanoConteudoRoute: typeof AuthenticatedPlanoConteudoRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedProjecaoRoute: typeof AuthenticatedProjecaoRoute
@@ -1448,6 +1468,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMetasRoute: AuthenticatedMetasRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPainelRoute: AuthenticatedPainelRoute,
+  AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPlanoConteudoRoute: AuthenticatedPlanoConteudoRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedProjecaoRoute: AuthenticatedProjecaoRoute,

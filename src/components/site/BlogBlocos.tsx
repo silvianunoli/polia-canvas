@@ -7,7 +7,7 @@ import {
   MockPerguntaMarca,
   MockTresNumeros,
 } from "@/components/landing/MocksLanding";
-import { MockPlanner } from "@/components/site/ProdutoMock";
+import { MockPedidos } from "@/components/landing/MocksLanding";
 
 /**
  * Blocos do blog (07/10/2026): sumário de revista no lugar da grade de cards,
@@ -207,7 +207,7 @@ type Chamada = {
   mock: ReactNode;
 };
 
-// Planner e Financeiro são Premium: a frase deles não diz "no Grátis".
+// Financeiro é Premium: a frase dele não diz "no Grátis".
 const CHAMADAS: Record<string, Chamada> = {
   Precificação: {
     chave: "precificacao",
@@ -227,14 +227,15 @@ const CHAMADAS: Record<string, Chamada> = {
     botao: "Quero ver o meu mês",
     mock: <MockTresNumeros />,
   },
+  // Era o Planner; desde 28/10/2026 a organização da semana é o quadro de Pedidos.
   Organização: {
     chave: "organizacao",
-    rotulo: "Planner",
-    titulo: "A semana organizada pelo que faz o mês fechar.",
+    rotulo: "Pedidos",
+    titulo: "Os pedidos da semana à vista.",
     frase:
-      "O Planner da Pólia One liga as tarefas às metas que você definiu, pra decisão não ficar só na cabeça.",
-    botao: "Quero organizar a semana",
-    mock: <MockPlanner />,
+      "O quadro de Pedidos da Pólia One mostra o que entregar hoje, o que atrasou e quanto entra na semana. Funciona no Grátis.",
+    botao: "Quero organizar os pedidos",
+    mock: <MockPedidos />,
   },
   "Validação de ideia": {
     chave: "ideia",

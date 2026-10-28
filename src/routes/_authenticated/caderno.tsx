@@ -19,6 +19,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useCamposPlanejamento } from "@/hooks/useCamposPlanejamento";
 import { CamposDoc } from "@/components/planejamento/CamposDoc";
 import { CAMPOS_FERRAMENTA } from "@/lib/planejamento";
+import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 
 export const Route = createFileRoute("/_authenticated/caderno")({
   head: () => ({
@@ -66,6 +67,9 @@ function CadernoPage() {
   // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
   const ehConfere = ehPlanoGratis(meta);
   const linkModulo5 = useLinkDoModulo(5);
+  // Notas só pra conta interna desde 28/10/2026 (lib/ferramentasInternas): pra
+  // todas, a tela é só o guia de presença que o Módulo 5 abre.
+  const acessoInterno = useFerramentasInternas();
   const camposQuery = useCamposPlanejamento(userId);
   const camposGuia = camposQuery.data ?? new Map<string, string>();
   const temGuia = CAMPOS_FERRAMENTA["/caderno"].some((c) => camposGuia.has(c));
@@ -348,6 +352,42 @@ function CadernoPage() {
     const termo = busca.trim().slice(0, 160);
     criar.mutate(termo);
     setBusca("");
+  }
+
+  if (!acessoInterno.caderno) {
+    return (
+      <PaginaLogada
+        largura="larga"
+        eyebrow="Guia de presença"
+        titulo="Como a marca aparece."
+        subtitulo="Canais, voz e bio, do jeito que o Módulo 5 do Planejamento respondeu."
+      >
+        {camposQuery.isLoading ? (
+          <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
+        ) : temGuia ? (
+          <div className="rounded-xl border border-[var(--line)] bg-white p-4 md:p-6">
+            <CamposDoc mapa={camposGuia} campos={CAMPOS_FERRAMENTA["/caderno"]} />
+            <LinkInterno
+              href={linkModulo5.href}
+              className="mt-2 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            >
+              Editar no Planejamento →
+            </LinkInterno>
+          </div>
+        ) : (
+          <Vazio
+            icone={NotebookPen}
+            titulo="O guia de presença ainda está em branco."
+            texto="Ele sai das respostas do Módulo 5 do Planejamento: os canais da marca, a voz e a bio."
+            acao={
+              <LinkInterno href={linkModulo5.href} className={BTN_ACAO}>
+                Quero abrir o Módulo 5
+              </LinkInterno>
+            }
+          />
+        )}
+      </PaginaLogada>
+    );
   }
 
   return (

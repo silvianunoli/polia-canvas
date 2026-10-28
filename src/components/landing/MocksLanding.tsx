@@ -578,21 +578,23 @@ export function MockPedidos({ className }: { className?: string }) {
   );
 }
 
+// Era o Planner da semana; desde 28/10/2026 o Planner saiu das usuárias e o
+// Calendário mostra as entregas dos pedidos junto da agenda do Google.
 const semana = [
-  { dia: "Seg", tarefa: "Embalar o kit da Júlia", origem: "Planner" },
-  { dia: "Ter", tarefa: "Comprar papel 300g", origem: "Planner" },
-  { dia: "Qua", tarefa: "Entrega da Bia, 15h", origem: "Google Agenda" },
-  { dia: "Qui", tarefa: "Post: do miolo ao caderno pronto", origem: "Planner" },
+  { dia: "Seg", tarefa: "Kit da Júlia, 2 cadernos", origem: "Entrega" },
+  { dia: "Ter", tarefa: "Feira do bairro, 9h", origem: "Google Agenda" },
+  { dia: "Qua", tarefa: "Caderno A5 da Bia", origem: "Entrega" },
+  { dia: "Qui", tarefa: "Pedido da Carla, 3 cadernos", origem: "Entrega" },
 ];
 
-/** Planner do Premium: tarefas e agenda do Google na mesma lista. */
-export function MockPlannerSemana({ className }: { className?: string }) {
+/** Calendário do Premium: entregas dos pedidos e agenda do Google na mesma semana. */
+export function MockSemanaEntregas({ className }: { className?: string }) {
   return (
     <Cartela
-      label="Planner da Pólia One com a semana: tarefas do ateliê e um compromisso que veio da agenda do Google, na mesma lista."
+      label="Calendário da Pólia One com a semana: as entregas dos pedidos e um compromisso que veio da agenda do Google, na mesma lista."
       className={className}
     >
-      <Label>Planner · esta semana</Label>
+      <Label>Calendário · esta semana</Label>
       <ul className="mt-3 flex list-none flex-col">
         {semana.map((s) => (
           <li

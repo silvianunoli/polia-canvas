@@ -136,7 +136,15 @@ describe("tutoriais por ferramenta", () => {
   it("busca sem acento no texto todo", () => {
     expect(buscarTutoriais("google").map((t) => t.slug)).toContain("calendario");
     expect(buscarTutoriais("calendario").map((t) => t.slug)).toContain("calendario");
-    expect(buscarTutoriais("x")).toHaveLength(TUTORIAIS.length);
+    // Tutorial interno (Planner, só a conta interna) fica fora da lista e da busca.
+    expect(buscarTutoriais("x")).toHaveLength(TUTORIAIS.filter((t) => !t.interno).length);
+  });
+
+  it("tutorial interno sai da lista e da busca, mas a tela dele ainda acha ele", () => {
+    expect(buscarTutoriais("x").map((t) => t.slug)).not.toContain("planner");
+    expect(buscarTutoriais("quadro").map((t) => t.slug)).not.toContain("planner");
+    expect(tutorialDaRota("/planner")?.slug).toBe("planner");
+    expect(tutorialDaRota("/pedidos")?.slug).toBe("pedidos");
   });
 
   it("anda pro próximo na ordem dos grupos", () => {

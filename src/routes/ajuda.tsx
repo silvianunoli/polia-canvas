@@ -100,22 +100,23 @@ const CATEGORIAS = [
   },
   {
     icon: KanbanSquare,
-    titulo: "Planner e rotina",
+    // O Planner saiu das usuárias em 28/10/2026; o quadro de Pedidos é a rotina.
+    titulo: "Pedidos e rotina",
     itens: [
       {
-        pergunta: "Criar um quadro no Planner",
+        pergunta: "Anotar um pedido",
         resposta:
-          "No Planner, clique em novo quadro e dê um nome ao projeto. Cada quadro tem colunas que dá pra renomear e reordenar, tipo um kanban.",
+          'Em Pedidos, clique em "Novo pedido": escolha a cliente, o produto do catálogo, a quantidade e o dia da entrega, e diga se já pagou.',
       },
       {
-        pergunta: "Organizar as tarefas da semana",
+        pergunta: "Acompanhar o que sai na semana",
         resposta:
-          "Arraste os cartões entre as colunas conforme o andamento. Quando o prazo de um cartão muda, o painel já puxa dali o que vence hoje.",
+          "Arraste o cartão de A fazer até Entregue, ou use a seta dele. No topo do quadro e no Painel aparecem as entregas de hoje, as de amanhã e as atrasadas.",
       },
       {
-        pergunta: "Ligar uma tarefa à meta do mês",
+        pergunta: "Lançar o pagamento na entrega",
         resposta:
-          "Ao criar o cartão, dá pra vincular ele a uma meta já definida no Planejamento. Assim o que sai no dia a dia aponta pro mesmo número decidido lá.",
+          'Quando um pedido não pago chega em Entregue, o cartão pergunta "O dinheiro já entrou?". Um clique em "Sim, lançar no Financeiro" lança o valor.',
       },
     ],
   },
@@ -374,7 +375,7 @@ function AjudaPage() {
                   type="search"
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
-                  placeholder="Busque por preço, venda, Planner, conta..."
+                  placeholder="Busque por preço, venda, pedido, conta..."
                   className="w-full flex-1 rounded-xl border border-[var(--line)] bg-white px-4 py-3 text-[15px] text-[var(--ink)] outline-none transition-colors focus:border-[var(--secondary)]"
                 />
                 <button type="submit" className={`${BTN_PRIMARIO} whitespace-nowrap`}>

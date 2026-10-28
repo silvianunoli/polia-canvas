@@ -110,7 +110,7 @@ export function itensPraAcender(
     {
       id: "completo",
       texto: "Fechar os 6 módulos",
-      acende: "Planejamento completo, com Metas e Caderno",
+      acende: "Planejamento completo, com Metas",
       feito: todos,
     },
   ];

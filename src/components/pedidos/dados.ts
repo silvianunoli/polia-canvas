@@ -47,15 +47,49 @@ export function usePedidos(userId: string | undefined, hoje: string) {
         .limit(500);
       // Leitura que falha não pode virar "nenhum pedido": a tela mostra o erro.
       if (error) throw error;
-      return ((data ?? []) as unknown as (VendaBanco & { andamento: string; entrega_em: string })[])
-        .filter((v) => ehAndamento(v.andamento) && !!v.entrega_em)
-        .map((v) => ({
-          ...vendaDoBanco(v),
-          andamento: v.andamento as AndamentoPedido,
-          entregaEm: v.entrega_em,
-        }));
+      return paraPedidos(data);
     },
   });
+}
+
+/**
+ * Pedidos com entrega entre `de` e `ate` (AAAA-MM-DD, inclusivas), de qualquer
+ * andamento, sem os cancelados. É o que o Calendário mostra como entregas.
+ */
+export function usePedidosDoPeriodo(
+  userId: string | undefined,
+  de: string,
+  ate: string,
+  ativo = true,
+) {
+  return useQuery({
+    queryKey: [...chavePedidos(userId), "periodo", de, ate],
+    enabled: !!userId && ativo,
+    queryFn: async (): Promise<PedidoLinha[]> => {
+      const { data, error } = await supabase
+        .from("vendas")
+        .select(SELECT)
+        .eq("user_id", userId!)
+        .not("andamento", "is", null)
+        .neq("status", "cancelada")
+        .gte("entrega_em", de)
+        .lte("entrega_em", ate)
+        .order("entrega_em", { ascending: true })
+        .limit(1000);
+      if (error) throw error;
+      return paraPedidos(data);
+    },
+  });
+}
+
+function paraPedidos(data: unknown): PedidoLinha[] {
+  return ((data ?? []) as (VendaBanco & { andamento: string; entrega_em: string })[])
+    .filter((v) => ehAndamento(v.andamento) && !!v.entrega_em)
+    .map((v) => ({
+      ...vendaDoBanco(v),
+      andamento: v.andamento as AndamentoPedido,
+      entregaEm: v.entrega_em,
+    }));
 }
 
 export interface NovoPedido {

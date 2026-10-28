@@ -39,7 +39,7 @@ export function ListaTutoriais({ base }: { base: "/como-usar" | "/tutorial" }) {
       {buscando && (
         <p aria-live="polite" className="mt-3 text-[13px] text-[var(--muted)]">
           {achados.length === 0
-            ? "Nenhum tutorial com esse termo. Tenta o nome da tela, como Financeiro ou Planner."
+            ? "Nenhum tutorial com esse termo. Tenta o nome da tela, como Financeiro ou Pedidos."
             : `${achados.length} ${achados.length === 1 ? "tutorial" : "tutoriais"}`}
         </p>
       )}

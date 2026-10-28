@@ -108,7 +108,7 @@ const ordem = [
   {
     titulo: "Por fim, o mês.",
     texto:
-      "A cada venda registrada, o Painel mostra quanto falta pra fechar as contas e o Planner organiza o que a semana pede.",
+      "A cada venda registrada, o Painel mostra quanto falta pra fechar as contas, e o quadro de Pedidos mostra o que precisa sair na semana.",
   },
 ];
 
@@ -194,8 +194,7 @@ function SobrePage() {
               <p className={CORPO}>
                 Comecei em 2012 vendendo cosmético artesanal. Depois veio a papelaria de casamento,
                 com lacinho feito à mão e a plotter de recorte ligada o dia todo. Mais tarde,
-                planner e caderno artesanal, os mesmos nomes que hoje batizam duas áreas da Pólia
-                One.
+                planner e caderno artesanal, montados à mão.
               </p>
               <p className={`mt-4 ${CORPO}`}>
                 Os números da frente iam bem. O que ninguém via era o fundo: as finanças no susto,

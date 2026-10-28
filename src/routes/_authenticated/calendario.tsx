@@ -54,8 +54,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-import { diaLocalDe } from "@/lib/data.functions";
+import { diaLocalDe, hojeISO } from "@/lib/data.functions";
 import { ddmm, distribuirTarefasPorDia, type OcorrenciaTarefa } from "@/lib/calendarioTarefas";
+import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
+import { usePedidosDoPeriodo, type PedidoLinha } from "@/components/pedidos/dados";
+import { estaAtrasado } from "@/lib/pedidos";
 
 interface CalendarioSearch {
   code?: string;
@@ -73,7 +76,7 @@ export const Route = createFileRoute("/_authenticated/calendario")({
       {
         name: "description",
         content:
-          "Suas tarefas do Planner e, se conectar, os compromissos do Google Calendar, num só lugar.",
+          "As entregas dos pedidos e, se conectar, os compromissos do Google Calendar, num só lugar.",
       },
     ],
   }),
@@ -96,9 +99,11 @@ interface TarefaCal {
   horario: string | null;
 }
 
+// "pedido" = entrega do quadro de Pedidos (28/10/2026): é a fonte principal
+// desde que o Planner ficou só pra conta interna (lib/ferramentasInternas).
 type ItemDia =
   | {
-      fonte: "planner";
+      fonte: "planner" | "pedido";
       id: string;
       titulo: string;
       horario: string | null;
@@ -119,7 +124,11 @@ function CalendarioPage() {
   const search = Route.useSearch();
 
   const [mes, setMes] = useState(() => startOfMonth(new Date()));
-  const [mostrarPlanner, setMostrarPlanner] = useState(true);
+  // Planner só aparece pra conta interna; pra todas, a grade é das entregas.
+  const comPlanner = useFerramentasInternas().planner;
+  const [mostrarEntregas, setMostrarEntregas] = useState(true);
+  const [mostrarPlannerFiltro, setMostrarPlanner] = useState(true);
+  const mostrarPlanner = comPlanner && mostrarPlannerFiltro;
   const [mostrarGoogle, setMostrarGoogle] = useState(true);
   const [quadroFiltro, setQuadroFiltro] = useState<string>("todos");
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
@@ -139,9 +148,11 @@ function CalendarioPage() {
   const inicioISO = format(inicioGrade, "yyyy-MM-dd");
   const fimISO = format(fimGrade, "yyyy-MM-dd");
 
+  const pedidosQuery = usePedidosDoPeriodo(userId, inicioISO, fimISO, mostrarEntregas);
+
   const quadrosQuery = useQuery({
     queryKey: ["quadros-calendario", userId],
-    enabled: !!userId,
+    enabled: !!userId && comPlanner,
     queryFn: async () => {
       const { data } = await supabase
         .from("quadros")
@@ -155,7 +166,7 @@ function CalendarioPage() {
 
   const tarefasQuery = useQuery({
     queryKey: ["calendario-tarefas", userId, inicioISO, fimISO],
-    enabled: !!userId,
+    enabled: !!userId && comPlanner,
     queryFn: async () => {
       // QA-34 (07/10/2026): a tarefa entra se o intervalo [data_inicio, prazo]
       // encosta na grade, não só se o prazo cai nela. prazo >= início da grade E
@@ -305,6 +316,17 @@ function CalendarioPage() {
     return distribuirTarefasPorDia(filtradas, inicioISO, fimISO);
   }, [tarefasQuery.data, mostrarPlanner, quadroFiltro, inicioISO, fimISO]);
 
+  const entregasPorDia = useMemo(() => {
+    const m = new Map<string, PedidoLinha[]>();
+    if (!mostrarEntregas) return m;
+    for (const p of pedidosQuery.data ?? []) {
+      const lista = m.get(p.entregaEm) ?? [];
+      lista.push(p);
+      m.set(p.entregaEm, lista);
+    }
+    return m;
+  }, [pedidosQuery.data, mostrarEntregas]);
+
   const eventosPorDia = useMemo(() => {
     const m = new Map<string, EventoGoogle[]>();
     if (!mostrarGoogle) return m;
@@ -346,6 +368,17 @@ function CalendarioPage() {
               ? `em andamento, até ${ddmm(x.prazo)}`
               : null,
       }));
+    const p: ItemDia[] = (entregasPorDia.get(iso) ?? []).map((x) => ({
+      fonte: "pedido",
+      id: x.id,
+      titulo: `Entrega · ${x.clienteNome || "sem nome"}`,
+      horario: null,
+      href: "/pedidos",
+      concluido: x.andamento === "entregue",
+      detalhe: estaAtrasado(x, hojeISO())
+        ? "atrasado"
+        : x.itens.map((i) => `${i.quantidade}x ${i.produtoNome}`).join(", "),
+    }));
     const g: ItemDia[] = (eventosPorDia.get(iso) ?? []).map((x) => ({
       fonte: "google",
       id: x.id,
@@ -353,7 +386,7 @@ function CalendarioPage() {
       horario: x.diaTodo ? null : format(new Date(x.inicio), "HH:mm"),
       href: x.link,
     }));
-    return [...t, ...g].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
+    return [...p, ...t, ...g].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
   };
 
   // Mês sem nenhum item desenhava 35 células em branco e mais nada: nem aviso de
@@ -365,20 +398,24 @@ function CalendarioPage() {
     for (const lista of tarefasPorDia.values()) for (const o of lista) idsTarefas.add(o.tarefa.id);
     let n = idsTarefas.size;
     for (const lista of eventosPorDia.values()) n += lista.length;
+    for (const lista of entregasPorDia.values()) n += lista.length;
     return n;
-  }, [tarefasPorDia, eventosPorDia]);
+  }, [tarefasPorDia, eventosPorDia, entregasPorDia]);
   const carregandoGrade =
-    tarefasQuery.isLoading || (conectado && mostrarGoogle && eventosGoogleQuery.isLoading);
+    (mostrarPlanner && tarefasQuery.isLoading) ||
+    (mostrarEntregas && pedidosQuery.isLoading) ||
+    (conectado && mostrarGoogle && eventosGoogleQuery.isLoading);
   const googleAtivo = conectado && mostrarGoogle;
-  const textoVazioDoMes = !mostrarPlanner
-    ? "O filtro do Planner está desligado. Liga ele aí em cima que as tarefas voltam pra grade."
+  const textoVazioDoMes = !mostrarEntregas
+    ? 'O filtro "Entregas" está desligado. Liga ele aí em cima que as entregas voltam pra grade.'
     : googleAtivo
-      ? "O calendário junta as tarefas do Planner e os compromissos do Google Calendar. As duas fontes estão vazias por aqui."
-      : "O calendário mostra as tarefas do Planner que têm prazo. Nenhuma delas cai neste mês.";
+      ? "O calendário junta as entregas dos pedidos e os compromissos do Google Calendar. Nenhum dos dois cai neste mês."
+      : "O calendário mostra o dia de entrega de cada pedido. Nenhum cai neste mês.";
   const itensDiaSelecionado = diaSelecionado
     ? itensDoDia(diaSelecionado, { comAndamento: true })
     : [];
-  const erroTarefas = mostrarPlanner && tarefasQuery.isError;
+  const erroTarefas =
+    (mostrarPlanner && tarefasQuery.isError) || (mostrarEntregas && pedidosQuery.isError);
 
   return (
     <PaginaLogada
@@ -386,7 +423,7 @@ function CalendarioPage() {
       largura="larga"
       eyebrow="Calendário"
       titulo="O mês inteiro à vista."
-      subtitulo={`Suas tarefas do Planner${conectado ? " e os compromissos do seu Google Calendar" : ""}, num só lugar.`}
+      subtitulo={`As entregas dos pedidos${conectado ? " e os compromissos do seu Google Calendar" : ""}, num só lugar.`}
     >
       <div>
         {/* Navegação de mês */}
@@ -425,12 +462,22 @@ function CalendarioPage() {
         <div className="mb-5 flex flex-wrap items-center gap-2">
           <button
             type="button"
-            onClick={() => setMostrarPlanner((v) => !v)}
-            aria-pressed={mostrarPlanner}
-            className={`${BTN_MIUDO} ${mostrarPlanner ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            onClick={() => setMostrarEntregas((v) => !v)}
+            aria-pressed={mostrarEntregas}
+            className={`${BTN_MIUDO} ${mostrarEntregas ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
-            Planner
+            Entregas
           </button>
+          {comPlanner && (
+            <button
+              type="button"
+              onClick={() => setMostrarPlanner((v) => !v)}
+              aria-pressed={mostrarPlanner}
+              className={`${BTN_MIUDO} ${mostrarPlanner ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            >
+              Planner
+            </button>
+          )}
           {googleConfigurado && (
             <button
               type="button"
@@ -508,16 +555,21 @@ function CalendarioPage() {
           <div className="mb-5">
             <Vazio
               icone={AlertTriangle}
-              titulo="A Pólia One não conseguiu carregar as tarefas deste mês."
-              texto="Pode ter sido a conexão. As tarefas continuam guardadas no Planner, a grade só não conseguiu ler agora."
+              titulo="A Pólia One não conseguiu carregar o que cai neste mês."
+              texto="Pode ter sido a conexão. Os pedidos continuam guardados, a grade só não conseguiu ler agora."
               acao={
                 <button
                   type="button"
-                  onClick={() => void tarefasQuery.refetch()}
-                  disabled={tarefasQuery.isFetching}
+                  onClick={() => {
+                    void pedidosQuery.refetch();
+                    if (comPlanner) void tarefasQuery.refetch();
+                  }}
+                  disabled={tarefasQuery.isFetching || pedidosQuery.isFetching}
                   className={BTN_ACAO}
                 >
-                  {tarefasQuery.isFetching ? "Tentando…" : "Tentar de novo"}
+                  {tarefasQuery.isFetching || pedidosQuery.isFetching
+                    ? "Tentando…"
+                    : "Tentar de novo"}
                 </button>
               }
             />
@@ -602,7 +654,7 @@ function CalendarioPage() {
                       }`}
                     >
                       {item.titulo}
-                      {item.fonte === "planner" && item.detalhe ? ` · ${item.detalhe}` : ""}
+                      {item.fonte !== "google" && item.detalhe ? ` · ${item.detalhe}` : ""}
                     </span>
                   ))}
                   {itens.length > 3 && (
@@ -622,12 +674,12 @@ function CalendarioPage() {
           <div className="mt-4">
             <Vazio
               icone={CalendarDays}
-              titulo={mostrarPlanner ? "Nada marcado neste mês." : "Nada aparecendo neste mês."}
+              titulo={mostrarEntregas ? "Nada marcado neste mês." : "Nada aparecendo neste mês."}
               texto={textoVazioDoMes}
               acao={
-                mostrarPlanner ? (
-                  <LinkInterno href="/planner" className={BTN_ACAO}>
-                    Quero criar uma tarefa
+                mostrarEntregas ? (
+                  <LinkInterno href="/pedidos" className={BTN_ACAO}>
+                    Quero anotar um pedido
                     <span aria-hidden="true">→</span>
                   </LinkInterno>
                 ) : undefined
@@ -653,7 +705,14 @@ function CalendarioPage() {
 
             {diaSelecionado && (
               <>
-                {quadros.length === 0 ? (
+                {!comPlanner ? (
+                  <LinkInterno
+                    href="/pedidos"
+                    className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
+                  >
+                    <Plus size={14} aria-hidden="true" /> Anotar um pedido
+                  </LinkInterno>
+                ) : quadros.length === 0 ? (
                   <p className="mb-4 text-[13px] italic text-[var(--muted)]">
                     Crie um quadro no{" "}
                     <LinkInterno
@@ -733,15 +792,20 @@ function CalendarioPage() {
                 {erroTarefas ? (
                   <div role="alert" className="rounded-lg border border-[var(--line)] p-3">
                     <p className="text-[13px] text-[var(--ink-soft)]">
-                      A Pólia One não conseguiu carregar as tarefas desse dia.
+                      A Pólia One não conseguiu carregar o que cai nesse dia.
                     </p>
                     <button
                       type="button"
-                      onClick={() => void tarefasQuery.refetch()}
-                      disabled={tarefasQuery.isFetching}
+                      onClick={() => {
+                        void pedidosQuery.refetch();
+                        if (comPlanner) void tarefasQuery.refetch();
+                      }}
+                      disabled={tarefasQuery.isFetching || pedidosQuery.isFetching}
                       className={`${BTN_MIUDO} mt-2 min-h-11`}
                     >
-                      {tarefasQuery.isFetching ? "Tentando…" : "Tentar de novo"}
+                      {tarefasQuery.isFetching || pedidosQuery.isFetching
+                        ? "Tentando…"
+                        : "Tentar de novo"}
                     </button>
                   </div>
                 ) : itensDiaSelecionado.length === 0 ? (
@@ -750,8 +814,8 @@ function CalendarioPage() {
                     titulo="Nada marcado nesse dia."
                     texto={
                       conectado
-                        ? "Nenhuma tarefa do Planner passa por esse dia, e nenhum compromisso no Google Calendar."
-                        : "Nenhuma tarefa do Planner passa por esse dia."
+                        ? "Nenhuma entrega cai nesse dia, e nenhum compromisso no Google Calendar."
+                        : "Nenhuma entrega cai nesse dia."
                     }
                   />
                 ) : (
@@ -773,7 +837,7 @@ function CalendarioPage() {
                           <span className="block truncate text-[14px] text-[var(--ink-soft)]">
                             {item.titulo}
                           </span>
-                          {item.fonte === "planner" && item.detalhe && (
+                          {item.fonte !== "google" && item.detalhe && (
                             <span className="block truncate text-[12px] text-[var(--muted)]">
                               {item.detalhe}
                             </span>
@@ -785,7 +849,11 @@ function CalendarioPage() {
                           </span>
                         )}
                         <span className="shrink-0 text-[10px] font-accent font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
-                          {item.fonte === "google" ? "Google" : "Planner"}
+                          {item.fonte === "google"
+                            ? "Google"
+                            : item.fonte === "pedido"
+                              ? "Entrega"
+                              : "Planner"}
                         </span>
                         {item.href && (
                           <a
@@ -811,7 +879,7 @@ function CalendarioPage() {
           open={confirmarDesconectar}
           onOpenChange={setConfirmarDesconectar}
           titulo="Desconectar o Google Calendar?"
-          descricao="Os compromissos somem da grade. As tarefas do Planner continuam."
+          descricao="Os compromissos somem da grade. As entregas dos pedidos continuam."
           textoConfirmar="Desconectar"
           textoCarregando="Desconectando…"
           textoCancelar="Voltar"

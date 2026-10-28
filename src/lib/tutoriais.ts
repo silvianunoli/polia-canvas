@@ -43,6 +43,12 @@ export type Tutorial = {
   /** Quando o plano não sai só da rota (ex.: a tela abre, mas conectar é do Pro). */
   plano?: PlanoVisivel;
   trecho?: string;
+  /**
+   * Ferramenta só da conta interna (Planner, 28/10/2026, lib/ferramentasInternas):
+   * fica fora da lista, da busca e do "anterior/próximo", mas o link "Como usar
+   * esta tela" continua achando ela pra quem tem acesso.
+   */
+  interno?: boolean;
   passos: { titulo: string; itens: string[] }[];
   bomSaber: string[];
   duvidas: { pergunta: string; resposta: string }[];
@@ -108,7 +114,6 @@ const LISTA = [
           "A frase do topo muda com o mês. Antes do Módulo 4, ela aponta o Planejamento. Depois, mostra quanto falta pra fechar as contas ou a Meta do mês.",
           "O botão logo abaixo é o próximo passo: continuar um módulo ou registrar uma entrada.",
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
-          '"Suas tarefas" traz do Planner o que passou do prazo, o que vence hoje e o que vence nos próximos 7 dias.',
           'Com pedido aberto no quadro de Pedidos, o cartão "Entregas" mostra as de hoje, as de amanhã, as atrasadas e quanto entra na semana. "Abrir o quadro" leva pra ele.',
         ],
       },
@@ -165,7 +170,7 @@ const LISTA = [
           'Abra o Planejamento e clique em "Começar o Módulo N" ou "Continuar o Módulo N".',
           'Escreva no campo "Escreva aqui…". A resposta se salva sozinha um segundo depois que você para de digitar.',
           'Clique em "Salvar e continuar" pra ir pra próxima seção. Na última, o botão vira "Concluir módulo".',
-          "No fim do módulo, a ferramenta que nasce dele já abre: a Marca, o Mapa de Mercado, o Catálogo, o Financeiro, o Caderno ou as Metas.",
+          "No fim do módulo, a ferramenta que nasce dele já abre: a Marca, o Mapa de Mercado, o Catálogo, o Financeiro, o Guia de presença ou as Metas.",
         ],
       },
       {
@@ -250,7 +255,7 @@ const LISTA = [
     outrasRotas: ["/assinar"],
     abrir: "Abrir Configurações",
     resumo: "O que abre em cada plano, onde ver o seu e como trocar, mudar o cartão ou cancelar.",
-    trecho: "plano",
+    // Sem clipe desde 28/10/2026: o vídeo lista Planner e Caderno nos planos.
     passos: [
       {
         titulo: "Ver o seu plano",
@@ -281,8 +286,8 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Metas, Planner (1 quadro), quadro de Pedidos (até 15 abertos), Caderno (1 nota) e Assistente.",
-      "Premium, R$ 29,90 por mês: Produtos, Planner, Pedidos e Caderno sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
+      "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas, guia de presença e Assistente.",
+      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
       "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo e a conexão com Mercado Livre e TikTok Shop.",
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
@@ -784,6 +789,7 @@ const LISTA = [
   {
     slug: "planner",
     nome: "Planner",
+    interno: true,
     grupo: "Clientes e rotina",
     rota: "/planner",
     abrir: "Abrir o Planner",
@@ -832,7 +838,7 @@ const LISTA = [
     slug: "pedidos",
     nome: "Pedidos",
     grupo: "Clientes e rotina",
-    rota: "/planner/pedidos",
+    rota: "/pedidos",
     abrir: "Abrir os Pedidos",
     resumo:
       "Um quadro pronto com cada pedido: a cliente, o que ela pediu, o dia da entrega e se já pagou. Na entrega, o dinheiro entra no Financeiro.",
@@ -840,7 +846,7 @@ const LISTA = [
       {
         titulo: "Anotar um pedido",
         itens: [
-          'No Planner, abra o quadro "Pedidos" e clique em "Novo pedido".',
+          'No menu, abra "Pedidos" e clique em "Novo pedido".',
           'Em "Cliente", escolha da lista ou digite um nome novo.',
           'Escolha o produto do catálogo, a variação (quando tiver) e a quantidade. O preço vem do catálogo. "+ mais um produto" põe outro item no mesmo pedido.',
           'Escolha o dia em "Entrega" e responda "Já pagou?".',
@@ -888,22 +894,22 @@ const LISTA = [
     rota: "/calendario",
     abrir: "Abrir o Calendário",
     resumo:
-      "O mês com os prazos dos cartões do Planner e, com o Google Calendar conectado, os compromissos de lá.",
-    trecho: "calendario",
+      "O mês com o dia de entrega de cada pedido e, com o Google Calendar conectado, os compromissos de lá.",
+    // Sem clipe desde 28/10/2026: o vídeo mostra a grade com os cartões do
+    // Planner, que saiu das usuárias. Volta quando a narração nova sair.
     passos: [
       {
         titulo: "Ver o mês",
         itens: [
           'Use "Mês anterior" e "Próximo mês" pra navegar. "Hoje" volta pro mês atual.',
-          "Clique num dia pra ver tudo o que cai nele. Cada item mostra se vem do Planner ou do Google.",
-          'Os filtros "Planner" e "Google Calendar" ligam e desligam cada origem.',
+          'Clique num dia pra ver tudo o que cai nele. Cada item mostra se é "Entrega" ou se vem do Google.',
+          'Os filtros "Entregas" e "Google Calendar" ligam e desligam cada origem.',
         ],
       },
       {
-        titulo: "Criar uma tarefa num dia",
+        titulo: "Anotar um pedido",
         itens: [
-          'Clique no dia e depois em "Nova tarefa nesse dia".',
-          'Escreva o nome, escolha o quadro e clique em "Adicionar". O cartão entra no Planner, com início e prazo nesse dia.',
+          'Clique no dia e depois em "Anotar um pedido". O quadro de Pedidos abre, e o pedido aparece aqui no dia da entrega.',
         ],
       },
       {
@@ -918,13 +924,13 @@ const LISTA = [
     bomSaber: [
       "O Calendário é do Premium e do Pro.",
       "O Google entra só pra leitura: a Pólia mostra a agenda principal, mas não cria nem muda compromisso lá.",
-      "Pra desconectar, clique no seu e-mail ao lado do botão do Google. As tarefas do Planner ficam.",
+      "Pra desconectar, clique no seu e-mail ao lado do botão do Google. As entregas dos pedidos ficam.",
     ],
     duvidas: [
       {
-        pergunta: "Minha tarefa não aparece",
+        pergunta: "Meu pedido não aparece",
         resposta:
-          'Ela precisa ser um cartão do Planner com prazo, e o filtro "Planner" precisa estar ligado. Confira também qual quadro está escolhido.',
+          'O Calendário mostra o pedido no dia da entrega, e o filtro "Entregas" precisa estar ligado. Pedido cancelado não aparece.',
       },
       {
         pergunta: "Qual agenda do Google aparece",
@@ -933,44 +939,37 @@ const LISTA = [
     ],
   },
   {
+    // Slug e rota continuam "caderno": desde 28/10/2026 as notas ficaram só pra
+    // conta interna e, pra todas, a tela é o guia de presença do Módulo 5. Sem
+    // clipe: o vídeo mostra as notas.
     slug: "caderno",
-    nome: "Caderno",
-    grupo: "Clientes e rotina",
+    nome: "Guia de presença",
+    grupo: "Primeiros passos",
     rota: "/caderno",
-    abrir: "Abrir o Caderno",
-    resumo:
-      "Ideia solta, rascunho de legenda e anotação de reunião, com busca e notas fixadas no topo.",
-    trecho: "caderno",
+    abrir: "Abrir o guia de presença",
+    resumo: "Os canais da marca, a voz e a bio, do jeito que o Módulo 5 do Planejamento respondeu.",
     passos: [
       {
-        titulo: "Escrever uma nota",
+        titulo: "Montar o guia",
         itens: [
-          'Clique em "Nova nota".',
-          "Dê um título e comece a escrever. A nota se salva sozinha quando você para de digitar.",
-          '"Salvar e fechar" fecha a nota, se quiser ter certeza.',
+          "Responda o Módulo 5 do Planejamento: por onde a cliente chega, como a marca fala e a bio.",
+          'No fim do módulo, clique em "Abrir meu guia de presença". O guia mostra as respostas, prontas pra consultar.',
         ],
       },
       {
-        titulo: "Achar e organizar",
-        itens: [
-          'Digite em "Buscar anotações…". A busca olha título e texto.',
-          "Clique no alfinete pra fixar a nota no topo da lista.",
-          '"Excluir nota" pede confirmação. Se apagou sem querer, "Desfazer" aparece por alguns segundos.',
-        ],
+        titulo: "Mudar uma resposta",
+        itens: ['No guia, clique em "Editar no Planejamento →". O guia muda junto.'],
       },
     ],
     bomSaber: [
-      "No plano Grátis cabe 1 nota. No Premium e no Pro, sem limite.",
-      "Com o Módulo 5 do Planejamento respondido, o guia de presença (canais, voz e bio) aparece no topo do Caderno.",
+      "O guia de presença abre em todo plano.",
+      "Enquanto o Módulo 5 não tem resposta, o guia aparece em branco, com o atalho pro módulo.",
     ],
     duvidas: [
       {
-        pergunta: "Preciso salvar",
-        resposta: "Não. O Caderno guarda sozinho enquanto você escreve.",
-      },
-      {
-        pergunta: "Busquei e não achei nada",
-        resposta: "A tela oferece criar uma nota com o termo buscado, num clique.",
+        pergunta: "Cadê as minhas notas",
+        resposta:
+          "As notas saíram da Pólia One em outubro de 2026, mas continuam guardadas. Se precisar de alguma, fale com a Pólia pela Ajuda.",
       },
     ],
   },
@@ -1026,9 +1025,12 @@ export type SlugTutorial = (typeof LISTA)[number]["slug"];
 export const TUTORIAIS: readonly Tutorial[] = LISTA;
 
 /** Ordem de leitura: a dos grupos, e dentro do grupo a ordem da lista. */
-const ORDENADOS: readonly Tutorial[] = GRUPOS_TUTORIAL.flatMap((g) =>
+const TODOS_ORDENADOS: readonly Tutorial[] = GRUPOS_TUTORIAL.flatMap((g) =>
   TUTORIAIS.filter((t) => t.grupo === g),
 );
+
+/** O que as usuárias veem na lista, na busca e no anterior/próximo. */
+const ORDENADOS: readonly Tutorial[] = TODOS_ORDENADOS.filter((t) => !t.interno);
 
 export function tutorialPorSlug(slug: string): Tutorial | undefined {
   return TUTORIAIS.find((t) => t.slug === slug);
@@ -1043,7 +1045,7 @@ export function tutorialPorSlug(slug: string): Tutorial | undefined {
 export function tutorialDaRota(pathname: string): Tutorial | undefined {
   let achado: Tutorial | undefined;
   let tamanho = 0;
-  for (const t of ORDENADOS) {
+  for (const t of TODOS_ORDENADOS) {
     for (const rota of [t.rota, ...(t.outrasRotas ?? [])]) {
       const bate = pathname === rota || pathname.startsWith(rota + "/");
       if (bate && rota.length > tamanho) {
