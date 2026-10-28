@@ -413,3 +413,14 @@ Diagnóstico GRW-89: 87 contas novas abriram a Calculadora e 9 guardaram preço;
 - Painel: `usePrimeirosPassos` traz o primeiro produto com breakdown; o passo feito mostra "nome: R$ X · lucra R$ Y por venda" e "Ver na Calculadora" (1 teste).
 - E-mail `guardar_d2`: texto novo "A conta do preço ficou no meio" (1 teste). Só muda no ar depois de publicar a edge function `lembretes-conta`.
 - Suíte inteira verde (2.020 testes), tipos, lint e build ok.
+
+## 2026-10-28 — App Android resumido, fase 1: barra de abas, + e Mais (AND-07)
+
+Wireframe em cinza aprovado pela Sil (v2, com Calculadora e Planner). Só dentro do app (`useAppNativo`, decidido depois de montar pra não quebrar a hidratação); o site no navegador não muda.
+
+- `_authenticated.tsx`: no app, sai o menu lateral e o Assistente flutuante; entra `BarraAbasApp` (Hoje = /painel, Calcular = /calculadora, + no meio, Planner = /planner, Mais = /mais) e o `main` reserva o espaço da barra (64px + área do sistema).
+- `MenuRegistrarApp`: o + abre "Registrar venda" (ModalRegistrarVenda; no Grátis vai pro upgrade com cadeado), "Lançar gasto" (ModalLancamento de saída; no Grátis preso ao mês, como no Painel) e "Nova tarefa" (`ModalNovaTarefaApp`: cartão em "Planejado" com prazo hoje, igual ao quick add do quadro; limite do Grátis pelo banco).
+- Rota `/mais`: as telas sem aba, em três grupos, com a mesma regra de cadeado do menu lateral; Assistente, Como usar, Configurações e Ajuda sempre abertos; Sair no fim.
+- `routeTree.gen.ts` regenerado (só a rota /mais; o bloco do Start foi mantido).
+- `BarraAbasApp.test.tsx` (5 testes). Suíte: 2046 passando; a única falha é do vocabulário em `src/components/pedidos` (trabalho de outra sessão, fora deste commit).
+- Fase 2: Hoje enxuto (números do mês, meta, tarefas de hoje, post do dia) e Planner de uma coluna por vez. Tutorial do app entra quando ele for pra loja (hoje só a Sil instala).

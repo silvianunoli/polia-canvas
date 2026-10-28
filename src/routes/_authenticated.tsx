@@ -6,6 +6,10 @@ import {
   useRouterState,
 } from "@tanstack/react-router";
 import { iniciarPush } from "@/lib/push";
+import { useAppNativo } from "@/hooks/useAppNativo";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { useUserMeta } from "@/hooks/useUserMeta";
+import { ALTURA_BARRA_APP, BarraAbasApp } from "@/components/app/BarraAbasApp";
 import { useBonusPrimeirosPassos } from "@/hooks/useBonusPrimeirosPassos";
 import { FaixaTestePro } from "@/components/layout/FaixaTestePro";
 import { useEffect } from "react";
@@ -196,6 +200,10 @@ function AuthenticatedLayout() {
   useEffect(() => {
     void gravarOrigemDoOAuth();
   }, []);
+  const appNativo = useAppNativo();
+  const session = useSupabaseSession();
+  const meta = useUserMeta();
+  const comBarraApp = appNativo && pathname !== "/onboarding";
 
   return (
     <AssistenteProvider>
@@ -205,14 +213,31 @@ function AuthenticatedLayout() {
         </a>
         {/* Onboarding é tela cheia, sem barra lateral (decisão da Sil, 05/10/2026):
           com o menu à vista dava pra sair no meio do fluxo. */}
-        {pathname !== "/onboarding" && <Sidebar />}
+        {/* No app Android (AND-07) a barra de abas embaixo substitui o menu
+          lateral, e o Assistente mora na aba Mais em vez de flutuar por cima
+          da barra. */}
+        {pathname !== "/onboarding" && !appNativo && <Sidebar />}
         <div className="flex min-w-0 flex-1 flex-col">
           {pathname !== "/onboarding" && <FaixaTestePro pathname={pathname} />}
-          <main id="main-content" tabIndex={-1} className="flex-1">
+          <main
+            id="main-content"
+            tabIndex={-1}
+            className="flex-1"
+            style={
+              comBarraApp
+                ? {
+                    paddingBottom: `calc(${ALTURA_BARRA_APP}px + env(safe-area-inset-bottom))`,
+                  }
+                : undefined
+            }
+          >
             <Outlet />
           </main>
         </div>
-        <AssistenteFlutuante pathname={pathname} />
+        {comBarraApp && (
+          <BarraAbasApp pathname={pathname} userId={session.user?.id} plano={meta.plano} />
+        )}
+        {!appNativo && <AssistenteFlutuante pathname={pathname} />}
         {csatPulso.mostrar && (
           <CsatPrompt
             pergunta="Como está sendo usar a Pólia One?"
