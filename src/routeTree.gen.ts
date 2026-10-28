@@ -37,6 +37,7 @@ import { Route as AuthVerificacaoRouteImport } from './routes/auth/verificacao'
 import { Route as AuthRedefinirSenhaRouteImport } from './routes/auth/redefinir-senha'
 import { Route as AuthLoginRouteImport } from './routes/auth/login'
 import { Route as AuthLinkExpiradoRouteImport } from './routes/auth/link-expirado'
+import { Route as AuthLinkRouteImport } from './routes/auth/link'
 import { Route as AuthEsqueciSenhaRouteImport } from './routes/auth/esqueci-senha'
 import { Route as AuthCriarSenhaRouteImport } from './routes/auth/criar-senha'
 import { Route as AuthCadastroRouteImport } from './routes/auth/cadastro'
@@ -218,6 +219,11 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
 const AuthLinkExpiradoRoute = AuthLinkExpiradoRouteImport.update({
   id: '/auth/link-expirado',
   path: '/auth/link-expirado',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthLinkRoute = AuthLinkRouteImport.update({
+  id: '/auth/link',
+  path: '/auth/link',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthEsqueciSenhaRoute = AuthEsqueciSenhaRouteImport.update({
@@ -496,6 +502,7 @@ export interface FileRoutesByFullPath {
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link': typeof AuthLinkRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
@@ -568,6 +575,7 @@ export interface FileRoutesByTo {
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link': typeof AuthLinkRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
@@ -642,6 +650,7 @@ export interface FileRoutesById {
   '/auth/cadastro': typeof AuthCadastroRoute
   '/auth/criar-senha': typeof AuthCriarSenhaRoute
   '/auth/esqueci-senha': typeof AuthEsqueciSenhaRoute
+  '/auth/link': typeof AuthLinkRoute
   '/auth/link-expirado': typeof AuthLinkExpiradoRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/redefinir-senha': typeof AuthRedefinirSenhaRoute
@@ -716,6 +725,7 @@ export interface FileRouteTypes {
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
+    | '/auth/link'
     | '/auth/link-expirado'
     | '/auth/login'
     | '/auth/redefinir-senha'
@@ -788,6 +798,7 @@ export interface FileRouteTypes {
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
+    | '/auth/link'
     | '/auth/link-expirado'
     | '/auth/login'
     | '/auth/redefinir-senha'
@@ -861,6 +872,7 @@ export interface FileRouteTypes {
     | '/auth/cadastro'
     | '/auth/criar-senha'
     | '/auth/esqueci-senha'
+    | '/auth/link'
     | '/auth/link-expirado'
     | '/auth/login'
     | '/auth/redefinir-senha'
@@ -913,6 +925,7 @@ export interface RootRouteChildren {
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthCriarSenhaRoute: typeof AuthCriarSenhaRoute
   AuthEsqueciSenhaRoute: typeof AuthEsqueciSenhaRoute
+  AuthLinkRoute: typeof AuthLinkRoute
   AuthLinkExpiradoRoute: typeof AuthLinkExpiradoRoute
   AuthLoginRoute: typeof AuthLoginRoute
   AuthRedefinirSenhaRoute: typeof AuthRedefinirSenhaRoute
@@ -1124,6 +1137,13 @@ declare module '@tanstack/react-router' {
       path: '/auth/link-expirado'
       fullPath: '/auth/link-expirado'
       preLoaderRoute: typeof AuthLinkExpiradoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/link': {
+      id: '/auth/link'
+      path: '/auth/link'
+      fullPath: '/auth/link'
+      preLoaderRoute: typeof AuthLinkRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/esqueci-senha': {
@@ -1546,6 +1566,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCadastroRoute: AuthCadastroRoute,
   AuthCriarSenhaRoute: AuthCriarSenhaRoute,
   AuthEsqueciSenhaRoute: AuthEsqueciSenhaRoute,
+  AuthLinkRoute: AuthLinkRoute,
   AuthLinkExpiradoRoute: AuthLinkExpiradoRoute,
   AuthLoginRoute: AuthLoginRoute,
   AuthRedefinirSenhaRoute: AuthRedefinirSenhaRoute,

@@ -4,6 +4,7 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { dispararAlerta } from "./lib/alertas.server";
 import { CORPO_ROBOTS } from "./lib/robots";
+import { corpoAssetLinks } from "./lib/assetLinks";
 import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
 import { ehCaminhoDeDownload } from "./lib/manual/download";
@@ -53,6 +54,18 @@ async function respostaSitemap(): Promise<Response> {
   });
 }
 
+// App Links do app Android (AND-09): sem este arquivo o Android não confia que
+// o app é dono do domínio e abre o link de e-mail no Chrome.
+function respostaAssetLinks(): Response {
+  return new Response(corpoAssetLinks(), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "public, max-age=3600",
+    },
+  });
+}
+
 function respostaRobots(): Response {
   return new Response(CORPO_ROBOTS, {
     status: 200,
@@ -78,11 +91,14 @@ const PREFIXOS_AUTENTICADOS = [
   "/clientes",
   "/configuracoes",
   "/financeiro",
+  "/hoje",
   "/marca",
+  "/mais",
   "/mercado",
   "/metas",
   "/onboarding",
   "/painel",
+  "/pedidos",
   "/planejamento",
   "/planner",
   "/plano-conteudo",
@@ -184,6 +200,7 @@ export default {
     }
     if (url.pathname === "/sitemap.xml") return await respostaSitemap();
     if (url.pathname === "/robots.txt") return respostaRobots();
+    if (url.pathname === "/.well-known/assetlinks.json") return respostaAssetLinks();
 
     // Download do PDF do manual (/manual/baixar?t=...): o arquivo mora num
     // bucket privado do Storage e só sai com um token que existe em

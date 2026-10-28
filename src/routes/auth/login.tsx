@@ -9,6 +9,8 @@ import { AuthButton, Divider } from "@/components/cosmic/AuthShell";
 import { AuthSplitShell, AuthTabs, type ModoAuth } from "@/components/cosmic/AuthSplitShell";
 import { CosmicInput, CapsLockHint } from "@/components/cosmic/CosmicInput";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
+import { isNativeApp } from "@/lib/platform";
+import { entrarComGoogleNoApp } from "@/lib/appNativo";
 import { resolvePostLoginPath } from "@/hooks/useSupabaseSession";
 import { useRecuperarSenha } from "@/hooks/useRecuperarSenha";
 import { useCapsLockWarning } from "@/hooks/useCapsLockWarning";
@@ -221,6 +223,15 @@ function LoginPage() {
     // destinoSeguro). Sem next, cai em /painel, que é também a entrada da
     // conta nova (bloco "Primeiros passos", 14/10/2026).
     const destino = destinoSeguro(search.next) ?? "/painel";
+    // Dentro do app Android o Google recusa a WebView (AND-09): abre no
+    // navegador do celular e volta pelo esquema do app (lib/appNativo).
+    if (isNativeApp()) {
+      const ok = await entrarComGoogleNoApp(destinoSeguro(search.next) ?? "/hoje");
+      setGoogleLoading(false);
+      if (!ok)
+        toastErro("O Google não respondeu agora. Tenta de novo ou entra com e-mail e senha.");
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}${destino}` },

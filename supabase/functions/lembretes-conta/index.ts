@@ -11,6 +11,7 @@ import {
   type TipoLembrete,
 } from "../_shared/lembretesConta.ts";
 import { nichoDoAnuncio } from "../_shared/nichosAnuncio.ts";
+import { linkDeEmailPelaPolia } from "../_shared/linkDeEmail.ts";
 import { mascararEmail } from "../_shared/stripeWebhookRegras.ts";
 
 // Lembretes pra conta nova (GRW-33, 14/10/2026). Chamada só pelo pg_cron
@@ -60,7 +61,8 @@ async function linkQueConfirma(email: string): Promise<string | null> {
     console.error("[lembretes-conta] Falha ao gerar link:", error?.message);
     return null;
   }
-  return data.properties.action_link;
+  // Pelo nosso domínio (AND-09): no celular com o app, o link abre o app.
+  return linkDeEmailPelaPolia(data.properties, "/painel");
 }
 
 async function enviar(email: string, assunto: string, texto: string, html: string) {

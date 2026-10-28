@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { cortesiaDoContexto, montarEmailAtivacao } from "../_shared/emailAtivacao.ts";
 import { MAX_TENTATIVAS, proximaTentativaEm } from "../_shared/reenvioEmail.ts";
 import { mascararEmail, semEmails } from "../_shared/stripeWebhookRegras.ts";
+import { linkDeEmailPelaPolia } from "../_shared/linkDeEmail.ts";
 
 // Fila de reenvio dos e-mails do Stripe (PAY-27, 08/10/2026). Chamada só pelo
 // pg_cron (disparar_reenvio_emails(), migração 20261009000100) a cada 10 min,
@@ -75,7 +76,8 @@ async function linkDeAtivacaoNovo(email: string): Promise<string | null> {
     console.error("[reenviar-emails] Falha ao gerar link de ativação:", error);
     return null;
   }
-  return data.properties.action_link;
+  // Pelo nosso domínio (AND-09): no celular com o app, o link abre o app.
+  return linkDeEmailPelaPolia(data.properties, "/auth/criar-senha");
 }
 
 async function enviar(p: Pendente): Promise<{ ok: boolean; erro: string | null }> {

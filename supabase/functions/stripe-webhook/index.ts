@@ -18,6 +18,7 @@ import {
   semEmails,
 } from "../_shared/stripeWebhookRegras.ts";
 import { proximaTentativaEm } from "../_shared/reenvioEmail.ts";
+import { linkDeEmailPelaPolia } from "../_shared/linkDeEmail.ts";
 import {
   contextoDaAtivacao,
   montarEmailAtivacao,
@@ -626,7 +627,13 @@ async function enviarEmailAtivacao(
 // compra (16/10/2026).
 async function enviarEmailCortesiaContaExistente(email: string, cortesia: Cortesia) {
   const { assunto, texto, html } = montarEmailCortesiaContaExistente(SITE_URL, cortesia);
-  return await enviarViaResend(assunto, texto, html, email, "e-mail de cortesia em conta existente");
+  return await enviarViaResend(
+    assunto,
+    texto,
+    html,
+    email,
+    "e-mail de cortesia em conta existente",
+  );
 }
 
 // Quem comprou já tinha conta: não há senha pra criar, então o e-mail só
@@ -849,7 +856,12 @@ async function resolverContaDaCompra(
       );
     }
     userId = data.user.id;
-    emailPendente = { tipo: "ativacao", link: data.properties.action_link };
+    // Pelo nosso domínio (AND-09): no celular com o app, o link abre o app.
+    emailPendente = {
+      tipo: "ativacao",
+      link:
+        linkDeEmailPelaPolia(data.properties, "/auth/criar-senha") ?? data.properties.action_link,
+    };
   } else if (await contaCriadaPorEstaSessao(userId, sessionId)) {
     emailPendente = { tipo: "reenviar_ativacao" };
   } else {
@@ -879,7 +891,8 @@ async function gerarLinkDeAtivacaoDeNovo(email: string): Promise<string | null> 
     console.error("[stripe-webhook] Falha ao gerar link de ativação de novo:", error);
     return null;
   }
-  return data.properties.action_link;
+  // Pelo nosso domínio (AND-09): no celular com o app, o link abre o app.
+  return linkDeEmailPelaPolia(data.properties, "/auth/criar-senha");
 }
 
 // Envia o e-mail decidido em resolverContaDaCompra. Nunca joga: roda depois

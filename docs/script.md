@@ -461,3 +461,16 @@ Decisão da Sil no chat: o Planner fica só pra conta oi@usepolia.com.br e o Cad
 - Tutoriais: Planner `interno` (fora da lista e da busca); Caderno virou "Guia de presença"; Calendário e Painel reescritos; Planos sem Planner e Caderno. Saíram os clipes de Planos, Calendário e Caderno: o vídeo mostra Planner e notas. O vídeo inteiro (/tour) ainda mostra os dois e precisa de narração nova.
 - App Android (BarraAbasApp, +, /mais, /hoje) fica com a sessão do app, avisada.
 - **Pedidos no lugar do Planner (mesmo dia, decisão da Sil):** Planner e Caderno viraram ferramentas internas (flags, sessão "Aderência", GRW-93). No app: a aba Planner virou **Pedidos** (/pedidos); no +, entrou "Novo pedido" (ModalNovoPedido) e "Nova tarefa" só aparece com a flag planner; /mais esconde Planner e Caderno sem a flag; /hoje troca as tarefas pelo cartão "Entregas" (usePedidos, resumoDoDia, rotuloEntrega), com as de hoje e as atrasadas. O commit vem depois do da sessão "Aderência", porque depende de useFerramentasInternas e da rota /pedidos.
+
+## 2026-10-28 — Login dentro do app Android (AND-09)
+
+Plano `docs/plano-login-no-app.md`, aprovado pela Sil com D1 a D3 (as duas partes; não esconder o Google no app antigo; links de e-mail por /auth/link também no computador). Sem commit nem deploy até ela conferir.
+
+- Pacotes `@capacitor/app` e `@capacitor/browser` (npm; o deploy usa `npm install`).
+- `lib/linkDoApp.ts` (8 testes): lê a URL que abriu o app (volta do Google por `br.com.usepolia.app://entrar#access_token=...`, desistência, erro, App Link do nosso domínio), caminho seguro, destino e tela de link vencido por tipo.
+- `lib/appNativo.ts`: no app, "Entrar com Google" (login e cadastro) pede a URL ao Supabase com `skipBrowserRedirect` e abre no navegador do celular; o ouvinte `appUrlOpen` (no `__root`) grava a sessão com `setSession`, fecha o navegador e vai pro destino; App Link manda a WebView pro caminho. Fora do app nada muda.
+- `/auth/link`: confirma o `token_hash` pelo `verifyOtp` (uma vez só) e segue pro `next` ou pro destino do tipo; vencido vai pra `/auth/link-expirado` com a tela certa.
+- `_shared/linkDeEmail.ts` (3 testes): `lembretes-conta`, `stripe-webhook` e `reenviar-emails` trocam o `action_link` do Supabase pelo link do nosso domínio (cai no antigo se faltar o `hashed_token`). Só valem depois de publicar as três funções.
+- `/.well-known/assetlinks.json` servido pelo `server.ts` (`lib/assetLinks.ts`, 2 testes), com a SHA-256 da chave de teste (debug.keystore). `/hoje`, `/mais` e `/pedidos` entraram na lista de telas logadas sem índice.
+- `AndroidManifest.xml`: filtros do esquema `br.com.usepolia.app://entrar` e do App Link `https://one.usepolia.com.br/auth/link` (autoVerify). `npx cap sync android` e APK de teste.
+- Pendências da Sil: S1 (Redirect URL no Supabase), S2 (3 modelos de e-mail, só depois do deploy), S3 (instalar o APK), S4 (SHA-256 da chave da Play Console, mais tarde).

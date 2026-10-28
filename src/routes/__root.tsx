@@ -27,7 +27,8 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
 import { recarregarSeVersaoAntiga } from "@/lib/versao-antiga";
-import { toastInfo } from "@/lib/toast";
+import { toastErro, toastInfo } from "@/lib/toast";
+import { ouvirLinksDoApp } from "@/lib/appNativo";
 import { lerLinkComErro } from "@/lib/linkComErro";
 import { urlCanonica } from "@/lib/seo";
 import { jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "@/lib/jsonld";
@@ -260,6 +261,18 @@ function RootComponent() {
     });
     return () => subscription.unsubscribe();
   }, [router, queryClient]);
+
+  // App Android (AND-09): a volta do "Entrar com Google" (pelo navegador do
+  // celular) e os links de e-mail do nosso domínio chegam como "o app foi
+  // aberto por um link". Fora do app, ouvirLinksDoApp não liga nada.
+  useEffect(
+    () =>
+      ouvirLinksDoApp({
+        navegar: (caminho) => router.history.push(caminho),
+        erro: (mensagem) => toastErro(mensagem),
+      }),
+    [router],
+  );
 
   // Link de confirmação de e-mail vencido/já usado: o Supabase volta com o
   // erro no hash da URL (não dá pro servidor ver, só o client). O link de

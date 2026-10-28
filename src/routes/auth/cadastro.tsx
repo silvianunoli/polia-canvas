@@ -25,6 +25,8 @@ import {
 } from "@/components/cosmic/CosmicInput";
 import { sugerirEmail } from "@/lib/sugestaoEmail";
 import { GoogleButton } from "@/components/cosmic/GoogleButton";
+import { isNativeApp } from "@/lib/platform";
+import { entrarComGoogleNoApp } from "@/lib/appNativo";
 import { AvisoSessaoAberta } from "@/components/cosmic/SairDaConta";
 import { senhaCumpreRequisitos } from "@/lib/senha";
 import { whatsappDaConta } from "@/lib/telefone";
@@ -265,6 +267,18 @@ function CadastroPage() {
     // O OAuth sai do site e volta em /painel: a origem espera no sessionStorage
     // da aba e é gravada na conta pelo _authenticated (gravarOrigemDoOAuth).
     guardarOrigemParaOAuth(origemCampanha);
+    // Dentro do app Android o Google recusa a WebView (AND-09): abre no
+    // navegador do celular e volta pelo esquema do app (lib/appNativo).
+    if (isNativeApp()) {
+      const ok = await entrarComGoogleNoApp("/painel");
+      setGoogleLoading(false);
+      if (!ok) {
+        toastErro(
+          "O Google não respondeu agora. Tenta de novo ou cria a conta com e-mail e senha.",
+        );
+      }
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/painel` },

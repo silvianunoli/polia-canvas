@@ -22,6 +22,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Volta do "Entrar com Google" (AND-09): o login abre no navegador
+                 do celular e o Supabase devolve pra br.com.usepolia.app://entrar. -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="br.com.usepolia.app" android:host="entrar" />
+            </intent-filter>
+
+            <!-- App Links (AND-09): o link de e-mail https://one.usepolia.com.br/auth/link
+                 abre direto no app. A verificação lê /.well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="one.usepolia.com.br" android:path="/auth/link" />
+            </intent-filter>
+
         </activity>
 
         <provider
