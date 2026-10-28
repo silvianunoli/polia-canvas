@@ -9,7 +9,6 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TutorialRouteImport } from './routes/tutorial'
 import { Route as TermosRouteImport } from './routes/termos'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -25,8 +24,11 @@ import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TutorialIndexRouteImport } from './routes/tutorial.index'
 import { Route as QuizIndexRouteImport } from './routes/quiz.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
+import { Route as TutorialTourRouteImport } from './routes/tutorial.tour'
+import { Route as TutorialSlugRouteImport } from './routes/tutorial.$slug'
 import { Route as QuizSplatRouteImport } from './routes/quiz.$'
 import { Route as OTokenRouteImport } from './routes/o.$token'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
@@ -51,7 +53,6 @@ import { Route as AuthenticatedMercadoRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMarcaRouteImport } from './routes/_authenticated/marca'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedComoUsarRouteImport } from './routes/_authenticated/como-usar'
 import { Route as AuthenticatedClientesRouteImport } from './routes/_authenticated/clientes'
 import { Route as AuthenticatedCalendarioRouteImport } from './routes/_authenticated/calendario'
 import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
@@ -60,10 +61,13 @@ import { Route as AuthenticatedAssinarRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAimerRouteImport } from './routes/_authenticated/aimer'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner.index'
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
+import { Route as AuthenticatedComoUsarIndexRouteImport } from './routes/_authenticated/como-usar.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
 import { Route as AuthenticatedProdutosAnunciosRouteImport } from './routes/_authenticated/produtos_.anuncios'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
+import { Route as AuthenticatedComoUsarTourRouteImport } from './routes/_authenticated/como-usar.tour'
+import { Route as AuthenticatedComoUsarSlugRouteImport } from './routes/_authenticated/como-usar.$slug'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
 import { Route as AuthenticatedProdutosAnunciosTiktokRouteImport } from './routes/_authenticated/produtos_.anuncios_.tiktok'
 import { Route as AuthenticatedProdutosAnunciosMercadoLivreRouteImport } from './routes/_authenticated/produtos_.anuncios_.mercado-livre'
@@ -73,11 +77,6 @@ import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport }
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok_.anuncios'
 import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre_.anuncios'
 
-const TutorialRoute = TutorialRouteImport.update({
-  id: '/tutorial',
-  path: '/tutorial',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermosRoute = TermosRouteImport.update({
   id: '/termos',
   path: '/termos',
@@ -152,6 +151,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TutorialIndexRoute = TutorialIndexRouteImport.update({
+  id: '/tutorial/',
+  path: '/tutorial/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QuizIndexRoute = QuizIndexRouteImport.update({
   id: '/quiz/',
   path: '/quiz/',
@@ -160,6 +164,16 @@ const QuizIndexRoute = QuizIndexRouteImport.update({
 const BlogIndexRoute = BlogIndexRouteImport.update({
   id: '/blog/',
   path: '/blog/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorialTourRoute = TutorialTourRouteImport.update({
+  id: '/tutorial/tour',
+  path: '/tutorial/tour',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TutorialSlugRoute = TutorialSlugRouteImport.update({
+  id: '/tutorial/$slug',
+  path: '/tutorial/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const QuizSplatRoute = QuizSplatRouteImport.update({
@@ -284,11 +298,6 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedComoUsarRoute = AuthenticatedComoUsarRouteImport.update({
-  id: '/como-usar',
-  path: '/como-usar',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedClientesRoute = AuthenticatedClientesRouteImport.update({
   id: '/clientes',
   path: '/clientes',
@@ -332,6 +341,12 @@ const AuthenticatedPlanejamentoIndexRoute =
     path: '/planejamento/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedComoUsarIndexRoute =
+  AuthenticatedComoUsarIndexRouteImport.update({
+    id: '/como-usar/',
+    path: '/como-usar/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedChamadosIndexRoute =
   AuthenticatedChamadosIndexRouteImport.update({
     id: '/chamados/',
@@ -354,6 +369,18 @@ const AuthenticatedPlanejamentoCompletoRoute =
   AuthenticatedPlanejamentoCompletoRouteImport.update({
     id: '/planejamento/completo',
     path: '/planejamento/completo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedComoUsarTourRoute =
+  AuthenticatedComoUsarTourRouteImport.update({
+    id: '/como-usar/tour',
+    path: '/como-usar/tour',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedComoUsarSlugRoute =
+  AuthenticatedComoUsarSlugRouteImport.update({
+    id: '/como-usar/$slug',
+    path: '/como-usar/$slug',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedChamadosIdRoute = AuthenticatedChamadosIdRouteImport.update({
@@ -419,14 +446,12 @@ export interface FileRoutesByFullPath {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
-  '/como-usar': typeof AuthenticatedComoUsarRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -451,13 +476,19 @@ export interface FileRoutesByFullPath {
   '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
+  '/tutorial/$slug': typeof TutorialSlugRoute
+  '/tutorial/tour': typeof TutorialTourRoute
   '/blog/': typeof BlogIndexRoute
   '/quiz/': typeof QuizIndexRoute
+  '/tutorial/': typeof TutorialIndexRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
+  '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
+  '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
+  '/como-usar/': typeof AuthenticatedComoUsarIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
@@ -483,14 +514,12 @@ export interface FileRoutesByTo {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
   '/aimer': typeof AuthenticatedAimerRoute
   '/assinar': typeof AuthenticatedAssinarRoute
   '/caderno': typeof AuthenticatedCadernoRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/calendario': typeof AuthenticatedCalendarioRoute
   '/clientes': typeof AuthenticatedClientesRoute
-  '/como-usar': typeof AuthenticatedComoUsarRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/marca': typeof AuthenticatedMarcaRoute
@@ -515,13 +544,19 @@ export interface FileRoutesByTo {
   '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
+  '/tutorial/$slug': typeof TutorialSlugRoute
+  '/tutorial/tour': typeof TutorialTourRoute
   '/blog': typeof BlogIndexRoute
   '/quiz': typeof QuizIndexRoute
+  '/tutorial': typeof TutorialIndexRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
+  '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
+  '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
+  '/como-usar': typeof AuthenticatedComoUsarIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
@@ -549,14 +584,12 @@ export interface FileRoutesById {
   '/privacidade': typeof PrivacidadeRoute
   '/sobre': typeof SobreRoute
   '/termos': typeof TermosRoute
-  '/tutorial': typeof TutorialRoute
   '/_authenticated/aimer': typeof AuthenticatedAimerRoute
   '/_authenticated/assinar': typeof AuthenticatedAssinarRoute
   '/_authenticated/caderno': typeof AuthenticatedCadernoRoute
   '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/calendario': typeof AuthenticatedCalendarioRoute
   '/_authenticated/clientes': typeof AuthenticatedClientesRoute
-  '/_authenticated/como-usar': typeof AuthenticatedComoUsarRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/marca': typeof AuthenticatedMarcaRoute
@@ -581,13 +614,19 @@ export interface FileRoutesById {
   '/l/$slug': typeof LSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
+  '/tutorial/$slug': typeof TutorialSlugRoute
+  '/tutorial/tour': typeof TutorialTourRoute
   '/blog/': typeof BlogIndexRoute
   '/quiz/': typeof QuizIndexRoute
+  '/tutorial/': typeof TutorialIndexRoute
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
+  '/_authenticated/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
+  '/_authenticated/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/_authenticated/produtos_/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
+  '/_authenticated/como-usar/': typeof AuthenticatedComoUsarIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/configuracoes_/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
@@ -615,14 +654,12 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
-    | '/tutorial'
     | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calculadora'
     | '/calendario'
     | '/clientes'
-    | '/como-usar'
     | '/configuracoes'
     | '/financeiro'
     | '/marca'
@@ -647,13 +684,19 @@ export interface FileRouteTypes {
     | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
+    | '/tutorial/$slug'
+    | '/tutorial/tour'
     | '/blog/'
     | '/quiz/'
+    | '/tutorial/'
     | '/chamados/$id'
+    | '/como-usar/$slug'
+    | '/como-usar/tour'
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/produtos/anuncios'
     | '/chamados/'
+    | '/como-usar/'
     | '/planejamento/'
     | '/planner/'
     | '/configuracoes/integracoes/mercado-livre'
@@ -679,14 +722,12 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
-    | '/tutorial'
     | '/aimer'
     | '/assinar'
     | '/caderno'
     | '/calculadora'
     | '/calendario'
     | '/clientes'
-    | '/como-usar'
     | '/configuracoes'
     | '/financeiro'
     | '/marca'
@@ -711,13 +752,19 @@ export interface FileRouteTypes {
     | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
+    | '/tutorial/$slug'
+    | '/tutorial/tour'
     | '/blog'
     | '/quiz'
+    | '/tutorial'
     | '/chamados/$id'
+    | '/como-usar/$slug'
+    | '/como-usar/tour'
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/produtos/anuncios'
     | '/chamados'
+    | '/como-usar'
     | '/planejamento'
     | '/planner'
     | '/configuracoes/integracoes/mercado-livre'
@@ -744,14 +791,12 @@ export interface FileRouteTypes {
     | '/privacidade'
     | '/sobre'
     | '/termos'
-    | '/tutorial'
     | '/_authenticated/aimer'
     | '/_authenticated/assinar'
     | '/_authenticated/caderno'
     | '/_authenticated/calculadora'
     | '/_authenticated/calendario'
     | '/_authenticated/clientes'
-    | '/_authenticated/como-usar'
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
     | '/_authenticated/marca'
@@ -776,13 +821,19 @@ export interface FileRouteTypes {
     | '/l/$slug'
     | '/o/$token'
     | '/quiz/$'
+    | '/tutorial/$slug'
+    | '/tutorial/tour'
     | '/blog/'
     | '/quiz/'
+    | '/tutorial/'
     | '/_authenticated/chamados/$id'
+    | '/_authenticated/como-usar/$slug'
+    | '/_authenticated/como-usar/tour'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
     | '/_authenticated/produtos_/anuncios'
     | '/_authenticated/chamados/'
+    | '/_authenticated/como-usar/'
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
     | '/_authenticated/configuracoes_/integracoes/mercado-livre'
@@ -810,7 +861,6 @@ export interface RootRouteChildren {
   PrivacidadeRoute: typeof PrivacidadeRoute
   SobreRoute: typeof SobreRoute
   TermosRoute: typeof TermosRoute
-  TutorialRoute: typeof TutorialRoute
   AuthCadastroRoute: typeof AuthCadastroRoute
   AuthCriarSenhaRoute: typeof AuthCriarSenhaRoute
   AuthEsqueciSenhaRoute: typeof AuthEsqueciSenhaRoute
@@ -822,19 +872,15 @@ export interface RootRouteChildren {
   LSlugRoute: typeof LSlugRoute
   OTokenRoute: typeof OTokenRoute
   QuizSplatRoute: typeof QuizSplatRoute
+  TutorialSlugRoute: typeof TutorialSlugRoute
+  TutorialTourRoute: typeof TutorialTourRoute
   BlogIndexRoute: typeof BlogIndexRoute
   QuizIndexRoute: typeof QuizIndexRoute
+  TutorialIndexRoute: typeof TutorialIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tutorial': {
-      id: '/tutorial'
-      path: '/tutorial'
-      fullPath: '/tutorial'
-      preLoaderRoute: typeof TutorialRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/termos': {
       id: '/termos'
       path: '/termos'
@@ -940,6 +986,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tutorial/': {
+      id: '/tutorial/'
+      path: '/tutorial'
+      fullPath: '/tutorial/'
+      preLoaderRoute: typeof TutorialIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/quiz/': {
       id: '/quiz/'
       path: '/quiz'
@@ -952,6 +1005,20 @@ declare module '@tanstack/react-router' {
       path: '/blog'
       fullPath: '/blog/'
       preLoaderRoute: typeof BlogIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutorial/tour': {
+      id: '/tutorial/tour'
+      path: '/tutorial/tour'
+      fullPath: '/tutorial/tour'
+      preLoaderRoute: typeof TutorialTourRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tutorial/$slug': {
+      id: '/tutorial/$slug'
+      path: '/tutorial/$slug'
+      fullPath: '/tutorial/$slug'
+      preLoaderRoute: typeof TutorialSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/quiz/$': {
@@ -1122,13 +1189,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/como-usar': {
-      id: '/_authenticated/como-usar'
-      path: '/como-usar'
-      fullPath: '/como-usar'
-      preLoaderRoute: typeof AuthenticatedComoUsarRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/clientes': {
       id: '/_authenticated/clientes'
       path: '/clientes'
@@ -1185,6 +1245,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanejamentoIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/como-usar/': {
+      id: '/_authenticated/como-usar/'
+      path: '/como-usar'
+      fullPath: '/como-usar/'
+      preLoaderRoute: typeof AuthenticatedComoUsarIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/chamados/': {
       id: '/_authenticated/chamados/'
       path: '/chamados'
@@ -1211,6 +1278,20 @@ declare module '@tanstack/react-router' {
       path: '/planejamento/completo'
       fullPath: '/planejamento/completo'
       preLoaderRoute: typeof AuthenticatedPlanejamentoCompletoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/como-usar/tour': {
+      id: '/_authenticated/como-usar/tour'
+      path: '/como-usar/tour'
+      fullPath: '/como-usar/tour'
+      preLoaderRoute: typeof AuthenticatedComoUsarTourRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/como-usar/$slug': {
+      id: '/_authenticated/como-usar/$slug'
+      path: '/como-usar/$slug'
+      fullPath: '/como-usar/$slug'
+      preLoaderRoute: typeof AuthenticatedComoUsarSlugRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/chamados/$id': {
@@ -1279,7 +1360,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedCalendarioRoute: typeof AuthenticatedCalendarioRoute
   AuthenticatedClientesRoute: typeof AuthenticatedClientesRoute
-  AuthenticatedComoUsarRoute: typeof AuthenticatedComoUsarRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedMarcaRoute: typeof AuthenticatedMarcaRoute
@@ -1294,10 +1374,13 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
+  AuthenticatedComoUsarSlugRoute: typeof AuthenticatedComoUsarSlugRoute
+  AuthenticatedComoUsarTourRoute: typeof AuthenticatedComoUsarTourRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
   AuthenticatedProdutosAnunciosRoute: typeof AuthenticatedProdutosAnunciosRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
+  AuthenticatedComoUsarIndexRoute: typeof AuthenticatedComoUsarIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
@@ -1316,7 +1399,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedCalendarioRoute: AuthenticatedCalendarioRoute,
   AuthenticatedClientesRoute: AuthenticatedClientesRoute,
-  AuthenticatedComoUsarRoute: AuthenticatedComoUsarRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedMarcaRoute: AuthenticatedMarcaRoute,
@@ -1331,11 +1413,14 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
+  AuthenticatedComoUsarSlugRoute: AuthenticatedComoUsarSlugRoute,
+  AuthenticatedComoUsarTourRoute: AuthenticatedComoUsarTourRoute,
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
   AuthenticatedProdutosAnunciosRoute: AuthenticatedProdutosAnunciosRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
+  AuthenticatedComoUsarIndexRoute: AuthenticatedComoUsarIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute:
@@ -1373,7 +1458,6 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacidadeRoute: PrivacidadeRoute,
   SobreRoute: SobreRoute,
   TermosRoute: TermosRoute,
-  TutorialRoute: TutorialRoute,
   AuthCadastroRoute: AuthCadastroRoute,
   AuthCriarSenhaRoute: AuthCriarSenhaRoute,
   AuthEsqueciSenhaRoute: AuthEsqueciSenhaRoute,
@@ -1385,8 +1469,11 @@ const rootRouteChildren: RootRouteChildren = {
   LSlugRoute: LSlugRoute,
   OTokenRoute: OTokenRoute,
   QuizSplatRoute: QuizSplatRoute,
+  TutorialSlugRoute: TutorialSlugRoute,
+  TutorialTourRoute: TutorialTourRoute,
   BlogIndexRoute: BlogIndexRoute,
   QuizIndexRoute: QuizIndexRoute,
+  TutorialIndexRoute: TutorialIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

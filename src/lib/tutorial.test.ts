@@ -9,6 +9,15 @@ describe("vídeo embutido", () => {
     );
   });
 
+  it("marca o trecho da ferramenta e ignora valor fora do formato", () => {
+    const html = '<html lang="pt-BR">';
+    expect(htmlEmbutido(html, "financeiro")).toBe(
+      '<html lang="pt-BR" class="embed" data-trecho="financeiro">',
+    );
+    expect(htmlEmbutido(html, "senha-o5")).toContain('data-trecho="senha-o5"');
+    expect(htmlEmbutido(html, '"><script>')).toBe('<html lang="pt-BR" class="embed">');
+  });
+
   it("aceita a altura do iframe só quando é plausível", () => {
     expect(lerMensagemTutorial({ tipo: "polia-tutorial-altura", altura: 812.4 })).toEqual({
       tipo: "altura",

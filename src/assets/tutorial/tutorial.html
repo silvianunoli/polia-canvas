@@ -1345,6 +1345,20 @@ const canvas = document.getElementById("canvas"), palco = document.getElementByI
 const IDX = Object.fromEntries(C.map((c, i) => [c.id, i]));
 const idx = id => { if (!(id in IDX)) throw new Error("cena não existe: " + id); return IDX[id]; };
 
+/* ── Trecho: a página de cada ferramenta no app toca só as cenas dela.
+   <html data-trecho="financeiro"> (uma cena) ou "senha-o5" (da primeira à última).
+   O áudio do trecho é um mp3 curto cortado por gerar_versao_app.py, então o
+   relógio do vídeo é OFF + tempo do áudio. Sem o atributo, toca o vídeo todo. ── */
+const TRECHO = (() => {
+  const v = document.documentElement.dataset.trecho || "";
+  const [a, b = a] = v.split("-");
+  return a in IDX && b in IDX && IDX[a] <= IDX[b] ? { id: v, i0: IDX[a], i1: IDX[b] } : null;
+})();
+const T0 = TRECHO ? Math.max(0, C[TRECHO.i0].inicio - 0.3) : 0;
+const T1 = TRECHO ? (TRECHO.i1 + 1 < N ? C[TRECHO.i1 + 1].inicio - 0.4 : TOTAL) : TOTAL;
+const OFF = TRECHO ? T0 : 0;
+const AUDIO_BASE = "/video-tutorial/";
+
 /* ── Deixas: "link", "link+0.4", "1.2", "fim" ── */
 function cue(s, expr) {
   const m = /^([a-z]+)?([+-][\d.]+|[\d.]+)?$/.exec(expr.trim());
@@ -1522,7 +1536,7 @@ function render(t) {
 }
 
 /* ── Relógio: o áudio manda; sem áudio, um relógio interno segue igual ── */
-const audio = new Audio("/video-tutorial/narracao.mp3");
+const audio = new Audio(AUDIO_BASE + (TRECHO ? "trechos/" + TRECHO.id + ".mp3" : "narracao.mp3"));
 audio.preload = "auto";
 let usaAudio = true, interno = { t: 0, ref: 0, rodando: false }, estado = "capa";
 audio.addEventListener("error", () => { if (usaAudio) trocaParaInterno("A narração não carregou. O vídeo segue com legenda."); });
@@ -1545,22 +1559,22 @@ function trocaParaBlob(alvo) {
   return true;
 }
 function trocaParaInterno(msg) {
-  const t = usaAudio ? (audio.currentTime || 0) : interno.t;
+  const t = usaAudio ? OFF + (audio.currentTime || 0) : interno.t;
   usaAudio = false; interno.t = t; interno.ref = performance.now();
   document.getElementById("nota").textContent = msg;
 }
 function agora() {
-  if (usaAudio) return audio.currentTime;
+  if (usaAudio) return OFF + audio.currentTime;
   return interno.rodando ? interno.t + (performance.now() - interno.ref) / 1000 : interno.t;
 }
 function irPara(t) {
-  t = Math.max(0, Math.min(TOTAL, t));
-  if (usaAudio && !trocaParaBlob(t)) { try { audio.currentTime = t; } catch (e) {} }
+  t = Math.max(T0, Math.min(T1, t));
+  if (usaAudio && !trocaParaBlob(t - OFF)) { try { audio.currentTime = t - OFF; } catch (e) {} }
   interno.t = t; interno.ref = performance.now();
   render(t); atualizaUI(t);
 }
 function tocar() {
-  if (estado === "capa" || estado === "fim") irPara(0);
+  if (estado === "capa" || estado === "fim") irPara(T0);
   estado = "tocando"; document.getElementById("capa-play").hidden = true;
   if (usaAudio) audio.play().catch(() => { trocaParaInterno("O navegador não deixou tocar o som. O vídeo segue com legenda."); interno.rodando = true; });
   else { interno.ref = performance.now(); interno.rodando = true; }
@@ -1574,9 +1588,10 @@ function pausar() {
   atualizaBotao();
 }
 function terminou() {
-  estado = "fim"; interno.rodando = false; interno.t = TOTAL;
+  estado = "fim"; interno.rodando = false; interno.t = T1;
   if (usaAudio) audio.pause();
   document.getElementById("capa-txt").textContent = "Assistir de novo";
+  avisarPai({ tipo: "polia-tutorial-evento", evento: "fim" });
   document.getElementById("capa-play").hidden = false;
   atualizaBotao();
 }
@@ -1584,7 +1599,7 @@ audio.addEventListener("ended", () => { if (usaAudio) terminou(); });
 
 /* ── Controles ── */
 const bPlay = document.getElementById("b-play"), scrub = document.getElementById("scrub"), tempoEl = document.getElementById("tempo");
-scrub.max = TOTAL.toFixed(2);
+scrub.min = T0.toFixed(2); scrub.max = T1.toFixed(2);
 const mmss = t => Math.floor(t / 60) + ":" + String(Math.floor(t % 60)).padStart(2, "0");
 function atualizaBotao() {
   const toca = estado === "tocando";
@@ -1596,7 +1611,7 @@ function atualizaBotao() {
 let arrastando = false;
 function atualizaUI(t) {
   if (!arrastando) scrub.value = t.toFixed(2);
-  tempoEl.textContent = mmss(t) + " / " + mmss(TOTAL);
+  tempoEl.textContent = mmss(t - T0) + " / " + mmss(T1 - T0);
 }
 bPlay.addEventListener("click", () => estado === "tocando" ? pausar() : tocar());
 document.getElementById("capa-play").addEventListener("click", tocar);
@@ -1654,10 +1669,12 @@ document.addEventListener("keydown", e => {
 
 const marcas = document.getElementById("marcas"), lista = document.getElementById("caps");
 const caps = C.map((c, i) => {
-  if (i > 0) { const m = document.createElement("i"); m.style.left = `calc(${(c.inicio / TOTAL) * 100}% - 1px)`; marcas.append(m); }
+  const fora = TRECHO && (i < TRECHO.i0 || i > TRECHO.i1);
+  if (i > (TRECHO ? TRECHO.i0 : 0) && !fora) { const m = document.createElement("i"); m.style.left = `calc(${((c.inicio - T0) / (T1 - T0)) * 100}% - 1px)`; marcas.append(m); }
   const li = document.createElement("li"), b = document.createElement("button");
   b.type = "button"; b.className = "cap"; b.innerHTML = `${NOMES[c.id] || c.id} <small>${mmss(c.inicio)}</small>`;
-  b.addEventListener("click", () => { irPara(Math.max(0, c.inicio - 0.3)); if (estado !== "tocando") { estado = "pausado"; document.getElementById("capa-play").hidden = true; atualizaBotao(); } });
+  li.hidden = !!fora;
+  b.addEventListener("click", () => { irPara(Math.max(T0, c.inicio - 0.3)); if (estado !== "tocando") { estado = "pausado"; document.getElementById("capa-play").hidden = true; atualizaBotao(); } });
   li.append(b); lista.append(li); return b;
 });
 
@@ -1672,13 +1689,19 @@ new ResizeObserver(escala).observe(palco); escala();
 function laco() {
   if (estado === "tocando") {
     const t = agora();
-    if (!usaAudio && t >= TOTAL) terminou();
-    render(Math.min(t, TOTAL)); atualizaUI(Math.min(t, TOTAL));
+    if (!usaAudio && t >= T1) terminou();
+    render(Math.min(t, T1)); atualizaUI(Math.min(t, T1));
   }
   requestAnimationFrame(laco);
 }
-const PREVIA = C[0].inicio + 6;
-function inicia() { posCache = new Map(); posicionaBaloes(); if (estado === "capa") { render(PREVIA); atualizaUI(0); } }
+const PREVIA = TRECHO ? C[TRECHO.i0].inicio + C[TRECHO.i0].dur * 0.7 : C[0].inicio + 6;
+/* No trecho: capa com a duração dele e, com uma cena só, sem lista de capítulos. */
+if (TRECHO) {
+  const d = Math.floor(T1 - T0);
+  document.getElementById("capa-txt").textContent = "Assistir com som · " + (d < 60 ? d + " s" : Math.floor(d / 60) + "min" + String(d % 60).padStart(2, "0"));
+  if (TRECHO.i0 === TRECHO.i1) lista.hidden = true;
+}
+function inicia() { posCache = new Map(); posicionaBaloes(); if (estado === "capa") { render(PREVIA); atualizaUI(T0); } }
 inicia();
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(inicia);
 requestAnimationFrame(laco);
@@ -1690,7 +1713,6 @@ new ResizeObserver(() => avisarApp({ tipo: "polia-tutorial-altura", altura: altu
 window.addEventListener("load", () => avisarApp({ tipo: "polia-tutorial-altura", altura: alturaConteudo() }));
 let jaTocou = false;
 audio.addEventListener("play", () => { if (!jaTocou) { jaTocou = true; avisarApp({ tipo: "polia-tutorial-evento", evento: "play" }); } });
-audio.addEventListener("ended", () => avisarApp({ tipo: "polia-tutorial-evento", evento: "fim" }));
 </script>
 
 </body>

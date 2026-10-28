@@ -96,7 +96,7 @@ export function ConversaAssistente({
               to="/como-usar"
               className="mt-3 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
             >
-              Prefere ver? O tutorial mostra cada tela em 5 minutos
+              Prefere ver? Tem um tutorial curto pra cada tela
               <span aria-hidden="true">→</span>
             </Link>
           </div>

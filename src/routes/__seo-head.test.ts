@@ -10,7 +10,9 @@ import { Route as AjudaRoute } from "./ajuda";
 import { Route as SobreRoute } from "./sobre";
 import { Route as LandingARoute } from "./landing-a";
 import { Route as LandingBRoute } from "./landing-b";
-import { Route as TutorialRoute } from "./tutorial";
+import { Route as TutorialRoute } from "./tutorial.index";
+import { Route as TutorialTourRoute } from "./tutorial.tour";
+import { Route as TutorialSlugRoute } from "./tutorial.$slug";
 
 type Head = {
   meta?: Array<Record<string, string>>;
@@ -162,5 +164,21 @@ describe("/tutorial", () => {
       href: "https://one.usepolia.com.br/tutorial",
     });
     expect(h.meta?.some((m) => m.name === "robots")).toBe(false);
+  });
+
+  it("o tour de 5 minutos tem canonical próprio em /tutorial/tour", () => {
+    expect(head(TutorialTourRoute).links).toContainEqual({
+      rel: "canonical",
+      href: "https://one.usepolia.com.br/tutorial/tour",
+    });
+  });
+
+  it("cada ferramenta tem canonical e FAQ em JSON-LD", () => {
+    const h = head(TutorialSlugRoute, { params: { slug: "financeiro" } });
+    expect(h.links).toContainEqual({
+      rel: "canonical",
+      href: "https://one.usepolia.com.br/tutorial/financeiro",
+    });
+    expect(h.scripts?.[0]?.children).toContain('"@type":"FAQPage"');
   });
 });

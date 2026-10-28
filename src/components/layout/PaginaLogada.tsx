@@ -1,7 +1,10 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
+import { PlayCircle } from "lucide-react";
 
 import { DicaDaTela } from "@/components/dicas/DicaDaTela";
 import type { ChaveDicaTela } from "@/lib/dicas";
+import { tutorialDaRota, type Tutorial } from "@/lib/tutoriais";
 
 /**
  * Casca única de toda tela da área logada: container, margem, cabeçalho e a
@@ -88,6 +91,15 @@ export function PaginaLogada({
   dica,
   children,
 }: PaginaLogadaProps) {
+  // "Como usar esta tela" (28/10/2026): toda tela com tutorial ganha o atalho
+  // pra ele. Lido no efeito, não no render, pra o HTML do servidor e o do
+  // navegador saírem iguais; nas telas do próprio tutorial não aparece.
+  const [tutorial, setTutorial] = useState<Tutorial>();
+  useEffect(() => {
+    const caminho = window.location.pathname;
+    if (!caminho.startsWith("/como-usar")) setTutorial(tutorialDaRota(caminho));
+  }, []);
+
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <div className={`mx-auto w-full ${LARGURA[largura]} px-6 pb-24 pt-12 md:px-10`}>
@@ -107,6 +119,18 @@ export function PaginaLogada({
               <p className="mt-2 max-w-[60ch] text-[15px] leading-relaxed text-[var(--ink-soft)]">
                 {subtitulo}
               </p>
+            )}
+            {tutorial && (
+              <Link
+                to="/como-usar/$slug"
+                params={{ slug: tutorial.slug }}
+                data-track="tutorial_atalho_da_tela"
+                data-track-props={JSON.stringify({ slug: tutorial.slug })}
+                className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] no-underline hover:underline md:min-h-8"
+              >
+                <PlayCircle size={15} aria-hidden="true" />
+                Como usar esta tela
+              </Link>
             )}
           </div>
           {/* max-w-full: com dois botões, o flex-wrap de dentro só quebra se a

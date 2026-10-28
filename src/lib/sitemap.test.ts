@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CAMINHOS_ESTATICOS, montarSitemap } from "./sitemap";
+import { CAMINHOS_ESTATICOS, CAMINHOS_TUTORIAIS, montarSitemap } from "./sitemap";
+
+const FIXAS = CAMINHOS_ESTATICOS.length + CAMINHOS_TUTORIAIS.length;
 
 describe("montarSitemap", () => {
   it("devolve só as URLs estáticas quando não tem post", () => {
@@ -10,7 +12,7 @@ describe("montarSitemap", () => {
     for (const caminho of CAMINHOS_ESTATICOS) {
       expect(xml).toContain(`<loc>https://one.usepolia.com.br${caminho}</loc>`);
     }
-    expect(xml.match(/<url>/g)).toHaveLength(CAMINHOS_ESTATICOS.length);
+    expect(xml.match(/<url>/g)).toHaveLength(FIXAS);
     // Data inventada é pior que data ausente: estática nenhuma leva lastmod.
     expect(xml).not.toContain("<lastmod>");
   });
@@ -21,13 +23,18 @@ describe("montarSitemap", () => {
     expect(montarSitemap([])).toContain("<loc>https://one.usepolia.com.br/tutorial</loc>");
   });
 
+  it("lista o tour e uma página por ferramenta", () => {
+    const xml = montarSitemap([]);
+    expect(xml).toContain("<loc>https://one.usepolia.com.br/tutorial/tour</loc>");
+    expect(xml).toContain("<loc>https://one.usepolia.com.br/tutorial/financeiro</loc>");
+    expect(CAMINHOS_TUTORIAIS.length).toBeGreaterThan(10);
+  });
+
   it("nunca aponta pro subdomínio workers.dev", () => {
     const xml = montarSitemap([{ slug: "preco-no-chute", publicado_em: "2026-08-01T12:00:00Z" }]);
 
     expect(xml).not.toContain("workers.dev");
-    expect(xml.match(/<loc>https:\/\/one\.usepolia\.com\.br/g)).toHaveLength(
-      CAMINHOS_ESTATICOS.length + 1,
-    );
+    expect(xml.match(/<loc>https:\/\/one\.usepolia\.com\.br/g)).toHaveLength(FIXAS + 1);
   });
 
   it("inclui os posts com lastmod vindo de publicado_em", () => {
@@ -40,7 +47,7 @@ describe("montarSitemap", () => {
     expect(xml).toContain("<lastmod>2026-08-01</lastmod>");
     expect(xml).toContain("<loc>https://one.usepolia.com.br/blog/quanto-sobra</loc>");
     expect(xml).toContain("<lastmod>2026-07-15</lastmod>");
-    expect(xml.match(/<url>/g)).toHaveLength(CAMINHOS_ESTATICOS.length + 2);
+    expect(xml.match(/<url>/g)).toHaveLength(FIXAS + 2);
   });
 
   it("omite lastmod quando publicado_em é nulo ou inválido", () => {

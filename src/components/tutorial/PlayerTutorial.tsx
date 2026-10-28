@@ -5,14 +5,23 @@ import { BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { htmlEmbutido, lerMensagemTutorial } from "@/lib/tutorial";
 
 /**
- * O tutorial narrado num iframe, usado na tela do app (/como-usar) e na página
- * pública (/tutorial). O HTML do vídeo entra no código como texto (import
+ * O tutorial narrado num iframe, usado nas telas do app (/como-usar) e nas
+ * páginas públicas (/tutorial). Com `trecho`, toca só as cenas de uma
+ * ferramenta (páginas /como-usar/$slug e /tutorial/$slug). O HTML do vídeo entra no código como texto (import
  * "?raw" num chunk separado, só baixado quando a tela abre) e vai pro iframe
  * por srcDoc. Ele NÃO mora em public/: com run_worker_first, um .html solto lá
  * voltava 404 em produção (07/10/2026). O iframe avisa a própria altura por
  * postMessage, pra a página rolar inteira em vez de ter rolagem dentro do vídeo.
  */
-export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
+export function PlayerTutorial({
+  origem,
+  trecho,
+  titulo = "Tutorial narrado da Pólia One",
+}: {
+  origem: "app" | "site";
+  trecho?: string;
+  titulo?: string;
+}) {
   const [html, setHtml] = useState<string | null>(null);
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
@@ -25,7 +34,7 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
     setErro(false);
     import("@/assets/tutorial/tutorial.html?raw")
       .then((m) => {
-        if (vivo) setHtml(htmlEmbutido(m.default));
+        if (vivo) setHtml(htmlEmbutido(m.default, trecho));
       })
       .catch(() => {
         if (vivo) setErro(true);
@@ -33,7 +42,7 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
     return () => {
       vivo = false;
     };
-  }, [tentativa]);
+  }, [tentativa, trecho]);
 
   useEffect(() => {
     function aoReceber(e: MessageEvent) {
@@ -45,11 +54,12 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
       else
         void track(msg.evento === "play" ? "tutorial_play" : "tutorial_assistido_ate_o_fim", {
           origem,
+          trecho: trecho ?? "completo",
         });
     }
     window.addEventListener("message", aoReceber);
     return () => window.removeEventListener("message", aoReceber);
-  }, [origem]);
+  }, [origem, trecho]);
 
   // Na tela cheia própria a página de fora não rola por baixo do vídeo.
   useEffect(() => {
@@ -95,7 +105,7 @@ export function PlayerTutorial({ origem }: { origem: "app" | "site" }) {
     <iframe
       ref={iframeRef}
       srcDoc={html}
-      title="Tutorial narrado da Pólia One"
+      title={titulo}
       allow="autoplay; fullscreen"
       allowFullScreen
       className="block w-full border-0"

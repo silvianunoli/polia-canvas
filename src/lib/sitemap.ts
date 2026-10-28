@@ -7,6 +7,7 @@
 // um sitemap derivado do request apontaria pra lá, criando índice duplicado.
 // Fonte única do host: src/lib/seo.ts.
 import { HOST_CANONICO } from "./seo";
+import { TUTORIAIS } from "./tutoriais";
 
 export { HOST_CANONICO };
 
@@ -22,9 +23,13 @@ export const CAMINHOS_ESTATICOS = [
   "/manual",
   "/planos",
   "/tutorial",
+  "/tutorial/tour",
   "/termos",
   "/privacidade",
 ] as const;
+
+// Um tutorial por ferramenta (28/10/2026), da mesma lista que monta as páginas.
+export const CAMINHOS_TUTORIAIS = TUTORIAIS.map((t) => `/tutorial/${t.slug}`);
 
 export type PostSitemap = {
   slug: string;
@@ -56,7 +61,7 @@ function formatarLastmod(valor: string | null): string | null {
 export function montarSitemap(posts: PostSitemap[]): string {
   const urls = [
     // Estáticas sem <lastmod>: data inventada é pior que data ausente.
-    ...CAMINHOS_ESTATICOS.map((caminho) => ({
+    ...[...CAMINHOS_ESTATICOS, ...CAMINHOS_TUTORIAIS].map((caminho) => ({
       loc: `${HOST_CANONICO}${caminho}`,
       lastmod: null as string | null,
     })),
