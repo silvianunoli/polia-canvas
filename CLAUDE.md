@@ -91,6 +91,16 @@ Não exigir esse processo para: correção de copy, pequenos ajustes de texto, c
 
 Revise contra este arquivo, contra o `DESIGN.md` e contra os checklists em `docs/`; liste o que faltou. Rode os agentes `revisor-anti-ia` e `revisor-de-usabilidade`.
 
+## Tutoriais acompanham a feature (2026-10-28, regra da Sil)
+
+Toda feature nova ou mudança em feature que a usuária vê atualiza o tutorial da tela **no mesmo commit**. Feature sem tutorial atualizado não está pronta. Os tutoriais moram em `src/lib/tutoriais.ts` (um por ferramenta, servem `/como-usar/$slug` no app e `/tutorial/$slug` no site).
+
+- **Mudou botão, rótulo, campo, regra, limite ou plano de uma tela:** revise o tutorial dela (passos, "Bom saber", dúvidas, `resumo`, `plano`). Rótulo entre aspas no tutorial é o que está escrito na tela; confira no código, nunca de memória.
+- **Tela nova:** ganha tutorial novo em `tutoriais.ts` (grupo, rota, passos, dúvidas) e ícone em `components/tutorial/iconesTutorial.ts`. O teste `tutoriais.test.ts` falha se uma rota de `src/routes/_authenticated/` ficar sem tutorial; tela que de fato não precisa (redirect, upgrade, checkout) entra na lista `SEM_TUTORIAL` do teste com o motivo.
+- **Clipe narrado:** se a mudança deixa a cena do vídeo errada (texto, tela ou número), tire o `trecho` do tutorial até a narração nova sair e registre no Kanban. Clipe mostrando tela antiga é pior que clipe nenhum. O vídeo mora em `../polia-one-tutorial/` (`_template.html` + `gerar_versao_app.py`).
+- **Feature que muda o que as outras telas mostram** (ex.: novo plano, nova cota, nova integração): procure o assunto em `tutoriais.ts` inteiro, não só no tutorial da tela mexida. O tutorial "Planos e assinatura" lista o que abre em cada plano.
+- No fim, diga na resposta quais tutoriais mudaram (ou que nenhum precisou, e por quê).
+
 ## Segurança (inegociável)
 
 - Nunca segredo hardcoded nem versionado (chave, token, senha, connection string). `.env` fica fora do git (já no `.gitignore`); use variável de ambiente / `.dev.vars` (Cloudflare) / secrets do Supabase. Não logue dado sensível.

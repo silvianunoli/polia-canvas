@@ -38,6 +38,8 @@ export type Tutorial = {
   abrir: string;
   /** Uma frase: pra que a tela serve. */
   resumo: string;
+  /** Outras telas que este tutorial explica (o atalho "Como usar esta tela" delas cai aqui). */
+  outrasRotas?: string[];
   /** Quando o plano não sai só da rota (ex.: a tela abre, mas conectar é do Pro). */
   plano?: PlanoVisivel;
   trecho?: string;
@@ -149,6 +151,8 @@ const LISTA = [
     nome: "Planejamento",
     grupo: "Primeiros passos",
     rota: "/planejamento",
+    // Marca e Mapa de Mercado são documentos que nascem dos módulos 1 e 2.
+    outrasRotas: ["/marca", "/mercado"],
     abrir: "Abrir o Planejamento",
     resumo:
       "O documento vivo da marca: seis módulos, do porquê ela existe até onde ela vai. Cada resposta vira preço, meta e conta do mês nas outras telas.",
@@ -242,6 +246,7 @@ const LISTA = [
     nome: "Planos e assinatura",
     grupo: "Primeiros passos",
     rota: "/configuracoes",
+    outrasRotas: ["/assinar"],
     abrir: "Abrir Configurações",
     resumo: "O que abre em cada plano, onde ver o seu e como trocar, mudar o cartão ou cancelar.",
     trecho: "plano",
@@ -412,6 +417,8 @@ const LISTA = [
     nome: "Anúncios nos canais",
     grupo: "Produto, preço e venda",
     rota: "/produtos/anuncios",
+    // Conectar o canal e ligar os anúncios também acontece em Configurações.
+    outrasRotas: ["/configuracoes/integracoes"],
     abrir: "Abrir Anúncios nos canais",
     resumo:
       "Liga cada anúncio do Mercado Livre e do TikTok Shop a um produto da Pólia, pra a venda baixar o estoque certo.",
@@ -972,14 +979,21 @@ export function tutorialPorSlug(slug: string): Tutorial | undefined {
 
 /**
  * Tutorial da tela aberta, pro link "Como usar esta tela" do cabeçalho
- * (PaginaLogada). Vale a rota mais comprida que bate: /produtos/anuncios é
- * Anúncios, não Produtos; /planejamento/modulo/2 é Planejamento.
+ * (PaginaLogada). Vale a rota mais comprida que bate, contando `outrasRotas`:
+ * /produtos/anuncios é Anúncios, não Produtos; /configuracoes/integracoes/tiktok
+ * é Anúncios, não Planos; /planejamento/modulo/2 é Planejamento.
  */
 export function tutorialDaRota(pathname: string): Tutorial | undefined {
   let achado: Tutorial | undefined;
+  let tamanho = 0;
   for (const t of ORDENADOS) {
-    const bate = pathname === t.rota || pathname.startsWith(t.rota + "/");
-    if (bate && (!achado || t.rota.length > achado.rota.length)) achado = t;
+    for (const rota of [t.rota, ...(t.outrasRotas ?? [])]) {
+      const bate = pathname === rota || pathname.startsWith(rota + "/");
+      if (bate && rota.length > tamanho) {
+        achado = t;
+        tamanho = rota.length;
+      }
+    }
   }
   return achado;
 }

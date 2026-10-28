@@ -1,4 +1,4 @@
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -23,7 +23,44 @@ const textos = (t: (typeof TUTORIAIS)[number]) => [
   ...t.duvidas.flatMap((d) => [d.pergunta, d.resposta]),
 ];
 
+// Telas logadas que não precisam de tutorial, cada uma com o motivo. Tela nova
+// fora daqui e sem tutorial faz o teste "toda tela logada tem tutorial" falhar
+// (regra de 28/10/2026 no CLAUDE.md: tutorial acompanha a feature).
+const SEM_TUTORIAL: Record<string, string> = {
+  "/onboarding": "só redireciona pro Painel desde 14/10/2026",
+  "/upgrade": "só decide pra onde mandar (assinar ou de volta)",
+  "/chamados": "suporte, não é ferramenta",
+  "/chamados/$id": "suporte, não é ferramenta",
+  "/como-usar": "é o próprio tutorial",
+  "/como-usar/$slug": "é o próprio tutorial",
+  "/como-usar/tour": "é o próprio tutorial",
+  "/mais": "aba Mais do app Android (AND-07): só lista as outras telas",
+};
+
+/** Arquivo de rota do TanStack (flat) → caminho: "produtos_.anuncios" → "/produtos/anuncios". */
+function caminhoDaRota(arquivo: string): string {
+  const partes = arquivo
+    .replace(/\.tsx$/, "")
+    .split(".")
+    .map((p) => p.replace(/_$/, ""))
+    .filter((p) => p !== "index");
+  return "/" + partes.join("/");
+}
+
 describe("tutoriais por ferramenta", () => {
+  it("toda tela logada tem tutorial (ou está em SEM_TUTORIAL com o motivo)", () => {
+    const pasta = resolve(__dirname, "../routes/_authenticated");
+    const caminhos = readdirSync(pasta)
+      .filter((f) => f.endsWith(".tsx") && !f.includes(".test."))
+      .map(caminhoDaRota);
+    expect(caminhos.length).toBeGreaterThan(20);
+    const semTutorial = caminhos.filter((c) => !(c in SEM_TUTORIAL) && !tutorialDaRota(c));
+    expect(
+      semTutorial,
+      "Tela sem tutorial: escreva um em src/lib/tutoriais.ts ou justifique em SEM_TUTORIAL",
+    ).toEqual([]);
+  });
+
   it("cobre todas as ferramentas do menu lateral, sem slug repetido", () => {
     const slugs = TUTORIAIS.map((t) => t.slug);
     expect(new Set(slugs).size).toBe(slugs.length);
@@ -90,6 +127,9 @@ describe("tutoriais por ferramenta", () => {
     expect(tutorialDaRota("/produtos/anuncios/tiktok")?.slug).toBe("anuncios");
     expect(tutorialDaRota("/produtos")?.slug).toBe("produtos");
     expect(tutorialDaRota("/planejamento/modulo/2")?.slug).toBe("planejamento");
+    expect(tutorialDaRota("/configuracoes/integracoes/tiktok")?.slug).toBe("anuncios");
+    expect(tutorialDaRota("/configuracoes")?.slug).toBe("planos");
+    expect(tutorialDaRota("/marca")?.slug).toBe("planejamento");
     expect(tutorialDaRota("/chamados")).toBeUndefined();
   });
 
