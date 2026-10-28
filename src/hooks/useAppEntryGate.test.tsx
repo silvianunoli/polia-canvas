@@ -68,10 +68,10 @@ describe("useAppEntryGate", () => {
       expect(navigateMock).not.toHaveBeenCalled();
     });
 
-    it("com sessão, manda direto pro painel (replace) e esconde a Home", () => {
+    it("com sessão, manda direto pra aba Hoje (replace) e esconde a Home", () => {
       sessao({ user: { id: "u1" } });
       const { result } = renderHook(() => useAppEntryGate());
-      expect(navigateMock).toHaveBeenCalledWith({ to: "/painel", replace: true });
+      expect(navigateMock).toHaveBeenCalledWith({ to: "/hoje", replace: true });
       expect(result.current.escondendoHome).toBe(true);
       expect(result.current.mostrarModal).toBe(false);
     });

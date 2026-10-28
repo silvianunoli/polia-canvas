@@ -35,6 +35,7 @@ const SEM_TUTORIAL: Record<string, string> = {
   "/como-usar/$slug": "é o próprio tutorial",
   "/como-usar/tour": "é o próprio tutorial",
   "/mais": "aba Mais do app Android (AND-07): só lista as outras telas",
+  "/hoje": "aba Hoje do app Android (AND-07): resumo do Painel, que tem tutorial próprio",
 };
 
 /** Arquivo de rota do TanStack (flat) → caminho: "produtos_.anuncios" → "/produtos/anuncios". */

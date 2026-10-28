@@ -440,10 +440,11 @@ Plano `docs/plano-quadro-de-pedidos.md`, aprovado pela Sil em 28/10 com D1 a D7 
 
 ## 2026-10-28 — App Android resumido, fase 2: Hoje enxuto e Planner de uma coluna (AND-07)
 
-- Rota `/hoje` (aba Hoje do app): saudação, "Entrou no mês" e "Quanto lucrou" (numerosDoMes sobre os lançamentos do mês, mesma conta do Painel), barra da Meta do mês (buscarMetaDoMes), tarefas atrasadas e de hoje com botão de concluir, post do dia do Plano de conteúdo (só se o plano abre a tela) e link pro Painel completo. O app abre direto nela (`useAppEntryGate`), e o Painel também acende a aba Hoje.
+- Rota `/hoje` (aba Hoje do app): saudação, "Entrou no mês" e "Quanto lucrou" (numerosDoMes sobre os lançamentos do mês, mesma conta do Painel), barra da Meta do mês (buscarMetaDoMes), as entregas de hoje e as atrasadas (usePedidos + resumoDoDia, depois do GRW-97; antes eram as tarefas do Planner), post do dia do Plano de conteúdo (só se o plano abre a tela) e link pro Painel completo. O app abre direto nela (`useAppEntryGate`), e o Painel também acende a aba Hoje.
 - `planner.$slug.tsx`: no app, uma coluna por vez, trocada por botões com a contagem; a coluna ocupa a largura toda. Mudar de coluna continua pelo campo "Coluna" do detalhe do cartão. No navegador nada muda.
 - **Correção da fase 1:** `/mais` não estava em `ROTAS_TIER` e caía no padrão "controle", então o Grátis ia pro upgrade ao abrir a aba Mais. `/hoje` e `/mais` agora são "confere" (teste em `planos.test.ts`).
 - `tutoriais.test.ts`: `/hoje` em SEM_TUTORIAL (resumo do Painel, que tem tutorial).
+- Depois do GRW-97 (Planner e Caderno só pra conta interna): a aba Planner virou Pedidos (/pedidos), o + ganhou "Novo pedido" (ModalNovoPedido) e "Nova tarefa" só aparece com a flag planner, e o /mais mostra Planner e Caderno só com a flag. A sessão do app foi fechada antes do commit; as mudanças subiram no AND-08.
 
 ## 2026-10-28 — Planner e Caderno saem das usuárias; Pedidos com rota própria (GRW-97)
 

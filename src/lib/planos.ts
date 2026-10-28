@@ -74,6 +74,10 @@ export function recursoLiberado(pathname: string, plano: string | null | undefin
 // tratados em _authenticated.tsx, não aqui.
 const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/painel", tier: "confere" },
+  // Abas do app Android (AND-07): Hoje é o Painel enxuto e Mais só lista as
+  // telas, cada uma com o próprio cadeado. Sem estas linhas o Grátis caía no upgrade.
+  { prefixo: "/hoje", tier: "confere" },
+  { prefixo: "/mais", tier: "confere" },
   { prefixo: "/configuracoes", tier: "confere" },
   { prefixo: "/chamados", tier: "confere" },
   { prefixo: "/planejamento", tier: "confere" },

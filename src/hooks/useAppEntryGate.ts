@@ -5,7 +5,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 
 const DISMISS_KEY = "polia-app-entry-gate-dismissed";
 
-// App Android/iOS, tela Home: quem já tem sessão pula direto pro painel (sem
+// App Android/iOS, tela Home: quem já tem sessão pula direto pra aba Hoje (AND-07) (sem
 // perguntar nada); quem não tem vê o modal "já é usuária?" uma vez por
 // abertura do app (sessionStorage — reseta ao reabrir o app do zero). No
 // site normal (web) isso não existe, a Home aparece igual sempre.
@@ -27,7 +27,7 @@ export function useAppEntryGate() {
 
   useEffect(() => {
     if (!native || loading || !user) return;
-    router.navigate({ to: "/painel", replace: true });
+    router.navigate({ to: "/hoje", replace: true });
   }, [native, loading, user, router]);
 
   const explorar = () => {

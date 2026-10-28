@@ -253,3 +253,11 @@ describe("lista de benefícios dos planos", () => {
     }
   });
 });
+
+describe("abas do app Android (AND-07)", () => {
+  it("Hoje e Mais abrem no Grátis; o cadeado fica em cada tela listada", () => {
+    expect(rotaLiberada("/hoje", "confere")).toBe(true);
+    expect(rotaLiberada("/mais", "confere")).toBe(true);
+    expect(rotaLiberada("/vendas", "confere")).toBe(false);
+  });
+});

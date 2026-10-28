@@ -1,23 +1,27 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { CheckSquare, Lock, Receipt, ShoppingBag } from "lucide-react";
+import { CheckSquare, ClipboardList, Lock, Receipt, ShoppingBag } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalLancamento } from "@/components/financeiro/ModalLancamento";
 import { ModalNovaTarefaApp } from "@/components/app/ModalNovaTarefaApp";
+import { ModalNovoPedido } from "@/components/pedidos/ModalNovoPedido";
+import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { hojeISO } from "@/lib/data.functions";
 import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
 import { toastSucesso } from "@/lib/toast";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
-// O + da barra de abas do app (AND-07): as três coisas que acontecem no meio
-// do dia, longe do computador. Cada opção abre o mesmo formulário da Pólia One
-// completa (ModalRegistrarVenda, ModalLancamento), então a regra é uma só.
+// O + da barra de abas do app (AND-07): o que acontece no meio do dia, longe
+// do computador. Cada opção abre o mesmo formulário da Pólia One completa
+// (ModalRegistrarVenda, ModalNovoPedido, ModalLancamento), então a regra é uma só.
 // Vendas é do Premium: no Grátis a opção aparece com cadeado e leva ao upgrade.
+// Pedido abre em todo plano; o teto do Grátis é o próprio modal que explica.
 // O gasto vale pra todos; no Grátis fica preso ao mês corrente, como no Painel.
+// Nova tarefa só pra quem ainda tem o Planner (conta interna, desde 28/10/2026).
 
-type Aberto = null | "venda" | "gasto" | "tarefa";
+type Aberto = null | "venda" | "pedido" | "gasto" | "tarefa";
 
 export function MenuRegistrarApp({
   aberto,
@@ -34,13 +38,14 @@ export function MenuRegistrarApp({
   const [formulario, setFormulario] = useState<Aberto>(null);
   const vendasLiberado = recursoLiberado("/vendas", plano);
   const financeiroLiberado = recursoLiberado("/financeiro", plano);
+  const internas = useFerramentasInternas();
 
   function abrir(qual: Exclude<Aberto, null>) {
     onOpenChange(false);
     setFormulario(qual);
   }
 
-  // O modal de venda já avisa sozinho ("Venda registrada..."); o de lançamento não.
+  // Os modais de venda e de pedido já avisam sozinhos; o de lançamento não.
   function salvou(mensagem: string | null) {
     setFormulario(null);
     void qc.invalidateQueries();
@@ -60,7 +65,7 @@ export function MenuRegistrarApp({
         >
           <SheetTitle className="font-cabinet text-[19px] text-[var(--ink)]">Registrar</SheetTitle>
           <SheetDescription className="sr-only">
-            Escolha entre registrar uma venda, lançar um gasto ou criar uma tarefa.
+            Escolha entre registrar uma venda, anotar um pedido ou lançar um gasto.
           </SheetDescription>
           <div className="mt-4 flex flex-col gap-3">
             {vendasLiberado ? (
@@ -85,20 +90,33 @@ export function MenuRegistrarApp({
                 </span>
               </Link>
             )}
+            <button type="button" className={opcao} onClick={() => abrir("pedido")}>
+              <ClipboardList size={20} aria-hidden="true" />
+              Novo pedido
+            </button>
             <button type="button" className={opcao} onClick={() => abrir("gasto")}>
               <Receipt size={20} aria-hidden="true" />
               Lançar gasto
             </button>
-            <button type="button" className={opcao} onClick={() => abrir("tarefa")}>
-              <CheckSquare size={20} aria-hidden="true" />
-              Nova tarefa
-            </button>
+            {internas.planner && (
+              <button type="button" className={opcao} onClick={() => abrir("tarefa")}>
+                <CheckSquare size={20} aria-hidden="true" />
+                Nova tarefa
+              </button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
 
       {formulario === "venda" && (
         <ModalRegistrarVenda
+          userId={userId}
+          onClose={() => setFormulario(null)}
+          onSaved={() => salvou(null)}
+        />
+      )}
+      {formulario === "pedido" && (
+        <ModalNovoPedido
           userId={userId}
           onClose={() => setFormulario(null)}
           onSaved={() => salvou(null)}

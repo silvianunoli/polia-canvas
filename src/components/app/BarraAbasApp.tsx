@@ -1,21 +1,23 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Calculator, Ellipsis, Home, LayoutList, Plus } from "lucide-react";
+import { Calculator, ClipboardList, Ellipsis, Home, Plus } from "lucide-react";
 import { MenuRegistrarApp } from "@/components/app/MenuRegistrarApp";
 
 // Barra de abas do app Android (AND-07, wireframe aprovado em 28/10/2026).
 // Substitui o menu lateral só dentro do app: Hoje, Calcular, o + no meio
-// (venda, gasto, tarefa), Planner e Mais (o resto da Pólia One).
-// Fase 1: Hoje abre o Painel de sempre; a versão enxuta vem depois.
+// (venda, pedido, gasto), Pedidos e Mais (o resto da Pólia One). Pedidos
+// entrou no lugar do Planner em 28/10/2026, quando o Planner virou ferramenta interna.
+// Hoje é o Painel enxuto (/hoje); o Painel completo também acende a aba Hoje.
 
 const ABAS = [
-  { to: "/painel", label: "Hoje", icon: Home },
+  { to: "/hoje", label: "Hoje", icon: Home },
   { to: "/calculadora", label: "Calcular", icon: Calculator },
-  { to: "/planner", label: "Planner", icon: LayoutList },
+  { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   { to: "/mais", label: "Mais", icon: Ellipsis },
 ] as const;
 
 function ativa(to: string, pathname: string) {
+  if (to === "/hoje" && pathname === "/painel") return true;
   return pathname === to || pathname.startsWith(`${to}/`);
 }
 
@@ -66,7 +68,7 @@ export function BarraAbasApp({
           <div className="flex flex-1 justify-center">
             <button
               type="button"
-              aria-label="Registrar venda, gasto ou tarefa"
+              aria-label="Registrar venda, pedido ou gasto"
               aria-haspopup="dialog"
               aria-expanded={registrarAberto}
               onClick={() => setRegistrarAberto(true)}
