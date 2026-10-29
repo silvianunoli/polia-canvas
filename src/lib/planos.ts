@@ -376,6 +376,13 @@ export const TIERS_PAGOS: Record<
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
       { id: "ia", texto: "Até 60 rascunhos por mês com a IA no Planejamento" },
       {
+        // ONE-148/ONE-149, 29/10/2026: só no Pro, decisão da Sil.
+        id: "catalogo",
+        texto:
+          "Catálogo online ligado aos Pedidos: o pedido que a cliente confirma no catálogo entra no quadro, com a variação de cada peça",
+        novoAte: "2026-11-28",
+      },
+      {
         // VND-05 (TikTok Shop), VND-30 (Mercado Livre) e VND-17 (Shopee). COPY-34, 27/10/2026.
         id: "marketplaces",
         texto:

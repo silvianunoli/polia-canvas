@@ -8,7 +8,7 @@ import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 
 // Card do catálogo online em Configurações > Integrações (ONE-148, fase 1).
-// Uma ação: ligar o domínio do catálogo aos Pedidos. Premium e Pro.
+// Uma ação: ligar o domínio do catálogo aos Pedidos. Só no Pro.
 
 const CHAVE_STATUS_CATALOGO = "status-catalogo";
 
@@ -73,10 +73,10 @@ export function CardCatalogo({ userId }: { userId: string | undefined }) {
           </div>
           {!st.ligado && !st.liberado ? (
             <LinkInterno
-              href={`/upgrade?rota=${encodeURIComponent("/configuracoes")}&tier=controle`}
+              href={`/upgrade?rota=${encodeURIComponent("/configuracoes")}&tier=projete`}
               className={BTN_MIUDO}
             >
-              <Lock size={13} aria-hidden="true" /> Abre no Premium
+              <Lock size={13} aria-hidden="true" /> Abre no Pro
             </LinkInterno>
           ) : st.ligado ? (
             <button

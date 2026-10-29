@@ -287,8 +287,8 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas, guia de presença e Assistente.",
-      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário e o catálogo online ligado aos Pedidos.",
-      "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo e a conexão com Mercado Livre e TikTok Shop.",
+      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
+      "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.",
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -863,9 +863,9 @@ const LISTA = [
         ],
       },
       {
-        titulo: "Receber os pedidos do catálogo online",
+        titulo: "Receber os pedidos do catálogo online (Pro)",
         itens: [
-          'Em "Configurações", na parte "Integrações", ache o cartão "Catálogo online".',
+          'Em "Configurações", na parte "Integrações", ache o cartão "Catálogo online". Ele abre no plano Pro.',
           'Escreva o domínio do catálogo (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
           'Daí em diante, cada pedido que a cliente confirma no catálogo entra em "A fazer", com o nome e o WhatsApp dela, as peças, a variação de cada uma e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
