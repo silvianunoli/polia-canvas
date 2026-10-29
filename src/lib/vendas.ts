@@ -16,6 +16,7 @@ export const CANAIS_VENDA = [
   "shopee",
   "tiktok_shop",
   "mercado_livre",
+  "catalogo",
   "outro",
 ] as const;
 export type CanalVenda = (typeof CANAIS_VENDA)[number];
@@ -29,6 +30,7 @@ export const CANAL_LABEL: Record<CanalVenda, string> = {
   shopee: "Shopee",
   tiktok_shop: "TikTok Shop",
   mercado_livre: "Mercado Livre",
+  catalogo: "Catálogo online",
   outro: "Outro",
 };
 

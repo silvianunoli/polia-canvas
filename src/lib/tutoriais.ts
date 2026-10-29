@@ -287,7 +287,7 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas, guia de presença e Assistente.",
-      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
+      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário e o catálogo online ligado aos Pedidos.",
       "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo e a conexão com Mercado Livre e TikTok Shop.",
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
@@ -862,9 +862,19 @@ const LISTA = [
           "No topo, a Pólia One mostra as entregas de hoje, as de amanhã, as atrasadas e quanto entra na semana.",
         ],
       },
+      {
+        titulo: "Receber os pedidos do catálogo online",
+        itens: [
+          'Em "Configurações", na parte "Integrações", ache o cartão "Catálogo online".',
+          'Escreva o domínio do catálogo (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
+          'Daí em diante, cada pedido que a cliente confirma no catálogo entra em "A fazer", com o nome e o WhatsApp dela, as peças, a variação de cada uma e o endereço na observação.',
+          "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
+        ],
+      },
     ],
     bomSaber: [
       "O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal Encomenda.",
+      'Pedido do catálogo online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Catálogo online". A cliente vira ficha em Clientes, pelo WhatsApp.',
       'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
@@ -884,6 +894,11 @@ const LISTA = [
       {
         pergunta: "Combinei outro dia com a cliente",
         resposta: 'Abra o pedido, troque a data em "Entrega" e clique em "Salvar a nova data".',
+      },
+      {
+        pergunta: "O pedido do catálogo veio com outro preço",
+        resposta:
+          "O preço é o que estava no catálogo na hora do pedido. Confirme com a cliente pelo WhatsApp antes de começar a produção.",
       },
     ],
   },

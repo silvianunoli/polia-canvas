@@ -188,6 +188,14 @@ export default {
     // o check.
     if (url.pathname === "/health") return respostaHealth();
 
+    // Pedido vindo do catálogo online da loja (ONE-148): outro domínio, sem
+    // sessão. Vem antes do 301 pra servir também no workers.dev, e o import é
+    // dinâmico pelo mesmo motivo do download do manual (supabaseAdmin).
+    if (url.pathname === "/api/catalogo/pedido") {
+      const { responderPedidoCatalogo } = await import("./lib/catalogo/pedido.server");
+      return await responderPedidoCatalogo(request);
+    }
+
     // Qualquer hostname que não seja o oficial (www, workers.dev, preview de
     // deploy) leva 301 pro domínio próprio. O workers_dev segue ligado no
     // wrangler.jsonc de propósito, como fallback operacional; é este 301 que
