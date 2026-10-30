@@ -331,7 +331,7 @@ const LISTA = [
           'Na aba "Catálogo", clique em "+ Adicionar produto".',
           'Preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
           'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o cartão já mostra quanto a marca lucra por venda.',
-          'Se quiser, ponha uma foto: clique em "Enviar foto" pra subir do aparelho (JPG, PNG ou WEBP, até 3 MB) ou cole o link de uma imagem.',
+          'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',

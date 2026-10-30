@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { ImageUp } from "lucide-react";
+import { ImageUp, X } from "lucide-react";
 import { hojeISO } from "@/lib/data.functions";
-import { FOTO_TIPOS } from "@/lib/loja";
-import { problemaDaFoto } from "@/components/catalogo/dados";
+import { FOTO_TIPOS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { track } from "@/lib/analytics";
@@ -11,12 +10,13 @@ import { avisarAtivacaoNoGA } from "@/lib/ativacaoPreco";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { toastErro } from "@/lib/toast";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { fmt, num, type Prefill, type Produto, type ProdutoTipo } from "./tipos";
 import { EstoqueDoProduto } from "./EstoqueDoProduto";
 import { useEstoqueDoProduto } from "./useEstoqueDoProduto";
 import { KitDoProduto } from "./KitDoProduto";
 import { useKitDoProduto } from "./useKitDoProduto";
+import { useFotosDoProduto } from "./useFotosDoProduto";
 
 /* ============== Modal: adicionar/editar produto ============== */
 export function ModalProduto({
@@ -42,33 +42,8 @@ export function ModalProduto({
   const [tipo, setTipo] = useState<ProdutoTipo>(
     (produtoEdit?.tipo as ProdutoTipo) ?? prefill?.tipo ?? "fisico",
   );
-  const [fotoUrl, setFotoUrl] = useState(produtoEdit?.foto_url ?? "");
-  const [enviandoFoto, setEnviandoFoto] = useState(false);
-
-  // Sobe na pasta da dona no bucket produtos-fotos e põe a URL pública no campo;
-  // o produto só guarda a foto quando ela salvar.
-  async function enviarFoto(arquivo: File | undefined) {
-    if (!arquivo) return;
-    const problema = problemaDaFoto(arquivo);
-    if (problema) {
-      toastErro(problema);
-      return;
-    }
-    setEnviandoFoto(true);
-    const ext =
-      arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
-    const path = `${userId}/foto-${Date.now()}.${ext}`;
-    const up = await supabase.storage
-      .from("produtos-fotos")
-      .upload(path, arquivo, { contentType: arquivo.type, upsert: false });
-    setEnviandoFoto(false);
-    if (up.error) {
-      console.error("produto_foto_upload", up.error);
-      toastErro("A Pólia One não conseguiu enviar a foto agora. Tenta de novo.");
-      return;
-    }
-    setFotoUrl(supabase.storage.from("produtos-fotos").getPublicUrl(path).data.publicUrl);
-  }
+  const fotos = useFotosDoProduto(userId, produtoEdit?.id ?? null, produtoEdit?.foto_url ?? null);
+  const [fotoAviso, setFotoAviso] = useState<string | null>(null);
   const [precoVenda, setPrecoVenda] = useState(
     produtoEdit?.preco_venda != null
       ? String(produtoEdit.preco_venda)
@@ -126,10 +101,16 @@ export function ModalProduto({
     setErro(null);
 
     if (edit && produtoEdit) {
+      const gravadas = await fotos.salvar(produtoEdit.id);
+      if (gravadas.erro) {
+        setSalvando(false);
+        setErro(gravadas.erro);
+        return;
+      }
       const update: Record<string, unknown> = {
         nome: nome.trim(),
         tipo,
-        foto_url: fotoUrl.trim() || null,
+        foto_url: gravadas.fotoUrl,
         preco_venda: precoVendaNum,
         preco_custo: precoCustoNum,
         descricao: descricao.trim() || null,
@@ -174,7 +155,7 @@ export function ModalProduto({
           user_id: userId,
           nome: nome.trim(),
           tipo,
-          foto_url: fotoUrl.trim() || null,
+          foto_url: fotos.link.trim() || null,
           preco_venda: precoVendaNum,
           preco_custo: precoCustoNum,
           descricao: descricao.trim() || null,
@@ -190,8 +171,16 @@ export function ModalProduto({
         setErro("A Pólia One não conseguiu salvar o produto. Tenta de novo.");
         return;
       }
+      const gravadas = await fotos.salvar(criado.id);
+      if (!gravadas.erro && gravadas.fotoUrl) {
+        await supabase
+          .from("produtos")
+          .update({ foto_url: gravadas.fotoUrl } as never)
+          .eq("id", criado.id);
+      }
       const erroEstoque = await salvarEstoqueOuKit(criado.id);
       setSalvando(false);
+      if (gravadas.erro) toastErro(`O produto foi salvo, mas as fotos não. ${gravadas.erro}`);
       if (erroEstoque) {
         // O produto já existe: ficar no modal duplicaria no próximo "Salvar".
         toastErro(
@@ -224,7 +213,7 @@ export function ModalProduto({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando || enviandoFoto || !podeSalvar}
+            disabled={salvando || fotos.carregando || !podeSalvar}
             className={BTN_ACAO}
           >
             {salvando ? "Salvando..." : "Salvar produto"}
@@ -273,56 +262,79 @@ export function ModalProduto({
         </div>
       </div>
 
-      {/* Foto: enviar do aparelho (bucket produtos-fotos) ou colar um link */}
+      {/* Fotos: até 4, as mesmas da loja (produto_fotos). A primeira é a da vitrine. */}
       <div className="mb-4">
-        <Campo
-          label="Foto"
-          htmlFor="foto-produto-link"
-          hint="envie do aparelho ou cole o link de uma imagem (opcional)"
-        >
-          <div>
-            <div className="mb-2 flex items-center gap-3">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--bg)]">
-                {fotoUrl.trim() ? (
-                  <img
-                    src={fotoUrl.trim()}
-                    alt="Foto atual do produto"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <ImageUp size={20} aria-hidden="true" className="text-[var(--muted)]" />
-                )}
-              </div>
-              <div className="flex flex-col items-start gap-1">
-                <input
-                  type="file"
-                  accept={FOTO_TIPOS.join(",")}
-                  className="sr-only"
-                  id="arquivo-foto-produto"
-                  onChange={(e) => {
-                    void enviarFoto(e.target.files?.[0]);
-                    e.target.value = "";
-                  }}
+        <p className="mb-1.5 text-[13px] font-medium text-[var(--ink)]">Fotos</p>
+        <ul className="grid grid-cols-4 gap-2" aria-label="Fotos do produto">
+          {fotos.itens.map((f, i) => (
+            <li key={f.chave} className="relative">
+              <div className="aspect-square overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--bg)]">
+                <img
+                  src={f.url}
+                  alt={`Foto ${i + 1} do produto`}
+                  className="h-full w-full object-cover"
                 />
-                <label
-                  htmlFor="arquivo-foto-produto"
-                  className={`${BTN_MIUDO_ACAO} cursor-pointer ${enviandoFoto ? "pointer-events-none opacity-60" : ""}`}
-                >
-                  {enviandoFoto ? "Enviando…" : fotoUrl.trim() ? "Trocar foto" : "Enviar foto"}
-                </label>
-                <p className="text-[12px] text-[var(--muted)]">JPG, PNG ou WEBP, até 3 MB.</p>
               </div>
-            </div>
-            <input
-              value={fotoUrl}
-              onChange={(e) => setFotoUrl(e.target.value)}
-              id="foto-produto-link"
-              aria-describedby="foto-produto-link-dica"
-              className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-              placeholder="https://..."
-            />
+              {i === 0 && (
+                <span className="absolute left-1 top-1 rounded bg-[var(--surface)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--ink)]">
+                  Vitrine
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={() => fotos.tirar(f.chave)}
+                aria-label={`Tirar a foto ${i + 1}`}
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:bg-[var(--bg)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)]"
+              >
+                <X size={14} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+          {fotos.itens.length < MAX_FOTOS_PRODUTO && (
+            <li>
+              <input
+                type="file"
+                multiple
+                accept={FOTO_TIPOS.join(",")}
+                className="peer sr-only"
+                id="arquivo-foto-produto"
+                aria-describedby="fotos-produto-dica"
+                onChange={(e) => {
+                  setFotoAviso(fotos.adicionar(Array.from(e.target.files ?? [])));
+                  e.target.value = "";
+                }}
+              />
+              <label
+                htmlFor="arquivo-foto-produto"
+                className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line)] bg-[var(--bg)] text-center text-[12px] text-[var(--muted)] hover:border-[var(--secondary-text)] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-[var(--secondary-text)]"
+              >
+                <ImageUp size={18} aria-hidden="true" />
+                {fotos.itens.length ? "Mais uma foto" : "Enviar foto"}
+              </label>
+            </li>
+          )}
+        </ul>
+        <p id="fotos-produto-dica" className="mt-1.5 text-[12.5px] text-[var(--muted)]">
+          Até 4 fotos, em JPG, PNG ou WEBP de até 3 MB. A primeira é a da vitrine e as fotos entram
+          ao salvar.
+        </p>
+        {fotoAviso && (
+          <p role="alert" className="mt-1 text-[12.5px] text-[var(--danger)]">
+            {fotoAviso}
+          </p>
+        )}
+        {fotos.itens.length === 0 && (
+          <div className="mt-3">
+            <Campo label="Ou cole o link de uma imagem" hint="opcional">
+              <input
+                value={fotos.link}
+                onChange={(e) => fotos.setLink(e.target.value)}
+                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                placeholder="https://..."
+              />
+            </Campo>
           </div>
-        </Campo>
+        )}
       </div>
 
       {/* Preço de venda */}
