@@ -136,7 +136,8 @@ Deno.serve(async (req: Request) => {
     if (!vence) continue;
     contagem[await renovar(c)]++;
   }
-  return new Response(JSON.stringify({ ok: true, ...contagem }), {
+  // A contagem fica num campo próprio: o "ok" dela (renovados) não pode apagar o ok da resposta.
+  return new Response(JSON.stringify({ ok: true, contagem }), {
     headers: { "Content-Type": "application/json" },
   });
 });
