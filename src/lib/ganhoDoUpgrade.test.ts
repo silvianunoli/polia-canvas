@@ -2,6 +2,16 @@ import { describe, expect, it } from "vitest";
 import { fraseDoGanho } from "./ganhoDoUpgrade";
 
 describe("fraseDoGanho", () => {
+  it("Raio-x, Projeção, Encomenda e Resumo nomeiam o plano que a tela pede (Premium depois de 01/12)", () => {
+    expect(fraseDoGanho("/raiox", "Premium")).toBe(
+      "O Premium lê o seu mês e devolve onde o dinheiro está vazando.",
+    );
+    for (const rota of ["/projecao", "/calculadora", "/financeiro/resumo"]) {
+      expect(fraseDoGanho(rota, "Premium")).toMatch(/^O Premium /);
+      expect(fraseDoGanho(rota, "Premium")).not.toContain("{plano}");
+    }
+  });
+
   it("tela conhecida tem frase própria", () => {
     expect(fraseDoGanho("/raiox", "Pro")).toBe(
       "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",

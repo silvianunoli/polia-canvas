@@ -15,7 +15,17 @@
 // Painel mudaram em 14/10, e as cenas de Produtos e Financeiro dizem "quanto
 // sobra", que saiu da copy em 18/10.
 
-import { ehRotaProjete, tierMinimoDaRota } from "@/lib/planos";
+import { depoisDaVirada, ehRotaProjete, tierMinimoDaRota, tiersPagos } from "@/lib/planos";
+
+// Virada de preços (01/12/2026, src/lib/planos.ts): Encomenda, Resumo pro
+// contador, Projeção e Raio-x descem do Pro pro Premium e os preços mudam.
+// Lido quando o módulo carrega. A narração das cenas "projecao" e "raiox" diz
+// "é do Pro", então o trecho sai depois da virada até a narração nova (PAY-46).
+const VIROU = depoisDaVirada();
+const PRECOS = tiersPagos();
+function reaisDoPlano(v: number): string {
+  return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 export const GRUPOS_TUTORIAL = [
   "Primeiros passos",
@@ -288,8 +298,12 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas, guia de presença e Assistente.",
-      "Premium, R$ 29,90 por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.",
-      "Pro, R$ 47,90 por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.",
+      VIROU
+        ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
+        : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
+      VIROU
+        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`
+        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -397,7 +411,9 @@ const LISTA = [
     ],
     bomSaber: [
       "Calcular é livre em todo plano. No Grátis com 5 produtos no catálogo, a conta funciona, mas guardar pede o Premium.",
-      'A aba "Encomenda (sob medida)" mostra o preço só no Pro.',
+      VIROU
+        ? 'A aba "Encomenda (sob medida)" mostra o preço no Premium e no Pro.'
+        : 'A aba "Encomenda (sob medida)" mostra o preço só no Pro.',
       "Com a Meta do mês criada, a Calculadora mostra quantas vendas desse produto fecham a meta.",
       'No Premium, "Quanto esse preço deixa em cada canal" compara o lucro por canal, com as taxas salvas em Vendas.',
     ],
@@ -570,7 +586,9 @@ const LISTA = [
       'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês. As marcas de mínimo e de celebrar vêm do módulo Quanto vale, no Planejamento.',
       "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
       "Excluir um lançamento não tem volta.",
-      'No Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
+      VIROU
+        ? 'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.'
+        : 'No Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
     ],
     duvidas: [
       {
@@ -648,7 +666,7 @@ const LISTA = [
     abrir: "Abrir a Projeção",
     resumo:
       "Quantas vendas faltam pra empatar, pra pagar o seu salário e pra bater a Meta do mês, e o que muda se o preço ou o custo mexer.",
-    trecho: "projecao",
+    trecho: VIROU ? undefined : "projecao",
     passos: [
       {
         titulo: "Ler a projeção",
@@ -670,7 +688,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "A Projeção é do Pro.",
+      VIROU ? "A Projeção é do Premium e do Pro." : "A Projeção é do Pro.",
       "Precisa de pelo menos um produto com preço e dos custos fixos do mês lançados no Financeiro. Faltando algo, a tela diz o quê e leva pra lá.",
       '"Salvar salário e meta" guarda só esses dois. Os outros campos voltam ao valor real.',
     ],
@@ -695,7 +713,7 @@ const LISTA = [
     abrir: "Abrir o Raio-x",
     resumo:
       "Com o mês fechado, a Pólia One lê entradas, saídas, meta e produtos e mostra o que puxou o resultado.",
-    trecho: "raiox",
+    trecho: VIROU ? undefined : "raiox",
     passos: [
       {
         titulo: "Gerar o raio-x",
@@ -715,7 +733,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "O Raio-x é do Pro.",
+      VIROU ? "O Raio-x é do Premium e do Pro." : "O Raio-x é do Pro.",
       "São 3 gerações por mês, somando todos os meses lidos. A conta zera no dia 1º.",
       "Mês sem nenhum lançamento no Financeiro não tem leitura. Com 2 lançamentos ou menos, a leitura sai limitada.",
       "A leitura é escrita por IA e pode errar. Vale conferir antes de decidir.",
@@ -923,14 +941,14 @@ const LISTA = [
         titulo: "Dar a cara da marca",
         itens: [
           'O logo e a cor vêm de "Marca". Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
-          'Sem capa, a loja monta a abertura com as fotos dos produtos.',
+          "Sem capa, a loja monta a abertura com as fotos dos produtos.",
         ],
       },
       {
         titulo: "Dizer como a loja vende",
         itens: [
           'Em "Como a loja vende", preencha o WhatsApp da loja, o Instagram, o prazo de produção em dias úteis, o sinal pra começar e como é a entrega.',
-          'O prazo marca o dia da entrega de cada pedido no quadro. Com sinal acima de 0, a loja mostra quanto a cliente paga pra começar.',
+          "O prazo marca o dia da entrega de cada pedido no quadro. Com sinal acima de 0, a loja mostra quanto a cliente paga pra começar.",
           'Desligue "Pedir o endereço da cliente" quando a entrega é sempre combinada na conversa.',
         ],
       },
@@ -944,7 +962,7 @@ const LISTA = [
     ],
     bomSaber: [
       "O preço do pedido é sempre o de Produtos na hora da compra: a loja não deixa mudar o valor pelo navegador.",
-      "Pedido da loja entra em Pedidos como \"a receber\", em \"A fazer\", e a cliente vira ficha em Clientes pelo WhatsApp.",
+      'Pedido da loja entra em Pedidos como "a receber", em "A fazer", e a cliente vira ficha em Clientes pelo WhatsApp.',
       "O endereço da loja fica com a marca: depois de usado, não passa pra outra conta.",
       "Fora do Pro, a loja fecha e mostra que não está aberta agora. Os produtos e as fotos continuam guardados.",
       "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",

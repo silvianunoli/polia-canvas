@@ -22,7 +22,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { BlockError } from "@/components/ui/BlockError";
 import { Lock } from "lucide-react";
-import { hrefUpgrade, recursoLiberado, TIERS_PAGOS, tierPagoDaRota } from "@/lib/planos";
+import { hrefUpgrade, recursoLiberado, tiersPagos, tierPagoDaRota } from "@/lib/planos";
 import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { fmt } from "@/components/produtos/tipos";
 import { TITULO_META_DO_MES } from "@/lib/metaDoMes";
@@ -773,7 +773,7 @@ function PlanejamentoPage() {
                         {!liberado && <Lock size={13} aria-hidden="true" />}
                         {liberado
                           ? f.nome
-                          : `${f.nome} no ${TIERS_PAGOS[tierPagoDaRota(f.rota)].titulo}`}
+                          : `${f.nome} no ${tiersPagos()[tierPagoDaRota(f.rota)].titulo}`}
                         <span aria-hidden="true">→</span>
                       </LinkInterno>
                     );

@@ -6,7 +6,13 @@ import { z } from "zod";
 import { toastErro } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { linkCanonico } from "@/lib/seo";
-import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem, type TierPago } from "@/lib/planos";
+import {
+  BENEFICIOS_GRATIS,
+  beneficiosNaOrdem,
+  tiersPagos,
+  type InfoTierPago,
+  type TierPago,
+} from "@/lib/planos";
 import { iniciarCompraPublica } from "@/lib/compra-publica.functions";
 import { campoDeBusca, lerOrigemCampanha, temOrigemCampanha } from "@/lib/origemCampanha";
 import { useTurnstile } from "@/hooks/useTurnstile";
@@ -104,7 +110,8 @@ function PlanosPage() {
   const turnstile = useTurnstile();
   const emailRef = useRef<HTMLInputElement>(null);
 
-  const tier = TIERS_PAGOS[escolhido];
+  const tiers = tiersPagos();
+  const tier = tiers[escolhido];
   // Só mostra a confirmação quando o e-mail tem cara de e-mail completo.
   const emailDigitado = email.trim().toLowerCase();
   const emailParaConfirmar = z.string().email().safeParse(emailDigitado).success
@@ -277,68 +284,66 @@ function PlanosPage() {
                 </div>
               </div>
 
-              {(Object.entries(TIERS_PAGOS) as [TierPago, (typeof TIERS_PAGOS)[TierPago]][]).map(
-                ([id, t]) => {
-                  const ativo = escolhido === id;
-                  return (
-                    <div
-                      key={id}
-                      className={`flex flex-col rounded-2xl border bg-white p-6 ${
-                        ativo
-                          ? "border-[var(--secondary)] ring-2 ring-[var(--secondary-light)]"
-                          : "border-[var(--line)]"
-                      }`}
-                    >
-                      {/* O selo existe só em alguns cartões; `invisible` guarda a
+              {(Object.entries(tiers) as [TierPago, InfoTierPago][]).map(([id, t]) => {
+                const ativo = escolhido === id;
+                return (
+                  <div
+                    key={id}
+                    className={`flex flex-col rounded-2xl border bg-white p-6 ${
+                      ativo
+                        ? "border-[var(--secondary)] ring-2 ring-[var(--secondary-light)]"
+                        : "border-[var(--line)]"
+                    }`}
+                  >
+                    {/* O selo existe só em alguns cartões; `invisible` guarda a
                           altura pra título e preço ficarem alinhados na linha que a
                           pessoa compara. */}
-                      <span
-                        aria-hidden={!t.destaque && !ativo}
-                        className={`mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)] ${
-                          t.destaque || ativo ? "" : "invisible"
-                        }`}
-                      >
-                        {ativo ? "Escolhido" : "Melhor valor"}
-                      </span>
-                      <p className="text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
-                        {t.titulo}
-                      </p>
-                      <p className="mt-1 font-cabinet text-[32px] leading-none">
-                        {fmtPreco(ciclo === "mensal" ? t.precoMensal : t.precoAnual)}
-                      </p>
-                      <p className="mt-1 text-[13px] text-[var(--muted)]">
-                        {ciclo === "mensal" ? "por mês" : "por ano"}
-                      </p>
-                      <p className="mt-4 text-[14px] font-semibold leading-snug text-[var(--ink)]">
-                        {t.base}
-                      </p>
-                      <ul className="mt-2 space-y-2">
-                        {beneficiosNaOrdem(t.beneficios).map((b) => (
-                          <li
-                            key={b.id}
-                            className={`text-[14px] leading-snug ${
-                              b.emBreve ? "text-[var(--muted)]" : "text-[var(--ink-soft)]"
-                            }`}
-                          >
-                            {b.texto}
-                            <SeloDoBeneficio beneficio={b} />
-                          </li>
-                        ))}
-                      </ul>
-                      <div className="mt-auto pt-6">
-                        <button
-                          type="button"
-                          onClick={() => escolher(id)}
-                          aria-pressed={ativo}
-                          className={`${ativo ? BTN_PRIMARIO : BTN_CONTORNO} w-full`}
+                    <span
+                      aria-hidden={!t.destaque && !ativo}
+                      className={`mb-2 inline-block w-fit rounded bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[1px] text-[var(--secondary-ink)] ${
+                        t.destaque || ativo ? "" : "invisible"
+                      }`}
+                    >
+                      {ativo ? "Escolhido" : "Melhor valor"}
+                    </span>
+                    <p className="text-[13px] font-semibold uppercase tracking-[1px] text-[var(--ink-soft)]">
+                      {t.titulo}
+                    </p>
+                    <p className="mt-1 font-cabinet text-[32px] leading-none">
+                      {fmtPreco(ciclo === "mensal" ? t.precoMensal : t.precoAnual)}
+                    </p>
+                    <p className="mt-1 text-[13px] text-[var(--muted)]">
+                      {ciclo === "mensal" ? "por mês" : "por ano"}
+                    </p>
+                    <p className="mt-4 text-[14px] font-semibold leading-snug text-[var(--ink)]">
+                      {t.base}
+                    </p>
+                    <ul className="mt-2 space-y-2">
+                      {beneficiosNaOrdem(t.beneficios).map((b) => (
+                        <li
+                          key={b.id}
+                          className={`text-[14px] leading-snug ${
+                            b.emBreve ? "text-[var(--muted)]" : "text-[var(--ink-soft)]"
+                          }`}
                         >
-                          {ativo ? `Seguir com o ${t.titulo}` : `Assinar o ${t.titulo}`}
-                        </button>
-                      </div>
+                          {b.texto}
+                          <SeloDoBeneficio beneficio={b} />
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-auto pt-6">
+                      <button
+                        type="button"
+                        onClick={() => escolher(id)}
+                        aria-pressed={ativo}
+                        className={`${ativo ? BTN_PRIMARIO : BTN_CONTORNO} w-full`}
+                      >
+                        {ativo ? `Seguir com o ${t.titulo}` : `Assinar o ${t.titulo}`}
+                      </button>
                     </div>
-                  );
-                },
-              )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>

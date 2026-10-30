@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { TIERS_PAGOS, ehBeta, temProjete, tierDoPlano, type TierPago } from "@/lib/planos";
+import { tiersPagos, ehBeta, temProjete, tierDoPlano, type TierPago } from "@/lib/planos";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { useUserMeta } from "@/hooks/useUserMeta";
 
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/upgrade")({
   head: ({ match }) => ({
     meta: [
       {
-        title: `Esse recurso é do ${TIERS_PAGOS[match.search.tier ?? TIER_PADRAO].titulo} · Pólia One`,
+        title: `Esse recurso é do ${tiersPagos()[match.search.tier ?? TIER_PADRAO].titulo} · Pólia One`,
       },
     ],
   }),

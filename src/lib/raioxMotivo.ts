@@ -1,13 +1,13 @@
 // Partes puras do raio-x que a tela e o servidor dividem (QA-30, 07/10/2026).
 // Fica fora de raiox.functions.ts pra a tela não importar nada de servidor.
-import { temProjete } from "@/lib/planos";
+import { temNumerosDoMes, tierDosNumeros, tiersPagos } from "@/lib/planos";
 
 /** Teto único de gerações de raio-x por mês do calendário (ia_uso). */
 export const LIMITE_RAIOX_MENSAL = 3;
 
-/** Pro e beta (acesso total) geram raio-x; o resto não. */
+/** Pro e beta geram raio-x; o Premium também a partir da virada de preços (01/12/2026). */
 export function planoGeraRaioX(plano: string | null | undefined): boolean {
-  return temProjete(plano);
+  return temNumerosDoMes(plano);
 }
 
 // ── Limite visível (07/10/2026, pedido da Sil) ─────────────────────────────
@@ -116,7 +116,7 @@ export function avisoDoMotivoRaioX(motivo: MotivoRaioX): string {
     case "manutencao":
       return "O raio-x está em manutenção agora. Tenta de novo mais tarde, este continua aqui.";
     case "plano_insuficiente":
-      return "A Pólia One não encontrou o plano Pro ativo nesta conta, então não gerou outro raio-x.";
+      return `A Pólia One não encontrou o plano ${tiersPagos()[tierDosNumeros()].titulo} ativo nesta conta, então não gerou outro raio-x.`;
     case "falha_ia":
       return "A Pólia One não conseguiu ler o seu mês agora. Tenta de novo.";
   }

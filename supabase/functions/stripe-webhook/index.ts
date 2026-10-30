@@ -71,6 +71,17 @@ if (PRICE_CONTROLE_MENSAL) PRICE_TO_PLANO[PRICE_CONTROLE_MENSAL] = "controle";
 if (PRICE_CONTROLE_ANUAL) PRICE_TO_PLANO[PRICE_CONTROLE_ANUAL] = "controle";
 if (PRICE_PROJETE_MENSAL) PRICE_TO_PLANO[PRICE_PROJETE_MENSAL] = "projete";
 if (PRICE_PROJETE_ANUAL) PRICE_TO_PLANO[PRICE_PROJETE_ANUAL] = "projete";
+// Prices da virada de 01/12/2026 (Premium R$ 39,90/R$ 399, Pro R$ 79,90/R$ 799).
+// Os de cima seguem no mapa: as assinaturas de fundadora continuam neles.
+for (const [nome, plano] of [
+  ["STRIPE_PRICE_ID_CONTROLE_MENSAL_DEZ2026", "controle"],
+  ["STRIPE_PRICE_ID_CONTROLE_ANUAL_DEZ2026", "controle"],
+  ["STRIPE_PRICE_ID_PROJETE_MENSAL_DEZ2026", "projete"],
+  ["STRIPE_PRICE_ID_PROJETE_ANUAL_DEZ2026", "projete"],
+] as const) {
+  const id = Deno.env.get(nome);
+  if (id) PRICE_TO_PLANO[id] = plano;
+}
 
 // Mesmo segredo compartilhado usado pelo Worker Cloudflare — ver
 // docs/observabilidade-alertas.md. Fire-and-forget: nunca deixa uma falha de

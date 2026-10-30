@@ -25,7 +25,7 @@ import { BotaoSair } from "@/components/cosmic/SairDaConta";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import type { FerramentaInterna } from "@/lib/ferramentasInternas";
-import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
+import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
 import { useAppNativo } from "@/hooks/useAppNativo";
 import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 
@@ -136,7 +136,7 @@ function Mais() {
                           <span className="flex-1">{item.label}</span>
                           <span className="flex items-center gap-1 text-[12px]">
                             <Lock size={14} aria-hidden="true" />
-                            {TIERS_PAGOS[tier].titulo}
+                            {tiersPagos()[tier].titulo}
                           </span>
                         </Link>
                       )}

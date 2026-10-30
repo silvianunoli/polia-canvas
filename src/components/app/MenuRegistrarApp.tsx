@@ -9,7 +9,7 @@ import { ModalNovaTarefaApp } from "@/components/app/ModalNovaTarefaApp";
 import { ModalNovoPedido } from "@/components/pedidos/ModalNovoPedido";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { hojeISO } from "@/lib/data.functions";
-import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
+import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
 import { toastSucesso } from "@/lib/toast";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
@@ -86,7 +86,7 @@ export function MenuRegistrarApp({
                 </span>
                 <span className="flex items-center gap-1 text-[12px] font-normal">
                   <Lock size={14} aria-hidden="true" />
-                  {TIERS_PAGOS[tierPagoDaRota("/vendas")].titulo}
+                  {tiersPagos()[tierPagoDaRota("/vendas")].titulo}
                 </span>
               </Link>
             )}

@@ -23,7 +23,7 @@ import { dataHoraDaGeracao, ordenarVersoes, versaoEscolhida } from "@/lib/raioxG
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { temProjete } from "@/lib/planos";
+import { temNumerosDoMes, tierDosNumeros, tiersPagos } from "@/lib/planos";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { AvisoConteudoIA } from "@/components/ui/AvisoConteudoIA";
 
@@ -88,7 +88,7 @@ function RaioXPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
-  const ehProjete = temProjete(meta.plano);
+  const ehProjete = temNumerosDoMes(meta.plano);
   const qc = useQueryClient();
 
   const opcoes = useMemo(opcoesDeMes, []);
@@ -177,9 +177,10 @@ function RaioXPage() {
     return (
       <UpgradeGate
         eyebrow="Raio-x do mês"
-        titulo="O raio-x do mês é do Pro"
+        titulo={`O raio-x do mês é do ${tiersPagos()[tierDosNumeros()].titulo}`}
         feature="A Pólia One lê os seus números reais todo mês e devolve o que puxou o resultado e o que fazer diferente."
         rota="/raiox"
+        tier={tierDosNumeros()}
       />
     );
   }

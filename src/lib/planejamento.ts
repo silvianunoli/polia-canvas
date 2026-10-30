@@ -13,7 +13,7 @@
 // entra com id que não colide (foi assim que "1.0" nasceu), nunca empurrando os
 // vizinhos. A ORDEM de exibição vem da ordem deste array, não do valor do id.
 
-import { TIERS_PAGOS, hrefUpgrade, recursoLiberado, tierPagoDaRota } from "@/lib/planos";
+import { tiersPagos, hrefUpgrade, recursoLiberado, tierPagoDaRota } from "@/lib/planos";
 
 export const TOTAL_MODULOS = 6;
 
@@ -729,7 +729,7 @@ export function acessoDaFerramenta(
       tituloPlano: null,
     };
   }
-  const titulo = TIERS_PAGOS[tierPagoDaRota(ferramenta.rota)].titulo;
+  const titulo = tiersPagos()[tierPagoDaRota(ferramenta.rota)].titulo;
   return {
     liberada: false,
     href: hrefUpgrade(ferramenta.rota),

@@ -4,21 +4,22 @@
 // muito").
 
 // O ganho concreto da área de onde ela veio. Sem rota conhecida, cai no fallback.
+// "{plano}" vira o nome do plano que a tela pede: Resumo, Encomenda, Raio-x e
+// Projeção são do Pro até 30/11/2026 e do Premium depois (virada de preços).
 export const GANHO_POR_ROTA: Record<string, string> = {
   "/financeiro":
     "Aqui entra tudo que entrou e saiu, e o Premium mostra quanto a marca lucrou no mês.",
   // Botão "Resumo pro contador" do Financeiro: a tela já abre no Premium, o
   // que é do Pro é o resumo (08/10/2026).
-  "/financeiro/resumo": "O Pro monta o resumo do mês pro contador, em PDF e CSV.",
+  "/financeiro/resumo": "O {plano} monta o resumo do mês pro contador, em PDF e CSV.",
   "/produtos":
     "O Premium solta o limite: cada produto com o custo, o preço e quanto a marca lucra.",
   "/calculadora":
-    "O Pro abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
-  // Raio-x é Pro, não Premium (ROTAS_PROJETE + o portão `temProjete` dentro
-  // da página). Nomear o Premium aqui vendia por R$ 29,90 uma tela que só abre
-  // no Pro, e ainda contradizia o selo "Recurso do plano Pro" logo acima.
-  "/raiox": "O Pro lê o seu mês e devolve onde o dinheiro está vazando.",
-  "/projecao": "O Pro mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
+    "O {plano} abre o modo Encomenda: o preço de um pedido sob medida, material por material.",
+  // Nome do plano pelo {plano}, nunca fixo: fixar o Premium aqui já vendeu por
+  // R$ 29,90 uma tela que só abria no Pro e contradizia o selo logo acima.
+  "/raiox": "O {plano} lê o seu mês e devolve onde o dinheiro está vazando.",
+  "/projecao": "O {plano} mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
   // O banco tem 60 ideias por nicho, que se repetem ao longo do ano: não
   // prometer "uma ideia nova por dia" (08/10/2026).
   "/plano-conteudo":
@@ -54,7 +55,7 @@ export const ROTAS_COM_COTA = [
 export function fraseDoGanho(rota: string | undefined, tituloDoPlano: string): string {
   const rotaComCota = !!rota && ROTAS_COM_COTA.some((r) => rota.startsWith(r));
   return (
-    (rota ? GANHO_POR_ROTA[rota] : undefined) ??
+    (rota ? GANHO_POR_ROTA[rota]?.replace("{plano}", tituloDoPlano) : undefined) ??
     (rotaComCota
       ? `O ${tituloDoPlano} aumenta o limite.`
       : `Assinando o ${tituloDoPlano}, essa tela abre na sua conta na hora.`)

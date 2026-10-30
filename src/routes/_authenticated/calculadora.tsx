@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { COTAS_CONFERE, temProjete } from "@/lib/planos";
+import { COTAS_CONFERE, temNumerosDoMes } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
@@ -62,7 +62,7 @@ function CalculadoraPage() {
   // Cancelada conta como Grátis e o cadeado espera o perfil carregar
   // (antes piscava pra quem paga).
   const ehConfere = ehPlanoGratis(meta);
-  const ehProjete = temProjete(meta.plano);
+  const ehProjete = temNumerosDoMes(meta.plano);
 
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   const [modalAberto, setModalAberto] = useState(false);

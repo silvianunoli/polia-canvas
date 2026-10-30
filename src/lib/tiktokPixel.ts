@@ -1,4 +1,4 @@
-import { TIERS_PAGOS, valorDoPlano } from "@/lib/planos";
+import { tiersPagos, valorDoPlano } from "@/lib/planos";
 import { urlComCodigoDeAutorizacao } from "@/lib/metaPixel";
 
 declare global {
@@ -231,7 +231,7 @@ const GRATIS = { content_id: "gratis", content_type: "product", content_name: "P
 function conteudoDoPlano(plano: string) {
   const [tier, ciclo] = plano.split("_");
   const titulo =
-    tier === "controle" || tier === "projete" ? TIERS_PAGOS[tier].titulo : (tier ?? plano);
+    tier === "controle" || tier === "projete" ? tiersPagos()[tier].titulo : (tier ?? plano);
   const nome = `Pólia One ${titulo}${ciclo ? ` ${ciclo}` : ""}`;
   return { content_id: plano, content_type: "product", content_name: nome };
 }

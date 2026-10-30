@@ -20,7 +20,7 @@ import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.fu
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
 import { formatarReais, percentualDe } from "@/lib/formatarReais";
 import { numerosDoMes } from "@/lib/numerosDoMes";
-import { temProjete } from "@/lib/planos";
+import { temNumerosDoMes, tierDosNumeros } from "@/lib/planos";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
@@ -200,7 +200,7 @@ function FinanceiroPage() {
       return data as { plano: string; razao_social: string | null; cnpj: string | null } | null;
     },
   });
-  const ehProjete = temProjete(perfilResumoQuery.data?.plano);
+  const ehProjete = temNumerosDoMes(perfilResumoQuery.data?.plano);
   const [resumoContadorAberto, setResumoContadorAberto] = useState(false);
   const [importarAberto, setImportarAberto] = useState(false);
 
@@ -414,7 +414,7 @@ function FinanceiroPage() {
           ) : (
             <Link
               to="/upgrade"
-              search={{ rota: "/financeiro/resumo", tier: "projete" }}
+              search={{ rota: "/financeiro/resumo", tier: tierDosNumeros() }}
               className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
             >
               <Lock size={14} aria-hidden="true" />

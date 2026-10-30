@@ -178,9 +178,14 @@ describe("valorDoPlano", () => {
 
 import {
   BENEFICIOS_GRATIS,
-  TIERS_PAGOS,
+  VIRADA_PRECOS,
   beneficiosNaOrdem,
+  depoisDaVirada,
   seloDoBeneficio,
+  temNumerosDoMes,
+  tierDosNumeros,
+  tiersPagos,
+  tiersPagosDeFundadora,
   type Beneficio,
 } from "./planos";
 
@@ -229,11 +234,16 @@ describe("beneficiosNaOrdem", () => {
   });
 });
 
+const NOV = Date.parse("2026-11-30T23:59:59-03:00");
+const DEZ = Date.parse(VIRADA_PRECOS);
+
 describe("lista de benefícios dos planos", () => {
   const todas = [
     BENEFICIOS_GRATIS,
-    TIERS_PAGOS.controle.beneficios,
-    TIERS_PAGOS.projete.beneficios,
+    ...[NOV, DEZ].flatMap((t) => [
+      tiersPagos(t).controle.beneficios,
+      tiersPagos(t).projete.beneficios,
+    ]),
   ];
 
   it("ids únicos dentro de cada plano (a landing escolhe a ordem pelo id)", () => {
@@ -248,7 +258,7 @@ describe("lista de benefícios dos planos", () => {
 
   it("o teste do Pro é só pra visitante e só no Grátis (a /assinar logada filtra)", () => {
     expect(BENEFICIOS_GRATIS.find((b) => b.id === "teste-pro")?.soParaVisitante).toBe(true);
-    for (const lista of [TIERS_PAGOS.controle.beneficios, TIERS_PAGOS.projete.beneficios]) {
+    for (const lista of todas.slice(1)) {
       expect(lista.some((b) => b.soParaVisitante)).toBe(false);
     }
   });
@@ -259,5 +269,70 @@ describe("abas do app Android (AND-07)", () => {
     expect(rotaLiberada("/hoje", "confere")).toBe(true);
     expect(rotaLiberada("/mais", "confere")).toBe(true);
     expect(rotaLiberada("/vendas", "confere")).toBe(false);
+  });
+});
+
+describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
+  it("vira no primeiro minuto de 01/12 em Brasília, logo depois do prazo de fundadora", () => {
+    expect(depoisDaVirada(NOV)).toBe(false);
+    expect(depoisDaVirada(DEZ)).toBe(true);
+  });
+
+  it("preços: 29,90/299 e 47,90/479 até 30/11; 39,90/399 e 79,90/799 depois", () => {
+    const nov = tiersPagos(NOV);
+    const dez = tiersPagos(DEZ);
+    expect([nov.controle.precoMensal, nov.controle.precoAnual]).toEqual([29.9, 299]);
+    expect([nov.projete.precoMensal, nov.projete.precoAnual]).toEqual([47.9, 479]);
+    expect([dez.controle.precoMensal, dez.controle.precoAnual]).toEqual([39.9, 399]);
+    expect([dez.projete.precoMensal, dez.projete.precoAnual]).toEqual([79.9, 799]);
+  });
+
+  it("a fundadora trava o preço de antes da virada em qualquer data", () => {
+    expect(tiersPagosDeFundadora().controle.precoMensal).toBe(29.9);
+    expect(tiersPagosDeFundadora().projete.precoMensal).toBe(47.9);
+  });
+
+  it("Raio-x, Projeção, Resumo e Encomenda saem do Pro e entram no Premium", () => {
+    const quatro = ["raiox", "projecao", "resumo-contador", "encomenda"];
+    const ids = (l: Beneficio[]) => l.map((b) => b.id);
+    for (const id of quatro) {
+      expect(ids(tiersPagos(NOV).projete.beneficios)).toContain(id);
+      expect(ids(tiersPagos(NOV).controle.beneficios)).not.toContain(id);
+      expect(ids(tiersPagos(DEZ).controle.beneficios)).toContain(id);
+      expect(ids(tiersPagos(DEZ).projete.beneficios)).not.toContain(id);
+    }
+    // O Pro continua com o que é canal e automação.
+    expect(ids(tiersPagos(DEZ).projete.beneficios)).toEqual(
+      expect.arrayContaining(["plano-conteudo", "assistente", "catalogo", "marketplaces"]),
+    );
+  });
+
+  it("temNumerosDoMes: Premium só a partir da virada; Pro e beta sempre; Grátis nunca", () => {
+    expect(temNumerosDoMes("controle", NOV)).toBe(false);
+    expect(temNumerosDoMes("controle", DEZ)).toBe(true);
+    for (const t of [NOV, DEZ]) {
+      expect(temNumerosDoMes("projete", t)).toBe(true);
+      expect(temNumerosDoMes("beta", t)).toBe(true);
+      expect(temNumerosDoMes("confere", t)).toBe(false);
+      expect(temNumerosDoMes("cancelada", t)).toBe(false);
+    }
+    expect(tierDosNumeros(NOV)).toBe("projete");
+    expect(tierDosNumeros(DEZ)).toBe("controle");
+  });
+
+  it("Raio-x e Projeção deixam de ser rota do Pro; Plano de conteúdo e Catálogo seguem", () => {
+    expect(ehRotaProjete("/raiox", NOV)).toBe(true);
+    expect(ehRotaProjete("/projecao", NOV)).toBe(true);
+    expect(ehRotaProjete("/raiox", DEZ)).toBe(false);
+    expect(ehRotaProjete("/projecao", DEZ)).toBe(false);
+    expect(tierPagoDaRota("/raiox", DEZ)).toBe("controle");
+    expect(ehRotaProjete("/plano-conteudo", DEZ)).toBe(true);
+    expect(ehRotaProjete("/catalogo", DEZ)).toBe(true);
+  });
+
+  it("recursoLiberado segue a data de hoje (sem cadeado do Raio-x pro Premium depois da virada)", () => {
+    const esperado = depoisDaVirada();
+    expect(recursoLiberado("/raiox", "controle")).toBe(esperado);
+    expect(recursoLiberado("/plano-conteudo", "controle")).toBe(false);
   });
 });

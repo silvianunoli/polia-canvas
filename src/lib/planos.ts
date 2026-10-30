@@ -33,19 +33,55 @@ export function temProjete(plano: string | null | undefined): boolean {
   return ehBeta(plano) || plano === "projete";
 }
 
+// ── Virada de preços (PAY-43/44/45, decisão da Sil em 30/10/2026) ───────────
+// A partir de 01/12/2026 o Premium vai a R$ 39,90 e ganha Raio-x, Projeção,
+// Calculadora de encomenda e Resumo pro contador; o Pro vai a R$ 79,90. Quem
+// assinou até 30/11 (preço de fundadora) segue no Price em que nasceu no
+// Stripe e, se for Premium, ganha os quatro recursos sem pagar mais. É o
+// minuto seguinte ao PRAZO_FUNDADORA (src/lib/fundadora.ts). Trocar a data
+// aqui muda preço, lista de recursos, travas e checkout juntos.
+export const VIRADA_PRECOS = "2026-12-01T00:00:00-03:00";
+const VIRADA_MS = Date.parse(VIRADA_PRECOS);
+
+export function depoisDaVirada(agora: number = Date.now()): boolean {
+  return agora >= VIRADA_MS;
+}
+
+/**
+ * Raio-x, Projeção, Calculadora de encomenda e Resumo pro contador: Pro (e
+ * beta) até 30/11/2026, Premium também a partir da virada.
+ */
+export function temNumerosDoMes(
+  plano: string | null | undefined,
+  agora: number = Date.now(),
+): boolean {
+  if (temProjete(plano)) return true;
+  return depoisDaVirada(agora) && plano === "controle";
+}
+
+/** Plano que vende esses quatro recursos, pro portão e pro link de upgrade. */
+export function tierDosNumeros(agora: number = Date.now()): TierPago {
+  return depoisDaVirada(agora) ? "controle" : "projete";
+}
+
 // Rotas que abrem só no Pro. Elas passam pelo guard de tier (são "controle")
 // e são barradas por um portão dentro da própria página. Sem esta lista, a barra
 // lateral não tem como saber que são pagas e mostra três itens SEM cadeado que a
-// usuária do Premium não consegue usar.
-const ROTAS_PROJETE = ["/raiox", "/plano-conteudo", "/projecao", "/catalogo"];
+// usuária do Premium não consegue usar. Raio-x e Projeção descem pro Premium na
+// virada de preços.
+const ROTAS_PROJETE = ["/plano-conteudo", "/catalogo"];
+const ROTAS_PROJETE_ATE_A_VIRADA = ["/raiox", "/projecao"];
 
-export function ehRotaProjete(pathname: string): boolean {
-  return ROTAS_PROJETE.some((p) => bateRota(p, pathname));
+export function ehRotaProjete(pathname: string, agora: number = Date.now()): boolean {
+  const rotas = depoisDaVirada(agora)
+    ? ROTAS_PROJETE
+    : [...ROTAS_PROJETE, ...ROTAS_PROJETE_ATE_A_VIRADA];
+  return rotas.some((p) => bateRota(p, pathname));
 }
 
 /** Qual plano pago a rota exige — pra nomear o certo na tela de upgrade. */
-export function tierPagoDaRota(pathname: string): TierPago {
-  return ehRotaProjete(pathname) ? "projete" : "controle";
+export function tierPagoDaRota(pathname: string, agora: number = Date.now()): TierPago {
+  return ehRotaProjete(pathname, agora) ? "projete" : "controle";
 }
 
 /**
@@ -251,21 +287,22 @@ export const BENEFICIOS_GRATIS: Beneficio[] = [
   },
 ];
 
+export type InfoTierPago = {
+  titulo: string;
+  precoMensal: number;
+  precoAnual: number;
+  /** Linha de abertura da lista, sem selo nem ícone. */
+  base: string;
+  beneficios: Beneficio[];
+  destaque?: boolean;
+};
+
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
 // (src/routes/_authenticated/assinar.tsx) e na tela de upgrade
 // (src/routes/_authenticated/upgrade.tsx), pra não duplicar em dois lugares.
-export const TIERS_PAGOS: Record<
-  TierPago,
-  {
-    titulo: string;
-    precoMensal: number;
-    precoAnual: number;
-    /** Linha de abertura da lista, sem selo nem ícone. */
-    base: string;
-    beneficios: Beneficio[];
-    destaque?: boolean;
-  }
-> = {
+// Vale até 30/11/2026; depois, TIERS_PAGOS_DEZ_2026. Lido sempre por
+// `tiersPagos()`, nunca direto, pra a troca acontecer na hora da virada.
+const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
   controle: {
     titulo: "Premium",
     precoMensal: 29.9,
@@ -406,29 +443,80 @@ export const TIERS_PAGOS: Record<
   },
 };
 
+// Os quatro recursos que descem do Pro pro Premium na virada, na ordem em que
+// entram na lista do Premium (logo depois do Financeiro). "Novo" em dezembro.
+const IDS_QUE_DESCEM = ["raiox", "projecao", "resumo-contador", "encomenda"];
+const NOVO_DEZ_2026 = "2026-12-31";
+
+function montarTiersDez2026(): Record<TierPago, InfoTierPago> {
+  const { controle, projete } = TIERS_PAGOS_ATE_NOV_2026;
+  const descem = IDS_QUE_DESCEM.map((id) => {
+    const b = projete.beneficios.find((x) => x.id === id);
+    if (!b) throw new Error(`Benefício "${id}" não está na lista do Pro.`);
+    return { ...b, novoAte: NOVO_DEZ_2026 };
+  });
+  const posFinanceiro = controle.beneficios.findIndex((b) => b.id === "financeiro") + 1;
+  return {
+    controle: {
+      ...controle,
+      precoMensal: 39.9,
+      precoAnual: 399,
+      beneficios: [
+        ...controle.beneficios.slice(0, posFinanceiro),
+        ...descem,
+        ...controle.beneficios.slice(posFinanceiro),
+      ],
+    },
+    projete: {
+      ...projete,
+      precoMensal: 79.9,
+      precoAnual: 799,
+      beneficios: projete.beneficios.filter((b) => !IDS_QUE_DESCEM.includes(b.id)),
+    },
+  };
+}
+
+const TIERS_PAGOS_DEZ_2026 = montarTiersDez2026();
+
+/** Preço e lista de cada plano pago no momento `agora` (antes ou depois da virada). */
+export function tiersPagos(agora: number = Date.now()): Record<TierPago, InfoTierPago> {
+  return depoisDaVirada(agora) ? TIERS_PAGOS_DEZ_2026 : TIERS_PAGOS_ATE_NOV_2026;
+}
+
+/** Preço que a fundadora trava: o de antes da virada, em qualquer data. */
+export function tiersPagosDeFundadora(): Record<TierPago, InfoTierPago> {
+  return TIERS_PAGOS_ATE_NOV_2026;
+}
+
 /**
  * O que está sendo assinado, em palavras, pro diálogo de pagamento:
  * "Premium, R$ 29,90 por mês". Antes o diálogo dizia só "Assinatura da Pólia
  * One" e o botão Confirmar não mostrava plano nem preço (PAY-31, 08/10/2026).
  * Chave desconhecida volta null.
  */
-export function resumoDoPlano(plano: string | null | undefined): string | null {
+export function resumoDoPlano(
+  plano: string | null | undefined,
+  agora: number = Date.now(),
+): string | null {
   const [tier, ciclo] = (plano ?? "").split("_");
-  const valor = valorDoPlano(plano);
+  const valor = valorDoPlano(plano, agora);
   if (valor === null || (tier !== "controle" && tier !== "projete")) return null;
   const preco = valor.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `${TIERS_PAGOS[tier].titulo}, R$ ${preco} ${ciclo === "anual" ? "por ano" : "por mês"}`;
+  return `${tiersPagos(agora)[tier].titulo}, R$ ${preco} ${ciclo === "anual" ? "por ano" : "por mês"}`;
 }
 
 // Valor cobrado por chave de plano ("controle_mensal" etc.), pro evento
 // purchase do GA4. Chave desconhecida volta null em vez de inventar valor.
-export function valorDoPlano(plano: string | null | undefined): number | null {
+export function valorDoPlano(
+  plano: string | null | undefined,
+  agora: number = Date.now(),
+): number | null {
   const [tier, ciclo] = (plano ?? "").split("_");
   if (tier !== "controle" && tier !== "projete") return null;
-  if (ciclo === "mensal") return TIERS_PAGOS[tier].precoMensal;
-  if (ciclo === "anual") return TIERS_PAGOS[tier].precoAnual;
+  if (ciclo === "mensal") return tiersPagos(agora)[tier].precoMensal;
+  if (ciclo === "anual") return tiersPagos(agora)[tier].precoAnual;
   return null;
 }

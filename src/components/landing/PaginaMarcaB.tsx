@@ -19,7 +19,7 @@ import {
   Tag,
   Wallet,
 } from "lucide-react";
-import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, beneficiosNaOrdem, depoisDaVirada, tiersPagos } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import { HighlightWord } from "@/components/site/HighlightWord";
@@ -180,6 +180,10 @@ const jeitoDeHoje: ItemLista[] = [
  * Agrupado pela tríade do "Como funciona" (23/10/2026): a marca, o preço, o mês.
  * As mesmas três palavras aparecem no subtítulo do topo e nos passos 01 a 03.
  */
+// Projeção e Resumo pro contador descem pro Premium na virada de preços
+// (01/12/2026, src/lib/planos.ts). Selo de vitrine: lido quando o módulo carrega.
+const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
+
 const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
   {
     grupo: "A marca",
@@ -233,13 +237,13 @@ const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
         titulo: "O seu salário entra na conta.",
         texto:
           "A meta começa por quanto você quer receber. A Projeção mostra quantas vendas faltam pra empatar, pra se pagar e pra bater a meta.",
-        planos: ["Pro"],
+        planos: [PLANO_DOS_NUMEROS],
       },
       {
         icone: FileText,
         titulo: "Contador sem caça ao papel.",
         texto: "O resumo do mês sai em PDF e CSV, pronto pra mandar.",
-        planos: ["Pro"],
+        planos: [PLANO_DOS_NUMEROS],
       },
     ],
   },
@@ -349,34 +353,39 @@ const praQuemNao = [
   "Você procura alguém pra decidir e fazer tudo no seu lugar.",
 ];
 
-const premium = TIERS_PAGOS.controle;
-const pro = TIERS_PAGOS.projete;
-
-const planos: PlanoLanding[] = [
-  {
-    nome: "Grátis",
-    praQuem: "Pra quem está pondo a marca no papel.",
-    mensal: "R$ 0",
-    itens: BENEFICIOS_GRATIS,
-  },
-  {
-    nome: "Premium",
-    etiqueta: "Pra quem já vende",
-    praQuem: "Pra quem já vende e quer o mês sob controle.",
-    mensal: precoBR(premium.precoMensal),
-    anual: precoBR(premium.precoAnual),
-    base: premium.base,
-    itens: beneficiosNaOrdem(premium.beneficios),
-  },
-  {
-    nome: "Pro",
-    praQuem: "Pra quem quer saber quanto falta pra marca pagar a dona.",
-    mensal: precoBR(pro.precoMensal),
-    anual: precoBR(pro.precoAnual),
-    base: pro.base,
-    itens: beneficiosNaOrdem(pro.beneficios, ["projecao"]),
-  },
-];
+// Preço e lista saem de tiersPagos() na hora de montar a tela, pra trocar
+// sozinhos na virada de preços (01/12/2026, src/lib/planos.ts).
+function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
+  const { controle: premium, projete: pro } = tiersPagos(agora);
+  const virou = depoisDaVirada(agora);
+  return [
+    {
+      nome: "Grátis",
+      praQuem: "Pra quem está pondo a marca no papel.",
+      mensal: "R$ 0",
+      itens: BENEFICIOS_GRATIS,
+    },
+    {
+      nome: "Premium",
+      etiqueta: "Pra quem já vende",
+      praQuem: "Pra quem já vende e quer o mês sob controle.",
+      mensal: precoBR(premium.precoMensal),
+      anual: precoBR(premium.precoAnual),
+      base: premium.base,
+      itens: beneficiosNaOrdem(premium.beneficios),
+    },
+    {
+      nome: "Pro",
+      praQuem: virou
+        ? "Pra quem vende no catálogo, no Instagram e nos marketplaces e quer tudo na mesma conta."
+        : "Pra quem quer saber quanto falta pra marca pagar a dona.",
+      mensal: precoBR(pro.precoMensal),
+      anual: precoBR(pro.precoAnual),
+      base: pro.base,
+      itens: beneficiosNaOrdem(pro.beneficios, [virou ? "catalogo" : "projecao"]),
+    },
+  ];
+}
 
 /** Exportado pro FAQPage (JSON-LD) da home: o schema sai do mesmo texto da tela. */
 export const PERGUNTAS_MARCA_B = [
@@ -479,6 +488,8 @@ export function PaginaMarcaB({
   const zonaPlanos = useRef<HTMLElement>(null);
   const zonaFinal = useRef<HTMLDivElement>(null);
   const zonaRodape = useRef<HTMLDivElement>(null);
+  const planos = montarPlanos();
+  const { controle: premium, projete: pro } = tiersPagos();
 
   // O mesmo bloco em dois lugares: logo depois do topo na /landing-b, perto dos
   // planos na home (COPY-39).

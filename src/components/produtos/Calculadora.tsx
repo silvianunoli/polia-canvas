@@ -37,6 +37,7 @@ import { totalDosInsumos, type ItemInsumo } from "./insumos";
 import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
+import { tierDosNumeros, tiersPagos } from "@/lib/planos";
 import { fmt, num, numInvalido, type Prefill, type Produto } from "./tipos";
 import { LucroPorCanal } from "./LucroPorCanal";
 
@@ -657,6 +658,9 @@ export function Calculadora({
   // Grátis que viram a tela de preço chegaram por esse cadeado sem ver nada.
   const abasDisponiveis: PerfilCalc[] = ["produto", "servico", "encomenda"];
   const encomendaTravada = perfil === "encomenda" && !ehProjete;
+  // Encomenda é do Pro até 30/11/2026 e do Premium depois (virada de preços).
+  const tierEncomenda = tierDosNumeros();
+  const planoEncomenda = tiersPagos()[tierEncomenda].titulo;
   const aoTeclarNasAbas = (e: KeyboardEvent<HTMLDivElement>) => {
     const atual = abasDisponiveis.indexOf(perfil);
     const ultimo = abasDisponiveis.length - 1;
@@ -755,7 +759,7 @@ export function Calculadora({
             {!ehProjete && (
               <>
                 <span className="sr-only">, preço do plano</span>
-                <EtiquetaPlano nome="Pro" />
+                <EtiquetaPlano nome={planoEncomenda} />
               </>
             )}
           </button>
@@ -1015,7 +1019,10 @@ export function Calculadora({
             <p className="font-cabinet mt-1 text-[var(--ink)] text-[clamp(28px,5vw,40px)] leading-none">
               {/* Travada: o número nem vai pro DOM, senão bastava inspecionar. */}
               {encomendaTravada ? (
-                <span aria-label="Preço fechado, abre no plano Pro" className="select-none">
+                <span
+                  aria-label={`Preço fechado, abre no plano ${planoEncomenda}`}
+                  className="select-none"
+                >
                   R$ ···
                 </span>
               ) : calc.invalido ? (
@@ -1029,11 +1036,11 @@ export function Calculadora({
                 <p className="text-[14px] text-[var(--ink)]">
                   A Pólia One já somou o custo dessa encomenda:{" "}
                   <b>{fmt(round2(encomendaCalc.custoTotal))}</b>. O preço sugerido e quanto a marca
-                  lucra nela abrem no Pro.
+                  lucra nela abrem no {planoEncomenda}.
                 </p>
                 <Link
                   to="/assinar"
-                  search={{ plano: "projete", rota: "/calculadora" }}
+                  search={{ plano: tierEncomenda, rota: "/calculadora" }}
                   onClick={() => track("encomenda_previa_cta")}
                   className={`${BTN_ACAO} mt-3 no-underline`}
                 >

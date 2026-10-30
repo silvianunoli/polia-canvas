@@ -29,7 +29,7 @@ import {
   ticketMedio,
   valorDoCampo,
 } from "@/lib/projecao.functions";
-import { temProjete } from "@/lib/planos";
+import { temNumerosDoMes, tierDosNumeros, tiersPagos } from "@/lib/planos";
 import { buscarMetaDoMes, TITULO_META_DO_MES } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import type { ProdutoResumo } from "@/lib/projecao.functions";
@@ -63,7 +63,7 @@ function ProjecaoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
-  const ehProjete = temProjete(meta.plano);
+  const ehProjete = temNumerosDoMes(meta.plano);
   const qc = useQueryClient();
 
   const hoje = new Date();
@@ -317,9 +317,10 @@ function ProjecaoPage() {
     return (
       <UpgradeGate
         eyebrow="Projeção"
-        titulo="Projeção é do Pro"
+        titulo={`Projeção é do ${tiersPagos()[tierDosNumeros()].titulo}`}
         feature="Quantas vendas e quanto de faturamento pra empatar, se pagar e bater a meta do mês, tudo a partir do que já está na Pólia One."
         rota="/projecao"
+        tier={tierDosNumeros()}
       />
     );
   }

@@ -6,6 +6,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispararAlerta } from "@/lib/alertas.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
 import { dentroDoPrazoFundadora } from "@/lib/fundadora";
+import { depoisDaVirada } from "@/lib/planos";
 import {
   formatarDocumento,
   soDigitos,
@@ -38,7 +39,26 @@ const ENV_PRICE_POR_PLANO: Record<PlanoAssinatura, string | undefined> = {
   projete_anual: process.env.STRIPE_PRICE_ID_PROJETE_ANUAL,
 };
 
-export function precoParaPlano(plano: PlanoAssinatura): string {
+// Prices da virada (01/12/2026, src/lib/planos.ts): Premium R$ 39,90 / R$ 399 e
+// Pro R$ 79,90 / R$ 799. Os de cima continuam existindo no Stripe e cobrando
+// quem assinou até 30/11 (fundadora): assinatura não muda de Price sozinha.
+const ENV_PRICE_DEZ_2026: Record<PlanoAssinatura, string | undefined> = {
+  controle_mensal: process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL_DEZ2026,
+  controle_anual: process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL_DEZ2026,
+  projete_mensal: process.env.STRIPE_PRICE_ID_PROJETE_MENSAL_DEZ2026,
+  projete_anual: process.env.STRIPE_PRICE_ID_PROJETE_ANUAL_DEZ2026,
+};
+
+export function precoParaPlano(plano: PlanoAssinatura, agora: number = Date.now()): string {
+  if (depoisDaVirada(agora)) {
+    const novo = ENV_PRICE_DEZ_2026[plano];
+    if (novo) return novo;
+    // Sem o secret novo, cobra o Price antigo em vez de travar o checkout, e
+    // avisa: a tela já mostra o preço novo, então isso precisa de conserto.
+    console.error(
+      `[Stripe] Missing STRIPE_PRICE_ID_${plano.toUpperCase()}_DEZ2026 environment variable; usando o Price antigo.`,
+    );
+  }
   const priceId = ENV_PRICE_POR_PLANO[plano];
   if (!priceId) {
     console.error(`[Stripe] Missing STRIPE_PRICE_ID_${plano.toUpperCase()} environment variable.`);
@@ -97,6 +117,26 @@ function infoDoPreco(priceId: string | null): InfoPreco | null {
   });
   add(process.env.STRIPE_PRICE_ID_PROJETE_ANUAL, {
     valorCentavos: 47900,
+    intervalo: "year",
+    tier: "projete",
+  });
+  add(process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL_DEZ2026, {
+    valorCentavos: 3990,
+    intervalo: "month",
+    tier: "controle",
+  });
+  add(process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL_DEZ2026, {
+    valorCentavos: 39900,
+    intervalo: "year",
+    tier: "controle",
+  });
+  add(process.env.STRIPE_PRICE_ID_PROJETE_MENSAL_DEZ2026, {
+    valorCentavos: 7990,
+    intervalo: "month",
+    tier: "projete",
+  });
+  add(process.env.STRIPE_PRICE_ID_PROJETE_ANUAL_DEZ2026, {
+    valorCentavos: 79900,
     intervalo: "year",
     tier: "projete",
   });

@@ -23,7 +23,8 @@ import {
   valorDoPlano,
   resumoDoPlano,
   BENEFICIOS_GRATIS,
-  TIERS_PAGOS,
+  tiersPagos,
+  type InfoTierPago,
   beneficiosNaOrdem,
   type Beneficio,
   type TierPago,
@@ -55,8 +56,6 @@ interface AssinarSearch {
 const PLANOS_PAGOS = ["controle", "projete"];
 const ESPERA_PLANO_MS = 20_000;
 const INTERVALO_PLANO_MS = 1_000;
-
-const TIERS = TIERS_PAGOS;
 
 function fmtPreco(v: number) {
   return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: v % 1 ? 2 : 0 })}`;
@@ -323,7 +322,9 @@ function AssinarPage() {
   const vemDoOnboarding = search.de === "onboarding";
   // Veio de uma tela bloqueada: diz o que destrava, no plano que a tela pede.
   const ganhoDaTela =
-    search.rota && search.plano ? fraseDoGanho(search.rota, TIERS[search.plano].titulo) : null;
+    search.rota && search.plano
+      ? fraseDoGanho(search.rota, tiersPagos()[search.plano].titulo)
+      : null;
 
   return (
     <div className="polia-v3 flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 py-16">
@@ -335,7 +336,7 @@ function AssinarPage() {
         )}
         {ganhoDaTela && search.plano && (
           <p className="mb-2 text-center text-[10px] font-accent font-bold uppercase tracking-[2px] text-[var(--muted)]">
-            Recurso do plano {TIERS[search.plano].titulo}
+            Recurso do plano {tiersPagos()[search.plano].titulo}
           </p>
         )}
         <h1 className="mb-3 text-center font-cabinet text-[36px] leading-tight text-[var(--ink)]">
@@ -410,7 +411,7 @@ function AssinarPage() {
               assinante ? setConfirmandoCancelamento(true) : navigate({ to: "/painel" })
             }
           />
-          {(Object.entries(TIERS) as [TierId, (typeof TIERS)[TierId]][]).map(([tierId, tier]) => (
+          {(Object.entries(tiersPagos()) as [TierId, InfoTierPago][]).map(([tierId, tier]) => (
             <PlanoCard
               key={tierId}
               titulo={tier.titulo}
@@ -458,9 +459,9 @@ function AssinarPage() {
         titulo="Voltar pro plano Grátis?"
         descricao={
           <>
-            O {planoAtual ? TIERS[planoAtual].titulo : "plano"} continua ativo até {dataFimPeriodo}.
-            Depois, a conta volta pro plano Grátis: os dados continuam guardados, e as telas do
-            plano pago deixam de abrir. Não tem nova cobrança.
+            O {planoAtual ? tiersPagos()[planoAtual].titulo : "plano"} continua ativo até{" "}
+            {dataFimPeriodo}. Depois, a conta volta pro plano Grátis: os dados continuam guardados,
+            e as telas do plano pago deixam de abrir. Não tem nova cobrança.
           </>
         }
         textoCancelar="Manter assinatura"

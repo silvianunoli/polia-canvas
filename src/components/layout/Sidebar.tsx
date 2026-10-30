@@ -35,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
-import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
+import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
 import { useCanaisConectados } from "@/hooks/useCanaisConectados";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { rotaVisivel } from "@/lib/ferramentasInternas";
@@ -254,7 +254,7 @@ function Body({
                 {compact ? (
                   <>
                     <Lock size={18} aria-hidden="true" />
-                    <span className="sr-only">{`${item.label}, disponível no ${TIERS_PAGOS[tierNecessario].titulo}`}</span>
+                    <span className="sr-only">{`${item.label}, disponível no ${tiersPagos()[tierNecessario].titulo}`}</span>
                   </>
                 ) : (
                   <>
@@ -269,7 +269,7 @@ function Body({
             );
             const tooltipLabel = liberado
               ? item.label
-              : `${item.label}: abre no ${TIERS_PAGOS[tierNecessario].titulo}`;
+              : `${item.label}: abre no ${tiersPagos()[tierNecessario].titulo}`;
             const principal = compact ? (
               <Tooltip key={item.to}>
                 <TooltipTrigger asChild>{content}</TooltipTrigger>

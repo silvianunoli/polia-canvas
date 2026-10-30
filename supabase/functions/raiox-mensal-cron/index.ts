@@ -38,8 +38,13 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const MODELO_PRO = "gemini-pro-latest";
 const FEATURE = "raiox";
 // Pro e beta (acesso total) geram raio-x: mesma regra de planoGeraRaioX /
-// temProjete no app. Antes só "projete" entrava e a conta beta ficava sem.
-const PLANOS_COM_RAIOX = ["projete", "beta"];
+// temNumerosDoMes no app. Antes só "projete" entrava e a conta beta ficava sem.
+// A partir da virada de preços (VIRADA_PRECOS em src/lib/planos.ts, 01/12/2026)
+// o Premium ("controle") também entra. O app e a edge function não dividem código.
+const VIRADA_PRECOS = "2026-12-01T00:00:00-03:00";
+function planosComRaioX(agora: number = Date.now()): string[] {
+  return agora >= Date.parse(VIRADA_PRECOS) ? ["projete", "beta", "controle"] : ["projete", "beta"];
+}
 const CONCORRENCIA = 4;
 // Gemini tem timeout de 50 s; quem começa até aqui termina antes do teto de
 // wall-clock da edge function (150 s no plano mais baixo): 80 + 50 = 130 s.
@@ -793,7 +798,7 @@ Deno.serve(async (req: Request) => {
       supabaseAdmin
         .from("profiles")
         .select("id")
-        .in("plano", PLANOS_COM_RAIOX)
+        .in("plano", planosComRaioX())
         .order("id", { ascending: true })
         .range(de, ate),
     );

@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { Archive, Camera, MousePointerClick, RotateCcw, Tag, Wallet } from "lucide-react";
-import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, beneficiosNaOrdem, depoisDaVirada, tiersPagos } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import {
   BarraCtaMobile,
@@ -47,10 +47,6 @@ import { precoBR } from "@/components/landing/preco";
  * O botão principal vai direto pro pagamento do Premium em /planos (só e-mail e
  * cartão; a conta nasce depois). O Grátis fica como link, nunca com o mesmo peso.
  */
-
-const premium = TIERS_PAGOS.controle;
-const pro = TIERS_PAGOS.projete;
-const PRECO_PREMIUM = precoBR(premium.precoMensal);
 
 const TOPO = {
   a: {
@@ -102,33 +98,41 @@ const semRisco: ItemLista[] = [
   },
 ];
 
-const planos: PlanoLanding[] = [
-  {
-    nome: "Grátis",
-    praQuem: "Pra pôr a marca no papel e fazer os primeiros preços.",
-    mensal: "R$ 0",
-    itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
-  },
-  {
-    nome: "Premium",
-    etiqueta: "Pra quem já vende",
-    praQuem: "Pra quem tem pedido toda semana e quer ver o lucro do mês.",
-    mensal: precoBR(premium.precoMensal),
-    anual: precoBR(premium.precoAnual),
-    base: premium.base,
-    // A página inteira vende o mês na mesma conta: Financeiro e Vendas na frente.
-    itemForte: "financeiro",
-    itens: beneficiosNaOrdem(premium.beneficios, ["financeiro", "vendas", "contas-pagar"]),
-  },
-  {
-    nome: "Pro",
-    praQuem: "Pra quem quer saber quantas vendas faltam pra marca pagar a dona.",
-    mensal: precoBR(pro.precoMensal),
-    anual: precoBR(pro.precoAnual),
-    base: pro.base,
-    itens: beneficiosNaOrdem(pro.beneficios, ["projecao"]),
-  },
-];
+// Preço e lista saem de tiersPagos() na hora de montar a tela, pra trocar
+// sozinhos na virada de preços (01/12/2026, src/lib/planos.ts).
+function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
+  const { controle: premium, projete: pro } = tiersPagos(agora);
+  const virou = depoisDaVirada(agora);
+  return [
+    {
+      nome: "Grátis",
+      praQuem: "Pra pôr a marca no papel e fazer os primeiros preços.",
+      mensal: "R$ 0",
+      itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
+    },
+    {
+      nome: "Premium",
+      etiqueta: "Pra quem já vende",
+      praQuem: "Pra quem tem pedido toda semana e quer ver o lucro do mês.",
+      mensal: precoBR(premium.precoMensal),
+      anual: precoBR(premium.precoAnual),
+      base: premium.base,
+      // A página inteira vende o mês na mesma conta: Financeiro e Vendas na frente.
+      itemForte: "financeiro",
+      itens: beneficiosNaOrdem(premium.beneficios, ["financeiro", "vendas", "contas-pagar"]),
+    },
+    {
+      nome: "Pro",
+      praQuem: virou
+        ? "Pra quem vende no catálogo, no Instagram e nos marketplaces e quer tudo na mesma conta."
+        : "Pra quem quer saber quantas vendas faltam pra marca pagar a dona.",
+      mensal: precoBR(pro.precoMensal),
+      anual: precoBR(pro.precoAnual),
+      base: pro.base,
+      itens: beneficiosNaOrdem(pro.beneficios, [virou ? "catalogo" : "projecao"]),
+    },
+  ];
+}
 
 const perguntas = [
   {
@@ -165,6 +169,9 @@ const perguntas = [
 ];
 
 export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo: "a" | "b" }) {
+  const planos = montarPlanos();
+  const { controle: premium, projete: pro } = tiersPagos();
+  const PRECO_PREMIUM = precoBR(premium.precoMensal);
   const heroCta = useRef<HTMLAnchorElement>(null);
   const zonaPlanos = useRef<HTMLElement>(null);
   const zonaFinal = useRef<HTMLDivElement>(null);

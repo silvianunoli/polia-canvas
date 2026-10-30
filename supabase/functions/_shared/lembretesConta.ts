@@ -191,7 +191,7 @@ function dataCurta(iso: string | null): string {
 
 function paragrafoFundadora(agora: Date): string | null {
   if (agora.getTime() > Date.parse(PRAZO_FUNDADORA_EMAIL)) return null;
-  return "Preço de fundadora: nas primeiras 50 assinaturas feitas até 30/11, o Premium fica em R$ 29,90 e o Pro em R$ 47,90 enquanto a assinatura estiver ativa, mesmo quando o preço subir.";
+  return "Preço de fundadora: nas primeiras 50 assinaturas feitas até 30/11, o Premium fica em R$ 29,90 e o Pro em R$ 47,90 enquanto a assinatura estiver ativa. A partir de 01/12, o Premium passa a R$ 39,90 e o Pro a R$ 79,90.";
 }
 
 const RODAPE_DICAS =

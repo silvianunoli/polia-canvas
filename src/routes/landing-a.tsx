@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { linkCanonico } from "@/lib/seo";
 import { lerFbclidDaQuery, lerUtmsDaQuery } from "@/lib/origemCampanha";
-import { BENEFICIOS_GRATIS, TIERS_PAGOS, beneficiosNaOrdem } from "@/lib/planos";
+import { BENEFICIOS_GRATIS, beneficiosNaOrdem, depoisDaVirada, tiersPagos } from "@/lib/planos";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Reveal } from "@/components/site/Reveal";
 import {
@@ -98,6 +98,10 @@ const contaNaHora: ItemLista[] = [
   },
 ];
 
+// Encomenda e Projeção descem pro Premium na virada de preços (01/12/2026,
+// src/lib/planos.ts). Selo de vitrine: lido quando o módulo carrega.
+const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
+
 const oQueMuda: ItemLista[] = [
   {
     icone: Calculator,
@@ -128,13 +132,13 @@ const oQueMuda: ItemLista[] = [
     icone: Ruler,
     titulo: "Encomenda sob medida.",
     texto: "Uma calculadora própria pra pedido que foge do catálogo.",
-    planos: ["Pro"],
+    planos: [PLANO_DOS_NUMEROS],
   },
   {
     icone: TrendingUp,
     titulo: "Quantas vendas faltam.",
     texto: "A Projeção mostra quanto falta pra empatar, pra se pagar e pra bater a meta.",
-    planos: ["Pro"],
+    planos: [PLANO_DOS_NUMEROS],
   },
 ];
 
@@ -151,36 +155,46 @@ const praQuemNao = [
   "Você procura alguém pra decidir e fazer tudo no seu lugar.",
 ];
 
-const premium = TIERS_PAGOS.controle;
-const pro = TIERS_PAGOS.projete;
-
-const planos: PlanoLanding[] = [
-  {
-    nome: "Grátis",
-    praQuem: "Pra ter o próximo orçamento com a conta feita.",
-    mensal: "R$ 0",
-    // A landing-a vende a Calculadora: ela abre o card e vem em destaque.
-    itemForte: "calculadora",
-    itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
-  },
-  {
-    nome: "Premium",
-    etiqueta: "Pra quem já vende",
-    praQuem: "Pra quem tem pedido toda semana e quer o mês sob controle.",
-    mensal: precoBR(premium.precoMensal),
-    anual: precoBR(premium.precoAnual),
-    base: premium.base,
-    itens: beneficiosNaOrdem(premium.beneficios, ["catalogo", "taxas", "orcamento"]),
-  },
-  {
-    nome: "Pro",
-    praQuem: "Pra quem faz encomenda sob medida e quer saber quantas vendas faltam.",
-    mensal: precoBR(pro.precoMensal),
-    anual: precoBR(pro.precoAnual),
-    base: pro.base,
-    itens: beneficiosNaOrdem(pro.beneficios, ["encomenda", "projecao"]),
-  },
-];
+// Preço e lista saem de tiersPagos() na hora de montar a tela, pra trocar
+// sozinhos na virada de preços (01/12/2026, src/lib/planos.ts).
+function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
+  const { controle: premium, projete: pro } = tiersPagos(agora);
+  const virou = depoisDaVirada(agora);
+  return [
+    {
+      nome: "Grátis",
+      praQuem: "Pra ter o próximo orçamento com a conta feita.",
+      mensal: "R$ 0",
+      // A landing-a vende a Calculadora: ela abre o card e vem em destaque.
+      itemForte: "calculadora",
+      itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
+    },
+    {
+      nome: "Premium",
+      etiqueta: "Pra quem já vende",
+      praQuem: virou
+        ? "Pra quem tem pedido toda semana, faz encomenda sob medida e quer o mês sob controle."
+        : "Pra quem tem pedido toda semana e quer o mês sob controle.",
+      mensal: precoBR(premium.precoMensal),
+      anual: precoBR(premium.precoAnual),
+      base: premium.base,
+      itens: beneficiosNaOrdem(
+        premium.beneficios,
+        virou ? ["catalogo", "encomenda", "taxas"] : ["catalogo", "taxas", "orcamento"],
+      ),
+    },
+    {
+      nome: "Pro",
+      praQuem: virou
+        ? "Pra quem vende no catálogo, no Instagram e nos marketplaces e quer tudo na mesma conta."
+        : "Pra quem faz encomenda sob medida e quer saber quantas vendas faltam.",
+      mensal: precoBR(pro.precoMensal),
+      anual: precoBR(pro.precoAnual),
+      base: pro.base,
+      itens: beneficiosNaOrdem(pro.beneficios, virou ? ["catalogo"] : ["encomenda", "projecao"]),
+    },
+  ];
+}
 
 const perguntas = [
   {
@@ -200,8 +214,7 @@ const perguntas = [
   },
   {
     pergunta: "Serve pra serviço e pra encomenda?",
-    resposta:
-      "Serve. Serviço é calculado por hora, no Grátis. Encomenda sob medida tem calculadora própria, no Pro.",
+    resposta: `Serve. Serviço é calculado por hora, no Grátis. Encomenda sob medida tem calculadora própria, no ${PLANO_DOS_NUMEROS}.`,
   },
   {
     pergunta: "Preciso entender de número?",
@@ -234,6 +247,8 @@ const perguntas = [
 /* ───────────────────────────── página ───────────────────────────── */
 
 function LandingA() {
+  const planos = montarPlanos();
+  const { controle: premium, projete: pro } = tiersPagos();
   const searchStr = useLocation({ select: (l) => l.searchStr });
   const fbclid = lerFbclidDaQuery(searchStr);
   const busca: BuscaCadastro = {
