@@ -34,6 +34,8 @@ import { DESTINO_SEM_ACESSO, rotaBloqueadaSemFlag } from "@/lib/ferramentasInter
 import { precisaCriarSenha } from "@/lib/senha";
 import { gravarOrigemDoOAuth } from "@/lib/gravarOrigemOAuth";
 import { lerLinkComErro } from "@/lib/linkComErro";
+import { AcoesTopo } from "@/components/avisos/AcoesTopo";
+import { JanelaNovidades } from "@/components/avisos/JanelaNovidades";
 
 // Flag própria (não a chave interna do supabase-js, que ele mesmo limpa
 // assim que detecta um token inválido/vencido — checar essa chave depois
@@ -227,6 +229,13 @@ function AuthenticatedLayout() {
           da barra. */}
         {pathname !== "/onboarding" && !appNativo && <Sidebar />}
         <div className="flex min-w-0 flex-1 flex-col">
+          {/* Suporte e sino no topo, no computador (ONE-152). No celular o par
+            mora na barra do menu (Sidebar) e, no app, na aba Mais. */}
+          {pathname !== "/onboarding" && !appNativo && (
+            <div className="hidden justify-end px-8 pt-3 md:flex">
+              <AcoesTopo />
+            </div>
+          )}
           {pathname !== "/onboarding" && <FaixaTestePro pathname={pathname} />}
           <main
             id="main-content"
@@ -247,6 +256,7 @@ function AuthenticatedLayout() {
           <BarraAbasApp pathname={pathname} userId={session.user?.id} plano={meta.plano} />
         )}
         {!appNativo && <AssistenteFlutuante pathname={pathname} />}
+        <JanelaNovidades pausada={pathname === "/onboarding" || csatPulso.mostrar} />
         {csatPulso.mostrar && (
           <CsatPrompt
             pergunta="Como está sendo usar a Pólia One?"

@@ -85,6 +85,7 @@ const LISTA = [
       "Só o primeiro passo que falta fica aceso. Os outros esperam a vez.",
       "Conta nova começa com 7 dias do Pro. Fechando os três passos durante o teste, ele ganha mais 7 dias.",
       "O nome da marca dá pra trocar depois em Configurações.",
+      'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados" e "Central de ajuda". No app, os dois ficam na aba Mais.',
     ],
     duvidas: [
       {
@@ -878,6 +879,7 @@ const LISTA = [
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
       "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
+      "Pedido novo que chega pela loja do Catálogo também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
     ],
     duvidas: [
       {
@@ -945,6 +947,7 @@ const LISTA = [
       "Pedido da loja entra em Pedidos como \"a receber\", em \"A fazer\", e a cliente vira ficha em Clientes pelo WhatsApp.",
       "O endereço da loja fica com a marca: depois de usado, não passa pra outra conta.",
       "Fora do Pro, a loja fecha e mostra que não está aberta agora. Os produtos e as fotos continuam guardados.",
+      "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",
     ],
     duvidas: [
       {

@@ -26,6 +26,8 @@ import { useUserMeta } from "@/hooks/useUserMeta";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import type { FerramentaInterna } from "@/lib/ferramentasInternas";
 import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
+import { useAppNativo } from "@/hooks/useAppNativo";
+import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 
 // Aba "Mais" do app Android (AND-07): tudo da Pólia One que não ganhou aba
 // própria. Mesma regra de cadeado do menu lateral (recursoLiberado): sem o
@@ -88,9 +90,11 @@ const LINHA =
 function Mais() {
   const meta = useUserMeta();
   const internas = useFerramentasInternas();
+  // No app Android não há barra de topo: Suporte e sino moram aqui (ONE-152).
+  const appNativo = useAppNativo();
 
   return (
-    <PaginaLogada titulo="Mais.">
+    <PaginaLogada titulo="Mais." acao={appNativo ? <AcoesTopo compacto /> : undefined}>
       <div className="flex flex-col gap-8">
         {GRUPOS.map((grupo) => (
           <section key={grupo.titulo} aria-labelledby={`mais-${grupo.titulo}`}>

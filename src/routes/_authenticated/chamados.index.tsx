@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +14,8 @@ import { track } from "@/lib/analytics";
 import { ordenarPorUltimaAtividade, rotuloStatusChamado } from "@/lib/chamados";
 
 export const Route = createFileRoute("/_authenticated/chamados/")({
+  // ?novo=1 chega do botão Suporte ("Abrir um chamado") com o formulário aberto.
+  validateSearch: (s: Record<string, unknown>): { novo?: 1 } => (Number(s.novo) === 1 ? { novo: 1 } : {}),
   head: () => ({
     meta: [
       { title: "Chamados · Pólia One" },
@@ -46,7 +48,17 @@ function ChamadosPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
-  const [modalAberto, setModalAberto] = useState(false);
+  const { novo } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const [modalAberto, setModalAberto] = useState(novo === 1);
+  // Chegou com ?novo=1 de novo (botão Suporte com a página já aberta): reabre.
+  useEffect(() => {
+    if (novo === 1) setModalAberto(true);
+  }, [novo]);
+  const fecharModal = () => {
+    setModalAberto(false);
+    if (novo === 1) void navigate({ search: {}, replace: true });
+  };
 
   const dadosQuery = useQuery({
     queryKey: ["chamados-hub", userId],
@@ -142,10 +154,10 @@ function ChamadosPage() {
       {modalAberto && userId && (
         <ModalNovoChamado
           userId={userId}
-          onClose={() => setModalAberto(false)}
+          onClose={fecharModal}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["chamados-hub", userId] });
-            setModalAberto(false);
+            fecharModal();
           }}
         />
       )}

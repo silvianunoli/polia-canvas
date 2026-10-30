@@ -39,6 +39,7 @@ import { recursoLiberado, tierPagoDaRota, TIERS_PAGOS } from "@/lib/planos";
 import { useCanaisConectados } from "@/hooks/useCanaisConectados";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { rotaVisivel } from "@/lib/ferramentasInternas";
+import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 
 // Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
 // conectado, pra quem não vende em marketplace não ver um item vazio.
@@ -432,6 +433,9 @@ export function Sidebar() {
           </SheetContent>
         </Sheet>
         <PoliaWordmark className="h-[18px] w-auto text-[var(--ink)]" />
+        <div className="ml-auto">
+          <AcoesTopo compacto />
+        </div>
       </div>
     </>
   );

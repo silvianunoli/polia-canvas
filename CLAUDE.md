@@ -101,6 +101,16 @@ Toda feature nova ou mudança em feature que a usuária vê atualiza o tutorial 
 - **Feature que muda o que as outras telas mostram** (ex.: novo plano, nova cota, nova integração): procure o assunto em `tutoriais.ts` inteiro, não só no tutorial da tela mexida. O tutorial "Planos e assinatura" lista o que abre em cada plano.
 - No fim, diga na resposta quais tutoriais mudaram (ou que nenhum precisou, e por quê).
 
+## Toda novidade vira aviso no sino (2026-10-29, regra da Sil)
+
+Toda funcionalidade nova ou mudança que a usuária vê na Pólia One ganha uma linha em `public.novidades` **no mesmo trabalho que a publica**, sem a Sil pedir. É o que alimenta a janela "Novidades na Pólia One" e o sino do topo (ONE-152). Correção de bug invisível não entra.
+
+- Entra por migration (`supabase/migrations/AAAAMMDDHHMMSS_novidade_<assunto>.sql`), com `insert into public.novidades (titulo, texto, link, link_rotulo)`. `titulo` até 80 caracteres, `texto` até 400, `link` é rota interna (`/catalogo`), `link_rotulo` vira o botão ("Montar a loja"). `imagem_url` só https.
+- Copy na voz da Pólia como empresa: a Pólia ou o módulo como sujeito, sem emoji, sem exclamação, sem hype, sem "você consegue". Diz o que mudou e onde fica.
+- Publica junto com o deploy: a linha não entra antes do código estar no ar (a janela abriria apontando pra tela que ainda não existe). Pra agendar, `publicada_em` no futuro.
+- Novidade errada: `update public.novidades set ativa = false`, nunca apagar (quem leu tem linha em `novidades_lidas`).
+- No fim, diga na resposta qual novidade entrou (ou por que nenhuma).
+
 ## Segurança (inegociável)
 
 - Nunca segredo hardcoded nem versionado (chave, token, senha, connection string). `.env` fica fora do git (já no `.gitignore`); use variável de ambiente / `.dev.vars` (Cloudflare) / secrets do Supabase. Não logue dado sensível.
