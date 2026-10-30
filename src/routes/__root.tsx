@@ -171,11 +171,16 @@ function RootComponent() {
   // pixelPageView() segue o mesmo gatilho (troca de pathname), com dedup
   // próprio por pathname pra não duplicar no carregamento inicial.
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Loja do catálogo (/loja/*) é da cliente da Pólia One, não da Pólia: sem
+  // banner de cookie, GA e pixels da Pólia ali, senão a compradora dela entra
+  // nas audiências de anúncio da Pólia.
+  const naLoja = pathname.startsWith("/loja/");
   useEffect(() => {
+    if (naLoja) return;
     track("pageview");
     pixelPageView(pathname);
     tiktokPageView(pathname);
-  }, [pathname]);
+  }, [pathname, naLoja]);
 
   // ViewContent do TikTok em toda página pública: landing nova entra sozinha,
   // sem lista pra manter. Página da área logada (_authenticated) nunca conta.
@@ -183,8 +188,8 @@ function RootComponent() {
     select: (s) => s.matches.some((m) => m.routeId.startsWith("/_authenticated")),
   });
   useEffect(() => {
-    if (!areaLogada) tiktokViewContent(pathname);
-  }, [pathname, areaLogada]);
+    if (!areaLogada && !naLoja) tiktokViewContent(pathname);
+  }, [pathname, areaLogada, naLoja]);
 
   // Clique instrumentado por delegação: qualquer elemento com data-track vira
   // evento sem precisar importar/chamar track() em cada botão. Ver plano de
@@ -193,6 +198,7 @@ function RootComponent() {
     const onClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
+      if (window.location.pathname.startsWith("/loja/")) return;
       // TikTok lê o destino de qualquer link (cadastro, plano), com ou sem data-track.
       const link = target.closest<HTMLAnchorElement>("a[href]");
       if (link) tiktokCliqueEmLink(link.href);
@@ -358,10 +364,14 @@ function RootComponent() {
           },
         }}
       />
-      <CookieConsent />
-      <GoogleAnalytics />
-      <MetaPixel />
-      <TiktokPixel />
+      {!naLoja && (
+        <>
+          <CookieConsent />
+          <GoogleAnalytics />
+          <MetaPixel />
+          <TiktokPixel />
+        </>
+      )}
       {import.meta.env.DEV && <DiagnosticPanel />}
     </QueryClientProvider>
   );

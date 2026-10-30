@@ -863,12 +863,11 @@ const LISTA = [
         ],
       },
       {
-        titulo: "Receber os pedidos do catálogo online (Pro)",
+        titulo: "Receber os pedidos da loja do catálogo (Pro)",
         itens: [
-          'Em "Configurações", na parte "Integrações", ache o cartão "Catálogo online". Ele abre no plano Pro.',
-          'Escreva o domínio do catálogo (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
-          'Daí em diante, cada pedido que a cliente confirma no catálogo entra em "A fazer", com o nome e o WhatsApp dela, as peças, a variação de cada uma e o endereço na observação.',
+          'Monte a loja em "Catálogo", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
+          'Se a marca tem um site próprio feito pela Pólia Lab, ele liga em "Configurações", na parte "Integrações", no cartão "Catálogo online": escreva o domínio (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
         ],
       },
     ],
@@ -899,6 +898,63 @@ const LISTA = [
         pergunta: "O pedido do catálogo veio com outro preço",
         resposta:
           "O preço é o que estava no catálogo na hora do pedido. Confirme com a cliente pelo WhatsApp antes de começar a produção.",
+      },
+    ],
+  },
+  {
+    slug: "catalogo",
+    nome: "Catálogo",
+    grupo: "Clientes e rotina",
+    rota: "/catalogo",
+    abrir: "Abrir o Catálogo",
+    resumo:
+      "A loja da marca num endereço da Pólia, com os produtos, as fotos e as variações de Produtos. A cliente monta o carrinho e confirma, e o pedido cai em Pedidos.",
+    passos: [
+      {
+        titulo: "Abrir a loja",
+        itens: [
+          'No menu, abra "Catálogo". Em "Endereço", confira o endereço da loja: ele fica em one.usepolia.com.br/loja/ seguido do nome que você escolher.',
+          'Ligue "Loja aberta" e clique em "Salvar a loja". Com a loja salva, o botão "Ver a loja" abre a vitrine como a cliente vê.',
+        ],
+      },
+      {
+        titulo: "Dar a cara da marca",
+        itens: [
+          'O logo e a cor vêm de "Marca". Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
+          'Sem capa, a loja monta a abertura com as fotos dos produtos.',
+        ],
+      },
+      {
+        titulo: "Dizer como a loja vende",
+        itens: [
+          'Em "Como a loja vende", preencha o WhatsApp da loja, o Instagram, o prazo de produção em dias úteis, o sinal pra começar e como é a entrega.',
+          'O prazo marca o dia da entrega de cada pedido no quadro. Com sinal acima de 0, a loja mostra quanto a cliente paga pra começar.',
+          'Desligue "Pedir o endereço da cliente" quando a entrega é sempre combinada na conversa.',
+        ],
+      },
+      {
+        titulo: "Escolher os produtos e as fotos",
+        itens: [
+          'Em "Produtos na loja", ligue cada produto que deve aparecer. Nome, preço e variações vêm de Produtos.',
+          'Clique em "Foto" pra subir até 4 fotos por produto (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine.',
+        ],
+      },
+    ],
+    bomSaber: [
+      "O preço do pedido é sempre o de Produtos na hora da compra: a loja não deixa mudar o valor pelo navegador.",
+      "Pedido da loja entra em Pedidos como \"a receber\", em \"A fazer\", e a cliente vira ficha em Clientes pelo WhatsApp.",
+      "O endereço da loja fica com a marca: depois de usado, não passa pra outra conta.",
+      "Fora do Pro, a loja fecha e mostra que não está aberta agora. Os produtos e as fotos continuam guardados.",
+    ],
+    duvidas: [
+      {
+        pergunta: "Posso usar um domínio meu",
+        resposta:
+          "O domínio próprio (suamarca.com.br) é um serviço da Pólia Lab. A loja do Catálogo mora no endereço da Pólia.",
+      },
+      {
+        pergunta: "A cliente precisa ter conta",
+        resposta: "Não. Ela escolhe, preenche nome e WhatsApp e confirma.",
       },
     ],
   },

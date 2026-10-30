@@ -37,7 +37,7 @@ export function temProjete(plano: string | null | undefined): boolean {
 // e são barradas por um portão dentro da própria página. Sem esta lista, a barra
 // lateral não tem como saber que são pagas e mostra três itens SEM cadeado que a
 // usuária do Premium não consegue usar.
-const ROTAS_PROJETE = ["/raiox", "/plano-conteudo", "/projecao"];
+const ROTAS_PROJETE = ["/raiox", "/plano-conteudo", "/projecao", "/catalogo"];
 
 export function ehRotaProjete(pathname: string): boolean {
   return ROTAS_PROJETE.some((p) => bateRota(p, pathname));
@@ -95,6 +95,7 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/raiox", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Resumo/Encomenda
   { prefixo: "/plano-conteudo", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/projecao", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
+  { prefixo: "/catalogo", tier: "controle" }, // loja do catálogo (ONE-148): Pro-only por dentro
   // Metas é do plano Grátis desde 03/09/2026 (decisão COPY-03): o card do plano
   // grátis promete "até 3 metas acompanhadas" e a rota redirecionava pro
   // upgrade — a usuária tinha zero metas, não três. O teto de 3 ativas por vez

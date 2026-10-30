@@ -13,6 +13,7 @@ import {
   PlayCircle,
   Settings,
   ShoppingBag,
+  Store,
   Stethoscope,
   Target,
   TrendingUp,
@@ -51,6 +52,7 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
     titulo: "Dia a dia",
     itens: [
       { to: "/vendas", label: "Vendas", icon: ShoppingBag },
+      { to: "/catalogo", label: "Catálogo", icon: Store },
       { to: "/financeiro", label: "Financeiro", icon: Wallet },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/produtos", label: "Produtos", icon: Package },

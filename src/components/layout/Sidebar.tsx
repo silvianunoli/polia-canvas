@@ -23,6 +23,7 @@ import {
   Megaphone,
   Calculator,
   ShoppingBag,
+  Store,
   Link2,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
@@ -54,6 +55,8 @@ const NAV: NavItem[] = [
   { to: "/produtos", label: "Produtos", icon: Package },
   // Pedidos (GRW-93) no lugar do Planner, que ficou só pra conta interna.
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
+  // Loja do catálogo (ONE-148), só no Pro: o cadeado vem de recursoLiberado.
+  { to: "/catalogo", label: "Catálogo", icon: Store },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
   { to: "/calculadora", label: "Calculadora", icon: Calculator },
   { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },

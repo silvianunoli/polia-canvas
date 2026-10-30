@@ -71,6 +71,7 @@ describe("tutoriais por ferramenta", () => {
       "/produtos",
       "/produtos/anuncios",
       "/vendas",
+      "/catalogo",
       "/calculadora",
       "/projecao",
       "/financeiro",
