@@ -39,6 +39,7 @@ import {
 } from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
+import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
 import { CardCatalogo } from "@/components/configuracoes/CardCatalogo";
 import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
 import { isNativeApp } from "@/lib/platform";
@@ -1023,6 +1024,7 @@ function ConfiguracoesPage() {
               onConfirmar={() => desconectarTiktokMutation.mutateAsync()}
             />
             <CardMercadoLivre userId={userId} />
+            <CardRedesSociais userId={userId} />
             <CardCatalogo userId={userId} />
             <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
               <p className="font-sans text-[var(--muted)] text-[13px]">

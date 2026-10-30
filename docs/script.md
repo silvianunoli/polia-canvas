@@ -474,3 +474,14 @@ Plano `docs/plano-login-no-app.md`, aprovado pela Sil com D1 a D3 (as duas parte
 - `/.well-known/assetlinks.json` servido pelo `server.ts` (`lib/assetLinks.ts`, 2 testes), com a SHA-256 da chave de teste (debug.keystore). `/hoje`, `/mais` e `/pedidos` entraram na lista de telas logadas sem índice.
 - `AndroidManifest.xml`: filtros do esquema `br.com.usepolia.app://entrar` e do App Link `https://one.usepolia.com.br/auth/link` (autoVerify). `npx cap sync android` e APK de teste.
 - Pendências da Sil: S1 (Redirect URL no Supabase), S2 (3 modelos de e-mail, só depois do deploy), S3 (instalar o APK), S4 (SHA-256 da chave da Play Console, mais tarde).
+
+## 2026-10-30 — Agenda das redes, fases 1 e 2: banco e conexão das contas (ONE-154)
+
+Decisão da Sil em 29/10 (RED-37): a publicação nas redes abre para as clientes do Pro no Pólia One, com TikTok e Instagram na mesma tela, e a auditoria do TikTok é pedida depois. Plano em `../RED-37-plano-agenda-redes-clientes-2026-10-29.md`.
+
+- Migration `20261030120000_redes_sociais_conexoes_posts.sql` (NÃO aplicada, espera o ok da Sil): `redes_conexoes` (token no Vault, RPCs `redes_token_salvar`/`redes_token_ler`, gatilho que apaga os segredos), `redes_posts`/`redes_post_midias`/`redes_post_destinos` (o navegador só lê os próprios; escolhas do TikTok sem padrão ligado, conteúdo de marca nunca "só eu"), bucket privado `redes-midias` com pasta por usuária, e o cron diário `redes-token-renovar`.
+- Regras puras em `supabase/functions/_shared/redesSociais.ts` (+ `src/lib/redesSociais.test.ts`), HTTP em `_shared/redesSociaisCliente.ts`, credenciais em `src/lib/redesSociaisApi.ts`.
+- `src/lib/redesSociais.functions.ts`: status, conectar, volta da autorização (state obrigatório), desconectar (revoga no TikTok e cancela os destinos pendentes). `redesSociaisAcesso.server.ts` renova o token do TikTok na hora de usar (fase 4).
+- Escopos só os usados (`user.info.basic`, `video.publish`): o `video.upload` da Fábrica saiu. Instagram recusa conta pessoal com o caminho para trocar.
+- Tela: `CardRedesSociais` em Configurações > Integrações e a rota de volta `/configuracoes/integracoes/redes/$rede`. Até as revisões aprovarem, só conta admin vê (`REDES_SOCIAIS_ABERTO=1` abre para o Pro).
+- Sem novidade no sino e sem tutorial novo ainda: a função não está visível para cliente. Entram juntos quando a tela de postar abrir.

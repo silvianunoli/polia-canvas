@@ -7,7 +7,8 @@ project_id = "egzwkyqpkexgrhbxwcvb"
 #     social-metricas / social-token-renovar (SOCIAL_CRON_SECRET),
 #     founder-monitor (FOUNDER_MONITOR_SECRET ou JWT de admin conferido no código),
 #     reenviar-emails (segredo só no Vault, conferido por RPC; PAY-27),
-#     tiktok-sync e ml-sync (segredo só no Vault, conferido por RPC; VND-05, VND-30)
+#     tiktok-sync e ml-sync (segredo só no Vault, conferido por RPC; VND-05, VND-30),
+#     redes-token-renovar (segredo só no Vault, conferido por RPC; ONE-154)
 #   assinatura do provedor: stripe-webhook (HMAC do Stripe), tiktok-webhook (HMAC do TikTok)
 #   aviso sem assinatura, só põe id na fila de vendedora conectada: ml-webhook (VND-30)
 #   token de verificação da Meta: ig-webhook (bot desativado, só responde o desafio)
@@ -60,6 +61,9 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.ml-sync]
+verify_jwt = false
+
+[functions.redes-token-renovar]
 verify_jwt = false
 
 [functions.push-lembretes]
