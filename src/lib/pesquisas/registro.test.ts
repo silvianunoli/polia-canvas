@@ -35,9 +35,9 @@ function textosVisiveis(p: Pergunta): string[] {
 }
 
 describe("PESQUISAS (registro)", () => {
-  it("lista as duas pesquisas com slugs únicos", () => {
+  it("lista as três pesquisas com slugs únicos", () => {
     const slugs = PESQUISAS.map((p) => p.slug);
-    expect(slugs).toEqual(["discovery-negocio", "pesquisa-precificacao"]);
+    expect(slugs).toEqual(["discovery-negocio", "pesquisa-precificacao", "pesquisa-gestao"]);
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
