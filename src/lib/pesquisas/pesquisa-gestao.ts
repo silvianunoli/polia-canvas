@@ -17,6 +17,15 @@ const daDiscovery = (id: string) => discoveryNegocio.perguntas.find((p) => p.id 
 
 export const pesquisaGestao: PesquisaConfig = {
   slug: "pesquisa-gestao",
+  // Incentivo decidido pela Sil em 31/10: 30 dias de Premium pra quem termina.
+  // Cupom PESQUISA30 no Stripe: 100%, repeating, 1 mês.
+  brinde: {
+    titulo: "30 dias de Premium, por conta da Pólia.",
+    texto: "Sem cartão. Depois dos 30 dias a conta volta pro Grátis sozinha, sem cobrança nenhuma.",
+    rotulo: "Quero os 30 dias de Premium",
+    plano: "premium",
+    codigo: "PESQUISA30",
+  },
   perguntas: [
     {
       id: "conta_polia",
@@ -122,7 +131,8 @@ export const pesquisaGestao: PesquisaConfig = {
       parte: 1,
       tipo: "aberta",
       opcional: true,
-      titulo: "Conta a última vez que um pedido, uma encomenda ou o estoque deu problema. O que aconteceu?",
+      titulo:
+        "Conta a última vez que um pedido, uma encomenda ou o estoque deu problema. O que aconteceu?",
       placeholder: "Do jeito que você contaria pra uma amiga.",
     },
     {

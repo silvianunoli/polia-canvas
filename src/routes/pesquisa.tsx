@@ -13,7 +13,7 @@ import { PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { Reveal } from "@/components/site/Reveal";
 import { CONTAINER, SECAO, BTN_PRIMARIO, BTN_CONTORNO, Eyebrow } from "@/components/site/Editorial";
 import { pesquisaPorSlug, perguntasPorId, totalPerguntas } from "@/lib/pesquisas/registro";
-import type { Pergunta } from "@/lib/pesquisas/tipos";
+import type { BrindePesquisa, Pergunta } from "@/lib/pesquisas/tipos";
 import { FieldError } from "@/components/ui/FieldError";
 
 export const Route = createFileRoute("/pesquisa")({
@@ -128,6 +128,34 @@ function LinkPlanos() {
         Conhecer os planos
       </Link>
     </div>
+  );
+}
+
+/** Cortesia de quem terminou a pesquisa. Aparece antes do e-mail de novidades
+ * (que é opcional) e de novo na tela de "já respondeu", pra quem voltar depois
+ * pegar o link. O link leva o código pronto: digitado à mão no checkout, o
+ * Stripe pede CPF e o purchase sai com preço cheio. */
+function Brinde({ brinde }: { brinde: BrindePesquisa }) {
+  return (
+    <Reveal>
+      <div className="mb-6 rounded-2xl bg-[var(--secondary-light)] p-[clamp(24px,4vw,40px)] max-md:px-5">
+        <Eyebrow>Obrigada pela resposta</Eyebrow>
+        <h2 className="mt-4 text-[clamp(1.5rem,3vw,2rem)] font-bold leading-[1.15] tracking-[-0.02em] text-balance">
+          {brinde.titulo}
+        </h2>
+        <p className="mt-3 text-[16px] leading-[1.55] text-[var(--ink-soft)]">{brinde.texto}</p>
+        <div className="mt-6">
+          <Link
+            to="/planos"
+            search={{ plano: brinde.plano, codigo: brinde.codigo, origem: "pesquisa" }}
+            data-track="pesquisa_brinde_clicado"
+            className={BTN_PRIMARIO}
+          >
+            {brinde.rotulo}
+          </Link>
+        </div>
+      </div>
+    </Reveal>
   );
 }
 
@@ -716,6 +744,7 @@ function PesquisaPage() {
   if (jaRespondeu && tela === "intro") {
     return (
       <Casca>
+        {config.brinde && <Brinde brinde={config.brinde} />}
         <Reveal>
           <div className={CARTAO}>
             <Eyebrow>Resposta registrada</Eyebrow>
@@ -774,6 +803,7 @@ function PesquisaPage() {
             animate={{ opacity: 1, transition: { duration: 0.22, ease: [0.23, 1, 0.32, 1] } }}
             exit={{ opacity: 0, transition: { duration: 0.15, ease: [0.23, 1, 0.32, 1] } }}
           >
+            {config.brinde && <Brinde brinde={config.brinde} />}
             <TelaContato onEnviar={enviarContato} onPular={() => setTela("fim")} />
           </motion.div>
         )}

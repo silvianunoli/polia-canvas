@@ -40,3 +40,20 @@ describe("pesquisaGestao", () => {
     }
   });
 });
+
+// O brinde vira link /planos?codigo=: o formato tem que passar no schema do
+// /planos (A-Z, 0-9, _ e -, até 40), senão o código cai e a pessoa vê preço cheio.
+describe("brinde da pesquisa de gestão", () => {
+  it("é Premium com código no formato aceito pelo /planos", () => {
+    expect(pesquisaGestao.brinde?.plano).toBe("premium");
+    expect(pesquisaGestao.brinde?.codigo).toMatch(/^[A-Za-z0-9_-]{1,40}$/);
+  });
+
+  it("copy do brinde sem exclamação, travessão ou emoji", () => {
+    const b = pesquisaGestao.brinde!;
+    for (const t of [b.titulo, b.texto, b.rotulo]) {
+      expect(t).not.toMatch(/[—!]/);
+      expect(t).not.toMatch(/\p{Extended_Pictographic}/u);
+    }
+  });
+});
