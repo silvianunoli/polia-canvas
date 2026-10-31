@@ -32,7 +32,8 @@ import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 // Aba "Mais" do app Android (AND-07): tudo da Pólia One que não ganhou aba
 // própria. Mesma regra de cadeado do menu lateral (recursoLiberado): sem o
 // plano, o item leva pra tela de upgrade em vez de abrir e barrar. Planner e
-// Caderno só aparecem pra quem tem a flag (conta interna, desde 28/10/2026).
+// Caderno só aparecem pra quem tem a flag (conta interna, desde 28/10/2026), e
+// o Planejamento também (desde 31/10/2026).
 
 export const Route = createFileRoute("/_authenticated/mais")({
   head: () => ({ meta: [{ title: "Mais · Pólia One" }] }),
@@ -63,7 +64,7 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
   {
     titulo: "Planejar",
     itens: [
-      { to: "/planejamento", label: "Planejamento", icon: Map },
+      { to: "/planejamento", label: "Planejamento", icon: Map, interna: "planejamento" },
       { to: "/metas", label: "Metas", icon: Target },
       { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
       { to: "/raiox", label: "Raio-x do mês", icon: Stethoscope },

@@ -68,6 +68,17 @@ export const Route = createFileRoute("/_authenticated")({
         throw redirect({ to: "/auth/criar-senha" });
       }
 
+      // Planner só pra conta interna (28/10/2026, lib/ferramentasInternas): sem
+      // a flag, leva pros Pedidos. Planejamento, Marca e Mercado também, desde
+      // 31/10/2026: sem a flag `planejamento`, levam pro Painel (os dados ficam
+      // no banco). O Caderno abre pra todas (só o guia do Módulo 5).
+      // Vem antes da trava de plano: /marca e /mercado são do Premium, e sem
+      // esta ordem a conta do Grátis caía no /upgrade vendendo o documento.
+      const bloqueada = rotaBloqueadaSemFlag(location.pathname);
+      if (bloqueada && !(await flagAtiva(bloqueada, data.session.user.id, false))) {
+        throw redirect({ to: DESTINO_SEM_ACESSO[bloqueada] });
+      }
+
       if (!isentoDeAssinatura(location.pathname)) {
         const { data: profile, error: erroPerfil } = await supabase
           .from("profiles")
@@ -103,12 +114,6 @@ export const Route = createFileRoute("/_authenticated")({
         }
       }
 
-      // Planner só pra conta interna (28/10/2026, lib/ferramentasInternas): sem
-      // a flag, leva pros Pedidos. O Caderno abre pra todas (só o guia do Módulo 5).
-      const bloqueada = rotaBloqueadaSemFlag(location.pathname);
-      if (bloqueada && !(await flagAtiva(bloqueada, data.session.user.id, false))) {
-        throw redirect({ to: DESTINO_SEM_ACESSO[bloqueada] });
-      }
       return;
     }
     // Link do e-mail (confirmação ou magiclink do lembrete) vencido: o

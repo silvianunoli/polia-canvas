@@ -44,6 +44,7 @@ import { CardCatalogo } from "@/components/configuracoes/CardCatalogo";
 import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
 import { isNativeApp } from "@/lib/platform";
 import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
+import { IdentidadeVisual } from "@/components/orcamentos/IdentidadeVisual";
 import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { PasswordRequirements } from "@/components/cosmic/CosmicInput";
@@ -811,7 +812,7 @@ function ConfiguracoesPage() {
               className="w-full h-[48px] border border-[var(--line)] rounded-xl px-4 font-sans text-[var(--ink)] text-[15px] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--secondary-text)] transition-[border-color,box-shadow]"
             />
             <p className="font-sans text-[var(--muted)] text-[11px] mt-1.5">
-              aparece no topo do seu planejamento
+              aparece no menu e no orçamento que vai pra cliente
             </p>
           </Campo>
 
@@ -867,6 +868,15 @@ function ConfiguracoesPage() {
             />
           </Campo>
         </Secao>
+
+        {/* Logo e cor da marca (ONE-129). Moravam em /marca, que saiu das
+            usuárias com o Planejamento em 31/10/2026; o orçamento e a loja do
+            Catálogo leem daqui. Âncora #logo-e-cor pros links dessas telas. */}
+        {userId && (
+          <div id="logo-e-cor" className="scroll-mt-24">
+            <IdentidadeVisual userId={userId} />
+          </div>
+        )}
 
         {/* SEÇÃO 3 — INTEGRAÇÕES */}
         <Secao

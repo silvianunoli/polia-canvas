@@ -34,7 +34,7 @@ const NICHOS: Record<string, NichoLanding> = {
     tipo: "servico",
     titulo: "Nail designer, sua marca atrai cliente ou só promoção?",
     subtitulo:
-      "O Planejamento da marca da Pólia One organiza o que te diferencia, e a Calculadora mostra quanto cobrar por isso.",
+      "A Calculadora da Pólia One põe o seu tempo e o material que te diferencia na conta, e mostra quanto cobrar por isso.",
     foto: "nicho-nail",
     alt: "Nail designer sorrindo enquanto faz as unhas de uma cliente, com a parede de esmaltes ao fundo.",
   },
@@ -208,7 +208,7 @@ const NICHOS: Record<string, NichoLanding> = {
     tipo: "produto",
     titulo: "Saboaria artesanal, a sua marca vale mais que o preço da feira?",
     subtitulo:
-      "O Planejamento da marca e a Calculadora da Pólia One mostram por que o seu preço não é o da feira.",
+      "A Calculadora da Pólia One põe a matéria-prima, a embalagem e as suas horas na conta e mostra por que o seu preço não é o da feira.",
     foto: "nicho-saboaria",
     alt: "Mãos amarrando barbante em sabonetes artesanais embalados, com velas na bancada.",
   },

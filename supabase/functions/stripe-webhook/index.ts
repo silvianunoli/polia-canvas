@@ -716,7 +716,7 @@ async function enviarEmailCancelamentoAgendado(email: string, dataFimAcesso: str
 // data já saiu quando ela pediu o cancelamento; este só fecha o ciclo.
 async function enviarEmailAssinaturaTerminou(email: string) {
   const paragrafo1 = "A assinatura da Pólia One terminou, e a conta voltou pro plano Grátis.";
-  const paragrafo2 = "O Planejamento e os dados continuam guardados, caso queira voltar.";
+  const paragrafo2 = "Os produtos, os pedidos e os dados continuam guardados, caso queira voltar.";
   return await enviarViaResend(
     "Sua assinatura terminou",
     `${paragrafo1}\n\n${paragrafo2}\n\n${SITE_URL}/planos\n\nAlguma dúvida? Fale com a Pólia: ${SITE_URL}/ajuda`,

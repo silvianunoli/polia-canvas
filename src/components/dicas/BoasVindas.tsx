@@ -14,8 +14,9 @@ import { toastInfo } from "@/lib/toast";
  *
  * Só aparece pra quem ainda não viu o tour: conta antiga, que já passou pelo
  * tour de três balões, não recebe as boas-vindas de novo. Fechar, Esc ou
- * qualquer botão marcam "boas-vindas"; aí o balão do tour assume e aponta o
- * Planejamento (TourBoasVindas espera essa marca).
+ * qualquer botão marcam "boas-vindas". Até 31/10/2026 o balão do tour
+ * (TourBoasVindas) assumia depois e apontava o Planejamento; com o Planejamento
+ * fora da Pólia One, o Painel não monta mais o balão.
  */
 export function BoasVindas() {
   const { mostrar, marcar } = useDicasVistas();

@@ -538,9 +538,12 @@ function FinanceiroPage() {
             </div>
           )}
 
+          {/* Até 31/10/2026 o texto mandava pro Planejamento (Quanto vale), que saiu
+              da Pólia One. As marcas continuam pra quem já tinha respondido. */}
           <p className="mt-0 text-[13px] text-[var(--muted)]">
-            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas. As marcas de mínimo e
-            celebrar vêm de Quanto vale, no seu Planejamento.
+            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas.
+            {marcas.length > 0 &&
+              " As marcas de mínimo e celebrar vêm das respostas que a marca já guardou."}
           </p>
         </section>
 

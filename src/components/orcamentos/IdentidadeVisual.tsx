@@ -21,8 +21,10 @@ const HEX = /^#[0-9a-f]{6}$/i;
 const COR_INICIAL = "#7CCBCD";
 
 /**
- * Logo e cor da marca (ONE-129). Hoje aparecem no orçamento que vai pra
- * cliente; a prévia mostra exatamente o topo que ela vai ver.
+ * Logo e cor da marca (ONE-129). Aparecem no orçamento que vai pra cliente e
+ * na loja do Catálogo; a prévia mostra exatamente o topo do orçamento. Mora em
+ * Configurações desde 31/10/2026 (antes era o topo de /marca, que saiu das
+ * usuárias com o Planejamento).
  */
 export function IdentidadeVisual({ userId }: { userId: string }) {
   const qc = useQueryClient();
@@ -135,7 +137,7 @@ export function IdentidadeVisual({ userId }: { userId: string }) {
         Logo e cor
       </h2>
       <p className="mt-1 text-[13px] text-[var(--muted)]">
-        Vão no topo do orçamento que a cliente abre pelo link.
+        Vão no topo do orçamento que a cliente abre pelo link e na loja do Catálogo.
       </p>
 
       <div className="mt-5 grid gap-6 md:grid-cols-2">

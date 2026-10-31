@@ -446,8 +446,8 @@ function AssinarPage() {
           hidden={assinante}
           className="mt-6 text-center font-sans text-[12px] text-[var(--muted)]"
         >
-          cancela quando quiser, direto em Configurações. Volta pro plano Grátis, sem apagar o
-          Planejamento.
+          cancela quando quiser, direto em Configurações. Volta pro plano Grátis, sem apagar nada do
+          que a marca guardou.
         </p>
       </div>
 

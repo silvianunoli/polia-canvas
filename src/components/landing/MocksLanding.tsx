@@ -136,19 +136,21 @@ export function MockDescontoHero({ className }: { className?: string }) {
 
 /* ──────────────────────── Mecanismo (landing B) ──────────────────────── */
 
+// Até 31/10/2026 o primeiro nó era o Planejamento ("Por que a sua marca
+// existe"). O Planejamento saiu da Pólia One; o fluxo virou preço, pedido, mês.
 const nosFluxo = [
-  { rotulo: "Planejamento", texto: "Por que a sua marca existe" },
   { rotulo: "Calculadora", texto: "R$ 49 · lucra R$ 19,60" },
+  { rotulo: "Pedidos", texto: "Caderno A5 da Marina · Entregue" },
   { rotulo: "Painel", texto: "Falta R$ 430 para bater a meta do mês" },
 ];
 
-/** Marca → preço → mês: as três telas ligadas, com os nós entrando em sequência. */
+/** Preço → pedido → mês: as três telas ligadas, com os nós entrando em sequência. */
 export function MockFluxoMarcaPrecoMes({ className = "" }: { className?: string }) {
   const reduzir = useReducedMotion();
   return (
     <div
       role="img"
-      aria-label="Como a Pólia One liga as partes: o Planejamento guarda por que a marca existe, a Calculadora mostra o preço de R$ 49 com R$ 19,60 de lucro, e o Painel mostra que falta R$ 430 para bater a meta do mês."
+      aria-label="Como a Pólia One liga as partes: a Calculadora mostra o preço de R$ 49 com R$ 19,60 de lucro, o pedido da Marina chega a Entregue no quadro de Pedidos, e o Painel mostra que falta R$ 430 para bater a meta do mês."
       className={className}
     >
       <motion.ol
@@ -200,7 +202,66 @@ export function MockFluxoMarcaPrecoMes({ className = "" }: { className?: string 
 
 /* ───────────────────── Como funciona (landing B) ───────────────────── */
 
-/** Passo 01 da B: uma pergunta do Módulo 1, a marca antes do dinheiro. */
+// Quadro de Pedidos (GRW-93): o andamento é o da tela real (lib/pedidos.ts) e o
+// lucro do caderno A5 é o mesmo da Calculadora deste arquivo.
+const quadroDePedidos = [
+  {
+    cliente: "Júlia Prado",
+    item: "Kit 3 cadernos A5",
+    entrega: "entrega segunda",
+    andamento: "Em produção",
+    tom: "bg-[var(--secondary-light)] text-[var(--ink)]",
+  },
+  {
+    cliente: "Bia Santos",
+    item: "12 cadernos com nome",
+    entrega: "entrega dia 20",
+    andamento: "A fazer",
+    tom: "bg-[var(--line)] text-[var(--ink-soft)]",
+  },
+  {
+    cliente: "Marina Costa",
+    item: "Caderno A5 · lucra R$ 19,60",
+    entrega: "entregue ontem",
+    andamento: "Entregue",
+    tom: "bg-[var(--surface-pink)] text-[var(--ink-soft)]",
+  },
+];
+
+/** Passo do pedido (home e landing B, 31/10/2026): o quadro de Pedidos com o andamento de cada um. */
+export function MockQuadroPedidos({ className }: { className?: string }) {
+  return (
+    <Cartela
+      label="Quadro de Pedidos da Pólia One com três pedidos: o kit da Júlia em produção, os cadernos da Bia a fazer e o caderno da Marina entregue, com R$ 19,60 de lucro."
+      className={className}
+    >
+      <Label>Pedidos · esta semana</Label>
+      <ul className="mt-3 flex list-none flex-col">
+        {quadroDePedidos.map((p) => (
+          <li
+            key={p.cliente}
+            className="flex items-center justify-between gap-3 border-b border-dashed border-[var(--line)] py-2.5 last:border-b-0"
+          >
+            <div className="min-w-0">
+              <p className="truncate text-[13.5px] font-semibold text-[var(--ink)]">{p.cliente}</p>
+              <p className="truncate text-[12px] text-[var(--muted)]">
+                {p.item} · {p.entrega}
+              </p>
+            </div>
+            <span className={`flex-none rounded-md px-2.5 py-1 text-[11.5px] ${p.tom}`}>
+              {p.andamento}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Cartela>
+  );
+}
+
+/**
+ * Uma pergunta do Módulo 1, a marca antes do dinheiro. Saiu das páginas de
+ * venda em 31/10/2026 com o Planejamento; fica pro blog e pro Pólia Lab.
+ */
 export function MockPerguntaMarca({ className }: { className?: string }) {
   return (
     <Cartela

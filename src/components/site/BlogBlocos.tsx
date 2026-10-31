@@ -2,11 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { BotaoCadastro, CORPO, H2, Rotulo, Secao } from "@/components/landing/BlocosLanding";
-import {
-  MockCalculadoraHero,
-  MockPerguntaMarca,
-  MockTresNumeros,
-} from "@/components/landing/MocksLanding";
+import { MockCalculadoraHero, MockTresNumeros } from "@/components/landing/MocksLanding";
 import { MockPedidos } from "@/components/landing/MocksLanding";
 
 /**
@@ -237,14 +233,16 @@ const CHAMADAS: Record<string, Chamada> = {
     botao: "Quero organizar os pedidos",
     mock: <MockPedidos />,
   },
+  // Era o Planejamento; ele saiu da Pólia One em 31/10/2026. A ideia agora
+  // chega pela Calculadora, que faz o primeiro preço antes da primeira venda.
   "Validação de ideia": {
     chave: "ideia",
-    rotulo: "Planejamento",
-    titulo: "A ideia no papel antes do primeiro preço.",
+    rotulo: "Calculadora",
+    titulo: "O primeiro preço antes da primeira venda.",
     frase:
-      "O Planejamento da Pólia One pergunta pra quem é a marca, o que ela entrega e quanto precisa render. O primeiro preço já nasce calculado.",
-    botao: "Quero pôr a ideia no papel",
-    mock: <MockPerguntaMarca />,
+      "A Calculadora da Pólia One faz a conta com o custo real e o seu tempo, e a ideia já nasce com o preço calculado. Funciona no Grátis.",
+    botao: "Quero calcular o primeiro preço",
+    mock: <MockCalculadoraHero />,
   },
 };
 

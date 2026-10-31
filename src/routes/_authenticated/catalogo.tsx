@@ -165,14 +165,14 @@ function CatalogoPage() {
             </div>
           </Secao>
 
-          <Secao titulo="Cara da loja" texto="O logo e a cor vêm de Marca. A capa e as frases são só da loja.">
+          <Secao titulo="Cara da loja" texto="O logo e a cor vêm de Configurações. A capa e as frases são só da loja.">
             <div className="flex flex-wrap items-center gap-4">
               {marca.data?.logoUrl ? (
                 <img src={marca.data.logoUrl} alt="Logo da marca" className="h-14 w-14 rounded-lg border border-[var(--line)] object-contain bg-white" />
               ) : (
                 <span className="font-sans text-[13px] text-[var(--ink-soft)]">Sem logo: a loja mostra o nome da marca.</span>
               )}
-              <LinkInterno href="/marca" className={BTN_MIUDO}>Trocar o logo em Marca</LinkInterno>
+              <LinkInterno href="/configuracoes#logo-e-cor" className={BTN_MIUDO}>Trocar o logo em Configurações</LinkInterno>
             </div>
             <Capa userId={userId!} capaUrl={cat?.capaUrl ?? null} temLoja={!!cat} />
             <Campo label="Cor de destaque" hint="Botões, preço do sinal e detalhes da loja. Vazio usa a cor da marca.">

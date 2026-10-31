@@ -47,6 +47,8 @@ export interface PassoTour {
 // que leva direto pro Módulo 1. Os balões do Assistente e da ação principal
 // saíram: o Assistente ganha dica própria dentro do módulo e a ação principal
 // do Painel passou a apontar pro Planejamento até o Módulo 4.
+// Desde 31/10/2026 o Planejamento saiu da Pólia One e o Painel não monta mais
+// o balão (TourBoasVindas). Fica aqui pra quando o Planejamento voltar no Lab.
 export const PASSOS_TOUR: PassoTour[] = [
   {
     alvo: "planejamento",
@@ -58,15 +60,19 @@ export const PASSOS_TOUR: PassoTour[] = [
   },
 ];
 
-/** Modal do primeiro acesso ao Painel: o ciclo da Pólia One em três linhas. */
+/**
+ * Modal do primeiro acesso ao Painel: o ciclo da Pólia One em três linhas.
+ * Desde 31/10/2026 é o ciclo do sistema da marca (preço, pedido, mês), sem o
+ * Planejamento, que saiu da Pólia One.
+ */
 export const BOAS_VINDAS = {
   titulo: "Assim a Pólia One funciona",
   ciclo: [
-    "No Planejamento, a marca conta quem ela é, pra quem vende e quanto custa.",
-    "A Pólia One organiza cada módulo em documento e ferramenta prontos.",
-    "O Painel acende com os números da marca conforme os módulos fecham.",
+    "Na Calculadora, o preço sai do custo real de cada produto, com o seu tempo na conta.",
+    "Em Pedidos, cada pedido anda de A fazer até Entregue, com o dia da entrega e o lucro dele.",
+    "O Painel junta o mês: o que entrou, o que saiu e quanto a marca lucrou.",
   ],
-  acao: "Quero começar pelo Módulo 1",
+  acao: "Quero começar",
   secundaria: "Ver o tutorial completo depois",
 } as const;
 

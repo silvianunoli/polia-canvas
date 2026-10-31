@@ -6,7 +6,6 @@ import {
   contaVeBloco,
   escolhaDoBusinessType,
   hrefCalculadora,
-  limparNomeMarca,
   mancheteDoBloco,
   mostraBloco,
   nichoDaConta,
@@ -14,8 +13,8 @@ import {
   textoPassoPreco,
   tipoPrecoDaBusca,
   tipoPrecoDaEscolha,
-  PASSO_MODULO_1,
-  PASSO_NOME,
+  PASSO_PEDIDO,
+  PASSO_ENTREGUE,
   CTA_PRECO,
   ESCOLHAS_TIPO,
 } from "./primeirosPassos";
@@ -79,7 +78,7 @@ describe("contaVeBloco (quem vê o bloco)", () => {
 
 describe("progressoPrimeirosPassos", () => {
   it("nada feito: destaque no preço", () => {
-    const p = progressoPrimeirosPassos({ temPreco: false, modulo1Fechado: false, temNome: false });
+    const p = progressoPrimeirosPassos({ temPreco: false, temPedido: false, temEntregue: false });
     expect(p.destaque).toBe("preco");
     expect(p.totalFeitos).toBe(0);
     expect(p.completo).toBe(false);
@@ -87,22 +86,22 @@ describe("progressoPrimeirosPassos", () => {
 
   it("o destaque desce pro próximo não feito", () => {
     expect(
-      progressoPrimeirosPassos({ temPreco: true, modulo1Fechado: false, temNome: false }).destaque,
-    ).toBe("modulo-1");
+      progressoPrimeirosPassos({ temPreco: true, temPedido: false, temEntregue: false }).destaque,
+    ).toBe("pedido");
     expect(
-      progressoPrimeirosPassos({ temPreco: true, modulo1Fechado: true, temNome: false }).destaque,
-    ).toBe("nome");
+      progressoPrimeirosPassos({ temPreco: true, temPedido: true, temEntregue: false }).destaque,
+    ).toBe("entregue");
   });
 
   it("feito fora de ordem não pula o primeiro pendente", () => {
-    const p = progressoPrimeirosPassos({ temPreco: false, modulo1Fechado: true, temNome: true });
+    const p = progressoPrimeirosPassos({ temPreco: false, temPedido: true, temEntregue: true });
     expect(p.destaque).toBe("preco");
-    expect(p.feitos).toEqual({ preco: false, "modulo-1": true, nome: true });
+    expect(p.feitos).toEqual({ preco: false, pedido: true, entregue: true });
     expect(p.totalFeitos).toBe(2);
   });
 
   it("os três feitos: completo, sem destaque", () => {
-    const p = progressoPrimeirosPassos({ temPreco: true, modulo1Fechado: true, temNome: true });
+    const p = progressoPrimeirosPassos({ temPreco: true, temPedido: true, temEntregue: true });
     expect(p.destaque).toBeNull();
     expect(p.completo).toBe(true);
   });
@@ -110,12 +109,12 @@ describe("progressoPrimeirosPassos", () => {
 
 describe("mostraBloco", () => {
   const nova = { createdAt: DEPOIS, onboardingCompleted: true, onboardingCompletedAt: DEPOIS };
-  const tudo = { temPreco: true, modulo1Fechado: true, temNome: true };
+  const tudo = { temPreco: true, temPedido: true, temEntregue: true };
   it("some com os três feitos e o nicho respondido", () => {
     expect(mostraBloco(nova, tudo, true)).toBe(false);
   });
   it("aparece enquanto falta um", () => {
-    expect(mostraBloco(nova, { ...tudo, temNome: false }, true)).toBe(true);
+    expect(mostraBloco(nova, { ...tudo, temEntregue: false }, true)).toBe(true);
   });
   it("nicho é obrigatório: com os três feitos e sem nicho, o bloco fica", () => {
     expect(mostraBloco(nova, tudo, false)).toBe(true);
@@ -123,7 +122,7 @@ describe("mostraBloco", () => {
   it("conta fora da regra nunca vê", () => {
     const antiga = { createdAt: ANTES, onboardingCompleted: true, onboardingCompletedAt: ANTES };
     expect(
-      mostraBloco(antiga, { temPreco: false, modulo1Fechado: false, temNome: false }, false),
+      mostraBloco(antiga, { temPreco: false, temPedido: false, temEntregue: false }, false),
     ).toBe(false);
   });
 });
@@ -212,13 +211,24 @@ describe("textos", () => {
     expect(
       mancheteDoBloco({ pessoa: "Papelaria personalizada", tipo: "produto", negocio: null }),
     ).toBe("Papelaria personalizada, o preço do seu produto começa por aqui.");
-    expect(mancheteDoBloco(null)).toBe("Três passos e o Painel começa a mostrar o seu mês.");
+    expect(mancheteDoBloco(null)).toBe(
+      "Três passos e o Painel começa a mostrar quanto a marca lucra.",
+    );
   });
 
-  it("nome da marca: sem espaço nas pontas e até 60 caracteres", () => {
-    expect(limparNomeMarca("  Ateliê da Ana  ")).toBe("Ateliê da Ana");
-    expect(limparNomeMarca("a".repeat(80))).toHaveLength(60);
-    expect(limparNomeMarca("   ")).toBe("");
+  it("manchete acompanha o passo em destaque (pedido e entregue)", () => {
+    expect(mancheteDoBloco(null, "pedido")).toMatch(/primeiro pedido/);
+    expect(
+      mancheteDoBloco({ pessoa: "Trancista", tipo: "servico", negocio: null }, "entregue"),
+    ).toMatch(/entregue/);
+  });
+
+  it("os passos de pedido levam pro quadro de Pedidos, sem o Planejamento", () => {
+    expect(PASSO_PEDIDO.href).toBe("/pedidos");
+    expect(PASSO_ENTREGUE.href).toBe("/pedidos");
+    for (const t of [PASSO_PEDIDO, PASSO_ENTREGUE].flatMap((p) => [p.titulo, p.subtitulo])) {
+      expect(t).not.toMatch(/Planejamento|Módulo/);
+    }
   });
 
   it("copy sem travessão, exclamação nem emoji; CTA começa por Quero", () => {
@@ -229,17 +239,21 @@ describe("textos", () => {
       ...Object.values(textoPassoPreco({ pessoa: "X", tipo: "servico", negocio: null })).filter(
         (v) => typeof v === "string",
       ),
-      PASSO_MODULO_1.titulo,
-      PASSO_MODULO_1.subtitulo,
-      PASSO_MODULO_1.acao,
-      PASSO_NOME.titulo,
-      PASSO_NOME.subtitulo,
+      mancheteDoBloco(null, "pedido"),
+      mancheteDoBloco(null, "entregue"),
+      PASSO_PEDIDO.titulo,
+      PASSO_PEDIDO.subtitulo,
+      PASSO_PEDIDO.acao,
+      PASSO_ENTREGUE.titulo,
+      PASSO_ENTREGUE.subtitulo,
+      PASSO_ENTREGUE.acao,
       CTA_PRECO,
       ...ESCOLHAS_TIPO.map((e) => e.rotulo),
     ] as string[];
     for (const t of textos) expect(t, t).not.toMatch(/[—–!]|\p{Extended_Pictographic}/u);
     expect(CTA_PRECO.startsWith("Quero")).toBe(true);
-    expect(PASSO_MODULO_1.acao.startsWith("Quero")).toBe(true);
+    expect(PASSO_PEDIDO.acao.startsWith("Quero")).toBe(true);
+    expect(PASSO_ENTREGUE.acao.startsWith("Quero")).toBe(true);
   });
 });
 

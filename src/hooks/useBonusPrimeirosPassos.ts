@@ -9,8 +9,9 @@ import { toastSucesso } from "@/lib/toast";
 /**
  * Bônus dos primeiros passos (ONE-136): +7 dias no teste do Pro aberto.
  * Montado no layout da área logada e pedido a cada troca de tela: o último
- * passo pode acontecer na Calculadora ou no Planejamento, e quem fecha o
- * passo no último dia não pode depender de voltar ao Painel antes do cron.
+ * passo pode acontecer na Calculadora ou em Pedidos (desde 31/10/2026 os passos
+ * são preço, pedido e pedido entregue), e quem fecha o passo no último dia não
+ * pode depender de voltar ao Painel antes do cron.
  * Quem confere os passos e decide é resgatar_bonus_primeiros_passos(), que
  * devolve null quando ainda falta algo.
  */

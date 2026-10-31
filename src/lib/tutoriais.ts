@@ -72,7 +72,7 @@ const LISTA = [
     rota: "/painel",
     abrir: "Abrir o Painel",
     resumo:
-      "Os três primeiros passos que aparecem no topo do Painel: o primeiro preço, o Módulo 1 e o nome da marca.",
+      "Os três primeiros passos que aparecem no topo do Painel: o primeiro preço, o primeiro pedido e o primeiro pedido entregue.",
     passos: [
       {
         titulo: "Antes dos passos: o nicho",
@@ -85,8 +85,8 @@ const LISTA = [
         titulo: "Os três passos",
         itens: [
           '"Calcular o primeiro preço": escolha "Produto", "Serviço" ou "Os dois" e clique em "Quero calcular meu preço →". A Calculadora abre na aba certa e guarda o primeiro preço sozinha.',
-          '"Fechar o Módulo 1 do Planejamento": clique em "Quero abrir o Módulo 1 →" e responda as 5 seções curtas.',
-          '"Dar nome à marca": escreva o nome, mesmo que provisório, e clique em "Salvar".',
+          '"Lançar o primeiro pedido": clique em "Quero lançar um pedido →". No quadro de Pedidos, "Anotar o primeiro pedido" guarda a cliente, o que ela pediu e o dia da entrega.',
+          '"Marcar um pedido como entregue e ver o lucro": clique em "Quero abrir o quadro de Pedidos →" e passe o pedido até "Entregue". O cartão do pedido mostra quanto ele lucra.',
           'O contador "N de 3" acompanha. Com os três feitos, o bloco some e o Painel passa a mostrar o mês.',
         ],
       },
@@ -94,7 +94,7 @@ const LISTA = [
     bomSaber: [
       "Só o primeiro passo que falta fica aceso. Os outros esperam a vez.",
       "Conta nova começa com 7 dias do Pro. Fechando os três passos durante o teste, ele ganha mais 7 dias.",
-      "O nome da marca dá pra trocar depois em Configurações.",
+      'O nome da marca fica em Configurações, em "Seu negócio", junto com o logo e a cor.',
       'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados" e "Central de ajuda". No app, os dois ficam na aba Mais.',
     ],
     duvidas: [
@@ -117,13 +117,13 @@ const LISTA = [
     rota: "/painel",
     abrir: "Abrir o Painel",
     resumo:
-      "A tela de todo dia: quanto falta pro mês, o que entrou, as tarefas que vencem e o próximo módulo do Planejamento.",
+      "A tela de todo dia: quanto falta pro mês, o que entrou, quanto a marca lucrou e as entregas da semana.",
     passos: [
       {
         titulo: "Ler o Painel",
         itens: [
-          "A frase do topo muda com o mês. Antes do Módulo 4, ela aponta o Planejamento. Depois, mostra quanto falta pra fechar as contas ou a Meta do mês.",
-          "O botão logo abaixo é o próximo passo: continuar um módulo ou registrar uma entrada.",
+          "A frase do topo muda com o mês. Sem venda no mês, ela aponta os Pedidos. Com venda, mostra quanto falta pra fechar as contas ou a Meta do mês.",
+          'O botão logo abaixo é o próximo passo: "Quero lançar um pedido →" sem venda no mês, ou o registro e o Financeiro depois dela.',
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
           'Com pedido aberto no quadro de Pedidos, o cartão "Entregas" mostra as de hoje, as de amanhã, as atrasadas e quanto entra na semana. "Abrir o quadro" leva pra ele.',
         ],
@@ -131,7 +131,7 @@ const LISTA = [
       {
         titulo: "Registrar uma entrada pelo Painel",
         itens: [
-          'Clique em "Registrar uma entrada" ou, no plano Grátis, em "+ Registrar" no bloco "Entrou e saiu este mês".',
+          'No bloco "Entrou e saiu este mês", clique em "Registrar". No plano Grátis, com venda no mês, o botão "Registrar entrada ou saída" do topo abre o mesmo registro.',
           'Escolha "Entrada" ou "Saída", preencha o "Valor (R$)" e a "Data".',
           'Escolha a categoria. Venda entra como "Venda de produto" ou "Prestação de serviço".',
           'Clique em "Salvar lançamento".',
@@ -146,9 +146,8 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      'A lista "Pra o Painel acender" mostra o que falta pra cada número aparecer. Ela some quando os 6 itens estão feitos.',
       "No Grátis, o Painel lança entradas e saídas só do mês atual. O histórico dos outros meses fica no Financeiro, do Premium.",
-      "A Meta do mês nasce no Módulo 4 do Planejamento, na pergunta do mês bom.",
+      'A Meta do mês nasce em Metas, em "Criar a Meta do mês".',
     ],
     duvidas: [
       {
@@ -170,6 +169,9 @@ const LISTA = [
     rota: "/planejamento",
     // Marca e Mapa de Mercado são documentos que nascem dos módulos 1 e 2.
     outrasRotas: ["/marca", "/mercado"],
+    // Saiu das usuárias em 31/10/2026 (vira ferramenta do Pólia Lab): fora da
+    // lista e da busca. Sem a flag `planejamento`, as rotas levam pro Painel.
+    interno: true,
     abrir: "Abrir o Planejamento",
     resumo:
       "O documento vivo da marca: seis módulos, do porquê ela existe até onde ela vai. Cada resposta vira preço, meta e conta do mês nas outras telas.",
@@ -228,7 +230,9 @@ const LISTA = [
     abrir: "Abrir o Assistente",
     resumo:
       "O balão no canto da tela: responde dúvidas sobre como usar a Pólia One e sobre o negócio.",
-    trecho: "assistente",
+    // Sem clipe desde 31/10/2026: a cena mostra o exemplo "Como eu preencho o
+    // Planejamento?" e a resposta sobre o Módulo 1, e o Planejamento saiu.
+    // Volta quando a narração nova sair.
     passos: [
       {
         titulo: "Fazer uma pergunta",
@@ -297,7 +301,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "Grátis, R$ 0: Painel, Planejamento, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas, guia de presença e Assistente.",
+      "Grátis, R$ 0: Painel, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas e Assistente.",
       VIROU
         ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
         : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
@@ -584,7 +588,7 @@ const LISTA = [
     ],
     bomSaber: [
       "O Financeiro é do Premium e do Pro. No Grátis, a entrada e a saída do mês são lançadas pelo Painel.",
-      'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês. As marcas de mínimo e de celebrar vêm do módulo Quanto vale, no Planejamento.',
+      'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês, que nasce em Metas.',
       "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
       "Excluir um lançamento não tem volta.",
       VIROU
@@ -898,6 +902,7 @@ const LISTA = [
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
       "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
+      'Lançar o primeiro pedido e levar um pedido até "Entregue" são dois dos Primeiros passos do Painel.',
       "Pedido novo que chega pela loja do Catálogo também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
     ],
     duvidas: [
@@ -941,7 +946,7 @@ const LISTA = [
       {
         titulo: "Dar a cara da marca",
         itens: [
-          'O logo e a cor vêm de "Marca". Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
+          'O logo e a cor vêm de Configurações, em "Logo e cor" ("Trocar o logo em Configurações" leva até lá). Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
           "Sem capa, a loja monta a abertura com as fotos dos produtos.",
         ],
       },
@@ -1034,8 +1039,10 @@ const LISTA = [
   {
     // Slug e rota continuam "caderno": desde 28/10/2026 as notas ficaram só pra
     // conta interna e, pra todas, a tela é o guia de presença do Módulo 5. Sem
-    // clipe: o vídeo mostra as notas.
+    // clipe: o vídeo mostra as notas. Interno desde 31/10/2026: o guia nasce do
+    // Módulo 5 do Planejamento, que saiu das usuárias.
     slug: "caderno",
+    interno: true,
     nome: "Guia de presença",
     grupo: "Primeiros passos",
     rota: "/caderno",

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Check } from "lucide-react";
 
 import { LinkInterno } from "@/components/ui/LinkInterno";
@@ -7,10 +7,9 @@ import {
   CTA_PRECO,
   ESCOLHAS_ESTAGIO,
   ESCOLHAS_TIPO,
-  NOME_MARCA_MAX,
   ORDEM_PASSOS,
-  PASSO_MODULO_1,
-  PASSO_NOME,
+  PASSO_ENTREGUE,
+  PASSO_PEDIDO,
   hrefCalculadora,
   perguntaEstagio,
   textoPassoPreco,
@@ -29,7 +28,9 @@ const ROTULO = "font-accent text-[11px] font-bold uppercase tracking-[0.12em] te
 
 /**
  * Bloco "Primeiros passos" do topo do Painel (14/10/2026, desenho em cinza
- * aprovado pela Sil). Três passos numerados; o primeiro não feito fica em
+ * aprovado pela Sil). Desde 31/10/2026 os três passos são de operação: o
+ * primeiro preço, o primeiro pedido e o primeiro pedido entregue (o
+ * Planejamento saiu da Pólia One). Três passos numerados; o primeiro não feito fica em
  * destaque (fundo, sem faixa lateral) e é o único com ação, pra a tela ter um
  * recado só. Feito ganha o check e o destaque desce. Com os três feitos o
  * Painel deixa de renderizar o bloco.
@@ -47,7 +48,6 @@ export function PrimeirosPassos({
   onEscolherEstagio,
   nichoSalvo,
   onEscolherNicho,
-  onSalvarNome,
   bonusDias = null,
   primeiroPreco = null,
 }: {
@@ -59,7 +59,6 @@ export function PrimeirosPassos({
   onEscolherEstagio: (e: EstagioNegocio) => Promise<boolean>;
   nichoSalvo: NichoNegocio | null;
   onEscolherNicho: (n: NichoNegocio) => Promise<boolean>;
-  onSalvarNome: (nome: string) => Promise<boolean>;
   /** Dias que o teste do Pro ganha ao completar os três (ONE-136). null = não oferece. */
   bonusDias?: number | null;
   /**
@@ -74,8 +73,8 @@ export function PrimeirosPassos({
 
   const textos: Record<IdPasso, { titulo: string; subtitulo: string }> = {
     preco: { titulo: preco.titulo, subtitulo: preco.subtitulo },
-    "modulo-1": { titulo: PASSO_MODULO_1.titulo, subtitulo: PASSO_MODULO_1.subtitulo },
-    nome: { titulo: PASSO_NOME.titulo, subtitulo: PASSO_NOME.subtitulo },
+    pedido: { titulo: PASSO_PEDIDO.titulo, subtitulo: PASSO_PEDIDO.subtitulo },
+    entregue: { titulo: PASSO_ENTREGUE.titulo, subtitulo: PASSO_ENTREGUE.subtitulo },
   };
 
   const acao = (id: IdPasso): ReactNode => {
@@ -89,26 +88,12 @@ export function PrimeirosPassos({
         </LinkInterno>
       );
     }
-    if (id === "modulo-1") {
-      return (
-        <LinkInterno href={PASSO_MODULO_1.href} className={`${BTN_ACAO} mt-4`}>
-          {PASSO_MODULO_1.acao}
-          <span aria-hidden="true">→</span>
-        </LinkInterno>
-      );
-    }
+    const passo = id === "pedido" ? PASSO_PEDIDO : PASSO_ENTREGUE;
     return (
-      <CampoNome
-        onSalvar={async (nome) => {
-          const ok = await onSalvarNome(nome);
-          // O campo some quando salva. Sem isto o foco caía no <body>; vai pro
-          // rótulo do bloco. Se era o último passo o bloco sai, e o Painel
-          // leva o foco pra manchete.
-          const eraOUltimo = progresso.totalFeitos === ORDEM_PASSOS.length - 1;
-          if (ok && !eraOUltimo) requestAnimationFrame(() => tituloRef.current?.focus());
-          return ok;
-        }}
-      />
+      <LinkInterno href={passo.href} className={`${BTN_ACAO} mt-4`}>
+        {passo.acao}
+        <span aria-hidden="true">→</span>
+      </LinkInterno>
     );
   };
 
@@ -127,7 +112,7 @@ export function PrimeirosPassos({
       </div>
       {bonusDias != null && (
         <p className="mt-1 px-1 text-[14px] text-[var(--ink-soft)]">
-          Com os três feitos, o teste do Pro ganha mais {bonusDias} dias.
+          Preço, pedido e entrega feitos, o teste do Pro ganha mais {bonusDias} dias.
         </p>
       )}
 
@@ -386,55 +371,6 @@ function EscolhaDoTipo({
         </>
       )}
     </div>
-  );
-}
-
-/** Nome da marca direto no bloco: mesmo campo do onboarding antigo e de Configurações. */
-function CampoNome({ onSalvar }: { onSalvar: (nome: string) => Promise<boolean> }) {
-  const [nome, setNome] = useState("");
-  const [salvando, setSalvando] = useState(false);
-  const inputId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  async function enviar(e: FormEvent) {
-    e.preventDefault();
-    if (salvando || !nome.trim()) return;
-    setSalvando(true);
-    const ok = await onSalvar(nome);
-    // Deu certo: o passo vira feito e o campo desmonta. Falhou: o texto fica.
-    if (!ok) {
-      setSalvando(false);
-      requestAnimationFrame(() => inputRef.current?.focus());
-    }
-  }
-
-  return (
-    <form onSubmit={(e) => void enviar(e)} className="mt-3 flex flex-col gap-2 sm:flex-row">
-      <label htmlFor={inputId} className="sr-only">
-        Nome da marca
-      </label>
-      <input
-        ref={inputRef}
-        id={inputId}
-        type="text"
-        value={nome}
-        onChange={(e) => setNome(e.target.value.slice(0, NOME_MARCA_MAX))}
-        maxLength={NOME_MARCA_MAX}
-        readOnly={salvando}
-        aria-busy={salvando || undefined}
-        aria-describedby="primeiros-passos-sub-nome"
-        autoComplete="organization"
-        placeholder="Mesmo que provisório"
-        className="h-11 min-w-0 flex-1 rounded-lg border border-[var(--line)] bg-white px-3 text-[16px] text-[var(--ink)] outline-none placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--ink)] sm:text-[14px]"
-      />
-      <button
-        type="submit"
-        disabled={salvando || !nome.trim()}
-        className={`${BTN_ACAO} min-h-11 shrink-0`}
-      >
-        {salvando ? "Salvando..." : "Salvar"}
-      </button>
-    </form>
   );
 }
 

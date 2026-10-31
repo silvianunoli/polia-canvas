@@ -16,7 +16,6 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/bo
 import { toastInfo } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { LinkInterno } from "@/components/ui/LinkInterno";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import {
   LIMITE_METAS_ATIVAS as LIMITE_ATIVAS,
@@ -28,7 +27,6 @@ import {
 import { progressoPct } from "@/lib/metas";
 import { somarEntradasDoMes } from "@/lib/numerosDoMes";
 import { formatarReais } from "@/lib/formatarReais";
-import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
 
 interface MetasSearch {
   /** "meta-do-mes": abre direto o atalho que cria a Meta do mês (vem do Financeiro e da Projeção). */
@@ -111,7 +109,6 @@ function MetasPage() {
   const qc = useQueryClient();
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const linkModulo6 = useLinkDoModulo(6);
 
   const [modalAberto, setModalAberto] = useState(false);
   const [metaEdit, setMetaEdit] = useState<Meta | null>(null);
@@ -386,28 +383,16 @@ function MetasPage() {
               titulo="Nenhuma meta ainda."
               texto={`Defina até ${LIMITE_ATIVAS} para manter o foco no que importa.`}
               acao={
-                // A ação do vazio é a da própria tela. O Planejamento é caminho
-                // secundário e só aponta pro Módulo 6 quando ele está liberado
-                // (antes o botão principal levava a um módulo trancado).
-                <>
-                  <button
-                    type="button"
-                    onClick={abrirCriar}
-                    disabled={limiteAtingido}
-                    className={BTN_ACAO}
-                  >
-                    <Plus size={16} aria-hidden="true" /> Nova meta
-                  </button>
-                  <p className="mt-3 text-[12px] text-[var(--muted)]">
-                    ou defina pelo{" "}
-                    <LinkInterno
-                      href={linkModulo6.href}
-                      className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
-                    >
-                      {linkModulo6.liberado ? "Módulo 6 do Planejamento →" : "Planejamento →"}
-                    </LinkInterno>
-                  </p>
-                </>
+                // A ação do vazio é a da própria tela. O atalho pro Módulo 6 do
+                // Planejamento saiu com ele em 31/10/2026.
+                <button
+                  type="button"
+                  onClick={abrirCriar}
+                  disabled={limiteAtingido}
+                  className={BTN_ACAO}
+                >
+                  <Plus size={16} aria-hidden="true" /> Nova meta
+                </button>
               }
             />
           ) : (

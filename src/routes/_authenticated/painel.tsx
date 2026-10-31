@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { Vazio } from "@/components/layout/Vazio";
-import { TOTAL_MODULOS, moduloInfo, secoesDoModulo } from "@/lib/planejamento";
 import { hojeISO, mesAnoDe } from "@/lib/data.functions";
 import { jaEntregue } from "@/lib/statusCliente";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
@@ -19,18 +18,8 @@ import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalL
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-import { TourBoasVindas } from "@/components/dicas/TourBoasVindas";
 import { BoasVindas } from "@/components/dicas/BoasVindas";
-import { FaixaPlanejamento } from "@/components/dicas/FaixaPlanejamento";
-import { ListaPraAcender } from "@/components/dicas/ListaPraAcender";
-import { progressoPlanejamento } from "@/lib/lembretePlanejamento";
-import {
-  chamadaDoPlanejamento,
-  estagioPainel,
-  itensPraAcender,
-  moduloFechado,
-} from "@/lib/painelAcende";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO } from "@/lib/botoes";
 import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
 import { useTestePro } from "@/hooks/useTestePro";
@@ -56,7 +45,7 @@ export const Route = createFileRoute("/_authenticated/painel")({
       { title: "Painel · Pólia One" },
       {
         name: "description",
-        content: "Seu painel da Pólia One: o próximo módulo, seu dia e o ar do seu negócio.",
+        content: "Seu painel da Pólia One: os pedidos, o dia e quanto a marca lucra no mês.",
       },
     ],
   }),
@@ -95,10 +84,6 @@ function comoResultado<T>(p: Promise<T[]>): Promise<{ data: T[] | null; error: u
   );
 }
 
-function ordinal(n: number) {
-  return `${n}º`;
-}
-
 // Extrai o primeiro número de um texto livre em pt-BR ("R$ 6.000" → 6000).
 function numeroDe(texto: string): number {
   const m = texto.match(/[\d.,]+/);
@@ -123,8 +108,7 @@ function numeroDe(texto: string): number {
 
 // Receita, Pedidos e Clientes são métricas comparáveis do mesmo mês, então têm
 // largura igual (4/4/4). Antes eram 5/3/4 — três larguras diferentes sugerem
-// três importâncias diferentes, que não é o caso. Mesmo erro já corrigido no
-// bento do /planejamento.
+// três importâncias diferentes, que não é o caso.
 const SPAN_CLASS: Record<number, string> = {
   4: "col-span-12 sm:col-span-4",
   6: "col-span-12 sm:col-span-6",
@@ -199,10 +183,6 @@ function CartaoFinanceiro({
   );
 }
 
-interface SecaoRow {
-  secao: string;
-  concluido: boolean;
-}
 interface CampoRow {
   campo: string;
   valor: string | null;
@@ -264,8 +244,6 @@ function PainelPage() {
       const { ano, mes } = mesAnoDe(hoje);
       const mesCorrente = intervaloDoMes(ano, mes);
       const [
-        profileRes,
-        secoesRes,
         camposRes,
         metaMesRes,
         lancRes,
@@ -275,18 +253,14 @@ function PainelPage() {
         concluidasSemanaRes,
         intencaoRes,
       ] = await Promise.all([
-        supabase.from("profiles").select("created_at").eq("id", userId!).maybeSingle(),
-        supabase
-          .from("planejamento_secoes" as never)
-          .select("secao, concluido")
-          .eq("user_id", userId!),
         supabase
           .from("planejamento_campos" as never)
           .select("campo, valor")
           .eq("user_id", userId!)
           // meta_minima entrou em 03/09/2026 (COPY-04): é o "mínimo pra fechar
-          // as contas" que a landing promete no painel diário, e ele é
-          // respondido no módulo 4 do Planejamento, que o plano Grátis tem.
+          // as contas" do painel diário, respondido no módulo 4 do
+          // Planejamento. O Planejamento saiu da Pólia One em 31/10/2026; quem
+          // já respondeu continua com o número aqui.
           .in("campo", ["financeiro.meta_minima", "financeiro.meta_celebracao"]),
         // Meta do mês: fonte única (mesma que Financeiro e a calculadora de Produtos lêem).
         // A escolha entre linhas repetidas/arquivadas mora em buscarMetaDoMes (QA-19).
@@ -363,8 +337,6 @@ function PainelPage() {
       ]);
       // Leitura que falha não pode virar R$ 0: a tela de dinheiro mentiria.
       const falha = [
-        profileRes,
-        secoesRes,
         camposRes,
         metaMesRes,
         lancRes,
@@ -376,8 +348,6 @@ function PainelPage() {
       ].find((r) => (r as { error: unknown }).error);
       if (falha) throw (falha as { error: unknown }).error;
       return {
-        createdAt: (profileRes.data as { created_at: string } | null)?.created_at ?? null,
-        secoes: ((secoesRes as unknown as { data: SecaoRow[] | null }).data ?? []) as SecaoRow[],
         campos: ((camposRes as unknown as { data: CampoRow[] | null }).data ?? []) as CampoRow[],
         metaMesAlvo: (metaMesRes.data as { valor_alvo: number | null } | null)?.valor_alvo ?? 0,
         lancamentos: (lancRes.data ?? []) as unknown as LancRow[],
@@ -392,60 +362,6 @@ function PainelPage() {
   });
 
   const dados = dadosQuery.data;
-
-  // ── Progresso do planejamento (mesma fonte da tela /planejamento) ──
-  const concluidas = useMemo(
-    () => new Set((dados?.secoes ?? []).filter((s) => s.concluido).map((s) => s.secao)),
-    [dados?.secoes],
-  );
-  const moduloAtual = useMemo(() => {
-    for (let n = 1; n <= TOTAL_MODULOS; n++) {
-      if (!secoesDoModulo(n).every((s) => concluidas.has(s.id))) return n;
-    }
-    return TOTAL_MODULOS + 1;
-  }, [concluidas]);
-  const jornadaFinalizada = moduloAtual > TOTAL_MODULOS;
-  const etapaInfo = moduloInfo(jornadaFinalizada ? TOTAL_MODULOS : moduloAtual);
-
-  // ── O Painel acende por partes (ONE-112, 11/10/2026) ──
-  // Até o Módulo 4 fechar, a manchete e a ação principal apontam o módulo em
-  // andamento: antes ela pedia "Registrar uma entrada" enquanto o tour apontava
-  // o Planejamento, dois recados na mesma tela. Depois do 4, volta a manchete
-  // de dinheiro (COPY-04), e o lembrete dos Módulos 5 e 6 vira faixa no topo.
-  const estagio = useMemo(() => estagioPainel(concluidas), [concluidas]);
-  const chamadaPlanejamento = useMemo(
-    () => (estagio.tipo === "planejamento" ? chamadaDoPlanejamento(estagio) : null),
-    [estagio],
-  );
-  const progressoFaixa = useMemo(
-    () => (estagio.tipo === "numeros" ? progressoPlanejamento(concluidas) : null),
-    [estagio.tipo, concluidas],
-  );
-  // "Registrar a primeira entrada" da lista olha qualquer mês, não só o atual:
-  // quem registrou em setembro já acendeu o cartão. Conta só o cabeçalho (sem
-  // linhas); se a leitura falhar, vale o que o mês corrente diz.
-  const temEntradaQuery = useQuery({
-    queryKey: ["painel-tem-entrada", userId],
-    enabled: !!userId && dadosQuery.isSuccess,
-    staleTime: 5 * 60_000,
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("lancamentos")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", userId!)
-        .eq("tipo", "entrada");
-      if (error) throw error;
-      return (count ?? 0) > 0;
-    },
-  });
-
-  // Dia do cadastro é o 1º dia (08/10/2026): antes era floor com mínimo 1, e
-  // o 1º e o 2º dia apareciam os dois como "1º".
-  const diasDesdeCadastro = useMemo(() => {
-    const c = dados?.createdAt;
-    if (!c) return 1;
-    return Math.max(1, Math.floor((Date.now() - new Date(c).getTime()) / 86400000) + 1);
-  }, [dados?.createdAt]);
 
   const campoValor = useMemo(() => {
     const m = new Map<string, string>();
@@ -483,27 +399,21 @@ function PainelPage() {
     };
   }, [dados?.lancamentos, clientReady]);
 
-  const itensAcender = useMemo(
-    () => itensPraAcender(concluidas, entradasMes > 0 || temEntradaQuery.data === true),
-    [concluidas, entradasMes, temEntradaQuery.data],
-  );
-
   // ── Primeiros passos (14/10/2026): a entrada da conta nova no lugar do
   // onboarding de 5 passos. Quem vê e o que está feito: lib/primeirosPassos.ts.
   // Leitura que falhou não mostra o bloco: o Painel segue como era.
   const nichoPasso = useMemo(() => nichoDaConta(user?.user_metadata), [user?.user_metadata]);
   const primeiros = usePrimeirosPassos(userId, nichoPasso);
-  const modulo1Fechado = useMemo(() => moduloFechado(1, concluidas), [concluidas]);
   const progressoPassos = useMemo(
     () =>
       primeiros.dados
         ? progressoPrimeirosPassos({
             temPreco: primeiros.dados.temPreco,
-            modulo1Fechado,
-            temNome: !!primeiros.dados.nomeMarca,
+            temPedido: primeiros.dados.temPedido,
+            temEntregue: primeiros.dados.temEntregue,
           })
         : null,
-    [primeiros.dados, modulo1Fechado],
+    [primeiros.dados],
   );
   // Bônus dos primeiros passos (ONE-136): o pedido mora no layout; aqui só o
   // convite no bloco, enquanto o teste está aberto e o bônus não foi usado.
@@ -589,20 +499,16 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
-    if (blocoVisivel) return mancheteDoBloco(nichoPasso);
-    if (chamadaPlanejamento) return chamadaPlanejamento.manchete;
-    // A manchete do plano Grátis era um desvio pro Planejamento, porque sem
-    // Financeiro a receita era sempre 0 e "registre sua primeira venda" mandava
-    // fazer o que o plano não deixava. Desde 03/09/2026 (COPY-04) todo plano
-    // registra entrada e saída pelo cartão "Entrou e saiu este mês", então a
-    // manchete volta a ser a mesma pra todo mundo: o número do mês, que é o que
-    // a landing promete no card do grátis.
+    if (blocoVisivel) return mancheteDoBloco(nichoPasso, progressoPassos?.destaque ?? null);
+    // Sem venda no mês, a manchete aponta pros Pedidos (31/10/2026: o
+    // Planejamento saiu e a Pólia One é vendida como o sistema da marca). O
+    // pedido é uma venda com dia de entrega, e o cartão dele mostra o lucro.
     if (receitaMes <= 0) {
-      return "Nenhuma venda registrada este mês. A primeira entrada já mostra quanto a marca lucra.";
+      return "Nenhuma venda registrada este mês. O primeiro pedido no quadro já mostra quanto a marca lucra com ele.";
     }
     // "Quanto falta pra fechar as contas do mês" é literalmente o que a landing
     // promete no painel diário, e o número vem do módulo 4 do Planejamento
-    // (financeiro.meta_minima). Vem antes da Meta do mês porque pagar as contas
+    // (financeiro.meta_minima), pra quem respondeu antes de ele sair. Vem antes da Meta do mês porque pagar as contas
     // é a primeira pergunta: mês bom só faz sentido depois dela.
     if (metaMinima > 0 && receitaMes < metaMinima) {
       return (
@@ -628,32 +534,21 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [receitaMes, metaBoa, metaMinima, chamadaPlanejamento, blocoVisivel, nichoPasso]);
+  }, [receitaMes, metaBoa, metaMinima, blocoVisivel, nichoPasso, progressoPassos]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
   // calculados aqui.
   //
-  // Sem o Financeiro (Grátis), a ação não é mais um desvio pro Planejamento
-  // nem um link pro /upgrade: é o registro em si, no modal do próprio Painel
-  // (COPY-04). O que o Premium abre segue dito no rodapé do cartão de
-  // registro, não no botão principal.
+  // Sem venda no mês, a ação é a da manchete: lançar o pedido, em todo plano
+  // (o quadro de Pedidos abre no Grátis). Com venda, sem o Financeiro (Grátis),
+  // a ação é o registro em si, no modal do próprio Painel (COPY-04); o que o
+  // Premium abre segue dito no rodapé do cartão de registro.
   const acaoPrincipal = useMemo((): { texto: string; href?: string; abreRegistro?: boolean } => {
-    if (chamadaPlanejamento) {
-      return {
-        texto: chamadaPlanejamento.acao,
-        href: `/planejamento/modulo/${chamadaPlanejamento.modulo}`,
-      };
-    }
-    if (!financeiroLiberado) {
-      return {
-        texto: receitaMes <= 0 ? "Registrar uma entrada" : "Registrar entrada ou saída",
-        abreRegistro: true,
-      };
-    }
-    if (receitaMes <= 0) return { texto: "Registrar uma entrada", href: "/financeiro" };
+    if (receitaMes <= 0) return { texto: "Quero lançar um pedido", href: "/pedidos" };
+    if (!financeiroLiberado) return { texto: "Registrar entrada ou saída", abreRegistro: true };
     return { texto: "Abrir o Financeiro", href: "/financeiro" };
-  }, [financeiroLiberado, receitaMes, chamadaPlanejamento]);
+  }, [financeiroLiberado, receitaMes]);
 
   // Modal de registro disparado pelo botão da manchete. Fica separado do estado
   // interno do cartão "Entrou e saiu este mês" de propósito: os dois usam o
@@ -754,14 +649,10 @@ function PainelPage() {
       {/* Fora enquanto o bloco "Primeiros passos" está na tela: ele já é o
           recado de boas-vindas e já tem a ação. Esperam o cabeçalho pra conta
           nova não ver o modal abrir antes de o bloco ser decidido. */}
+      {/* O balão do tour (TourBoasVindas) e a faixa dos Módulos 5 e 6 saíram
+          com o Planejamento em 31/10/2026: os dois apontavam pra ele. */}
       {cabecalhoPronto && !blocoVisivel && <BoasVindas />}
-      {cabecalhoPronto && !blocoVisivel && (
-        <TourBoasVindas modulo={jornadaFinalizada ? null : moduloAtual} />
-      )}
       <div className="mx-auto w-full max-w-[1120px] px-6 pb-24 pt-16 md:px-10">
-        {userId && progressoFaixa && (
-          <FaixaPlanejamento userId={userId} progresso={progressoFaixa} />
-        )}
         {/* Header: primeira dobra, sem reveal */}
         <div>
           <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
@@ -784,9 +675,9 @@ function PainelPage() {
             )}
           </h1>
 
-          {/* Só depois dos dados: antes disso a ação era a de conta nova e
-              piscava "Quero começar o Módulo 1" pra quem já passou dele.
-              Com o bloco "Primeiros passos" na tela, a ação é a dele. */}
+          {/* Só depois dos dados: antes disso a ação piscava a de conta nova
+              pra quem já passou dela. Com o bloco "Primeiros passos" na
+              tela, a ação é a dele. */}
           {blocoCarregando && <PrimeirosPassosCarregando />}
           {blocoVisivel && primeiros.dados && progressoPassos && (
             <PrimeirosPassos
@@ -807,14 +698,6 @@ function PainelPage() {
               }}
               bonusDias={convidaBonus ? DIAS_BONUS_PASSOS : null}
               primeiroPreco={primeiros.dados.primeiroPreco}
-              onSalvarNome={async (nome) => {
-                const ok = await primeiros.salvarNome(nome);
-                // Era o último passo: o bloco sai e o foco iria pro <body>.
-                if (ok && progressoPassos.totalFeitos === 2) {
-                  requestAnimationFrame(() => document.getElementById("painel-manchete")?.focus());
-                }
-                return ok;
-              }}
             />
           )}
           {!cabecalhoPronto || blocoVisivel ? null : acaoPrincipal.href ? (
@@ -838,9 +721,8 @@ function PainelPage() {
             </button>
           )}
 
-          {/* Duas listas de passos na mesma tela (as duas com o Módulo 1) seriam
-              dois recados: enquanto o bloco está na tela, a lista espera. */}
-          {cabecalhoPronto && !blocoVisivel && <ListaPraAcender itens={itensAcender} />}
+          {/* A lista "Pra o Painel acender" (ListaPraAcender) saiu em
+              31/10/2026: os itens dela eram os módulos do Planejamento. */}
 
           {/* Intenção do dia */}
           <div className="mt-6 max-w-[560px]">
@@ -926,38 +808,6 @@ function PainelPage() {
           </div>
         ) : (
           <>
-            {/* Linha de contexto */}
-            <div className="mt-8 flex flex-wrap gap-x-8 gap-y-4 border-y border-[var(--line)] py-4">
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-                  Dia no planejamento
-                </span>
-                <span className="font-cabinet rounded-lg bg-[var(--highlight)] px-3 py-0.5 text-[19px] font-semibold text-[var(--highlight-ink)]">
-                  {ordinal(diasDesdeCadastro)}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-                  Status
-                </span>
-                <span className="text-[15px] text-[var(--ink-soft)]">
-                  {jornadaFinalizada
-                    ? "Planejamento concluído"
-                    : `Módulo ${moduloAtual} · ${etapaInfo.nome}`}
-                </span>
-                {/* ONE-11 (07/10/2026): era um "abrir" discreto e a Sil não achava
-                o caminho de volta pro Planejamento. Virou botão com o verbo
-                certo. Antes do Módulo 4 a ação principal já leva pro módulo
-                (ONE-112), então este caminho secundário só aparece depois. */}
-                {estagio.tipo === "numeros" && (
-                  <LinkInterno href="/planejamento" className={BTN_MIUDO}>
-                    {jornadaFinalizada ? "Rever o Planejamento" : "Continuar o Planejamento"}
-                    <span aria-hidden="true">→</span>
-                  </LinkInterno>
-                )}
-              </div>
-            </div>
-
             {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
             Desde 03/09/2026 (COPY-04) o número é real em TODO plano: o cadeado
             saiu daqui porque o registro de entrada e saída deixou de ser pago.

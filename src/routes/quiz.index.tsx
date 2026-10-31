@@ -485,8 +485,8 @@ function TelaResultado({
           vira a ação principal, com origem=quiz, igual ao botão do e-mail
           (src/lib/quiz/email.ts). */}
       <p className="mt-4 text-[16px] leading-[1.55] text-[var(--ink-soft)]">
-        A Pólia One organiza a marca, o preço e a meta do mês num lugar só, a partir do
-        Planejamento. O plano Grátis abre sem cartão.
+        A Pólia One organiza o preço, os pedidos e a meta do mês num lugar só. O plano Grátis abre
+        sem cartão.
       </p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">

@@ -98,7 +98,7 @@ const ordem = [
   {
     titulo: "Primeiro, a marca.",
     texto:
-      "No Planejamento, a Pólia One pergunta por que a marca existe, pra quem ela é e o que entrega. É isso que sustenta o preço quando a cliente diz que tá caro.",
+      "As horas da peça, o material escolhido e o cuidado da embalagem entram na conta da Pólia One. É isso que sustenta o preço quando a cliente diz que tá caro.",
   },
   {
     titulo: "Depois, o preço.",
@@ -407,8 +407,8 @@ function SobrePage() {
               O método que faltou pra mim agora tem nome.
             </h2>
             <p className={`mt-6 ${CORPO}`}>
-              A Pólia One começa pela marca, faz a conta do preço e mostra o mês. O Grátis abre o
-              Planejamento e a Calculadora.
+              A Pólia One começa pela marca, faz a conta do preço e mostra o mês. O Grátis abre a
+              Calculadora e o quadro de Pedidos.
             </p>
             <div className="mt-8 flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
               <div>

@@ -6,7 +6,7 @@ import { BTN_ACAO } from "@/lib/botoes";
 import { useAssistente } from "./AssistenteContext";
 
 const EXEMPLOS = [
-  "Como eu preencho o Planejamento?",
+  "Como eu lanço um pedido?",
   "Meu preço cobre os custos?",
   "Por que lucrei tão pouco esse mês?",
 ];

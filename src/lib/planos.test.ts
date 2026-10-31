@@ -336,3 +336,24 @@ describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
     expect(recursoLiberado("/plano-conteudo", "controle")).toBe(false);
   });
 });
+
+describe("Planejamento fora da lista dos planos (31/10/2026)", async () => {
+  const { BENEFICIOS_GRATIS, tiersPagos, tiersPagosDeFundadora } = await import("./planos");
+  const NOV = Date.parse("2026-11-15T12:00:00-03:00");
+  const DEZ = Date.parse("2026-12-02T12:00:00-03:00");
+
+  it("nenhum plano vende o Planejamento, os documentos de Marca e Mercado nem a IA dele", () => {
+    const listas = [
+      BENEFICIOS_GRATIS,
+      ...Object.values(tiersPagos(NOV)).map((t) => t.beneficios),
+      ...Object.values(tiersPagos(DEZ)).map((t) => t.beneficios),
+      ...Object.values(tiersPagosDeFundadora()).map((t) => t.beneficios),
+    ];
+    for (const lista of listas) {
+      for (const b of lista) {
+        expect(b.texto, b.id).not.toMatch(/Planejamento|Marca e Mercado|rascunho/);
+        expect(["planejamento", "documentos", "ia"]).not.toContain(b.id);
+      }
+    }
+  });
+});

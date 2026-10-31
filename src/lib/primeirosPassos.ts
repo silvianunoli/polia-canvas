@@ -3,6 +3,11 @@
 // vez de quatro telas de perguntas antes de ver qualquer coisa, a conta cai
 // direto no Painel com três passos, o primeiro deles já a Calculadora.
 //
+// Desde 31/10/2026 os três passos são de operação (o Planejamento saiu da
+// Pólia One): o primeiro preço, o primeiro pedido e o primeiro pedido
+// entregue, que mostra o lucro. Saíram "Fechar o Módulo 1" e "Dar nome à
+// marca" (o nome continua em Configurações).
+//
 // Aqui mora só a regra (quem vê o bloco, o que está feito, qual passo está em
 // destaque, que texto aparece). A leitura e a gravação ficam no hook
 // usePrimeirosPassos; a tela, em components/painel/PrimeirosPassos.tsx.
@@ -59,15 +64,16 @@ export function contaCriadaDepoisDoCorte(createdAt: string | null | undefined): 
   return aPartirDoCorte(createdAt ?? null);
 }
 
-export type IdPasso = "preco" | "modulo-1" | "nome";
-export const ORDEM_PASSOS: readonly IdPasso[] = ["preco", "modulo-1", "nome"];
+export type IdPasso = "preco" | "pedido" | "entregue";
+export const ORDEM_PASSOS: readonly IdPasso[] = ["preco", "pedido", "entregue"];
 
 export interface FatosPrimeirosPassos {
   /** Existe produto com calculadora_breakdown: o preço saiu da Calculadora. */
   temPreco: boolean;
-  modulo1Fechado: boolean;
-  /** business_name preenchido. */
-  temNome: boolean;
+  /** Existe venda com andamento (um pedido do quadro de Pedidos). */
+  temPedido: boolean;
+  /** Existe pedido no andamento "entregue" e não cancelado. */
+  temEntregue: boolean;
 }
 
 export interface ProgressoPrimeirosPassos {
@@ -81,8 +87,8 @@ export interface ProgressoPrimeirosPassos {
 export function progressoPrimeirosPassos(f: FatosPrimeirosPassos): ProgressoPrimeirosPassos {
   const feitos: Record<IdPasso, boolean> = {
     preco: f.temPreco,
-    "modulo-1": f.modulo1Fechado,
-    nome: f.temNome,
+    pedido: f.temPedido,
+    entregue: f.temEntregue,
   };
   const destaque = ORDEM_PASSOS.find((id) => !feitos[id]) ?? null;
   const totalFeitos = ORDEM_PASSOS.filter((id) => feitos[id]).length;
@@ -230,28 +236,33 @@ export function textoPassoPreco(nicho: NichoDoPasso | null): TextoPassoPreco {
   };
 }
 
-export const PASSO_MODULO_1 = {
-  titulo: "Fechar o Módulo 1 do Planejamento",
-  subtitulo: "O que faz a sua marca valer esse preço.",
-  acao: "Quero abrir o Módulo 1",
-  href: "/planejamento/modulo/1",
+// Os dois levam pro quadro de Pedidos. Sem pedido nenhum, o quadro abre no
+// vazio com um botão só, "Anotar o primeiro pedido" (pedidos.tsx), que grava
+// pela registrar_pedido.
+export const PASSO_PEDIDO = {
+  titulo: "Lançar o primeiro pedido",
+  subtitulo: "Quem comprou, o que levou e o dia da entrega, no quadro de Pedidos.",
+  acao: "Quero lançar um pedido",
+  href: "/pedidos",
 } as const;
 
-export const PASSO_NOME = {
-  titulo: "Dar nome à marca",
-  subtitulo: "Aparece no menu e no Planejamento. Dá pra trocar depois em Configurações.",
+export const PASSO_ENTREGUE = {
+  titulo: "Marcar um pedido como entregue e ver o lucro",
+  subtitulo: "No quadro, o pedido anda até Entregue, e o cartão mostra quanto ele lucrou.",
+  acao: "Quero abrir o quadro de Pedidos",
+  href: "/pedidos",
 } as const;
-
-/** Mesmo teto do campo de nome do onboarding antigo. */
-export const NOME_MARCA_MAX = 60;
-
-export function limparNomeMarca(v: string): string {
-  return v.trim().slice(0, NOME_MARCA_MAX).trim();
-}
 
 /** Manchete do Painel enquanto o bloco está na tela. */
-export function mancheteDoBloco(nicho: NichoDoPasso | null): string {
-  if (!nicho) return "Três passos e o Painel começa a mostrar o seu mês.";
+export function mancheteDoBloco(
+  nicho: NichoDoPasso | null,
+  destaque: IdPasso | null = "preco",
+): string {
+  if (destaque === "pedido") return "Preço feito. Agora o primeiro pedido entra no quadro.";
+  if (destaque === "entregue") {
+    return "O pedido está no quadro. Quando ele for entregue, o cartão dele mostra quanto lucrou.";
+  }
+  if (!nicho) return "Três passos e o Painel começa a mostrar quanto a marca lucra.";
   return nicho.tipo === "servico"
     ? `${nicho.pessoa}, o preço da sua hora começa por aqui.`
     : `${nicho.pessoa}, o preço do seu produto começa por aqui.`;

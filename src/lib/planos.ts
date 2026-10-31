@@ -116,6 +116,8 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/mais", tier: "confere" },
   { prefixo: "/configuracoes", tier: "confere" },
   { prefixo: "/chamados", tier: "confere" },
+  // Planejamento, Marca e Mercado: só a conta interna desde 31/10/2026
+  // (lib/ferramentasInternas). O tier fica pra quando a conta interna abre.
   { prefixo: "/planejamento", tier: "confere" },
   { prefixo: "/aimer", tier: "confere" }, // todo plano abre o chat; teto diário e modo data-aware são no servidor
   { prefixo: "/produtos", tier: "confere" }, // cotada, ver COTAS_CONFERE
@@ -246,21 +248,18 @@ export function beneficiosNaOrdem(lista: Beneficio[], primeiros: string[] = []):
 }
 
 // O que o plano Grátis inclui.
-// /marca e /mercado não estão em ROTAS_TIER, então são pagas: a lista avisa
-// (06/10/2026, decisão da Sil) em vez de prometer "Planejamento completo" e
-// mandar a usuária do Grátis pra uma tela de upgrade no fim do Módulo 1.
 // Recursos no ar que faltavam na lista entraram em 27/10/2026 (COPY-36): teste do
-// Pro, cota de IA, Calculadora detalhada, importar planilha, tutorial e chamados.
+// Pro, Calculadora detalhada, importar planilha, tutorial e chamados.
+// O Planejamento, os documentos de Marca e Mercado e a cota de IA dele saíram das
+// três listas em 31/10/2026 (decisão da Sil): o Planejamento saiu da Pólia One e
+// vira ferramenta do Pólia Lab. A cota continua em CONFIG_POR_PLANO pra conta
+// interna, só não é mais vendida.
 export const BENEFICIOS_GRATIS: Beneficio[] = [
   {
     // GRW-66 e ONE-136 (src/lib/testePro.ts): conta nova nasce no Pro por 7 dias.
     id: "teste-pro",
     texto: "Conta nova começa com 7 dias de Pro. Completou os primeiros passos, ganha mais 7.",
     soParaVisitante: true,
-  },
-  {
-    id: "planejamento",
-    texto: "Os 6 módulos do Planejamento (os documentos de Marca e Mercado são do Premium)",
   },
   {
     // ONE-107 e ONE-109. A Encomenda é a única parte que trava (Pro).
@@ -278,8 +277,6 @@ export const BENEFICIOS_GRATIS: Beneficio[] = [
   // Planner e Caderno saíram das usuárias em 28/10/2026; Pedidos entrou no lugar.
   { id: "pedidos", texto: "Quadro de Pedidos com até 15 pedidos abertos" },
   { id: "assistente", texto: "Assistente pra tirar dúvida, com teto diário" },
-  // Cota em CONFIG_POR_PLANO (src/lib/planejamentoIa.functions.ts): 1, 30 e 60.
-  { id: "ia", texto: "1 rascunho por mês com a IA no Planejamento" },
   {
     // /como-usar e /chamados abrem em todo plano (ROTAS_TIER).
     id: "tutorial-suporte",
@@ -309,10 +306,6 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
     precoAnual: 299,
     base: "Tudo do Grátis, mais:",
     beneficios: [
-      {
-        id: "documentos",
-        texto: "Documentos de Marca e Mercado, escritos a partir do Planejamento",
-      },
       {
         id: "catalogo",
         texto: "Catálogo sem limite: cada produto com o custo, o preço e quanto a marca lucra",
@@ -346,7 +339,7 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
       {
         id: "financeiro",
         texto:
-          "Financeiro com os três números que decidem o mês: o mínimo pra fechar as contas, o mês bom e o mês de celebrar",
+          "Financeiro com o que entrou, o que saiu e quanto a marca lucrou no mês, com cada pedido entregue já somado",
       },
       {
         // ONE-124, no ar desde 11/10 (6fa92f8).
@@ -374,7 +367,6 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
         id: "pedidos",
         texto: "Pedidos sem limite e o Calendário das entregas com a agenda do Google junto",
       },
-      { id: "ia", texto: "Até 30 rascunhos por mês com a IA no Planejamento" },
       {
         // ONE-133, no ar desde 23/10 (7430af6)
         id: "insumos",
@@ -412,7 +404,6 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
       },
       { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
-      { id: "ia", texto: "Até 60 rascunhos por mês com a IA no Planejamento" },
       {
         // ONE-148/ONE-149, 29/10/2026: só no Pro, decisão da Sil.
         id: "catalogo",

@@ -23,9 +23,9 @@ describe("montarSitemap", () => {
     expect(montarSitemap([])).toContain("<loc>https://one.usepolia.com.br/tutorial</loc>");
   });
 
-  it("lista o tour e uma página por ferramenta", () => {
+  it("lista uma página por ferramenta, sem o tour narrado (fora do ar desde 31/10)", () => {
     const xml = montarSitemap([]);
-    expect(xml).toContain("<loc>https://one.usepolia.com.br/tutorial/tour</loc>");
+    expect(xml).not.toContain("<loc>https://one.usepolia.com.br/tutorial/tour</loc>");
     expect(xml).toContain("<loc>https://one.usepolia.com.br/tutorial/financeiro</loc>");
     expect(CAMINHOS_TUTORIAIS.length).toBeGreaterThan(10);
   });

@@ -265,7 +265,7 @@ function LoginPage() {
   return (
     <AuthSplitShell
       headline="Sua marca no centro, com os números no lugar."
-      subtext="A Pólia liga o planejamento da marca a preço, lucro e meta, pra cada decisão ter chão."
+      subtext="A Pólia One junta pedidos, estoque e lucro da marca num lugar só, pra cada decisão ter chão."
       rodape={["Marca", "Números", "Decisão"]}
     >
       <AuthTabs modo={modo} onModoChange={selecionarModo} />

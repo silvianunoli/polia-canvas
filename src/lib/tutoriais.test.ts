@@ -36,6 +36,13 @@ const SEM_TUTORIAL: Record<string, string> = {
   "/como-usar/tour": "é o próprio tutorial",
   "/mais": "aba Mais do app Android (AND-07): só lista as outras telas",
   "/hoje": "aba Hoje do app Android (AND-07): resumo do Painel, que tem tutorial próprio",
+  // O Planejamento saiu da Pólia One em 31/10/2026: sem a flag `planejamento`
+  // (conta interna) estas rotas levam pro Painel. O tutorial dele virou interno.
+  "/planejamento": "redireciona pro Painel fora da conta interna desde 31/10/2026",
+  "/planejamento/modulo/$n": "redireciona pro Painel fora da conta interna desde 31/10/2026",
+  "/planejamento/completo": "redireciona pro Painel fora da conta interna desde 31/10/2026",
+  "/marca": "redireciona pro Painel fora da conta interna desde 31/10/2026",
+  "/mercado": "redireciona pro Painel fora da conta interna desde 31/10/2026",
 };
 
 /** Arquivo de rota do TanStack (flat) → caminho: "produtos_.anuncios" → "/produtos/anuncios". */
@@ -147,6 +154,17 @@ describe("tutoriais por ferramenta", () => {
     expect(buscarTutoriais("quadro").map((t) => t.slug)).not.toContain("planner");
     expect(tutorialDaRota("/planner")?.slug).toBe("planner");
     expect(tutorialDaRota("/pedidos")?.slug).toBe("pedidos");
+  });
+
+  it("Planejamento e guia de presença saem da lista das usuárias (31/10/2026)", () => {
+    const visiveis = buscarTutoriais("x").map((t) => t.slug);
+    expect(visiveis).not.toContain("planejamento");
+    expect(visiveis).not.toContain("caderno");
+    // Nenhum tutorial da lista manda pro Planejamento.
+    for (const t of buscarTutoriais("x")) {
+      for (const texto of textos(t))
+        expect(texto, `${t.slug}: ${texto}`).not.toMatch(/Planejamento|Módulo \d/);
+    }
   });
 
   it("anda pro próximo na ordem dos grupos", () => {

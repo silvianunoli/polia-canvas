@@ -198,14 +198,14 @@ function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
 
 const perguntas = [
   {
-    pergunta: "Preciso preencher o Planejamento antes de usar a Calculadora?",
+    pergunta: "Preciso preencher alguma coisa antes de usar a Calculadora?",
     resposta:
-      "Não. A Calculadora funciona sozinha logo depois do cadastro. O Planejamento entra quando fizer sentido ligar o preço à meta do mês e à marca.",
+      "Não. A Calculadora funciona sozinha logo depois do cadastro. A Meta do mês entra quando fizer sentido ligar o preço ao que o mês precisa trazer.",
   },
   {
     pergunta: "Isso não é só uma calculadora?",
     resposta:
-      "Não. A Calculadora é a porta. Atrás dela estão o catálogo com o histórico de preço, a meta do mês, o Planejamento da marca e o Painel que mostra quanto falta pra fechar as contas.",
+      "Não. A Calculadora é a porta. Atrás dela estão o catálogo com o histórico de preço, o quadro de Pedidos, a meta do mês e o Painel que mostra quanto falta pra fechar as contas.",
   },
   {
     pergunta: "A Pólia One me diz o preço certo?",
@@ -229,7 +229,7 @@ const perguntas = [
   {
     pergunta: "A IA inventa o meu preço?",
     resposta:
-      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
+      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA responde dúvidas do dia a dia no Assistente.",
   },
   {
     // Termos, seção 8 (06/10/2026): só na contratação, não na renovação.
@@ -370,7 +370,7 @@ function LandingA() {
                 n: "03",
                 titulo: "O mês entra na conta",
                 texto:
-                  "Com a meta do mês preenchida no Planejamento, a Calculadora mostra quantas vendas daquele produto fecham o mês.",
+                  "Com a Meta do mês criada em Metas, a Calculadora mostra quantas vendas daquele produto fecham o mês.",
                 mock: <MockVendasMeta />,
               },
             ]}
@@ -424,12 +424,12 @@ function LandingA() {
                 texto="uma cliente perguntou porque ela devia comprar comigo e não na loja, e eu não soube responder, fiquei sem chão"
               />
               <p className={`mt-8 ${CORPO}`}>
-                No Planejamento, a Pólia One pergunta por que a sua marca existe, pra quem ela é e o
-                que ela entrega.{" "}
+                Na Pólia One, as horas de mão, o material escolhido e a embalagem entram no custo de
+                cada produto.{" "}
                 <b className="font-semibold text-[var(--ink)]">
-                  Dali sai a resposta pro &ldquo;tá caro&rdquo;
+                  Na hora do &ldquo;tá caro&rdquo;, a resposta já está na conta
                 </b>
-                , com as suas palavras.
+                , com o que a marca entrega.
               </p>
               <FraseAncora className="mt-8">
                 A marca dá coragem pro preço. O número prova que a coragem tinha razão.

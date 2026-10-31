@@ -116,7 +116,7 @@ describe("/ajuda", () => {
     expect(dado["@type"]).toBe("FAQPage");
     // 6 categorias × 3 perguntas, mais o arrependimento em 7 dias (06/10/2026).
     expect(dado.mainEntity).toHaveLength(19);
-    expect(dado.mainEntity[0].name).toBe("Por onde começar no Planejamento");
+    expect(dado.mainEntity[0].name).toBe("Por onde começar");
   });
 });
 

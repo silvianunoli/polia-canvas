@@ -18,9 +18,11 @@ import { PERGUNTAS_HOME, PaginaMarcaB } from "@/components/landing/PaginaMarcaB"
 // Nomes de plano visíveis (Grátis, Premium, Pro) moram em PaginaMarcaB.tsx.
 
 // Topo "o escritório da sua marca" desde 27/10/2026 (COPY-34, POSICIONAMENTO-POLIA-ONE.md).
-const TITULO = "Pólia One · O escritório da sua marca";
+// Virou "o sistema da sua marca" em 31/10/2026 (decisão da Sil, junto com a
+// saída do Planejamento): pedidos, estoque e lucro num lugar só, no celular.
+const TITULO = "Pólia One · O sistema da sua marca";
 const DESCRICAO =
-  "A Pólia One é o escritório da sua marca: preço, estoque, vendas e dinheiro no mesmo lugar. Comece no Grátis, sem cartão.";
+  "A Pólia One é o sistema de gestão da sua marca: pedidos, estoque, vendas e lucro num lugar só, no celular. Comece no Grátis, sem cartão.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,7 +32,7 @@ export const Route = createFileRoute("/")({
       {
         property: "og:title",
         content:
-          "Pólia One · Sua marca cresceu. O escritório dela continua sendo o caderno, a planilha perdida e o WhatsApp.",
+          "Pólia One · Sua marca cresceu. A gestão dela continua no caderno, na planilha perdida e no WhatsApp.",
       },
       { property: "og:description", content: DESCRICAO },
     ],

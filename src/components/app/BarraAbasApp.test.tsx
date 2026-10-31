@@ -36,7 +36,7 @@ vi.mock("@/components/pedidos/ModalNovoPedido", () => ({
   ModalNovoPedido: () => <div>formulário de pedido</div>,
 }));
 // Planner é ferramenta interna desde 28/10/2026: cada teste diz se a conta tem a flag.
-const internas = { planner: false, caderno: false };
+const internas = { planner: false, caderno: false, planejamento: false };
 vi.mock("@/hooks/useFerramentasInternas", () => ({ useFerramentasInternas: () => internas }));
 vi.mock("@/components/ui/sheet", () => ({
   Sheet: ({ open, children }: { open: boolean; children: ReactNode }) =>

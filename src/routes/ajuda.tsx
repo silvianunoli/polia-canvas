@@ -60,15 +60,17 @@ const CATEGORIAS = [
     icon: PlayCircle,
     titulo: "Começando na Pólia",
     itens: [
+      // O Planejamento saiu da Pólia One em 31/10/2026: o começo são os
+      // Primeiros passos do Painel (preço, pedido e pedido entregue).
       {
-        pergunta: "Por onde começar no Planejamento",
+        pergunta: "Por onde começar",
         resposta:
-          "Pelo módulo 1, que começa pela razão de a marca existir: para quem ela é e o que a diferencia. A conta do mês, quanto você quer receber e quanto o negócio custa, entra no módulo 4, com a marca já no papel. Os seis módulos abrem em ordem, um de cada vez, porque cada resposta usa a anterior. No fim dos seis, as principais decisões do negócio já estão organizadas.",
+          "Pelos Primeiros passos, no topo do Painel: calcular o primeiro preço na Calculadora, lançar o primeiro pedido no quadro de Pedidos e marcar um pedido como entregue. O cartão do pedido mostra quanto ele lucrou.",
       },
       {
         pergunta: "O que fazer no primeiro dia",
         resposta:
-          "Comece pelo Planejamento. É a base de tudo: enquanto ele não está pronto, Produtos, Financeiro e Painel ficam sem o preço e a meta que dependem dele.",
+          "Calcular o preço de um produto ou serviço. Leva uns 3 minutos, e a Pólia One guarda esse preço no catálogo sozinha, com o custo. Com ele guardado, o primeiro pedido já entra no quadro mostrando quanto lucra.",
       },
       {
         pergunta: "Usando a Pólia no celular",
@@ -82,19 +84,19 @@ const CATEGORIAS = [
     titulo: "Sua marca",
     itens: [
       {
-        pergunta: "Definir quem é a minha marca",
+        pergunta: "Mudar o nome da marca",
         resposta:
-          "É o módulo 1 do Planejamento: quem a marca atende, o que ela entrega e o que a diferencia. As respostas ficam salvas e alimentam o resto do sistema.",
+          "Em Configurações, na parte Seu negócio. O nome aparece no menu e no orçamento que vai pra cliente.",
+      },
+      {
+        pergunta: "Colocar o logo e a cor da marca",
+        resposta:
+          "Em Configurações, na parte Logo e cor. Os dois vão no topo do orçamento que a cliente abre pelo link e na loja do Catálogo.",
       },
       {
         pergunta: "Mudar o que vendo depois",
         resposta:
-          "Pode editar o Planejamento quando quiser, direto na tela dele. A mudança se reflete nos módulos que dependem dessa resposta, sem precisar refazer nada do zero.",
-      },
-      {
-        pergunta: "Por que a Pólia me pergunta isso",
-        resposta:
-          "Porque o preço, a meta e os módulos seguintes usam essas respostas pra funcionar. Não é formulário de cadastro, é a decisão que sustenta o resto do sistema.",
+          "Em Produtos, cada produto pode ser editado quando quiser. Pra refazer o preço com um custo novo, a Calculadora abre o produto com a conta que ficou guardada.",
       },
     ],
   },
@@ -153,12 +155,12 @@ const CATEGORIAS = [
       {
         pergunta: "Entender o resumo do mês",
         resposta:
-          "No plano Grátis, o Painel mostra o que entrou e o que saiu no mês. No Premium, o Financeiro mostra entradas, saídas e quanto lucrou, com uma régua que compara o mês atual com as referências que vieram do seu Planejamento.",
+          "No plano Grátis, o Painel mostra o que entrou e o que saiu no mês. No Premium, o Financeiro mostra entradas, saídas e quanto lucrou, com uma régua que compara o mês atual com a Meta do mês.",
       },
       {
         pergunta: "De onde vêm esses valores",
         resposta:
-          "Do que foi registrado. Cada entrada e saída do Painel e do Financeiro é lançada à mão ou vem de uma venda registrada a partir de um pedido entregue em Clientes. As referências do mês vêm do Planejamento. Nada ali é estimativa solta.",
+          "Do que foi registrado. Cada entrada e saída do Painel e do Financeiro é lançada à mão ou vem de uma venda registrada a partir de um pedido entregue em Clientes. A Meta do mês vem de Metas. Nada ali é estimativa solta.",
       },
     ],
   },
@@ -174,7 +176,7 @@ const CATEGORIAS = [
       {
         pergunta: "Como cancelar",
         resposta:
-          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Grátis, sem apagar o Planejamento.",
+          "Também em Configurações, num clique. O acesso ao plano pago continua até o fim do período já pago, e depois disso a conta volta pro plano Grátis, sem apagar nada do que a marca guardou.",
       },
       {
         pergunta: "Desistir nos primeiros 7 dias",
@@ -726,8 +728,8 @@ function AjudaPage() {
                 </h2>
                 <p className="mt-4 max-w-[60ch] text-[17px] leading-[1.65] text-[var(--ink-soft)]">
                   A Pólia começa ajudando você a reconhecer o que a marca realmente vale, e a cobrar
-                  de acordo. O plano Grátis já abre o Planejamento e a calculadora de preço, sem
-                  cartão de crédito.
+                  de acordo. O plano Grátis já abre a calculadora de preço e o quadro de Pedidos,
+                  sem cartão de crédito.
                 </p>
                 <div className="mt-8">
                   <Link

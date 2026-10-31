@@ -5,9 +5,9 @@ import { flagAtiva } from "@/lib/flags";
 import { SEM_ACESSO_INTERNO, type AcessoInterno } from "@/lib/ferramentasInternas";
 
 /**
- * Planner e Caderno pra conta interna (flags `planner` e `caderno`). Até a
- * leitura chegar, e se ela falhar, os dois ficam escondidos: quem não tem
- * acesso nunca vê o item piscar.
+ * Planner, Caderno e Planejamento pra conta interna (flags `planner`, `caderno`
+ * e `planejamento`). Até a leitura chegar, e se ela falhar, os três ficam
+ * escondidos: quem não tem acesso nunca vê o item piscar.
  */
 export function useFerramentasInternas(): AcessoInterno {
   const { user } = useSupabaseSession();
@@ -17,11 +17,12 @@ export function useFerramentasInternas(): AcessoInterno {
     enabled: !!userId,
     staleTime: 60 * 1000,
     queryFn: async (): Promise<AcessoInterno> => {
-      const [planner, caderno] = await Promise.all([
+      const [planner, caderno, planejamento] = await Promise.all([
         flagAtiva("planner", userId, false),
         flagAtiva("caderno", userId, false),
+        flagAtiva("planejamento", userId, false),
       ]);
-      return { planner, caderno };
+      return { planner, caderno, planejamento };
     },
   });
   return query.data ?? SEM_ACESSO_INTERNO;

@@ -152,6 +152,11 @@ export function montarEmailPreco(nicho: NichoAnuncio | null): {
 // Quem cabe em cada e-mail o banco decide (RPC contas_regua_ativacao); aqui é
 // só o texto. Regra de voz: sem travessão, sem exclamação, sem emoji, a Pólia
 // como sujeito da promessa, e nada de piada em e-mail de dinheiro ou de plano.
+//
+// O "modulo_d7" (O Planejamento ficou no meio) saiu em 31/10/2026, junto com o
+// Planejamento da Pólia One. Fora desta lista, o tipo não passa no ehTipoRegua
+// e não sai, mesmo que o banco ainda devolva a conta (a migration
+// 20261031200200 tira o critério da contas_regua_ativacao).
 
 export type TipoRegua =
   | "teste_reativacao"
@@ -159,8 +164,7 @@ export type TipoRegua =
   | "teste_acabou"
   | "checkout_1h"
   | "guardar_d2"
-  | "segundo_passo_d4"
-  | "modulo_d7";
+  | "segundo_passo_d4";
 
 export const TIPOS_REGUA: readonly TipoRegua[] = [
   "teste_reativacao",
@@ -169,7 +173,6 @@ export const TIPOS_REGUA: readonly TipoRegua[] = [
   "checkout_1h",
   "guardar_d2",
   "segundo_passo_d4",
-  "modulo_d7",
 ];
 
 export function ehTipoRegua(v: unknown): v is TipoRegua {
@@ -252,8 +255,8 @@ export function montarEmailRegua(
         headline: "A conta voltou pro Grátis",
         preheader: "Nada foi apagado. O que a marca guardou continua lá.",
         paragrafos: [
-          "O teste do Pro terminou e a conta voltou pro plano Grátis. Nada foi apagado: produtos, Planejamento e o que a Projeção e o Raio-x mostraram continuam lá.",
-          "O Grátis segue com a Calculadora, até 5 produtos no catálogo e os 6 módulos do Planejamento.",
+          "O teste do Pro terminou e a conta voltou pro plano Grátis. Nada foi apagado: produtos, pedidos e o que a Projeção e o Raio-x mostraram continuam lá.",
+          "O Grátis segue com a Calculadora, até 5 produtos no catálogo e o quadro de Pedidos com até 15 pedidos abertos.",
           fundadora,
         ],
         ctaLabel: "Quero o Pro de volta",
@@ -306,20 +309,6 @@ export function montarEmailRegua(
         ],
         ctaLabel: "Quero definir a meta do mês",
         url: `${SITE}/metas`,
-      };
-      break;
-    case "modulo_d7":
-      c = {
-        assunto: "O Planejamento ficou no meio",
-        headline: "As respostas continuam guardadas",
-        preheader: "Uma seção por vez já conta.",
-        paragrafos: [
-          "O Planejamento da sua marca começou e parou no meio. As respostas continuam guardadas, exatamente como ficaram.",
-          "É dele que saem os documentos da marca e o que sustenta o preço na frente da cliente. Uma seção por vez já conta.",
-          RODAPE_DICAS,
-        ],
-        ctaLabel: "Quero continuar o Planejamento",
-        url: `${SITE}/planejamento`,
       };
       break;
   }

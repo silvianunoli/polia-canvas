@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { ChamadaTour } from "@/components/tutorial/ChamadaTour";
 import { ListaTutoriais } from "@/components/tutorial/ListaTutoriais";
 
 // Tutoriais dentro da área logada (28/10/2026, pedido da Sil: um por
@@ -21,7 +20,7 @@ function ComoUsarPage() {
       largura="larga"
     >
       <ListaTutoriais base="/como-usar" />
-      <ChamadaTour base="/como-usar" />
+      {/* Tour narrado fora do ar desde 31/10/2026: o áudio e os clipes ainda mostram o Planejamento, que saiu da Pólia One. Volta com narração nova (ChamadaTour). */}
     </PaginaLogada>
   );
 }

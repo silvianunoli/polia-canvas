@@ -28,9 +28,8 @@ import {
 import {
   MockCustosProduto,
   MockPedidos,
-  MockPerguntaMarca,
   MockSemanaEntregas,
-  MockTresNumeros,
+  MockVendaEstoque,
 } from "@/components/landing/MocksLanding";
 import { PlayerVsl } from "@/components/landing/VideoVsl";
 import { precoBR } from "@/components/landing/preco";
@@ -106,7 +105,7 @@ function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
   return [
     {
       nome: "Grátis",
-      praQuem: "Pra pôr a marca no papel e fazer os primeiros preços.",
+      praQuem: "Pra fazer os primeiros preços e anotar os primeiros pedidos.",
       mensal: "R$ 0",
       itens: beneficiosNaOrdem(BENEFICIOS_GRATIS, ["calculadora", "catalogo"]),
     },
@@ -159,7 +158,7 @@ const perguntas = [
   {
     pergunta: "A IA inventa o meu preço?",
     resposta:
-      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA só ajuda a completar textos do Planejamento e responde dúvidas do dia a dia.",
+      "Não. O preço vem de conta: custo, taxas e o lucro que a marca precisa. A IA responde dúvidas do dia a dia no Assistente.",
   },
   {
     pergunta: "É pra mim?",
@@ -262,13 +261,8 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
           <h2 className={`mt-4 mb-10 ${H2}`}>O que o Premium faz pelo seu mês.</h2>
           <ComoFuncionaPassos
             passos={[
-              {
-                titulo: "A marca escrita",
-                texto:
-                  "Os documentos de Marca e Mercado saem do Planejamento e viram a resposta pro “tá caro”, com as suas palavras.",
-                nota: "No lugar da resposta inventada na hora",
-                mock: <MockPerguntaMarca />,
-              },
+              // "A marca escrita" (os documentos de Marca e Mercado, do Planejamento)
+              // saiu em 31/10/2026, junto com o Planejamento da Pólia One.
               {
                 titulo: "Cada produto com quanto lucra",
                 texto:
@@ -277,11 +271,11 @@ export function PaginaPremium({ busca, angulo }: { busca: BuscaCadastro; angulo:
                 mock: <MockCustosProduto />,
               },
               {
-                titulo: "O mês em três números",
+                titulo: "Cada venda já no Financeiro",
                 texto:
-                  "O mínimo pra fechar as contas, o mês bom e o mês de celebrar. O Financeiro mostra em qual deles o mês está.",
+                  "A venda baixa o estoque e entra no Financeiro já sem a taxa. O mês fecha sem caderno.",
                 nota: "No lugar do caderno de contas",
-                mock: <MockTresNumeros />,
+                mock: <MockVendaEstoque />,
               },
               {
                 titulo: "Cada pedido com status",

@@ -471,8 +471,12 @@ function EnvioDoOrcamento({
         <p className="mt-4 text-[13px] text-[var(--ink-soft)]">
           O orçamento sai com o nome da marca. Pra ele levar o seu logo e a sua cor, coloque os dois
           em{" "}
-          <Link to="/marca" className="font-medium text-[var(--secondary-text)] hover:underline">
-            Marca
+          <Link
+            to="/configuracoes"
+            hash="logo-e-cor"
+            className="font-medium text-[var(--secondary-text)] hover:underline"
+          >
+            Configurações
           </Link>
           .
         </p>

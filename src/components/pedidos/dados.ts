@@ -135,4 +135,6 @@ export function recarregarDepoisDoPedido(qc: QueryClient, userId: string | undef
   void qc.invalidateQueries({ queryKey: chaveEstoque(userId) });
   void qc.invalidateQueries({ queryKey: ["financeiro", userId] });
   void qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
+  // Lançar e entregar o pedido são dois dos Primeiros passos (31/10/2026).
+  void qc.invalidateQueries({ queryKey: ["primeiros-passos", userId] });
 }

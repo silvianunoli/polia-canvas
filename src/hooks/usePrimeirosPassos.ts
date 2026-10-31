@@ -11,7 +11,6 @@ import {
   escolhaDoBusinessType,
   escolhaDoNicho,
   estagioDoBanco,
-  limparNomeMarca,
   type EscolhaTipo,
   type EstagioNegocio,
   type NichoDoPasso,
@@ -30,9 +29,11 @@ export interface DadosPrimeirosPassos {
   estagio: EstagioNegocio | null;
   /** profiles.nicho (null = ainda não respondeu; obrigatório no bloco). */
   nicho: NichoNegocio | null;
-  /** business_name sem espaço nas pontas ("" = sem nome). */
-  nomeMarca: string;
   temPreco: boolean;
+  /** Existe pedido no quadro (venda com andamento), mesmo cancelado depois. */
+  temPedido: boolean;
+  /** Existe pedido entregue e não cancelado. */
+  temEntregue: boolean;
   /** O primeiro produto guardado pela Calculadora, pra o passo feito mostrar o número dela (GRW-90). */
   primeiroPreco: PrimeiroPrecoDoPasso | null;
 }
@@ -104,11 +105,11 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
     queryKey,
     enabled: !!userId,
     queryFn: async () => {
-      const [perfilRes, precoRes] = await Promise.all([
+      const [perfilRes, precoRes, pedidoRes, entregueRes] = await Promise.all([
         supabase
           .from("profiles")
           .select(
-            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_stage, business_name, nicho",
+            "created_at, onboarding_completed, onboarding_completed_at, business_type, business_stage, nicho",
           )
           .eq("id", userId!)
           .maybeSingle(),
@@ -122,16 +123,31 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
           .not("calculadora_breakdown", "is", null)
           .order("created_at", { ascending: true })
           .limit(1),
+        // Mesma régua da resgatar_bonus_primeiros_passos (migration
+        // 20261031200100): pedido é venda com andamento; entregue é o
+        // andamento "entregue" sem cancelamento. Só a contagem, sem linhas.
+        supabase
+          .from("vendas")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!)
+          .not("andamento", "is", null),
+        supabase
+          .from("vendas")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", userId!)
+          .eq("andamento", "entregue")
+          .neq("status", "cancelada"),
       ]);
       if (perfilRes.error) throw perfilRes.error;
       if (precoRes.error) throw precoRes.error;
+      if (pedidoRes.error) throw pedidoRes.error;
+      if (entregueRes.error) throw entregueRes.error;
       const p = perfilRes.data as {
         created_at: string | null;
         onboarding_completed: boolean | null;
         onboarding_completed_at: string | null;
         business_type: string | null;
         business_stage: string | null;
-        business_name: string | null;
         nicho: string | null;
       } | null;
       return {
@@ -141,8 +157,9 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
         escolhaTipo: escolhaDoBusinessType(p?.business_type),
         estagio: estagioDoBanco(p?.business_stage),
         nicho: nichoDoBanco(p?.nicho),
-        nomeMarca: (p?.business_name ?? "").trim(),
         temPreco: (precoRes.data ?? []).length > 0,
+        temPedido: (pedidoRes.count ?? 0) > 0,
+        temEntregue: (entregueRes.count ?? 0) > 0,
         primeiroPreco: primeiroPrecoDaLinha(precoRes.data?.[0]),
       };
     },
@@ -322,33 +339,6 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
       });
   }, [userId, dados, nicho, atualizarCache]);
 
-  /** Grava profiles.business_name, o mesmo campo do onboarding antigo e de Configurações. */
-  const salvarNome = useCallback(
-    async (bruto: string): Promise<boolean> => {
-      const nome = limparNomeMarca(bruto);
-      if (!userId || !nome) return false;
-      const eraVazio = !dados?.nomeMarca;
-      const { error } = await supabase
-        .from("profiles")
-        .update({ business_name: nome } as never)
-        .eq("id", userId);
-      if (error) {
-        track("primeiros_passos_nome_falhou", { motivo: error.message || "erro_desconhecido" });
-        toastErro(
-          "A Pólia One não conseguiu salvar o nome da marca. Tenta de novo, o nome continua no campo.",
-        );
-        return false;
-      }
-      atualizarCache({ nomeMarca: nome });
-      // O menu lateral mostra o nome da marca (useUserMeta).
-      void qc.invalidateQueries({ queryKey: ["user-meta", userId] });
-      // Mesmo evento do onboarding antigo e de Configurações (funil "Criou negócio").
-      if (eraVazio) void registrar("business_created", { feature: "painel" });
-      return true;
-    },
-    [userId, dados?.nomeMarca, atualizarCache, qc],
-  );
-
   return {
     dados,
     carregando: !!userId && query.isPending,
@@ -356,6 +346,5 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
     salvarTipo,
     salvarEstagio,
     salvarNicho,
-    salvarNome,
   };
 }

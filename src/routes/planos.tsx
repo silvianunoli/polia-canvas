@@ -221,7 +221,7 @@ function PlanosPage() {
               </h1>
               <p className="mt-5 max-w-[56ch] text-[clamp(1.06rem,1.35vw,1.2rem)] leading-[1.6] text-[var(--ink-soft)]">
                 Pagou, a conta abre. A Pólia manda por e-mail o link para criar a senha e entrar.
-                Cancelar é um clique, e o Planejamento continua seu.
+                Cancelar é um clique, e o que a marca guardou continua seu.
               </p>
             </Reveal>
 

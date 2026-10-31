@@ -1,11 +1,35 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { secoesDoModulo } from "./planejamento";
 
-// resgatar_bonus_primeiros_passos() (migration 20261023330000) confere o
-// Módulo 1 pelas seções escritas à mão no SQL. Mudou aqui: migration nova lá,
-// senão o Painel promete o bônus e o banco nunca entrega (ONE-136).
+import { ANDAMENTOS } from "./pedidos";
+import { ORDEM_PASSOS } from "./primeirosPassos";
+
+// resgatar_bonus_primeiros_passos() confere os passos escritos à mão no SQL.
+// Desde 31/10/2026 (migration 20261031200100) são o primeiro preço, o primeiro
+// pedido e um pedido entregue, a mesma régua do hook usePrimeirosPassos. Mudou
+// aqui: migration nova lá, senão o Painel promete o bônus e o banco nunca
+// entrega (ONE-136).
+const MIGRATION = resolve(
+  __dirname,
+  "../../supabase/migrations/20261031200100_bonus_passos_pedido_entregue.sql",
+);
+
 describe("bônus dos primeiros passos", () => {
-  it("as seções do Módulo 1 são as mesmas do banco", () => {
-    expect(secoesDoModulo(1).map((s) => s.id)).toEqual(["1.1", "1.2", "1.3", "1.4", "1.5"]);
+  const sql = readFileSync(MIGRATION, "utf-8");
+
+  it("os passos do Painel são preço, pedido e entregue", () => {
+    expect(ORDEM_PASSOS).toEqual(["preco", "pedido", "entregue"]);
+  });
+
+  it("o banco confere os mesmos três passos, sem o Planejamento", () => {
+    expect(sql).toMatch(/calculadora_breakdown is not null/);
+    expect(sql).toMatch(/andamento is not null/);
+    expect(sql).toMatch(/andamento = 'entregue' and status <> 'cancelada'/);
+    expect(sql).not.toMatch(/planejamento_secoes|business_name/);
+  });
+
+  it("o andamento conferido no banco existe no quadro de Pedidos", () => {
+    expect(ANDAMENTOS).toContain("entregue");
   });
 });

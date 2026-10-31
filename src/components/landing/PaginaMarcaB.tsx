@@ -12,7 +12,6 @@ import {
   FileText,
   Gauge,
   LayoutGrid,
-  MessageSquareQuote,
   NotebookPen,
   PackageCheck,
   Percent,
@@ -51,7 +50,7 @@ import {
   MockDescontoSimulado,
   MockFluxoMarcaPrecoMes,
   MockFraseMes,
-  MockPerguntaMarca,
+  MockQuadroPedidos,
   MockTresNumeros,
   MockVendaEstoque,
 } from "@/components/landing/MocksLanding";
@@ -76,6 +75,11 @@ import type { NichoLanding } from "@/lib/nichosLanding";
  * Proposta bloco a bloco na seção 8 de POSICIONAMENTO-POLIA-ONE.md, na raiz do
  * workspace. Tudo o que tem "Escritorio" no nome vale só com `escritorio` (home);
  * a /landing-b segue com o conteúdo original até o teste de campanha acabar.
+ *
+ * 31/10/2026 (decisão da Sil): o texto visível da home troca "escritório" por
+ * "sistema" (o identificador `escritorio` fica), e o Planejamento sai das duas
+ * páginas, porque saiu da Pólia One. A /landing-b mantém a própria copy, só sem
+ * vender o Planejamento.
  */
 
 /** A semana da dona, com o preço como uma das cenas, não a única. */
@@ -122,7 +126,7 @@ const jeitoDeHojeEscritorio: ItemLista[] = [
   },
 ];
 
-/** O teto (COPY-39): cada venda nova multiplica a bagunça do escritório improvisado. */
+/** O teto (COPY-39): cada venda nova multiplica a bagunça da gestão improvisada. */
 const tetoDoImproviso = [
   "Mais pedido, mais conversa pra caçar no WhatsApp.",
   "Mais produto, mais estoque pra contar no olho.",
@@ -177,26 +181,15 @@ const jeitoDeHoje: ItemLista[] = [
 ];
 
 /**
- * Agrupado pela tríade do "Como funciona" (23/10/2026): a marca, o preço, o mês.
- * As mesmas três palavras aparecem no subtítulo do topo e nos passos 01 a 03.
+ * Agrupado pela tríade do "Como funciona" (23/10/2026): o preço, o mês. O
+ * grupo "A marca" vendia o Planejamento e os documentos de Marca e Mercado, e
+ * saiu com eles em 31/10/2026.
  */
 // Projeção e Resumo pro contador descem pro Premium na virada de preços
 // (01/12/2026, src/lib/planos.ts). Selo de vitrine: lido quando o módulo carrega.
 const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
 
 const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
-  {
-    grupo: "A marca",
-    itens: [
-      {
-        icone: MessageSquareQuote,
-        titulo: "A resposta pro “tá caro”.",
-        texto:
-          "O Planejamento pergunta por que a marca existe, pra quem ela é e o que entrega. No Premium, as respostas viram os documentos de Marca e Mercado.",
-        planos: ["Grátis", "Premium"],
-      },
-    ],
-  },
   {
     grupo: "O preço",
     itens: [
@@ -220,9 +213,9 @@ const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
     itens: [
       {
         icone: Gauge,
-        titulo: "O mês em três números.",
+        titulo: "O mês fechado, sem caderno.",
         texto:
-          "O mínimo pra fechar as contas, o mês bom e o mês de celebrar. O Financeiro mostra em qual deles você está.",
+          "O que entrou, o que saiu e quanto a marca lucrou. Cada pedido entregue já entra no Financeiro.",
         planos: ["Premium"],
       },
       {
@@ -361,7 +354,7 @@ function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
   return [
     {
       nome: "Grátis",
-      praQuem: "Pra quem está pondo a marca no papel.",
+      praQuem: "Pra quem quer o preço na conta e os pedidos num lugar só.",
       mensal: "R$ 0",
       itens: BENEFICIOS_GRATIS,
     },
@@ -402,7 +395,7 @@ export const PERGUNTAS_MARCA_B = [
   {
     pergunta: "Não tenho tempo. Quanto isso toma?",
     resposta:
-      "Cada módulo do Planejamento leva cerca de vinte minutos e fica salvo onde você parou. A Calculadora não depende dele: um produto já mostra o preço. Depois, registrar uma venda é uma linha.",
+      "O primeiro preço leva uns 3 minutos na Calculadora. Depois, cada pedido é uma linha no quadro de Pedidos, com a cliente e o dia da entrega.",
   },
   {
     pergunta: "Tenho tudo num caderno. Vou ter que passar tudo pra lá?",
@@ -417,12 +410,12 @@ export const PERGUNTAS_MARCA_B = [
   {
     pergunta: "A IA inventa o meu preço?",
     resposta:
-      "Não. O preço vem de conta: custo, taxas e meta. A IA só ajuda a completar textos que você começou no Planejamento e responde dúvidas do dia a dia. Imposto, contrato e investimento ficam fora.",
+      "Não. O preço vem de conta: custo, taxas e meta. A IA responde dúvidas do dia a dia no Assistente. Imposto, contrato e investimento ficam fora.",
   },
   {
     pergunta: "Ainda não vendo. Serve pra mim?",
     resposta:
-      "Serve. O Planejamento ajuda a definir pra quem é a marca e o que ela entrega, e o primeiro preço já nasce calculado.",
+      "Serve. O primeiro preço já nasce calculado com o custo real, e o primeiro pedido entra no quadro no dia em que chegar.",
   },
   {
     pergunta: "Quem me ajuda no negócio pode entrar na mesma conta?",
@@ -474,7 +467,8 @@ export function PaginaMarcaB({
   busca: BuscaCadastro;
   linkSobre?: boolean;
   /**
-   * Só a home (COPY-34, 27/10/2026): topo "o escritório da sua marca" e a seção dos
+   * Só a home (COPY-34, 27/10/2026): topo "o sistema da sua marca" (era "escritório"
+   * até 31/10/2026) e a seção dos
    * quatro lugares com os canais em breve. A /landing-b fica como está, pra não mexer
    * no teste de campanha no meio.
    */
@@ -523,21 +517,21 @@ export function PaginaMarcaB({
               nicho
                 ? `Pólia One · ${nicho.rotulo}`
                 : escritorio
-                  ? "Pólia One · o escritório da sua marca"
+                  ? "Pólia One · o sistema da sua marca"
                   : "Pólia One · para quem toca a própria marca"
             }
             titulo={
               nicho
                 ? nicho.titulo
                 : escritorio
-                  ? "Sua marca cresceu. O escritório dela continua sendo o caderno, a planilha perdida e o WhatsApp."
+                  ? "Sua marca cresceu. A gestão dela continua no caderno, na planilha perdida e no WhatsApp."
                   : "Sua marca já vale mais do que você está cobrando."
             }
             subtitulo={
               nicho
                 ? nicho.subtitulo
                 : escritorio
-                  ? "A Pólia One é o escritório da sua marca: preço, estoque, vendas e dinheiro no mesmo lugar."
+                  ? "A Pólia One é o sistema da sua marca: pedidos, estoque e lucro num lugar só, no celular."
                   : "A Pólia One liga a sua marca, o custo de cada produto e a meta do mês. Na hora do orçamento, o preço sai dessa conta."
             }
             micro={
@@ -721,15 +715,15 @@ export function PaginaMarcaB({
           {escritorio && (
             <FraseAncora className="mt-12 !max-w-[44ch]">
               Não é falta de organização. Quem não se organiza não dá conta de 50 peças numa semana.
-              É uma marca que virou empresa e um escritório que ficou no caderno.
+              É uma marca que virou empresa e uma gestão que ficou no caderno.
             </FraseAncora>
           )}
-          {/* O teto (COPY-39): por que o escritório improvisado trava o crescimento. */}
+          {/* O teto (COPY-39): por que a gestão improvisada trava o crescimento. */}
           {escritorio && (
             <div className="mt-16 border-t border-[var(--line)] pt-12">
               <Rotulo>O teto</Rotulo>
               <h3 className="mt-4 max-w-[26ch] text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-[var(--ink)]">
-                Uma marca não cresce mais do que o escritório dela aguenta.
+                Uma marca não cresce mais do que a gestão dela aguenta.
               </h3>
               <ul className="mt-6 flex list-none flex-col gap-2">
                 {tetoDoImproviso.map((linha) => (
@@ -773,9 +767,9 @@ export function PaginaMarcaB({
           </div>
           <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
             <p className={CORPO}>
-              <b className="font-semibold text-[var(--ink)]">A marca dá o argumento.</b> No
-              Planejamento, a Pólia One pergunta por que a sua marca existe, pra quem ela é e o que
-              ela entrega. Dali sai a resposta pro &ldquo;tá caro&rdquo;, com as suas palavras.
+              <b className="font-semibold text-[var(--ink)]">A marca dá o argumento.</b> As horas da
+              peça, o material escolhido e a embalagem entram no custo de cada produto na Pólia One.
+              Na hora do &ldquo;tá caro&rdquo;, o que a marca entrega já está na conta.
             </p>
             <p className={CORPO}>
               <b className="font-semibold text-[var(--ink)]">O número dá a prova.</b> Depois vem a
@@ -799,11 +793,11 @@ export function PaginaMarcaB({
           )}
         </Secao>
 
-        {/* B5b · O ESCRITÓRIO: só na home. Depois da marca (eixo marca primeiro), o que a
-            venda faz sozinha e o que vem aí nos canais. */}
+        {/* B5b · O SISTEMA (era "o escritório" até 31/10/2026): só na home. Depois da marca
+            (eixo marca primeiro), o que a venda faz sozinha e o que vem aí nos canais. */}
         {escritorio && (
           <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
-            <Rotulo>O escritório da marca</Rotulo>
+            <Rotulo>O sistema da marca</Rotulo>
             <h2 className={`mt-4 ${H2}`}>Uma venda. Quatro lugares em dia.</h2>
             <p className={`mt-6 max-w-[60ch] ${CORPO}`}>
               A venda entra uma vez. A Pólia One leva ela pra cada lugar que depende dela, e ninguém
@@ -848,24 +842,26 @@ export function PaginaMarcaB({
           <Rotulo>Como funciona</Rotulo>
           <h2 className={`mt-4 mb-10 max-w-[26ch] ${H2}`}>
             {escritorio
-              ? "Da razão de existir da marca ao mês que fecha."
-              : "Da razão de existir da marca ao preço que fecha o mês."}
+              ? "Do primeiro preço ao mês que fecha."
+              : "Do custo da peça ao preço que fecha o mês."}
           </h2>
+          {/* Até 31/10/2026 o passo 01 era "A marca no papel" (os 6 módulos do
+              Planejamento). Saiu com o Planejamento: os passos são de operação. */}
           <ComoFuncionaPassos
             passos={[
               {
                 n: "01",
-                titulo: "A marca no papel",
-                texto:
-                  "Seis módulos curtos, cerca de vinte minutos cada. A Pólia One pergunta da marca primeiro e do dinheiro depois, e guarda onde você parou.",
-                mock: <MockPerguntaMarca />,
-              },
-              {
-                n: "02",
                 titulo: "O preço na conta",
                 texto:
                   "Na Calculadora, o custo do produto, as taxas da maquininha ou do marketplace e o lucro que a marca precisa viram um preço sugerido. O desconto pode ser simulado antes de ser dado.",
                 mock: <MockCalculadoraHero />,
+              },
+              {
+                n: "02",
+                titulo: "O pedido no quadro",
+                texto:
+                  "O pedido do WhatsApp, da feira ou do Instagram entra no quadro de Pedidos com a cliente e o dia da entrega, e anda de A fazer até Entregue. O cartão mostra quanto cada pedido lucra.",
+                mock: <MockQuadroPedidos />,
               },
               // Home (COPY-37): o caminho passa pela venda antes do mês.
               ...(escritorio
@@ -907,7 +903,7 @@ export function PaginaMarcaB({
           )}
         </Secao>
 
-        {/* B7 · POR DENTRO: sai da home (COPY-37), repetia o escritório e o como funciona.
+        {/* B7 · POR DENTRO: sai da home (COPY-37), repetia o sistema e o como funciona.
             A âncora #produto do menu foi pro bloco do escritório. */}
         {!escritorio && (
           <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
@@ -933,7 +929,7 @@ export function PaginaMarcaB({
           <Rotulo>O que muda</Rotulo>
           <h2 className={`mt-4 mb-10 max-w-[24ch] ${H2}`}>
             {escritorio
-              ? "A marca cresce, e o escritório cresce junto."
+              ? "A marca cresce, e o sistema cresce junto."
               : "Cada decisão de dinheiro com um número do lado."}
           </h2>
           <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_5fr]">
@@ -987,7 +983,7 @@ export function PaginaMarcaB({
               </p>
               <p className={`mt-4 ${CORPO}`}>
                 {escritorio
-                  ? "A Pólia One é o escritório que eu queria ter tido quando a minha marca cresceu."
+                  ? "A Pólia One é o sistema que eu queria ter tido quando a minha marca cresceu."
                   : "A Pólia One é a ferramenta que eu queria ter aberto toda vez que um orçamento chegava."}{" "}
                 Eu construo a Pólia usando a Pólia.
               </p>
@@ -1033,12 +1029,12 @@ export function PaginaMarcaB({
               <div>
                 <h2 className="text-[clamp(30px,3.6vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance text-[var(--ink)]">
                   {escritorio
-                    ? "Por fora, a marca que a cliente lembra. Por dentro, o escritório que fecha a conta."
+                    ? "Por fora, a marca que a cliente lembra. Por dentro, o sistema que fecha a conta."
                     : "O próximo orçamento vai chegar de qualquer jeito."}
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
                   {escritorio
-                    ? "A marca já cresceu. Agora o escritório acompanha. Começa no Grátis, com 7 dias de Pro."
+                    ? "A marca já cresceu. Agora o sistema acompanha. Começa no Grátis, com 7 dias de Pro."
                     : "A Pólia One deixa o preço pronto antes dele."}
                 </p>
                 <div className="mt-8">

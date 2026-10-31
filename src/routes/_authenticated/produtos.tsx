@@ -11,11 +11,9 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
-import { useLinkDoModulo } from "@/lib/useLinkDoModulo";
 import { toastErro } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
 import { sobraDoProduto, taxasDoBreakdown } from "@/lib/precificacao.functions";
-import { LinkInterno } from "@/components/ui/LinkInterno";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
@@ -57,7 +55,6 @@ function ProdutosPage() {
   // Grátis do jeito que a trava de rota entende (cancelada conta) e só depois
   // de o perfil carregar: antes o cadeado de cota piscava pra quem paga.
   const ehConfere = ehPlanoGratis(meta);
-  const linkModulo3 = useLinkDoModulo(3);
   const { aba: abaDaUrl } = Route.useSearch();
   const aba: AbaProdutos = abaDaUrl ?? "catalogo";
   const trocarAba = (nova: AbaProdutos) =>
@@ -251,30 +248,18 @@ function ProdutosPage() {
               <Vazio
                 icone={Package}
                 titulo="Nenhum produto ainda."
-                texto="Adicione um aqui, ou deixe o Módulo 3 do Planejamento criar os primeiros com o que for listado lá."
+                texto="Adicione um aqui. O preço calculado na Calculadora também entra aqui sozinho."
                 acao={
-                  // A ação do vazio é a da própria tela; o Planejamento é caminho
-                  // secundário e só aponta pro Módulo 3 quando ele está liberado.
-                  <>
-                    <button
-                      type="button"
-                      onClick={abrirAdicionar}
-                      disabled={cotaAtingida}
-                      className={BTN_ACAO}
-                    >
-                      + Adicionar produto
-                    </button>
-                    <p className="mt-3 text-[12px] text-[var(--muted)]">
-                      ou deixe o{" "}
-                      <LinkInterno
-                        href={linkModulo3.href}
-                        className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
-                      >
-                        {linkModulo3.liberado ? "Módulo 3 do Planejamento →" : "Planejamento →"}
-                      </LinkInterno>{" "}
-                      criar os primeiros
-                    </p>
-                  </>
+                  // A ação do vazio é a da própria tela. O atalho pro Módulo 3 do
+                  // Planejamento saiu com ele em 31/10/2026.
+                  <button
+                    type="button"
+                    onClick={abrirAdicionar}
+                    disabled={cotaAtingida}
+                    className={BTN_ACAO}
+                  >
+                    + Adicionar produto
+                  </button>
                 }
               />
             </div>

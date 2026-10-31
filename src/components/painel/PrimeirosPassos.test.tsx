@@ -15,7 +15,7 @@ const { progressoPrimeirosPassos } = await import("@/lib/primeirosPassos");
 
 afterEach(() => cleanup());
 
-const nada = progressoPrimeirosPassos({ temPreco: false, modulo1Fechado: false, temNome: false });
+const nada = progressoPrimeirosPassos({ temPreco: false, temPedido: false, temEntregue: false });
 
 function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
   const props = {
@@ -28,7 +28,6 @@ function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
     // Respondido por padrão: os testes dos passos não dependem da pergunta.
     nichoSalvo: "comida" as const,
     onEscolherNicho: vi.fn(async () => true),
-    onSalvarNome: vi.fn(async () => true),
     ...over,
   };
   render(<PrimeirosPassos {...props} />);
@@ -47,7 +46,9 @@ describe("PrimeirosPassos", () => {
 
   it("fala do bônus de 7 dias só quando o teste do Pro está aberto (ONE-136)", () => {
     montar({ bonusDias: 7 });
-    expect(screen.getByText("Com os três feitos, o teste do Pro ganha mais 7 dias.")).toBeTruthy();
+    expect(
+      screen.getByText("Preço, pedido e entrega feitos, o teste do Pro ganha mais 7 dias."),
+    ).toBeTruthy();
     cleanup();
     montar();
     expect(screen.queryByText(/o teste do Pro ganha mais/)).toBeNull();
@@ -56,8 +57,8 @@ describe("PrimeirosPassos", () => {
   it("passo do preço feito mostra o número dela e leva pra Calculadora (GRW-90)", () => {
     const comPreco = progressoPrimeirosPassos({
       temPreco: true,
-      modulo1Fechado: false,
-      temNome: false,
+      temPedido: false,
+      temEntregue: false,
     });
     montar({
       progresso: comPreco,
@@ -83,8 +84,8 @@ describe("PrimeirosPassos", () => {
     cleanup();
     const comPreco = progressoPrimeirosPassos({
       temPreco: true,
-      modulo1Fechado: false,
-      temNome: false,
+      temPedido: false,
+      temEntregue: false,
     });
     const props = montar({ progresso: comPreco });
     await userEvent.click(screen.getByRole("button", { name: "Já vende" }));
@@ -150,31 +151,29 @@ describe("PrimeirosPassos", () => {
     montar({
       progresso: progressoPrimeirosPassos({
         temPreco: true,
-        modulo1Fechado: false,
-        temNome: false,
+        temPedido: false,
+        temEntregue: false,
       }),
     });
     const itens = screen.getAllByRole("listitem");
     expect(itens[0].textContent).toContain("Feito:");
     expect(itens[1].getAttribute("aria-current")).toBe("step");
-    expect(screen.getByRole("link", { name: /Quero abrir o Módulo 1/ }).getAttribute("href")).toBe(
-      "/planejamento/modulo/1",
+    expect(screen.getByText("Lançar o primeiro pedido")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Quero lançar um pedido/ }).getAttribute("href")).toBe(
+      "/pedidos",
     );
+    expect(screen.queryByText(/Módulo 1|Planejamento|Dar nome à marca/)).toBeNull();
   });
 
-  it("nome da marca: salva pelo Enter e, se falhar, o texto fica no campo", async () => {
-    const onSalvarNome = vi.fn(async () => false);
+  it("com o pedido lançado, o destaque vai pro entregue e leva pro quadro", () => {
     montar({
-      progresso: progressoPrimeirosPassos({ temPreco: true, modulo1Fechado: true, temNome: false }),
-      onSalvarNome,
+      progresso: progressoPrimeirosPassos({ temPreco: true, temPedido: true, temEntregue: false }),
     });
-    const campo = screen.getByLabelText("Nome da marca") as HTMLInputElement;
-    expect((screen.getByRole("button", { name: "Salvar" }) as HTMLButtonElement).disabled).toBe(
-      true,
-    );
-    await userEvent.type(campo, "Ateliê da Ana{Enter}");
-    expect(onSalvarNome).toHaveBeenCalledWith("Ateliê da Ana");
-    await waitFor(() => expect(campo.readOnly).toBe(false));
-    expect(campo.value).toBe("Ateliê da Ana");
+    const itens = screen.getAllByRole("listitem");
+    expect(itens[2].getAttribute("aria-current")).toBe("step");
+    expect(screen.getByText("Marcar um pedido como entregue e ver o lucro")).toBeTruthy();
+    expect(
+      screen.getByRole("link", { name: /Quero abrir o quadro de Pedidos/ }).getAttribute("href"),
+    ).toBe("/pedidos");
   });
 });

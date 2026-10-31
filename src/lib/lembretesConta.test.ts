@@ -170,4 +170,12 @@ describe("régua de ativação e do teste do Pro (GRW-66)", async () => {
     expect(ehTipoRegua("preco_d1")).toBe(false);
     expect(ehTipoRegua("teste_acabou")).toBe(true);
   });
+
+  it("o lembrete do Planejamento saiu junto com ele (31/10/2026)", () => {
+    expect(ehTipoRegua("modulo_d7")).toBe(false);
+    for (const tipo of TIPOS_REGUA) {
+      const e = montarEmailRegua(tipo, { nome: null, testeFim: fim, agora: antes });
+      expect(`${e.assunto} ${e.texto}`, tipo).not.toMatch(/Planejamento|módulo/i);
+    }
+  });
 });

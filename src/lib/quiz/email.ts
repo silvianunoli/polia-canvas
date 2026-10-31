@@ -47,7 +47,7 @@ export function montarEmailDiagnostico({
   const ondeLabel = "No seu caso, esse é o ponto que apareceu no diagnóstico:";
   const contaLabel = "O que fazer agora";
   const ponte =
-    "A Pólia One organiza a marca, o preço e a meta do mês num lugar só, a partir do Planejamento. O plano Grátis abre sem cartão.";
+    "A Pólia One organiza o preço, os pedidos e a meta do mês num lugar só. O plano Grátis abre sem cartão.";
   const instagramTexto = "Mais conta de preço e de marca no Instagram:";
 
   const text = [

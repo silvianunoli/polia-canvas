@@ -48,8 +48,9 @@ const ANUNCIOS_CANAIS = "/produtos/anuncios";
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 
 // Marca e Mapa de Mercado NÃO ficam aqui: são documentos do planejamento,
-// acessados pelo badge de cada módulo dentro de /planejamento. O sidebar guarda
-// o planejamento + as ferramentas de trabalho do dia a dia.
+// acessados pelo badge de cada módulo dentro de /planejamento. O Planejamento
+// saiu das usuárias em 31/10/2026 e só aparece pra conta interna (flag
+// `planejamento`, lib/ferramentasInternas); o resto é o trabalho do dia a dia.
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
   { to: "/planejamento", label: "Planejamento", icon: Map },
@@ -113,11 +114,12 @@ function Body({
   const tutorialAtivo = isActive("/como-usar", pathname);
   // Selo "2 de 5" ao lado de Planejamento (ONE-112, 11/10/2026): o lembrete
   // diário era um modal em qualquer tela; o selo lembra onde parou sem
-  // interromper. Some com os 6 módulos fechados.
+  // interromper. Some com os 6 módulos fechados. Só aparece junto do item,
+  // que desde 31/10/2026 é só da conta interna.
   const { progresso } = useProgressoPlanejamento();
   const { canais } = useCanaisConectados();
   const anunciosAtivo = isActive(ANUNCIOS_CANAIS, pathname);
-  // Planner e Caderno só pra conta interna (28/10/2026).
+  // Planner e Caderno (28/10/2026) e Planejamento (31/10/2026) só pra conta interna.
   const acessoInterno = useFerramentasInternas();
 
   return (
