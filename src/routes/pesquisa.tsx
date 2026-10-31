@@ -23,7 +23,7 @@ export const Route = createFileRoute("/pesquisa")({
       {
         name: "description",
         content:
-          "Me conta como está o seu negócio hoje: uma pesquisa rápida e anônima sobre preço, lucro e o que mais aperta.",
+          "Pesquisa rápida e anônima sobre o dia a dia de quem toca a própria marca: pedidos, estoque e dinheiro.",
       },
       // Formulário de pesquisa, não conteúdo editorial: fica fora do índice, mas
       // "follow" porque a página não tem nenhum link que precise ser isolado do

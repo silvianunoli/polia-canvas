@@ -54,7 +54,7 @@ export const pesquisaGestao: PesquisaConfig = {
       tipo: "multipla",
       titulo: "Onde você vende hoje?",
       ajuda: "Marca todos os lugares.",
-      maxSelecoes: 9,
+      maxSelecoes: 8,
       opcoes: [
         { id: "instagram", rotulo: "Instagram" },
         { id: "whatsapp", rotulo: "WhatsApp" },
@@ -62,7 +62,6 @@ export const pesquisaGestao: PesquisaConfig = {
         { id: "shopee", rotulo: "Shopee" },
         { id: "mercado_livre", rotulo: "Mercado Livre" },
         { id: "tiktok_shop", rotulo: "TikTok Shop" },
-        { id: "elo7", rotulo: "Elo7" },
         { id: "feira_loja_fisica", rotulo: "Feira ou loja física" },
         { id: "encomenda_direta", rotulo: "Encomenda direta, por indicação" },
         { id: "outro", rotulo: "Outro lugar" },
