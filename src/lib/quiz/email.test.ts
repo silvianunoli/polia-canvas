@@ -46,8 +46,8 @@ describe("e-mail do diagnóstico", () => {
     expect(text).toContain(`Quero começar grátis: ${cadastro}`);
     expect(html).toContain(`href="${cadastro}"`);
     expect(html).toContain("Quero começar grátis");
-    expect(text).toContain("https://www.instagram.com/hub.polia/");
-    expect(html).toContain('href="https://www.instagram.com/hub.polia/"');
+    expect(text).toContain("https://www.instagram.com/polialab/");
+    expect(html).toContain('href="https://www.instagram.com/polialab/"');
   });
 
   // O gate promete "você sai quando quiser". O link do rodapé é o cumprimento
@@ -95,7 +95,7 @@ describe("e-mail do diagnóstico", () => {
       for (const t of TERRITORIOS) {
         const { subject, text, html } = montar({ faixa: f, territorio: t });
         expect(text).toContain(t.conta);
-        expect(html).toContain("Seguir @hub.polia");
+        expect(html).toContain("Seguir @polialab");
         for (const parte of [subject, text]) {
           expect(parte).not.toMatch(/[—–]/);
         }

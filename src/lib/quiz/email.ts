@@ -13,7 +13,7 @@
 import { escapeHtml, emailPolia } from "@/lib/email-template";
 import type { Faixa, Territorio } from "./perguntas";
 
-const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
+const INSTAGRAM_URL = "https://www.instagram.com/polialab/";
 // Mesmo destino do botão da tela de resultado (src/routes/quiz.index.tsx), com
 // a origem marcada pra o cadastro saber que veio do quiz.
 export const CADASTRO_QUIZ_URL = "https://one.usepolia.com.br/auth/cadastro?origem=quiz";
@@ -65,7 +65,7 @@ export function montarEmailDiagnostico({
     ponte,
     `${CTA_CADASTRO_QUIZ}: ${CADASTRO_QUIZ_URL}`,
     "",
-    `${instagramTexto} Seguir @hub.polia: ${INSTAGRAM_URL}`,
+    `${instagramTexto} Seguir @polialab: ${INSTAGRAM_URL}`,
     "",
     `Não quero mais receber: ${descadastroUrl}`,
   ].join("\n");
@@ -80,7 +80,7 @@ export function montarEmailDiagnostico({
       escapeHtml(territorio.explicacao),
       // A casca só tem um botão e ele vem depois da caixa pêssego, então o
       // Instagram entra como link de texto antes dela.
-      `${escapeHtml(instagramTexto)} <a href="${INSTAGRAM_URL}" style="color:#0A0A0A;text-decoration:underline;">Seguir @hub.polia</a>`,
+      `${escapeHtml(instagramTexto)} <a href="${INSTAGRAM_URL}" style="color:#0A0A0A;text-decoration:underline;">Seguir @polialab</a>`,
       escapeHtml(ponte),
     ],
     // Mesma caixa pêssego da tela de resultado: quem abre o e-mail reconhece

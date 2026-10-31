@@ -164,7 +164,7 @@ describe("tiktokCliqueEmLink", () => {
   });
 
   it("link externo ou sem plano não dispara nada", async () => {
-    mod.tiktokCliqueEmLink("https://instagram.com/hub.polia");
+    mod.tiktokCliqueEmLink("https://instagram.com/polialab");
     mod.tiktokCliqueEmLink("/planos");
     mod.tiktokCliqueEmLink("/blog");
     await esperar();

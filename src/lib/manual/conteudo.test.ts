@@ -12,9 +12,9 @@ describe("conteúdo do manual", () => {
     expect(NOME_MANUAL).toBe(`O ${NOME_MANUAL_CURTO}`);
   });
 
-  // O perfil oficial é @hub.polia desde 14/09/2026; @usepolia está morto.
-  it("o Instagram aponta pro perfil oficial @hub.polia", () => {
-    expect(INSTAGRAM_URL).toBe("https://www.instagram.com/hub.polia/");
+  // O perfil oficial é @polialab desde 31/10/2026 (era @hub.polia desde 14/09/2026); @usepolia está morto.
+  it("o Instagram aponta pro perfil oficial @polialab", () => {
+    expect(INSTAGRAM_URL).toBe("https://www.instagram.com/polialab/");
     expect(INSTAGRAM_URL).not.toContain("usepolia");
   });
 

@@ -29,7 +29,7 @@ import { calcularResultado, type RespostasQuiz } from "@/lib/quiz/pontuacao";
 // Estado só em memória: abandonar no meio não grava nada e recarregar começa do
 // zero (no-go do v1). A única escrita é o lead, no gate de e-mail.
 
-const INSTAGRAM_URL = "https://www.instagram.com/hub.polia/";
+const INSTAGRAM_URL = "https://www.instagram.com/polialab/";
 const TIMEOUT_MS = 8000;
 
 const ERRO_REDE =
@@ -506,7 +506,7 @@ function TelaResultado({
           rel="noopener noreferrer"
           className={`${BTN_CONTORNO} ${CTA_LARGO}`}
         >
-          Seguir @hub.polia
+          Seguir @polialab
         </a>
       </div>
       <button

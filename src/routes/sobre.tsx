@@ -390,8 +390,8 @@ function SobrePage() {
                   },
                   {
                     rotulo: "Instagram",
-                    valor: "@hub.polia",
-                    href: "https://instagram.com/hub.polia",
+                    valor: "@polialab",
+                    href: "https://instagram.com/polialab",
                     externo: true,
                   },
                 ]}
