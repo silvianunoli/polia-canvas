@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { percentualDe } from "@/lib/formatarReais";
+import { formatarReais, percentualDe } from "@/lib/formatarReais";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { chaveDoMes, numerosDoMes, type LancamentoDoMes } from "@/lib/numerosDoMes";
 import { ehCategoriaInsumos } from "@/lib/projecao.functions";
-import { lucroDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
+import { subtotalDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
 
 /**
  * Quanto a marca lucrou no mês, descontado o custo de cada produto vendido
@@ -22,9 +22,17 @@ import { lucroDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
  *         - saídas do mês, menos as de Insumos (o material já está no custo
  *           de cada produto; tirar de novo contava o mesmo dinheiro duas vezes)
  *
+ * Item vendido sem custo (01/11/2026, ONE-166): entra inteiro, sem custo
+ * descontado, e conta em `semCusto` pra legenda pedir o custo. Antes um item
+ * desses jogava o mês todo pra conta antiga, e o custo das outras vendas
+ * sumia junto. Cadastrar o custo em Produtos preenche esses itens no banco
+ * (trigger preencher_custo_das_vendas), então o número se corrige sozinho.
+ *
+ * Venda a receber entra no lucro do mês em que foi vendida, como no cartão de
+ * Vendas (regime de competência); a legenda diz quanto ainda vai entrar.
+ *
  * Cai na conta antiga (entradas - saídas) quando não dá pra usar as vendas:
- * mês sem venda registrada, venda com item sem custo (a Pólia não inventa o
- * custo) ou leitura das vendas que falhou.
+ * mês sem venda registrada ou leitura das vendas que falhou.
  */
 
 /** Prefixo do `id_externo` que as RPCs de venda gravam no lançamento ("venda:<id>"). */
@@ -43,7 +51,7 @@ export type VendaDoMes = Pick<Venda, "status" | "desconto" | "taxaCanal" | "cust
   itens: ItemVenda[];
 };
 
-export type MotivoContaDeCaixa = "sem_vendas" | "venda_sem_custo" | "vendas_nao_lidas";
+export type MotivoContaDeCaixa = "sem_vendas" | "vendas_nao_lidas";
 
 export interface LucroDoMes {
   valor: number;
@@ -55,6 +63,8 @@ export interface LucroDoMes {
   motivo: MotivoContaDeCaixa | null;
   /** Líquido das vendas do mês ainda a receber (já está no lucro). */
   aReceber: number;
+  /** Vendas com algum item sem custo: entraram sem esse custo descontado. */
+  semCusto: number;
 }
 
 const centavos = (v: number) => Math.round(v * 100) / 100;
@@ -82,6 +92,7 @@ export function lucroDoMes(
     fonte: "caixa",
     motivo,
     aReceber: 0,
+    semCusto: 0,
   });
 
   if (vendas == null) return caixa("vendas_nao_lidas");
@@ -91,10 +102,14 @@ export function lucroDoMes(
   let lucroVendas = 0;
   let recebido = 0;
   let aReceber = 0;
+  let semCusto = 0;
   for (const v of validas) {
-    const lucro = lucroDaVenda(v);
-    if (lucro == null) return caixa("venda_sem_custo");
-    lucroVendas += lucro;
+    // Igual a lucroDaVenda, mas o item sem custo entra sem custo em vez de
+    // anular a venda inteira.
+    if (v.itens.some((i) => i.custoUnitario == null)) semCusto += 1;
+    const custo = v.itens.reduce((s, i) => s + i.quantidade * (i.custoUnitario ?? 0), 0);
+    lucroVendas +=
+      subtotalDaVenda(v.itens) - v.desconto - v.taxaCanal - (v.custoEnvio ?? 0) - custo;
     // Mesmo valor que a RPC grava no lançamento: total - taxa - frete pago por ela.
     const liquido = v.total - v.taxaCanal - (v.custoEnvio ?? 0);
     if (v.status === "a_receber") aReceber += liquido;
@@ -123,6 +138,7 @@ export function lucroDoMes(
     fonte: "vendas",
     motivo: null,
     aReceber: centavos(aReceber),
+    semCusto,
   };
 }
 
@@ -134,14 +150,18 @@ export function lucroDoMes(
 export function legendaDoLucro(l: LucroDoMes): string {
   const pct = percentualDe(l.valor, l.base);
   if (l.fonte === "vendas") {
-    return l.aReceber > 0
-      ? `${pct}% do que vendeu · pelo custo de cada produto`
-      : `${pct}% do que entrou · pelo custo de cada produto`;
-  }
-  // O custo do item é guardado na hora da venda (registrar_venda): cadastrar
-  // o custo em Produtos vale pras próximas vendas, não refaz a que já entrou.
-  if (l.motivo === "venda_sem_custo") {
-    return "entradas menos saídas: tem venda sem o custo do produto · cadastre o custo em Produtos";
+    const base =
+      l.aReceber > 0
+        ? `${pct}% do que vendeu, com ${formatarReais(l.aReceber)} ainda a receber`
+        : `${pct}% do que entrou`;
+    // Cadastrar o custo em Produtos preenche as vendas que ficaram sem ele.
+    const custo =
+      l.semCusto === 0
+        ? "pelo custo de cada produto"
+        : l.semCusto === 1
+          ? "1 venda sem custo, preencha em Produtos"
+          : `${l.semCusto} vendas sem custo, preencha em Produtos`;
+    return `${base} · ${custo}`;
   }
   if (l.motivo === "vendas_nao_lidas")
     return "entradas menos saídas · as vendas não carregaram agora";

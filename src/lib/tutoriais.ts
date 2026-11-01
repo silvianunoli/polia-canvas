@@ -150,7 +150,8 @@ const LISTA = [
       "No Grátis, o Painel lança entradas e saídas só do mês atual. O histórico dos outros meses fica no Financeiro, do Premium.",
       'A Meta do mês nasce em Metas, em "Criar a Meta do mês".',
       'Saída lançada em "Insumos / estoque" não sai de novo do "Quanto lucrou": o material já está no custo de cada produto vendido.',
-      'Sem venda registrada no mês, ou com venda de produto sem custo, o "Quanto lucrou" é entradas menos saídas, e a frase embaixo do número avisa.',
+      'Sem venda registrada no mês, o "Quanto lucrou" é entradas menos saídas. Venda de produto sem custo entra inteira, e a frase embaixo do número diz quantas são.',
+      'Venda "a receber" já conta no "Quanto lucrou" do mês em que foi feita, como no cartão de Vendas. A frase embaixo do número diz quanto ainda vai entrar.',
     ],
     duvidas: [
       {
@@ -395,9 +396,9 @@ const LISTA = [
     abrir: "Abrir a Calculadora",
     resumo:
       "Entram os custos reais da marca, sai o preço sugerido e quanto ele deixa de lucro depois das taxas.",
-    // Sem `trecho` desde 01/11/2026: a cena do vídeo não tem o campo "Qual
-    // produto?" do topo e o título dela ainda diz "quanto sobra". Volta quando
-    // a narração e a cena novas saírem (polia-one-tutorial/).
+    // A cena ganhou o "Qual produto?" e o título novo em 01/11/2026 (ONE-166);
+    // a narração não muda, ela não cita o nome do produto nem o "sobra".
+    trecho: "calculadora",
     passos: [
       {
         titulo: "Calcular o preço de um produto",
@@ -551,12 +552,12 @@ const LISTA = [
       {
         pergunta: 'Por que a venda aparece "sem custo"',
         resposta:
-          "Algum produto dessa venda está sem custo no catálogo, então a Pólia One não tem como calcular quanto lucrou. Preencha o custo em Produtos.",
+          "Algum produto dessa venda estava sem custo no catálogo, então a Pólia One não tinha como calcular quanto lucrou. Preencha o custo em Produtos: as vendas que ficaram sem custo passam a usar esse custo, e o lucro se corrige.",
       },
       {
-        pergunta: 'Qual a diferença pra "Registrar venda de um produto" do Financeiro',
+        pergunta: 'Qual a diferença pra "Registrar venda" do Financeiro',
         resposta:
-          "A de Vendas registra a venda inteira, baixa o estoque e lança o dinheiro. A do Financeiro só lança o dinheiro de uma venda, pelo preço do catálogo, sem mexer no estoque.",
+          "Nenhuma. O botão do Financeiro abre o mesmo formulário de Vendas: registra a venda, guarda o custo de cada produto, baixa o estoque e lança o dinheiro.",
       },
       {
         pergunta: "Como desfazer uma venda",
@@ -580,6 +581,7 @@ const LISTA = [
           'Preencha o "Valor (R$)" e a "Data". A "Descrição" é opcional.',
           'Escolha a "Categoria". Se nenhuma servir, "+ nova categoria" cria a sua.',
           'Clique em "Salvar lançamento".',
+          'Venda de produto vai por "+ Registrar venda": ela abre o formulário de Vendas e guarda o custo de cada produto, que o "Lucro do mês" desconta.',
         ],
       },
       {

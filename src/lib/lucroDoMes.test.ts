@@ -49,7 +49,14 @@ const entradaDaVenda = lanc("entrada", 46.16, {
 describe("lucroDoMes", () => {
   it("conta nova só com a venda: dá o lucro da venda, não tudo que entrou", () => {
     const r = lucroDoMes([entradaDaVenda], [vendaCaderno()], 2026, 11);
-    expect(r).toEqual({ valor: 16.16, base: 46.16, fonte: "vendas", motivo: null, aReceber: 0 });
+    expect(r).toEqual({
+      valor: 16.16,
+      base: 46.16,
+      fonte: "vendas",
+      motivo: null,
+      aReceber: 0,
+      semCusto: 0,
+    });
   });
 
   it("venda + saída de custo fixo: o custo fixo sai do lucro", () => {
@@ -87,7 +94,14 @@ describe("lucroDoMes", () => {
       2026,
       11,
     );
-    expect(r).toEqual({ valor: 150, base: 200, fonte: "caixa", motivo: "sem_vendas", aReceber: 0 });
+    expect(r).toEqual({
+      valor: 150,
+      base: 200,
+      fonte: "caixa",
+      motivo: "sem_vendas",
+      aReceber: 0,
+      semCusto: 0,
+    });
   });
 
   it("venda + entrada avulsa: a avulsa entra inteira, a da venda não entra duas vezes", () => {
@@ -101,7 +115,7 @@ describe("lucroDoMes", () => {
     expect(r.base).toBe(126.16);
   });
 
-  it("venda com item sem custo: cai na conta antiga em vez de inventar", () => {
+  it("venda com item sem custo: só ela entra inteira, as outras seguem pelo custo", () => {
     const semCusto = vendaCaderno({
       itens: [
         {
@@ -120,13 +134,35 @@ describe("lucroDoMes", () => {
       2026,
       11,
     );
+    // 16,16 do caderno + 40 da agenda sem custo - 6 de saída. Antes o mês
+    // inteiro virava entradas - saídas (80,16) e o custo do caderno sumia.
     expect(r).toEqual({
-      valor: 80.16,
+      valor: 50.16,
       base: 86.16,
-      fonte: "caixa",
-      motivo: "venda_sem_custo",
+      fonte: "vendas",
+      motivo: null,
       aReceber: 0,
+      semCusto: 1,
     });
+  });
+
+  it("venda com dois itens e só um sem custo: desconta o custo que existe", () => {
+    const mista = vendaCaderno({
+      itens: [
+        ...vendaCaderno().itens,
+        {
+          produtoId: "p2",
+          produtoNome: "Agenda",
+          quantidade: 1,
+          precoUnitario: 40,
+          custoUnitario: null,
+        },
+      ],
+      total: 86.16,
+    });
+    const r = lucroDoMes([], [mista], 2026, 11);
+    expect(r.valor).toBe(56.16);
+    expect(r.semCusto).toBe(1);
   });
 
   it("leitura das vendas que falhou: conta antiga, com o motivo", () => {
@@ -150,6 +186,7 @@ describe("lucroDoMes", () => {
       fonte: "vendas",
       motivo: null,
       aReceber: 46.16,
+      semCusto: 0,
     });
   });
 
@@ -213,20 +250,33 @@ describe("legendaDoLucro", () => {
     expect(legendaDoLucro(l)).toBe("35% do que entrou · pelo custo de cada produto");
   });
 
-  it("com venda a receber: percentual do que vendeu", () => {
+  it("com venda a receber: percentual do que vendeu e quanto ainda vai entrar", () => {
     const l = lucroDoMes([], [vendaCaderno({ status: "a_receber" })], 2026, 11);
-    expect(legendaDoLucro(l)).toBe("35% do que vendeu · pelo custo de cada produto");
+    expect(legendaDoLucro(l)).toBe(
+      "35% do que vendeu, com R$ 46,16 ainda a receber · pelo custo de cada produto",
+    );
   });
 
-  it("venda sem custo: diz que é entradas menos saídas e onde cadastrar o custo", () => {
+  it("venda sem custo: conta quantas e diz onde preencher", () => {
     const l = lucroDoMes(
       [entradaDaVenda],
       [vendaCaderno({ itens: [{ ...vendaCaderno().itens[0], custoUnitario: null }] })],
       2026,
       11,
     );
-    expect(legendaDoLucro(l)).toBe(
-      "entradas menos saídas: tem venda sem o custo do produto · cadastre o custo em Produtos",
+    expect(legendaDoLucro(l)).toBe("100% do que entrou · 1 venda sem custo, preencha em Produtos");
+
+    const duas = lucroDoMes(
+      [],
+      [
+        vendaCaderno({ itens: [{ ...vendaCaderno().itens[0], custoUnitario: null }] }),
+        vendaCaderno({ itens: [{ ...vendaCaderno().itens[0], custoUnitario: null }] }),
+      ],
+      2026,
+      11,
+    );
+    expect(legendaDoLucro(duas)).toBe(
+      "100% do que entrou · 2 vendas sem custo, preencha em Produtos",
     );
   });
 

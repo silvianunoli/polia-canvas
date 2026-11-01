@@ -561,6 +561,9 @@ html.cheia .tempo { color: var(--bg); }
 .troca-b { display: grid; } .troca-b > * { grid-area: 1 / 1; }
 .rolado { transform: translateY(-262px); }
 .rolado2 { transform: translateY(-440px); }
+.rolado3 { transform: translateY(-540px); }
+/* O Planejamento saiu da Pólia One em 31/10/2026: o item some do menu nas cenas depois dele. */
+.nav.fora { display: none; }
 .rolax { transform: translateX(-712px); }
 .b.bloq { opacity: .5; }
 .marca2 { background: var(--secondary-light); box-shadow: 0 0 0 4px var(--secondary-light); }
@@ -900,7 +903,7 @@ html.cheia .tempo { color: var(--bg); }
               <div class="av-linha"><span class="avatar">A</span></div>
             </div>
             <div class="nav" id="nav-painel"><svg><use href="#i-painel"/></svg>Painel</div>
-            <div class="nav" id="nav-planejamento" data-cls="painel@planejamento-0.2~assistente:alvo"><svg><use href="#i-mapa"/></svg>Planejamento</div>
+            <div class="nav" id="nav-planejamento" data-cls="painel@planejamento-0.2~assistente:alvo produtos:fora calculadora:fora projecao:fora financeiro:fora raiox:fora clientes:fora metas:fora caderno:fora planner:fora conteudo:fora calendario:fora assistente:fora fechamento:fora"><svg><use href="#i-mapa"/></svg>Planejamento</div>
             <div class="nav" id="nav-produtos"><svg><use href="#i-pacote"/></svg>Produtos</div>
             <div class="nav" id="nav-calculadora"><svg><use href="#i-calc"/></svg>Calculadora</div>
             <div class="nav so-pro" id="nav-projecao"><svg><use href="#i-sobe"/></svg>Projeção e cenários<svg class="cad"><use href="#i-cad"/></svg></div>
@@ -1021,9 +1024,12 @@ html.cheia .tempo { color: var(--bg); }
 
             <!-- Calculadora -->
             <div class="mv" data-vis="calculadora">
-              <div class="calc-col rola" data-cls="calculadora@sai-0.5:rolado2">
-                <div class="pg"><div><p class="pg-olho">Calculadora</p><h1 class="pg-h1">Quanto sobra em cada venda.</h1><p class="pg-sub">Coloque os custos e veja o preço de venda e quanto fica depois das taxas.</p></div></div>
+              <div class="calc-col rola" data-cls="calculadora@sai-0.5:rolado3">
+                <div class="pg"><div><p class="pg-olho">Calculadora</p><h1 class="pg-h1">Quanto a marca lucra em cada venda.</h1><p class="pg-sub">Coloque os custos e veja o preço de venda e quanto fica depois das taxas.</p></div></div>
                 <div class="abas"><span class="ativa">Produto (físico/digital)</span><span>Serviço (por hora)</span><span>Encomenda (sob medida)</span></div>
+                <div class="grupo"><div class="grade-c">
+                  <div class="cmp"><label>Qual produto?</label><span class="in" data-cls="calculadora@calculadora~custos-0.1:foco"><span data-txt="Caderno A5" data-t="calculadora@calculadora+0.2" data-v="14"></span></span></div>
+                </div></div>
                 <div class="grupo"><p class="rot">Custos diretos (por unidade)</p><div class="grade-c">
                   <div class="cmp"><label>Matéria-prima / insumos (R$)</label><span class="in" data-cls="calculadora@custos-0.1~custos+0.35:foco"><span data-txt="18,00" data-t="calculadora@custos" data-v="14"></span></span></div>
                   <div class="cmp"><label>Embalagem (R$)</label><span class="in" data-cls="calculadora@custos+0.35~custos+0.7:foco"><span data-txt="4,00" data-t="calculadora@custos+0.35" data-v="14"></span></span></div>
@@ -1089,7 +1095,7 @@ html.cheia .tempo { color: var(--bg); }
                   <span class="tag-am sobe" style="left:43.5%" data-vis="financeiro@barra+0.9">R$ 3.260 entraram até aqui</span>
                 </div>
               </div>
-              <div class="fin-acoes"><span class="b b-acao" id="fin-entrada" data-cls="financeiro@lancamento-0.5~lancamento-0.35:apertado">+ Registrar entrada</span><span class="b b-cont">+ Registrar venda de um produto</span><span class="b b-cont">+ Registrar saída</span></div>
+              <div class="fin-acoes"><span class="b b-acao" id="fin-entrada" data-cls="financeiro@lancamento-0.5~lancamento-0.35:apertado">+ Registrar entrada</span><span class="b b-cont">+ Registrar venda</span><span class="b b-cont">+ Registrar saída</span></div>
             </div>
 
             <!-- Raio-x (Pro) -->

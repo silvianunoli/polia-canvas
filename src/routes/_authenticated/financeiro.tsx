@@ -16,13 +16,13 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
 import { formatarReais } from "@/lib/formatarReais";
 import { numerosDoMes } from "@/lib/numerosDoMes";
 import { legendaDoLucro, lucroDoMes } from "@/lib/lucroDoMes";
 import { intervaloDoPeriodo } from "@/lib/vendas";
 import { useVendas } from "@/components/vendas/dados";
+import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { temNumerosDoMes, tierDosNumeros } from "@/lib/planos";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
@@ -587,7 +587,7 @@ function FinanceiroPage() {
             onClick={() => setModalVendaAberto(true)}
             className={BTN_ACAO_CONTORNO}
           >
-            + Registrar venda de um produto
+            + Registrar venda
           </button>
           <button type="button" onClick={() => abrirModal("saida")} className={BTN_ACAO_CONTORNO}>
             + Registrar saída
@@ -737,16 +737,19 @@ function FinanceiroPage() {
         />
       )}
 
-      {/* ───────── 6. Modal: registrar venda de um produto ───────── */}
+      {/* ───────── 6. Modal: registrar venda ─────────
+          Até 01/11/2026 era um modal próprio que só lançava a entrada pelo
+          preço do catálogo, sem venda ligada: o "Quanto lucrou" contava ela
+          inteira, sem o custo do produto (ONE-166). Agora é o mesmo formulário
+          de Vendas, que guarda o custo de cada item, baixa o estoque e lança
+          o dinheiro no Financeiro. O modal já avisa sozinho. */}
       {modalVendaAberto && userId && (
-        <ModalRegistrarVendaProduto
+        <ModalRegistrarVenda
           userId={userId}
-          dataPadrao={hojeISOStr}
           onClose={() => setModalVendaAberto(false)}
-          onSaved={(msg) => {
-            qc.invalidateQueries({ queryKey: ["financeiro", userId] });
+          onSaved={() => {
             setModalVendaAberto(false);
-            toastSucesso(msg);
+            void qc.invalidateQueries();
           }}
         />
       )}
@@ -840,194 +843,5 @@ function LinhaLancamento({
         />
       </div>
     </div>
-  );
-}
-
-/* ============== Modal: registrar venda de um produto ============== */
-interface ProdutoVenda {
-  id: string;
-  nome: string;
-  preco_venda: number;
-  preco_custo: number | null;
-  calculadora_breakdown: CalculadoraBreakdown | null;
-}
-
-function ModalRegistrarVendaProduto({
-  userId,
-  dataPadrao,
-  onClose,
-  onSaved,
-}: {
-  userId: string;
-  dataPadrao: string;
-  onClose: () => void;
-  onSaved: (mensagem: string) => void;
-}) {
-  const [produtoId, setProdutoId] = useState("");
-  const [data, setData] = useState(dataPadrao);
-  const [salvando, setSalvando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-
-  const produtosQuery = useQuery({
-    queryKey: ["produtos-venda-rapida", userId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("produtos")
-        .select("id, nome, preco_venda, preco_custo, calculadora_breakdown")
-        .eq("user_id", userId)
-        .eq("arquivado", false)
-        .order("nome");
-      // Leitura que falha não pode virar "Ainda não tem produto no catálogo".
-      if (error) throw error;
-      return (data ?? []) as unknown as ProdutoVenda[];
-    },
-  });
-  const produtos = produtosQuery.data ?? [];
-  const produto = produtos.find((p) => p.id === produtoId) ?? null;
-  // Produto criado pelo Planejamento nasce com preço 0 ("preço a definir"):
-  // registrar a venda dele lançava uma entrada de R$ 0 no caixa.
-  const semPreco = produto != null && !(Number(produto.preco_venda) > 0);
-  // null quando não há custo cadastrado: antes o custo vazio virava 0 e a
-  // frase "Dessa venda sobram..." aparecia sempre, com o preço inteiro como
-  // sobra (QA-28). Também mostra o prejuízo, que antes saía "sobram R$ -5".
-  const sobra = produto
-    ? sobraDoProduto({
-        precoVenda: Number(produto.preco_venda),
-        precoCusto: produto.preco_custo != null ? Number(produto.preco_custo) : null,
-        breakdown: produto.calculadora_breakdown,
-      })
-    : null;
-
-  const salvar = async () => {
-    if (!produto || semPreco || !data) return;
-    setSalvando(true);
-    setErro(null);
-    const { error } = await supabase.from("lancamentos").insert({
-      user_id: userId,
-      tipo: "entrada",
-      valor: produto.preco_venda,
-      data,
-      descricao: produto.nome,
-      categoria: "Venda de produto",
-    });
-    setSalvando(false);
-    if (error) {
-      // Mesmo motivo do modal de lançamento: técnico no log, casa na tela.
-      console.error("venda_produto_registrar", error);
-      setErro("A Pólia One não conseguiu registrar a venda agora. Tenta de novo.");
-      return;
-    }
-    track("venda_produto_registrada", { produto_id: produto.id });
-    void registrar("feature_completed", { feature: "financeiro", propriedades: { acao: "venda" } });
-    onSaved(
-      sobra == null
-        ? `Venda de "${produto.nome}" registrada.`
-        : sobra.prejuizo
-          ? `Venda de "${produto.nome}" registrada. Essa venda ficou ${fmtCentavos(-sobra.valor)} abaixo do custo.`
-          : `Venda de "${produto.nome}" registrada. Essa venda deu ${fmtCentavos(sobra.valor)} de lucro.`,
-    );
-  };
-
-  return (
-    <Modal
-      open
-      onOpenChange={(next) => {
-        if (!next) onClose();
-      }}
-      title="Registrar venda de um produto"
-      description="Cria a entrada no caixa com o preço do catálogo."
-      footer={
-        <>
-          <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={salvar}
-            disabled={salvando || !produto || semPreco || !data}
-            className={BTN_ACAO}
-          >
-            {salvando ? "Registrando..." : "Registrar venda"}
-          </button>
-        </>
-      }
-    >
-      {produtosQuery.isLoading ? (
-        <p className="py-6 text-center text-[14px] text-[var(--muted)]">Carregando produtos…</p>
-      ) : produtosQuery.isError ? (
-        <div role="alert">
-          <BlockError
-            message="A Pólia One não conseguiu ler os seus produtos agora. Nada foi perdido, é só a leitura que falhou."
-            onRetry={() => void produtosQuery.refetch()}
-          />
-        </div>
-      ) : produtos.length === 0 ? (
-        <p className="py-6 text-[14px] text-[var(--ink-soft)]">
-          Ainda não tem produto no catálogo.{" "}
-          <Link to="/produtos" className="text-[var(--secondary-text)] hover:underline">
-            Adicionar em Produtos →
-          </Link>
-        </p>
-      ) : (
-        <>
-          <div className="mb-4">
-            <Campo label="Produto">
-              <select
-                value={produtoId}
-                onChange={(e) => setProdutoId(e.target.value)}
-                autoFocus
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-              >
-                <option value="">Escolha um produto</option>
-                {produtos.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome} · {fmt(Number(p.preco_venda))}
-                  </option>
-                ))}
-              </select>
-            </Campo>
-          </div>
-
-          <div className="mb-4">
-            <Campo label="Data" required error={!data ? "Falta a data" : undefined}>
-              <input
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-              />
-            </Campo>
-          </div>
-
-          {produto && semPreco ? (
-            <div className="mb-4 rounded-lg bg-[var(--surface)] px-3 py-2.5 text-[13px] text-[var(--ink-soft)]">
-              Esse produto ainda está sem preço de venda. Defina o preço em{" "}
-              <Link to="/produtos" className="text-[var(--secondary-text)] hover:underline">
-                Produtos
-              </Link>{" "}
-              pra registrar a venda.
-            </div>
-          ) : produto && sobra?.prejuizo ? (
-            <div className="mb-4 rounded-lg bg-[var(--danger-soft)] px-3 py-2.5 text-[13px] text-[var(--danger)]">
-              Com esse preço, a venda fica {fmtCentavos(-sobra.valor)} abaixo do custo direto.
-            </div>
-          ) : produto ? (
-            <div className="mb-4 rounded-lg bg-[var(--secondary-light)] px-3 py-2.5 text-[13px] text-[var(--secondary-text)]">
-              {sobra != null ? (
-                <>Essa venda dá {fmtCentavos(sobra.valor)} de lucro, descontado o custo direto.</>
-              ) : (
-                <>Cadastre o custo desse produto pra ver o lucro de cada venda.</>
-              )}
-            </div>
-          ) : null}
-        </>
-      )}
-
-      {erro && (
-        <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
-          {erro}
-        </p>
-      )}
-    </Modal>
   );
 }
