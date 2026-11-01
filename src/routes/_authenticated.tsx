@@ -195,6 +195,17 @@ function AuthenticatedLayout() {
     registrarAberturaDeTela(pathname);
   }, [pathname]);
   useEffect(() => montarHeartbeat(), []);
+  // Campo type="number" focado muda de valor com a rodinha do mouse quando a
+  // pessoa rola a página por cima dele (01/11/2026: R$ 279 virou R$ 272 no
+  // Editar produto sem ela ver). Rolou, o campo perde o foco e o valor fica.
+  useEffect(() => {
+    const soltar = () => {
+      const el = document.activeElement;
+      if (el instanceof HTMLInputElement && el.type === "number") el.blur();
+    };
+    document.addEventListener("wheel", soltar, { passive: true });
+    return () => document.removeEventListener("wheel", soltar);
+  }, []);
   // Avisos push (AND-06): só faz algo dentro do app Android. Tocar no aviso
   // abre a tela dele (/vendas, /painel).
   const router = useRouter();

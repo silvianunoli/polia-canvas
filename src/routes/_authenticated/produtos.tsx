@@ -18,7 +18,7 @@ import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
-import { fmt, fmtData, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
+import { fmt, fmtData, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 import { AbaEstoque } from "@/components/produtos/AbaEstoque";
 import { AbaInsumos } from "@/components/produtos/AbaInsumos";
 import { useProdutosComEstoque, type SkuProduto } from "@/components/vendas/dados";
@@ -75,6 +75,7 @@ function ProdutosPage() {
   const [produtoParaArquivar, setProdutoParaArquivar] = useState<Produto | null>(null);
   const [arquivando, setArquivando] = useState(false);
   const [importarAberto, setImportarAberto] = useState(false);
+  const [busca, setBusca] = useState("");
 
   const produtosQuery = useQuery({
     queryKey: ["produtos", userId],
@@ -264,20 +265,43 @@ function ProdutosPage() {
               />
             </div>
           ) : (
-            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {produtos.map((p, i) => (
-                <ProdutoCard
-                  key={p.id}
-                  produto={p}
-                  indice={i}
-                  somenteLeitura={idsExcedentes.has(p.id)}
-                  onEditar={() => abrirEditar(p)}
-                  onArquivar={() => setProdutoParaArquivar(p)}
-                  onRecalcular={() => abrirRecalcular(p)}
-                  skus={p.controla_estoque ? skusPorProduto.get(p.id) : undefined}
+            <>
+              <div className="mt-6 max-w-sm">
+                <label htmlFor="busca-produto" className="sr-only">
+                  Buscar produto pelo nome
+                </label>
+                <input
+                  id="busca-produto"
+                  type="search"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  placeholder="Buscar pelo nome"
+                  className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                 />
-              ))}
-            </div>
+              </div>
+              {busca.trim() && !produtos.some((p) => nomeBate(p.nome, busca)) ? (
+                <p className="mt-4 text-[14px] text-[var(--muted)]" role="status">
+                  Nenhum produto com "{busca.trim()}" no nome.
+                </p>
+              ) : (
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {produtos.map((p, i) =>
+                    !nomeBate(p.nome, busca) ? null : (
+                      <ProdutoCard
+                        key={p.id}
+                        produto={p}
+                        indice={i}
+                        somenteLeitura={idsExcedentes.has(p.id)}
+                        onEditar={() => abrirEditar(p)}
+                        onArquivar={() => setProdutoParaArquivar(p)}
+                        onRecalcular={() => abrirRecalcular(p)}
+                        skus={p.controla_estoque ? skusPorProduto.get(p.id) : undefined}
+                      />
+                    ),
+                  )}
+                </div>
+              )}
+            </>
           )}
         </>
       )}

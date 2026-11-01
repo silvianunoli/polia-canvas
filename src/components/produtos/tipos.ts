@@ -76,3 +76,10 @@ export function numInvalido(s: string): boolean {
   const v = parseFloat(s.replace(",", "."));
   return !Number.isFinite(v) || v < 0;
 }
+
+/** Busca do Catálogo de Produtos: sem diferença de maiúscula nem de acento ("lilas" acha "Lilás"). */
+export function nomeBate(nome: string, busca: string): boolean {
+  const limpa = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+  const b = limpa(busca);
+  return !b || limpa(nome).includes(b);
+}

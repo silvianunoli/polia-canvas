@@ -347,6 +347,7 @@ const LISTA = [
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
+          'Com muitos produtos, o campo "Buscar pelo nome" acima dos cartões acha o produto sem diferença de maiúscula ou acento.',
         ],
       },
       {

@@ -36,7 +36,10 @@ interface MenuOpcoesProps {
  */
 export function MenuOpcoes({ itens, trigger, ariaLabel, align = "end" }: MenuOpcoesProps) {
   return (
-    <DropdownMenu.Root>
+    // modal={false} (01/11/2026): com o menu modal, abrir um Dialog pelo item
+    // deixava o body com pointer-events:none depois que o Dialog fechava. O hover
+    // morria e o "···" dos cartões de Produtos sumia até recarregar a página.
+    <DropdownMenu.Root modal={false}>
       <DropdownMenu.Trigger
         type="button"
         aria-label={ariaLabel ?? (trigger ? undefined : "Mais opções")}
