@@ -8,6 +8,8 @@ import { temProjete } from "@/lib/planos";
 import { moedaParaPrompt } from "@/lib/moeda";
 import { hojeEmBrasilia, mesAnoEmBrasilia } from "@/lib/data.functions";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
+import { lerVendasDoPeriodo, lucroDoMes, type LancamentoComOrigem } from "@/lib/lucroDoMes";
+import { limitesDoMes } from "@/lib/numerosDoMes";
 import { LIMITE_DIARIO_ASSISTENTE } from "@/lib/usoIa";
 
 const FEATURE = "aimer";
@@ -161,6 +163,8 @@ export function montarContextoProjete(dados: {
   entradas: number;
   saidas: number;
   resultado: number;
+  /** O resultado descontou o custo de cada produto vendido (lib/lucroDoMes). */
+  resultadoPeloCusto?: boolean;
   metaAlvo: number | null;
   metaAtual: number | null;
 }): string | null {
@@ -170,6 +174,11 @@ export function montarContextoProjete(dados: {
     `Saídas do mês: ${moedaParaPrompt(dados.saidas)}`,
     `Resultado do mês (quanto lucrou): ${moedaParaPrompt(dados.resultado)}`,
   ];
+  if (dados.resultadoPeloCusto) {
+    partes.push(
+      "O resultado desconta o custo de cada produto vendido (cadastrado em Produtos), por isso não é entradas menos saídas; compra de insumo não sai de novo. É o mesmo número do Painel.",
+    );
+  }
   if (dados.metaAlvo != null) {
     partes.push(
       `Meta do mês: ${moedaParaPrompt(dados.metaAlvo)} (atingido até agora: ${moedaParaPrompt(dados.metaAtual ?? 0)})`,
@@ -300,24 +309,34 @@ export const perguntarAimer = createServerFn({ method: "POST" })
       const inicioMes = `${ano}-${String(mes).padStart(2, "0")}-01`;
       const inicioProximo =
         mes === 12 ? `${ano + 1}-01-01` : `${ano}-${String(mes + 1).padStart(2, "0")}-01`;
-      const [{ data: lancamentos }, { data: meta }] = await Promise.all([
+      const [{ data: lancamentos }, { data: meta }, vendas] = await Promise.all([
         supabaseAdmin
           .from("lancamentos")
-          .select("tipo, valor, data")
+          .select("tipo, valor, data, categoria, id_externo")
           .eq("user_id", context.userId)
           .gte("data", inicioMes)
           .lt("data", inicioProximo),
         buscarMetaDoMes(supabaseAdmin, context.userId),
+        // Vendas do mês pro "quanto lucrou" descontar o custo de cada produto,
+        // como o Painel. Falha vira null: cai em entradas - saídas.
+        lerVendasDoPeriodo(
+          supabaseAdmin,
+          context.userId,
+          inicioMes,
+          limitesDoMes(inicioMes).max,
+        ).catch((erro: unknown) => {
+          console.error("assistente: falha ao ler vendas", erro);
+          return null;
+        }),
       ]);
-      const { entradas, saidas, resultado } = resultadoDoMes(
-        (lancamentos ?? []) as LancamentoResumo[],
-        mes,
-        ano,
-      );
+      const lidos = (lancamentos ?? []) as (LancamentoResumo & LancamentoComOrigem)[];
+      const { entradas, saidas } = resultadoDoMes(lidos, mes, ano);
+      const lucro = lucroDoMes(lidos, vendas, ano, mes);
       contextoProjete = montarContextoProjete({
         entradas,
         saidas,
-        resultado,
+        resultado: lucro.valor,
+        resultadoPeloCusto: lucro.fonte === "vendas",
         metaAlvo: meta?.valor_alvo ?? null,
         // O "atingido" da Meta do mês são as entradas do mês, igual ao Painel,
         // ao Financeiro e a Metas (08/10/2026); valor_atual não é mais usado.

@@ -251,6 +251,14 @@ describe("montarContextoProjete", () => {
     expect(ctx).toContain("R$ 2.000,00");
     expect(ctx).not.toMatch(/\d\.\d{2}(\D|$)/);
   });
+
+  it("diz quando o resultado desconta o custo de cada produto (01/11/2026)", () => {
+    const dados = { entradas: 46.16, saidas: 0, resultado: 16.16, metaAlvo: null, metaAtual: null };
+    expect(montarContextoProjete({ ...dados, resultadoPeloCusto: true })).toContain(
+      "desconta o custo de cada produto vendido",
+    );
+    expect(montarContextoProjete(dados)).not.toContain("desconta o custo");
+  });
 });
 
 describe("montarPromptAimer", () => {

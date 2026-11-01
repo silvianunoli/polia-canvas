@@ -504,7 +504,8 @@ export function Calculadora({
 
     if (!produtoRecalcular) {
       onSalvarComoProduto({
-        nome: "",
+        // O "Qual produto?" do topo já preenche o nome no cadastro (01/11/2026).
+        nome: primeiroPreco.nome.trim().slice(0, NOME_PRODUTO_MAX).trim(),
         tipo: perfil === "produto" ? "fisico" : perfil === "encomenda" ? "fisico" : "servico",
         preco_venda: precoVenda,
         preco_custo: precoCusto,
@@ -606,6 +607,60 @@ export function Calculadora({
     !produtoRecalcular &&
     (primeiroPreco.produtoId !== null ||
       deveGuardarSozinho({ temPreco, recalculando: false, perfil }));
+
+  // "Qual produto?" no topo de cada aba (01/11/2026). No teste de 01/11 o
+  // primeiro preço foi guardado sozinho como "Primeiro produto" e chegou assim
+  // no pedido ("2x Primeiro produto"): o nome só aparecia depois de guardar.
+  // Preenchido, o salvamento automático (GRW-90) e o "Guardar esse preço" usam
+  // esse nome; vazio, fica o provisório de sempre. Um estado só, o do hook.
+  // Recalculando, o produto já tem nome: o campo some.
+  const campoNomeProduto = (onde: PerfilCalc) => {
+    if (produtoRecalcular) return null;
+    const rotulo =
+      onde === "servico"
+        ? "Qual serviço?"
+        : onde === "encomenda"
+          ? "Qual encomenda?"
+          : "Qual produto?";
+    const exemplo =
+      onde === "servico"
+        ? "ex: Sessão de fotos"
+        : onde === "encomenda"
+          ? "ex: Bolo de aniversário"
+          : "ex: Caderno A5";
+    return (
+      <div className="mt-6">
+        <Campo
+          id={`calc-nome-${onde}`}
+          label={rotulo}
+          error={primeiroPreco.erroNome ?? undefined}
+          hint={
+            primeiroPreco.produtoId
+              ? "O nome muda no catálogo quando você sai do campo."
+              : undefined
+          }
+        >
+          <input
+            value={primeiroPreco.nome}
+            onChange={(e) => primeiroPreco.setNome(e.target.value.slice(0, NOME_PRODUTO_MAX))}
+            onBlur={() => {
+              if (primeiroPreco.produtoId) void primeiroPreco.salvarNome();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && primeiroPreco.produtoId) {
+                e.preventDefault();
+                void primeiroPreco.salvarNome();
+              }
+            }}
+            maxLength={NOME_PRODUTO_MAX}
+            placeholder={exemplo}
+            autoComplete="off"
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus:outline-none sm:text-[14px]"
+          />
+        </Campo>
+      </div>
+    );
+  };
 
   // Valor da sua hora: o MESMO estado em Produto (mão de obra pelo tempo),
   // Serviço e Encomenda. Desde 09/10/2026 o "usar como meu valor-hora padrão"
@@ -769,6 +824,7 @@ export function Calculadora({
       {/* Campos */}
       {perfil === "produto" ? (
         <div id="calc-painel-produto" role="tabpanel" aria-labelledby="calc-tab-produto">
+          {campoNomeProduto("produto")}
           <GrupoCalc titulo="Custos diretos (por unidade)">
             <BlocoInsumos
               label="Matéria-prima / insumos (R$)"
@@ -842,11 +898,12 @@ export function Calculadora({
               onChange={setTaxaVenda}
             />
             <CampoNum label="Impostos sobre a venda (%)" value={impostos} onChange={setImpostos} />
-            <CampoNum label="Quanto quer que sobre (%)" value={margem} onChange={setMargem} />
+            <CampoNum label="Quanto quer lucrar (%)" value={margem} onChange={setMargem} />
           </GrupoCalc>
         </div>
       ) : perfil === "servico" ? (
         <div id="calc-painel-servico" role="tabpanel" aria-labelledby="calc-tab-servico">
+          {campoNomeProduto("servico")}
           <GrupoCalc titulo="Seu trabalho">
             {campoValorHora(
               "servico",
@@ -894,11 +951,12 @@ export function Calculadora({
               value={impostosS}
               onChange={setImpostosS}
             />
-            <CampoNum label="Quanto quer que sobre (%)" value={margemSeg} onChange={setMargemSeg} />
+            <CampoNum label="Quanto quer lucrar (%)" value={margemSeg} onChange={setMargemSeg} />
           </GrupoCalc>
         </div>
       ) : (
         <div id="calc-painel-encomenda" role="tabpanel" aria-labelledby="calc-tab-encomenda">
+          {!encomendaTravada && campoNomeProduto("encomenda")}
           {encomendaVazia && (
             <p className="mt-6 rounded-xl border border-dashed border-[var(--line)] bg-white px-5 py-8 text-center text-[13px] leading-relaxed text-[var(--muted)]">
               Monte a encomenda: adicione os materiais, as horas de trabalho e os custos extras. O
@@ -1001,7 +1059,7 @@ export function Calculadora({
               onChange={setImpostosE}
             />
             <CampoNum
-              label="Quanto quer que sobre (%)"
+              label="Quanto quer lucrar (%)"
               value={quantoSobraPct}
               onChange={setQuantoSobraPct}
             />
@@ -1135,14 +1193,16 @@ export function Calculadora({
               <BlocoPrimeiroPreco
                 estado={primeiroPreco.estado}
                 erro={primeiroPreco.erro}
-                erroNome={primeiroPreco.erroNome}
                 produtoId={primeiroPreco.produtoId}
                 invalido={calc.invalido}
-                nome={primeiroPreco.nome}
-                placeholderNome={nomeProvisorio(perfil)}
-                rotuloNome={perfil === "servico" ? "Nome do serviço" : "Nome do produto"}
-                onNome={primeiroPreco.setNome}
-                onSalvarNome={primeiroPreco.salvarNome}
+                nomeGuardado={primeiroPreco.nomeSalvo ?? nomeProvisorio(perfil)}
+                rotuloCampoNome={
+                  !primeiroPreco.nomeSalvo || primeiroPreco.nomeSalvo === nomeProvisorio(perfil)
+                    ? perfil === "servico"
+                      ? "Qual serviço?"
+                      : "Qual produto?"
+                    : null
+                }
                 onTentarDeNovo={primeiroPreco.tentarDeNovo}
                 onCompletarCadastro={onCompletarCadastro}
               />
@@ -1250,33 +1310,28 @@ export function Calculadora({
 /**
  * Primeiro preço guardado sozinho (GRW-90, wireframe em cinza aprovado em
  * docs/plano-primeiro-preco-guardado.md). Fica no lugar do "Guardar esse
- * preço": esperando a conta parar, guardando, guardado (com o nome ali mesmo)
- * ou erro com "Tentar de novo". Os números nunca saem da tela.
+ * preço": esperando a conta parar, guardando, guardado (com o nome com que
+ * ficou) ou erro com "Tentar de novo". Os números nunca saem da tela. O campo
+ * do nome subiu pro topo da aba em 01/11/2026 ("Qual produto?").
  */
 function BlocoPrimeiroPreco({
   estado,
   erro,
-  erroNome,
   produtoId,
   invalido,
-  nome,
-  placeholderNome,
-  rotuloNome,
-  onNome,
-  onSalvarNome,
+  nomeGuardado,
+  rotuloCampoNome,
   onTentarDeNovo,
   onCompletarCadastro,
 }: {
   estado: EstadoPrimeiroPreco;
   erro: string | null;
-  erroNome: string | null;
   produtoId: string | null;
   invalido: boolean;
-  nome: string;
-  placeholderNome: string;
-  rotuloNome: string;
-  onNome: (v: string) => void;
-  onSalvarNome: () => Promise<boolean>;
+  /** O nome com que o produto fica no catálogo (o digitado ou o provisório). */
+  nomeGuardado: string;
+  /** Rótulo do campo do nome quando ficou o provisório, pra dizer onde trocar; null com nome digitado. */
+  rotuloCampoNome: string | null;
   onTentarDeNovo: () => void;
   onCompletarCadastro?: (produtoId: string) => void;
 }) {
@@ -1312,7 +1367,9 @@ function BlocoPrimeiroPreco({
         <Check size={16} strokeWidth={2.5} aria-hidden="true" className="mt-0.5 shrink-0" />
         {estado === "guardando"
           ? "Atualizando o preço guardado..."
-          : "A Pólia One guardou esse preço no catálogo."}
+          : `A Pólia One guardou esse preço no catálogo como "${nomeGuardado}".${
+              rotuloCampoNome ? ` O nome muda em "${rotuloCampoNome}", no topo.` : ""
+            }`}
       </p>
     );
   }
@@ -1322,24 +1379,6 @@ function BlocoPrimeiroPreco({
       <div aria-live="polite">{recado}</div>
       {guardado && (
         <>
-          <form
-            className="mt-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void onSalvarNome();
-            }}
-          >
-            <Campo label={rotuloNome} error={erroNome ?? undefined}>
-              <input
-                value={nome}
-                onChange={(e) => onNome(e.target.value.slice(0, NOME_PRODUTO_MAX))}
-                onBlur={() => void onSalvarNome()}
-                maxLength={NOME_PRODUTO_MAX}
-                placeholder={placeholderNome}
-                className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[16px] text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus:outline-none sm:text-[14px]"
-              />
-            </Campo>
-          </form>
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
             {onCompletarCadastro && (
               <button

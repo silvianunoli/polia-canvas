@@ -219,7 +219,7 @@ const perguntas = [
   {
     pergunta: "Preciso entender de número?",
     resposta:
-      "Não. Você coloca o que já sabe: quanto pagou no material, quanto a maquininha cobra, quanto quer que sobre. A conta é da Pólia One.",
+      "Não. Você coloca o que já sabe: quanto pagou no material, quanto a maquininha cobra, quanto quer lucrar. A conta é da Pólia One.",
   },
   {
     pergunta: "Conecta com o WhatsApp ou com o Instagram?",

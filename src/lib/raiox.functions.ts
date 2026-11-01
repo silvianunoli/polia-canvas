@@ -10,6 +10,8 @@ import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { mesAnoEmBrasilia, mesEmBrasilia } from "@/lib/data.functions";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { lerVendasDoPeriodo, lucroDoMes, type LancamentoComOrigem } from "@/lib/lucroDoMes";
+import { limitesDoMes } from "@/lib/numerosDoMes";
 import { LIMITE_RAIOX_MENSAL, planoGeraRaioX, type MotivoRaioX } from "@/lib/raioxMotivo";
 import { faltaSchema, gravarGeracaoRaioX } from "@/lib/raioxGeracoes";
 import {
@@ -114,6 +116,11 @@ export interface ContextoRaioX {
   entradas: number;
   saidas: number;
   resultado: number;
+  /**
+   * O resultado descontou o custo de cada produto vendido (lib/lucroDoMes),
+   * então não é entradas - saídas. A IA precisa saber pra não "corrigir".
+   */
+  resultadoPeloCusto?: boolean;
   metaAlvo: number | null;
   metaAtual: number | null;
   produtos: ProdutoPorSobra[];
@@ -132,6 +139,11 @@ export function montarPromptRaioX(ctx: ContextoRaioX): {
     `Saídas: ${moedaParaPrompt(ctx.saidas)}`,
     `Resultado (quanto lucrou): ${moedaParaPrompt(ctx.resultado)}`,
   ];
+  if (ctx.resultadoPeloCusto) {
+    partes.push(
+      "O resultado desconta o custo de cada produto vendido (cadastrado em Produtos), por isso não é entradas menos saídas; compra de insumo não sai de novo.",
+    );
+  }
   if (ctx.metaAlvo != null) {
     partes.push(
       `Meta do mês: ${moedaParaPrompt(ctx.metaAlvo)} (atingido: ${moedaParaPrompt(ctx.metaAtual ?? 0)})`,
@@ -341,18 +353,18 @@ export const gerarRaioX = createServerFn({ method: "POST" })
     // lançamentos da conta e o PostgREST corta em 1.000 linhas sem avisar, o
     // que deixava o mês com soma parcial em quem tem histórico longo.
     const { inicio, fimExclusivo } = intervaloDoMes(data.ano, data.mes);
-    const lerLancamentos = lerTodasAsPaginas<LancamentoResumo>(
+    const lerLancamentos = lerTodasAsPaginas<LancamentoResumo & LancamentoComOrigem>(
       (de, ate) =>
         supabaseAdmin
           .from("lancamentos")
-          .select("tipo, valor, data")
+          .select("tipo, valor, data, categoria, id_externo")
           .eq("user_id", context.userId)
           .gte("data", inicio)
           .lt("data", fimExclusivo)
           .order("data", { ascending: true })
           .order("id", { ascending: true })
           .range(de, ate) as unknown as PromiseLike<{
-          data: LancamentoResumo[] | null;
+          data: (LancamentoResumo & LancamentoComOrigem)[] | null;
           error: unknown;
         }>,
     ).then(
@@ -367,29 +379,40 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       { ano: data.ano, mes: data.mes },
       { ano: anoAtual, mes: mesAtual },
     );
-    const [leitura, { data: meta }, { data: produtos }, metaDoHistorico] = await Promise.all([
-      lerLancamentos,
-      buscarMetaDoMes(supabaseAdmin, context.userId),
-      supabaseAdmin
-        .from("produtos")
-        .select(
-          "nome, preco_venda, preco_custo, calculadora_breakdown, historico_precos, preco_atualizado_em, created_at, updated_at",
-        )
-        .eq("user_id", context.userId)
-        .eq("arquivado", false),
-      mesPassado ? lerMetaDoHistorico(context.userId, mesLabel) : Promise.resolve(null),
-    ]);
+    // Vendas do mês inteiro, pro "quanto lucrou" descontar o custo de cada
+    // produto como o Painel. Falha de leitura vira null: o resultado cai em
+    // entradas - saídas, que é o que o Raio-x sempre leu.
+    const lerVendas = lerVendasDoPeriodo(
+      supabaseAdmin,
+      context.userId,
+      inicio,
+      limitesDoMes(inicio).max,
+    ).catch((erro: unknown) => {
+      console.error("raiox: falha ao ler vendas", erro);
+      return null;
+    });
+    const [leitura, { data: meta }, { data: produtos }, metaDoHistorico, vendas] =
+      await Promise.all([
+        lerLancamentos,
+        buscarMetaDoMes(supabaseAdmin, context.userId),
+        supabaseAdmin
+          .from("produtos")
+          .select(
+            "nome, preco_venda, preco_custo, calculadora_breakdown, historico_precos, preco_atualizado_em, created_at, updated_at",
+          )
+          .eq("user_id", context.userId)
+          .eq("arquivado", false),
+        mesPassado ? lerMetaDoHistorico(context.userId, mesLabel) : Promise.resolve(null),
+        lerVendas,
+      ]);
 
     // Leitura que falha não pode virar "mês sem lançamento" nem soma parcial.
     if (!leitura) {
       return { ok: false, motivo: "falha_ia" };
     }
 
-    const { entradas, saidas, resultado, totalLancamentos } = resultadoDoMes(
-      leitura.data,
-      data.mes,
-      data.ano,
-    );
+    const { entradas, saidas, totalLancamentos } = resultadoDoMes(leitura.data, data.mes, data.ano);
+    const lucro = lucroDoMes(leitura.data, vendas, data.ano, data.mes);
 
     if (totalLancamentos === 0) {
       return { ok: false, motivo: "dado_insuficiente" };
@@ -418,7 +441,8 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       mes: mesLabel,
       entradas,
       saidas,
-      resultado,
+      resultado: lucro.valor,
+      resultadoPeloCusto: lucro.fonte === "vendas",
       metaAlvo: escolhaMeta.valorAlvo,
       // "Atingido" = entradas do mês lido, a mesma conta do Financeiro. Antes
       // ia o valor_atual de hoje, que é digitado à mão e não é do mês lido.

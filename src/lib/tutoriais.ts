@@ -125,6 +125,7 @@ const LISTA = [
           "A frase do topo muda com o mês. Sem venda no mês, ela aponta os Pedidos. Com venda, mostra quanto falta pra fechar as contas ou a Meta do mês.",
           'O botão logo abaixo é o próximo passo: "Quero lançar um pedido →" sem venda no mês, ou o registro e o Financeiro depois dela.',
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
+          '"Quanto lucrou · mês" desconta o custo de cada produto vendido, o mesmo lucro do cartão "Vendas · mês", soma as entradas que não vieram de venda e tira as saídas do mês. A frase embaixo do número diz de onde ele veio.',
           'Com pedido aberto no quadro de Pedidos, o cartão "Entregas" mostra as de hoje, as de amanhã, as atrasadas e quanto entra na semana. "Abrir o quadro" leva pra ele.',
         ],
       },
@@ -148,8 +149,15 @@ const LISTA = [
     bomSaber: [
       "No Grátis, o Painel lança entradas e saídas só do mês atual. O histórico dos outros meses fica no Financeiro, do Premium.",
       'A Meta do mês nasce em Metas, em "Criar a Meta do mês".',
+      'Saída lançada em "Insumos / estoque" não sai de novo do "Quanto lucrou": o material já está no custo de cada produto vendido.',
+      'Sem venda registrada no mês, ou com venda de produto sem custo, o "Quanto lucrou" é entradas menos saídas, e a frase embaixo do número avisa.',
     ],
     duvidas: [
+      {
+        pergunta: 'Por que "Quanto lucrou" é menor do que entrou',
+        resposta:
+          "Porque desconta o custo de cada produto vendido, além das saídas do mês. Vendeu 2 cadernos de R$ 23,08 com custo de R$ 15 cada: entraram R$ 46,16 e a marca lucrou R$ 16,16.",
+      },
       {
         pergunta: 'Registrei dinheiro e "Pedidos" continua em zero',
         resposta:
@@ -386,24 +394,27 @@ const LISTA = [
     abrir: "Abrir a Calculadora",
     resumo:
       "Entram os custos reais da marca, sai o preço sugerido e quanto ele deixa de lucro depois das taxas.",
-    trecho: "calculadora",
+    // Sem `trecho` desde 01/11/2026: a cena do vídeo não tem o campo "Qual
+    // produto?" do topo e o título dela ainda diz "quanto sobra". Volta quando
+    // a narração e a cena novas saírem (polia-one-tutorial/).
     passos: [
       {
         titulo: "Calcular o preço de um produto",
         itens: [
           'Escolha a aba: "Produto (físico/digital)", "Serviço (por hora)" ou "Encomenda (sob medida)".',
+          'Em "Qual produto?", escreva o nome, como "Caderno A5". No Serviço o campo é "Qual serviço?" e na Encomenda, "Qual encomenda?".',
           'Em "Custos diretos (por unidade)", coloque matéria-prima, embalagem, mão de obra e outros custos de cada peça.',
           'Em "Custos fixos e salário", entre com os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados.',
-          'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e o lucro que a marca quer em cada venda.',
+          'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e, em "Quanto quer lucrar (%)", o lucro que a marca quer em cada venda.',
           'O resultado mostra o "Preço sugerido", o custo por unidade, o preço mínimo pra não ter prejuízo e quanto a marca lucra.',
         ],
       },
       {
         titulo: "Guardar o preço no catálogo",
         itens: [
-          'No primeiro preço, a Pólia One guarda sozinha: com a conta parada por 2 segundos, o preço vai pro catálogo como "Primeiro produto" ou "Primeiro serviço".',
-          'Dá pra trocar o nome ali mesmo, ou clicar em "Completar o cadastro" ou "Ver no catálogo".',
-          'A partir do segundo preço, clique em "Guardar esse preço". O cadastro do produto abre com preço e custo preenchidos: escreva o nome e clique em "Salvar produto".',
+          'No primeiro preço, a Pólia One guarda sozinha: com a conta parada por 2 segundos, o preço vai pro catálogo com o nome de "Qual produto?". Com o campo vazio, entra como "Primeiro produto" ou "Primeiro serviço".',
+          'Pra trocar o nome depois de guardado, mude o "Qual produto?" e saia do campo. "Completar o cadastro" e "Ver no catálogo" ficam logo abaixo do preço.',
+          'A partir do segundo preço, clique em "Guardar esse preço". O cadastro do produto abre com o nome de "Qual produto?", o preço e o custo preenchidos: confira e clique em "Salvar produto".',
         ],
       },
       {
@@ -436,7 +447,7 @@ const LISTA = [
       {
         pergunta: "Pra onde foi o preço que eu calculei",
         resposta:
-          'Pro catálogo, em Produtos, com o nome "Primeiro produto" (ou o nome que você escreveu). Dá pra renomear quando quiser.',
+          'Pro catálogo, em Produtos, com o nome escrito em "Qual produto?". Se o campo ficou vazio, com o nome "Primeiro produto". Dá pra renomear quando quiser, e é esse nome que aparece no pedido.',
       },
     ],
   },
@@ -590,6 +601,7 @@ const LISTA = [
       "O Financeiro é do Premium e do Pro. No Grátis, a entrada e a saída do mês são lançadas pelo Painel.",
       'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês, que nasce em Metas.',
       "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
+      '"Lucro do mês" é a mesma conta do "Quanto lucrou" do Painel: desconta o custo de cada produto vendido em Vendas, por isso pode ser menor que entradas menos saídas. Saída em "Insumos / estoque" não sai de novo.',
       "Excluir um lançamento não tem volta.",
       VIROU
         ? 'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.'
@@ -607,7 +619,7 @@ const LISTA = [
       {
         pergunta: "Comprei insumo. Conta como custo fixo",
         resposta:
-          'Lance na categoria "Insumos / estoque". A Projeção deixa essa categoria fora dos custos fixos, porque ela muda com a produção.',
+          'Lance na categoria "Insumos / estoque". A Projeção deixa essa categoria fora dos custos fixos, porque ela muda com a produção, e o "Lucro do mês" não tira essa saída de novo quando as vendas do mês têm o custo de cada produto.',
       },
     ],
   },

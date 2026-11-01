@@ -33,6 +33,8 @@ export interface Lancamento {
   data: string;
   descricao: string | null;
   categoria: string | null;
+  /** Origem ("venda:<id>" quando veio de uma venda). Só vem nas leituras que pedem a coluna. */
+  id_externo?: string | null;
   created_at: string;
 }
 

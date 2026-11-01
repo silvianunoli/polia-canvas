@@ -53,6 +53,10 @@ export function useGuardarPrimeiroPreco({
   const [produtoId, setProdutoId] = useState<string | null>(null);
   const [nome, setNome] = useState("");
   const [erroNome, setErroNome] = useState<string | null>(null);
+  // O nome que está no catálogo agora (o digitado só vale depois de gravado).
+  // A tela mostra este, não o do campo: o recado do "guardou" é aria-live e
+  // repetiria a cada tecla.
+  const [nomeSalvo, setNomeSalvo] = useState<string | null>(null);
 
   // Refs pra a gravação ler sempre o valor mais novo, mesmo vinda do timer.
   const valoresRef = useRef(valores);
@@ -113,6 +117,7 @@ export function useGuardarPrimeiroPreco({
         const id = (data as { id: string }).id;
         produtoIdRef.current = id;
         setProdutoId(id);
+        setNomeSalvo(nomeFinal);
         track("produto_criado", { tipo, auto: true });
         void registrar("create_product", {
           feature: "calculadora",
@@ -193,6 +198,7 @@ export function useGuardarPrimeiroPreco({
       return false;
     }
     setErroNome(null);
+    setNomeSalvo(nomeFinal);
     onCriadoRef.current?.();
     return true;
   }, []);
@@ -202,5 +208,15 @@ export function useGuardarPrimeiroPreco({
     void gravar();
   }, [gravar]);
 
-  return { estado, erro, erroNome, produtoId, nome, setNome, salvarNome, tentarDeNovo };
+  return {
+    estado,
+    erro,
+    erroNome,
+    produtoId,
+    nome,
+    setNome,
+    nomeSalvo,
+    salvarNome,
+    tentarDeNovo,
+  };
 }

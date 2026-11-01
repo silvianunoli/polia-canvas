@@ -12,7 +12,9 @@ import { jaEntregue } from "@/lib/statusCliente";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { numerosDoMes } from "@/lib/numerosDoMes";
-import { formatarReais, percentualDe } from "@/lib/formatarReais";
+import { legendaDoLucro, lucroDoMes } from "@/lib/lucroDoMes";
+import { intervaloDoPeriodo } from "@/lib/vendas";
+import { formatarReais } from "@/lib/formatarReais";
 import { rotaLiberada } from "@/lib/planos";
 import { ModalLancamento, type Lancamento } from "@/components/financeiro/ModalLancamento";
 import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
@@ -26,6 +28,7 @@ import { useTestePro } from "@/hooks/useTestePro";
 import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
+import { useVendas } from "@/components/vendas/dados";
 import { CartaoPedidosPainel } from "@/components/pedidos/CartaoPedidosPainel";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
@@ -272,7 +275,7 @@ function PainelPage() {
           lerTodasAsPaginas<LancRow>((de, ate) =>
             supabase
               .from("lancamentos")
-              .select("id, tipo, valor, data, descricao, categoria, created_at")
+              .select("id, tipo, valor, data, descricao, categoria, id_externo, created_at")
               .eq("user_id", userId!)
               .gte("data", mesCorrente.inicio)
               .lt("data", mesCorrente.fimExclusivo)
@@ -387,17 +390,46 @@ function PainelPage() {
   // Mesma conta do Financeiro e do "atual" da Meta do mês em Metas
   // (numerosDoMes). "Pedidos" conta só entrada marcada como venda (Venda de
   // produto, Prestação de serviço): aporte, reembolso e "Outros" não são pedido.
-  const { receitaMes, pedidosMes, entradasMes, lucroMes } = useMemo(() => {
-    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, entradasMes: 0, lucroMes: 0 };
+  const { receitaMes, pedidosMes, entradasMes } = useMemo(() => {
+    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, entradasMes: 0 };
     const { ano, mes } = mesAnoDe(hojeISO());
     const n = numerosDoMes(dados?.lancamentos ?? [], ano, mes);
     return {
       receitaMes: n.entradas,
       pedidosMes: n.vendas,
       entradasMes: n.registrosDeEntrada,
-      lucroMes: n.sobra,
     };
   }, [dados?.lancamentos, clientReady]);
+
+  // "Quanto lucrou" desconta o custo de cada produto vendido (lib/lucroDoMes,
+  // 01/11/2026). Era entradas - saídas: conta nova sem saída via a venda
+  // inteira como lucro, contradizendo o cartão de Vendas logo abaixo. As
+  // vendas vêm do mesmo hook e do mesmo período desse cartão (mesmo cache).
+  const periodoVendas = useMemo(
+    () => (clientReady ? intervaloDoPeriodo("mes", new Date()) : { de: "", ate: "" }),
+    [clientReady],
+  );
+  const vendasMesQuery = useVendas(
+    clientReady ? userId : undefined,
+    periodoVendas.de,
+    periodoVendas.ate,
+  );
+  const lucroMes = useMemo(() => {
+    if (!clientReady || vendasMesQuery.isLoading) return null;
+    const { ano, mes } = mesAnoDe(hojeISO());
+    return lucroDoMes(
+      dados?.lancamentos ?? [],
+      vendasMesQuery.isError ? null : (vendasMesQuery.data ?? []),
+      ano,
+      mes,
+    );
+  }, [
+    dados?.lancamentos,
+    clientReady,
+    vendasMesQuery.isLoading,
+    vendasMesQuery.isError,
+    vendasMesQuery.data,
+  ]);
 
   // ── Primeiros passos (14/10/2026): a entrada da conta nova no lugar do
   // onboarding de 5 passos. Quem vê e o que está feito: lib/primeirosPassos.ts.
@@ -808,7 +840,8 @@ function PainelPage() {
           </div>
         ) : (
           <>
-            {/* Quanto sobrou este mês: a resposta real de "quanto sobra", na primeira tela.
+            {/* Quanto lucrou este mês, descontado o custo de cada produto vendido
+            (lib/lucroDoMes), na primeira tela.
             Desde 03/09/2026 (COPY-04) o número é real em TODO plano: o cadeado
             saiu daqui porque o registro de entrada e saída deixou de ser pago.
             O que continua no Premium é a tela /financeiro, e só quem a tem é
@@ -823,15 +856,14 @@ function PainelPage() {
                 </div>
                 <p
                   className={`font-cabinet mt-1 text-[40px] leading-none ${
-                    lucroMes < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+                    lucroMes && lucroMes.valor < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
                   }`}
+                  aria-busy={lucroMes == null}
                 >
-                  {fmtBRL(lucroMes)}
+                  {lucroMes ? fmtBRL(lucroMes.valor) : "..."}
                 </p>
                 <p className="mt-2 text-[13px] text-[var(--muted)]">
-                  {receitaMes > 0
-                    ? `${percentualDe(lucroMes, receitaMes)}% de tudo que entrou`
-                    : "registre entradas e saídas pra ver"}
+                  {lucroMes ? legendaDoLucro(lucroMes) : "lendo as vendas do mês"}
                   {financeiroLiberado ? (
                     <>
                       {" "}

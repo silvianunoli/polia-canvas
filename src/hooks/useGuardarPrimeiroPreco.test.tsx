@@ -178,5 +178,27 @@ describe("useGuardarPrimeiroPreco (GRW-90)", () => {
     expect(ok).toBe(true);
     expect(banco.updates.at(-1)).toMatchObject({ id: "p1", campos: { nome: "Bolo de pote" } });
     expect(banco.updates.at(-1)?.campos).not.toHaveProperty("preco_venda");
+    expect(result.current.nomeSalvo).toBe("Bolo de pote");
+  });
+
+  // 01/11/2026: o "Qual produto?" do topo da Calculadora preenche o nome
+  // antes de guardar. No teste de 01/11 o pedido saiu "2x Primeiro produto".
+  it("nome digitado antes de guardar vai no insert, e nomeSalvo só muda depois de gravar", async () => {
+    const { result } = montar({ ativo: true, pronto: true, preco: 10, margem: "20" });
+    act(() => result.current.setNome(" Caderno A5 "));
+    expect(result.current.nomeSalvo).toBeNull();
+    await passar(2100);
+    expect(banco.inserts).toHaveLength(1);
+    expect(banco.inserts[0]).toMatchObject({ nome: "Caderno A5" });
+    expect(result.current.nomeSalvo).toBe("Caderno A5");
+    // Digitar depois de guardado não muda o que a tela diz que está no catálogo.
+    act(() => result.current.setNome("Caderno A4"));
+    expect(result.current.nomeSalvo).toBe("Caderno A5");
+  });
+
+  it("sem nome digitado, nomeSalvo é o provisório", async () => {
+    const { result } = montar({ ativo: true, pronto: true, preco: 10, margem: "20" });
+    await passar(2100);
+    expect(result.current.nomeSalvo).toBe("Primeiro produto");
   });
 });

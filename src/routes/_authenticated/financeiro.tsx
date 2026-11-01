@@ -18,8 +18,11 @@ import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
 import { sobraDoProduto, type CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
-import { formatarReais, percentualDe } from "@/lib/formatarReais";
+import { formatarReais } from "@/lib/formatarReais";
 import { numerosDoMes } from "@/lib/numerosDoMes";
+import { legendaDoLucro, lucroDoMes } from "@/lib/lucroDoMes";
+import { intervaloDoPeriodo } from "@/lib/vendas";
+import { useVendas } from "@/components/vendas/dados";
 import { temNumerosDoMes, tierDosNumeros } from "@/lib/planos";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
@@ -157,7 +160,7 @@ function FinanceiroPage() {
         lerTodasAsPaginas<Lancamento>((de, ate) =>
           supabase
             .from("lancamentos")
-            .select("id, tipo, valor, data, descricao, categoria, created_at")
+            .select("id, tipo, valor, data, descricao, categoria, id_externo, created_at")
             .eq("user_id", userId!)
             .order("data", { ascending: false })
             .order("id", { ascending: true })
@@ -224,7 +227,35 @@ function FinanceiroPage() {
     return { entradas: n.entradas, saidas: n.saidas, numEntradasMes: n.registrosDeEntrada };
   }, [lancamentos, clientReady, anoAtual, mesAtual]);
 
-  const lucro = entradas - saidas;
+  // Lucro do mês: mesma conta do "Quanto lucrou" do Painel (lib/lucroDoMes,
+  // 01/11/2026), que desconta o custo de cada produto vendido. Era entradas -
+  // saídas, e a venda inteira aparecia como lucro em quem não tem saída.
+  const periodoVendas = useMemo(
+    () => (clientReady ? intervaloDoPeriodo("mes", new Date()) : { de: "", ate: "" }),
+    [clientReady],
+  );
+  const vendasMesQuery = useVendas(
+    clientReady ? userId : undefined,
+    periodoVendas.de,
+    periodoVendas.ate,
+  );
+  const lucroInfo = useMemo(() => {
+    if (!clientReady || vendasMesQuery.isLoading) return null;
+    return lucroDoMes(
+      lancamentos,
+      vendasMesQuery.isError ? null : (vendasMesQuery.data ?? []),
+      anoAtual,
+      mesAtual,
+    );
+  }, [
+    lancamentos,
+    clientReady,
+    anoAtual,
+    mesAtual,
+    vendasMesQuery.isLoading,
+    vendasMesQuery.isError,
+    vendasMesQuery.data,
+  ]);
 
   const lancamentosMes = useMemo(() => {
     if (!clientReady) return [];
@@ -251,9 +282,6 @@ function FinanceiroPage() {
     ],
     [lancamentos],
   );
-
-  // Mesma regra do Painel: mês que gastou mais do que entrou mostra o negativo.
-  const margemPct = percentualDe(lucro, entradas);
 
   // ── Marcas da régua (leitura, vêm do Módulo 4 do Planejamento) ──
   // "mês bom" (financeiro.meta_boa) não entra aqui: é a própria Meta do mês,
@@ -459,12 +487,14 @@ function FinanceiroPage() {
             </p>
             <p
               className={`font-cabinet mt-1 text-[32px] leading-none ${
-                lucro < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
+                lucroInfo && lucroInfo.valor < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
               }`}
             >
-              {fmt(lucro)}
+              {lucroInfo ? fmt(lucroInfo.valor) : "..."}
             </p>
-            <p className="mt-1 text-[13px] text-[var(--muted)]">{margemPct}% de tudo que entrou</p>
+            <p className="mt-1 text-[13px] text-[var(--muted)]">
+              {lucroInfo ? legendaDoLucro(lucroInfo) : "lendo as vendas do mês"}
+            </p>
           </div>
         </section>
 

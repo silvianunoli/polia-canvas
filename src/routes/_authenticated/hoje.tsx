@@ -9,7 +9,9 @@ import { BlockError } from "@/components/ui/BlockError";
 import { hojeISO, mesAnoDe } from "@/lib/data.functions";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
-import { numerosDoMes, type LancamentoDoMes } from "@/lib/numerosDoMes";
+import { numerosDoMes } from "@/lib/numerosDoMes";
+import { lerVendasDoPeriodo, lucroDoMes, type LancamentoComOrigem } from "@/lib/lucroDoMes";
+import { intervaloDoPeriodo } from "@/lib/vendas";
 import { formatarReais } from "@/lib/formatarReais";
 import { recursoLiberado } from "@/lib/planos";
 import { estaAberto, linhaDoResumo, resumoDoDia, rotuloEntrega } from "@/lib/pedidos";
@@ -17,8 +19,8 @@ import { usePedidos } from "@/components/pedidos/dados";
 
 // Aba "Hoje" do app Android (AND-07, wireframe v2 aprovado em 28/10/2026): o
 // Painel enxuto pra tela do celular. Os números saem das mesmas fontes do
-// Painel (numerosDoMes sobre os lançamentos do mês, buscarMetaDoMes), então
-// os dois nunca discordam. O Painel completo continua a um toque.
+// Painel (numerosDoMes e lucroDoMes sobre os lançamentos e as vendas do mês,
+// buscarMetaDoMes), então os dois nunca discordam. O Painel completo continua a um toque.
 // Entregas no lugar das tarefas do Planner desde 28/10/2026: o quadro de
 // Pedidos virou a rotina (usePedidos + resumoDoDia, as mesmas do Painel).
 
@@ -61,11 +63,12 @@ function Hoje() {
       const dia = hoje!;
       const { ano, mes } = mesAnoDe(dia);
       const intervalo = intervaloDoMes(ano, mes);
-      const [lancamentos, metaMes, post] = await Promise.all([
-        lerTodasAsPaginas<LancamentoDoMes>((de, ate) =>
+      const periodoVendas = intervaloDoPeriodo("mes", new Date());
+      const [lancamentos, metaMes, post, vendas] = await Promise.all([
+        lerTodasAsPaginas<LancamentoComOrigem>((de, ate) =>
           supabase
             .from("lancamentos")
-            .select("tipo, valor, data, categoria")
+            .select("tipo, valor, data, categoria, id_externo")
             .eq("user_id", userId!)
             .gte("data", intervalo.inicio)
             .lt("data", intervalo.fimExclusivo)
@@ -82,13 +85,21 @@ function Hoje() {
               .limit(1)
               .maybeSingle()
           : Promise.resolve({ data: null, error: null }),
+        // Mesmo período do cartão de Vendas do Painel. Leitura que falha vira
+        // null: o lucro cai em entradas - saídas em vez de sumir.
+        lerVendasDoPeriodo(supabase, userId!, periodoVendas.de, periodoVendas.ate).catch(
+          (erro: unknown) => {
+            console.error("hoje: falha ao ler vendas", erro);
+            return null;
+          },
+        ),
       ]);
       if (metaMes.error) throw metaMes.error;
       if (post.error) throw post.error;
       const n = numerosDoMes(lancamentos, ano, mes);
       return {
         entrou: n.entradas,
-        lucrou: n.sobra,
+        lucrou: lucroDoMes(lancamentos, vendas, ano, mes).valor,
         metaAlvo: Number(metaMes.data?.valor_alvo ?? 0),
         post: post.data as PostHoje | null,
       };

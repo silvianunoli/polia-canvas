@@ -81,6 +81,23 @@ describe("montarPromptRaioX", () => {
     expect(prompt).not.toMatch(/\d\.\d{2}(\D|$)/);
   });
 
+  it("diz quando o resultado desconta o custo de cada produto (01/11/2026)", () => {
+    const base = {
+      mes: "2026-10",
+      entradas: 46.16,
+      saidas: 0,
+      resultado: 16.16,
+      metaAlvo: null,
+      metaAtual: null,
+      produtos: [],
+      dadoRalo: false,
+    };
+    expect(montarPromptRaioX({ ...base, resultadoPeloCusto: true }).prompt).toContain(
+      "desconta o custo de cada produto vendido",
+    );
+    expect(montarPromptRaioX(base).prompt).not.toContain("desconta o custo");
+  });
+
   it("avisa quando o dado é ralo", () => {
     const { prompt } = montarPromptRaioX({
       mes: "2026-07",

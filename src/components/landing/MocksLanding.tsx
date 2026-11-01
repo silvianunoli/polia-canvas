@@ -389,7 +389,7 @@ const custosProduto = [
   ["Outros custos diretos (R$)", "6,25"],
   ["Taxa de maquininha / marketplace (%)", "5"],
   ["Impostos sobre a venda (%)", "0"],
-  ["Quanto quer que sobre (%)", "40"],
+  ["Quanto quer lucrar (%)", "40"],
 ];
 
 /** Passo 01 da A: os custos que entram uma vez, com os rótulos reais da tela. */
@@ -397,7 +397,7 @@ export function MockCustosProduto({ className }: { className?: string }) {
   return (
     <Janela
       url="one.usepolia.com.br/calculadora"
-      label="Calculadora da Pólia One com os custos do caderno de aquarela A5 preenchidos: matéria-prima, embalagem, envio, taxa da maquininha, imposto e quanto quer que sobre."
+      label="Calculadora da Pólia One com os custos do caderno de aquarela A5 preenchidos: matéria-prima, embalagem, envio, taxa da maquininha, imposto e quanto quer lucrar."
       className={className}
     >
       <CabecalhoProduto />
