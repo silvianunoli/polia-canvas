@@ -51,7 +51,6 @@ import {
   MockFluxoMarcaPrecoMes,
   MockFraseMes,
   MockQuadroPedidos,
-  MockTresNumeros,
   MockVendaEstoque,
 } from "@/components/landing/MocksLanding";
 import { precoBR } from "@/components/landing/preco";
@@ -944,7 +943,7 @@ export function PaginaMarcaB({
               ))}
             </div>
             <div className="md:sticky md:top-[112px]">
-              <MockTresNumeros />
+              <MockVendaEstoque />
               <p className="mt-3 text-[13px] text-[var(--muted)]">Números de exemplo.</p>
             </div>
           </div>
