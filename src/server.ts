@@ -101,7 +101,6 @@ const PREFIXOS_AUTENTICADOS = [
   "/pedidos",
   "/planejamento",
   "/planner",
-  "/plano-conteudo",
   "/produtos",
   "/projecao",
   "/raiox",

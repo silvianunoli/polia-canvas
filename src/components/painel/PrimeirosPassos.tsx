@@ -221,7 +221,7 @@ function PerguntaNicho({ onEscolher }: { onEscolher: (n: NichoNegocio) => Promis
         Antes dos passos: qual é o nicho da marca?
       </h3>
       <p className="mt-1 text-[14px] leading-snug text-[var(--ink-soft)]">
-        A Pólia One usa o nicho pra separar as ideias de post do seu ramo.
+        A Pólia One usa o nicho pra já saber se a marca vende produto ou serviço.
       </p>
       <div role="group" aria-labelledby={rotuloId} className="mt-3 grid gap-2 sm:grid-cols-2">
         {ESCOLHAS_NICHO.map((o) => (

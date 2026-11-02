@@ -20,14 +20,10 @@ export const GANHO_POR_ROTA: Record<string, string> = {
   // R$ 29,90 uma tela que só abria no Pro e contradizia o selo logo acima.
   "/raiox": "O {plano} lê o seu mês e devolve onde o dinheiro está vazando.",
   "/projecao": "O {plano} mostra quantas vendas fecham o mês e quantas pagam o seu salário.",
-  // O banco tem 60 ideias por nicho, que se repetem ao longo do ano: não
-  // prometer "uma ideia nova por dia" (08/10/2026).
-  "/plano-conteudo":
-    "O Pro monta o plano de conteúdo do ano: 60 ideias do seu nicho espalhadas pelos dias, uma por dia.",
   // Rotas pagas que caíam no fallback genérico (08/10/2026).
   "/marca": "O Premium escreve o documento da sua Marca a partir do que o Planejamento já sabe.",
   "/mercado": "O Premium monta o Mapa de Mercado a partir das respostas do Planejamento.",
-  "/calendario": "O Premium abre o Calendário, com a agenda do Google junto.",
+  "/calendario": "O Premium abre o Calendário, com o dia de entrega de cada pedido no mês.",
   "/clientes": "O Premium mostra cada cliente com o status do pedido, da espera à entrega.",
   "/vendas":
     "O Premium registra cada venda, baixa o estoque sozinho e mostra quais produtos mais vendem e mais lucram.",

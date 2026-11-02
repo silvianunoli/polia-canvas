@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { MSG_LIMITE_CARTOES } from "@/lib/planos";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  Link2,
-  Unlink,
   Plus,
   CalendarDays,
   AlertTriangle,
@@ -19,8 +17,6 @@ import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
-import { track } from "@/lib/analytics";
-import { BlockError } from "@/components/ui/BlockError";
 import {
   startOfMonth,
   endOfMonth,
@@ -36,14 +32,6 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  statusConexaoGoogle,
-  iniciarConexaoGoogle,
-  finalizarConexaoGoogle,
-  listarEventosDoMes,
-  desconectarGoogle,
-} from "@/lib/calendarGoogle.functions";
-import type { EventoGoogle } from "@/lib/googleCalendarApi";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -51,32 +39,24 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-import { diaLocalDe, hojeISO } from "@/lib/data.functions";
+import { hojeISO } from "@/lib/data.functions";
 import { ddmm, distribuirTarefasPorDia, type OcorrenciaTarefa } from "@/lib/calendarioTarefas";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { usePedidosDoPeriodo, type PedidoLinha } from "@/components/pedidos/dados";
 import { estaAtrasado } from "@/lib/pedidos";
 
-interface CalendarioSearch {
-  code?: string;
-  state?: string;
-}
-
+// A integração com o Google Calendar saiu da Pólia One em 02/11/2026 (decisão
+// da Sil): o Calendário mostra as entregas dos pedidos (e o Planner, na conta
+// interna). A tabela google_calendar_conexoes ficou no banco.
 export const Route = createFileRoute("/_authenticated/calendario")({
-  validateSearch: (search: Record<string, unknown>): CalendarioSearch => ({
-    code: typeof search.code === "string" ? search.code : undefined,
-    state: typeof search.state === "string" ? search.state : undefined,
-  }),
   head: () => ({
     meta: [
       { title: "Calendário · Pólia One" },
       {
         name: "description",
-        content:
-          "As entregas dos pedidos e, se conectar, os compromissos do Google Calendar, num só lugar.",
+        content: "As entregas dos pedidos, o mês inteiro numa tela só.",
       },
     ],
   }),
@@ -101,18 +81,16 @@ interface TarefaCal {
 
 // "pedido" = entrega do quadro de Pedidos (28/10/2026): é a fonte principal
 // desde que o Planner ficou só pra conta interna (lib/ferramentasInternas).
-type ItemDia =
-  | {
-      fonte: "planner" | "pedido";
-      id: string;
-      titulo: string;
-      horario: string | null;
-      href: string;
-      concluido: boolean;
-      /** "até 20/10" no começo do intervalo; "em andamento, até 20/10" no meio. */
-      detalhe: string | null;
-    }
-  | { fonte: "google"; id: string; titulo: string; horario: string | null; href: string | null };
+type ItemDia = {
+  fonte: "planner" | "pedido";
+  id: string;
+  titulo: string;
+  horario: string | null;
+  href: string;
+  concluido: boolean;
+  /** "até 20/10" no começo do intervalo; "em andamento, até 20/10" no meio. */
+  detalhe: string | null;
+};
 
 const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
@@ -120,8 +98,6 @@ function CalendarioPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
-  const navigate = useNavigate();
-  const search = Route.useSearch();
 
   const [mes, setMes] = useState(() => startOfMonth(new Date()));
   // Planner só aparece pra conta interna; pra todas, a grade é das entregas.
@@ -129,13 +105,9 @@ function CalendarioPage() {
   const [mostrarEntregas, setMostrarEntregas] = useState(true);
   const [mostrarPlannerFiltro, setMostrarPlanner] = useState(true);
   const mostrarPlanner = comPlanner && mostrarPlannerFiltro;
-  const [mostrarGoogle, setMostrarGoogle] = useState(true);
   const [quadroFiltro, setQuadroFiltro] = useState<string>("todos");
   const [diaSelecionado, setDiaSelecionado] = useState<string | null>(null);
-  const [processandoCallback, setProcessandoCallback] = useState(false);
   const [mostrarComposer, setMostrarComposer] = useState(false);
-  // Desconectar apaga os compromissos da grade na hora: confirma antes.
-  const [confirmarDesconectar, setConfirmarDesconectar] = useState(false);
   const [novoTitulo, setNovoTitulo] = useState("");
   const [novoQuadroId, setNovoQuadroId] = useState("");
 
@@ -186,62 +158,6 @@ function CalendarioPage() {
     },
   });
 
-  const statusGoogleQuery = useQuery({
-    queryKey: ["google-status", userId],
-    enabled: !!userId,
-    queryFn: () => statusConexaoGoogle(),
-  });
-  // Sem as credenciais do OAuth no servidor, "Conectar" só daria erro: a página
-  // esconde a integração e segue só com o Planner. Enquanto o status carrega,
-  // também fica escondida (evita o botão piscar e sumir).
-  const googleConfigurado = statusGoogleQuery.data?.configurado ?? false;
-  const conectado = statusGoogleQuery.data?.conectado ?? false;
-  const emailConectado = statusGoogleQuery.data?.email ?? null;
-
-  const eventosGoogleQuery = useQuery({
-    queryKey: ["google-eventos", userId, inicioISO, fimISO],
-    enabled: !!userId && conectado && mostrarGoogle,
-    queryFn: () =>
-      listarEventosDoMes({
-        data: {
-          inicioISO: inicioGrade.toISOString(),
-          fimISO: new Date(fimGrade.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-        },
-      }),
-  });
-  const eventosGoogle = useMemo(
-    () => eventosGoogleQuery.data?.eventos ?? [],
-    [eventosGoogleQuery.data],
-  );
-  // O servidor desfez a conexão (sem permissão da agenda ou token expirado):
-  // relê o status pra tela trocar "desconectar" por "Conectar".
-  const servidorDesconectou = eventosGoogleQuery.data?.conectado === false;
-  useEffect(() => {
-    if (servidorDesconectou && conectado) void statusGoogleQuery.refetch();
-  }, [servidorDesconectou, conectado, statusGoogleQuery]);
-
-  const conectarMutation = useMutation({
-    mutationFn: () => iniciarConexaoGoogle(),
-    onSuccess: (res) => {
-      if (res.error || !res.url) {
-        toastErro(res.error ?? "A Pólia One não conseguiu conectar com o Google agora.");
-        return;
-      }
-      window.location.href = res.url;
-    },
-    onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o Google."),
-  });
-
-  const desconectarMutation = useMutation({
-    mutationFn: () => desconectarGoogle(),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["google-status", userId] });
-      qc.invalidateQueries({ queryKey: ["google-eventos"] });
-      toastSucesso("Google Calendar desconectado.");
-    },
-    onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
-  });
-
   const criarTarefaMutation = useMutation({
     mutationFn: async ({
       quadroId,
@@ -284,28 +200,6 @@ function CalendarioPage() {
     setMostrarComposer(true);
   };
 
-  // Google redireciona de volta pra cá com ?code&state — troca por tokens e
-  // limpa a URL. Só roda uma vez por code recebido.
-  useEffect(() => {
-    if (!search.code || !search.state || processandoCallback) return;
-    setProcessandoCallback(true);
-    finalizarConexaoGoogle({ data: { code: search.code, state: search.state } })
-      .then((res) => {
-        if (res.ok) {
-          track("evento_google_conectado");
-          toastSucesso("Google Calendar conectado.");
-        } else
-          toastErro(res.error ?? "A Pólia One não conseguiu confirmar a conexão com o Google.");
-        qc.invalidateQueries({ queryKey: ["google-status", userId] });
-      })
-      .catch(() => toastErro("A Pólia One não conseguiu confirmar a conexão com o Google."))
-      .finally(() => {
-        setProcessandoCallback(false);
-        navigate({ to: "/calendario", search: {}, replace: true });
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search.code, search.state]);
-
   // Cada dia guarda as tarefas com o papel delas ali (início, andamento, prazo).
   // A grade mostra só início e prazo; o detalhe do dia mostra todas.
   const tarefasPorDia = useMemo(() => {
@@ -326,21 +220,6 @@ function CalendarioPage() {
     }
     return m;
   }, [pedidosQuery.data, mostrarEntregas]);
-
-  const eventosPorDia = useMemo(() => {
-    const m = new Map<string, EventoGoogle[]>();
-    if (!mostrarGoogle) return m;
-    for (const ev of eventosGoogle) {
-      // Dia no fuso do navegador, o mesmo do horário mostrado na grade. Os 10
-      // primeiros caracteres vinham no fuso da agenda do Google (ou em UTC) e
-      // podiam pôr o compromisso da noite no dia seguinte (07/10/2026).
-      const dia = diaLocalDe(ev.inicio);
-      const lista = m.get(dia) ?? [];
-      lista.push(ev);
-      m.set(dia, lista);
-    }
-    return m;
-  }, [eventosGoogle, mostrarGoogle]);
 
   useEffect(() => {
     setMostrarComposer(false);
@@ -379,14 +258,7 @@ function CalendarioPage() {
         ? "atrasado"
         : x.itens.map((i) => `${i.quantidade}x ${i.produtoNome}`).join(", "),
     }));
-    const g: ItemDia[] = (eventosPorDia.get(iso) ?? []).map((x) => ({
-      fonte: "google",
-      id: x.id,
-      titulo: x.titulo,
-      horario: x.diaTodo ? null : format(new Date(x.inicio), "HH:mm"),
-      href: x.link,
-    }));
-    return [...p, ...t, ...g].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
+    return [...p, ...t].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
   };
 
   // Mês sem nenhum item desenhava 35 células em branco e mais nada: nem aviso de
@@ -397,20 +269,14 @@ function CalendarioPage() {
     const idsTarefas = new Set<string>();
     for (const lista of tarefasPorDia.values()) for (const o of lista) idsTarefas.add(o.tarefa.id);
     let n = idsTarefas.size;
-    for (const lista of eventosPorDia.values()) n += lista.length;
     for (const lista of entregasPorDia.values()) n += lista.length;
     return n;
-  }, [tarefasPorDia, eventosPorDia, entregasPorDia]);
+  }, [tarefasPorDia, entregasPorDia]);
   const carregandoGrade =
-    (mostrarPlanner && tarefasQuery.isLoading) ||
-    (mostrarEntregas && pedidosQuery.isLoading) ||
-    (conectado && mostrarGoogle && eventosGoogleQuery.isLoading);
-  const googleAtivo = conectado && mostrarGoogle;
+    (mostrarPlanner && tarefasQuery.isLoading) || (mostrarEntregas && pedidosQuery.isLoading);
   const textoVazioDoMes = !mostrarEntregas
     ? 'O filtro "Entregas" está desligado. Liga ele aí em cima que as entregas voltam pra grade.'
-    : googleAtivo
-      ? "O calendário junta as entregas dos pedidos e os compromissos do Google Calendar. Nenhum dos dois cai neste mês."
-      : "O calendário mostra o dia de entrega de cada pedido. Nenhum cai neste mês.";
+    : "O calendário mostra o dia de entrega de cada pedido. Nenhum cai neste mês.";
   const itensDiaSelecionado = diaSelecionado
     ? itensDoDia(diaSelecionado, { comAndamento: true })
     : [];
@@ -423,7 +289,7 @@ function CalendarioPage() {
       largura="larga"
       eyebrow="Calendário"
       titulo="O mês inteiro à vista."
-      subtitulo={`As entregas dos pedidos${conectado ? " e os compromissos do seu Google Calendar" : ""}, num só lugar.`}
+      subtitulo="As entregas dos pedidos, num só lugar."
     >
       <div>
         {/* Navegação de mês */}
@@ -478,19 +344,6 @@ function CalendarioPage() {
               Planner
             </button>
           )}
-          {googleConfigurado && (
-            <button
-              type="button"
-              onClick={() => conectado && setMostrarGoogle((v) => !v)}
-              disabled={!conectado}
-              aria-pressed={mostrarGoogle}
-              title={!conectado ? "Conecte o Google Calendar pra filtrar por ele" : undefined}
-              className={`${BTN_MIUDO} ${conectado && mostrarGoogle ? "!bg-[var(--secondary)]" : "bg-white"}`}
-            >
-              Google Calendar
-            </button>
-          )}
-
           {mostrarPlanner && quadros.length > 1 && (
             <Select value={quadroFiltro} onValueChange={setQuadroFiltro}>
               <SelectTrigger className="h-9 w-[190px] rounded-lg border border-[var(--line)] px-3 text-[13px] text-[var(--ink-soft)] focus:ring-0">
@@ -511,45 +364,7 @@ function CalendarioPage() {
               </SelectContent>
             </Select>
           )}
-
-          <div className="ml-auto">
-            {!googleConfigurado ? null : conectado ? (
-              <button
-                type="button"
-                onClick={() => setConfirmarDesconectar(true)}
-                disabled={desconectarMutation.isPending}
-                className={`${BTN_MIUDO} hover:!border-[var(--danger)] hover:!text-[var(--danger)]`}
-              >
-                <Unlink size={14} aria-hidden="true" />
-                {emailConectado ?? "conectado"} · desconectar
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => conectarMutation.mutate()}
-                disabled={conectarMutation.isPending}
-                className={BTN_MIUDO}
-              >
-                <Link2 size={14} aria-hidden="true" />
-                {conectarMutation.isPending ? "Abrindo..." : "Conectar Google Calendar"}
-              </button>
-            )}
-          </div>
         </div>
-
-        {mostrarGoogle && eventosGoogleQuery.data?.error && (
-          <div className="mb-5">
-            <BlockError
-              // O servidor já devolve o motivo em português ("precisa da
-              // permissão de ver a agenda", "não conseguiu buscar agora").
-              message={
-                eventosGoogleQuery.data.error ||
-                "Não deu pra carregar os compromissos do Google Calendar."
-              }
-              onRetry={() => eventosGoogleQuery.refetch()}
-            />
-          </div>
-        )}
 
         {erroTarefas && (
           <div className="mb-5">
@@ -625,11 +440,7 @@ function CalendarioPage() {
                       <span
                         key={`${item.fonte}-${item.id}`}
                         className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                          item.fonte === "google"
-                            ? "bg-[var(--ink-soft)]"
-                            : item.concluido
-                              ? "bg-[var(--line)]"
-                              : "bg-[var(--secondary)]"
+                          item.concluido ? "bg-[var(--line)]" : "bg-[var(--secondary)]"
                         }`}
                         aria-hidden="true"
                       />
@@ -646,15 +457,13 @@ function CalendarioPage() {
                     <span
                       key={`${item.fonte}-${item.id}`}
                       className={`truncate rounded px-1.5 py-0.5 text-[11px] ${
-                        item.fonte === "google"
-                          ? "bg-[var(--surface)] text-[var(--ink-soft)]"
-                          : item.concluido
-                            ? "bg-[var(--surface)] text-[var(--muted)] line-through"
-                            : "bg-white text-[var(--ink-soft)] outline outline-1 outline-[var(--secondary)]"
+                        item.concluido
+                          ? "bg-[var(--surface)] text-[var(--muted)] line-through"
+                          : "bg-white text-[var(--ink-soft)] outline outline-1 outline-[var(--secondary)]"
                       }`}
                     >
                       {item.titulo}
-                      {item.fonte !== "google" && item.detalhe ? ` · ${item.detalhe}` : ""}
+                      {item.detalhe ? ` · ${item.detalhe}` : ""}
                     </span>
                   ))}
                   {itens.length > 3 && (
@@ -812,11 +621,7 @@ function CalendarioPage() {
                   <Vazio
                     denso
                     titulo="Nada marcado nesse dia."
-                    texto={
-                      conectado
-                        ? "Nenhuma entrega cai nesse dia, e nenhum compromisso no Google Calendar."
-                        : "Nenhuma entrega cai nesse dia."
-                    }
+                    texto="Nenhuma entrega cai nesse dia."
                   />
                 ) : (
                   <ul className="flex flex-col gap-2">
@@ -826,18 +631,14 @@ function CalendarioPage() {
                         className="flex items-center gap-3 rounded-lg border border-[var(--line)] px-3 py-2"
                       >
                         <span
-                          className={`h-2 w-2 shrink-0 rounded-full ${
-                            item.fonte === "google"
-                              ? "bg-[var(--ink-soft)]"
-                              : "bg-[var(--secondary)]"
-                          }`}
+                          className="h-2 w-2 shrink-0 rounded-full bg-[var(--secondary)]"
                           aria-hidden="true"
                         />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[14px] text-[var(--ink-soft)]">
                             {item.titulo}
                           </span>
-                          {item.fonte !== "google" && item.detalhe && (
+                          {item.detalhe && (
                             <span className="block truncate text-[12px] text-[var(--muted)]">
                               {item.detalhe}
                             </span>
@@ -849,17 +650,11 @@ function CalendarioPage() {
                           </span>
                         )}
                         <span className="shrink-0 text-[10px] font-accent font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
-                          {item.fonte === "google"
-                            ? "Google"
-                            : item.fonte === "pedido"
-                              ? "Entrega"
-                              : "Planner"}
+                          {item.fonte === "pedido" ? "Entrega" : "Planner"}
                         </span>
                         {item.href && (
                           <a
                             href={item.href}
-                            target={item.fonte === "google" ? "_blank" : undefined}
-                            rel={item.fonte === "google" ? "noreferrer" : undefined}
                             className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--secondary-text)]"
                             aria-label="Abrir"
                           >
@@ -874,19 +669,6 @@ function CalendarioPage() {
             )}
           </SheetContent>
         </Sheet>
-
-        <ConfirmarAcao
-          open={confirmarDesconectar}
-          onOpenChange={setConfirmarDesconectar}
-          titulo="Desconectar o Google Calendar?"
-          descricao="Os compromissos somem da grade. As entregas dos pedidos continuam."
-          textoConfirmar="Desconectar"
-          textoCarregando="Desconectando…"
-          textoCancelar="Voltar"
-          destrutivo
-          carregando={desconectarMutation.isPending}
-          onConfirmar={() => desconectarMutation.mutate()}
-        />
       </div>
     </PaginaLogada>
   );

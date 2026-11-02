@@ -104,7 +104,7 @@ export const Route = createFileRoute("/_authenticated")({
         // paga manda pro /upgrade.
         if (!rotaLiberada(location.pathname, profile?.plano)) {
           // O plano a nomear na tela de upgrade é o que a ROTA exige, não um
-          // fixo: /raiox, /projecao e /plano-conteudo são do Pro. Com "controle"
+          // fixo: /raiox, /projecao e /catalogo são do Pro. Com "controle"
           // fixo, a usuária do Grátis via "Recurso do plano Premium", assinava
           // o Premium e continuava barrada pelo portão Pro de dentro da página.
           throw redirect({

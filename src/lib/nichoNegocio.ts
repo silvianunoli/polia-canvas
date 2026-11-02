@@ -1,10 +1,9 @@
 // Nicho do negócio (23/10/2026, pedido da Sil): obrigatório no bloco "Primeiros
 // passos" do Painel, que é o onboarding desde 14/10. Fica em profiles.nicho.
 //
-// As chaves e os nomes são os mesmos do banco de ideias do Plano de conteúdo
-// (lib/bancoIdeias), mais "outro" pra quem não se acha em nenhum. A lista é
-// repetida aqui de propósito: importar lib/bancoIdeias levaria as 480 ideias
-// pro Painel. O teste trava que as duas listas continuam iguais.
+// As chaves e os nomes vieram do banco de ideias do Plano de conteúdo, que
+// saiu da Pólia One em 02/11/2026, mais "outro" pra quem não se acha em
+// nenhum. Desde então esta é a lista única.
 
 import type { BusinessTypeGravado } from "@/lib/primeirosPassos";
 

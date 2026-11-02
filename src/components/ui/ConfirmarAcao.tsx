@@ -34,7 +34,7 @@ interface ConfirmarAcaoProps {
   /**
    * Desabilita os dois botões enquanto onConfirmar ainda está em andamento —
    * evita duplo clique num pedido que demora (mesmo cuidado de
-   * `desconectarMutation.isPending` em calendario.tsx). Também troca o texto
+   * `desconectarTiktokMutation.isPending` em configuracoes.tsx). Também troca o texto
    * do botão e anuncia a mudança pro leitor de tela (role="status"), pra não
    * ficar sem nenhum retorno perceptível durante o carregamento.
    */
@@ -49,7 +49,7 @@ function ehPromessa(v: unknown): v is PromiseLike<unknown> {
  * Substitui window.confirm() (auditoria de set/2026 encontrou 5 usos nativos)
  * compondo API mais simples por cima do AlertDialog do shadcn já instalado —
  * mesma composição (polia-v3 + TOKEN_BRIDGE_V3, botão --secondary/--danger) já
- * usada em calendario.tsx (desconectar Google Calendar) e planner.$slug.tsx
+ * usada em configuracoes.tsx (desconectar o TikTok Shop) e planner.$slug.tsx
  * (concluir tarefa).
  *
  * 08/10/2026: o AlertDialogAction do Radix fecha o diálogo no próprio clique.

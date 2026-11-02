@@ -16,7 +16,6 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { cnpjValido, formatarCnpj } from "@/lib/cnpj";
 import { whatsappDaConta, whatsappParaCampo } from "@/lib/telefone";
 import { ESCOLHAS_NICHO, nichoDoBanco, type NichoNegocio } from "@/lib/nichoNegocio";
-import { hrefUpgrade, rotaLiberada } from "@/lib/planos";
 import { Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -32,11 +31,6 @@ import {
   desconectarTiktok,
   alternarCuidaEstoqueTiktok,
 } from "@/lib/tiktokShop.functions";
-import {
-  statusConexaoGoogle,
-  iniciarConexaoGoogle,
-  desconectarGoogle,
-} from "@/lib/calendarGoogle.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
 import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
@@ -167,36 +161,6 @@ function ConfiguracoesPage() {
     queryClient.invalidateQueries({ queryKey: ["assinatura-status", userId] });
     queryClient.invalidateQueries({ queryKey: ["configuracoes-profile", userId] });
   };
-
-  // ── Google Calendar: status real da conexão (era um "EM BREVE" fixo, mesmo já integrado) ──
-  const statusGoogleQuery = useQuery({
-    queryKey: ["google-status", userId],
-    enabled: !!userId,
-    queryFn: () => statusConexaoGoogle(),
-  });
-  const googleConectado = statusGoogleQuery.data?.conectado ?? false;
-  const googleEmail = statusGoogleQuery.data?.email ?? null;
-
-  const conectarGoogleMutation = useMutation({
-    mutationFn: () => iniciarConexaoGoogle(),
-    onSuccess: (res) => {
-      if (res.error || !res.url) {
-        toastErro(res.error ?? "A Pólia One não conseguiu conectar com o Google agora.");
-        return;
-      }
-      window.location.href = res.url;
-    },
-    onError: () => toastErro("A Pólia One não conseguiu iniciar a conexão com o Google."),
-  });
-
-  const desconectarGoogleMutation = useMutation({
-    mutationFn: () => desconectarGoogle(),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["google-status", userId] });
-      toastSucesso("Google Calendar desconectado.");
-    },
-    onError: () => toastErro("A Pólia One não conseguiu desconectar agora."),
-  });
 
   // ── TikTok Shop (VND-05): só no Pro; escondido se o servidor não tiver as credenciais ──
   const statusTiktokQuery = useQuery({
@@ -884,48 +848,7 @@ function ConfiguracoesPage() {
           subtitulo="conecta ferramentas de uso diário pra reunir tudo num lugar só."
         >
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 border border-[var(--line)] rounded-xl">
-              <div>
-                <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
-                  Google Calendar
-                </p>
-                <p className="font-sans text-[var(--ink-soft)] text-[12px]">
-                  {googleConectado
-                    ? `conectado como ${googleEmail}`
-                    : "veja seus compromissos no Calendário"}
-                </p>
-              </div>
-              {/* O Calendário é do Premium: no Grátis o "Conectar" levava a uma
-                  agenda que ela não abre (ONE-102). Quem já conectou segue
-                  podendo desconectar. */}
-              {!googleConectado &&
-              profileQuery.data &&
-              !rotaLiberada("/calendario", profileQuery.data.plano) ? (
-                <LinkInterno href={hrefUpgrade("/calendario")} className={BTN_MIUDO}>
-                  <Lock size={13} aria-hidden="true" /> Abre no Premium
-                </LinkInterno>
-              ) : statusGoogleQuery.isLoading ? (
-                <span className="text-[var(--muted)] text-[12px]">carregando...</span>
-              ) : googleConectado ? (
-                <button
-                  type="button"
-                  onClick={() => desconectarGoogleMutation.mutate()}
-                  disabled={desconectarGoogleMutation.isPending}
-                  className={`${BTN_MIUDO} hover:border-[var(--danger)] hover:text-[var(--danger)]`}
-                >
-                  {desconectarGoogleMutation.isPending ? "Desconectando..." : "Desconectar"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => conectarGoogleMutation.mutate()}
-                  disabled={conectarGoogleMutation.isPending}
-                  className={BTN_MIUDO}
-                >
-                  {conectarGoogleMutation.isPending ? "Conectando..." : "Conectar"}
-                </button>
-              )}
-            </div>
+            {/* O Google Calendar saiu da Pólia One em 02/11/2026 (decisão da Sil). */}
             {tiktok && (
               <div className="p-4 border border-[var(--line)] rounded-xl">
                 <div className="flex items-start justify-between gap-4">
@@ -1201,7 +1124,7 @@ function ConfiguracoesPage() {
               <>
                 <p className="mb-4 font-sans text-[15px] text-[var(--ink-soft)]">
                   {plano === "controle"
-                    ? "Plano Premium liberado pela Pólia, sem cobrança. O Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."
+                    ? "Plano Premium liberado pela Pólia, sem cobrança. O Pro acrescenta o Raio-x do mês e a projeção."
                     : "Plano Pro liberado pela Pólia, sem cobrança."}
                 </p>
                 {plano === "controle" && (
@@ -1222,7 +1145,7 @@ function ConfiguracoesPage() {
                 <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
                   {plano === "cancelada"
                     ? "Sua assinatura foi cancelada. Dá pra assinar de novo quando quiser."
-                    : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês, a projeção e o plano de conteúdo do ano."}
+                    : "No plano Grátis agora. O Premium abre o Financeiro e os Clientes; o Pro acrescenta o Raio-x do mês e a projeção."}
                 </p>
                 <LinkInterno href="/assinar" className={BTN_ACAO}>
                   Ver planos

@@ -20,7 +20,6 @@ import {
   Lock,
   TrendingUp,
   Stethoscope,
-  Megaphone,
   Calculator,
   ShoppingBag,
   Store,
@@ -68,7 +67,6 @@ const NAV: NavItem[] = [
   { to: "/metas", label: "Metas", icon: Target },
   { to: "/caderno", label: "Caderno", icon: Notebook },
   { to: "/planner", label: "Planner", icon: LayoutList },
-  { to: "/plano-conteudo", label: "Plano de conteúdo", icon: Megaphone },
   { to: "/calendario", label: "Calendário", icon: CalendarDays },
 ];
 

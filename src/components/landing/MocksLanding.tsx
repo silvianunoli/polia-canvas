@@ -640,19 +640,19 @@ export function MockPedidos({ className }: { className?: string }) {
 }
 
 // Era o Planner da semana; desde 28/10/2026 o Planner saiu das usuárias e o
-// Calendário mostra as entregas dos pedidos junto da agenda do Google.
+// Calendário mostra as entregas dos pedidos. A agenda do Google saiu em 02/11/2026.
 const semana = [
   { dia: "Seg", tarefa: "Kit da Júlia, 2 cadernos", origem: "Entrega" },
-  { dia: "Ter", tarefa: "Feira do bairro, 9h", origem: "Google Agenda" },
+  { dia: "Ter", tarefa: "Encomenda da Lu, 1 agenda", origem: "Entrega" },
   { dia: "Qua", tarefa: "Caderno A5 da Bia", origem: "Entrega" },
   { dia: "Qui", tarefa: "Pedido da Carla, 3 cadernos", origem: "Entrega" },
 ];
 
-/** Calendário do Premium: entregas dos pedidos e agenda do Google na mesma semana. */
+/** Calendário do Premium: as entregas dos pedidos na semana. */
 export function MockSemanaEntregas({ className }: { className?: string }) {
   return (
     <Cartela
-      label="Calendário da Pólia One com a semana: as entregas dos pedidos e um compromisso que veio da agenda do Google, na mesma lista."
+      label="Calendário da Pólia One com a semana: a entrega de cada pedido, dia a dia."
       className={className}
     >
       <Label>Calendário · esta semana</Label>

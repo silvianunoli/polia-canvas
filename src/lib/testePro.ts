@@ -85,7 +85,7 @@ export function textoFaixaTeste(
   if (testeAcabouHaPouco(t, agora)) {
     return {
       texto:
-        "O teste do Pro terminou e a conta voltou pro Grátis. Raio-x, Projeção e Plano de conteúdo continuam guardados, só fechados.",
+        "O teste do Pro terminou e a conta voltou pro Grátis. Raio-x, Projeção e Encomenda continuam guardados, só fechados.",
       cta: "Quero o Pro de volta",
       urgente: false,
     };

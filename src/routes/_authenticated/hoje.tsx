@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
@@ -13,7 +12,6 @@ import { numerosDoMes } from "@/lib/numerosDoMes";
 import { lerVendasDoPeriodo, lucroDoMes, type LancamentoComOrigem } from "@/lib/lucroDoMes";
 import { intervaloDoPeriodo } from "@/lib/vendas";
 import { formatarReais } from "@/lib/formatarReais";
-import { recursoLiberado } from "@/lib/planos";
 import { estaAberto, linhaDoResumo, resumoDoDia, rotuloEntrega } from "@/lib/pedidos";
 import { usePedidos } from "@/components/pedidos/dados";
 
@@ -28,8 +26,6 @@ export const Route = createFileRoute("/_authenticated/hoje")({
   head: () => ({ meta: [{ title: "Hoje · Pólia One" }] }),
   component: Hoje,
 });
-
-type PostHoje = { titulo: string | null; tipo: string | null; postado: boolean | null };
 
 function saudacaoAgora() {
   const agora = new Date();
@@ -54,17 +50,15 @@ function Hoje() {
     setHoje(hojeISO());
   }, []);
 
-  const postLiberado = !meta.carregando && recursoLiberado("/plano-conteudo", meta.plano);
-
   const dados = useQuery({
-    queryKey: ["hoje-app", userId, hoje, postLiberado],
+    queryKey: ["hoje-app", userId, hoje],
     enabled: !!userId && !!hoje,
     queryFn: async () => {
       const dia = hoje!;
       const { ano, mes } = mesAnoDe(dia);
       const intervalo = intervaloDoMes(ano, mes);
       const periodoVendas = intervaloDoPeriodo("mes", new Date());
-      const [lancamentos, metaMes, post, vendas] = await Promise.all([
+      const [lancamentos, metaMes, vendas] = await Promise.all([
         lerTodasAsPaginas<LancamentoComOrigem>((de, ate) =>
           supabase
             .from("lancamentos")
@@ -76,15 +70,6 @@ function Hoje() {
             .range(de, ate),
         ),
         buscarMetaDoMes(supabase, userId!),
-        postLiberado
-          ? supabase
-              .from("ia_plano_conteudo")
-              .select("titulo, tipo, postado")
-              .eq("user_id", userId!)
-              .eq("data", dia)
-              .limit(1)
-              .maybeSingle()
-          : Promise.resolve({ data: null, error: null }),
         // Mesmo período do cartão de Vendas do Painel. Leitura que falha vira
         // null: o lucro cai em entradas - saídas em vez de sumir.
         lerVendasDoPeriodo(supabase, userId!, periodoVendas.de, periodoVendas.ate).catch(
@@ -95,13 +80,11 @@ function Hoje() {
         ),
       ]);
       if (metaMes.error) throw metaMes.error;
-      if (post.error) throw post.error;
       const n = numerosDoMes(lancamentos, ano, mes);
       return {
         entrou: n.entradas,
         lucrou: lucroDoMes(lancamentos, vendas, ano, mes).valor,
         metaAlvo: Number(metaMes.data?.valor_alvo ?? 0),
-        post: post.data as PostHoje | null,
       };
     },
   });
@@ -244,24 +227,7 @@ function Hoje() {
               )}
             </div>
 
-            {d?.post && (
-              <Link
-                to="/plano-conteudo"
-                className={`${CARTAO} flex items-center gap-3 no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--ink)]`}
-              >
-                <div className="min-w-0 flex-1">
-                  <p className={ROTULO}>Post de hoje{d.post.tipo ? ` · ${d.post.tipo}` : ""}</p>
-                  <p className="mt-1 text-[15px] text-[var(--ink)]">
-                    {d.post.titulo || "Ver a ideia do dia"}
-                  </p>
-                  {d.post.postado && (
-                    <p className="mt-1 text-[12px] text-[var(--secondary-text)]">Já postado</p>
-                  )}
-                </div>
-                <ChevronRight size={18} className="text-[var(--muted)]" aria-hidden="true" />
-              </Link>
-            )}
-
+            {/* O cartão "Post de hoje" saiu com o Plano de conteúdo em 02/11/2026. */}
             <Link
               to="/painel"
               className="mt-2 self-start text-[14px] text-[var(--secondary-text)] underline underline-offset-2"

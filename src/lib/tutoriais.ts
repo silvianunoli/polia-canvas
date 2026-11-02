@@ -315,8 +315,8 @@ const LISTA = [
         ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
         : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
       VIROU
-        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`
-        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, Plano de conteúdo, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`,
+        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`
+        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -1006,17 +1006,17 @@ const LISTA = [
     grupo: "Clientes e rotina",
     rota: "/calendario",
     abrir: "Abrir o Calendário",
-    resumo:
-      "O mês com o dia de entrega de cada pedido e, com o Google Calendar conectado, os compromissos de lá.",
+    resumo: "O mês com o dia de entrega de cada pedido.",
     // Sem clipe desde 28/10/2026: o vídeo mostra a grade com os cartões do
-    // Planner, que saiu das usuárias. Volta quando a narração nova sair.
+    // Planner, que saiu das usuárias. Volta quando a narração nova sair. A
+    // conexão com o Google Calendar saiu da Pólia One em 02/11/2026.
     passos: [
       {
         titulo: "Ver o mês",
         itens: [
           'Use "Mês anterior" e "Próximo mês" pra navegar. "Hoje" volta pro mês atual.',
-          'Clique num dia pra ver tudo o que cai nele. Cada item mostra se é "Entrega" ou se vem do Google.',
-          'Os filtros "Entregas" e "Google Calendar" ligam e desligam cada origem.',
+          "Clique num dia pra ver as entregas dele. Cada uma mostra a cliente e o que vai no pedido.",
+          'O filtro "Entregas" liga e desliga as entregas na grade.',
         ],
       },
       {
@@ -1025,19 +1025,10 @@ const LISTA = [
           'Clique no dia e depois em "Anotar um pedido". O quadro de Pedidos abre, e o pedido aparece aqui no dia da entrega.',
         ],
       },
-      {
-        titulo: "Conectar o Google Calendar",
-        itens: [
-          'Clique em "Conectar Google Calendar" e entre na sua conta Google.',
-          "Na tela do Google, marque a permissão de ver a agenda. Sem ela, os compromissos não aparecem.",
-          'De volta à Pólia One, aparece "Google Calendar conectado." e os compromissos entram no mês.',
-        ],
-      },
     ],
     bomSaber: [
       "O Calendário é do Premium e do Pro.",
-      "O Google entra só pra leitura: a Pólia mostra a agenda principal, mas não cria nem muda compromisso lá.",
-      "Pra desconectar, clique no seu e-mail ao lado do botão do Google. As entregas dos pedidos ficam.",
+      "Pedido entregue continua no dia dele, riscado na grade.",
     ],
     duvidas: [
       {
@@ -1046,8 +1037,9 @@ const LISTA = [
           'O Calendário mostra o pedido no dia da entrega, e o filtro "Entregas" precisa estar ligado. Pedido cancelado não aparece.',
       },
       {
-        pergunta: "Qual agenda do Google aparece",
-        resposta: "Só a agenda principal da conta conectada.",
+        pergunta: "Cadê os compromissos do Google",
+        resposta:
+          "A conexão com o Google Calendar saiu da Pólia One em novembro de 2026. O Calendário mostra as entregas dos pedidos.",
       },
     ],
   },
@@ -1085,51 +1077,6 @@ const LISTA = [
         pergunta: "Cadê as minhas notas",
         resposta:
           "As notas saíram da Pólia One em outubro de 2026, mas continuam guardadas. Se precisar de alguma, fale com a Pólia pela Ajuda.",
-      },
-    ],
-  },
-  {
-    slug: "plano-de-conteudo",
-    nome: "Plano de conteúdo",
-    grupo: "Clientes e rotina",
-    rota: "/plano-conteudo",
-    abrir: "Abrir o Plano de conteúdo",
-    resumo:
-      "Uma ideia de post pra cada dia do ano, pelo tipo do negócio, e cada uma dá pra editar.",
-    trecho: "conteudo",
-    passos: [
-      {
-        titulo: "Montar o plano",
-        itens: [
-          "Na primeira visita, escolha o tipo do negócio, como Papelaria e presentes ou Comida e doces.",
-          'Clique em "Montar meu plano".',
-          'Use o seletor "Mês" pra ver o ano. Cada dia tem o tipo de post, o título e a ideia.',
-        ],
-      },
-      {
-        titulo: "Usar no dia a dia",
-        itens: [
-          "Clique no título ou na ideia pra editar. Salva quando você clica fora.",
-          'Depois de postar, clique em "Marcar como postado". Se o tema de hoje ainda não foi marcado, a tela lembra, com o botão "Já postei".',
-        ],
-      },
-      {
-        titulo: "Trocar o tipo do negócio",
-        itens: [
-          'Clique em "Trocar o tipo de negócio", escolha o novo e clique em "Refazer o plano".',
-          "Confirme. O plano muda de hoje até 31 de dezembro. Os dias que já passaram ficam como estão.",
-        ],
-      },
-    ],
-    bomSaber: [
-      "O Plano de conteúdo é do Pro.",
-      "As ideias vêm de um banco fixo de 60 temas por tipo de negócio, espalhados pelo ano. Não é IA e não tem limite de uso.",
-      "Dá pra escolher um tipo de negócio por plano.",
-    ],
-    duvidas: [
-      {
-        pergunta: "Refazer o plano apaga o que eu editei",
-        resposta: "Só de hoje em diante. Os dias que já passaram ficam intocados.",
       },
     ],
   },

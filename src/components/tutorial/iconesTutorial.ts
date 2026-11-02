@@ -8,7 +8,6 @@ import {
   LayoutList,
   Link2,
   Map,
-  Megaphone,
   MessageCircle,
   Notebook,
   Package,
@@ -46,5 +45,4 @@ export const ICONE_TUTORIAL: Record<SlugTutorial, LucideIcon> = {
   pedidos: ClipboardList,
   calendario: CalendarDays,
   caderno: Notebook,
-  "plano-de-conteudo": Megaphone,
 };

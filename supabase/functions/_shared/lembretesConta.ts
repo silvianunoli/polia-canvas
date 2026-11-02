@@ -227,7 +227,7 @@ export function montarEmailRegua(
         preheader: `Até ${dataCurta(d.testeFim)}, sem cartão e sem cobrança.`,
         paragrafos: [
           `A Pólia One abriu o plano Pro na sua conta até ${dataCurta(d.testeFim)}. Não precisa de cartão, e no fim não vira cobrança sozinho.`,
-          "No Pro entram a Encomenda na Calculadora, a Projeção, que mostra quantas vendas faltam pra meta do mês, o Raio-x do mês e o Plano de conteúdo com ideias do seu nicho.",
+          "No Pro entram a Encomenda na Calculadora, a Projeção, que mostra quantas vendas faltam pra meta do mês, o Raio-x do mês e o catálogo online ligado aos Pedidos.",
           "Um bom começo: calcular o preço de um produto e guardar. Com ele guardado, a Projeção já mostra quantas vendas o mês pede.",
           "No fim do prazo a conta volta pro Grátis, e o que a marca guardou continua guardado.",
         ],
@@ -242,7 +242,7 @@ export function montarEmailRegua(
         preheader: `Termina em ${dataCurta(d.testeFim)}, e a conta volta pro Grátis sem cobrança.`,
         paragrafos: [
           `O teste do Pro termina em ${dataCurta(d.testeFim)}. Depois disso a conta volta pro Grátis sozinha, sem cobrança nenhuma.`,
-          "O que a marca guardou continua guardado. Raio-x, Projeção, Encomenda e Plano de conteúdo ficam fechados até uma assinatura.",
+          "O que a marca guardou continua guardado. Raio-x, Projeção, Encomenda e o catálogo online ficam fechados até uma assinatura.",
           fundadora,
         ],
         ctaLabel: "Quero assinar",

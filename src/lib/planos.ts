@@ -68,8 +68,8 @@ export function tierDosNumeros(agora: number = Date.now()): TierPago {
 // e são barradas por um portão dentro da própria página. Sem esta lista, a barra
 // lateral não tem como saber que são pagas e mostra três itens SEM cadeado que a
 // usuária do Premium não consegue usar. Raio-x e Projeção descem pro Premium na
-// virada de preços.
-const ROTAS_PROJETE = ["/plano-conteudo", "/catalogo"];
+// virada de preços. O Plano de conteúdo saiu da Pólia One em 02/11/2026.
+const ROTAS_PROJETE = ["/catalogo"];
 const ROTAS_PROJETE_ATE_A_VIRADA = ["/raiox", "/projecao"];
 
 export function ehRotaProjete(pathname: string, agora: number = Date.now()): boolean {
@@ -86,7 +86,7 @@ export function tierPagoDaRota(pathname: string, agora: number = Date.now()): Ti
 
 /**
  * Link da tela de upgrade já com o plano que a rota exige (Pro pra Raio-x,
- * Projeção e Plano de conteúdo; Premium pro resto). Com "controle" fixo, a
+ * Projeção e Catálogo; Premium pro resto). Com "controle" fixo, a
  * usuária do Grátis via "Recurso do plano Premium" numa tela do Pro.
  */
 export function hrefUpgrade(rota: string): string {
@@ -131,7 +131,6 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/caderno", tier: "confere" }, // cotada
   { prefixo: "/como-usar", tier: "confere" }, // tutorial narrado: todo plano assiste
   { prefixo: "/raiox", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Resumo/Encomenda
-  { prefixo: "/plano-conteudo", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/projecao", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/catalogo", tier: "controle" }, // loja do catálogo (ONE-148): Pro-only por dentro
   // Metas é do plano Grátis desde 03/09/2026 (decisão COPY-03): o card do plano
@@ -365,7 +364,8 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
       },
       {
         id: "pedidos",
-        texto: "Pedidos sem limite e o Calendário das entregas com a agenda do Google junto",
+        // A agenda do Google saiu do Calendário em 02/11/2026 (decisão da Sil).
+        texto: "Pedidos sem limite e o Calendário com o dia de cada entrega",
       },
       {
         // ONE-133, no ar desde 23/10 (7430af6)
@@ -398,10 +398,7 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
         texto: "Projeção: quantas vendas faltam pra empatar, pra se pagar e pra bater a meta",
       },
       { id: "encomenda", texto: "Calculadora de encomenda sob medida" },
-      {
-        id: "plano-conteudo",
-        texto: "Plano de conteúdo: 60 ideias do seu nicho espalhadas pelo ano, uma por dia",
-      },
+      // O Plano de conteúdo saiu da Pólia One em 02/11/2026 (decisão da Sil).
       { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
       {

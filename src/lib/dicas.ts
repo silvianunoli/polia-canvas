@@ -14,7 +14,6 @@ export type ChaveDicaTela =
   | "metas"
   | "caderno"
   | "planner"
-  | "plano-conteudo"
   | "calendario";
 
 // "tutorial" = convite antigo do tutorial narrado (saiu do primeiro acesso em
@@ -102,9 +101,7 @@ export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
   caderno:
     "Ideia solta, anotação de reunião, aquele insight que chega no banho. Tem lugar pra isso aqui.",
   planner: "Um quadro pra cada projeto, pra lançamento e campanha não morarem só na cabeça.",
-  "plano-conteudo":
-    "Escolhe o tipo do seu negócio e a Pólia One espalha 60 ideias do seu nicho pelo ano, uma por dia, com a do dia em destaque.",
-  calendario: "Prazos das tarefas e compromissos do Google Calendar, o mês inteiro numa tela só.",
+  calendario: "O dia de entrega de cada pedido, o mês inteiro numa tela só.",
 };
 
 /** Lista com a chave marcada como vista, sem duplicar. */

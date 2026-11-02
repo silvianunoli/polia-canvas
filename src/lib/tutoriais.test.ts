@@ -87,7 +87,6 @@ describe("tutoriais por ferramenta", () => {
       "/metas",
       "/caderno",
       "/planner",
-      "/plano-conteudo",
       "/calendario",
     ]) {
       expect(

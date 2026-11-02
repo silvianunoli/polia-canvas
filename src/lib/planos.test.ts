@@ -105,11 +105,12 @@ describe("temProjete", () => {
 });
 
 describe("ehRotaProjete", () => {
-  it("reconhece as três rotas exclusivas, inclusive subrota", () => {
-    expect(ehRotaProjete("/raiox")).toBe(true);
-    expect(ehRotaProjete("/projecao")).toBe(true);
-    expect(ehRotaProjete("/plano-conteudo")).toBe(true);
-    expect(ehRotaProjete("/raiox/2026-07")).toBe(true);
+  it("reconhece as rotas exclusivas, inclusive subrota", () => {
+    expect(ehRotaProjete("/raiox", NOV)).toBe(true);
+    expect(ehRotaProjete("/projecao", NOV)).toBe(true);
+    expect(ehRotaProjete("/catalogo")).toBe(true);
+    expect(ehRotaProjete("/plano-conteudo")).toBe(false);
+    expect(ehRotaProjete("/raiox/2026-07", NOV)).toBe(true);
   });
 
   it("não pega rota de Controle", () => {
@@ -120,14 +121,14 @@ describe("ehRotaProjete", () => {
 
 describe("recursoLiberado", () => {
   // Este bloco existe por causa de um bug real: a barra lateral usava só a
-  // trava de rota, e como Raio-x/Projeção/Plano de conteúdo são tier "controle",
+  // trava de rota, e como Raio-x/Projeção/Catálogo são tier "controle",
   // a usuária do Controle via os três SEM cadeado e só descobria que eram pagos
   // depois de clicar e bater no portão de dentro da página.
   it("nega rota Projete pra quem está no Controle, mesmo a rota passando no guard", () => {
     expect(rotaLiberada("/raiox", "controle")).toBe(true);
     expect(recursoLiberado("/raiox", "controle")).toBe(false);
     expect(recursoLiberado("/projecao", "controle")).toBe(false);
-    expect(recursoLiberado("/plano-conteudo", "controle")).toBe(false);
+    expect(recursoLiberado("/catalogo", "controle")).toBe(false);
   });
 
   it("libera rota Projete pro projete e pro beta", () => {
@@ -303,7 +304,7 @@ describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
     }
     // O Pro continua com o que é canal e automação.
     expect(ids(tiersPagos(DEZ).projete.beneficios)).toEqual(
-      expect.arrayContaining(["plano-conteudo", "assistente", "catalogo", "marketplaces"]),
+      expect.arrayContaining(["assistente", "catalogo", "marketplaces"]),
     );
   });
 
@@ -320,20 +321,19 @@ describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
     expect(tierDosNumeros(DEZ)).toBe("controle");
   });
 
-  it("Raio-x e Projeção deixam de ser rota do Pro; Plano de conteúdo e Catálogo seguem", () => {
+  it("Raio-x e Projeção deixam de ser rota do Pro; o Catálogo segue", () => {
     expect(ehRotaProjete("/raiox", NOV)).toBe(true);
     expect(ehRotaProjete("/projecao", NOV)).toBe(true);
     expect(ehRotaProjete("/raiox", DEZ)).toBe(false);
     expect(ehRotaProjete("/projecao", DEZ)).toBe(false);
     expect(tierPagoDaRota("/raiox", DEZ)).toBe("controle");
-    expect(ehRotaProjete("/plano-conteudo", DEZ)).toBe(true);
     expect(ehRotaProjete("/catalogo", DEZ)).toBe(true);
   });
 
   it("recursoLiberado segue a data de hoje (sem cadeado do Raio-x pro Premium depois da virada)", () => {
     const esperado = depoisDaVirada();
     expect(recursoLiberado("/raiox", "controle")).toBe(esperado);
-    expect(recursoLiberado("/plano-conteudo", "controle")).toBe(false);
+    expect(recursoLiberado("/catalogo", "controle")).toBe(false);
   });
 });
 

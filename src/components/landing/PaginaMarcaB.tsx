@@ -404,7 +404,7 @@ export const PERGUNTAS_MARCA_B = [
   {
     pergunta: "Conecta com o banco, com marketplace ou com o Instagram?",
     resposta:
-      "Com o banco, dá pra importar o extrato (OFX ou CSV) no Financeiro, no Premium. Com marketplace, ainda não: as vendas entram à mão, uma linha por venda, e a ligação com TikTok Shop, Mercado Livre e Shopee vem em breve no Pro. Com o Instagram, não. Dá pra entrar com a conta Google, e no Premium a agenda do Google aparece junto das tarefas.",
+      "Com o banco, dá pra importar o extrato (OFX ou CSV) no Financeiro, no Premium. Com marketplace, ainda não: as vendas entram à mão, uma linha por venda, e a ligação com TikTok Shop, Mercado Livre e Shopee vem em breve no Pro. Com o Instagram, não. Dá pra entrar com a conta Google.",
   },
   {
     pergunta: "A IA inventa o meu preço?",

@@ -15,7 +15,6 @@ export const FEATURES_POR_ROTA: { prefixo: string; feature: string }[] = [
   { prefixo: "/metas", feature: "metas" },
   { prefixo: "/caderno", feature: "caderno" },
   { prefixo: "/planner", feature: "planner" },
-  { prefixo: "/plano-conteudo", feature: "plano_conteudo" },
   { prefixo: "/calendario", feature: "calendario" },
   { prefixo: "/aimer", feature: "aimer" },
   { prefixo: "/marca", feature: "marca" },

@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { NICHOS } from "./bancoIdeias";
 import { CHAVES_NICHOS, nichoDaCampanha } from "./nichosLanding";
 import {
   ESCOLHAS_NICHO,
@@ -9,11 +8,10 @@ import {
 } from "./nichoNegocio";
 
 describe("ESCOLHAS_NICHO", () => {
-  it("são os nichos do banco de ideias, na mesma ordem, mais o outro no fim", () => {
-    const semOutro = ESCOLHAS_NICHO.slice(0, -1);
-    expect(semOutro.map((n) => [n.valor, n.rotulo, n.exemplos])).toEqual(
-      NICHOS.map((n) => [n.chave, n.nome, n.exemplos]),
-    );
+  it("são oito nichos sem repetir, mais o outro no fim", () => {
+    const valores = ESCOLHAS_NICHO.map((n) => n.valor);
+    expect(new Set(valores).size).toBe(valores.length);
+    expect(valores).toHaveLength(9);
     expect(ESCOLHAS_NICHO.at(-1)?.valor).toBe("outro");
   });
 });

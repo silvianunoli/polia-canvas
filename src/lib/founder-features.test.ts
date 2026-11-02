@@ -5,7 +5,6 @@ describe("featureDaRota", () => {
   it("mapeia a rota e as subrotas pra mesma feature", () => {
     expect(featureDaRota("/produtos")).toBe("produtos");
     expect(featureDaRota("/planejamento/modulo/3")).toBe("planejamento");
-    expect(featureDaRota("/plano-conteudo")).toBe("plano_conteudo");
   });
 
   it("não confunde prefixo com rota parecida", () => {
