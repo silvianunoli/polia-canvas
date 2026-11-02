@@ -92,7 +92,7 @@ function PrivacidadePage() {
                 Política de Privacidade
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 26/10/2026 · Alinhada à LGPD (Lei 13.709/2018)
+                Última atualização: 02/11/2026 · Alinhada à LGPD (Lei 13.709/2018)
               </p>
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
                 Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -299,25 +299,6 @@ function PrivacidadePage() {
                   da API, em que o Google não usa esse conteúdo pra treinar os modelos dele
                 </li>
                 <li>
-                  <strong className="text-[var(--ink)]">Google Agenda</strong>: apenas se a titular
-                  conectar, para ler os próprios eventos. O acesso é só de leitura: os eventos
-                  aparecem no Calendário da Pólia One na hora em que a tela abre e não ficam
-                  guardados. A Pólia guarda apenas o e-mail da conta conectada e a chave de acesso
-                  que o Google entrega, e apaga as duas quando a titular desconecta. Esses dados não
-                  são vendidos, não vão pra publicidade, não treinam IA e não são repassados a
-                  terceiros. O uso e a transferência de informações recebidas das APIs do Google
-                  seguem a{" "}
-                  <a
-                    href="https://developers.google.com/terms/api-services-user-data-policy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[var(--secondary-text)] underline"
-                  >
-                    Política de Dados do Usuário dos Serviços de API do Google
-                  </a>
-                  , incluindo os requisitos de Uso Limitado
-                </li>
-                <li>
                   <strong className="text-[var(--ink)]">Google Analytics e Google Ads</strong>:
                   medição de uso do site e das campanhas de anúncio, só com consentimento
                 </li>
@@ -379,10 +360,10 @@ function PrivacidadePage() {
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
-                East). Provedores como Cloudflare, Stripe, Resend, Google (Agenda, Analytics, Ads e
-                Gemini), Meta (Meta Ads, Instagram e WhatsApp) e TikTok (TikTok Ads) também podem
-                processar dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias
-                adequadas previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos de
+                East). Provedores como Cloudflare, Stripe, Resend, Google (Analytics, Ads e Gemini),
+                Meta (Meta Ads, Instagram e WhatsApp) e TikTok (TikTok Ads) também podem processar
+                dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias adequadas
+                previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos de
                 tratamento de dados (DPA) desses provedores.
               </p>
 
