@@ -195,6 +195,11 @@ export default {
       const { responderPedidoCatalogo } = await import("./lib/catalogo/pedido.server");
       return await responderPedidoCatalogo(request);
     }
+    // O Worker do catálogo lê daqui os produtos a cada visita (SERV-59).
+    if (url.pathname === "/api/catalogo/vitrine") {
+      const { responderVitrineCatalogo } = await import("./lib/catalogo/vitrine.server");
+      return await responderVitrineCatalogo(request);
+    }
 
     // Qualquer hostname que não seja o oficial (www, workers.dev, preview de
     // deploy) leva 301 pro domínio próprio. O workers_dev segue ligado no
