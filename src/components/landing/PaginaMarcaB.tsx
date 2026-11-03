@@ -346,8 +346,9 @@ const praQuemNao = [
 ];
 
 // Preço e lista saem de tiersPagos() na hora de montar a tela, pra trocar
-// sozinhos na virada de preços (01/12/2026, src/lib/planos.ts).
-function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
+// sozinhos na virada de preços (01/12/2026, src/lib/planos.ts). Exportado pra home
+// (PaginaHome.tsx), que monta os mesmos planos.
+export function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
   const { controle: premium, projete: pro } = tiersPagos(agora);
   const virou = depoisDaVirada(agora);
   return [

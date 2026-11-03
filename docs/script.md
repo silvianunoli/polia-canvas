@@ -485,3 +485,12 @@ Decisão da Sil em 29/10 (RED-37): a publicação nas redes abre para as cliente
 - Escopos só os usados (`user.info.basic`, `video.publish`): o `video.upload` da Fábrica saiu. Instagram recusa conta pessoal com o caminho para trocar.
 - Tela: `CardRedesSociais` em Configurações > Integrações e a rota de volta `/configuracoes/integracoes/redes/$rede`. Até as revisões aprovarem, só conta admin vê (`REDES_SOCIAIS_ABERTO=1` abre para o Pro).
 - Sem novidade no sino e sem tutorial novo ainda: a função não está visível para cliente. Entram juntos quando a tela de postar abrir.
+
+## 2026-11-03 — Home nova na ordem do bench do Pode Postar (COPY-43)
+
+Pedido da Sil depois do bench do site do Pode Postar (RED-128, `../Campanhas/polia-conteudo-redes-sociais/refs/bench-podepostar-site-2026-11-03.md`). Wireframe em cinza aprovado por ela em 03/11.
+
+- `src/components/landing/PaginaHome.tsx` (novo): topo com os módulos em etiquetas e botão; a dor com o meme do Ross (Friends) com o texto por cima; a notícia boa em faixa tinta; o mecanismo (entregou, o resto atualiza); tudo que tem, um bloco por módulo com a etiqueta do plano e o VSL no fim ("Por dentro"); a marca abre, o número prova (curta); é pra você que; quem fez; risco zero; planos; FAQ; CTA final.
+- `src/routes/index.tsx` renderiza a `PaginaHome`. A /landing-b e os nichos seguem no `PaginaMarcaB` (o `escritorio` lá ficou sem uso). `montarPlanos` passou a ser exportado.
+- Meme: GIF oficial de Friends no Giphy, recortado no Ross sem a legenda em inglês, como webp animado (`public/marketing/landing/meme-ross-tudo-otimo.webp`, 680 KB, lazy) e jpg parado pra quem pede menos movimento. Webp e não MP4 porque o Worker não responde Range. Imagem de terceiro aceita pela Sil.
+- Sem novidade no sino e sem tutorial: é página de marketing, não tela do app.

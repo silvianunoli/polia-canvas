@@ -7,7 +7,8 @@ import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import type { BuscaCadastro } from "@/components/landing/BlocosLanding";
-import { PERGUNTAS_HOME, PaginaMarcaB } from "@/components/landing/PaginaMarcaB";
+import { PERGUNTAS_HOME } from "@/components/landing/PaginaMarcaB";
+import { PaginaHome } from "@/components/landing/PaginaHome";
 
 // Home V6 (07/10/2026): a copy aprovada em 06/10 (Ângulo B, "a marca sustenta o
 // preço"), a mesma página da /landing-b com o menu do site, o link pro Sobre e
@@ -31,8 +32,7 @@ export const Route = createFileRoute("/")({
       { name: "description", content: DESCRICAO },
       {
         property: "og:title",
-        content:
-          "Pólia One · Sua marca cresceu. A gestão dela continua no caderno, na planilha perdida e no WhatsApp.",
+        content: TITULO,
       },
       { property: "og:description", content: DESCRICAO },
     ],
@@ -61,8 +61,9 @@ function HomePage() {
         {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
       </AnimatePresence>
       <SiteHeader />
-      {/* Desde 16/10/2026 a home tem o mesmo topo da /landing-b: título e o VSL logo embaixo. */}
-      <PaginaMarcaB busca={busca} linkSobre vsl escritorio />
+      {/* Desde 03/11/2026 (COPY-43) a home tem página própria, na ordem do bench do Pode
+          Postar; a /landing-b segue no PaginaMarcaB. O VSL desceu pro "Por dentro". */}
+      <PaginaHome busca={busca} />
     </div>
   );
 }
