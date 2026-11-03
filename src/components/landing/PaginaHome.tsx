@@ -7,7 +7,6 @@ import {
   BarraCtaMobile,
   BotaoCadastro,
   CORPO,
-  EtiquetaPlano,
   FaqLanding,
   FotoLanding,
   FraseAncora,
@@ -28,7 +27,7 @@ import {
 import { PERGUNTAS_HOME, montarPlanos } from "@/components/landing/PaginaMarcaB";
 import { precoBR } from "@/components/landing/preco";
 import { PlayerVsl } from "@/components/landing/VideoVsl";
-import { depoisDaVirada, tiersPagos } from "@/lib/planos";
+import { tiersPagos } from "@/lib/planos";
 
 /**
  * Home da Pólia One reestruturada em 03/11/2026 (pedido da Sil, COPY-43), na ordem
@@ -67,55 +66,61 @@ const canaisHoje = ["WhatsApp", "Instagram", "Vitrine online", "Pedido feito pes
 /** Em breve no Pro (VND-05, VND-17, VND-30). */
 const canaisEmBreve = ["TikTok Shop", "Mercado Livre", "Shopee"];
 
-// Raio-x e Projeção descem pro Premium na virada de preços (01/12/2026).
-const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
+type Recurso = { titulo: string; texto: string; gratis?: boolean; mock: ReactNode };
 
-type Recurso = { titulo: string; texto: string; plano: string; mock: ReactNode };
-
-/** Um bloco por módulo, com a etiqueta do plano que libera (src/lib/planos.ts). */
+/**
+ * Um bloco por módulo. Quem chega pela primeira vez não conhece os planos, então o
+ * bloco só diz quando o módulo já vem no grátis (src/lib/planos.ts).
+ */
 const recursos: Recurso[] = [
   {
     titulo: "Pedidos",
     texto:
       "Cada pedido num cartão, com o nome da cliente e o dia da entrega. Do WhatsApp, do Instagram ou feito pessoalmente. Nada de rolar conversa às 23h.",
-    plano: "Grátis",
+    gratis: true,
     mock: <MockQuadroPedidos />,
   },
   {
     titulo: "Vitrine online",
     texto:
       "A vitrine da marca num link, pronto pra bio do Instagram. A cliente escolhe, e o pedido chega no WhatsApp da cliente.",
-    plano: "Pro",
     mock: <MockVitrine />,
   },
   {
     titulo: "Estoque e Vendas",
     texto:
       "Vendeu, baixou. A peça sai da prateleira sozinha, e a Pólia One avisa o que está acabando antes de faltar.",
-    plano: "Premium",
     mock: <MockVendaEstoque />,
   },
   {
     titulo: "Financeiro",
     texto:
       "O lado B da marca. O que entrou, o que saiu e quanto a marca lucrou de verdade, separado da conta de casa.",
-    plano: "Premium",
     mock: <MockTresNumeros />,
   },
   {
     titulo: "Calculadora de preço",
     texto:
       "Chega de mudar o valor três vezes antes de mandar. O custo, a taxa da maquininha e o lucro que a marca precisa viram o preço, e o desconto pode ser testado antes de ser dado.",
-    plano: "Grátis",
+    gratis: true,
     mock: <MockCalculadoraHero />,
   },
   {
     titulo: "Metas, Raio-x e Projeção",
     texto:
       "Você diz quanto quer ganhar no mês, e a Pólia One mostra quanto falta a cada venda. Antes de uma decisão grande, dá pra testar o cenário.",
-    plano: PLANO_DOS_NUMEROS,
     mock: <MockVendasMeta />,
   },
+];
+
+/** O que a dona usa hoje, espalhado, e a Pólia One junta (sem número de economia sem fonte). */
+const ferramentasEspalhadas = [
+  "Caderno de pedidos",
+  "Planilha",
+  "Bloco de notas do celular",
+  "App de estoque",
+  "App de catálogo",
+  "Controle financeiro em outro app",
 ];
 
 const praVoceQue = [
@@ -127,8 +132,8 @@ const praVoceQue = [
 
 const riscoZero = [
   "Começa grátis, sem cartão.",
-  "Os 7 primeiros dias vêm com o Pro inteiro liberado.",
-  "Cancelou? A conta volta pro Grátis, e nada do que você anotou se perde.",
+  "Nos 7 primeiros dias, todas as funções vêm liberadas pra você testar.",
+  "Cancelou? Você volta pro plano grátis, e nada do que anotou se perde.",
   "Assinou e se arrependeu? Em 7 dias o dinheiro volta inteiro, sem explicar nada.",
 ];
 
@@ -381,8 +386,8 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           <div className="mt-12 grid grid-cols-1 items-start gap-8 md:grid-cols-2">
             <p className="text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.25] tracking-[-0.02em] text-balance text-[var(--ink)]">
               A Pólia One é o sistema da sua marca: o pedido no quadro, a vitrine no link da bio, o
-              estoque que baixa sozinho, o financeiro longe da conta de casa e o preço com a conta
-              feita.
+              estoque que baixa sozinho, o financeiro longe da conta de casa e o preço calculado com
+              o custo de verdade.
             </p>
             <div>
               <ul className="flex list-none flex-col gap-3">
@@ -435,9 +440,6 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               </Etiqueta>
             ))}
           </ul>
-          <p className="mt-4 flex items-center justify-center gap-2 text-[13px] text-[var(--muted)]">
-            Os marketplaces entram no <EtiquetaPlano nome="Pro" />
-          </p>
         </Secao>
 
         {/* 5 · TUDO QUE TEM: um bloco por módulo, e o VSL no fim ("por dentro"). */}
@@ -455,7 +457,11 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
                   <div className={i % 2 === 1 ? "md:order-2" : ""}>
                     <h3 className="flex flex-wrap items-center gap-3 text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-[var(--ink)]">
                       {r.titulo}
-                      <EtiquetaPlano nome={r.plano} />
+                      {r.gratis && (
+                        <span className="font-accent rounded-full bg-[var(--secondary-light)] px-3 py-1 text-[11px] font-bold uppercase leading-none tracking-[0.06em] text-[var(--ink)]">
+                          Já vem no grátis
+                        </span>
+                      )}
                     </h3>
                     <p className={`mt-4 ${CORPO}`}>{r.texto}</p>
                   </div>
@@ -478,7 +484,9 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               <BotaoCadastro busca={busca} contexto="por-dentro">
                 Quero organizar a minha marca
               </BotaoCadastro>
-              <p className="mt-3 text-[13px] text-[var(--muted)]">Sem cartão no Grátis.</p>
+              <p className="mt-3 text-[13px] text-[var(--muted)]">
+                Grátis pra começar, sem cartão.
+              </p>
             </div>
           </div>
         </Secao>
@@ -486,7 +494,32 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
         {/* A seção "A marca abre. O número prova." saiu em 03/11/2026 (pedido da Sil):
             sem o Planejamento, ela não tinha mais o que mostrar. */}
 
-        {/* 6 · É PRA VOCÊ QUE: quatro cenas que a dona reconhece. */}
+        {/* 6 · UMA ASSINATURA NO LUGAR DE VÁRIAS (03/11/2026, pedido da Sil, inspirado no
+            "deixando de usar outras ferramentas" do Pode Postar). Sem depoimento nem número
+            de economia até ter fonte. */}
+        <Secao fundo="surface">
+          <h2 className={`mx-auto max-w-[24ch] text-center ${H2}`}>
+            Uma assinatura no lugar de um monte de coisa.
+          </h2>
+          <ul className="mx-auto mt-10 flex max-w-[760px] list-none flex-wrap justify-center gap-3">
+            {ferramentasEspalhadas.map((f) => (
+              <li
+                key={f}
+                className="rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[15px] text-[var(--muted)] line-through decoration-[var(--danger)] decoration-2 max-md:text-[14px]"
+              >
+                {f}
+              </li>
+            ))}
+          </ul>
+          <p className={`mx-auto mt-10 text-center ${CORPO}`}>
+            Cada app cobra a sua mensalidade e nenhum conversa com o outro.{" "}
+            <b className="font-semibold text-[var(--ink)]">
+              Na Pólia One fica tudo junto, e dá pra começar sem pagar nada.
+            </b>
+          </p>
+        </Secao>
+
+        {/* 7 · É PRA VOCÊ QUE: quatro cenas que a dona reconhece. */}
         <Secao fundo="secondary-light">
           <h2 className={`text-center ${H2}`}>A Pólia One foi feita pra você que:</h2>
           <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -501,7 +534,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </ul>
         </Secao>
 
-        {/* 7 · QUEM FEZ: a prova enquanto não tem depoimento. */}
+        {/* 8 · QUEM FEZ: a prova enquanto não tem depoimento. */}
         <Secao fundo="surface-pink">
           <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[5fr_6fr]">
             <figure>
@@ -535,7 +568,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </div>
         </Secao>
 
-        {/* 8 · RISCO ZERO: era uma linha de 13 px embaixo do botão. */}
+        {/* 9 · RISCO ZERO: era uma linha de 13 px embaixo do botão. */}
         <section className="bg-[var(--ink)] py-[clamp(64px,8vw,96px)]">
           <div className="mx-auto w-full max-w-[720px] px-[clamp(20px,4vw,48px)] text-center">
             <h2 className="text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.02em] text-balance text-[var(--bg)]">
@@ -559,10 +592,12 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </div>
         </section>
 
-        {/* 9 · PLANOS */}
+        {/* 10 · PLANOS */}
         <Secao fundo="surface" id="planos" secaoRef={zonaPlanos} className="scroll-mt-[88px]">
           <Rotulo>Planos</Rotulo>
-          <h2 className={`mt-4 mb-8 ${H2}`}>Começa no Grátis. Sobe quando a conta pedir.</h2>
+          <h2 className={`mt-4 mb-8 ${H2}`}>
+            Comece grátis. Mude de plano quando a marca pedir mais.
+          </h2>
           <PlanosLanding planos={planos} busca={busca} />
           <p className={`mt-8 ${CORPO}`}>
             No anual, o ano custa 10 mensalidades: Premium {precoBR(premium.precoAnual)}, Pro{" "}
@@ -573,14 +608,14 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </FraseAncora>
         </Secao>
 
-        {/* 10 · FAQ */}
+        {/* 11 · FAQ */}
         <Secao id="perguntas" className="scroll-mt-[88px]">
           <h2 className={`mb-8 ${H2}`}>Perguntas frequentes</h2>
           <FaqLanding perguntas={PERGUNTAS_HOME} />
         </Secao>
 
         <div ref={zonaFinal}>
-          {/* 11 · CTA FINAL */}
+          {/* 12 · CTA FINAL */}
           <Secao fundo="secondary">
             <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_4fr]">
               <div>
@@ -588,13 +623,15 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
                   A sua marca já provou que tem cliente. Agora ela ganha um sistema à altura.
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
-                  Começa hoje, grátis, com 7 dias de Pro. Sem cartão.
+                  Começa hoje, grátis, com 7 dias de tudo liberado. Sem cartão.
                 </p>
                 <div className="mt-8">
                   <BotaoCadastro busca={busca} contexto="final" invertido>
                     Quero organizar a minha marca
                   </BotaoCadastro>
-                  <p className="mt-3 text-[13px] text-[var(--ink)]">Sem cartão no Grátis.</p>
+                  <p className="mt-3 text-[13px] text-[var(--ink)]">
+                    Grátis pra começar, sem cartão.
+                  </p>
                 </div>
               </div>
               <FotoLanding

@@ -315,8 +315,8 @@ const LISTA = [
         ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
         : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
       VIROU
-        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`
-        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com Mercado Livre e TikTok Shop e o catálogo online ligado aos Pedidos.`,
+        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com Mercado Livre e TikTok Shop e a vitrine online ligada aos Pedidos.`
+        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com Mercado Livre e TikTok Shop e a vitrine online ligada aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -906,13 +906,13 @@ const LISTA = [
         itens: [
           'Monte a loja em "Catálogo", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
-          'Se a marca tem um site próprio feito pela Pólia Lab, ele liga em "Configurações", na parte "Integrações", no cartão "Catálogo online": escreva o domínio (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
+          'Se a marca tem um site próprio feito pela Pólia Lab, ele liga em "Configurações", na parte "Integrações", no cartão "Vitrine online": escreva o domínio (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
         ],
       },
     ],
     bomSaber: [
       "O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal Encomenda.",
-      'Pedido do catálogo online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Catálogo online". A cliente vira ficha em Clientes, pelo WhatsApp.',
+      'Pedido da vitrine online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Catálogo online". A cliente vira ficha em Clientes, pelo WhatsApp.',
       'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',

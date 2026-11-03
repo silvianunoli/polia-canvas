@@ -405,7 +405,7 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
         // ONE-148/ONE-149, 29/10/2026: só no Pro, decisão da Sil.
         id: "catalogo",
         texto:
-          "Catálogo online ligado aos Pedidos: o pedido que a cliente confirma no catálogo entra no quadro, com a variação de cada peça",
+          "Vitrine online ligada aos Pedidos: o pedido que a cliente confirma na vitrine entra no quadro, com a variação de cada peça",
         novoAte: "2026-11-28",
       },
       {

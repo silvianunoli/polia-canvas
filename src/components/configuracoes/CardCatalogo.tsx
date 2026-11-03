@@ -62,13 +62,13 @@ export function CardCatalogo({ userId }: { userId: string | undefined }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
-              Catálogo online
+              Vitrine online
               {st.ligado && st.dominio ? ` · ${st.dominio}` : ""}
             </p>
             <p className="font-sans text-[var(--ink-soft)] text-[12px]">
               {st.ligado
-                ? "ligado · cada pedido confirmado no catálogo entra em Pedidos, em A fazer"
-                : "o pedido confirmado no catálogo entra em Pedidos, com a cliente, as peças e a variação de cada uma"}
+                ? "ligada · cada pedido confirmado na vitrine entra em Pedidos, em A fazer"
+                : "o pedido confirmado na vitrine entra em Pedidos, com a cliente, as peças e a variação de cada uma"}
             </p>
           </div>
           {!st.ligado && !st.liberado ? (

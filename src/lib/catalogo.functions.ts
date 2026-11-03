@@ -12,7 +12,7 @@ import { normalizarDominio } from "@/lib/catalogo";
 // confere de novo no banco (migration 20261029210000).
 
 const CANAL = "catalogo";
-const SO_PRO = "O catálogo online ligado aos Pedidos é do plano Pro.";
+const SO_PRO = "A vitrine online ligada aos Pedidos é do plano Pro.";
 
 async function temPro(userId: string): Promise<boolean> {
   const { data } = await supabaseAdmin.from("profiles").select("plano").eq("id", userId).maybeSingle();

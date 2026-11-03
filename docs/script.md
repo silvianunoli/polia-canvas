@@ -504,3 +504,11 @@ Ajustes da Sil depois de ver a home nova no ar ("os textos ainda estão sem emo�
 - "Tudo o que tem" começa por Pedidos e a Calculadora vai pro meio: a Pólia One não é vendida como calculadora (pedido da Sil).
 - Saíram a seção "A marca abre. O número prova." (sem o Planejamento não tinha o que mostrar) e o link "Ler a história inteira" (a cliente não sai da página).
 - O VSL do "Por dentro" ainda fala "escritório": roteiro novo no COPY-45.
+
+## 2026-11-03 — Home pra quem não conhece a Pólia One e Vitrine online no app (COPY-46)
+
+Pedido da Sil: o texto falava do "Pro" e de "conta" como se a visitante já conhecesse a Pólia One.
+
+- `PaginaHome.tsx`: os módulos de "Tudo o que tem" perdem a etiqueta de plano e ganham só "Já vem no grátis" (Pedidos e Calculadora); "7 dias de tudo liberado" no lugar de "7 dias de Pro"; planos "Comece grátis. Mude de plano quando a marca pedir mais."; sai "Os marketplaces entram no Pro". Seção nova "Uma assinatura no lugar de um monte de coisa" (caderno, planilha e apps riscados), inspirada no Pode Postar, sem número de economia nem depoimento por falta de fonte.
+- "Catálogo online" vira "Vitrine online" no benefício do Pro (`planos.ts`), no cartão de Integrações (`CardCatalogo.tsx`), no aviso de plano (`catalogo.functions.ts`) e nos tutoriais de Planos e Pedidos (`tutoriais.ts`). Ficam com o nome antigo, pra decidir: o canal "Catálogo online" em Vendas (gravado pelo `canal_venda_nome` no banco), a nota do pedido (`catalogo.ts`) e os e-mails de lembrete (`lembretesConta.ts`).
+- Sem novidade no sino: troca de nome, sem função nova.
