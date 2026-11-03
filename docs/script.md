@@ -494,3 +494,13 @@ Pedido da Sil depois do bench do site do Pode Postar (RED-128, `../Campanhas/pol
 - `src/routes/index.tsx` renderiza a `PaginaHome`. A /landing-b e os nichos seguem no `PaginaMarcaB` (o `escritorio` lá ficou sem uso). `montarPlanos` passou a ser exportado.
 - Meme: GIF oficial de Friends no Giphy, recortado no Ross sem a legenda em inglês, como webp animado (`public/marketing/landing/meme-ross-tudo-otimo.webp`, 680 KB, lazy) e jpg parado pra quem pede menos movimento. Webp e não MP4 porque o Worker não responde Range. Imagem de terceiro aceita pela Sil.
 - Sem novidade no sino e sem tutorial: é página de marketing, não tela do app.
+
+## 2026-11-03 — Copy v2 da home: mais emoção, a Pólia One inteira (COPY-44)
+
+Ajustes da Sil depois de ver a home nova no ar ("os textos ainda estão sem emoção"). Copy em `../COPY-HOME-POLIA-ONE-v2.md`.
+
+- `PaginaHome.tsx`: título "A gestão do seu negócio não precisa mais morar no caderno."; cenas na dor (a cliente às 23h, "vendi bem, mas cadê o dinheiro?"); botões "Quero organizar a minha marca"; risco zero "Experimenta. Se não for pra você, tudo bem."
+- Catálogo online vira Vitrine online (link da bio, pedido pelo WhatsApp); sem "feira" (pedido feito pessoalmente); "Feita pra quem não entende de números"; "Você pode testar gratuitamente".
+- "Tudo o que tem" começa por Pedidos e a Calculadora vai pro meio: a Pólia One não é vendida como calculadora (pedido da Sil).
+- Saíram a seção "A marca abre. O número prova." (sem o Planejamento não tinha o que mostrar) e o link "Ler a história inteira" (a cliente não sai da página).
+- O VSL do "Por dentro" ainda fala "escritório": roteiro novo no COPY-45.

@@ -1,5 +1,4 @@
 import { useRef, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { Eyebrow } from "@/components/site/Editorial";
@@ -20,7 +19,6 @@ import {
 } from "@/components/landing/BlocosLanding";
 import {
   MockCalculadoraHero,
-  MockFluxoMarcaPrecoMes,
   MockFraseMes,
   MockQuadroPedidos,
   MockTresNumeros,
@@ -49,7 +47,7 @@ import { depoisDaVirada, tiersPagos } from "@/lib/planos";
 const modulos = [
   "Calculadora de preço",
   "Pedidos",
-  "Catálogo online",
+  "Vitrine online",
   "Estoque",
   "Vendas",
   "Financeiro",
@@ -65,7 +63,7 @@ const efeitosDaEntrega = [
   "Meta do mês andou",
 ];
 
-const canaisHoje = ["WhatsApp", "Instagram", "Catálogo online"];
+const canaisHoje = ["WhatsApp", "Instagram", "Vitrine online", "Pedido feito pessoalmente"];
 /** Em breve no Pro (VND-05, VND-17, VND-30). */
 const canaisEmBreve = ["TikTok Shop", "Mercado Livre", "Shopee"];
 
@@ -77,66 +75,66 @@ type Recurso = { titulo: string; texto: string; plano: string; mock: ReactNode }
 /** Um bloco por módulo, com a etiqueta do plano que libera (src/lib/planos.ts). */
 const recursos: Recurso[] = [
   {
-    titulo: "Calculadora de preço",
-    texto:
-      "O custo do produto, a taxa da maquininha e o lucro que a marca precisa viram o preço. O desconto pode ser testado antes de ser dado.",
-    plano: "Grátis",
-    mock: <MockCalculadoraHero />,
-  },
-  {
     titulo: "Pedidos",
     texto:
-      "O pedido do WhatsApp, da feira ou do Instagram entra no quadro com a cliente e o dia da entrega, e anda de A fazer até Entregue.",
+      "Cada pedido num cartão, com o nome da cliente e o dia da entrega. Do WhatsApp, do Instagram ou feito pessoalmente. Nada de rolar conversa às 23h.",
     plano: "Grátis",
     mock: <MockQuadroPedidos />,
   },
   {
+    titulo: "Vitrine online",
+    texto:
+      "A vitrine da marca num link, pronto pra bio do Instagram. A cliente escolhe, e o pedido chega no WhatsApp da cliente.",
+    plano: "Pro",
+    mock: <MockVitrine />,
+  },
+  {
     titulo: "Estoque e Vendas",
     texto:
-      "A peça vendida sai da prateleira, o kit baixa cada item e o dinheiro entra no Financeiro já sem a taxa.",
+      "Vendeu, baixou. A peça sai da prateleira sozinha, e a Pólia One avisa o que está acabando antes de faltar.",
     plano: "Premium",
     mock: <MockVendaEstoque />,
   },
   {
     titulo: "Financeiro",
     texto:
-      "O lado B da marca: o que entrou, o que saiu e quanto a marca lucrou no mês, sem misturar com a conta de casa.",
+      "O lado B da marca. O que entrou, o que saiu e quanto a marca lucrou de verdade, separado da conta de casa.",
     plano: "Premium",
     mock: <MockTresNumeros />,
   },
   {
-    titulo: "Catálogo online",
+    titulo: "Calculadora de preço",
     texto:
-      "A vitrine da marca num link. A cliente escolhe, e o pedido cai direto no quadro de Pedidos.",
-    plano: "Pro",
-    mock: <MockVitrine />,
+      "Chega de mudar o valor três vezes antes de mandar. O custo, a taxa da maquininha e o lucro que a marca precisa viram o preço, e o desconto pode ser testado antes de ser dado.",
+    plano: "Grátis",
+    mock: <MockCalculadoraHero />,
   },
   {
     titulo: "Metas, Raio-x e Projeção",
     texto:
-      "A meta do mês anda a cada venda. O Raio-x lê o mês, e a Projeção testa o cenário antes da decisão.",
+      "Você diz quanto quer ganhar no mês, e a Pólia One mostra quanto falta a cada venda. Antes de uma decisão grande, dá pra testar o cenário.",
     plano: PLANO_DOS_NUMEROS,
     mock: <MockVendasMeta />,
   },
 ];
 
 const praVoceQue = [
-  "Fecha o preço no chute e passa o resto do dia torcendo.",
-  "Anota pedido no caderno, no WhatsApp e na memória.",
-  "Mistura o Pix da marca com a conta de casa.",
-  "Vende bem e, no fim do mês, não sabe quanto lucrou.",
+  "Já respondeu “deixa eu ver aqui e te falo” quando a cliente perguntou o preço.",
+  "Tem pedido anotado no caderno, no WhatsApp e no bloco de notas do celular.",
+  "Já pagou o mercado com o Pix da marca, e depois não soube quanto era de quem.",
+  "Vende bem, trabalha muito e no fim do mês se pergunta pra onde foi o dinheiro.",
 ];
 
 const riscoZero = [
-  "Conta nova começa com 7 dias de Pro.",
-  "Sem cartão pra entrar.",
-  "Cancelar é um clique, e a conta volta pro Grátis com tudo guardado.",
-  "No plano pago, 7 dias pra desistir com o valor de volta, sem explicar o motivo.",
+  "Começa grátis, sem cartão.",
+  "Os 7 primeiros dias vêm com o Pro inteiro liberado.",
+  "Cancelou? A conta volta pro Grátis, e nada do que você anotou se perde.",
+  "Assinou e se arrependeu? Em 7 dias o dinheiro volta inteiro, sem explicar nada.",
 ];
 
 /* ───────────────────────────── peças ───────────────────────────── */
 
-/** A vitrine do catálogo online: o produto com preço e o pedido que vai pro quadro. */
+/** A vitrine online: o produto com preço e o pedido que vai pelo WhatsApp. */
 function MockVitrine() {
   const itens = [
     { nome: "Caderno de aquarela A5", preco: "R$ 49,00" },
@@ -146,11 +144,11 @@ function MockVitrine() {
   return (
     <div
       role="img"
-      aria-label="Catálogo online da marca com três produtos e preços, e o aviso de que o pedido da cliente foi pro quadro de Pedidos."
+      aria-label="Vitrine online da marca com três produtos e preços, e o aviso de que o pedido da cliente foi enviado pelo WhatsApp."
       className="rounded-xl border border-[var(--line)] bg-white p-6"
     >
       <p className="font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-        Catálogo online · Ateliê da Ana
+        Vitrine online · Ateliê da Ana
       </p>
       <ul className="mt-3 flex list-none flex-col">
         {itens.map((i) => (
@@ -166,7 +164,7 @@ function MockVitrine() {
         ))}
       </ul>
       <p className="mt-3 rounded-md bg-[var(--secondary-light)] px-3 py-2 text-[12.5px] text-[var(--ink)]">
-        Pedido novo da Marina foi pro quadro de Pedidos.
+        Pedido da Marina enviado pelo WhatsApp.
       </p>
     </div>
   );
@@ -295,7 +293,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             botão que falta lá. Centralizado, como o topo de antes (pedido da Sil). */}
         <Secao className="!pb-[clamp(64px,8vw,96px)] !pt-[clamp(40px,5vw,64px)]">
           <div className="flex justify-center text-center">
-            <Rotulo>Pólia One</Rotulo>
+            <Rotulo>Pólia One · o sistema da sua marca</Rotulo>
           </div>
           <ul className="mx-auto mt-6 flex max-w-[760px] list-none flex-wrap justify-center gap-3">
             {modulos.map((m) => (
@@ -303,18 +301,19 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             ))}
           </ul>
           <h1 className="mx-auto mt-8 max-w-[22ch] text-center text-[clamp(32px,4vw,52px)] font-bold leading-[1.05] tracking-[-0.02em] text-balance">
-            O sistema da sua marca.
+            A gestão do seu negócio não precisa mais morar no caderno.
           </h1>
           <p className={`mx-auto mt-6 text-center ${CORPO} !text-[18px]`}>
-            A Pólia One ajuda quem toca a própria marca, de doce a peça feita à mão, a{" "}
-            <b className="font-semibold text-[var(--ink)]">
-              cobrar o preço certo, organizar os pedidos e saber quanto a marca lucra no mês.
-            </b>
+            Pra quem faz quase tudo sozinha: o pedido, a entrega, o estoque e o Pix. A Pólia One
+            junta a gestão inteira da marca num lugar só,{" "}
+            <b className="font-semibold text-[var(--ink)]">e cabe no celular.</b>
           </p>
           <div className="mt-8 flex flex-col items-center text-center">
-            <BotaoCadastro busca={busca} contexto="hero" botaoRef={heroCta} />
+            <BotaoCadastro busca={busca} contexto="hero" botaoRef={heroCta}>
+              Quero organizar a minha marca
+            </BotaoCadastro>
             <p className="mt-3 text-[13px] text-[var(--muted)]">
-              Sem cartão. Conta nova começa com 7 dias de Pro.
+              Grátis pra começar, sem cartão. E os 7 primeiros dias com tudo liberado.
             </p>
           </div>
           <div className="relative mx-auto mt-12 max-w-[520px]">
@@ -325,9 +324,9 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               <b className="font-semibold">Júlia · 2 cadernos pra sexta</b>
             </Flutuante>
             <Flutuante className="mt-3 lg:absolute lg:-right-48 lg:top-8 lg:mt-0 lg:w-[220px]">
-              <span className="text-[var(--muted)]">Preço calculado</span>
+              <span className="text-[var(--muted)]">Vitrine online</span>
               <br />
-              <b className="font-semibold">R$ 49,00 · lucra R$ 19,60</b>
+              <b className="font-semibold">Pedido novo da Marina</b>
             </Flutuante>
           </div>
           <p className="mt-4 text-center text-[13px] text-[var(--muted)]">Números de exemplo.</p>
@@ -339,20 +338,19 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             <Rotulo>Vamos combinar</Rotulo>
           </div>
           <h2 className={`mx-auto mt-4 max-w-[22ch] text-center ${H2}`}>
-            Tocar uma marca nunca foi só fazer o produto.
+            Ninguém abriu uma marca pra passar a noite caçando pedido no WhatsApp.
           </h2>
           <Reveal>
             <MemeRoss />
           </Reveal>
           <p className={`mx-auto mt-12 text-center ${CORPO}`}>
-            É <b className="font-semibold text-[var(--ink)]">pedido no WhatsApp, preço no chute</b>,
-            conta no caderno e Pix misturado com a conta de casa.
+            São 23h, a cliente pergunta se ainda dá pra sexta, e você rola a conversa inteira até
+            achar o pedido dela. O preço? Saiu no chute, porque ela estava esperando a resposta. O
+            Pix caiu na conta de casa e foi junto com o mercado.
           </p>
           <p className={`mx-auto mt-4 text-center ${CORPO}`}>
-            Enquanto isso, a cliente pergunta se tem pra sexta, a embalagem acabou e{" "}
-            <b className="font-semibold text-[var(--ink)]">
-              ninguém sabe dizer quanto a marca lucrou no mês.
-            </b>
+            E no fim do mês vem a pergunta que ninguém consegue responder:{" "}
+            <b className="font-semibold text-[var(--ink)]">vendi bem, mas cadê o dinheiro?</b>
           </p>
         </Secao>
 
@@ -362,7 +360,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             <Eyebrow claro>A notícia boa é que</Eyebrow>
           </div>
           <h2 className="mx-auto mt-4 max-w-[22ch] px-6 text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.02em] text-balance text-[var(--bg)]">
-            Agora a sua marca tem um sistema.
+            Dá pra ter tudo isso num lugar só. E sem virar especialista em planilha.
           </h2>
         </section>
         <Secao className="!pt-[clamp(48px,6vw,64px)]">
@@ -382,15 +380,16 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           <p className="mt-4 text-center text-[13px] text-[var(--muted)]">Números de exemplo.</p>
           <div className="mt-12 grid grid-cols-1 items-start gap-8 md:grid-cols-2">
             <p className="text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.25] tracking-[-0.02em] text-balance text-[var(--ink)]">
-              A Pólia One junta num lugar só o que estava espalhado no caderno, na planilha perdida
-              e no WhatsApp.
+              A Pólia One é o sistema da sua marca: o pedido no quadro, a vitrine no link da bio, o
+              estoque que baixa sozinho, o financeiro longe da conta de casa e o preço com a conta
+              feita.
             </p>
             <div>
               <ul className="flex list-none flex-col gap-3">
                 {[
-                  "Funciona no celular.",
-                  "Feita pra quem não é do financeiro.",
-                  "Começa no Grátis.",
+                  "Funciona no celular, no intervalo entre um pedido e outro.",
+                  "Feita pra quem não entende de números.",
+                  "Você pode testar gratuitamente.",
                 ].map((l) => (
                   <li key={l} className="flex items-start gap-3 text-[17px] text-[var(--ink)]">
                     <Check
@@ -403,7 +402,9 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
                 ))}
               </ul>
               <div className="mt-8">
-                <BotaoCadastro busca={busca} contexto="noticia-boa" />
+                <BotaoCadastro busca={busca} contexto="noticia-boa">
+                  Quero organizar a minha marca
+                </BotaoCadastro>
               </div>
             </div>
           </div>
@@ -412,12 +413,15 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
         {/* 4 · O MECANISMO: uma entrega e o que ela atualiza sozinha. */}
         <Secao fundo="surface" id="produto" className="scroll-mt-[88px]">
           <h2 className={`mx-auto max-w-[24ch] text-center ${H2}`}>
-            Entregou o pedido, o resto da conta se atualiza sozinho.
+            Entregou o pedido? Pronto. O resto se atualiza sozinho.
           </h2>
           <MockPedidoEntregue />
           <p className={`mx-auto mt-12 text-center ${CORPO}`}>
-            O que antes era anotar em quatro lugares,{" "}
-            <b className="font-semibold text-[var(--ink)]">agora acontece de uma vez.</b>
+            Antes, uma venda virava quatro anotações: no caderno, na planilha, no estoque e na
+            cabeça.{" "}
+            <b className="font-semibold text-[var(--ink)]">
+              Agora ela entra uma vez, e a Pólia One leva pra cada lugar.
+            </b>
           </p>
           <ul className="mx-auto mt-8 flex max-w-[760px] list-none flex-wrap justify-center gap-3">
             {canaisHoje.map((c) => (
@@ -442,7 +446,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             <Rotulo>Tudo o que tem na Pólia One</Rotulo>
           </div>
           <h2 className={`mx-auto mt-4 max-w-[24ch] text-center ${H2}`}>
-            Do primeiro preço ao mês que fecha.
+            Tudo o que a sua marca precisa pra parar de depender da memória.
           </h2>
           <div className="mt-12 flex flex-col">
             {recursos.map((r, i) => (
@@ -467,46 +471,24 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               <Rotulo>Por dentro</Rotulo>
             </div>
             <h3 className="mx-auto mt-4 max-w-[26ch] text-center text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-[var(--ink)]">
-              Vem ver a Pólia One funcionando.
+              Quer ver funcionando? É menos de dois minutos.
             </h3>
             <PlayerVsl busca={busca} className="mx-auto mt-8 max-w-[960px]" />
             <div className="mt-8 flex flex-col items-center text-center">
-              <BotaoCadastro busca={busca} contexto="por-dentro" />
+              <BotaoCadastro busca={busca} contexto="por-dentro">
+                Quero organizar a minha marca
+              </BotaoCadastro>
               <p className="mt-3 text-[13px] text-[var(--muted)]">Sem cartão no Grátis.</p>
             </div>
           </div>
         </Secao>
 
-        {/* 6 · A MARCA ABRE, O NÚMERO PROVA: o eixo marca primeiro, mais curto. */}
-        <Secao fundo="secondary-light">
-          <div className="grid grid-cols-1 items-start gap-[clamp(32px,5vw,64px)] md:grid-cols-2">
-            <div>
-              <Rotulo>A marca abre. O número prova.</Rotulo>
-              <h2 className={`mt-4 ${H2}`}>
-                Quando a cliente diz que tá caro, quase nunca é sobre o preço.
-              </h2>
-            </div>
-            <div className="flex flex-col gap-4">
-              <p className={CORPO}>
-                <b className="font-semibold text-[var(--ink)]">A marca dá o argumento.</b> As horas
-                da peça, o material escolhido e a embalagem entram no custo de cada produto.
-              </p>
-              <p className={CORPO}>
-                <b className="font-semibold text-[var(--ink)]">O número dá a prova.</b> Todo preço
-                calculado na Pólia One é comparado com a meta do mês.
-              </p>
-            </div>
-          </div>
-          <MockFluxoMarcaPrecoMes className="mt-12" />
-          <p className="mt-3 text-[13px] text-[var(--ink-soft)]">Números de exemplo.</p>
-          <FraseAncora className="mt-10">
-            A marca dá coragem pro preço. O número prova que a coragem tinha razão.
-          </FraseAncora>
-        </Secao>
+        {/* A seção "A marca abre. O número prova." saiu em 03/11/2026 (pedido da Sil):
+            sem o Planejamento, ela não tinha mais o que mostrar. */}
 
-        {/* 7 · É PRA VOCÊ QUE: quatro cenas que a dona reconhece. */}
-        <Secao>
-          <h2 className={`text-center ${H2}`}>A Pólia One é pra você que:</h2>
+        {/* 6 · É PRA VOCÊ QUE: quatro cenas que a dona reconhece. */}
+        <Secao fundo="secondary-light">
+          <h2 className={`text-center ${H2}`}>A Pólia One foi feita pra você que:</h2>
           <ul className="mt-12 grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {praVoceQue.map((c) => (
               <li
@@ -519,7 +501,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </ul>
         </Secao>
 
-        {/* 8 · QUEM FEZ: a prova enquanto não tem depoimento. */}
+        {/* 7 · QUEM FEZ: a prova enquanto não tem depoimento. */}
         <Secao fundo="surface-pink">
           <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[5fr_6fr]">
             <figure>
@@ -548,21 +530,16 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
                 A Pólia One é o sistema que eu queria ter tido quando a minha marca cresceu. Eu
                 construo a Pólia usando a Pólia.
               </p>
-              <Link
-                to="/sobre"
-                className="mt-6 inline-flex min-h-[44px] items-center text-[16px] font-semibold text-[var(--secondary-text)] underline decoration-1 underline-offset-4 hover:decoration-2"
-              >
-                Ler a história inteira
-              </Link>
+              {/* Sem o link pro /sobre (pedido da Sil, 03/11/2026): a cliente não sai da página. */}
             </div>
           </div>
         </Secao>
 
-        {/* 9 · RISCO ZERO: era uma linha de 13 px embaixo do botão. */}
+        {/* 8 · RISCO ZERO: era uma linha de 13 px embaixo do botão. */}
         <section className="bg-[var(--ink)] py-[clamp(64px,8vw,96px)]">
           <div className="mx-auto w-full max-w-[720px] px-[clamp(20px,4vw,48px)] text-center">
             <h2 className="text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.02em] text-balance text-[var(--bg)]">
-              Começa no Grátis. Sem cartão.
+              Experimenta. Se não for pra você, tudo bem.
             </h2>
             <ul className="mx-auto mt-8 flex max-w-[520px] list-none flex-col gap-3 text-left">
               {riscoZero.map((l) => (
@@ -582,7 +559,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </div>
         </section>
 
-        {/* 10 · PLANOS */}
+        {/* 9 · PLANOS */}
         <Secao fundo="surface" id="planos" secaoRef={zonaPlanos} className="scroll-mt-[88px]">
           <Rotulo>Planos</Rotulo>
           <h2 className={`mt-4 mb-8 ${H2}`}>Começa no Grátis. Sobe quando a conta pedir.</h2>
@@ -596,26 +573,27 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           </FraseAncora>
         </Secao>
 
-        {/* 11 · FAQ */}
+        {/* 10 · FAQ */}
         <Secao id="perguntas" className="scroll-mt-[88px]">
           <h2 className={`mb-8 ${H2}`}>Perguntas frequentes</h2>
           <FaqLanding perguntas={PERGUNTAS_HOME} />
         </Secao>
 
         <div ref={zonaFinal}>
-          {/* 12 · CTA FINAL */}
+          {/* 11 · CTA FINAL */}
           <Secao fundo="secondary">
             <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_4fr]">
               <div>
                 <h2 className="text-[clamp(30px,3.6vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance text-[var(--ink)]">
-                  Por fora, a marca que a cliente lembra. Por dentro, o sistema que fecha a conta.
+                  A sua marca já provou que tem cliente. Agora ela ganha um sistema à altura.
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
-                  A marca já cresceu. Agora o sistema acompanha. Começa no Grátis, com 7 dias de
-                  Pro.
+                  Começa hoje, grátis, com 7 dias de Pro. Sem cartão.
                 </p>
                 <div className="mt-8">
-                  <BotaoCadastro busca={busca} contexto="final" invertido />
+                  <BotaoCadastro busca={busca} contexto="final" invertido>
+                    Quero organizar a minha marca
+                  </BotaoCadastro>
                   <p className="mt-3 text-[13px] text-[var(--ink)]">Sem cartão no Grátis.</p>
                 </div>
               </div>
