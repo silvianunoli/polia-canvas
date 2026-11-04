@@ -512,3 +512,8 @@ Pedido da Sil: o texto falava do "Pro" e de "conta" como se a visitante já conh
 - `PaginaHome.tsx`: os módulos de "Tudo o que tem" perdem a etiqueta de plano e ganham só "Já vem no grátis" (Pedidos e Calculadora); "7 dias de tudo liberado" no lugar de "7 dias de Pro"; planos "Comece grátis. Mude de plano quando a marca pedir mais."; sai "Os marketplaces entram no Pro". Seção nova "Uma assinatura no lugar de um monte de coisa" (caderno, planilha e apps riscados), inspirada no Pode Postar, sem número de economia nem depoimento por falta de fonte.
 - "Catálogo online" vira "Vitrine online" no benefício do Pro (`planos.ts`), no cartão de Integrações (`CardCatalogo.tsx`), no aviso de plano (`catalogo.functions.ts`) e nos tutoriais de Planos e Pedidos (`tutoriais.ts`). Ficam com o nome antigo, pra decidir: o canal "Catálogo online" em Vendas (gravado pelo `canal_venda_nome` no banco), a nota do pedido (`catalogo.ts`) e os e-mails de lembrete (`lembretesConta.ts`).
 - Sem novidade no sino: troca de nome, sem função nova.
+
+## 2026-11-04 — Texto da Sil na dor e no fechamento da home (COPY-47)
+
+- `PaginaHome.tsx`, seção da dor: título "Me diz uma coisa: a sua rotina de vendas hoje tá parecida com isso?", três cenas em cartões (O desespero das 23h, Preço no susto, Dinheiro misturado), o meme do Ross, "Chega o dia 30..." e o fechamento "Chega de trabalhar só pra apagar incêndio". Sai o rótulo "Vamos combinar".
+- CTA final: "O mais difícil você já fez: provar que o seu produto é incrível e que tem cliente querendo comprar.", "Agora, o seu negócio merece uma organização à altura do seu talento." e o convite dos 7 dias grátis sem cartão. Sai a linha pequena repetida embaixo do botão.

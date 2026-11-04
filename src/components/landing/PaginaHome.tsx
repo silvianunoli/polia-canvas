@@ -113,6 +113,24 @@ const recursos: Recurso[] = [
   },
 ];
 
+/** As três cenas da seção da dor (texto da Sil, 04/11/2026). */
+const cenasDaDor = [
+  {
+    titulo: "O desespero das 23h",
+    texto:
+      "A cliente quer saber se dá pra entregar na sexta, e você perde um tempão caçando o pedido dela no meio de mil mensagens.",
+  },
+  {
+    titulo: "Preço no susto",
+    texto:
+      "Você passa o valor da encomenda na pressa, na ansiedade de responder logo, e o seu lucro vai embora.",
+  },
+  {
+    titulo: "Dinheiro misturado",
+    texto: "O Pix da venda cai na sua conta pessoal e vira pão, leite e boleto de casa.",
+  },
+];
+
 /** O que a dona usa hoje, espalhado, e a Pólia One junta (sem número de economia sem fonte). */
 const ferramentasEspalhadas = [
   "Caderno de pedidos",
@@ -337,25 +355,32 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           <p className="mt-4 text-center text-[13px] text-[var(--muted)]">Números de exemplo.</p>
         </Secao>
 
-        {/* 2 · A DOR, com o meme no meio. */}
+        {/* 2 · A DOR: as três cenas, o meme do dia 30 e a virada (texto da Sil, 04/11/2026). */}
         <Secao fundo="surface">
-          <div className="flex justify-center text-center">
-            <Rotulo>Vamos combinar</Rotulo>
-          </div>
-          <h2 className={`mx-auto mt-4 max-w-[22ch] text-center ${H2}`}>
-            Ninguém abriu uma marca pra passar a noite caçando pedido no WhatsApp.
+          <h2 className={`mx-auto max-w-[26ch] text-center ${H2}`}>
+            Me diz uma coisa: a sua rotina de vendas hoje tá parecida com isso?
           </h2>
+          <ul className="mt-12 grid list-none grid-cols-1 gap-4 md:grid-cols-3">
+            {cenasDaDor.map((c) => (
+              <li
+                key={c.titulo}
+                className="rounded-xl border border-[var(--line)] bg-white p-6 text-[17px] leading-[1.55] text-[var(--ink-soft)]"
+              >
+                <b className="block text-[18px] font-semibold text-[var(--ink)]">{c.titulo}</b>
+                <span className="mt-2 block">{c.texto}</span>
+              </li>
+            ))}
+          </ul>
           <Reveal>
             <MemeRoss />
           </Reveal>
           <p className={`mx-auto mt-12 text-center ${CORPO}`}>
-            São 23h, a cliente pergunta se ainda dá pra sexta, e você rola a conversa inteira até
-            achar o pedido dela. O preço? Saiu no chute, porque ela estava esperando a resposta. O
-            Pix caiu na conta de casa e foi junto com o mercado.
+            Chega o dia 30 e você olha pro teto com aquela frustração que ninguém merece passar:{" "}
+            <b className="font-semibold text-[var(--ink)]">“Vendi bem, mas cadê o dinheiro?”</b>
           </p>
-          <p className={`mx-auto mt-4 text-center ${CORPO}`}>
-            E no fim do mês vem a pergunta que ninguém consegue responder:{" "}
-            <b className="font-semibold text-[var(--ink)]">vendi bem, mas cadê o dinheiro?</b>
+          <p className="mx-auto mt-6 max-w-[34ch] text-center text-[clamp(20px,2vw,24px)] font-bold leading-[1.3] tracking-[-0.02em] text-balance text-[var(--ink)]">
+            Chega de trabalhar só pra apagar incêndio. Tá na hora de ver o seu negócio dar lucro de
+            verdade.
           </p>
         </Secao>
 
@@ -615,23 +640,25 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
         </Secao>
 
         <div ref={zonaFinal}>
-          {/* 12 · CTA FINAL */}
+          {/* 12 · CTA FINAL (texto da Sil, 04/11/2026) */}
           <Secao fundo="secondary">
             <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[7fr_4fr]">
               <div>
                 <h2 className="text-[clamp(30px,3.6vw,48px)] font-bold leading-[1.08] tracking-[-0.02em] text-balance text-[var(--ink)]">
-                  A sua marca já provou que tem cliente. Agora ela ganha um sistema à altura.
+                  O mais difícil você já fez: provar que o seu produto é incrível e que tem cliente
+                  querendo comprar.
                 </h2>
                 <p className="mt-5 text-[18px] leading-[1.6] text-[var(--ink)]">
-                  Começa hoje, grátis, com 7 dias de tudo liberado. Sem cartão.
+                  Agora, o seu negócio merece uma organização à altura do seu talento.
+                </p>
+                <p className="mt-4 text-[18px] leading-[1.6] text-[var(--ink)]">
+                  Vem botar ordem na casa hoje mesmo. São 7 dias totalmente grátis com tudo
+                  liberado. E o melhor: você nem precisa cadastrar o cartão de crédito pra começar.
                 </p>
                 <div className="mt-8">
                   <BotaoCadastro busca={busca} contexto="final" invertido>
                     Quero organizar a minha marca
                   </BotaoCadastro>
-                  <p className="mt-3 text-[13px] text-[var(--ink)]">
-                    Grátis pra começar, sem cartão.
-                  </p>
                 </div>
               </div>
               <FotoLanding
