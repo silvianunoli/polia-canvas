@@ -11,7 +11,8 @@ import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
  */
 
 /**
- * Categorias de entrada que contam como venda no cartão "Pedidos · mês".
+ * Categorias de entrada que contam como venda (o cartão "Pedidos · mês" soma
+ * as lançadas à mão às vendas do mês, ver lib/pedidosDoMes).
  * São as duas que o produto grava sozinho: "Venda de produto" (venda de
  * cliente e venda de produto do catálogo) e "Prestação de serviço" (semente
  * do modal de lançamento). Entrada sem categoria, "Outros" e categoria criada

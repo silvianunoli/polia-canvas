@@ -12,6 +12,7 @@ import { jaEntregue } from "@/lib/statusCliente";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { numerosDoMes } from "@/lib/numerosDoMes";
+import { legendaDosPedidos, pedidosDoMes } from "@/lib/pedidosDoMes";
 import { legendaDoLucro, lucroDoMes } from "@/lib/lucroDoMes";
 import { intervaloDoPeriodo } from "@/lib/vendas";
 import { formatarReais } from "@/lib/formatarReais";
@@ -388,15 +389,13 @@ function PainelPage() {
   const [clientReady, setClientReady] = useState(false);
   useEffect(() => setClientReady(true), []);
   // Mesma conta do Financeiro e do "atual" da Meta do mês em Metas
-  // (numerosDoMes). "Pedidos" conta só entrada marcada como venda (Venda de
-  // produto, Prestação de serviço): aporte, reembolso e "Outros" não são pedido.
-  const { receitaMes, pedidosMes, entradasMes } = useMemo(() => {
-    if (!clientReady) return { receitaMes: 0, pedidosMes: 0, entradasMes: 0 };
+  // (numerosDoMes).
+  const { receitaMes, entradasMes } = useMemo(() => {
+    if (!clientReady) return { receitaMes: 0, entradasMes: 0 };
     const { ano, mes } = mesAnoDe(hojeISO());
     const n = numerosDoMes(dados?.lancamentos ?? [], ano, mes);
     return {
       receitaMes: n.entradas,
-      pedidosMes: n.vendas,
       entradasMes: n.registrosDeEntrada,
     };
   }, [dados?.lancamentos, clientReady]);
@@ -418,6 +417,23 @@ function PainelPage() {
     if (!clientReady || vendasMesQuery.isLoading) return null;
     const { ano, mes } = mesAnoDe(hojeISO());
     return lucroDoMes(
+      dados?.lancamentos ?? [],
+      vendasMesQuery.isError ? null : (vendasMesQuery.data ?? []),
+      ano,
+      mes,
+    );
+  }, [
+    dados?.lancamentos,
+    clientReady,
+    vendasMesQuery.isLoading,
+    vendasMesQuery.isError,
+    vendasMesQuery.data,
+  ]);
+  // "Pedidos" bate com o cartão de Vendas: venda a receber conta (ONE-172).
+  const pedidosMes = useMemo(() => {
+    if (!clientReady || vendasMesQuery.isLoading) return null;
+    const { ano, mes } = mesAnoDe(hojeISO());
+    return pedidosDoMes(
       dados?.lancamentos ?? [],
       vendasMesQuery.isError ? null : (vendasMesQuery.data ?? []),
       ano,
@@ -931,25 +947,24 @@ function PainelPage() {
               </div>
 
               <div className={SPAN_CLASS[4]}>
-                <CartaoFinanceiro href={financeiroLiberado ? "/financeiro" : undefined}>
+                <CartaoFinanceiro href={vendasLiberado ? "/vendas" : undefined}>
                   <TituloCartao className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
                     Pedidos · mês
                   </TituloCartao>
-                  <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
-                    {pedidosMes}
+                  <p
+                    className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]"
+                    aria-busy={pedidosMes == null}
+                  >
+                    {pedidosMes ? pedidosMes.total : "..."}
                   </p>
                   <p className="mt-2 text-[13px] text-[var(--muted)]">
-                    {pedidosMes > 0
-                      ? pedidosMes === 1
-                        ? "venda ou serviço registrado"
-                        : "vendas e serviços registrados"
-                      : entradasMes > 0
-                        ? "nenhuma entrada marcada como venda ou serviço"
-                        : "nenhuma ainda"}
-                    {financeiroLiberado && (
+                    {pedidosMes
+                      ? legendaDosPedidos(pedidosMes, entradasMes)
+                      : "lendo as vendas do mês"}
+                    {vendasLiberado && (
                       <>
                         {" "}
-                        · <span className="text-[var(--ink-soft)]">ver entradas</span>
+                        · <span className="text-[var(--ink-soft)]">ver vendas</span>
                       </>
                     )}
                   </p>

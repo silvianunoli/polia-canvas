@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileText, Lock, Upload, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
@@ -26,6 +25,8 @@ import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { temNumerosDoMes, tierDosNumeros } from "@/lib/planos";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
+import { ReguaDaMeta } from "@/components/financeiro/ReguaDaMeta";
+import type { MarcaDaRegua } from "@/lib/reguaDaMeta";
 import { ResumoContadorModal } from "@/components/financeiro/ResumoContadorModal";
 // O modal de lançamento saiu daqui em 03/09/2026 (COPY-04): o Painel do plano Grátis
 // também registra entrada/saída por ele, sem abrir esta tela.
@@ -287,7 +288,7 @@ function FinanceiroPage() {
   // "mês bom" (financeiro.meta_boa) não entra aqui: é a própria Meta do mês,
   // já o denominador da barra (metaAlvo), não uma marca adicional.
   const marcas = useMemo(() => {
-    const lista: { chave: string; rotulo: string; detalhe: string; num: number }[] = [];
+    const lista: MarcaDaRegua[] = [];
     for (const [campo, label] of [
       ["financeiro.meta_minima", "mínimo"],
       ["financeiro.meta_celebracao", "celebrar"],
@@ -369,17 +370,6 @@ function FinanceiroPage() {
     qc.invalidateQueries({ queryKey: ["financeiro", userId] });
     setLancamentoExcluir(null);
   };
-
-  // Denominador único: valor_alvo da meta "Meta do mês" (mesma fonte que /metas gerencia).
-  const metaPct = metaAlvo > 0 ? Math.min((entradas / metaAlvo) * 100, 100) : 0;
-
-  const reduce = usePrefersReducedMotion();
-  const [barOn, setBarOn] = useState(reduce);
-  useEffect(() => {
-    if (reduce) return;
-    const id = requestAnimationFrame(() => requestAnimationFrame(() => setBarOn(true)));
-    return () => cancelAnimationFrame(id);
-  }, [reduce]);
 
   // ── Loading ──
   if (dadosQuery.isError) {
@@ -517,55 +507,7 @@ function FinanceiroPage() {
               </LinkInterno>
             </p>
           ) : (
-            <div
-              className="relative mt-7 mb-14 h-3.5 rounded-lg border border-[var(--line)] bg-white"
-              role="progressbar"
-              aria-valuenow={Math.round(metaPct)}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label="Progresso da Meta do mês"
-              aria-valuetext={`${fmt(entradas)} de ${fmt(metaAlvo)}, ${Math.round(metaPct)}% da meta`}
-            >
-              {/* O corte fica só no preenchimento: no trilho, cortava os rótulos
-                  das marcas e o selo de "entraram até aqui", que moram fora dele. */}
-              <div className="absolute inset-0 overflow-hidden rounded-lg">
-                <div
-                  className={`absolute inset-y-0 left-0 w-full origin-left bg-[var(--secondary)] ${
-                    reduce
-                      ? ""
-                      : "transition-transform duration-[250ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]"
-                  }`}
-                  style={{ transform: `scaleX(${(barOn ? metaPct : 0) / 100})` }}
-                />
-              </div>
-              {marcas.map((m) => {
-                const left = Math.min(99, (m.num / metaAlvo) * 100);
-                return (
-                  <div
-                    key={m.chave}
-                    className="group/mark absolute -top-1.5 -bottom-1.5 w-[2px] bg-[var(--ink)]"
-                    style={{ left: `${left}%` }}
-                  >
-                    <span
-                      title={m.detalhe}
-                      className={`absolute -top-[34px] left-1/2 whitespace-nowrap rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)] transition-colors duration-150 group-hover/mark:bg-[var(--secondary-light)] ${
-                        left > 90 ? "-translate-x-[90%]" : "-translate-x-1/2"
-                      }`}
-                    >
-                      {m.rotulo}
-                    </span>
-                  </div>
-                );
-              })}
-              <span
-                className={`absolute top-[22px] whitespace-nowrap rounded-md bg-[var(--highlight)] px-2 py-0.5 text-[12px] font-semibold text-[var(--highlight-ink)] ${
-                  metaPct < 8 ? "" : metaPct > 92 ? "-translate-x-full" : "-translate-x-1/2"
-                }`}
-                style={{ left: `${Math.min(100, metaPct)}%` }}
-              >
-                {fmt(entradas)} entraram até aqui
-              </span>
-            </div>
+            <ReguaDaMeta entradas={entradas} metaAlvo={metaAlvo} marcas={marcas} />
           )}
 
           {/* Até 31/10/2026 o texto mandava pro Planejamento (Quanto vale), que saiu

@@ -517,3 +517,11 @@ Pedido da Sil: o texto falava do "Pro" e de "conta" como se a visitante já conh
 
 - `PaginaHome.tsx`, seção da dor: título "Me diz uma coisa: a sua rotina de vendas hoje tá parecida com isso?", três cenas em cartões (O desespero das 23h, Preço no susto, Dinheiro misturado), o meme do Ross, "Chega o dia 30..." e o fechamento "Chega de trabalhar só pra apagar incêndio". Sai o rótulo "Vamos combinar".
 - CTA final: "O mais difícil você já fez: provar que o seu produto é incrível e que tem cliente querendo comprar.", "Agora, o seu negócio merece uma organização à altura do seu talento." e o convite dos 7 dias grátis sem cartão. Sai a linha pequena repetida embaixo do botão.
+
+## 2026-11-05 — Régua do Financeiro no celular e "Pedidos · mês" (ONE-171, ONE-172)
+
+Achados nos prints reais da sessão de atendimento da Pólia One.
+
+- **ONE-171.** A régua saiu de `financeiro.tsx` pra `components/financeiro/ReguaDaMeta.tsx` (conta em `lib/reguaDaMeta.ts`, + testes). Os rótulos flutuavam sobre o trilho com corte fixo (ONE-16: abaixo de 8% à esquerda, acima de 92% à direita), que só valia em tela larga, e subiam 40 px, em cima do título. Agora ficam no fluxo da página, cada marca na sua linha, com `left: X%` + `translateX(-X%)`: o rótulo nunca sai do trilho e o ponto da régua fica sempre embaixo dele. Medido em Chrome headless, com o componente e o CSS reais, em 360 e 402 px: versão antiga com defeito nos 18 casos, versão nova em nenhum.
+- **ONE-172.** O cartão "Pedidos · mês" contava lançamentos de venda, e venda a receber só vira lançamento quando é paga. `lib/pedidosDoMes.ts` (+ testes): vendas do mês não canceladas (o mesmo número de "Vendas · mês") + entradas de venda lançadas à mão. O lançamento de venda paga não conta de novo. Quando há as duas, a frase do cartão separa. O cartão agora leva pra `/vendas`, com "ver vendas", porque o histórico do Financeiro não mostra pedido a receber.
+- Tutorial do Painel atualizado. Novidade em `20261105150000_novidade_pedidos_do_mes.sql`, ainda não aplicada: entra junto com o deploy.

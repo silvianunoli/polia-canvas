@@ -125,6 +125,7 @@ const LISTA = [
           "A frase do topo muda com o mês. Sem venda no mês, ela aponta os Pedidos. Com venda, mostra quanto falta pra fechar as contas ou a Meta do mês.",
           'O botão logo abaixo é o próximo passo: "Quero lançar um pedido →" sem venda no mês, ou o registro e o Financeiro depois dela.',
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
+          '"Pedidos · mês" conta as vendas do mês, pagas e a receber, o mesmo número do cartão "Vendas · mês", mais as entradas de venda ou serviço lançadas à mão. "Receita · mês" soma só o que já entrou, então pedido a receber aparece nos pedidos antes de aparecer na receita.',
           '"Quanto lucrou · mês" desconta o custo de cada produto vendido, o mesmo lucro do cartão "Vendas · mês", soma as entradas que não vieram de venda e tira as saídas do mês. A frase embaixo do número diz de onde ele veio.',
           'Com pedido aberto no quadro de Pedidos, o cartão "Entregas" mostra as de hoje, as de amanhã, as atrasadas e quanto entra na semana. "Abrir o quadro" leva pra ele.',
         ],
