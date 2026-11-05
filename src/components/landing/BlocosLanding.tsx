@@ -382,6 +382,7 @@ const FOTOS_DISPONIVEIS = new Set<string>([
   "ctafinal-celular-pedido",
   "a-cena-encomenda-lembrancinhas",
   "quemfez-sil-retrato",
+  "quemfez-sil-ceu-azul",
   // Topo da /landing-b por nicho (ver src/lib/nichosLanding.ts).
   ...FOTOS_NICHOS,
 ]);

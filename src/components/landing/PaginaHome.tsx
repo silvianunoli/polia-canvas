@@ -327,7 +327,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             ))}
           </ul>
           <h1 className="mx-auto mt-8 max-w-[22ch] text-center text-[clamp(32px,4vw,52px)] font-bold leading-[1.05] tracking-[-0.02em] text-balance">
-            Quem é dona, sabe o que sai amanhã.
+            A gestão do seu negócio não precisa mais morar no caderno.
           </h1>
           <p className={`mx-auto mt-6 text-center ${CORPO} !text-[18px]`}>
             Pra quem faz quase tudo sozinha: a Pólia One junta cada encomenda num lugar só, com a
@@ -567,8 +567,8 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
           <div className="grid grid-cols-1 items-center gap-[clamp(32px,5vw,64px)] md:grid-cols-[5fr_6fr]">
             <figure>
               <FotoLanding
-                nome="quemfez-sil-retrato"
-                alt="Sil, fundadora da Pólia, sorrindo, de blusa clara, em casa."
+                nome="quemfez-sil-ceu-azul"
+                alt="Sil, fundadora da Pólia, de óculos escuros e conjunto claro, sentada num muro de concreto sob o céu azul, com uma esfera branca flutuando acima dela."
                 proporcao="4/5"
               />
               <figcaption className="mt-3 text-[13px] text-[var(--muted)]">
