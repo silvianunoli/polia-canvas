@@ -42,9 +42,11 @@ import { tiersPagos } from "@/lib/planos";
 
 /* ───────────────────────────── conteúdo ───────────────────────────── */
 
-/** Os módulos que existem hoje, como estão no menu do app. */
+/**
+ * Os módulos que existem hoje, como estão no menu do app. A Calculadora fica por
+ * último (05/11/2026, COPY-48): a venda abre na encomenda, não no preço.
+ */
 const modulos = [
-  "Calculadora de preço",
   "Pedidos",
   "Vitrine online",
   "Estoque",
@@ -52,6 +54,7 @@ const modulos = [
   "Financeiro",
   "Metas",
   "Clientes",
+  "Calculadora de preço",
 ];
 
 /** O que uma entrega atualiza sozinha (src/lib/vendas.ts). */
@@ -83,7 +86,7 @@ const recursos: Recurso[] = [
   {
     titulo: "Vitrine online",
     texto:
-      "A vitrine da marca num link, pronto pra bio do Instagram. A cliente escolhe, e o pedido chega no WhatsApp da cliente.",
+      "A vitrine da marca num link, pronto pra bio do Instagram. A cliente escolhe, o pedido entra no seu quadro e segue pelo seu WhatsApp.",
     mock: <MockVitrine />,
   },
   {
@@ -324,12 +327,12 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             ))}
           </ul>
           <h1 className="mx-auto mt-8 max-w-[22ch] text-center text-[clamp(32px,4vw,52px)] font-bold leading-[1.05] tracking-[-0.02em] text-balance">
-            A gestão do seu negócio não precisa mais morar no caderno.
+            Quem é dona, sabe o que sai amanhã.
           </h1>
           <p className={`mx-auto mt-6 text-center ${CORPO} !text-[18px]`}>
-            Pra quem faz quase tudo sozinha: o pedido, a entrega, o estoque e o Pix. A Pólia One
-            junta a gestão inteira da marca num lugar só,{" "}
-            <b className="font-semibold text-[var(--ink)]">e cabe no celular.</b>
+            Pra quem faz quase tudo sozinha: a Pólia One junta cada encomenda num lugar só, com a
+            cliente, o dia da entrega, se já pagou e quanto lucra.{" "}
+            <b className="font-semibold text-[var(--ink)]">E cabe no celular.</b>
           </p>
           <div className="mt-8 flex flex-col items-center text-center">
             <BotaoCadastro busca={busca} contexto="hero" botaoRef={heroCta}>
@@ -629,7 +632,7 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
             {precoBR(pro.precoAnual)}.
           </p>
           <FraseAncora className="mt-6">
-            Um desconto dado no chute pode custar mais do que um mês de assinatura.
+            Uma encomenda esquecida pode custar mais do que um mês de assinatura.
           </FraseAncora>
         </Secao>
 

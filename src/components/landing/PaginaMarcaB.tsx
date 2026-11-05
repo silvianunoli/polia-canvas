@@ -436,18 +436,34 @@ export const PERGUNTAS_MARCA_B = [
 ];
 
 /**
- * FAQ da home: a mesma lista com "A Pólia One é um ERP?" logo depois do "curso".
- * É o único lugar da home onde a palavra aparece (COPY-37). Exportado pro FAQPage
- * (JSON-LD) da home, pelo mesmo motivo do PERGUNTAS_MARCA_B.
+ * FAQ da home (COPY-48, 05/11/2026): a pergunta do ERP saiu, a da calculadora entrou
+ * e três respostas trocam o preço pela encomenda. A /landing-b segue com a lista dela.
+ * Exportado pro FAQPage (JSON-LD) da home, pelo mesmo motivo do PERGUNTAS_MARCA_B.
  */
 export const PERGUNTAS_HOME = [
-  PERGUNTAS_MARCA_B[0],
   {
-    pergunta: "A Pólia One é um ERP?",
+    pergunta: "A Pólia One é um curso?",
     resposta:
-      "Pra quem conhece o termo, funciona como um. Estoque por variação, vendas que baixam o estoque e entram no Financeiro, contas a pagar, clientes e orçamento, tudo ligado. A diferença é a ordem: um ERP começa pelo estoque, a Pólia One começa pela marca e pelo preço.",
+      "Não. Não tem aula pra assistir. Tem as suas encomendas, o seu estoque e o seu mês, num lugar só, pra usar no dia a dia.",
   },
-  ...PERGUNTAS_MARCA_B.slice(1),
+  {
+    pergunta: "A Pólia One é aquela calculadora de preço?",
+    resposta:
+      "A Calculadora é uma parte. A Pólia One é o sistema da sua marca: a encomenda entra no quadro com o dia da entrega, a venda baixa o estoque e entra no Financeiro, e o mês mostra quanto a marca lucrou. Tudo no celular, num lugar só.",
+  },
+  PERGUNTAS_MARCA_B[1],
+  {
+    pergunta: "Não tenho tempo. Quanto isso toma?",
+    resposta:
+      "Começa por uma encomenda, a próxima que você tem pra entregar: o produto dela, o dia da entrega, e ela já aparece no quadro. O resto entra conforme os pedidos chegam.",
+  },
+  ...PERGUNTAS_MARCA_B.slice(3, 6),
+  {
+    pergunta: "Ainda não vendo. Serve pra mim?",
+    resposta:
+      "Serve. Os produtos ficam prontos antes, e o primeiro pedido entra no quadro no dia em que chegar.",
+  },
+  ...PERGUNTAS_MARCA_B.slice(7),
 ];
 
 /* ───────────────────────────── página ───────────────────────────── */
