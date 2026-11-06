@@ -766,8 +766,7 @@ const LISTA = [
     grupo: "Clientes e rotina",
     rota: "/clientes",
     abrir: "Abrir Clientes",
-    resumo:
-      "Cada cliente com contato, pedido, valor e status, do primeiro contato ao pós-venda, e a venda lançada no Financeiro com um clique.",
+    resumo: "Cada cliente com contato, pedido, valor e status, do primeiro contato ao pós-venda.",
     trecho: "clientes",
     passos: [
       {
@@ -790,9 +789,10 @@ const LISTA = [
       {
         titulo: "Mandar a venda pro Financeiro",
         itens: [
-          'Marque o pedido como "Entregue" ou "Pós-venda".',
-          'Clique em "Registrar venda →" na linha da cliente e confirme.',
-          'A linha passa a mostrar "Registrada · ver no Financeiro".',
+          "O status da cliente organiza a lista e não lança dinheiro no Financeiro.",
+          'Pedido do quadro: em Pedidos, leve o cartão até "Entregue" e clique em "Sim, lançar no Financeiro".',
+          'Venda fora do quadro: clique no nome da cliente pra abrir a ficha e use "Registrar venda". O formulário pede o produto, baixa o estoque e lança no Financeiro.',
+          'Venda sem produto cadastrado: no Financeiro, use "+ Registrar entrada".',
         ],
       },
     ],
@@ -804,9 +804,9 @@ const LISTA = [
     ],
     duvidas: [
       {
-        pergunta: 'Por que não aparece "Registrar venda"',
+        pergunta: 'Cadê o botão "Registrar venda" da lista',
         resposta:
-          'O botão aparece com o status "Entregue" ou "Pós-venda" e com valor da venda ou produto escolhido.',
+          'Saiu, porque podia lançar em dobro uma venda que já tinha entrado por Pedidos. Agora a venda entra por Pedidos ou pela ficha da cliente. Quem já tinha registrado continua com "Registrada · ver no Financeiro".',
       },
       {
         pergunta: "Mudei o valor depois de registrar. O Financeiro muda",

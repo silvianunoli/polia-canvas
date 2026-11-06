@@ -23,7 +23,7 @@ export const GRUPOS_STATUS: { titulo: string; status: readonly StatusCliente[] }
 
 export const TODOS_STATUS: StatusCliente[] = GRUPOS_STATUS.flatMap((g) => g.status);
 
-/** Pedido já entregue: conta como entregue no Painel e libera registrar a venda. */
+/** Pedido já entregue: conta como entregue no Painel. */
 export function jaEntregue(status: string | null | undefined): boolean {
   return status === "Entregue" || status === "Pós-venda";
 }

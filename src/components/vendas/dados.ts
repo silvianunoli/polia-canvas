@@ -286,8 +286,6 @@ export interface NovaVenda {
   taxaCanal: number;
   recebida: boolean;
   observacao: string | null;
-  /** Veio do "Registrar venda" de Clientes: marca a cliente na mesma transação. */
-  marcarCliente?: boolean;
   /**
    * Veio do "Virar venda" de um orçamento (ONE-129): converter_orcamento grava
    * a venda e marca o orçamento como convertido na mesma transação.
@@ -330,7 +328,6 @@ export async function registrarVenda(v: NovaVenda) {
     p_taxa_canal: v.taxaCanal,
     p_recebida: v.recebida,
     p_observacao: v.observacao,
-    p_marcar_cliente: v.marcarCliente ?? false,
   });
 }
 

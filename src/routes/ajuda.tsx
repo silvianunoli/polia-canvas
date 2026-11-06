@@ -150,7 +150,7 @@ const CATEGORIAS = [
       {
         pergunta: "Registrar uma venda",
         resposta:
-          "No plano Grátis, a venda entra pelo Painel, em registrar entrada: uma linha por venda. No Premium, dá pra lançar direto no Financeiro, ou marcar o pedido como Entregue em Clientes e registrar a venda no Financeiro com um clique, sem digitar de novo.",
+          "No plano Grátis, a venda entra pelo Painel, em registrar entrada: uma linha por venda. No Premium, dá pra lançar direto no Financeiro. E o pedido que chega em Entregue no quadro de Pedidos lança o valor com um clique, sem digitar de novo.",
       },
       {
         pergunta: "Entender o resumo do mês",
@@ -160,7 +160,7 @@ const CATEGORIAS = [
       {
         pergunta: "De onde vêm esses valores",
         resposta:
-          "Do que foi registrado. Cada entrada e saída do Painel e do Financeiro é lançada à mão ou vem de uma venda registrada a partir de um pedido entregue em Clientes. A Meta do mês vem de Metas. Nada ali é estimativa solta.",
+          "Do que foi registrado. Cada entrada e saída do Painel e do Financeiro é lançada à mão ou vem de um pedido ou de uma venda registrada. A Meta do mês vem de Metas. Nada ali é estimativa solta.",
       },
     ],
   },

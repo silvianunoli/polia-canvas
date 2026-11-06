@@ -10,12 +10,12 @@ import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar as registrarFounder } from "@/lib/founder-eventos";
 import { gerarCsv, baixarCsv } from "@/lib/csv";
-import { dataISOLocal, hojeISO } from "@/lib/data.functions";
+import { hojeISO } from "@/lib/data.functions";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
@@ -35,13 +35,7 @@ import {
   type FiltroGrupo,
   type Origem,
 } from "@/lib/leads";
-import {
-  emNegociacao,
-  GRUPOS_STATUS,
-  jaEntregue,
-  TODOS_STATUS,
-  type StatusCliente,
-} from "@/lib/statusCliente";
+import { emNegociacao, GRUPOS_STATUS, TODOS_STATUS, type StatusCliente } from "@/lib/statusCliente";
 
 export const Route = createFileRoute("/_authenticated/clientes")({
   head: () => ({
@@ -88,11 +82,6 @@ interface Produto {
 function formatarValorBRL(valor: number | null) {
   if (valor === null || valor === undefined) return null;
   return formatarReais(Number(valor));
-}
-
-/** Venda sem valor lançava uma entrada de R$ 0 no Financeiro. */
-function temValorDeVenda(valor: number | null) {
-  return valor != null && Number(valor) > 0;
 }
 
 function formatarDataCurta(iso: string) {
@@ -246,7 +235,7 @@ function ClientesPage() {
           <Vazio
             icone={Users}
             titulo="Nenhuma cliente cadastrada ainda."
-            texto="Cada cliente guarda onde a conversa está, o pedido, o valor e o pós-venda. Quando o pedido é entregue, a venda vai pro Financeiro com um clique."
+            texto="Cada cliente guarda onde a conversa está, o pedido, o valor e o pós-venda."
             acao={
               <div className="flex flex-wrap justify-center gap-2">
                 <button type="button" onClick={() => setModalAberto(true)} className={BTN_ACAO}>
@@ -404,7 +393,7 @@ function ClientesPage() {
   );
 }
 
-/* ============== Linha da lista + popover de registro ============== */
+/* ============== Linha da lista ============== */
 function LinhaCliente({
   cliente,
   nomeProduto,
@@ -418,24 +407,18 @@ function LinhaCliente({
   onRegistrado: () => void;
   onEditar: () => void;
 }) {
-  const [popAberto, setPopAberto] = useState(false);
-  // Cliente com produto vende pelo módulo Vendas (VND-03): baixa o estoque e o
-  // lucro sai certo. Sem produto continua o registro simples no Financeiro.
-  const [vendaAberta, setVendaAberta] = useState(false);
-  // Ficha (VND-04) e a venda que sai dela: a ficha registra venda a qualquer
-  // momento; marca a cliente só quando é a venda do pedido entregue.
+  // Ficha (VND-04) e a venda que sai dela. A venda da ficha é sempre uma venda
+  // nova: o status da cliente não lança dinheiro, porque o mesmo pedido pode já
+  // ter entrado pelo quadro de Pedidos (ONE-183).
   const [fichaAberta, setFichaAberta] = useState(false);
   const [vendaDaFicha, setVendaDaFicha] = useState(false);
-  const vendePorProduto = !!cliente.produto_id;
-  const [duplicataData, setDuplicataData] = useState<string | null>(null);
-  const [registrando, setRegistrando] = useState(false);
   const [salvandoStatus, setSalvandoStatus] = useState(false);
   const [confirmarExcluir, setConfirmarExcluir] = useState(false);
   const [excluindo, setExcluindo] = useState(false);
   const [orcamentoAberto, setOrcamentoAberto] = useState(false);
 
   // QA-31 (07/10/2026): excluir a cliente apaga só a linha de `clientes`. O
-  // lançamento que registrar_venda_cliente criou em `lancamentos` não tem FK pra
+  // lançamento que o antigo registrar_venda_cliente criou em `lancamentos` não tem FK pra
   // cliente (liga só pela descrição), então continua no Financeiro: a venda
   // aconteceu e o dinheiro entrou, sumir com ele bagunçaria o mês.
   const excluir = async () => {
@@ -480,65 +463,10 @@ function LinhaCliente({
     onRegistrado();
   };
 
-  const abrirPopover = async () => {
-    setPopAberto(true);
-    setDuplicataData(null);
-    const seteDiasAtras = new Date();
-    seteDiasAtras.setDate(seteDiasAtras.getDate() - 7);
-    const { data } = await supabase
-      .from("lancamentos")
-      .select("data, descricao")
-      .eq("user_id", userId)
-      .ilike("descricao", cliente.nome)
-      .gte("data", dataISOLocal(seteDiasAtras));
-    if (data && data.length > 0) {
-      setDuplicataData(data[0].data);
-    }
-  };
-
-  const registrar = async () => {
-    if (!temValorDeVenda(cliente.valor)) return;
-    setRegistrando(true);
-    // RPC transacional: insere o lançamento e marca a cliente numa só transação. Se o update
-    // falhar, o insert faz rollback — sem lançamento órfão que levasse a registro DUPLICADO.
-    const { error } = await (
-      supabase.rpc as unknown as (
-        fn: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ error: { message?: string } | null }>
-    )("registrar_venda_cliente", { p_cliente_id: cliente.id });
-    setRegistrando(false);
-    if (error) {
-      const jaRegistrada = error.message?.includes("já registrada");
-      toastErro(
-        jaRegistrada
-          ? "Essa venda já foi registrada. Atualize a página."
-          : "A Pólia One não conseguiu registrar a venda no Financeiro. Tenta de novo.",
-      );
-      // Recarrega a lista mesmo no erro "já registrada" pra sumir com o botão desatualizado.
-      if (jaRegistrada) {
-        setPopAberto(false);
-        onRegistrado();
-      }
-      return;
-    }
-    track("venda_registrada");
-    void registrarFounder("feature_completed", {
-      feature: "clientes",
-      propriedades: { acao: "venda" },
-    });
-    setPopAberto(false);
-    onRegistrado();
-    toastSucesso("Venda registrada no Financeiro.");
-  };
-
-  // Pós-venda vem depois da entrega: a venda ainda pode ser registrada ali,
-  // senão mover a cliente pro pós-venda escondia o botão (ONE-123).
-  const mostrarAcaoRegistrar = jaEntregue(cliente.status_pedido) && !cliente.venda_registrada;
-  const semValor = !temValorDeVenda(cliente.valor);
-
-  // A ação de venda mora numa linha própria no celular: em 375px, selo +
-  // "Registrar venda →" + menu não cabiam ao lado do nome e estouravam a linha.
+  // Só a cliente marcada antes do ONE-183 mostra o selo: o botão "Registrar
+  // venda →" saiu daqui e nada mais marca a cliente.
+  // A ação de venda mora numa linha própria no celular: em 375px, selo + menu
+  // não cabiam ao lado do nome e estouravam a linha.
   const acaoVenda = cliente.venda_registrada ? (
     <span className="font-sans text-[13px] text-[var(--ink-soft)]">
       Registrada ·{" "}
@@ -549,28 +477,6 @@ function LinhaCliente({
         ver no Financeiro
       </Link>
     </span>
-  ) : mostrarAcaoRegistrar ? (
-    semValor && !vendePorProduto ? (
-      // Sem valor, registrar lançaria R$ 0 no caixa: o caminho é pôr o valor.
-      <span className="font-sans text-[13px] text-[var(--ink-soft)]">
-        Coloque o valor da venda pra registrar ·{" "}
-        <button
-          type="button"
-          onClick={onEditar}
-          className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
-        >
-          Editar cliente
-        </button>
-      </span>
-    ) : (
-      <button
-        type="button"
-        onClick={vendePorProduto ? () => setVendaAberta(true) : abrirPopover}
-        className={`${BTN_MIUDO_ACAO} w-full sm:w-auto`}
-      >
-        Registrar venda →
-      </button>
-    )
   ) : null;
 
   return (
@@ -664,46 +570,6 @@ function LinhaCliente({
         onConfirmar={excluir}
       />
 
-      <ConfirmarAcao
-        open={popAberto}
-        onOpenChange={setPopAberto}
-        titulo="Registrar no Financeiro"
-        descricao={
-          <>
-            {nomeProduto}
-            {formatarValorBRL(cliente.valor) ? ` · ${formatarValorBRL(cliente.valor)}` : ""}
-            {" · categoria: Venda de produto"}
-            {duplicataData && (
-              <span className="mt-3 block rounded-lg bg-[var(--bg)] px-3 py-2 text-[12.5px] text-[var(--ink-soft)]">
-                Já existe um lançamento parecido em {formatarDataCurta(duplicataData)}. Registrar
-                mesmo assim?
-              </span>
-            )}
-          </>
-        }
-        textoConfirmar={
-          registrando ? "Registrando..." : duplicataData ? "Registrar mesmo assim" : "Registrar"
-        }
-        onConfirmar={registrar}
-        carregando={registrando}
-      />
-      {vendaAberta && (
-        <ModalRegistrarVenda
-          userId={userId}
-          prefill={{
-            clienteId: cliente.id,
-            clienteNome: cliente.nome,
-            produtoId: cliente.produto_id,
-            valor: cliente.valor,
-            marcarCliente: true,
-          }}
-          onClose={() => setVendaAberta(false)}
-          onSaved={() => {
-            setVendaAberta(false);
-            onRegistrado();
-          }}
-        />
-      )}
       {fichaAberta && (
         <FichaCliente
           cliente={cliente}
@@ -731,8 +597,6 @@ function LinhaCliente({
             clienteNome: cliente.nome,
             produtoId: cliente.produto_id,
             valor: cliente.valor,
-            // Só a venda do pedido entregue marca a cliente (é a que o botão da linha faria).
-            marcarCliente: mostrarAcaoRegistrar && vendePorProduto,
           }}
           onClose={() => setVendaDaFicha(false)}
           onSaved={() => {

@@ -222,8 +222,8 @@ const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
         icone: PackageCheck,
         titulo: "Pedido por pedido.",
         texto:
-          "Cada cliente com o status da encomenda, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
-        planos: ["Premium"],
+          "Cada encomenda no quadro, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
+        planos: ["Grátis até 15", "Premium sem limite"],
       },
       {
         icone: Wallet,

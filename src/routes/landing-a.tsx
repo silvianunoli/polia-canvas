@@ -125,8 +125,8 @@ const oQueMuda: ItemLista[] = [
     icone: PackageCheck,
     titulo: "Pedido acompanhado.",
     texto:
-      "Cada cliente com o status da encomenda, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
-    planos: ["Premium"],
+      "Cada encomenda no quadro, da espera à entrega. Entregou, vira venda no Financeiro com um clique.",
+    planos: ["Grátis até 15", "Premium sem limite"],
   },
   {
     icone: Ruler,

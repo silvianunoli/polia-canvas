@@ -466,12 +466,15 @@ export type ItemLista = {
   icone: LucideIcon;
   titulo: string;
   texto: string;
-  planos?: Array<"Grátis" | "Premium" | "Pro" | "Grátis até 5" | "Premium sem limite">;
+  planos?: Array<
+    "Grátis" | "Premium" | "Pro" | "Grátis até 5" | "Grátis até 15" | "Premium sem limite"
+  >;
 };
 
 const TOM_PLANO: Record<string, string> = {
   Grátis: "bg-[var(--bg)] border border-[var(--line)]",
   "Grátis até 5": "bg-[var(--bg)] border border-[var(--line)]",
+  "Grátis até 15": "bg-[var(--bg)] border border-[var(--line)]",
   Premium: "bg-[var(--secondary-light)]",
   "Premium sem limite": "bg-[var(--secondary-light)]",
   Pro: "bg-[var(--accent)]",

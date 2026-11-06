@@ -550,3 +550,13 @@ Decisão da Sil, pra Pólia One não parecer ferramenta de precificação ("Sim,
 - Sem novidade no sino: o bloco só aparece pra quem ainda está nos primeiros passos, e quem já usa o Painel não vê a mudança.
 - `_shared/nichosAnuncio.ts` e o teste dele ficaram sem uso: a exclusão foi barrada pelo ambiente.
 
+## 2026-11-06 — "Registrar venda →" sai da lista de Clientes (ONE-183)
+
+Decisão da Sil, entre travar, tirar o botão e ligar a ficha ao pedido: "Tirar o botão". Lido no código, não reproduzido numa conta.
+
+- O buraco: a mesma venda entrava pelo quadro de Pedidos e pelo botão, nas duas ordens. Sem produto, `registrar_venda_cliente` lançava olhando só `clientes.venda_registrada`. Com produto, abria o `ModalRegistrarVenda` e criava uma segunda venda, com outro lançamento e nova baixa de estoque. O aviso de lançamento parecido nunca achava o pedido, que grava "Venda · canal · nome".
+- Por que tirar: dos 6 pedidos do banco em 06/11, nenhum tinha cliente ligada, então a trava não pegaria nenhum, e barraria a segunda compra de verdade. Nenhuma cliente foi marcada depois de 16/07.
+- `clientes.tsx` perde o botão, o popover e o aviso; a venda da ficha é sempre uma venda nova. `marcarCliente` sai do modal e de `registrarVenda`. O selo "Registrada" fica pras 12 clientes já marcadas.
+- `registrar_venda_cliente` continua no banco, porque aba aberta com o app antigo ainda chama: sai depois (ver card no Kanban).
+- Teste: `components/clientes/vendaNaListaDeClientes.test.tsx`. Tutorial "Clientes", `/ajuda`, home e landing-a atualizados; o cartão da home agora fala do quadro, com o plano certo ("Grátis até 15", "Premium sem limite"). O clipe de Clientes não mostra o botão desde o ONE-143.
+- Novidade: `20261106180000_novidade_venda_sai_de_clientes.sql`, aplicar depois do deploy.

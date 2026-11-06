@@ -58,8 +58,6 @@ export interface PrefillVenda {
   clienteNome?: string;
   produtoId?: string | null;
   valor?: number | null;
-  /** Vindo de Clientes: a RPC marca a venda como registrada na cliente. */
-  marcarCliente?: boolean;
   /**
    * Vindo de um orçamento (ONE-129): os itens dele, e a venda grava pela
    * converter_orcamento, que marca o orçamento na mesma transação.
@@ -125,7 +123,6 @@ export function ModalRegistrarVenda({
   // Id da venda nasce com o modal: se a resposta se perder e ela tentar de novo,
   // o banco devolve a venda que já entrou em vez de duplicar.
   const [idVenda] = useState(() => crypto.randomUUID());
-  const clienteTravada = !!prefill?.marcarCliente && !!prefill.clienteId;
   const [data, setData] = useState(hojeISO());
   const [canal, setCanal] = useState<CanalVenda>("instagram");
   const [clienteNome, setClienteNome] = useState(prefill?.clienteNome ?? "");
@@ -167,7 +164,6 @@ export function ModalRegistrarVenda({
 
   // Cliente escolhida da lista vira vínculo; nome digitado fica só como texto.
   const clienteId = useMemo(() => {
-    if (clienteTravada) return prefill!.clienteId!;
     if (prefill?.clienteId && clienteNome === prefill.clienteNome) return prefill.clienteId;
     const alvo = clienteNome.trim().toLocaleLowerCase("pt-BR");
     if (!alvo) return null;
@@ -175,7 +171,7 @@ export function ModalRegistrarVenda({
       (c) => c.nome.trim().toLocaleLowerCase("pt-BR") === alvo,
     );
     return achadas.length === 1 ? achadas[0].id : null;
-  }, [clienteNome, clientesQuery.data, prefill, clienteTravada]);
+  }, [clienteNome, clientesQuery.data, prefill]);
 
   // Item que já veio com produto (de Clientes) e sem preço: o preço do
   // cadastro entra quando o catálogo chega.
@@ -301,27 +297,24 @@ export function ModalRegistrarVenda({
       taxaCanal: valores.taxaCanal,
       recebida,
       observacao: observacao.trim() || null,
-      marcarCliente: prefill?.marcarCliente,
       orcamentoId: prefill?.orcamentoId,
     });
     setSalvando(false);
     if (error) {
       console.error("venda_registrar", error);
       setErro(
-        error.message?.includes("já registrada")
-          ? "Essa venda já foi registrada pra essa cliente. Atualize a página."
-          : error.message?.startsWith("Escolha a variação")
-            ? `${error.message}. Confira o estoque dele em Produtos.`
-            : error.message?.includes("Orçamento encerrado")
-              ? "Esse orçamento foi cancelado. Atualize a página."
-              : "A Pólia One não conseguiu registrar a venda. Tenta de novo: se ela já tiver entrado, não duplica.",
+        error.message?.startsWith("Escolha a variação")
+          ? `${error.message}. Confira o estoque dele em Produtos.`
+          : error.message?.includes("Orçamento encerrado")
+            ? "Esse orçamento foi cancelado. Atualize a página."
+            : "A Pólia One não conseguiu registrar a venda. Tenta de novo: se ela já tiver entrado, não duplica.",
       );
       return;
     }
     track("venda_registrada", {
       canal,
       itens: itensValidos.length,
-      origem: prefill?.orcamentoId ? "orcamento" : prefill?.marcarCliente ? "clientes" : "vendas",
+      origem: prefill?.orcamentoId ? "orcamento" : "vendas",
     });
     void registrar("feature_completed", {
       feature: "vendas",
@@ -402,18 +395,15 @@ export function ModalRegistrarVenda({
             <Campo
               label="Cliente"
               hint={
-                clienteTravada
-                  ? "vinda de Clientes"
-                  : clienteNome.trim() && !clienteId
-                    ? "Fica só o nome. Pra ligar a uma ficha, escolha da lista."
-                    : "opcional"
+                clienteNome.trim() && !clienteId
+                  ? "Fica só o nome. Pra ligar a uma ficha, escolha da lista."
+                  : "opcional"
               }
             >
               <input
                 value={clienteNome}
                 onChange={(e) => setClienteNome(e.target.value)}
-                readOnly={clienteTravada}
-                list={clienteTravada ? undefined : "venda-clientes"}
+                list="venda-clientes"
                 maxLength={120}
                 className={INPUT}
                 placeholder="Buscar em Clientes ou digitar"
