@@ -31,6 +31,20 @@ export function tiktokConfigurado(): boolean {
   return credenciais() !== null;
 }
 
+// oi@usepolia.com.br (teste da Sil) e a conta que o TikTok usa na avaliação do app.
+const CONTAS_TESTE = [
+  "1aa18965-2aed-4c38-a827-f829b0c0f760",
+  "05099e07-0501-46b3-86ac-8d884894f703",
+];
+
+/**
+ * Até o TikTok aprovar o app e a loja real passar no teste (VND-42), só as contas
+ * de teste conectam. TIKTOK_SHOP_ABERTO=1 abre para o Pro.
+ */
+export function tiktokAbertoPara(userId: string): boolean {
+  return process.env.TIKTOK_SHOP_ABERTO === "1" || CONTAS_TESTE.includes(userId);
+}
+
 export function montarUrlAutorizacao(state: string): { url: string | null; error: string | null } {
   if (!credenciais()) return { url: null, error: SEM_CONFIG };
   return { url: urlDeAutorizacao(SERVICE_ID, state), error: null };

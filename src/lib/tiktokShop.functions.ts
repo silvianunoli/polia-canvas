@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { registrarEventoSistema } from "@/lib/founder-eventos.server";
 import { temProjete } from "@/lib/planos";
 import {
+  tiktokAbertoPara,
   lojasAutorizadas,
   montarUrlAutorizacao,
   tiktokConfigurado,
@@ -63,6 +64,10 @@ export const statusConexaoTiktok = createServerFn({ method: "GET" })
         .eq("canal", CANAL),
     ]);
     const conectada = conexao?.status === "conectada";
+    // Fechado até abrir para as clientes (VND-42): o cartão e o atalho somem como se
+    // o servidor não tivesse as credenciais. Quem já tem loja ligada continua vendo,
+    // pra poder desconectar.
+    if (!conectada && !tiktokAbertoPara(context.userId)) return { configurado: false as const };
     return {
       configurado: true as const,
       liberado: pro,
@@ -78,6 +83,8 @@ export const statusConexaoTiktok = createServerFn({ method: "GET" })
 export const iniciarConexaoTiktok = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    if (!tiktokAbertoPara(context.userId))
+      return { url: null, error: "A Pólia One ainda não abriu a conexão com o TikTok Shop." };
     if (!(await temPro(context.userId)))
       return { url: null, error: "A integração com o TikTok Shop é do plano Pro." };
     const atual = await lerConexao(context.userId);

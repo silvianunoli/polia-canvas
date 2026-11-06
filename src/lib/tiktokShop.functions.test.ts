@@ -28,6 +28,7 @@ const { registrarEventoSistema } = vi.hoisted(() => ({ registrarEventoSistema: v
 vi.mock("@/lib/founder-eventos.server", () => ({ registrarEventoSistema }));
 
 const api = vi.hoisted(() => ({
+  tiktokAbertoPara: vi.fn(),
   tiktokConfigurado: vi.fn(),
   montarUrlAutorizacao: vi.fn(),
   trocarCodigoPorTokens: vi.fn(),
@@ -100,6 +101,32 @@ beforeEach(() => {
   registrarEventoSistema.mockReset();
   for (const fn of Object.values(api)) fn.mockReset();
   api.tiktokConfigurado.mockReturnValue(true);
+  api.tiktokAbertoPara.mockReturnValue(true);
+});
+
+describe("TikTok Shop fechado para as clientes (VND-42)", () => {
+  beforeEach(() => api.tiktokAbertoPara.mockReturnValue(false));
+
+  it("sem loja ligada, a integração some da tela, mesmo no Pro", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    expect(await statusFn({ context })).toEqual({ configurado: false });
+  });
+
+  it("com loja ligada, o cartão continua, pra ela poder desconectar", async () => {
+    responder("canal_conexoes", { data: { ...conexaoPendente, status: "conectada" } });
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await statusFn({ context })) as { configurado: boolean; conectada: boolean };
+    expect(r).toMatchObject({ configurado: true, conectada: true });
+  });
+
+  it("chamar o servidor direto não gera link de autorização", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await iniciar({ context })) as { url: string | null; error: string };
+    expect(r.url).toBeNull();
+    expect(r.error).toMatch(/ainda não abriu/);
+    expect(api.montarUrlAutorizacao).not.toHaveBeenCalled();
+    expect(consultas.canal_conexoes).toBeUndefined();
+  });
 });
 
 describe("statusConexaoTiktok", () => {

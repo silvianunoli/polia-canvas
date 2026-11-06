@@ -316,8 +316,8 @@ const LISTA = [
         ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
         : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
       VIROU
-        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com Mercado Livre e TikTok Shop e a vitrine online ligada aos Pedidos.`
-        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com Mercado Livre e TikTok Shop e a vitrine online ligada aos Pedidos.`,
+        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`
+        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -463,15 +463,15 @@ const LISTA = [
     outrasRotas: ["/configuracoes/integracoes"],
     abrir: "Abrir Anúncios nos canais",
     resumo:
-      "Liga cada anúncio do Mercado Livre e do TikTok Shop a um produto da Pólia, pra a venda baixar o estoque certo.",
+      "Liga cada anúncio do Mercado Livre a um produto da Pólia, pra a venda baixar o estoque certo.",
     plano: "Pro",
     passos: [
       {
         titulo: "Conectar o canal de venda",
         itens: [
           'Abra Configurações e desça até "Integrações".',
-          'No cartão do Mercado Livre ou do TikTok Shop, clique em "Conectar".',
-          "Entre na conta da loja e autorize. No Mercado Livre, use a conta dona da loja, não a de colaboradora. No TikTok, a loja precisa estar aprovada no TikTok Shop.",
+          'No cartão do Mercado Livre, clique em "Conectar".',
+          "Entre na conta da loja e autorize. Use a conta dona da loja, não a de colaboradora.",
           "Na volta, a Pólia One abre direto a tela de ligar os anúncios.",
         ],
       },
@@ -497,7 +497,7 @@ const LISTA = [
       'Os pedidos só começam a chegar em Vendas depois que os anúncios estão ligados, e entram como "a receber".',
       "No Mercado Livre, quantidade zero pausa o anúncio. Anúncio no Full continua com o estoque do Mercado Livre.",
       "A Pólia não cria anúncio, não responde compradora e não guarda dados de quem comprou.",
-      "A Shopee ainda não conecta. Por enquanto ela aparece só nas taxas da Calculadora e de Vendas.",
+      "TikTok Shop e Shopee ainda não conectam. Por enquanto, eles aparecem só nas taxas da Calculadora e de Vendas.",
     ],
     duvidas: [
       {
@@ -546,7 +546,7 @@ const LISTA = [
       "Vendas é do Premium e do Pro.",
       'Pedido anotado no quadro de Pedidos também é venda: aparece aqui pelo canal "Encomenda", no dia em que foi anotado.',
       "A venda daqui baixa o estoque e entra no Financeiro assim que o dinheiro é recebido.",
-      'Pedidos do Mercado Livre e do TikTok Shop entram sozinhos, como "a receber", quando o canal está conectado e os anúncios ligados.',
+      'Pedidos do Mercado Livre entram sozinhos, como "a receber", quando o canal está conectado e os anúncios ligados.',
       "A venda sai de um produto do catálogo. Sem produto cadastrado, a tela pede pra ir em Produtos antes.",
     ],
     duvidas: [
