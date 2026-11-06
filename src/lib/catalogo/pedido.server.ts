@@ -72,6 +72,7 @@ export async function responderPedidoCatalogo(request: Request): Promise<Respons
       p_dominio: dominio,
       p_id_externo: pedido.id,
       p_itens: pedido.itens.map((i) => ({
+        produto_id: i.produto_id ?? null,
         nome: i.nome,
         variacao: i.variacao ?? null,
         quantidade: i.quantidade,

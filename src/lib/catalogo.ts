@@ -55,6 +55,8 @@ export const pedidoCatalogoSchema = z.object({
   itens: z
     .array(
       z.object({
+        /** Com este id, preço e nome saem do cadastro no banco, e preco_unitario é ignorado. */
+        produto_id: z.string().uuid().optional().nullable(),
         nome: texto(200).min(1),
         variacao: texto(80).optional().nullable(),
         quantidade: z.number().int().min(1).max(1000),

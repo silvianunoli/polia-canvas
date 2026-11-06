@@ -51,6 +51,27 @@ describe("POST /api/catalogo/pedido", () => {
     expect(args.p_ip_hash).toMatch(/^[0-9a-f]{64}$/);
   });
 
+  it("repassa o produto_id pro banco achar o preço no cadastro", async () => {
+    const produto_id = "11111111-2222-4333-8444-555555555555";
+    const itens = [{ ...pedido.itens[0], produto_id, preco_unitario: 1 }];
+    const r = await responderPedidoCatalogo(req({ ...pedido, itens }));
+    expect(r.status).toBe(200);
+    expect(rpc.mock.calls[0][1].p_itens[0]).toMatchObject({ produto_id });
+  });
+
+  it("item sem produto_id segue aceito enquanto o site antigo está no ar", async () => {
+    const r = await responderPedidoCatalogo(req(pedido));
+    expect(r.status).toBe(200);
+    expect(rpc.mock.calls[0][1].p_itens[0].produto_id).toBeNull();
+  });
+
+  it("recusa produto_id que não é um id válido", async () => {
+    const itens = [{ ...pedido.itens[0], produto_id: "abc" }];
+    const r = await responderPedidoCatalogo(req({ ...pedido, itens }));
+    expect(r.status).toBe(400);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("recusa origem que não é a da loja, sem chamar o banco", async () => {
     const r = await responderPedidoCatalogo(req(pedido, "https://outraloja.com.br"));
     expect(r.status).toBe(403);
