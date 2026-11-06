@@ -2378,6 +2378,7 @@ export type Database = {
           network_finalized_at: string | null
           nicho: string | null
           notif_dicas: boolean
+          notif_entregas: boolean
           notif_novidades: boolean
           notif_push_resumo: boolean
           notif_push_vendas: boolean
@@ -2481,6 +2482,7 @@ export type Database = {
           network_finalized_at?: string | null
           nicho?: string | null
           notif_dicas?: boolean
+          notif_entregas?: boolean
           notif_novidades?: boolean
           notif_push_resumo?: boolean
           notif_push_vendas?: boolean
@@ -2584,6 +2586,7 @@ export type Database = {
           network_finalized_at?: string | null
           nicho?: string | null
           notif_dicas?: boolean
+          notif_entregas?: boolean
           notif_novidades?: boolean
           notif_push_resumo?: boolean
           notif_push_vendas?: boolean

@@ -92,7 +92,7 @@ function ConfiguracoesPage() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "full_name, business_name, business_type, razao_social, cnpj, whatsapp, nicho, streak, notif_resumo_semanal, notif_novidades, notif_dicas, plano",
+          "full_name, business_name, business_type, razao_social, cnpj, whatsapp, nicho, streak, notif_resumo_semanal, notif_novidades, notif_dicas, notif_entregas, plano",
         )
         .eq("id", userId!)
         .maybeSingle();
@@ -134,6 +134,7 @@ function ConfiguracoesPage() {
   const [notifResumo, setNotifResumo] = useState(true);
   const [notifNovidades, setNotifNovidades] = useState(true);
   const [notifDicas, setNotifDicas] = useState(true);
+  const [notifEntregas, setNotifEntregas] = useState(true);
   // Avisos no celular só existem no app Android; decidido depois de montar
   // pra não divergir do HTML do servidor.
   const [appNativo, setAppNativo] = useState(false);
@@ -340,6 +341,7 @@ function ConfiguracoesPage() {
     setNotifResumo(p.notif_resumo_semanal ?? true);
     setNotifNovidades(p.notif_novidades ?? true);
     setNotifDicas(p.notif_dicas ?? true);
+    setNotifEntregas(p.notif_entregas ?? true);
     carregouInicial.current = true;
   }, [profileQuery.data, userId]);
 
@@ -472,24 +474,28 @@ function ConfiguracoesPage() {
   };
 
   const toggleNotif = async (
-    campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas",
+    campo: "notif_resumo_semanal" | "notif_novidades" | "notif_dicas" | "notif_entregas",
     valor: boolean,
   ) => {
     if (!userId) return;
     if (campo === "notif_resumo_semanal") setNotifResumo(valor);
     if (campo === "notif_novidades") setNotifNovidades(valor);
     if (campo === "notif_dicas") setNotifDicas(valor);
+    if (campo === "notif_entregas") setNotifEntregas(valor);
     const payload =
       campo === "notif_resumo_semanal"
         ? { notif_resumo_semanal: valor }
         : campo === "notif_novidades"
           ? { notif_novidades: valor }
-          : { notif_dicas: valor };
+          : campo === "notif_dicas"
+            ? { notif_dicas: valor }
+            : { notif_entregas: valor };
     const { error } = await supabase.from("profiles").update(payload).eq("id", userId);
     if (error) {
       if (campo === "notif_resumo_semanal") setNotifResumo(!valor);
       if (campo === "notif_novidades") setNotifNovidades(!valor);
       if (campo === "notif_dicas") setNotifDicas(!valor);
+      if (campo === "notif_entregas") setNotifEntregas(!valor);
       toastErro("A Pólia One não conseguiu salvar essa preferência. Tenta de novo em instantes.");
     }
   };
@@ -1053,6 +1059,12 @@ function ConfiguracoesPage() {
         {/* SEÇÃO 5 — NOTIFICAÇÕES */}
         <Secao titulo="Notificações" subtitulo="escolha o que chega por e-mail.">
           <div className="divide-y divide-[var(--line)]">
+            <ToggleLinha
+              titulo="Entregas de amanhã"
+              descricao="às 18h da véspera, por e-mail e no celular se o app estiver instalado"
+              checked={notifEntregas}
+              onCheckedChange={(v) => toggleNotif("notif_entregas", v)}
+            />
             <ToggleLinha
               titulo="Resumo semanal"
               descricao="um panorama do seu negócio toda semana"

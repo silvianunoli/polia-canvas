@@ -109,8 +109,8 @@ export function AvisosNoCelular({ userId }: { userId: string }) {
     return (
       <div className="flex flex-col items-start gap-4">
         <p className="font-sans text-[14px] text-[var(--ink-soft)]">
-          Com os avisos ligados, a Pólia One lembra de registrar as vendas do dia e manda o resumo
-          da semana.
+          Com os avisos ligados, a Pólia One lembra de registrar as vendas do dia, avisa das
+          entregas de amanhã e manda o resumo da semana.
         </p>
         <button type="button" className={BTN_ACAO_CONTORNO} onClick={ligar} disabled={ativando}>
           {ativando ? "Ligando..." : "Quero receber os avisos"}

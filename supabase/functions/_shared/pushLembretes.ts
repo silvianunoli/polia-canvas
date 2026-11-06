@@ -25,7 +25,7 @@ export function hojeEmBrasilia(agora: Date): string {
   return formatoDiaBrasilia.format(agora);
 }
 
-function somaDias(dia: string, dias: number): string {
+export function somaDias(dia: string, dias: number): string {
   const d = new Date(`${dia}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + dias);
   return d.toISOString().slice(0, 10);

@@ -525,3 +525,13 @@ Achados nos prints reais da sessão de atendimento da Pólia One.
 - **ONE-171.** A régua saiu de `financeiro.tsx` pra `components/financeiro/ReguaDaMeta.tsx` (conta em `lib/reguaDaMeta.ts`, + testes). Os rótulos flutuavam sobre o trilho com corte fixo (ONE-16: abaixo de 8% à esquerda, acima de 92% à direita), que só valia em tela larga, e subiam 40 px, em cima do título. Agora ficam no fluxo da página, cada marca na sua linha, com `left: X%` + `translateX(-X%)`: o rótulo nunca sai do trilho e o ponto da régua fica sempre embaixo dele. Medido em Chrome headless, com o componente e o CSS reais, em 360 e 402 px: versão antiga com defeito nos 18 casos, versão nova em nenhum.
 - **ONE-172.** O cartão "Pedidos · mês" contava lançamentos de venda, e venda a receber só vira lançamento quando é paga. `lib/pedidosDoMes.ts` (+ testes): vendas do mês não canceladas (o mesmo número de "Vendas · mês") + entradas de venda lançadas à mão. O lançamento de venda paga não conta de novo. Quando há as duas, a frase do cartão separa. O cartão agora leva pra `/vendas`, com "ver vendas", porque o histórico do Financeiro não mostra pedido a receber.
 - Tutorial do Painel atualizado. Novidade em `20261105150000_novidade_pedidos_do_mes.sql`, ainda não aplicada: entra junto com o deploy.
+
+## 2026-11-05 — Aviso das entregas de amanhã (ONE-174)
+
+Fase 2 do quadro de Pedidos, com a D7 do plano: e-mail às 18h + push quando houver aparelho. Texto, horário e público aprovados pela Sil ("Pode construir"). O e-mail é o canal que entrega hoje: há 0 aparelhos em `push_aparelhos` e o app não está na Play.
+
+- Migration `20261105220000`: coluna `notif_entregas`, tabela `entregas_amanha_envios` (um aviso por dona por dia), RPC `alvos_entregas_amanha`, segredo no Vault e `disparar_entregas_amanha`, que só chama a função quando há pedido aberto pra amanhã.
+- Edge function `entregas-amanha` + `_shared/entregasAmanha.ts` (puro, com testes em `lib/entregasAmanha.test.ts`). Nome da cliente vem da vitrine pública: entra escapado no HTML e fica fora do push, que aparece na tela bloqueada.
+- Configurações: interruptor "Entregas de amanhã" em Notificações, vale pros dois canais. Tutorial "Pedidos" atualizado.
+- Não existe staging (sem branch no Supabase, sem ambiente no repo). O SQL foi conferido no banco real dentro de um `do` que termina em erro, então nada ficou gravado: sem pedido, com pedido, entregue, cancelado, outro dia, interruptor desligado e aviso já enviado.
+- Ordem de publicação: migration `20261105220000`, edge function, deploy do app e, com o teste aprovado, `20261105220100` (cron) e `20261105220200` (novidade).

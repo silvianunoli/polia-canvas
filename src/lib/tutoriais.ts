@@ -920,6 +920,7 @@ const LISTA = [
       "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
       'Lançar o primeiro pedido e levar um pedido até "Entregue" são dois dos Primeiros passos do Painel.',
       "Pedido novo que chega pela loja do Catálogo também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
+      'Às 18h da véspera, a Pólia One manda um e-mail com os pedidos que têm entrega no dia seguinte e ainda não foram entregues, e um aviso no celular se o app estiver instalado. Sem entrega amanhã, não sai nada. Pra desligar, abra "Configurações" e, em "Notificações", desligue "Entregas de amanhã".',
     ],
     duvidas: [
       {
