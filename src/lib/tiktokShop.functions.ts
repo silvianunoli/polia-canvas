@@ -133,6 +133,10 @@ export const finalizarConexaoTiktok = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => finalizarInput.parse(input))
   .handler(async ({ data, context }): Promise<ResultadoFinalizar> => {
     let conexao = await lerConexao(context.userId);
+    // A loja de apps do TikTok também traz autorização pra cá: fechada como o cartão
+    // (VND-42), antes de trocar o code. Loja já ligada segue renovando.
+    if (!tiktokAbertoPara(context.userId) && conexao?.status !== "conectada")
+      return { ok: false, error: "A Pólia One ainda não abriu a conexão com o TikTok Shop." };
     const iniciadaNaPolia = !!data.state;
     if (iniciadaNaPolia && (!conexao || conexao.state_pendente !== data.state))
       return { ok: false, error: "Essa conexão expirou ou não é sua. Tenta conectar de novo." };

@@ -127,6 +127,26 @@ describe("TikTok Shop fechado para as clientes (VND-42)", () => {
     expect(api.montarUrlAutorizacao).not.toHaveBeenCalled();
     expect(consultas.canal_conexoes).toBeUndefined();
   });
+
+  it("autorização vinda da loja de apps do TikTok não troca o code nem liga a loja", async () => {
+    responder("profiles", { data: { plano: "projete" } });
+    const r = (await finalizar({ data: { code: "code-1" }, context })) as {
+      ok: boolean;
+      error: string;
+    };
+    expect(r.ok).toBe(false);
+    expect(r.error).toMatch(/ainda não abriu/);
+    expect(api.trocarCodigoPorTokens).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("quem já tem loja ligada segue passando pela volta da autorização", async () => {
+    responder("canal_conexoes", { data: { ...conexaoPendente, status: "conectada" } });
+    responder("profiles", { data: { plano: "projete" } });
+    api.trocarCodigoPorTokens.mockResolvedValue({ tokens: null, error: "recusado" });
+    await finalizar({ data: { code: "code-1" }, context });
+    expect(api.trocarCodigoPorTokens).toHaveBeenCalled();
+  });
 });
 
 describe("statusConexaoTiktok", () => {
