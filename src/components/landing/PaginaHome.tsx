@@ -134,6 +134,32 @@ const cenasDaDor = [
   },
 ];
 
+/**
+ * A semana depois da virada (COPY-49, texto aprovado pela Sil em 05/11/2026). Só o que
+ * já existe: quadro, cartão do Painel (CartaoPedidosPainel) e cartão do pedido.
+ */
+const semanaComAPolia = [
+  {
+    quando: "Sexta, 21h.",
+    texto:
+      "“Minha encomenda sai amanhã?” Você abre o quadro e responde ali mesmo, sem caçar a conversa de terça.",
+  },
+  {
+    quando: "Sábado de manhã.",
+    texto:
+      "O Painel mostra o que sai hoje e o que atrasou. No cartão de cada encomenda está se já pagou. Ninguém recebe cobrança por engano, e ninguém passa batido.",
+  },
+  {
+    quando: "Sábado à tarde.",
+    texto:
+      "Entregou, marcou. O estoque baixa, o dinheiro entra no mês e o cartão mostra quanto aquela encomenda lucrou.",
+  },
+  {
+    quando: "Domingo.",
+    texto: "O extrato pode esperar. O mês já está somado.",
+  },
+];
+
 /** O que a dona usa hoje, espalhado, e a Pólia One junta (sem número de economia sem fonte). */
 const ferramentasEspalhadas = [
   "Caderno de pedidos",
@@ -468,6 +494,36 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               </Etiqueta>
             ))}
           </ul>
+        </Secao>
+
+        {/* 4b · A SEMANA: a sexta à noite com o sistema, de sexta a domingo (COPY-49). */}
+        <Secao fundo="secondary-light">
+          <div className="flex justify-center text-center">
+            <Rotulo>A semana com a Pólia One</Rotulo>
+          </div>
+          <h2 className={`mx-auto mt-4 max-w-[24ch] text-center ${H2}`}>
+            Sexta, 21h. A cliente pergunta. Você já sabe.
+          </h2>
+          <Reveal>
+            <ol className="mx-auto mt-12 flex max-w-[760px] list-none flex-col">
+              {semanaComAPolia.map((m) => (
+                <li
+                  key={m.quando}
+                  className="grid grid-cols-1 gap-2 border-t border-[var(--ink)] py-6 md:grid-cols-[176px_1fr] md:gap-8"
+                >
+                  <b className="text-[18px] font-semibold leading-[1.5] text-[var(--ink)]">
+                    {m.quando}
+                  </b>
+                  <span className="text-[17px] leading-[1.6] text-[var(--ink)] max-md:text-[16px]">
+                    {m.texto}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </Reveal>
+          <p className="mt-12 text-center text-[clamp(28px,3.2vw,44px)] font-bold leading-[1.1] tracking-[-0.02em] text-balance text-[var(--ink)]">
+            Quem é dona, sabe.
+          </p>
         </Secao>
 
         {/* 5 · TUDO QUE TEM: um bloco por módulo, e o VSL no fim ("por dentro"). */}
