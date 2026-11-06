@@ -13,13 +13,12 @@
 // Sem `trecho`, a página mostra só o passo a passo: Anúncios nos canais fica sem
 // clipe porque só o Mercado Livre conecta. O vídeo foi refeito em 06/11/2026 (ONE-143).
 
-import { depoisDaVirada, ehRotaProjete, tierMinimoDaRota, tiersPagos } from "@/lib/planos";
+import { VIRADA_PRECOS, ehRotaProjete, tierMinimoDaRota, tiersPagos } from "@/lib/planos";
 
-// Virada de preços (06/11/2026, src/lib/planos.ts): Encomenda, Resumo pro
-// contador, Projeção e Raio-x descem do Pro pro Premium e os preços mudam.
-// Lido quando o módulo carrega.
-const VIROU = depoisDaVirada();
-const PRECOS = tiersPagos();
+// Preço fixado na data da virada, sem ler o relógio: esta lista monta quando o
+// módulo carrega, e no Worker o relógio ainda não anda nessa hora. Com `tiersPagos()`
+// a página saiu do servidor com o preço de antes da virada (06/11/2026).
+const PRECOS = tiersPagos(Date.parse(VIRADA_PRECOS));
 function reaisDoPlano(v: number): string {
   return `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
@@ -308,12 +307,8 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas e Assistente.",
-      VIROU
-        ? `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`
-        : `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes e Calendário.`,
-      VIROU
-        ? `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`
-        : `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais Projeção, Raio-x, a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`,
+      `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`,
+      `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -425,9 +420,7 @@ const LISTA = [
     ],
     bomSaber: [
       "Calcular é livre em todo plano. No Grátis com 5 produtos no catálogo, a conta funciona, mas guardar pede o Premium.",
-      VIROU
-        ? 'A aba "Encomenda (sob medida)" mostra o preço no Premium e no Pro.'
-        : 'A aba "Encomenda (sob medida)" mostra o preço só no Pro.',
+      'A aba "Encomenda (sob medida)" mostra o preço no Premium e no Pro.',
       "Com a Meta do mês criada, a Calculadora mostra quantas vendas desse produto fecham a meta.",
       'No Premium, "Quanto esse preço deixa em cada canal" compara o lucro por canal, com as taxas salvas em Vendas.',
     ],
@@ -604,9 +597,7 @@ const LISTA = [
       "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
       '"Lucro do mês" é a mesma conta do "Quanto lucrou" do Painel: desconta o custo de cada produto vendido em Vendas, por isso pode ser menor que entradas menos saídas. Saída em "Insumos / estoque" não sai de novo.',
       "Excluir um lançamento não tem volta.",
-      VIROU
-        ? 'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.'
-        : 'No Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
+      'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
     ],
     duvidas: [
       {
@@ -706,7 +697,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      VIROU ? "A Projeção é do Premium e do Pro." : "A Projeção é do Pro.",
+      "A Projeção é do Premium e do Pro.",
       "Precisa de pelo menos um produto com preço e dos custos fixos do mês lançados no Financeiro. Faltando algo, a tela diz o quê e leva pra lá.",
       '"Salvar salário e meta" guarda só esses dois. Os outros campos voltam ao valor real.',
     ],
@@ -751,7 +742,7 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      VIROU ? "O Raio-x é do Premium e do Pro." : "O Raio-x é do Pro.",
+      "O Raio-x é do Premium e do Pro.",
       "São 3 gerações por mês, somando todos os meses lidos. A conta zera no dia 1º.",
       "Mês sem nenhum lançamento no Financeiro não tem leitura. Com 2 lançamentos ou menos, a leitura sai limitada.",
       "A leitura é escrita por IA e pode errar. Vale conferir antes de decidir.",

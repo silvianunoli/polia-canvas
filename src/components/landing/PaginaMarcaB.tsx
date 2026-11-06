@@ -184,9 +184,10 @@ const jeitoDeHoje: ItemLista[] = [
  * grupo "A marca" vendia o Planejamento e os documentos de Marca e Mercado, e
  * saiu com eles em 31/10/2026.
  */
-// Projeção e Resumo pro contador descem pro Premium na virada de preços
-// (01/12/2026, src/lib/planos.ts). Selo de vitrine: lido quando o módulo carrega.
-const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
+// Projeção e Resumo pro contador desceram pro Premium na virada de preços
+// (06/11/2026, src/lib/planos.ts). Fixo: no Worker o relógio não anda enquanto o
+// módulo carrega.
+const PLANO_DOS_NUMEROS = "Premium";
 
 const oQueMuda: Array<{ grupo: string; itens: ItemLista[] }> = [
   {

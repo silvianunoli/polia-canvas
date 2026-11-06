@@ -98,9 +98,9 @@ const contaNaHora: ItemLista[] = [
   },
 ];
 
-// Encomenda e Projeção descem pro Premium na virada de preços (01/12/2026,
-// src/lib/planos.ts). Selo de vitrine: lido quando o módulo carrega.
-const PLANO_DOS_NUMEROS = depoisDaVirada() ? "Premium" : "Pro";
+// Encomenda e Projeção desceram pro Premium na virada de preços (06/11/2026,
+// src/lib/planos.ts). Fixo: no Worker o relógio não anda enquanto o módulo carrega.
+const PLANO_DOS_NUMEROS = "Premium";
 
 const oQueMuda: ItemLista[] = [
   {

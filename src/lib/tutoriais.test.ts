@@ -1,6 +1,6 @@
 import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   buscarTutoriais,
@@ -121,6 +121,24 @@ describe("tutoriais por ferramenta", () => {
     expect(duracaoDoTrecho("metas")).toBe("11 s");
     expect(duracaoDoTrecho(undefined)).toBeNull();
     expect(duracaoDoTrecho("nao-existe")).toBeNull();
+  });
+
+  // No Worker, o relógio não anda enquanto o módulo carrega. A página de planos
+  // saiu do servidor com R$ 29,90 e R$ 47,90 depois da virada (06/11/2026).
+  it("o preço e o plano do texto não dependem do relógio na carga do módulo", async () => {
+    vi.resetModules();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(0);
+    try {
+      const mod = await import("./tutoriais");
+      const planos = mod.tutorialPorSlug("planos")!.bomSaber.join(" ");
+      expect(planos).toContain("R$ 39,90");
+      expect(planos).toContain("R$ 79,90");
+      expect(planos).not.toMatch(/29,90|47,90/);
+      expect(mod.tutorialPorSlug("raiox")!.bomSaber[0]).toBe("O Raio-x é do Premium e do Pro.");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("nomeia o plano visível de cada tela", () => {
