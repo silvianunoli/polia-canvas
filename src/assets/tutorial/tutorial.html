@@ -235,7 +235,7 @@ html.cheia .tempo { color: var(--bg); }
 .cf .nota { font-size: 17.5px; color: var(--muted); }
 .cf .nota b { color: var(--ink-soft); font-weight: 400; }
 
-/* Planejamento */
+/* Barras */
 .trilho { position: relative; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .trilho i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--secondary); border-radius: 4px; transition: width .6s; }
 
@@ -371,7 +371,6 @@ html.cheia .tempo { color: var(--bg); }
 .troca { display: inline-grid; } .troca > * { grid-area: 1 / 1; }
 .troca-b { display: grid; } .troca-b > * { grid-area: 1 / 1; }
 .rolado3 { transform: translateY(-540px); }
-/* O Planejamento saiu da Pólia One em 31/10/2026: o item some do menu nas cenas depois dele. */
 .nav.fora { display: none; }
 .b.bloq { opacity: .5; }
 .marca2 { background: var(--secondary-light); box-shadow: 0 0 0 4px var(--secondary-light); }
@@ -508,6 +507,11 @@ html.cheia .tempo { color: var(--bg); }
 .mail-pop small b { color: var(--ink); font-weight: 500; }
 .mail-pop strong { font-weight: 500; font-size: 20px; }
 .mail-pop p { margin: 0; font-size: 16.5px; color: var(--ink-soft); }
+html.mudo .controles, html.mudo .caps, html.mudo .nota-rodape { display: none; }
+html.mudo #capa-play { align-items: flex-start; justify-content: flex-end; padding: 2.5%; }
+@media (max-width: 640px) { html.mudo #capa-play .bp { padding: 4px 10px 4px 4px; gap: 6px; font-size: 12px; } html.mudo #capa-play .bp i { width: 22px; height: 22px; } }
+/* Palco pequeno: a legenda cresce pra continuar legível no celular */
+#canvas.leg-g #legenda { top: auto; bottom: 0; height: auto; left: 0; right: 0; padding: 10px 50px 16px; line-height: 1.22; background: var(--ink); }
 /* Prévia / capa de play */
 #capa-play { position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: flex-end; padding: 4%; background: transparent; border: 0; cursor: pointer; z-index: 60; }
 #capa-play .bp { display: inline-flex; align-items: center; gap: 14px; background: var(--secondary); color: var(--secondary-ink); border-radius: 999px; padding: 14px 24px 14px 14px; font: 600 clamp(14px, 1.6vw, 19px)/1 var(--font-body); }
@@ -610,10 +614,10 @@ html.cheia .tempo { color: var(--bg); }
 <main class="pagina">
   <header class="topo">
     <div>
-      <p class="olho">Tutorial · área logada</p>
+      <p class="olho">Tutorial · Pólia One</p>
       <h1>A Pólia One por dentro</h1>
     </div>
-    <p>Do pagamento ao primeiro dia de uso, tela por tela. Narrado e com legenda, em 5min19, com cada ferramenta do menu.</p>
+    <p>Da próxima encomenda ao fim do mês, tela por tela. Narrado e com legenda, em 4min57, com cada ferramenta do menu.</p>
   </header>
 
   <div class="palco" id="palco">
@@ -1097,6 +1101,9 @@ const TRECHO = (() => {
 const T0 = TRECHO ? Math.max(0, C[TRECHO.i0].inicio - 0.3) : 0;
 const T1 = TRECHO ? (TRECHO.i1 + 1 < N ? C[TRECHO.i1 + 1].inicio - 0.4 : TOTAL) : TOTAL;
 const OFF = TRECHO ? T0 : 0;
+/* Vitrine (home): começa sozinho e mudo, em loop, e o áudio só baixa no toque. */
+const VITRINE = document.documentElement.hasAttribute("data-vitrine");
+let mudo = false;
 const AUDIO_BASE = "/video-tutorial/";
 
 /* ── Deixas: "link", "link+0.4", "1.2", "fim" ── */
@@ -1261,7 +1268,7 @@ function render(t) {
 
 /* ── Relógio: o áudio manda; sem áudio, um relógio interno segue igual ── */
 const audio = new Audio(AUDIO_BASE + (TRECHO ? "trechos/" + TRECHO.id + ".mp3" : "narracao.mp3"));
-audio.preload = "auto";
+audio.preload = VITRINE ? "none" : "auto";
 let usaAudio = true, interno = { t: 0, ref: 0, rodando: false }, estado = "capa";
 audio.addEventListener("error", () => { if (usaAudio) trocaParaInterno("A narração não carregou. O vídeo segue com legenda."); });
 
@@ -1270,10 +1277,16 @@ audio.addEventListener("error", () => { if (usaAudio) trocaParaInterno("A narra�
    de tempo voltam pro começo. Baixar o arquivo inteiro e tocar de um blob
    resolve: blob sempre deixa pular. Até o blob chegar, toca direto do arquivo. */
 let blobAudio = null;
-if (typeof fetch === "function") fetch(audio.src).then(r => r.ok ? r.blob() : Promise.reject(new Error("audio"))).then(b => {
-  blobAudio = URL.createObjectURL(b);
-  if (estado !== "tocando") trocaParaBlob();
-}).catch(() => {});
+let pediuBlob = false;
+function baixaBlob() {
+  if (pediuBlob || typeof fetch !== "function") return;
+  pediuBlob = true;
+  fetch(audio.src).then(r => r.ok ? r.blob() : Promise.reject(new Error("audio"))).then(b => {
+    blobAudio = URL.createObjectURL(b);
+    if (estado !== "tocando") trocaParaBlob();
+  }).catch(() => {});
+}
+if (!VITRINE) baixaBlob();
 function trocaParaBlob(alvo) {
   if (!blobAudio || audio.src === blobAudio) return false;
   const t = alvo ?? (audio.currentTime || 0), tocava = !audio.paused;
@@ -1298,6 +1311,7 @@ function irPara(t) {
   render(t); atualizaUI(t);
 }
 function tocar() {
+  baixaBlob();
   if (estado === "capa" || estado === "fim") irPara(T0);
   estado = "tocando"; document.getElementById("capa-play").hidden = true;
   if (usaAudio) audio.play().catch(() => { trocaParaInterno("O navegador não deixou tocar o som. O vídeo segue com legenda."); interno.rodando = true; });
@@ -1338,7 +1352,7 @@ function atualizaUI(t) {
   tempoEl.textContent = mmss(t - T0) + " / " + mmss(T1 - T0);
 }
 bPlay.addEventListener("click", () => estado === "tocando" ? pausar() : tocar());
-document.getElementById("capa-play").addEventListener("click", tocar);
+document.getElementById("capa-play").addEventListener("click", () => mudo ? ouvir() : tocar());
 document.getElementById("b-reini").addEventListener("click", () => { estado = "capa"; tocar(); });
 scrub.addEventListener("input", () => { arrastando = true; irPara(+scrub.value); });
 scrub.addEventListener("change", () => { arrastando = false; if (estado === "capa" || estado === "fim") { estado = "pausado"; document.getElementById("capa-play").hidden = true; atualizaBotao(); } });
@@ -1384,6 +1398,7 @@ document.addEventListener("fullscreenchange", aoMudarFs);
 document.addEventListener("webkitfullscreenchange", aoMudarFs);
 window.addEventListener("resize", () => { if (raiz.classList.contains("cheia")) ajustaCtrl(); });
 document.addEventListener("keydown", e => {
+  if (mudo) return;
   if (e.key === "Escape" && raiz.classList.contains("cheia") && !cheiaReal) { sairCheia(); return; }
   if (e.target.closest("button, input")) return;
   if (e.key === " " || e.key === "k") { e.preventDefault(); estado === "tocando" ? pausar() : tocar(); }
@@ -1406,6 +1421,9 @@ const caps = C.map((c, i) => {
 function escala() {
   const w = palco.clientWidth, h = palco.clientHeight || w * 9 / 16, k = Math.min(w / 1920, h / 1080);
   canvas.style.transform = `translate(${(w - 1920 * k) / 2}px, ${(h - 1080 * k) / 2}px) scale(${k})`;
+  const pequeno = 31 * k < 12;
+  canvas.classList.toggle("leg-g", pequeno);
+  legenda.style.fontSize = pequeno ? 12 / k + "px" : "";
 }
 new ResizeObserver(escala).observe(palco); escala();
 
@@ -1413,7 +1431,8 @@ new ResizeObserver(escala).observe(palco); escala();
 function laco() {
   if (estado === "tocando") {
     const t = agora();
-    if (!usaAudio && t >= T1) terminou();
+    if (mudo && t >= T1) { interno.t = T0; interno.ref = performance.now(); }
+    else if (!usaAudio && t >= T1) terminou();
     render(Math.min(t, T1)); atualizaUI(Math.min(t, T1));
   }
   requestAnimationFrame(laco);
@@ -1426,6 +1445,21 @@ if (TRECHO) {
   if (TRECHO.i0 === TRECHO.i1) lista.hidden = true;
 }
 function inicia() { posCache = new Map(); if (estado === "capa") { render(PREVIA); atualizaUI(T0); } }
+/* Vitrine: roda mudo pelo relógio interno, com legenda; o toque volta pro começo com som. */
+function comecaMudo() {
+  mudo = true; raiz.classList.add("mudo");
+  usaAudio = false; interno.t = T0; interno.ref = performance.now(); interno.rodando = true; estado = "tocando";
+  document.getElementById("capa-txt").textContent = "Toque pra ouvir";
+  document.querySelector("#capa-play use").setAttribute("href", "#i-som");
+  document.getElementById("capa-play").setAttribute("aria-label", "O vídeo está sem som. Toque pra ouvir desde o começo");
+}
+function ouvir() {
+  mudo = false; raiz.classList.remove("mudo");
+  document.querySelector("#capa-play use").setAttribute("href", "#i-play");
+  usaAudio = true; interno.rodando = false; estado = "capa";
+  tocar();
+}
+if (VITRINE && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) comecaMudo();
 inicia();
 (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(inicia);
 requestAnimationFrame(laco);

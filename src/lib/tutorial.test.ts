@@ -15,6 +15,7 @@ describe("vídeo embutido", () => {
       '<html lang="pt-BR" class="embed" data-trecho="financeiro">',
     );
     expect(htmlEmbutido(html, "senha-o5")).toContain('data-trecho="senha-o5"');
+    expect(htmlEmbutido(html, undefined, true)).toContain('class="embed" data-vitrine>');
     expect(htmlEmbutido(html, '"><script>')).toBe('<html lang="pt-BR" class="embed">');
   });
 

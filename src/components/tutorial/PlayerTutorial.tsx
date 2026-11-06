@@ -12,29 +12,47 @@ import { htmlEmbutido, lerMensagemTutorial } from "@/lib/tutorial";
  * por srcDoc. Ele NÃO mora em public/: com run_worker_first, um .html solto lá
  * voltava 404 em produção (07/10/2026). O iframe avisa a própria altura por
  * postMessage, pra a página rolar inteira em vez de ter rolagem dentro do vídeo.
+ * Com `vitrine` (home, ONE-185), roda mudo em loop e só carrega perto da tela.
  */
 export function PlayerTutorial({
   origem,
   trecho,
   titulo = "Tutorial narrado da Pólia One",
+  vitrine = false,
 }: {
-  origem: "app" | "site";
+  origem: "app" | "site" | "home";
   trecho?: string;
   titulo?: string;
+  vitrine?: boolean;
 }) {
   const [html, setHtml] = useState<string | null>(null);
   const [erro, setErro] = useState(false);
   const [tentativa, setTentativa] = useState(0);
   const [altura, setAltura] = useState<number | null>(null);
   const [cheia, setCheia] = useState(false);
+  const [perto, setPerto] = useState(!vitrine);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const esperaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (perto || !esperaRef.current) return;
+    const obs = new IntersectionObserver(
+      (entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) setPerto(true);
+      },
+      { rootMargin: "400px" },
+    );
+    obs.observe(esperaRef.current);
+    return () => obs.disconnect();
+  }, [perto]);
+
+  useEffect(() => {
+    if (!perto) return;
     let vivo = true;
     setErro(false);
     import("@/assets/tutorial/tutorial.html?raw")
       .then((m) => {
-        if (vivo) setHtml(htmlEmbutido(m.default, trecho));
+        if (vivo) setHtml(htmlEmbutido(m.default, trecho, vitrine));
       })
       .catch(() => {
         if (vivo) setErro(true);
@@ -42,7 +60,7 @@ export function PlayerTutorial({
     return () => {
       vivo = false;
     };
-  }, [tentativa, trecho]);
+  }, [tentativa, trecho, perto, vitrine]);
 
   useEffect(() => {
     function aoReceber(e: MessageEvent) {
@@ -94,6 +112,7 @@ export function PlayerTutorial({
   if (!html) {
     return (
       <div
+        ref={esperaRef}
         aria-busy="true"
         aria-label="Carregando o tutorial"
         className="aspect-video w-full animate-pulse rounded-2xl bg-[var(--surface)]"
@@ -121,7 +140,7 @@ export function PlayerTutorial({
             }
           : altura
             ? { height: altura }
-            : { aspectRatio: "16 / 11" }
+            : { aspectRatio: vitrine ? "16 / 9" : "16 / 11" }
       }
     />
   );

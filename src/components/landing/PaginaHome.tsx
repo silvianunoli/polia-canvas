@@ -26,7 +26,7 @@ import {
 } from "@/components/landing/MocksLanding";
 import { PERGUNTAS_HOME, montarPlanos } from "@/components/landing/PaginaMarcaB";
 import { precoBR } from "@/components/landing/preco";
-import { PlayerVsl } from "@/components/landing/VideoVsl";
+import { PlayerTutorial } from "@/components/tutorial/PlayerTutorial";
 import { tiersPagos } from "@/lib/planos";
 
 /**
@@ -561,9 +561,11 @@ export function PaginaHome({ busca }: { busca: BuscaCadastro }) {
               <Rotulo>Por dentro</Rotulo>
             </div>
             <h3 className="mx-auto mt-4 max-w-[26ch] text-center text-[clamp(22px,2.2vw,28px)] font-bold leading-[1.2] tracking-[-0.02em] text-balance text-[var(--ink)]">
-              Quer ver funcionando? É menos de dois minutos.
+              Quer ver funcionando? São menos de cinco minutos.
             </h3>
-            <PlayerVsl busca={busca} className="mx-auto mt-8 max-w-[960px]" />
+            <div className="mx-auto mt-8 max-w-[960px]">
+              <PlayerTutorial origem="home" titulo="Tour narrado da Pólia One" vitrine />
+            </div>
             <div className="mt-8 flex flex-col items-center text-center">
               <BotaoCadastro busca={busca} contexto="por-dentro">
                 Quero organizar a minha marca

@@ -15,11 +15,15 @@ export const TUTORIAL_ROTA = "/como-usar";
  * HTML do vídeo pronto pro srcDoc do iframe: liga o modo embutido (sem cabeçalho).
  * Com `trecho` ("financeiro", "senha-o5"), o vídeo toca só aquelas cenas, com o
  * mp3 curto de public/video-tutorial/trechos/ (página de cada ferramenta,
- * 28/10/2026). Trecho fora do formato é ignorado e o vídeo toca inteiro.
+ * 28/10/2026). Trecho fora do formato é ignorado e o vídeo toca inteiro. Com
+ * `vitrine` (home), começa sozinho e mudo, em loop, e o áudio só baixa no toque.
  */
-export function htmlEmbutido(html: string, trecho?: string): string {
+export function htmlEmbutido(html: string, trecho?: string, vitrine = false): string {
   const attr = trecho && /^[a-z0-9]+(-[a-z0-9]+)?$/.test(trecho) ? ` data-trecho="${trecho}"` : "";
-  return html.replace('<html lang="pt-BR">', `<html lang="pt-BR" class="embed"${attr}>`);
+  return html.replace(
+    '<html lang="pt-BR">',
+    `<html lang="pt-BR" class="embed"${attr}${vitrine ? " data-vitrine" : ""}>`,
+  );
 }
 
 export type MensagemTutorial =
