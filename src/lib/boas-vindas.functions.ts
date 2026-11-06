@@ -30,13 +30,16 @@ export const garantirBoasVindas = createServerFn({ method: "POST" })
       subject: "Bem-vinda à Pólia One",
       // "Você" não é sujeito de capacidade (trava de 17/08/2026): quem promete
       // é a Pólia One. Desde 31/10/2026 o Planejamento saiu da Pólia One e o
-      // e-mail fala do sistema da marca: os Primeiros passos do Painel são o
-      // preço, o primeiro pedido e o pedido entregue (lib/primeirosPassos.ts).
+      // e-mail fala do sistema da marca. Desde 05/11/2026 (ONE-175) os Primeiros
+      // passos abrem na encomenda: o pedido, a entrega e o preço
+      // (lib/primeirosPassos.ts).
       text: `Sua conta está pronta.
 
 A Pólia One é o sistema da sua marca: pedidos, estoque e lucro num lugar só, no celular.
 
-Por onde começar: os Primeiros passos no Painel. O primeiro é o preço de um produto ou serviço, calculado com o custo real. O segundo é lançar o primeiro pedido no quadro de Pedidos. O terceiro é marcar um pedido como entregue, e o cartão dele mostra quanto a marca lucrou.
+Por onde começar: os Primeiros passos no Painel. O primeiro é lançar a próxima encomenda no quadro de Pedidos, com o dia da entrega. O segundo é marcar como entregue, e o cartão dela mostra quanto lucrou.
+
+O terceiro é calcular o preço de um produto, com o custo real.
 
 ${SITE_URL}/painel`,
       html: emailPolia({
@@ -44,8 +47,8 @@ ${SITE_URL}/painel`,
         headline: "Sua conta está pronta",
         paragrafos: [
           "A Pólia One é o sistema da sua marca: pedidos, estoque e lucro num lugar só, no celular.",
-          "Por onde começar: os Primeiros passos no Painel. O primeiro é o preço de um produto ou serviço, calculado com o custo real. O segundo é lançar o primeiro pedido no quadro de Pedidos.",
-          "O terceiro é marcar um pedido como entregue, e o cartão dele mostra quanto a marca lucrou.",
+          "Por onde começar: os Primeiros passos no Painel. O primeiro é lançar a próxima encomenda no quadro de Pedidos, com o dia da entrega. O segundo é marcar como entregue, e o cartão dela mostra quanto lucrou.",
+          "O terceiro é calcular o preço de um produto, com o custo real.",
         ],
         ctaLabel: "Abrir a Pólia One",
         ctaUrl: `${SITE_URL}/painel`,

@@ -535,3 +535,18 @@ Fase 2 do quadro de Pedidos, com a D7 do plano: e-mail às 18h + push quando hou
 - Configurações: interruptor "Entregas de amanhã" em Notificações, vale pros dois canais. Tutorial "Pedidos" atualizado.
 - Não existe staging (sem branch no Supabase, sem ambiente no repo). O SQL foi conferido no banco real dentro de um `do` que termina em erro, então nada ficou gravado: sem pedido, com pedido, entregue, cancelado, outro dia, interruptor desligado e aviso já enviado.
 - Ordem de publicação: migration `20261105220000`, edge function, deploy do app e, com o teste aprovado, `20261105220100` (cron) e `20261105220200` (novidade).
+
+## 2026-11-05 — Primeiros passos abrem na encomenda (ONE-175)
+
+Decisão da Sil, pra Pólia One não parecer ferramenta de precificação ("Sim, as quatro"). Nas contas confirmadas dos últimos 30 dias: 180 contas, 29 com produto (27 pela Calculadora), 1 com pedido, 1 com pedido entregue.
+
+- `lib/primeirosPassos.ts`: a ordem vira pedido, entregue e preço. Conta de serviço lê "pedido" no lugar de "encomenda". A pergunta "E a marca, já vende?" passa a vir depois do primeiro pedido.
+- Bônus de 7 dias: sai com um pedido entregue, sem exigir preço (migration `20261105230000`).
+- `ModalNovoPedido`: com o catálogo vazio, "Cadastrar o produto" abre o cadastro ali mesmo e o pedido continua. Antes o botão mandava pra Calculadora, e o primeiro passo voltaria ao preço.
+- `CartaoPedido`: sem custo, avisa "falta o custo pra mostrar o lucro". Com a ordem nova, o pedido pode vir antes do custo.
+- E-mails (migration `20261105230100` e edge function `lembretes-conta`): `guardar_d2` com o texto aprovado, pra quem está sem pedido entre 40 horas e 5 dias de conta. `segundo_passo_d4` com texto novo, pra quem tem pedido em aberto e nenhum entregue. `preco_d1` desligado. Boas-vindas na ordem nova. `teste_fim_2d` e `teste_acabou` ficam pro PAY-51.
+- Ordem de publicação: edge function primeiro, depois as migrations. Ao contrário, o público novo receberia o texto antigo. Na entrada, o `guardar_d2` alcança 8 contas e o `segundo_passo_d4`, nenhuma (simulação desfeita de 05/11).
+- Tutoriais "Primeiro acesso" e "Pedidos" atualizados.
+- Sem novidade no sino: o bloco só aparece pra quem ainda está nos primeiros passos, e quem já usa o Painel não vê a mudança.
+- `_shared/nichosAnuncio.ts` e o teste dele ficaram sem uso: a exclusão foi barrada pelo ambiente.
+

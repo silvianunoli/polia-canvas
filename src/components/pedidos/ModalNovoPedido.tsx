@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { hojeISO, somarDias } from "@/lib/data.functions";
@@ -12,8 +12,13 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { fmt, num } from "@/components/produtos/tipos";
 import { totalDaVenda, validarVenda, type ErroVenda } from "@/lib/vendas";
 import { ehErroDeTeto } from "@/lib/pedidos";
-import { useProdutosComEstoque, type ProdutoVendavel } from "@/components/vendas/dados";
+import {
+  chaveEstoque,
+  useProdutosComEstoque,
+  type ProdutoVendavel,
+} from "@/components/vendas/dados";
 import { ItemDaVenda, type LinhaItem } from "@/components/vendas/ModalRegistrarVenda";
+import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { registrarPedido } from "./dados";
 
 const INPUT =
@@ -37,6 +42,9 @@ function precisaDeVariacao(p: ProdutoVendavel | undefined): boolean {
  * Novo pedido (GRW-93, wireframe em cinza em docs/plano-quadro-de-pedidos.md):
  * cliente, produto, quantidade, dia da entrega e "Já pagou?". Grava pela
  * registrar_pedido, que é a registrar_venda de sempre com andamento e entrega.
+ *
+ * Catálogo vazio (ONE-175): o pedido é o primeiro passo da conta nova, então o
+ * produto é cadastrado aqui mesmo e o pedido segue, sem passar pela Calculadora.
  */
 export function ModalNovoPedido({
   userId,
@@ -47,6 +55,8 @@ export function ModalNovoPedido({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const qc = useQueryClient();
+  const [cadastrandoProduto, setCadastrandoProduto] = useState(false);
   const produtosQuery = useProdutosComEstoque(userId);
   const produtos = useMemo(() => produtosQuery.data ?? [], [produtosQuery.data]);
   const porId = useMemo(() => new Map(produtos.map((p) => [p.id, p])), [produtos]);
@@ -170,6 +180,24 @@ export function ModalNovoPedido({
   const carregando = produtosQuery.isLoading;
   const catalogoVazio = produtosQuery.isSuccess && produtos.length === 0;
 
+  if (cadastrandoProduto) {
+    return (
+      <ModalProduto
+        userId={userId}
+        prefill={null}
+        produtoEdit={null}
+        onClose={() => setCadastrandoProduto(false)}
+        onSaved={() => {
+          void qc.invalidateQueries({ queryKey: ["produtos", userId] });
+          void qc.invalidateQueries({ queryKey: ["produtos-total-ativos", userId] });
+          void qc.invalidateQueries({ queryKey: chaveEstoque(userId) });
+          void qc.invalidateQueries({ queryKey: ["produto-skus"] });
+          setCadastrandoProduto(false);
+        }}
+      />
+    );
+  }
+
   return (
     <Modal
       open
@@ -204,14 +232,20 @@ export function ModalNovoPedido({
         <div className="space-y-3 text-[14px] text-[var(--ink-soft)]">
           <p>
             O pedido sai de um produto do catálogo, com o preço e o custo dele. O catálogo ainda
-            está vazio.
+            está vazio: cadastre o produto desta encomenda e o pedido continua daqui.
           </p>
-          <Link
-            to="/calculadora"
-            className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
-          >
-            Calcular o preço do primeiro produto
-          </Link>
+          <button type="button" onClick={() => setCadastrandoProduto(true)} className={BTN_ACAO}>
+            Cadastrar o produto
+          </button>
+          <p>
+            Ainda sem preço fechado?{" "}
+            <Link
+              to="/calculadora"
+              className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
+            >
+              A Calculadora faz a conta
+            </Link>
+          </p>
         </div>
       ) : (
         <div className="space-y-5">

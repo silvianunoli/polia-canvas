@@ -15,9 +15,9 @@ export interface TestePro {
 }
 
 /**
- * Dias que completar os primeiros passos soma no teste (resgatar_bonus_primeiros_passos).
- * Desde 31/10/2026 os passos são o primeiro preço, o primeiro pedido e um
- * pedido entregue (migration 20261031200100); antes eram preço, Módulo 1 e nome.
+ * Dias que os primeiros passos somam no teste (resgatar_bonus_primeiros_passos).
+ * Desde 05/11/2026 (ONE-175, migration 20261105230000) basta um pedido entregue:
+ * o preço continua nos passos, mas não trava o bônus.
  */
 export const DIAS_BONUS_PASSOS = 7;
 

@@ -452,6 +452,7 @@ function PainelPage() {
   // Leitura que falhou não mostra o bloco: o Painel segue como era.
   const nichoPasso = useMemo(() => nichoDaConta(user?.user_metadata), [user?.user_metadata]);
   const primeiros = usePrimeirosPassos(userId, nichoPasso);
+  const escolhaTipoPasso = primeiros.dados?.escolhaTipo ?? null;
   const progressoPassos = useMemo(
     () =>
       primeiros.dados
@@ -547,7 +548,9 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
-    if (blocoVisivel) return mancheteDoBloco(nichoPasso, progressoPassos?.destaque ?? null);
+    if (blocoVisivel) {
+      return mancheteDoBloco(nichoPasso, progressoPassos?.destaque ?? null, escolhaTipoPasso);
+    }
     // Sem venda no mês, a manchete aponta pros Pedidos (31/10/2026: o
     // Planejamento saiu e a Pólia One é vendida como o sistema da marca). O
     // pedido é uma venda com dia de entrega, e o cartão dele mostra o lucro.
@@ -582,7 +585,15 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [receitaMes, metaBoa, metaMinima, blocoVisivel, nichoPasso, progressoPassos]);
+  }, [
+    receitaMes,
+    metaBoa,
+    metaMinima,
+    blocoVisivel,
+    nichoPasso,
+    progressoPassos,
+    escolhaTipoPasso,
+  ]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos

@@ -1,12 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   lembreteDeConfirmacao,
-  lembreteDePreco,
   montarEmailConfirmacao,
-  montarEmailPreco,
   type TipoLembrete,
 } from "../../supabase/functions/_shared/lembretesConta.ts";
-import { nichoDoAnuncio } from "../../supabase/functions/_shared/nichosAnuncio.ts";
 
 const HORA = 60 * 60 * 1000;
 const agora = new Date("2026-10-14T12:00:00Z");
@@ -46,69 +43,6 @@ describe("montarEmailConfirmacao", () => {
     expect(montarEmailConfirmacao("confirmacao_1h", "x").assunto).not.toBe(
       montarEmailConfirmacao("confirmacao_24h", "x").assunto,
     );
-  });
-});
-
-describe("lembreteDePreco", () => {
-  it("nada antes de 20 horas", () => {
-    expect(lembreteDePreco(ha(19.9), agora, false)).toBeNull();
-  });
-  it("entre 20 e 72 horas, uma vez só", () => {
-    expect(lembreteDePreco(ha(20), agora, false)).toBe("preco_d1");
-    expect(lembreteDePreco(ha(50), agora, false)).toBe("preco_d1");
-    expect(lembreteDePreco(ha(50), agora, true)).toBeNull();
-  });
-  it("nada a partir de 72 horas", () => {
-    expect(lembreteDePreco(ha(72), agora, false)).toBeNull();
-  });
-});
-
-describe("montarEmailPreco", () => {
-  const ULTIMO = "Este é o único lembrete sobre isso.";
-  const PRIMEIRO =
-    "A conta na Pólia One está pronta, mas o primeiro preço ainda não foi calculado.";
-
-  it("nicho de serviço fala da hora e abre a calculadora de serviço", () => {
-    const e = montarEmailPreco(nichoDoAnuncio("N02-trancista"));
-    expect(e.assunto).toBe("Trancista, ficou faltando a conta da sua hora");
-    expect(e.html).toContain("A conta da sua hora ainda está em branco");
-    expect(e.texto).toContain(
-      "A calculadora junta o material e o seu tempo e mostra quanto a hora precisa valer pra fechar o mês. Leva uns 3 minutos.",
-    );
-    expect(e.texto).toContain("https://one.usepolia.com.br/calculadora?tipo=servico");
-    expect(e.html).toContain("https://one.usepolia.com.br/calculadora?tipo=servico");
-  });
-
-  it("nicho de produto fala do produto e abre a calculadora de produto", () => {
-    const e = montarEmailPreco(nichoDoAnuncio("N07-confeiteira"));
-    expect(e.assunto).toBe("Confeiteira, ficou faltando a conta do seu produto");
-    expect(e.html).toContain("A conta do seu produto ainda está em branco");
-    expect(e.texto).toContain(
-      "A calculadora junta material, embalagem e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
-    );
-    expect(e.texto).toContain("https://one.usepolia.com.br/calculadora?tipo=produto");
-  });
-
-  it("sem nicho, versão geral que leva pro Painel", () => {
-    const e = montarEmailPreco(null);
-    expect(e.assunto).toBe("Falta o primeiro preço na sua Pólia One");
-    expect(e.html).toContain("O primeiro preço ainda está em branco");
-    expect(e.texto).toContain(
-      "A calculadora junta o custo real e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
-    );
-    expect(e.texto).toContain("https://one.usepolia.com.br/painel");
-    expect(e.texto).not.toContain("calculadora?tipo");
-  });
-
-  it("todas as versões: mesmo primeiro e último parágrafo, botão, link normal e sem travessão nem exclamação", () => {
-    for (const nicho of [nichoDoAnuncio("N17-designer"), nichoDoAnuncio("N18-papelaria"), null]) {
-      const e = montarEmailPreco(nicho);
-      expect(e.texto.startsWith(PRIMEIRO)).toBe(true);
-      expect(e.texto).toContain(ULTIMO);
-      expect(e.html).toContain("Quero calcular meu preço");
-      expect(e.texto).not.toMatch(/token|magiclink|verify/i);
-      expect(`${e.assunto} ${e.texto}`).not.toMatch(/[—–!]/);
-    }
   });
 });
 
@@ -154,16 +88,32 @@ describe("régua de ativação e do teste do Pro (GRW-66)", async () => {
     ).not.toContain("desligar");
   });
 
-  it("guardar_d2 fala da conta que parou no meio, não de preço calculado (GRW-90)", () => {
-    const e = montarEmailRegua("guardar_d2", { nome: null, testeFim: null, agora: antes });
-    expect(e.assunto).toBe("A conta do preço ficou no meio");
-    expect(e.texto).not.toMatch(/não ficou guardado|Guardar esse preço/);
+  it("guardar_d2 leva o texto aprovado e abre o quadro de Pedidos (ONE-175)", () => {
+    const e = montarEmailRegua("guardar_d2", { nome: "Ana", testeFim: null, agora: antes });
+    expect(e.assunto).toBe("A próxima encomenda já pode entrar no quadro");
+    expect(e.texto).toContain(
+      "O quadro de Pedidos está pronto na sua conta. Cadastre o produto da próxima encomenda e lance o pedido com o dia da entrega.",
+    );
+    expect(e.texto).toContain(
+      "A partir daí, a Pólia One mostra o que tem pra hoje e pra amanhã, quem já pagou e quanto cada encomenda lucra.",
+    );
+    expect(e.texto).toContain("Quero lançar a encomenda: https://one.usepolia.com.br/pedidos");
   });
 
-  it("assunto com nome quando há nome", () => {
-    expect(
-      montarEmailRegua("guardar_d2", { nome: "Ana", testeFim: null, agora: antes }).assunto,
-    ).toMatch(/^Ana, /);
+  it("segundo_passo_d4 fala da entrega e abre o quadro de Pedidos (ONE-175)", () => {
+    const e = montarEmailRegua("segundo_passo_d4", { nome: null, testeFim: null, agora: antes });
+    expect(e.assunto).toBe("Agora que a encomenda está no quadro");
+    expect(e.html).toContain("O passo seguinte é a entrega");
+    expect(e.texto).toContain(
+      "Quero abrir o quadro de Pedidos: https://one.usepolia.com.br/pedidos",
+    );
+  });
+
+  it("os dois e-mails de ativação não falam de preço, meta nem Calculadora (ONE-175)", () => {
+    for (const tipo of ["guardar_d2", "segundo_passo_d4"] as const) {
+      const e = montarEmailRegua(tipo, { nome: null, testeFim: null, agora: antes });
+      expect(`${e.assunto} ${e.texto}`, tipo).not.toMatch(/preço|meta|calculadora/i);
+    }
   });
 
   it("tipo desconhecido não passa", () => {

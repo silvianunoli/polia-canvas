@@ -123,9 +123,9 @@ export function usePrimeirosPassos(userId: string | undefined, nicho: NichoDoPas
           .not("calculadora_breakdown", "is", null)
           .order("created_at", { ascending: true })
           .limit(1),
-        // Mesma régua da resgatar_bonus_primeiros_passos (migration
-        // 20261031200100): pedido é venda com andamento; entregue é o
-        // andamento "entregue" sem cancelamento. Só a contagem, sem linhas.
+        // Pedido é venda com andamento; entregue é o andamento "entregue" sem
+        // cancelamento, a mesma régua da resgatar_bonus_primeiros_passos
+        // (migration 20261105230000). Só a contagem, sem linhas.
         supabase
           .from("vendas")
           .select("id", { count: "exact", head: true })

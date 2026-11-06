@@ -7,13 +7,16 @@ import {
   CTA_PRECO,
   ESCOLHAS_ESTAGIO,
   ESCOLHAS_TIPO,
+  HREF_PEDIDOS,
   ORDEM_PASSOS,
-  PASSO_ENTREGUE,
-  PASSO_PEDIDO,
   hrefCalculadora,
   perguntaEstagio,
+  textoConviteBonus,
+  textoPassoEntregue,
+  textoPassoPedido,
   textoPassoPreco,
   tipoPrecoDaEscolha,
+  vendeServico,
   type EscolhaTipo,
   type EstagioNegocio,
   type IdPasso,
@@ -28,9 +31,8 @@ const ROTULO = "font-accent text-[11px] font-bold uppercase tracking-[0.12em] te
 
 /**
  * Bloco "Primeiros passos" do topo do Painel (14/10/2026, desenho em cinza
- * aprovado pela Sil). Desde 31/10/2026 os três passos são de operação: o
- * primeiro preço, o primeiro pedido e o primeiro pedido entregue (o
- * Planejamento saiu da Pólia One). Três passos numerados; o primeiro não feito fica em
+ * aprovado pela Sil). Desde 05/11/2026 (ONE-175) a ordem abre na encomenda: o
+ * pedido, a entrega e o preço. Três passos numerados; o primeiro não feito fica em
  * destaque (fundo, sem faixa lateral) e é o único com ação, pra a tela ter um
  * recado só. Feito ganha o check e o destaque desce. Com os três feitos o
  * Painel deixa de renderizar o bloco.
@@ -59,7 +61,7 @@ export function PrimeirosPassos({
   onEscolherEstagio: (e: EstagioNegocio) => Promise<boolean>;
   nichoSalvo: NichoNegocio | null;
   onEscolherNicho: (n: NichoNegocio) => Promise<boolean>;
-  /** Dias que o teste do Pro ganha ao completar os três (ONE-136). null = não oferece. */
+  /** Dias que o teste do Pro ganha com a encomenda entregue (ONE-136, ONE-175). null = não oferece. */
   bonusDias?: number | null;
   /**
    * O primeiro preço guardado (GRW-90). Com ele, o passo feito mostra o
@@ -69,12 +71,15 @@ export function PrimeirosPassos({
 }) {
   const tituloId = useId();
   const tituloRef = useRef<HTMLHeadingElement>(null);
-  const preco = textoPassoPreco(nicho);
+  const servico = vendeServico(nicho, escolhaSalva);
+  const preco = textoPassoPreco(nicho, escolhaSalva);
+  const pedido = textoPassoPedido(servico);
+  const entregue = textoPassoEntregue(servico);
 
   const textos: Record<IdPasso, { titulo: string; subtitulo: string }> = {
+    pedido,
+    entregue,
     preco: { titulo: preco.titulo, subtitulo: preco.subtitulo },
-    pedido: { titulo: PASSO_PEDIDO.titulo, subtitulo: PASSO_PEDIDO.subtitulo },
-    entregue: { titulo: PASSO_ENTREGUE.titulo, subtitulo: PASSO_ENTREGUE.subtitulo },
   };
 
   const acao = (id: IdPasso): ReactNode => {
@@ -88,10 +93,9 @@ export function PrimeirosPassos({
         </LinkInterno>
       );
     }
-    const passo = id === "pedido" ? PASSO_PEDIDO : PASSO_ENTREGUE;
     return (
-      <LinkInterno href={passo.href} className={`${BTN_ACAO} mt-4`}>
-        {passo.acao}
+      <LinkInterno href={HREF_PEDIDOS} className={`${BTN_ACAO} mt-4`}>
+        {id === "pedido" ? pedido.acao : entregue.acao}
         <span aria-hidden="true">→</span>
       </LinkInterno>
     );
@@ -112,7 +116,7 @@ export function PrimeirosPassos({
       </div>
       {bonusDias != null && (
         <p className="mt-1 px-1 text-[14px] text-[var(--ink-soft)]">
-          Preço, pedido e entrega feitos, o teste do Pro ganha mais {bonusDias} dias.
+          {textoConviteBonus(servico, bonusDias)}
         </p>
       )}
 
@@ -193,7 +197,7 @@ export function PrimeirosPassos({
         })}
       </ol>
 
-      {perguntaEstagio(progresso.feitos.preco, estagioSalvo) && (
+      {perguntaEstagio(progresso.feitos.pedido, estagioSalvo) && (
         <PerguntaEstagio onEscolher={onEscolherEstagio} />
       )}
     </section>

@@ -1,5 +1,4 @@
 import { emailPolia } from "./email-polia.ts";
-import type { NichoAnuncio } from "./nichosAnuncio.ts";
 
 // Lembretes pra conta nova (GRW-33, 14/10/2026). Puro: monta o e-mail e decide
 // qual lembrete cabe, sem rede nem banco, pra ficar testável.
@@ -8,14 +7,12 @@ import type { NichoAnuncio } from "./nichosAnuncio.ts";
 // confirmaram (o e-mail foi entregue e ficou parado). Um lembrete 1 hora depois
 // e outro 24 horas depois, cada um com link novo que confirma e já entra.
 //
-// Primeiro preço (preco_d1, 15/10/2026): conta confirmada que no dia seguinte
-// ainda não calculou nenhum preço recebe um e-mail só, com a copy do nicho do
-// anúncio (serviço ou produto) quando ele é conhecido. O link é URL normal, não
-// magiclink: o magiclink vence em pouco tempo e este e-mail é aberto horas
-// depois. Sem sessão, o app manda pro login e volta pro destino.
+// O "preco_d1" (Falta o primeiro preço) saiu em 05/11/2026 (ONE-175, decisão da
+// Sil): era o primeiro e-mail da conta e abria a conversa pelo preço. As linhas
+// antigas de lembretes_conta com esse tipo continuam como registro de envio.
 
 export type TipoConfirmacao = "confirmacao_1h" | "confirmacao_24h";
-export type TipoLembrete = TipoConfirmacao | "preco_d1";
+export type TipoLembrete = TipoConfirmacao;
 
 const HORA = 60 * 60 * 1000;
 
@@ -79,74 +76,7 @@ export function montarEmailConfirmacao(
   };
 }
 
-/**
- * O lembrete do primeiro preço cabe? Conta confirmada entre 20 e 72 horas de
- * vida (o dia seguinte, com folga pra quem se cadastrou antes de ele existir),
- * sem preço calculado (o banco já filtra) e que ainda não recebeu. Uma vez só.
- */
-export function lembreteDePreco(
-  criadaEm: Date,
-  agora: Date,
-  jaRecebeu: boolean,
-): "preco_d1" | null {
-  if (jaRecebeu) return null;
-  const idade = agora.getTime() - criadaEm.getTime();
-  return idade >= 20 * HORA && idade < 72 * HORA ? "preco_d1" : null;
-}
-
 const SITE = "https://one.usepolia.com.br";
-
-const PRIMEIRO_PARAGRAFO =
-  "A conta na Pólia One está pronta, mas o primeiro preço ainda não foi calculado.";
-const ULTIMO_PARAGRAFO = "Este é o único lembrete sobre isso.";
-
-/** E-mail do primeiro preço. Sem nicho conhecido, a versão geral leva pro Painel. */
-export function montarEmailPreco(nicho: NichoAnuncio | null): {
-  assunto: string;
-  texto: string;
-  html: string;
-} {
-  const copy =
-    nicho?.tipo === "servico"
-      ? {
-          assunto: `${nicho.pessoa}, ficou faltando a conta da sua hora`,
-          headline: "A conta da sua hora ainda está em branco",
-          segundo:
-            "A calculadora junta o material e o seu tempo e mostra quanto a hora precisa valer pra fechar o mês. Leva uns 3 minutos.",
-          preheader: "Uns 3 minutos e a Pólia One mostra quanto a hora precisa valer.",
-          url: `${SITE}/calculadora?tipo=servico`,
-        }
-      : nicho?.tipo === "produto"
-        ? {
-            assunto: `${nicho.pessoa}, ficou faltando a conta do seu produto`,
-            headline: "A conta do seu produto ainda está em branco",
-            segundo:
-              "A calculadora junta material, embalagem e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
-            preheader: "Uns 3 minutos e a Pólia One mostra o preço que dá lucro.",
-            url: `${SITE}/calculadora?tipo=produto`,
-          }
-        : {
-            assunto: "Falta o primeiro preço na sua Pólia One",
-            headline: "O primeiro preço ainda está em branco",
-            segundo:
-              "A calculadora junta o custo real e o seu tempo e mostra o preço que dá lucro de verdade. Leva uns 3 minutos.",
-            preheader: "Uns 3 minutos e a Pólia One mostra o preço que dá lucro.",
-            url: `${SITE}/painel`,
-          };
-  const paragrafos = [PRIMEIRO_PARAGRAFO, copy.segundo, ULTIMO_PARAGRAFO];
-  const ctaLabel = "Quero calcular meu preço";
-  return {
-    assunto: copy.assunto,
-    texto: `${paragrafos.join("\n\n")}\n\n${ctaLabel}: ${copy.url}`,
-    html: emailPolia({
-      preheader: copy.preheader,
-      headline: copy.headline,
-      paragrafos,
-      ctaLabel,
-      ctaUrl: copy.url,
-    }),
-  };
-}
 
 // ── Régua de ativação e do teste do Pro (GRW-66, 20/10/2026) ──
 // Quem cabe em cada e-mail o banco decide (RPC contas_regua_ativacao); aqui é
@@ -277,38 +207,38 @@ export function montarEmailRegua(
         url: `${SITE}/assinar`,
       };
       break;
-    // Desde GRW-90 (27/10/2026) o primeiro preço é guardado sozinho quando o
-    // resultado aparece. Quem cai aqui abriu a Calculadora e não chegou ao
-    // preço: o texto antigo ("o preço não ficou guardado") deixou de ser verdade.
+    // Desde ONE-175 (05/11/2026) os dois falam da encomenda, não de preço e meta,
+    // pra Pólia One não parecer ferramenta de precificação. A chave interna fica:
+    // quem já recebeu a versão antiga não recebe de novo (migration 20261105230100).
+    // Dois dias de conta, sem pedido lançado. Texto aprovado pela Sil em
+    // Polia Lab/clientes/polia-one/05-vendas/TA-CARO-E-CAMINHO.md, Parte 3.
     case "guardar_d2":
       c = {
-        assunto: d.nome
-          ? `${d.nome}, a conta do preço ficou no meio`
-          : "A conta do preço ficou no meio",
-        headline: "A conta do preço ficou no meio",
-        preheader: "Quando o resultado aparece, a Pólia One já guarda o preço no catálogo.",
+        assunto: "A próxima encomenda já pode entrar no quadro",
+        headline: "A próxima encomenda já pode entrar no quadro",
+        preheader: "Cadastre o produto e lance o pedido com o dia da entrega.",
         paragrafos: [
-          "A Calculadora foi aberta, mas a conta parou antes do preço aparecer.",
-          "Com os custos e o tempo preenchidos, o preço aparece embaixo, e a Pólia One guarda esse preço no catálogo na hora, com o custo e o lucro. Não precisa de botão.",
-          "Com um preço guardado, a Pólia One mostra quantas vendas a Meta do mês pede.",
+          "O quadro de Pedidos está pronto na sua conta. Cadastre o produto da próxima encomenda e lance o pedido com o dia da entrega.",
+          "A partir daí, a Pólia One mostra o que tem pra hoje e pra amanhã, quem já pagou e quanto cada encomenda lucra.",
           RODAPE_DICAS,
         ],
-        ctaLabel: "Quero terminar a conta",
-        url: `${SITE}/calculadora`,
+        ctaLabel: "Quero lançar a encomenda",
+        url: `${SITE}/pedidos`,
       };
       break;
+    // Quatro dias de conta, com pedido em aberto e nenhum entregue.
     case "segundo_passo_d4":
       c = {
-        assunto: "Agora que o preço está guardado",
-        headline: "O passo seguinte é a meta do mês",
-        preheader: "Com a meta, a Pólia One mostra quantas vendas faltam.",
+        assunto: "Agora que a encomenda está no quadro",
+        headline: "O passo seguinte é a entrega",
+        preheader: "Entregue, o cartão mostra quanto a encomenda lucrou.",
         paragrafos: [
-          "O primeiro preço já está no catálogo. O passo seguinte é dizer quanto o mês precisa trazer.",
-          "Com a Meta do mês, a Pólia One cruza o preço com o objetivo e mostra quantas vendas faltam. Leva menos de um minuto.",
+          "A encomenda já está no quadro. Quando ela sair, é só passar o cartão até Entregue.",
+          "Entregue, ela entra no mês, e o cartão mostra quanto lucrou.",
           RODAPE_DICAS,
         ],
-        ctaLabel: "Quero definir a meta do mês",
-        url: `${SITE}/metas`,
+        ctaLabel: "Quero abrir o quadro de Pedidos",
+        url: `${SITE}/pedidos`,
       };
       break;
   }

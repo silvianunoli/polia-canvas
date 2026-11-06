@@ -72,7 +72,7 @@ const LISTA = [
     rota: "/painel",
     abrir: "Abrir o Painel",
     resumo:
-      "Os três primeiros passos que aparecem no topo do Painel: o primeiro preço, o primeiro pedido e o primeiro pedido entregue.",
+      "Os três primeiros passos que aparecem no topo do Painel: lançar a próxima encomenda, marcar como entregue e ver o lucro, e calcular o preço de um produto.",
     passos: [
       {
         titulo: "Antes dos passos: o nicho",
@@ -84,16 +84,16 @@ const LISTA = [
       {
         titulo: "Os três passos",
         itens: [
-          '"Calcular o primeiro preço": escolha "Produto", "Serviço" ou "Os dois" e clique em "Quero calcular meu preço →". A Calculadora abre na aba certa e guarda o primeiro preço sozinha.',
-          '"Lançar o primeiro pedido": clique em "Quero lançar um pedido →". No quadro de Pedidos, "Anotar o primeiro pedido" guarda a cliente, o que ela pediu e o dia da entrega.',
-          '"Marcar um pedido como entregue e ver o lucro": clique em "Quero abrir o quadro de Pedidos →" e passe o pedido até "Entregue". O cartão do pedido mostra quanto ele lucra.',
+          '"Lançar a próxima encomenda": clique em "Quero lançar a encomenda →". No quadro de Pedidos, "Anotar o primeiro pedido" guarda a cliente, o que ela pediu e o dia da entrega. Com o catálogo vazio, "Cadastrar o produto" abre o cadastro ali mesmo e o pedido continua. Quem vende serviço lê "Lançar o próximo pedido".',
+          '"Marcar como entregue e ver o lucro": clique em "Quero abrir o quadro de Pedidos →" e passe o pedido até "Entregue". O cartão do pedido mostra quanto ele lucra. Sem o custo do produto, o cartão avisa "falta o custo pra mostrar o lucro".',
+          '"Calcular o preço de um produto": clique em "Quero calcular meu preço →". Sem anúncio de nicho, escolha antes "Produto", "Serviço" ou "Os dois". A Calculadora abre na aba certa e, se ainda não houver preço calculado, guarda esse primeiro sozinha.',
           'O contador "N de 3" acompanha. Com os três feitos, o bloco some e o Painel passa a mostrar o mês.',
         ],
       },
     ],
     bomSaber: [
       "Só o primeiro passo que falta fica aceso. Os outros esperam a vez.",
-      "Conta nova começa com 7 dias do Pro. Fechando os três passos durante o teste, ele ganha mais 7 dias.",
+      "Conta nova começa com 7 dias do Pro. Com um pedido lançado e entregue durante o teste, ele ganha mais 7 dias. O preço não precisa estar calculado.",
       'O nome da marca fica em Configurações, em "Seu negócio", junto com o logo e a cor.',
       'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados" e "Central de ajuda". No app, os dois ficam na aba Mais.',
     ],
@@ -886,7 +886,7 @@ const LISTA = [
       {
         titulo: "Anotar um pedido",
         itens: [
-          'No menu, abra "Pedidos" e clique em "Novo pedido".',
+          'No menu, abra "Pedidos" e clique em "Novo pedido". Com o catálogo vazio, clique em "Cadastrar o produto": o cadastro abre ali mesmo e, salvo, o pedido continua.',
           'Em "Cliente", escolha da lista ou digite um nome novo.',
           'Escolha o produto do catálogo, a variação (quando tiver) e a quantidade. O preço vem do catálogo. "+ mais um produto" põe outro item no mesmo pedido.',
           'Escolha o dia em "Entrega" e responda "Já pagou?".',
@@ -918,7 +918,8 @@ const LISTA = [
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
       "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
-      'Lançar o primeiro pedido e levar um pedido até "Entregue" são dois dos Primeiros passos do Painel.',
+      'Lançar a próxima encomenda e levar um pedido até "Entregue" são os dois primeiros dos Primeiros passos do Painel.',
+      'O cartão mostra quanto o pedido lucra quando o produto tem custo. Sem custo, ele avisa "falta o custo pra mostrar o lucro": coloque em Produtos e a Pólia One corrige a venda.',
       "Pedido novo que chega pela loja do Catálogo também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
       'Às 18h da véspera, a Pólia One manda um e-mail com os pedidos que têm entrega no dia seguinte e ainda não foram entregues, e um aviso no celular se o app estiver instalado. Sem entrega amanhã, não sai nada. Pra desligar, abra "Configurações" e, em "Notificações", desligue "Entregas de amanhã".',
     ],

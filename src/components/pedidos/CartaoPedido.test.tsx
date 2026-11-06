@@ -63,6 +63,13 @@ describe("CartaoPedido (GRW-93)", () => {
     expect(screen.getByText("a receber")).toBeTruthy();
   });
 
+  it("sem custo, o cartão diz o que falta pra mostrar o lucro (ONE-175)", () => {
+    const base = pedido();
+    montar({ ...base, itens: [{ ...base.itens[0], custoUnitario: null }] });
+    expect(screen.getByText(/falta o custo pra mostrar o lucro/)).toBeTruthy();
+    expect(screen.queryByText(/lucra/)).toBeNull();
+  });
+
   it("avisa o atraso e avança pra próxima coluna", async () => {
     const props = montar(pedido({ entregaEm: "2026-10-27" }));
     expect(screen.getByText("atrasado desde 27/10")).toBeTruthy();

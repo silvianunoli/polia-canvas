@@ -58,12 +58,14 @@ export function CartaoPedido({
         <span className="mt-0.5 block text-[var(--ink-soft)]">{resumoDosItens(pedido)}</span>
         <span className="mt-1 block text-[var(--ink)]">
           {fmt(pedido.total)}
-          {lucro != null && (
-            <span className="text-[var(--muted)]">
-              {" "}
-              · lucra {fmt(Math.round(lucro * 100) / 100)}
-            </span>
-          )}
+          {/* Desde ONE-175 o pedido vem antes da Calculadora, e o custo é opcional no cadastro. */}
+          <span className="text-[var(--muted)]">
+            {" "}
+            ·{" "}
+            {lucro != null
+              ? `lucra ${fmt(Math.round(lucro * 100) / 100)}`
+              : "falta o custo pra mostrar o lucro"}
+          </span>
         </span>
         <span
           className={`mt-1 block text-[13px] ${

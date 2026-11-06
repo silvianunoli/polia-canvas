@@ -103,12 +103,12 @@ describe("garantirBoasVindas: regra do 'só marca com envio confirmado'", () => 
     );
     const { text, html } = enviarEmailResend.mock.calls[0][0] as { text: string; html: string };
     // Desde GRW-33 (15/10/2026) o próximo passo são os Primeiros passos do
-    // Painel. Desde 31/10/2026 eles são preço, pedido e entregue, sem o
-    // Planejamento, que saiu da Pólia One.
+    // Painel. Desde 05/11/2026 (ONE-175) eles abrem na encomenda: pedido,
+    // entregue e preço, sem o Planejamento, que saiu da Pólia One.
     expect(text).toContain("https://one.usepolia.com.br/painel");
     expect(html).toContain("https://one.usepolia.com.br/painel");
     expect(text).toContain("sistema da sua marca");
-    expect(text).toContain("primeiro pedido");
+    expect(text).toContain("O primeiro é lançar a próxima encomenda");
     expect(text).toContain("entregue");
     expect(`${text} ${html}`).not.toMatch(/Planejamento|Módulo/);
     expect(html).toContain("Abrir a Pólia One");

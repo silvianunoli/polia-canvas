@@ -4,13 +4,10 @@ import {
   montarEmailRegua,
   type TipoRegua,
   lembreteDeConfirmacao,
-  lembreteDePreco,
   montarEmailConfirmacao,
-  montarEmailPreco,
   type TipoConfirmacao,
   type TipoLembrete,
 } from "../_shared/lembretesConta.ts";
-import { nichoDoAnuncio } from "../_shared/nichosAnuncio.ts";
 import { linkDeEmailPelaPolia } from "../_shared/linkDeEmail.ts";
 import { mascararEmail } from "../_shared/stripeWebhookRegras.ts";
 
@@ -20,15 +17,12 @@ import { mascararEmail } from "../_shared/stripeWebhookRegras.ts";
 // verify_jwt desligado: quem chama não tem sessão; o segredo do cron mora no
 // Vault e é conferido por RPC.
 //
-// Dois tipos, cada um sai uma vez só por conta (lembretes_conta, marcado antes
-// de enviar):
+// Cada e-mail sai uma vez só por conta (lembretes_conta, marcado antes de enviar):
 // - Confirmação de e-mail (confirmacao_1h e confirmacao_24h), pra conta não
 //   confirmada (RPC contas_sem_confirmacao). O link é um magiclink novo: abrir
 //   confirma o e-mail e já entra na conta.
-// - Primeiro preço (preco_d1, 15/10/2026), pra conta confirmada entre 20 e 72
-//   horas sem nenhum preço calculado (RPC contas_sem_preco). Copy pelo nicho do
-//   anúncio (utm_content). Link normal pra Calculadora ou Painel, não magiclink:
-//   o magiclink vence antes de o e-mail do dia seguinte ser aberto.
+// - Régua de ativação e do teste do Pro (RPC contas_regua_ativacao).
+// O preco_d1 (Falta o primeiro preço) saiu em 05/11/2026 (ONE-175).
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -87,13 +81,6 @@ type ContaSemConfirmacao = {
   criado_em: string;
   enviados: string[];
 };
-type ContaSemPreco = {
-  user_id: string;
-  email: string;
-  criado_em: string;
-  utm_content: string | null;
-  ja_recebeu: boolean;
-};
 type ContaRegua = {
   user_id: string;
   email: string;
@@ -111,7 +98,7 @@ type Envio = {
 };
 
 async function ler<T>(
-  rpc: "contas_sem_confirmacao" | "contas_sem_preco" | "contas_regua_ativacao",
+  rpc: "contas_sem_confirmacao" | "contas_regua_ativacao",
 ): Promise<T[] | null> {
   const { data, error } = await supabaseAdmin.rpc(rpc);
   if (error) {
@@ -129,13 +116,12 @@ Deno.serve(async (req: Request) => {
     return new Response(JSON.stringify({ ok: false, motivo: "sem_resend" }), { status: 500 });
   }
 
-  const [semConfirmacao, semPreco, regua] = await Promise.all([
+  const [semConfirmacao, regua] = await Promise.all([
     ler<ContaSemConfirmacao>("contas_sem_confirmacao"),
-    ler<ContaSemPreco>("contas_sem_preco"),
     ler<ContaRegua>("contas_regua_ativacao"),
   ]);
-  // Uma leitura que falha não segura as outras; todas falhando é erro de verdade.
-  if (!semConfirmacao && !semPreco && !regua) {
+  // Uma leitura que falha não segura a outra; as duas falhando é erro de verdade.
+  if (!semConfirmacao && !regua) {
     return new Response(JSON.stringify({ ok: false, motivo: "falha_leitura" }), { status: 500 });
   }
 
@@ -161,16 +147,6 @@ Deno.serve(async (req: Request) => {
       },
     });
   }
-  for (const c of semPreco ?? []) {
-    const tipo = lembreteDePreco(new Date(c.criado_em), agora, c.ja_recebeu);
-    if (!tipo) continue;
-    envios.push({
-      user_id: c.user_id,
-      email: c.email,
-      tipo,
-      montar: () => Promise.resolve(montarEmailPreco(nichoDoAnuncio(c.utm_content))),
-    });
-  }
 
   // Régua de ativação e do teste do Pro (GRW-66). O banco já escolheu um tipo
   // por conta, o mais urgente, e tirou quem recebeu e-mail nas últimas 20 horas.
@@ -190,8 +166,8 @@ Deno.serve(async (req: Request) => {
   let falhas = 0;
   for (const envio of envios.slice(0, LOTE)) {
     // Marca antes de enviar: se o envio falhar, não insiste a cada 15 min
-    // (na confirmação, o próximo lembrete da janela ainda vem; o preco_d1 é
-    // um só e fica por isso mesmo). Conflito = outra execução já pegou.
+    // (na confirmação, o próximo lembrete da janela ainda vem; os da régua são
+    // um só e ficam por isso mesmo). Conflito = outra execução já pegou.
     const { error: erroMarca } = await supabaseAdmin
       .from("lembretes_conta")
       .insert({ user_id: envio.user_id, tipo: envio.tipo });

@@ -10,11 +10,14 @@ import {
   mostraBloco,
   nichoDaConta,
   progressoPrimeirosPassos,
+  textoConviteBonus,
+  textoPassoEntregue,
+  textoPassoPedido,
   textoPassoPreco,
   tipoPrecoDaBusca,
   tipoPrecoDaEscolha,
-  PASSO_PEDIDO,
-  PASSO_ENTREGUE,
+  vendeServico,
+  HREF_PEDIDOS,
   CTA_PRECO,
   ESCOLHAS_TIPO,
 } from "./primeirosPassos";
@@ -77,27 +80,27 @@ describe("contaVeBloco (quem vê o bloco)", () => {
 });
 
 describe("progressoPrimeirosPassos", () => {
-  it("nada feito: destaque no preço", () => {
+  it("nada feito: destaque na encomenda, não no preço (ONE-175)", () => {
     const p = progressoPrimeirosPassos({ temPreco: false, temPedido: false, temEntregue: false });
-    expect(p.destaque).toBe("preco");
+    expect(p.destaque).toBe("pedido");
     expect(p.totalFeitos).toBe(0);
     expect(p.completo).toBe(false);
   });
 
-  it("o destaque desce pro próximo não feito", () => {
+  it("o destaque desce pro próximo não feito, e o preço vem por último", () => {
     expect(
-      progressoPrimeirosPassos({ temPreco: true, temPedido: false, temEntregue: false }).destaque,
-    ).toBe("pedido");
-    expect(
-      progressoPrimeirosPassos({ temPreco: true, temPedido: true, temEntregue: false }).destaque,
+      progressoPrimeirosPassos({ temPreco: false, temPedido: true, temEntregue: false }).destaque,
     ).toBe("entregue");
+    expect(
+      progressoPrimeirosPassos({ temPreco: false, temPedido: true, temEntregue: true }).destaque,
+    ).toBe("preco");
   });
 
   it("feito fora de ordem não pula o primeiro pendente", () => {
-    const p = progressoPrimeirosPassos({ temPreco: false, temPedido: true, temEntregue: true });
-    expect(p.destaque).toBe("preco");
-    expect(p.feitos).toEqual({ preco: false, pedido: true, entregue: true });
-    expect(p.totalFeitos).toBe(2);
+    const p = progressoPrimeirosPassos({ temPreco: true, temPedido: false, temEntregue: false });
+    expect(p.destaque).toBe("pedido");
+    expect(p.feitos).toEqual({ preco: true, pedido: false, entregue: false });
+    expect(p.totalFeitos).toBe(1);
   });
 
   it("os três feitos: completo, sem destaque", () => {
@@ -198,36 +201,58 @@ describe("textos", () => {
       perguntaTipo: false,
     });
     expect(textoPassoPreco(null)).toEqual({
-      titulo: "Calcular o primeiro preço",
+      titulo: "Calcular o preço de um produto",
       subtitulo: "A sua marca vende o quê?",
       perguntaTipo: true,
     });
+    expect(textoPassoPreco(null, "servico").titulo).toBe("Calcular o preço da sua hora");
   });
 
-  it("manchete por nicho e sem nicho", () => {
+  it("manchete abre na encomenda, por nicho e sem nicho (ONE-175)", () => {
     expect(mancheteDoBloco({ pessoa: "Trancista", tipo: "servico", negocio: null })).toBe(
-      "Trancista, o preço da sua hora começa por aqui.",
+      "Trancista, o próximo pedido entra no quadro por aqui.",
     );
     expect(
       mancheteDoBloco({ pessoa: "Papelaria personalizada", tipo: "produto", negocio: null }),
-    ).toBe("Papelaria personalizada, o preço do seu produto começa por aqui.");
+    ).toBe("Papelaria personalizada, a próxima encomenda entra no quadro por aqui.");
     expect(mancheteDoBloco(null)).toBe(
-      "Três passos e o Painel começa a mostrar quanto a marca lucra.",
+      "A próxima encomenda entra no quadro, e o Painel começa a mostrar quanto a marca lucra.",
+    );
+    expect(mancheteDoBloco(null, "pedido", "servico")).toBe(
+      "O próximo pedido entra no quadro, e o Painel começa a mostrar quanto a marca lucra.",
     );
   });
 
-  it("manchete acompanha o passo em destaque (pedido e entregue)", () => {
-    expect(mancheteDoBloco(null, "pedido")).toMatch(/primeiro pedido/);
+  it("manchete acompanha o passo em destaque", () => {
+    expect(mancheteDoBloco(null, "entregue")).toMatch(/A encomenda está no quadro/);
     expect(
       mancheteDoBloco({ pessoa: "Trancista", tipo: "servico", negocio: null }, "entregue"),
-    ).toMatch(/entregue/);
+    ).toMatch(/O pedido está no quadro/);
+    expect(mancheteDoBloco(null, "preco")).toMatch(/Calculadora/);
+    expect(mancheteDoBloco(null, null)).toMatch(/nicho/);
   });
 
-  it("os passos de pedido levam pro quadro de Pedidos, sem o Planejamento", () => {
-    expect(PASSO_PEDIDO.href).toBe("/pedidos");
-    expect(PASSO_ENTREGUE.href).toBe("/pedidos");
-    for (const t of [PASSO_PEDIDO, PASSO_ENTREGUE].flatMap((p) => [p.titulo, p.subtitulo])) {
-      expect(t).not.toMatch(/Planejamento|Módulo/);
+  it("quem vende serviço lê pedido; o anúncio vale antes da escolha salva", () => {
+    expect(vendeServico(null, "servico")).toBe(true);
+    expect(vendeServico(null, "os_dois")).toBe(false);
+    expect(vendeServico(null, null)).toBe(false);
+    expect(vendeServico({ pessoa: "X", tipo: "produto", negocio: null }, "servico")).toBe(false);
+    expect(textoPassoPedido(false).titulo).toBe("Lançar a próxima encomenda");
+    expect(textoPassoPedido(true).titulo).toBe("Lançar o próximo pedido");
+    expect(textoConviteBonus(false, 7)).toBe(
+      "Encomenda lançada e entregue, o teste do Pro ganha mais 7 dias.",
+    );
+    expect(textoConviteBonus(true, 7)).toBe(
+      "Pedido lançado e entregue, o teste do Pro ganha mais 7 dias.",
+    );
+  });
+
+  it("os passos de pedido levam pro quadro de Pedidos e não falam de preço", () => {
+    expect(HREF_PEDIDOS).toBe("/pedidos");
+    for (const servico of [false, true]) {
+      for (const p of [textoPassoPedido(servico), textoPassoEntregue(servico)]) {
+        expect(`${p.titulo} ${p.subtitulo}`).not.toMatch(/Planejamento|Módulo|preço|Calculadora/);
+      }
     }
   });
 
@@ -239,21 +264,23 @@ describe("textos", () => {
       ...Object.values(textoPassoPreco({ pessoa: "X", tipo: "servico", negocio: null })).filter(
         (v) => typeof v === "string",
       ),
-      mancheteDoBloco(null, "pedido"),
+      mancheteDoBloco(null, "preco"),
       mancheteDoBloco(null, "entregue"),
-      PASSO_PEDIDO.titulo,
-      PASSO_PEDIDO.subtitulo,
-      PASSO_PEDIDO.acao,
-      PASSO_ENTREGUE.titulo,
-      PASSO_ENTREGUE.subtitulo,
-      PASSO_ENTREGUE.acao,
+      mancheteDoBloco(null, null),
+      ...[false, true].flatMap((s) => [
+        ...Object.values(textoPassoPedido(s)),
+        ...Object.values(textoPassoEntregue(s)),
+        textoConviteBonus(s, 7),
+      ]),
       CTA_PRECO,
       ...ESCOLHAS_TIPO.map((e) => e.rotulo),
     ] as string[];
     for (const t of textos) expect(t, t).not.toMatch(/[—–!]|\p{Extended_Pictographic}/u);
     expect(CTA_PRECO.startsWith("Quero")).toBe(true);
-    expect(PASSO_PEDIDO.acao.startsWith("Quero")).toBe(true);
-    expect(PASSO_ENTREGUE.acao.startsWith("Quero")).toBe(true);
+    for (const s of [false, true]) {
+      expect(textoPassoPedido(s).acao.startsWith("Quero")).toBe(true);
+      expect(textoPassoEntregue(s).acao.startsWith("Quero")).toBe(true);
+    }
   });
 });
 
@@ -265,7 +292,7 @@ describe("estágio do negócio (GRW-66)", async () => {
     expect(estagioDoBanco("outro")).toBeNull();
     expect(estagioDoBanco(null)).toBeNull();
   });
-  it("pergunta só com preço calculado e estágio vazio", () => {
+  it("pergunta só com pedido lançado e estágio vazio", () => {
     expect(perguntaEstagio(false, null)).toBe(false);
     expect(perguntaEstagio(true, null)).toBe(true);
     expect(perguntaEstagio(true, "comecei")).toBe(false);

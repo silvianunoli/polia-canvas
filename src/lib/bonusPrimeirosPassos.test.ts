@@ -5,28 +5,26 @@ import { describe, expect, it } from "vitest";
 import { ANDAMENTOS } from "./pedidos";
 import { ORDEM_PASSOS } from "./primeirosPassos";
 
-// resgatar_bonus_primeiros_passos() confere os passos escritos à mão no SQL.
-// Desde 31/10/2026 (migration 20261031200100) são o primeiro preço, o primeiro
-// pedido e um pedido entregue, a mesma régua do hook usePrimeirosPassos. Mudou
-// aqui: migration nova lá, senão o Painel promete o bônus e o banco nunca
+// resgatar_bonus_primeiros_passos() confere a condição escrita à mão no SQL.
+// Desde 05/11/2026 (ONE-175, migration 20261105230000) é um pedido entregue, a
+// mesma régua do hook usePrimeirosPassos, e o preço não trava mais o bônus.
+// Mudou aqui: migration nova lá, senão o Painel promete o bônus e o banco nunca
 // entrega (ONE-136).
 const MIGRATION = resolve(
   __dirname,
-  "../../supabase/migrations/20261031200100_bonus_passos_pedido_entregue.sql",
+  "../../supabase/migrations/20261105230000_bonus_passos_encomenda_entregue.sql",
 );
 
 describe("bônus dos primeiros passos", () => {
   const sql = readFileSync(MIGRATION, "utf-8");
 
-  it("os passos do Painel são preço, pedido e entregue", () => {
-    expect(ORDEM_PASSOS).toEqual(["preco", "pedido", "entregue"]);
+  it("os passos do Painel abrem na encomenda e o preço vem por último", () => {
+    expect(ORDEM_PASSOS).toEqual(["pedido", "entregue", "preco"]);
   });
 
-  it("o banco confere os mesmos três passos, sem o Planejamento", () => {
-    expect(sql).toMatch(/calculadora_breakdown is not null/);
-    expect(sql).toMatch(/andamento is not null/);
+  it("o banco confere o pedido entregue, sem o preço nem o Planejamento", () => {
     expect(sql).toMatch(/andamento = 'entregue' and status <> 'cancelada'/);
-    expect(sql).not.toMatch(/planejamento_secoes|business_name/);
+    expect(sql).not.toMatch(/calculadora_breakdown|planejamento_secoes|business_name/);
   });
 
   it("o andamento conferido no banco existe no quadro de Pedidos", () => {

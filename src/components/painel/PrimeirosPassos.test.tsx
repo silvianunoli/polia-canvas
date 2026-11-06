@@ -16,6 +16,8 @@ const { progressoPrimeirosPassos } = await import("@/lib/primeirosPassos");
 afterEach(() => cleanup());
 
 const nada = progressoPrimeirosPassos({ temPreco: false, temPedido: false, temEntregue: false });
+// Encomenda lançada e entregue: o destaque chega no passo do preço.
+const noPreco = progressoPrimeirosPassos({ temPreco: false, temPedido: true, temEntregue: true });
 
 function montar(over: Partial<Parameters<typeof PrimeirosPassos>[0]> = {}) {
   const props = {
@@ -38,8 +40,7 @@ describe("PrimeirosPassos", () => {
   it("sem nicho, a pergunta vem antes e os passos ficam sem ação até responder", async () => {
     const props = montar({ nichoSalvo: null });
     expect(screen.getByText("Antes dos passos: qual é o nicho da marca?")).toBeTruthy();
-    expect(screen.queryByRole("button", { name: "Produto" })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Quero calcular meu preço/ })).toBeNull();
+    expect(screen.queryByRole("link", { name: /Quero lançar a encomenda/ })).toBeNull();
     await userEvent.click(screen.getByRole("button", { name: /Comida e doces/ }));
     expect(props.onEscolherNicho).toHaveBeenCalledWith("comida");
   });
@@ -47,11 +48,29 @@ describe("PrimeirosPassos", () => {
   it("fala do bônus de 7 dias só quando o teste do Pro está aberto (ONE-136)", () => {
     montar({ bonusDias: 7 });
     expect(
-      screen.getByText("Preço, pedido e entrega feitos, o teste do Pro ganha mais 7 dias."),
+      screen.getByText("Encomenda lançada e entregue, o teste do Pro ganha mais 7 dias."),
+    ).toBeTruthy();
+    cleanup();
+    montar({ bonusDias: 7, escolhaSalva: "servico" });
+    expect(
+      screen.getByText("Pedido lançado e entregue, o teste do Pro ganha mais 7 dias."),
     ).toBeTruthy();
     cleanup();
     montar();
     expect(screen.queryByText(/o teste do Pro ganha mais/)).toBeNull();
+  });
+
+  it("abre na encomenda: o primeiro passo é lançar, e o preço vem por último (ONE-175)", () => {
+    montar();
+    const itens = screen.getAllByRole("listitem");
+    expect(itens[0].textContent).toContain("Lançar a próxima encomenda");
+    expect(itens[0].getAttribute("aria-current")).toBe("step");
+    expect(itens[1].textContent).toContain("Marcar como entregue e ver o lucro");
+    expect(itens[2].textContent).toContain("Calcular o preço de um produto");
+    expect(
+      screen.getByRole("link", { name: /Quero lançar a encomenda/ }).getAttribute("href"),
+    ).toBe("/pedidos");
+    expect(screen.queryByRole("link", { name: /Quero calcular meu preço/ })).toBeNull();
   });
 
   it("passo do preço feito mostra o número dela e leva pra Calculadora (GRW-90)", () => {
@@ -78,20 +97,20 @@ describe("PrimeirosPassos", () => {
     expect(screen.queryByText("Antes dos passos: qual é o nicho da marca?")).toBeNull();
   });
 
-  it("pergunta do estágio só depois do primeiro preço, e some com resposta salva", async () => {
+  it("pergunta do estágio só depois do primeiro pedido, e some com resposta salva", async () => {
     montar();
     expect(screen.queryByText("E a marca, já vende?")).toBeNull();
     cleanup();
-    const comPreco = progressoPrimeirosPassos({
-      temPreco: true,
-      temPedido: false,
+    const comPedido = progressoPrimeirosPassos({
+      temPreco: false,
+      temPedido: true,
       temEntregue: false,
     });
-    const props = montar({ progresso: comPreco });
+    const props = montar({ progresso: comPedido });
     await userEvent.click(screen.getByRole("button", { name: "Já vende" }));
     expect(props.onEscolherEstagio).toHaveBeenCalledWith("ja_vendo");
     cleanup();
-    montar({ progresso: comPreco, estagioSalvo: "ideia" });
+    montar({ progresso: comPedido, estagioSalvo: "ideia" });
     expect(screen.queryByText("E a marca, já vende?")).toBeNull();
   });
 
@@ -106,7 +125,7 @@ describe("PrimeirosPassos", () => {
   });
 
   it("com nicho de serviço, sem pergunta: o botão já leva à aba Serviço", () => {
-    montar({ nicho: { pessoa: "Trancista", tipo: "servico", negocio: null } });
+    montar({ progresso: noPreco, nicho: { pessoa: "Trancista", tipo: "servico", negocio: null } });
     expect(screen.getByText("Calcular o preço da sua hora")).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Produto" })).toBeNull();
     const link = screen.getByRole("link", { name: /Quero calcular meu preço/ });
@@ -114,7 +133,7 @@ describe("PrimeirosPassos", () => {
   });
 
   it("sem nicho, o botão fica travado até escolher; escolher grava e libera", async () => {
-    const props = montar();
+    const props = montar({ progresso: noPreco });
     const travado = screen.getByRole("button", { name: /Quero calcular meu preço/ });
     expect((travado as HTMLButtonElement).disabled).toBe(true);
 
@@ -128,7 +147,7 @@ describe("PrimeirosPassos", () => {
   });
 
   it("business_type já salvo vem marcado", () => {
-    montar({ escolhaSalva: "servico" });
+    montar({ progresso: noPreco, escolhaSalva: "servico" });
     expect(screen.getByRole("button", { name: "Serviço" }).getAttribute("aria-pressed")).toBe(
       "true",
     );
@@ -138,7 +157,7 @@ describe("PrimeirosPassos", () => {
   });
 
   it("gravação do tipo que falha desfaz a escolha", async () => {
-    montar({ onEscolherTipo: vi.fn(async () => false) });
+    montar({ progresso: noPreco, onEscolherTipo: vi.fn(async () => false) });
     await userEvent.click(screen.getByRole("button", { name: "Produto" }));
     await waitFor(() =>
       expect(screen.getByRole("button", { name: "Produto" }).getAttribute("aria-pressed")).toBe(
@@ -150,30 +169,25 @@ describe("PrimeirosPassos", () => {
   it("feito ganha o check e o destaque desce pro próximo", () => {
     montar({
       progresso: progressoPrimeirosPassos({
-        temPreco: true,
-        temPedido: false,
+        temPreco: false,
+        temPedido: true,
         temEntregue: false,
       }),
     });
     const itens = screen.getAllByRole("listitem");
     expect(itens[0].textContent).toContain("Feito:");
     expect(itens[1].getAttribute("aria-current")).toBe("step");
-    expect(screen.getByText("Lançar o primeiro pedido")).toBeTruthy();
-    expect(screen.getByRole("link", { name: /Quero lançar um pedido/ }).getAttribute("href")).toBe(
-      "/pedidos",
-    );
-    expect(screen.queryByText(/Módulo 1|Planejamento|Dar nome à marca/)).toBeNull();
-  });
-
-  it("com o pedido lançado, o destaque vai pro entregue e leva pro quadro", () => {
-    montar({
-      progresso: progressoPrimeirosPassos({ temPreco: true, temPedido: true, temEntregue: false }),
-    });
-    const itens = screen.getAllByRole("listitem");
-    expect(itens[2].getAttribute("aria-current")).toBe("step");
-    expect(screen.getByText("Marcar um pedido como entregue e ver o lucro")).toBeTruthy();
+    expect(screen.getByText("Marcar como entregue e ver o lucro")).toBeTruthy();
     expect(
       screen.getByRole("link", { name: /Quero abrir o quadro de Pedidos/ }).getAttribute("href"),
     ).toBe("/pedidos");
+    expect(screen.queryByText(/Módulo 1|Planejamento|Dar nome à marca/)).toBeNull();
+  });
+
+  it("com a entrega feita, o destaque chega no preço, o último", () => {
+    montar({ progresso: noPreco });
+    const itens = screen.getAllByRole("listitem");
+    expect(itens[2].getAttribute("aria-current")).toBe("step");
+    expect(screen.getByRole("button", { name: /Quero calcular meu preço/ })).toBeTruthy();
   });
 });

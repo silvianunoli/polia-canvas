@@ -1,12 +1,16 @@
 // Bloco "Primeiros passos" do Painel (14/10/2026, desenho em cinza aprovado
 // pela Sil). Substitui o onboarding de 5 passos como entrada da conta nova: em
 // vez de quatro telas de perguntas antes de ver qualquer coisa, a conta cai
-// direto no Painel com três passos, o primeiro deles já a Calculadora.
+// direto no Painel com três passos.
 //
 // Desde 31/10/2026 os três passos são de operação (o Planejamento saiu da
-// Pólia One): o primeiro preço, o primeiro pedido e o primeiro pedido
-// entregue, que mostra o lucro. Saíram "Fechar o Módulo 1" e "Dar nome à
-// marca" (o nome continua em Configurações).
+// Pólia One). Saíram "Fechar o Módulo 1" e "Dar nome à marca" (o nome continua
+// em Configurações).
+//
+// Desde 05/11/2026 (ONE-175, decisão da Sil) a ordem abre na encomenda: o
+// pedido, a entrega que mostra o lucro e só depois o preço na Calculadora. É a
+// mesma ideia da venda: a Pólia One é o sistema da marca, não uma ferramenta de
+// precificação.
 //
 // Aqui mora só a regra (quem vê o bloco, o que está feito, qual passo está em
 // destaque, que texto aparece). A leitura e a gravação ficam no hook
@@ -65,7 +69,7 @@ export function contaCriadaDepoisDoCorte(createdAt: string | null | undefined): 
 }
 
 export type IdPasso = "preco" | "pedido" | "entregue";
-export const ORDEM_PASSOS: readonly IdPasso[] = ["preco", "pedido", "entregue"];
+export const ORDEM_PASSOS: readonly IdPasso[] = ["pedido", "entregue", "preco"];
 
 export interface FatosPrimeirosPassos {
   /** Existe produto com calculadora_breakdown: o preço saiu da Calculadora. */
@@ -196,9 +200,9 @@ export function estagioDoBanco(v: unknown): EstagioNegocio | null {
   return v === "ja_vendo" || v === "comecei" || v === "ideia" ? v : null;
 }
 
-/** A pergunta do estágio só aparece depois do primeiro preço: antes disso ela atrasaria a Calculadora. */
-export function perguntaEstagio(temPreco: boolean, estagio: EstagioNegocio | null): boolean {
-  return temPreco && estagio === null;
+/** A pergunta do estágio só aparece depois do primeiro pedido: antes disso ela atrasaria o quadro. */
+export function perguntaEstagio(temPedido: boolean, estagio: EstagioNegocio | null): boolean {
+  return temPedido && estagio === null;
 }
 
 /** Conta que veio de anúncio de nicho já diz o que vende: grava sem perguntar. */
@@ -214,10 +218,14 @@ export interface TextoPassoPreco {
   perguntaTipo: boolean;
 }
 
-export function textoPassoPreco(nicho: NichoDoPasso | null): TextoPassoPreco {
+export function textoPassoPreco(
+  nicho: NichoDoPasso | null,
+  escolha: EscolhaTipo | null = null,
+): TextoPassoPreco {
   if (!nicho) {
     return {
-      titulo: "Calcular o primeiro preço",
+      titulo:
+        escolha === "servico" ? "Calcular o preço da sua hora" : "Calcular o preço de um produto",
       subtitulo: "A sua marca vende o quê?",
       perguntaTipo: true,
     };
@@ -236,34 +244,75 @@ export function textoPassoPreco(nicho: NichoDoPasso | null): TextoPassoPreco {
   };
 }
 
+/** Quem vende serviço não tem "encomenda": o anúncio ou a escolha salva dizem o que a conta vende. */
+export function vendeServico(nicho: NichoDoPasso | null, escolha: EscolhaTipo | null): boolean {
+  return nicho ? nicho.tipo === "servico" : escolha === "servico";
+}
+
+export interface TextoPassoPedido {
+  titulo: string;
+  subtitulo: string;
+  acao: string;
+}
+
 // Os dois levam pro quadro de Pedidos. Sem pedido nenhum, o quadro abre no
 // vazio com um botão só, "Anotar o primeiro pedido" (pedidos.tsx), que grava
-// pela registrar_pedido.
-export const PASSO_PEDIDO = {
-  titulo: "Lançar o primeiro pedido",
-  subtitulo: "Quem comprou, o que levou e o dia da entrega, no quadro de Pedidos.",
-  acao: "Quero lançar um pedido",
-  href: "/pedidos",
-} as const;
+// pela registrar_pedido. Com o catálogo vazio, o Novo pedido cadastra o produto
+// ali mesmo (ModalNovoPedido).
+export const HREF_PEDIDOS = "/pedidos";
 
-export const PASSO_ENTREGUE = {
-  titulo: "Marcar um pedido como entregue e ver o lucro",
-  subtitulo: "No quadro, o pedido anda até Entregue, e o cartão mostra quanto ele lucrou.",
-  acao: "Quero abrir o quadro de Pedidos",
-  href: "/pedidos",
-} as const;
+export function textoPassoPedido(servico: boolean): TextoPassoPedido {
+  return servico
+    ? {
+        titulo: "Lançar o próximo pedido",
+        subtitulo: "Cadastre o serviço e lance o pedido com a cliente e o dia da entrega.",
+        acao: "Quero lançar o pedido",
+      }
+    : {
+        titulo: "Lançar a próxima encomenda",
+        subtitulo: "Cadastre o produto dela e lance o pedido com a cliente e o dia da entrega.",
+        acao: "Quero lançar a encomenda",
+      };
+}
+
+export function textoPassoEntregue(servico: boolean): TextoPassoPedido {
+  return {
+    titulo: "Marcar como entregue e ver o lucro",
+    subtitulo: servico
+      ? "No quadro, o pedido anda até Entregue, e o cartão mostra quanto ele lucrou."
+      : "No quadro, a encomenda anda até Entregue, e o cartão mostra quanto ela lucrou.",
+    acao: "Quero abrir o quadro de Pedidos",
+  };
+}
+
+/** A condição do bônus, a mesma da resgatar_bonus_primeiros_passos: o preço não entra. */
+export function textoConviteBonus(servico: boolean, dias: number): string {
+  return `${servico ? "Pedido lançado e entregue" : "Encomenda lançada e entregue"}, o teste do Pro ganha mais ${dias} dias.`;
+}
 
 /** Manchete do Painel enquanto o bloco está na tela. */
 export function mancheteDoBloco(
   nicho: NichoDoPasso | null,
-  destaque: IdPasso | null = "preco",
+  destaque: IdPasso | null = "pedido",
+  escolha: EscolhaTipo | null = null,
 ): string {
-  if (destaque === "pedido") return "Preço feito. Agora o primeiro pedido entra no quadro.";
-  if (destaque === "entregue") {
-    return "O pedido está no quadro. Quando ele for entregue, o cartão dele mostra quanto lucrou.";
+  const servico = vendeServico(nicho, escolha);
+  // Os três feitos e o bloco ainda na tela: só falta responder o nicho.
+  if (destaque === null) return "Os três passos estão feitos. Falta só dizer o nicho da marca.";
+  if (destaque === "preco") {
+    return "A entrega já mostrou o lucro. Agora a Calculadora confere o preço com o custo real.";
   }
-  if (!nicho) return "Três passos e o Painel começa a mostrar quanto a marca lucra.";
-  return nicho.tipo === "servico"
-    ? `${nicho.pessoa}, o preço da sua hora começa por aqui.`
-    : `${nicho.pessoa}, o preço do seu produto começa por aqui.`;
+  if (destaque === "entregue") {
+    return servico
+      ? "O pedido está no quadro. Quando ele for entregue, o cartão dele mostra quanto lucrou."
+      : "A encomenda está no quadro. Quando ela for entregue, o cartão dela mostra quanto lucrou.";
+  }
+  if (!nicho) {
+    return servico
+      ? "O próximo pedido entra no quadro, e o Painel começa a mostrar quanto a marca lucra."
+      : "A próxima encomenda entra no quadro, e o Painel começa a mostrar quanto a marca lucra.";
+  }
+  return servico
+    ? `${nicho.pessoa}, o próximo pedido entra no quadro por aqui.`
+    : `${nicho.pessoa}, a próxima encomenda entra no quadro por aqui.`;
 }
