@@ -157,7 +157,7 @@ describe("tiktokCliqueEmLink", () => {
             content_name: "Pólia One Premium mensal",
           },
         ],
-        value: 29.9,
+        value: 39.9,
         currency: "BRL",
       },
     ]);

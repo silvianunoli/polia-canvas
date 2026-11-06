@@ -1,28 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { ofertaFundadoraAtiva, textoFundadora, vagasRestantes, VAGAS_FUNDADORA } from "./fundadora";
+import { dentroDoPrazoFundadora, tiersPagosDaConta } from "./fundadora";
+import { tiersPagos } from "./planos";
 
-const antes = Date.parse("2026-10-20T12:00:00-03:00");
+const noPrazo = Date.parse("2026-11-15T12:00:00-03:00");
 const depois = Date.parse("2026-12-01T00:00:01-03:00");
 
-describe("preço de fundadora", () => {
-  it("vagas nunca negativas", () => {
-    expect(vagasRestantes(2)).toBe(VAGAS_FUNDADORA - 2);
-    expect(vagasRestantes(80)).toBe(0);
-    expect(vagasRestantes(-3)).toBe(VAGAS_FUNDADORA);
+describe("preço honrado até 30/11 (decisão da Sil em 06/11/2026)", () => {
+  it("o prazo termina no último segundo de 30/11 em Brasília", () => {
+    expect(dentroDoPrazoFundadora(Date.parse("2026-11-30T23:59:59-03:00"))).toBe(true);
+    expect(dentroDoPrazoFundadora(depois)).toBe(false);
   });
-  it("ativa só no prazo e com vaga", () => {
-    expect(ofertaFundadoraAtiva(2, antes)).toBe(true);
-    expect(ofertaFundadoraAtiva(2, depois)).toBe(false);
-    expect(ofertaFundadoraAtiva(VAGAS_FUNDADORA, antes)).toBe(false);
+
+  it("quem recebeu a promessa vê o preço antigo no mensal e no anual", () => {
+    const t = tiersPagosDaConta(true, noPrazo);
+    expect([t.controle.precoMensal, t.controle.precoAnual]).toEqual([29.9, 299]);
+    expect([t.projete.precoMensal, t.projete.precoAnual]).toEqual([47.9, 479]);
   });
-  it("texto com prazo, preços e vagas, sem travessão nem exclamação", () => {
-    const t = textoFundadora(2, antes)!;
-    expect(t.texto).toContain("30/11");
-    expect(t.texto).toContain("29,90");
-    expect(t.texto).toContain("47,90");
-    expect(t.vagas).toBe("Restam 48 das 50 vagas.");
-    expect(`${t.rotulo} ${t.texto} ${t.vagas}`).not.toMatch(/[—–!]/);
-    expect(textoFundadora(49, antes)!.vagas).toBe("Resta 1 vaga.");
-    expect(textoFundadora(2, depois)).toBeNull();
+
+  it("a lista de recursos é a de hoje: só o preço volta", () => {
+    const t = tiersPagosDaConta(true, noPrazo);
+    expect(t.controle.beneficios).toEqual(tiersPagos(noPrazo).controle.beneficios);
+    expect(t.projete.beneficios).toEqual(tiersPagos(noPrazo).projete.beneficios);
+  });
+
+  it("quem não recebeu, ou passou do prazo, vê o preço público", () => {
+    expect(tiersPagosDaConta(false, noPrazo)).toEqual(tiersPagos(noPrazo));
+    expect(tiersPagosDaConta(true, depois)).toEqual(tiersPagos(depois));
+    expect(tiersPagosDaConta(false, noPrazo).controle.precoMensal).toBe(39.9);
   });
 });

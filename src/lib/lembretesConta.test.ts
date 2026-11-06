@@ -70,13 +70,12 @@ describe("régua de ativação e do teste do Pro (GRW-66)", async () => {
     ).toContain("27/10");
   });
 
-  it("preço de fundadora só antes do prazo", () => {
-    expect(
-      montarEmailRegua("teste_acabou", { nome: null, testeFim: fim, agora: antes }).texto,
-    ).toContain("fundadora");
-    expect(
-      montarEmailRegua("teste_acabou", { nome: null, testeFim: fim, agora: depois }).texto,
-    ).not.toContain("fundadora");
+  it("fim do teste leva o texto aprovado, abre o Premium e não fala de preço (PAY-51)", () => {
+    for (const tipo of ["teste_fim_2d", "teste_acabou"] as const) {
+      const e = montarEmailRegua(tipo, { nome: null, testeFim: fim, agora: antes });
+      expect(e.texto).toContain("Quero assinar o Premium: https://one.usepolia.com.br/assinar?plano=controle");
+      expect(e.texto).not.toMatch(/fundadora|R\$|30\/11|01\/12/);
+    }
   });
 
   it("dica leva o jeito de desligar; aviso de conta não", () => {

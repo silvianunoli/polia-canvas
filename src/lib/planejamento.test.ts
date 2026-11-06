@@ -218,7 +218,8 @@ describe("marca antes do dinheiro", () => {
 
 describe("hrefUpgrade", () => {
   it("leva o plano que a rota exige, não um Premium fixo", () => {
-    expect(hrefUpgrade("/raiox")).toBe("/upgrade?rota=%2Fraiox&tier=projete");
+    expect(hrefUpgrade("/catalogo")).toBe("/upgrade?rota=%2Fcatalogo&tier=projete");
+    expect(hrefUpgrade("/raiox")).toBe("/upgrade?rota=%2Fraiox&tier=controle");
     expect(hrefUpgrade("/financeiro")).toBe("/upgrade?rota=%2Ffinanceiro&tier=controle");
   });
 });

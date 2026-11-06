@@ -109,9 +109,6 @@ export function ehTipoRegua(v: unknown): v is TipoRegua {
   return typeof v === "string" && (TIPOS_REGUA as readonly string[]).includes(v);
 }
 
-/** Igual ao PRAZO_FUNDADORA de src/lib/fundadora.ts (o app e a edge function não dividem código). */
-export const PRAZO_FUNDADORA_EMAIL = "2026-11-30T23:59:59-03:00";
-
 function dataCurta(iso: string | null): string {
   const t = iso ? Date.parse(iso) : NaN;
   if (!Number.isFinite(t)) return "o fim do prazo";
@@ -120,11 +117,6 @@ function dataCurta(iso: string | null): string {
     month: "2-digit",
     timeZone: "America/Sao_Paulo",
   });
-}
-
-function paragrafoFundadora(agora: Date): string | null {
-  if (agora.getTime() > Date.parse(PRAZO_FUNDADORA_EMAIL)) return null;
-  return "Preço de fundadora: nas primeiras 50 assinaturas feitas até 30/11, o Premium fica em R$ 29,90 e o Pro em R$ 47,90 enquanto a assinatura estiver ativa. A partir de 01/12, o Premium passa a R$ 39,90 e o Pro a R$ 79,90.";
 }
 
 const RODAPE_DICAS =
@@ -140,7 +132,6 @@ export function montarEmailRegua(
   tipo: TipoRegua,
   d: DadosRegua,
 ): { assunto: string; texto: string; html: string } {
-  const fundadora = paragrafoFundadora(d.agora);
   let c: {
     assunto: string;
     headline: string;
@@ -171,12 +162,11 @@ export function montarEmailRegua(
         headline: "O teste do Pro está acabando",
         preheader: `Termina em ${dataCurta(d.testeFim)}, e a conta volta pro Grátis sem cobrança.`,
         paragrafos: [
-          `O teste do Pro termina em ${dataCurta(d.testeFim)}. Depois disso a conta volta pro Grátis sozinha, sem cobrança nenhuma.`,
-          "O que a marca guardou continua guardado. Raio-x, Projeção, Encomenda e o catálogo online ficam fechados até uma assinatura.",
-          fundadora,
+          `O teste do Pro termina em ${dataCurta(d.testeFim)}. Depois disso, a conta volta pro Grátis sozinha, sem cobrança, e o que a marca guardou continua guardado.`,
+          "No Grátis, o quadro segue com até 15 pedidos abertos. O Premium guarda pedidos sem limite e abre o Financeiro, com quanto a marca lucrou no mês.",
         ],
-        ctaLabel: "Quero assinar",
-        url: `${SITE}/assinar?plano=projete`,
+        ctaLabel: "Quero assinar o Premium",
+        url: `${SITE}/assinar?plano=controle`,
       };
       break;
     case "teste_acabou":
@@ -185,12 +175,11 @@ export function montarEmailRegua(
         headline: "A conta voltou pro Grátis",
         preheader: "Nada foi apagado. O que a marca guardou continua lá.",
         paragrafos: [
-          "O teste do Pro terminou e a conta voltou pro plano Grátis. Nada foi apagado: produtos, pedidos e o que a Projeção e o Raio-x mostraram continuam lá.",
-          "O Grátis segue com a Calculadora, até 5 produtos no catálogo e o quadro de Pedidos com até 15 pedidos abertos.",
-          fundadora,
+          "A conta voltou pro plano Grátis, e nada foi apagado. O quadro de Pedidos segue com até 15 pedidos abertos.",
+          "Quando a semana pedir mais, o Premium guarda pedidos sem limite e abre o Financeiro.",
         ],
-        ctaLabel: "Quero o Pro de volta",
-        url: `${SITE}/assinar?plano=projete`,
+        ctaLabel: "Quero assinar o Premium",
+        url: `${SITE}/assinar?plano=controle`,
       };
       break;
     case "checkout_1h":

@@ -39,9 +39,9 @@ const MODELO_PRO = "gemini-pro-latest";
 const FEATURE = "raiox";
 // Pro e beta (acesso total) geram raio-x: mesma regra de planoGeraRaioX /
 // temNumerosDoMes no app. Antes só "projete" entrava e a conta beta ficava sem.
-// A partir da virada de preços (VIRADA_PRECOS em src/lib/planos.ts, 01/12/2026)
+// A partir da virada de preços (VIRADA_PRECOS em src/lib/planos.ts, 06/11/2026)
 // o Premium ("controle") também entra. O app e a edge function não dividem código.
-const VIRADA_PRECOS = "2026-12-01T00:00:00-03:00";
+const VIRADA_PRECOS = "2026-11-06T00:00:00-03:00";
 function planosComRaioX(agora: number = Date.now()): string[] {
   return agora >= Date.parse(VIRADA_PRECOS) ? ["projete", "beta", "controle"] : ["projete", "beta"];
 }

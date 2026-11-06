@@ -1,78 +1,50 @@
-// Preço de fundadora (GRW-66, aprovado pela Sil em 20/10/2026).
+// Preço honrado (decisão da Sil em 06/11/2026: "Honrar todas as contas").
 //
-// Quem assina até o prazo, dentro das primeiras VAGAS assinaturas pagas, fica
-// com o preço de hoje enquanto a assinatura estiver ativa. No Stripe isso já é
-// verdade sozinho: assinatura existente continua no Price em que nasceu quando
-// um Price novo é criado. A assinatura sai com metadata.fundadora = "sim" pra
-// ninguém precisar adivinhar depois quem tem o preço travado.
+// Os e-mails do fim do teste prometeram R$ 29,90 no Premium e R$ 47,90 no Pro pra
+// quem assinasse até 30/11, e a virada de preços veio antes disso. Quem recebeu
+// a promessa está em `precos_honrados` e, logada, vê e paga o preço antigo até o
+// prazo. Nenhuma tela explica o porquê nem cita a data (decisão de 03/11).
 //
-// Desconto não entra aqui de propósito: o que a oferta dá é o preço de hoje
-// travado, sem baratear o plano.
+// Desconto não entra aqui de propósito: é o Price antigo do Stripe, que continua
+// ativo. Assinatura existente segue no Price em que nasceu.
 
-import { VIRADA_PRECOS, tiersPagos, tiersPagosDeFundadora } from "@/lib/planos";
+import {
+  tiersPagos,
+  tiersPagosDeFundadora,
+  type InfoTierPago,
+  type TierPago,
+} from "@/lib/planos";
 
-/** Fim do prazo, horário de Brasília. Trocar aqui muda a tela e o checkout juntos. */
+/** Fim do prazo, horário de Brasília. */
 export const PRAZO_FUNDADORA = "2026-11-30T23:59:59-03:00";
-export const VAGAS_FUNDADORA = 50;
 
 const PRAZO_MS = Date.parse(PRAZO_FUNDADORA);
 
-export function vagasRestantes(assinaturasPagas: number): number {
-  return Math.max(0, VAGAS_FUNDADORA - Math.max(0, assinaturasPagas));
-}
-
-/** Só o prazo (o checkout marca a assinatura por ele; as vagas a tela controla). */
 export function dentroDoPrazoFundadora(agora: number = Date.now()): boolean {
   return agora <= PRAZO_MS;
 }
 
-export function ofertaFundadoraAtiva(
-  assinaturasPagas: number,
+/**
+ * Preço e lista que a conta vê: a lista é sempre a de hoje, e só o preço volta
+ * ao antigo. Os quatro recursos que desceram pro Premium valem pra ela também.
+ */
+export function tiersPagosDaConta(
+  temPrecoHonrado: boolean,
   agora: number = Date.now(),
-): boolean {
-  return agora <= PRAZO_MS && vagasRestantes(assinaturasPagas) > 0;
-}
-
-/** "30/11", no fuso de Brasília. */
-export function prazoCurto(): string {
-  return new Date(PRAZO_MS).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-}
-
-/** "01/12", no fuso de Brasília: o dia em que os preços novos valem. */
-function diaDaVirada(): string {
-  return new Date(Date.parse(VIRADA_PRECOS)).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    timeZone: "America/Sao_Paulo",
-  });
-}
-
-function reais(v: number): string {
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-export interface TextoFundadora {
-  rotulo: string;
-  texto: string;
-  vagas: string;
-}
-
-export function textoFundadora(
-  assinaturasPagas: number,
-  agora: number = Date.now(),
-): TextoFundadora | null {
-  if (!ofertaFundadoraAtiva(assinaturasPagas, agora)) return null;
-  const restam = vagasRestantes(assinaturasPagas);
-  // O preço travado é sempre o de antes da virada (src/lib/planos.ts).
-  const hoje = tiersPagosDeFundadora();
-  const depois = tiersPagos(Date.parse(VIRADA_PRECOS));
+): Record<TierPago, InfoTierPago> {
+  const hoje = tiersPagos(agora);
+  if (!temPrecoHonrado || !dentroDoPrazoFundadora(agora)) return hoje;
+  const antigo = tiersPagosDeFundadora();
   return {
-    rotulo: "Preço de fundadora",
-    texto: `Quem assina até ${prazoCurto()} fica com ${reais(hoje.controle.precoMensal)} no Premium e ${reais(hoje.projete.precoMensal)} no Pro enquanto a assinatura estiver ativa. A partir de ${diaDaVirada()}, o Premium passa a ${reais(depois.controle.precoMensal)} e o Pro a ${reais(depois.projete.precoMensal)}.`,
-    vagas: restam === 1 ? "Resta 1 vaga." : `Restam ${restam} das ${VAGAS_FUNDADORA} vagas.`,
+    controle: {
+      ...hoje.controle,
+      precoMensal: antigo.controle.precoMensal,
+      precoAnual: antigo.controle.precoAnual,
+    },
+    projete: {
+      ...hoje.projete,
+      precoMensal: antigo.projete.precoMensal,
+      precoAnual: antigo.projete.precoAnual,
+    },
   };
 }

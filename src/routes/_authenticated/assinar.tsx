@@ -30,7 +30,8 @@ import {
   type TierPago,
 } from "@/lib/planos";
 import { testeAberto, testeDoBanco } from "@/lib/testePro";
-import { BlocoFundadora } from "@/components/planos/BlocoFundadora";
+import { tiersPagosDaConta } from "@/lib/fundadora";
+import { precoHonradoDaConta } from "@/lib/fundadora.functions";
 import { SeloDoBeneficio } from "@/components/planos/SeloDoBeneficio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { fraseDoGanho } from "@/lib/ganhoDoUpgrade";
@@ -143,6 +144,10 @@ function AssinarPage() {
     queryKey: ["assinatura-status"],
     queryFn: () => statusAssinatura(),
   });
+  const precoHonradoQuery = useQuery({
+    queryKey: ["preco-honrado"],
+    queryFn: () => precoHonradoDaConta(),
+  });
 
   const [ciclo, setCiclo] = useState<CicloId>("mensal");
   const [planoIniciando, setPlanoIniciando] = useState<PlanoAssinatura | null>(null);
@@ -155,6 +160,8 @@ function AssinarPage() {
   const planoAtual: TierId | null =
     meta.plano === "controle" || meta.plano === "projete" ? meta.plano : null;
   const assinante = !!planoAtual && !!assinaturaQuery.data?.ativa;
+  // Quem já assina troca pelo portal, que cobra o preço público.
+  const tiers = assinante ? tiersPagos() : tiersPagosDaConta(!!precoHonradoQuery.data?.honrado);
   const [trocando, setTrocando] = useState<TierId | null>(null);
   const cancelaNoFim = !!assinaturaQuery.data?.cancelAtPeriodEnd;
   const dataFimPeriodo = assinaturaQuery.data?.currentPeriodEnd
@@ -354,8 +361,6 @@ function AssinarPage() {
                 : "O plano abre na sua conta assim que o pagamento entra. O que já está guardado continua no lugar."}
         </p>
 
-        {!assinante && <BlocoFundadora className="mx-auto mb-8 max-w-[640px]" />}
-
         {/* Ciclo mensal/anual. Assinante escolhe o ciclo no portal, na troca. */}
         <div
           hidden={assinante}
@@ -411,7 +416,7 @@ function AssinarPage() {
               assinante ? setConfirmandoCancelamento(true) : navigate({ to: "/painel" })
             }
           />
-          {(Object.entries(tiersPagos()) as [TierId, InfoTierPago][]).map(([tierId, tier]) => (
+          {(Object.entries(tiers) as [TierId, InfoTierPago][]).map(([tierId, tier]) => (
             <PlanoCard
               key={tierId}
               titulo={tier.titulo}
@@ -425,6 +430,7 @@ function AssinarPage() {
                 planoIniciando !== null ||
                 trocando !== null ||
                 assinaturaQuery.isLoading ||
+                precoHonradoQuery.isLoading ||
                 (assinante && planoAtual === tierId)
               }
               foco={assinante ? false : search.plano === tierId}
@@ -475,12 +481,12 @@ function AssinarPage() {
       {clientSecret && (
         <AssinaturaCheckout
           clientSecret={clientSecret}
-          resumo={resumoDoPlano(planoNoCheckout)}
+          resumo={resumoDoPlano(planoNoCheckout, Date.now(), tiers)}
           onClose={() => setClientSecret(null)}
           onSucesso={() => {
             track("assinatura_concluida");
             // Conversão de compra pro GA4/Google Ads (FUN-09).
-            const valor = valorDoPlano(planoNoCheckout);
+            const valor = valorDoPlano(planoNoCheckout, Date.now(), tiers);
             if (valor !== null) {
               gtagEvent("purchase", {
                 value: valor,

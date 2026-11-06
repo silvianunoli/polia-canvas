@@ -1,12 +1,19 @@
 import { describe, it, expect } from "vitest";
 import { resumoDoPlano, valorDoPlano } from "./planos";
+import { tiersPagosDaConta } from "./fundadora";
 
 describe("resumoDoPlano (PAY-31: o diálogo de pagamento diz plano e preço)", () => {
   it("monta plano, preço e ciclo", () => {
-    expect(resumoDoPlano("controle_mensal")).toBe("Premium, R$ 29,90 por mês");
-    expect(resumoDoPlano("controle_anual")).toBe("Premium, R$ 299,00 por ano");
-    expect(resumoDoPlano("projete_mensal")).toBe("Pro, R$ 47,90 por mês");
-    expect(resumoDoPlano("projete_anual")).toBe("Pro, R$ 479,00 por ano");
+    expect(resumoDoPlano("controle_mensal")).toBe("Premium, R$ 39,90 por mês");
+    expect(resumoDoPlano("controle_anual")).toBe("Premium, R$ 399,00 por ano");
+    expect(resumoDoPlano("projete_mensal")).toBe("Pro, R$ 79,90 por mês");
+    expect(resumoDoPlano("projete_anual")).toBe("Pro, R$ 799,00 por ano");
+  });
+
+  it("com o preço honrado, o diálogo diz o que a conta paga", () => {
+    const tiers = tiersPagosDaConta(true, Date.parse("2026-11-15T12:00:00-03:00"));
+    expect(resumoDoPlano("controle_mensal", Date.now(), tiers)).toBe("Premium, R$ 29,90 por mês");
+    expect(valorDoPlano("projete_anual", Date.now(), tiers)).toBe(479);
   });
 
   it("chave desconhecida não inventa texto", () => {
@@ -123,12 +130,13 @@ describe("recursoLiberado", () => {
   // Este bloco existe por causa de um bug real: a barra lateral usava só a
   // trava de rota, e como Raio-x/Projeção/Catálogo são tier "controle",
   // a usuária do Controle via os três SEM cadeado e só descobria que eram pagos
-  // depois de clicar e bater no portão de dentro da página.
+  // depois de clicar e bater no portão de dentro da página. Depois da virada, só
+  // o Catálogo segue no Pro.
   it("nega rota Projete pra quem está no Controle, mesmo a rota passando no guard", () => {
-    expect(rotaLiberada("/raiox", "controle")).toBe(true);
-    expect(recursoLiberado("/raiox", "controle")).toBe(false);
-    expect(recursoLiberado("/projecao", "controle")).toBe(false);
+    expect(rotaLiberada("/catalogo", "controle")).toBe(true);
     expect(recursoLiberado("/catalogo", "controle")).toBe(false);
+    expect(recursoLiberado("/raiox", "controle")).toBe(true);
+    expect(recursoLiberado("/projecao", "controle")).toBe(true);
   });
 
   it("libera rota Projete pro projete e pro beta", () => {
@@ -149,7 +157,8 @@ describe("recursoLiberado", () => {
 
 describe("tierPagoDaRota", () => {
   it("nomeia o plano certo pra tela de upgrade", () => {
-    expect(tierPagoDaRota("/raiox")).toBe("projete");
+    expect(tierPagoDaRota("/catalogo")).toBe("projete");
+    expect(tierPagoDaRota("/raiox")).toBe("controle");
     expect(tierPagoDaRota("/financeiro")).toBe("controle");
   });
 });
@@ -164,10 +173,10 @@ describe("ehBeta", () => {
 
 describe("valorDoPlano", () => {
   it("devolve o preço cobrado de cada plano pago", () => {
-    expect(valorDoPlano("controle_mensal")).toBe(29.9);
-    expect(valorDoPlano("controle_anual")).toBe(299);
-    expect(valorDoPlano("projete_mensal")).toBe(47.9);
-    expect(valorDoPlano("projete_anual")).toBe(479);
+    expect(valorDoPlano("controle_mensal")).toBe(39.9);
+    expect(valorDoPlano("controle_anual")).toBe(399);
+    expect(valorDoPlano("projete_mensal")).toBe(79.9);
+    expect(valorDoPlano("projete_anual")).toBe(799);
   });
 
   it("chave desconhecida ou vazia volta null", () => {
@@ -235,7 +244,8 @@ describe("beneficiosNaOrdem", () => {
   });
 });
 
-const NOV = Date.parse("2026-11-30T23:59:59-03:00");
+// Um segundo antes e o primeiro segundo da virada (os nomes ficaram da data antiga).
+const NOV = Date.parse(VIRADA_PRECOS) - 1000;
 const DEZ = Date.parse(VIRADA_PRECOS);
 
 describe("lista de benefícios dos planos", () => {
@@ -273,13 +283,14 @@ describe("abas do app Android (AND-07)", () => {
   });
 });
 
-describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
-  it("vira no primeiro minuto de 01/12 em Brasília, logo depois do prazo de fundadora", () => {
+describe("virada de preços, antecipada pra 06/11/2026 (PAY-43/44/45)", () => {
+  it("vira no primeiro minuto de 06/11 em Brasília", () => {
+    expect(VIRADA_PRECOS).toBe("2026-11-06T00:00:00-03:00");
     expect(depoisDaVirada(NOV)).toBe(false);
     expect(depoisDaVirada(DEZ)).toBe(true);
   });
 
-  it("preços: 29,90/299 e 47,90/479 até 30/11; 39,90/399 e 79,90/799 depois", () => {
+  it("preços: 29,90/299 e 47,90/479 antes da virada; 39,90/399 e 79,90/799 depois", () => {
     const nov = tiersPagos(NOV);
     const dez = tiersPagos(DEZ);
     expect([nov.controle.precoMensal, nov.controle.precoAnual]).toEqual([29.9, 299]);
@@ -288,7 +299,7 @@ describe("virada de preços de 01/12/2026 (PAY-43/44/45)", () => {
     expect([dez.projete.precoMensal, dez.projete.precoAnual]).toEqual([79.9, 799]);
   });
 
-  it("a fundadora trava o preço de antes da virada em qualquer data", () => {
+  it("o preço de antes da virada segue disponível em qualquer data", () => {
     expect(tiersPagosDeFundadora().controle.precoMensal).toBe(29.9);
     expect(tiersPagosDeFundadora().projete.precoMensal).toBe(47.9);
   });

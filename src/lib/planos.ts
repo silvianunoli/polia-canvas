@@ -34,13 +34,13 @@ export function temProjete(plano: string | null | undefined): boolean {
 }
 
 // ── Virada de preços (PAY-43/44/45, decisão da Sil em 30/10/2026) ───────────
-// A partir de 01/12/2026 o Premium vai a R$ 39,90 e ganha Raio-x, Projeção,
-// Calculadora de encomenda e Resumo pro contador; o Pro vai a R$ 79,90. Quem
-// assinou até 30/11 (preço de fundadora) segue no Price em que nasceu no
-// Stripe e, se for Premium, ganha os quatro recursos sem pagar mais. É o
-// minuto seguinte ao PRAZO_FUNDADORA (src/lib/fundadora.ts). Trocar a data
-// aqui muda preço, lista de recursos, travas e checkout juntos.
-export const VIRADA_PRECOS = "2026-12-01T00:00:00-03:00";
+// O Premium vai a R$ 39,90 e ganha Raio-x, Projeção, Calculadora de encomenda e
+// Resumo pro contador; o Pro vai a R$ 79,90. Era pra 01/12 e a Sil antecipou pra
+// 06/11/2026. Quem já assinou segue no Price em que nasceu no Stripe e, se for
+// Premium, ganha os quatro recursos sem pagar mais. Quem recebeu a promessa do
+// preço por e-mail ainda paga o antigo até 30/11 (src/lib/fundadora.ts). Trocar
+// a data aqui muda preço, lista de recursos, travas e checkout juntos.
+export const VIRADA_PRECOS = "2026-11-06T00:00:00-03:00";
 const VIRADA_MS = Date.parse(VIRADA_PRECOS);
 
 export function depoisDaVirada(agora: number = Date.now()): boolean {
@@ -49,7 +49,7 @@ export function depoisDaVirada(agora: number = Date.now()): boolean {
 
 /**
  * Raio-x, Projeção, Calculadora de encomenda e Resumo pro contador: Pro (e
- * beta) até 30/11/2026, Premium também a partir da virada.
+ * beta) antes da virada, Premium também a partir dela.
  */
 export function temNumerosDoMes(
   plano: string | null | undefined,
@@ -296,8 +296,8 @@ export type InfoTierPago = {
 // Preço e o que cada plano pago abre — mesmo conteúdo usado no checkout
 // (src/routes/_authenticated/assinar.tsx) e na tela de upgrade
 // (src/routes/_authenticated/upgrade.tsx), pra não duplicar em dois lugares.
-// Vale até 30/11/2026; depois, TIERS_PAGOS_DEZ_2026. Lido sempre por
-// `tiersPagos()`, nunca direto, pra a troca acontecer na hora da virada.
+// Vale até a virada; depois, TIERS_PAGOS_DEZ_2026 (o nome ficou da data antiga).
+// Lido sempre por `tiersPagos()`, nunca direto, pra a troca acontecer na hora.
 const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
   controle: {
     titulo: "Premium",
@@ -471,7 +471,7 @@ export function tiersPagos(agora: number = Date.now()): Record<TierPago, InfoTie
   return depoisDaVirada(agora) ? TIERS_PAGOS_DEZ_2026 : TIERS_PAGOS_ATE_NOV_2026;
 }
 
-/** Preço que a fundadora trava: o de antes da virada, em qualquer data. */
+/** O preço de antes da virada, em qualquer data (ver src/lib/fundadora.ts). */
 export function tiersPagosDeFundadora(): Record<TierPago, InfoTierPago> {
   return TIERS_PAGOS_ATE_NOV_2026;
 }
@@ -480,20 +480,22 @@ export function tiersPagosDeFundadora(): Record<TierPago, InfoTierPago> {
  * O que está sendo assinado, em palavras, pro diálogo de pagamento:
  * "Premium, R$ 29,90 por mês". Antes o diálogo dizia só "Assinatura da Pólia
  * One" e o botão Confirmar não mostrava plano nem preço (PAY-31, 08/10/2026).
- * Chave desconhecida volta null.
+ * Chave desconhecida volta null. `tiers` é o que a conta vê, quando não é o
+ * preço público (tiersPagosDaConta).
  */
 export function resumoDoPlano(
   plano: string | null | undefined,
   agora: number = Date.now(),
+  tiers: Record<TierPago, InfoTierPago> = tiersPagos(agora),
 ): string | null {
   const [tier, ciclo] = (plano ?? "").split("_");
-  const valor = valorDoPlano(plano, agora);
+  const valor = valorDoPlano(plano, agora, tiers);
   if (valor === null || (tier !== "controle" && tier !== "projete")) return null;
   const preco = valor.toLocaleString("pt-BR", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  return `${tiersPagos(agora)[tier].titulo}, R$ ${preco} ${ciclo === "anual" ? "por ano" : "por mês"}`;
+  return `${tiers[tier].titulo}, R$ ${preco} ${ciclo === "anual" ? "por ano" : "por mês"}`;
 }
 
 // Valor cobrado por chave de plano ("controle_mensal" etc.), pro evento
@@ -501,10 +503,11 @@ export function resumoDoPlano(
 export function valorDoPlano(
   plano: string | null | undefined,
   agora: number = Date.now(),
+  tiers: Record<TierPago, InfoTierPago> = tiersPagos(agora),
 ): number | null {
   const [tier, ciclo] = (plano ?? "").split("_");
   if (tier !== "controle" && tier !== "projete") return null;
-  if (ciclo === "mensal") return tiersPagos(agora)[tier].precoMensal;
-  if (ciclo === "anual") return tiersPagos(agora)[tier].precoAnual;
+  if (ciclo === "mensal") return tiers[tier].precoMensal;
+  if (ciclo === "anual") return tiers[tier].precoAnual;
   return null;
 }

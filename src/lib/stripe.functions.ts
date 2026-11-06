@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { dispararAlerta } from "@/lib/alertas.server";
 import { HOST_CANONICO as SITE_URL } from "@/lib/seo";
-import { dentroDoPrazoFundadora } from "@/lib/fundadora";
+import { contaTemPrecoHonrado } from "@/lib/fundadora.functions";
 import { depoisDaVirada } from "@/lib/planos";
 import {
   formatarDocumento,
@@ -39,9 +39,9 @@ const ENV_PRICE_POR_PLANO: Record<PlanoAssinatura, string | undefined> = {
   projete_anual: process.env.STRIPE_PRICE_ID_PROJETE_ANUAL,
 };
 
-// Prices da virada (01/12/2026, src/lib/planos.ts): Premium R$ 39,90 / R$ 399 e
-// Pro R$ 79,90 / R$ 799. Os de cima continuam existindo no Stripe e cobrando
-// quem assinou até 30/11 (fundadora): assinatura não muda de Price sozinha.
+// Prices da virada (src/lib/planos.ts): Premium R$ 39,90 / R$ 399 e Pro R$ 79,90 /
+// R$ 799. Os de cima continuam existindo no Stripe: cobram quem assinou antes da
+// virada (assinatura não muda de Price sozinha) e quem tem o preço honrado.
 const ENV_PRICE_DEZ_2026: Record<PlanoAssinatura, string | undefined> = {
   controle_mensal: process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL_DEZ2026,
   controle_anual: process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL_DEZ2026,
@@ -49,8 +49,12 @@ const ENV_PRICE_DEZ_2026: Record<PlanoAssinatura, string | undefined> = {
   projete_anual: process.env.STRIPE_PRICE_ID_PROJETE_ANUAL_DEZ2026,
 };
 
-export function precoParaPlano(plano: PlanoAssinatura, agora: number = Date.now()): string {
-  if (depoisDaVirada(agora)) {
+export function precoParaPlano(
+  plano: PlanoAssinatura,
+  agora: number = Date.now(),
+  precoHonrado: boolean = false,
+): string {
+  if (depoisDaVirada(agora) && !precoHonrado) {
     const novo = ENV_PRICE_DEZ_2026[plano];
     if (novo) return novo;
     // Sem o secret novo, cobra o Price antigo em vez de travar o checkout, e
@@ -182,7 +186,9 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
     // o alerta checkout_erro avisa que é configuração.
     try {
       const stripe = stripeClient();
-      const priceId = precoParaPlano(data.plano);
+      // Lido aqui, não vindo da tela: quem decide o preço é o servidor.
+      const precoHonrado = await contaTemPrecoHonrado(context.userId);
+      const priceId = precoParaPlano(data.plano, Date.now(), precoHonrado);
 
       // Tentativa anterior abandonada (janela de pagamento fechada sem pagar):
       // cancela antes de abrir outra, senão cada clique deixa uma assinatura
@@ -250,7 +256,6 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
       }
 
       const janela = janelaIdempotencia();
-      const fundadora = dentroDoPrazoFundadora();
       const customerId =
         existente?.stripe_customer_id ??
         (
@@ -268,10 +273,8 @@ export const iniciarAssinatura = createServerFn({ method: "POST" })
         {
           customer: customerId,
           items: [{ price: priceId }],
-          // Preço de fundadora (GRW-66): marca quem assinou dentro do prazo. As
-          // 50 vagas são controladas pela tela (o bloco some sem vaga) e, se
-          // precisar, conferidas depois pela ordem das assinaturas pagas.
-          metadata: { fundadora: fundadora ? "sim" : "nao" },
+          // Marca quem assinou no preço honrado (src/lib/fundadora.ts).
+          metadata: { fundadora: precoHonrado ? "sim" : "nao" },
           payment_behavior: "default_incomplete",
           payment_settings: { save_default_payment_method: "on_subscription" },
           // confirmation_secret só volta quando é pedido pelo caminho inteiro.

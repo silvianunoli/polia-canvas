@@ -73,10 +73,10 @@ describe("limite visível do raio-x", () => {
 });
 
 describe("planoGeraRaioX (QA-30)", () => {
-  it("Pro e beta geram; Grátis, Premium, cancelada e sem plano não", () => {
+  it("Pro, Premium e beta geram; Grátis, cancelada e sem plano não", () => {
     expect(planoGeraRaioX("projete")).toBe(true);
     expect(planoGeraRaioX("beta")).toBe(true);
-    expect(planoGeraRaioX("controle")).toBe(false);
+    expect(planoGeraRaioX("controle")).toBe(true);
     expect(planoGeraRaioX("confere")).toBe(false);
     expect(planoGeraRaioX("cancelada")).toBe(false);
     expect(planoGeraRaioX(null)).toBe(false);

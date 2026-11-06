@@ -8,6 +8,10 @@ vi.hoisted(() => {
   process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL = "price_controle_anual";
   process.env.STRIPE_PRICE_ID_PROJETE_MENSAL = "price_projete_mensal";
   process.env.STRIPE_PRICE_ID_PROJETE_ANUAL = "price_projete_anual";
+  process.env.STRIPE_PRICE_ID_CONTROLE_MENSAL_DEZ2026 = "price_controle_mensal_novo";
+  process.env.STRIPE_PRICE_ID_CONTROLE_ANUAL_DEZ2026 = "price_controle_anual_novo";
+  process.env.STRIPE_PRICE_ID_PROJETE_MENSAL_DEZ2026 = "price_projete_mensal_novo";
+  process.env.STRIPE_PRICE_ID_PROJETE_ANUAL_DEZ2026 = "price_projete_anual_novo";
 });
 
 // createServerFn vira um builder de mentira: guarda o validador e devolve o
@@ -61,6 +65,9 @@ vi.mock("@/integrations/supabase/client.server", () => ({ supabaseAdmin: { from 
 const { dispararAlerta } = vi.hoisted(() => ({ dispararAlerta: vi.fn() }));
 vi.mock("@/lib/alertas.server", () => ({ dispararAlerta }));
 
+const { contaTemPrecoHonrado } = vi.hoisted(() => ({ contaTemPrecoHonrado: vi.fn() }));
+vi.mock("@/lib/fundadora.functions", () => ({ contaTemPrecoHonrado }));
+
 import {
   precoParaPlano,
   iniciarAssinatura,
@@ -94,6 +101,8 @@ const context = { userId: "u-1", claims: { email: "ana@exemplo.com" } };
 beforeEach(() => {
   from.mockReset();
   dispararAlerta.mockReset();
+  contaTemPrecoHonrado.mockReset();
+  contaTemPrecoHonrado.mockResolvedValue(false);
   stripeMock.customers.create.mockReset();
   stripeMock.customers.update.mockReset();
   stripeMock.customers.listTaxIds.mockReset();
@@ -108,11 +117,24 @@ beforeEach(() => {
 });
 
 describe("precoParaPlano", () => {
-  it("mapeia cada chave interna pra env var certa", () => {
-    expect(precoParaPlano("controle_mensal")).toBe("price_controle_mensal");
-    expect(precoParaPlano("controle_anual")).toBe("price_controle_anual");
-    expect(precoParaPlano("projete_mensal")).toBe("price_projete_mensal");
-    expect(precoParaPlano("projete_anual")).toBe("price_projete_anual");
+  const ANTES = Date.parse("2026-11-05T12:00:00-03:00");
+  const DEPOIS = Date.parse("2026-11-15T12:00:00-03:00");
+
+  it("antes da virada, mapeia cada chave interna pra env var certa", () => {
+    expect(precoParaPlano("controle_mensal", ANTES)).toBe("price_controle_mensal");
+    expect(precoParaPlano("controle_anual", ANTES)).toBe("price_controle_anual");
+    expect(precoParaPlano("projete_mensal", ANTES)).toBe("price_projete_mensal");
+    expect(precoParaPlano("projete_anual", ANTES)).toBe("price_projete_anual");
+  });
+
+  it("depois da virada, cobra o Price novo", () => {
+    expect(precoParaPlano("controle_mensal", DEPOIS)).toBe("price_controle_mensal_novo");
+    expect(precoParaPlano("projete_anual", DEPOIS)).toBe("price_projete_anual_novo");
+  });
+
+  it("com o preço honrado, segue no Price antigo depois da virada", () => {
+    expect(precoParaPlano("controle_mensal", DEPOIS, true)).toBe("price_controle_mensal");
+    expect(precoParaPlano("projete_anual", DEPOIS, true)).toBe("price_projete_anual");
   });
 
   it("explode com mensagem clara quando o price id do plano não está no env", async () => {
@@ -122,10 +144,10 @@ describe("precoParaPlano", () => {
     delete process.env.STRIPE_PRICE_ID_PROJETE_ANUAL;
     try {
       const mod = await import("./stripe.functions");
-      expect(() => mod.precoParaPlano("projete_anual")).toThrow(
+      expect(() => mod.precoParaPlano("projete_anual", ANTES)).toThrow(
         'Missing price id for plano "projete_anual".',
       );
-      expect(() => mod.precoParaPlano("controle_mensal")).not.toThrow();
+      expect(() => mod.precoParaPlano("controle_mensal", ANTES)).not.toThrow();
     } finally {
       process.env.STRIPE_PRICE_ID_PROJETE_ANUAL = salvo;
     }
@@ -194,7 +216,8 @@ describe("iniciarAssinatura", () => {
     expect(stripeMock.subscriptions.create).toHaveBeenCalledWith(
       expect.objectContaining({
         customer: "cus_novo",
-        items: [{ price: "price_projete_anual" }],
+        items: [{ price: "price_projete_anual_novo" }],
+        metadata: { fundadora: "nao" },
         payment_behavior: "default_incomplete",
         // Sem o caminho inteiro o Stripe não devolve o confirmation_secret.
         expand: ["latest_invoice.confirmation_secret"],
@@ -206,13 +229,45 @@ describe("iniciarAssinatura", () => {
         user_id: "u-1",
         stripe_customer_id: "cus_novo",
         stripe_subscription_id: "sub_1",
-        price_id: "price_projete_anual",
+        price_id: "price_projete_anual_novo",
         status: "incomplete",
         current_period_end: new Date(1_800_000_000 * 1000).toISOString(),
       }),
       { onConflict: "user_id" },
     );
     expect(r).toEqual({ clientSecret: "pi_secret", error: null });
+  });
+
+  it("conta com o preço honrado assina no Price antigo, decidido no servidor", async () => {
+    contaTemPrecoHonrado.mockResolvedValue(true);
+    from.mockReturnValueOnce(consulta({ data: null }));
+    from.mockReturnValueOnce(consulta({ error: null }));
+    stripeMock.customers.create.mockResolvedValue({ id: "cus_novo" });
+    stripeMock.subscriptions.create.mockResolvedValue(subscriptionOk);
+
+    await iniciar({ data: { plano: "controle_mensal" }, context });
+
+    expect(contaTemPrecoHonrado).toHaveBeenCalledWith("u-1");
+    expect(stripeMock.subscriptions.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: [{ price: "price_controle_mensal" }],
+        metadata: { fundadora: "sim" },
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("sem saber se a conta tem o preço honrado, não cria assinatura", async () => {
+    contaTemPrecoHonrado.mockRejectedValue(new Error("banco fora"));
+    from.mockReturnValueOnce(consulta({ data: null }));
+
+    const r = (await iniciar({ data: { plano: "controle_mensal" }, context })) as {
+      error: string | null;
+    };
+
+    expect(stripeMock.subscriptions.create).not.toHaveBeenCalled();
+    expect(dispararAlerta).toHaveBeenCalledWith("checkout_erro", expect.any(String), expect.anything());
+    expect(r.error).toBe("A Pólia One não conseguiu iniciar sua assinatura agora. Tenta de novo.");
   });
 
   it("reaproveita o customer de uma assinatura antiga cancelada", async () => {

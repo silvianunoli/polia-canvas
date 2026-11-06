@@ -126,7 +126,7 @@ describe("tutoriais por ferramenta", () => {
   it("nomeia o plano visível de cada tela", () => {
     expect(planoDoTutorial(tutorialPorSlug("metas")!)).toBe("Grátis");
     expect(planoDoTutorial(tutorialPorSlug("financeiro")!)).toBe("Premium");
-    expect(planoDoTutorial(tutorialPorSlug("raiox")!)).toBe("Pro");
+    expect(planoDoTutorial(tutorialPorSlug("raiox")!)).toBe("Premium");
     // A tela abre em todo plano, mas conectar o canal é do Pro.
     expect(planoDoTutorial(tutorialPorSlug("anuncios")!)).toBe("Pro");
   });
