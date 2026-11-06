@@ -17,6 +17,8 @@ import { useEstoqueDoProduto } from "./useEstoqueDoProduto";
 import { KitDoProduto } from "./KitDoProduto";
 import { useKitDoProduto } from "./useKitDoProduto";
 import { useFotosDoProduto } from "./useFotosDoProduto";
+import { NaLojaDoProduto } from "./NaLojaDoProduto";
+import { useLojaDoProduto } from "./useLojaDoProduto";
 
 /* ============== Modal: adicionar/editar produto ============== */
 export function ModalProduto({
@@ -68,6 +70,12 @@ export function ModalProduto({
   // Kit e combo (ONE-132): kit não tem estoque próprio, a venda baixa os itens.
   const kit = useKitDoProduto(userId, produtoEdit?.id ?? null);
   const ehKit = tipo === "fisico" && kit.estado.ehKit;
+  // Loja de marca (ONE-181): quem tem loja cadastra variação pela seção Na loja.
+  const loja = useLojaDoProduto(
+    userId,
+    produtoEdit?.id ?? null,
+    produtoEdit?.controla_estoque ?? false,
+  );
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -81,12 +89,16 @@ export function ModalProduto({
 
   /** Kit ligado: grava os itens (e desliga o estoque próprio). Senão, o estoque. */
   const salvarEstoqueOuKit = async (id: string): Promise<string | null> => {
-    if (ehKit) return kit.salvar(id);
+    if (ehKit) {
+      const erroDoKit = await kit.salvar(id);
+      if (erroDoKit || !loja.temLoja) return erroDoKit;
+      return loja.salvar(id, true);
+    }
     // Era kit e deixou de ser (ou virou serviço/digital): desfaz o kit antes,
     // porque o banco não deixa kit ligar estoque próprio.
     const erroKit = await kit.salvar(id, true);
     if (erroKit) return erroKit;
-    return estoque.salvar(id);
+    return loja.temLoja ? loja.salvar(id, false) : estoque.salvar(id);
   };
 
   const salvar = async () => {
@@ -95,6 +107,11 @@ export function ModalProduto({
     // explicação deixava a pessoa procurando o que faltava.
     if (ehKit && kit.erro) {
       setErro(kit.erro);
+      return;
+    }
+    const problemaDaLoja = loja.problemaPara(ehKit);
+    if (problemaDaLoja) {
+      setErro(problemaDaLoja);
       return;
     }
     setSalvando(true);
@@ -213,7 +230,9 @@ export function ModalProduto({
           <button
             type="button"
             onClick={salvar}
-            disabled={salvando || fotos.carregando || !podeSalvar}
+            disabled={
+              salvando || fotos.carregando || loja.carregando || loja.erroAoCarregar || !podeSalvar
+            }
             className={BTN_ACAO}
           >
             {salvando ? "Salvando..." : "Salvar produto"}
@@ -411,7 +430,9 @@ export function ModalProduto({
         </p>
       )}
 
-      {!ehKit && (
+      {loja.temLoja && <NaLojaDoProduto loja={loja} ehKit={ehKit} />}
+
+      {!ehKit && !loja.temLoja && (
         <EstoqueDoProduto
           estado={estoque.estado}
           onMudar={estoque.setEstado}
