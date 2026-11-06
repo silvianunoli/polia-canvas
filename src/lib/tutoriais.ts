@@ -17,10 +17,9 @@
 
 import { depoisDaVirada, ehRotaProjete, tierMinimoDaRota, tiersPagos } from "@/lib/planos";
 
-// Virada de preços (01/12/2026, src/lib/planos.ts): Encomenda, Resumo pro
+// Virada de preços (06/11/2026, src/lib/planos.ts): Encomenda, Resumo pro
 // contador, Projeção e Raio-x descem do Pro pro Premium e os preços mudam.
-// Lido quando o módulo carrega. A narração das cenas "projecao" e "raiox" diz
-// "é do Pro", então o trecho sai depois da virada até a narração nova (PAY-46).
+// Lido quando o módulo carrega.
 const VIROU = depoisDaVirada();
 const PRECOS = tiersPagos();
 function reaisDoPlano(v: number): string {
@@ -687,7 +686,7 @@ const LISTA = [
     abrir: "Abrir a Projeção",
     resumo:
       "Quantas vendas faltam pra empatar, pra pagar o seu salário e pra bater a Meta do mês, e o que muda se o preço ou o custo mexer.",
-    trecho: VIROU ? undefined : "projecao",
+    trecho: "projecao",
     passos: [
       {
         titulo: "Ler a projeção",
@@ -734,7 +733,7 @@ const LISTA = [
     abrir: "Abrir o Raio-x",
     resumo:
       "Com o mês fechado, a Pólia One lê entradas, saídas, meta e produtos e mostra o que puxou o resultado.",
-    trecho: VIROU ? undefined : "raiox",
+    trecho: "raiox",
     passos: [
       {
         titulo: "Gerar o raio-x",
@@ -1163,11 +1162,11 @@ export function buscarTutoriais(termo: string): readonly Tutorial[] {
 // (tempos.json do vídeo). Mudou o vídeo, rode o gerador e atualize aqui; o
 // teste confere que cada trecho daqui tem o mp3 dele.
 const DURACAO_TRECHO: Record<string, number> = {
-  plano: 24,
+  plano: 25,
   "planejamento-ia": 35,
   calculadora: 8,
-  projecao: 13,
-  raiox: 14,
+  projecao: 14,
+  raiox: 15,
   clientes: 12,
   metas: 9,
   caderno: 9,
