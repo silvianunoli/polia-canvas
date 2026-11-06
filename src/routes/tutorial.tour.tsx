@@ -9,7 +9,7 @@ import { linkCanonico } from "@/lib/seo";
 
 const TITULO = "Tour completo · A Pólia One por dentro";
 const DESCRICAO =
-  "Um tour narrado de 5 minutos pela Pólia One: do Planejamento à Calculadora, ao Financeiro e a cada ferramenta do menu.";
+  "Um tour narrado de 5 minutos pela Pólia One: da próxima encomenda ao fim do mês, passando por cada ferramenta do menu.";
 
 // O tour de 5 minutos, público (pedido da Sil, 07/10/2026: dá pra mandar o link
 // pra quem ainda não tem conta). Até 28/10/2026 morava em /tutorial, que agora

@@ -23,6 +23,7 @@ export const CAMINHOS_ESTATICOS = [
   "/manual",
   "/planos",
   "/tutorial",
+  "/tutorial/tour",
   "/termos",
   "/privacidade",
 ] as const;

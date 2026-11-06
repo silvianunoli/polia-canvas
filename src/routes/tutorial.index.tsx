@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BotaoCadastro, CORPO, Rotulo, Secao } from "@/components/landing/BlocosLanding";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
+import { ChamadaTour } from "@/components/tutorial/ChamadaTour";
 import { ListaTutoriais } from "@/components/tutorial/ListaTutoriais";
 import { linkCanonico } from "@/lib/seo";
 
@@ -43,7 +44,7 @@ function TutoriaisPublicoPage() {
           <div className="mt-10">
             <ListaTutoriais base="/tutorial" />
           </div>
-          {/* Tour narrado fora do ar desde 31/10/2026: o áudio e os clipes ainda mostram o Planejamento, que saiu da Pólia One. Volta com narração nova (ChamadaTour). */}
+          <ChamadaTour base="/tutorial" />
           <div className="mt-12">
             <BotaoCadastro
               busca={{ origem: "tutorial" }}

@@ -118,7 +118,7 @@ describe("tutoriais por ferramenta", () => {
   });
 
   it("formata a duração do clipe", () => {
-    expect(duracaoDoTrecho("metas")).toBe("9 s");
+    expect(duracaoDoTrecho("metas")).toBe("11 s");
     expect(duracaoDoTrecho(undefined)).toBeNull();
     expect(duracaoDoTrecho("nao-existe")).toBeNull();
   });

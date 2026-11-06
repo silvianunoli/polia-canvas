@@ -10,10 +10,8 @@
 // `trecho` aponta as cenas do vídeo (id da cena, ou "primeira-última"). Cada
 // trecho tem um mp3 curto em public/video-tutorial/trechos/, cortado por
 // polia-one-tutorial/gerar_versao_app.py; o teste confere que o arquivo existe.
-// Sem `trecho`, a página mostra só o passo a passo até a narração nova sair:
-// Vendas e Anúncios entraram no menu depois do vídeo, o primeiro acesso e o
-// Painel mudaram em 14/10, e as cenas de Produtos e Financeiro dizem "quanto
-// sobra", que saiu da copy em 18/10.
+// Sem `trecho`, a página mostra só o passo a passo: Anúncios nos canais fica sem
+// clipe porque só o Mercado Livre conecta. O vídeo foi refeito em 06/11/2026 (ONE-143).
 
 import { depoisDaVirada, ehRotaProjete, tierMinimoDaRota, tiersPagos } from "@/lib/planos";
 
@@ -72,6 +70,7 @@ const LISTA = [
     abrir: "Abrir o Painel",
     resumo:
       "Os três primeiros passos que aparecem no topo do Painel: lançar a próxima encomenda, marcar como entregue e ver o lucro, e calcular o preço de um produto.",
+    trecho: "primeiros",
     passos: [
       {
         titulo: "Antes dos passos: o nicho",
@@ -117,6 +116,7 @@ const LISTA = [
     abrir: "Abrir o Painel",
     resumo:
       "A tela de todo dia: quanto falta pro mês, o que entrou, quanto a marca lucrou e as entregas da semana.",
+    trecho: "painel",
     passos: [
       {
         titulo: "Ler o Painel",
@@ -184,7 +184,6 @@ const LISTA = [
     abrir: "Abrir o Planejamento",
     resumo:
       "O documento vivo da marca: seis módulos, do porquê ela existe até onde ela vai. Cada resposta vira preço, meta e conta do mês nas outras telas.",
-    trecho: "planejamento-ia",
     passos: [
       {
         titulo: "Responder um módulo",
@@ -239,9 +238,7 @@ const LISTA = [
     abrir: "Abrir o Assistente",
     resumo:
       "O balão no canto da tela: responde dúvidas sobre como usar a Pólia One e sobre o negócio.",
-    // Sem clipe desde 31/10/2026: a cena mostra o exemplo "Como eu preencho o
-    // Planejamento?" e a resposta sobre o Módulo 1, e o Planejamento saiu.
-    // Volta quando a narração nova sair.
+    trecho: "assistente",
     passos: [
       {
         titulo: "Fazer uma pergunta",
@@ -279,7 +276,7 @@ const LISTA = [
     outrasRotas: ["/assinar"],
     abrir: "Abrir Configurações",
     resumo: "O que abre em cada plano, onde ver o seu e como trocar, mudar o cartão ou cancelar.",
-    // Sem clipe desde 28/10/2026: o vídeo lista Planner e Caderno nos planos.
+    trecho: "plano",
     passos: [
       {
         titulo: "Ver o seu plano",
@@ -337,6 +334,7 @@ const LISTA = [
     rota: "/produtos",
     abrir: "Abrir Produtos",
     resumo: "O catálogo da marca: o que ela vende, quanto custa e quanto lucra em cada venda.",
+    trecho: "produtos",
     passos: [
       {
         titulo: "Cadastrar um produto",
@@ -396,8 +394,6 @@ const LISTA = [
     abrir: "Abrir a Calculadora",
     resumo:
       "Entram os custos reais da marca, sai o preço sugerido e quanto ele deixa de lucro depois das taxas.",
-    // A cena ganhou o "Qual produto?" e o título novo em 01/11/2026 (ONE-166);
-    // a narração não muda, ela não cita o nome do produto nem o "sobra".
     trecho: "calculadora",
     passos: [
       {
@@ -518,6 +514,7 @@ const LISTA = [
     rota: "/vendas",
     abrir: "Abrir Vendas",
     resumo: "O que vendeu, por qual canal, pra quem e quanto a marca lucrou em cada venda.",
+    trecho: "vendas",
     passos: [
       {
         titulo: "Registrar uma venda",
@@ -573,6 +570,7 @@ const LISTA = [
     rota: "/financeiro",
     abrir: "Abrir o Financeiro",
     resumo: "Tudo o que entrou e saiu no mês, e quanto a marca lucrou no fim.",
+    trecho: "financeiro",
     passos: [
       {
         titulo: "Lançar uma entrada ou uma saída",
@@ -834,7 +832,6 @@ const LISTA = [
     abrir: "Abrir o Planner",
     resumo:
       "Um quadro por projeto, com colunas das ideias até o pronto. Cada cartão tem prazo e pode ficar ligado a uma meta.",
-    trecho: "planner",
     passos: [
       {
         titulo: "Criar um quadro",
@@ -881,6 +878,7 @@ const LISTA = [
     abrir: "Abrir os Pedidos",
     resumo:
       "Um quadro pronto com cada pedido: a cliente, o que ela pediu, o dia da entrega e se já pagou. Na entrega, o dinheiro entra no Financeiro.",
+    trecho: "pedido-entrega",
     passos: [
       {
         titulo: "Anotar um pedido",
@@ -952,6 +950,7 @@ const LISTA = [
     abrir: "Abrir o Catálogo",
     resumo:
       "A loja da marca num endereço da Pólia, com os produtos, as fotos e as variações de Produtos. A cliente monta o carrinho e confirma, e o pedido cai em Pedidos.",
+    trecho: "catalogo",
     passos: [
       {
         titulo: "Abrir a loja",
@@ -1009,9 +1008,8 @@ const LISTA = [
     rota: "/calendario",
     abrir: "Abrir o Calendário",
     resumo: "O mês com o dia de entrega de cada pedido.",
-    // Sem clipe desde 28/10/2026: o vídeo mostra a grade com os cartões do
-    // Planner, que saiu das usuárias. Volta quando a narração nova sair. A
-    // conexão com o Google Calendar saiu da Pólia One em 02/11/2026.
+    // A conexão com o Google Calendar saiu da Pólia One em 02/11/2026.
+    trecho: "calendario",
     passos: [
       {
         titulo: "Ver o mês",
@@ -1047,9 +1045,8 @@ const LISTA = [
   },
   {
     // Slug e rota continuam "caderno": desde 28/10/2026 as notas ficaram só pra
-    // conta interna e, pra todas, a tela é o guia de presença do Módulo 5. Sem
-    // clipe: o vídeo mostra as notas. Interno desde 31/10/2026: o guia nasce do
-    // Módulo 5 do Planejamento, que saiu das usuárias.
+    // conta interna e, pra todas, a tela é o guia de presença do Módulo 5. Interno
+    // desde 31/10/2026: o guia nasce do Módulo 5 do Planejamento, que saiu das usuárias.
     slug: "caderno",
     interno: true,
     nome: "Guia de presença",
@@ -1162,18 +1159,21 @@ export function buscarTutoriais(termo: string): readonly Tutorial[] {
 // (tempos.json do vídeo). Mudou o vídeo, rode o gerador e atualize aqui; o
 // teste confere que cada trecho daqui tem o mp3 dele.
 const DURACAO_TRECHO: Record<string, number> = {
-  plano: 25,
-  "planejamento-ia": 35,
-  calculadora: 8,
-  projecao: 14,
-  raiox: 15,
-  clientes: 12,
-  metas: 9,
-  caderno: 9,
-  planner: 11,
-  conteudo: 11,
-  calendario: 10,
-  assistente: 14,
+  primeiros: 12,
+  "pedido-entrega": 47,
+  painel: 19,
+  plano: 32,
+  produtos: 17,
+  vendas: 19,
+  catalogo: 12,
+  calculadora: 12,
+  financeiro: 19,
+  metas: 11,
+  projecao: 13,
+  raiox: 14,
+  clientes: 15,
+  calendario: 14,
+  assistente: 16,
 };
 
 export const TRECHOS_USADOS = Object.keys(DURACAO_TRECHO);
