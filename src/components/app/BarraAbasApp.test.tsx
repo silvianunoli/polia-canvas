@@ -62,6 +62,14 @@ describe("BarraAbasApp", () => {
     expect(screen.getByRole("link", { name: "Hoje" }).getAttribute("href")).toBe("/hoje");
   });
 
+  // ONE-188: fora do wrapper das páginas, sem a classe a barra ficava transparente.
+  it("a barra carrega os tokens da Pólia, porque mora fora do wrapper das páginas", () => {
+    render(<BarraAbasApp pathname="/hoje" userId="u1" plano="controle" />);
+    expect(
+      screen.getByRole("navigation", { name: "Navegação do app" }).classList.contains("polia-v3"),
+    ).toBe(true);
+  });
+
   it("o Painel completo também acende a aba Hoje", () => {
     render(<BarraAbasApp pathname="/painel" userId="u1" plano="controle" />);
     expect(screen.getByRole("link", { name: "Hoje" }).getAttribute("aria-current")).toBe("page");

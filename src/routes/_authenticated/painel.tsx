@@ -715,7 +715,8 @@ function PainelPage() {
         {/* Header: primeira dobra, sem reveal */}
         <div>
           <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
-            {saudacao}, {meta.displayName}.
+            {saudacao}
+            {meta.primeiroNome ? `, ${meta.primeiroNome}` : ""}.
           </p>
           <h1
             id="painel-manchete"

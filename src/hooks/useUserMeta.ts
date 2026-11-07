@@ -7,6 +7,12 @@ import { dataISOLocal, hojeISO } from "@/lib/data.functions";
 export interface UserMeta {
   initial: string;
   displayName: string;
+  /**
+   * Primeiro nome de verdade, ou `null` enquanto o perfil carrega ou quando a
+   * conta não tem nome. Saudação usa este, não `displayName` (ONE-188: o
+   * "você" de reserva virava "Boa noite, você.").
+   */
+  primeiroNome: string | null;
   businessName: string | null;
   isAdmin: boolean;
   streak: number;
@@ -93,8 +99,9 @@ export function useUserMeta() {
         (profile?.full_name as string | undefined) ??
         (user?.user_metadata?.full_name as string | undefined) ??
         "";
-      const displayName = full.trim().split(" ")[0] || "você";
-      const initial = (displayName.charAt(0) || "P").toUpperCase();
+      const primeiroNome = full.trim().split(" ")[0] || null;
+      const displayName = primeiroNome ?? "você";
+      const initial = (primeiroNome?.charAt(0) || "P").toUpperCase();
 
       // Presença = dias distintos em que a usuária apareceu: abriu o app (presencas)
       // ou concluiu uma tarefa (concluido). É um total que só cresce — não um streak
@@ -115,6 +122,7 @@ export function useUserMeta() {
       return {
         initial,
         displayName,
+        primeiroNome,
         businessName,
         isAdmin: !!profile?.is_admin,
         streak,
@@ -133,6 +141,7 @@ export function useUserMeta() {
   return {
     initial: "P",
     displayName: "você",
+    primeiroNome: null,
     businessName: null,
     isAdmin: false,
     streak: 0,

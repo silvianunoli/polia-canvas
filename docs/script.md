@@ -577,3 +577,11 @@ Pedidos da Sil depois de ver o app no emulador. Commit e deploy autorizados por 
 - `auth/login.tsx`: a frase do eixo antigo ("Sua marca no centro, com os números no lugar.") virou "Quem é dona, sabe.", com rodapé Pedidos · Entregas · Lucro.
 - `CartaoConsultoria`: X branco no canto; fechar esconde o cartão por 24 horas (localStorage `polia-consultoria-fechada-em`).
 - `PaginaLogada`: "Como usar esta tela" abre o tutorial num `Modal` largo por cima da tela; `ConteudoTutorial` ganhou `emModal`, sem links que tirem a usuária dali. Novidade no sino em `20261107200000_novidade_tutorial_em_modal.sql`.
+
+## 2026-11-07 — Barra de abas, convite de avisos e saudação no app (ONE-188)
+
+Achados no emulador depois do login. Correção e deploy autorizados pela Sil em 07/11.
+
+- `BarraAbasApp`: a barra mora fora do wrapper `.polia-v3`, então `--bg`/`--line` não existiam (fundo transparente) e `--muted` caía no rosa do `:root`. Ganhou a classe `polia-v3`.
+- `push.ts` + `ConviteAvisosApp`: o app não pede mais a permissão do Android sozinho no login. A aba Hoje mostra o cartão "Avisos no celular" e o pedido do sistema só abre no toque; "Agora não" segura 7 dias.
+- `useUserMeta.primeiroNome`: saudação de Hoje e Painel vira "Boa noite." quando o nome não chegou ou não existe, em vez de "Boa noite, você."; a inicial do avatar sem nome volta a ser "P".

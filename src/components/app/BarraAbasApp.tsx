@@ -55,9 +55,12 @@ export function BarraAbasApp({
 
   return (
     <>
+      {/* polia-v3 aqui mesmo (ONE-188): a barra mora fora do wrapper das
+          páginas, e sem a classe --bg e --line não existem (fundo transparente,
+          conteúdo passando por baixo) e --muted cai no rosa do :root. */}
       <nav
         aria-label="Navegação do app"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)] px-2 pb-[env(safe-area-inset-bottom)]"
+        className="polia-v3 fixed inset-x-0 bottom-0 z-40 border-t border-[var(--line)] bg-[var(--bg)] px-2 pb-[env(safe-area-inset-bottom)]"
       >
         <div
           className="mx-auto flex max-w-[560px] items-center"

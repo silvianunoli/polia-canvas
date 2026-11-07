@@ -14,6 +14,7 @@ import { intervaloDoPeriodo } from "@/lib/vendas";
 import { formatarReais } from "@/lib/formatarReais";
 import { estaAberto, linhaDoResumo, resumoDoDia, rotuloEntrega } from "@/lib/pedidos";
 import { usePedidos } from "@/components/pedidos/dados";
+import { ConviteAvisosApp } from "@/components/app/ConviteAvisosApp";
 
 // Aba "Hoje" do app Android (AND-07, wireframe v2 aprovado em 28/10/2026): o
 // Painel enxuto pra tela do celular. Os números saem das mesmas fontes do
@@ -108,9 +109,15 @@ function Hoje() {
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
       <div className="mx-auto w-full max-w-[560px] px-4 pb-8 pt-8">
         <p className="font-fraunces text-[19px] italic text-[var(--ink-soft)]">
-          {saudacao}, {meta.displayName}.
+          {saudacao}
+          {meta.primeiroNome ? `, ${meta.primeiroNome}` : ""}.
         </p>
         <h1 className="font-cabinet mt-1 text-[28px] leading-[1.1] text-[var(--ink)]">Hoje</h1>
+
+        {/* Só no app e só enquanto a permissão do Android não foi decidida (ONE-188). */}
+        <div className="mt-6 empty:hidden">
+          <ConviteAvisosApp />
+        </div>
 
         {dados.isError ? (
           <div className="mt-6" role="alert">

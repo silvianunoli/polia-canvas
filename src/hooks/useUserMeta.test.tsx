@@ -102,6 +102,8 @@ describe("useUserMeta", () => {
     expect(result.current).toEqual({
       initial: "P",
       displayName: "você",
+      // Saudação usa este: sem nome confirmado, "Boa noite." sem o "você" (ONE-188).
+      primeiroNome: null,
       businessName: null,
       isAdmin: false,
       streak: 0,
@@ -125,14 +127,16 @@ describe("useUserMeta", () => {
 
     await waitFor(() => expect(result.current.displayName).toBe("Ana"));
     expect(result.current.initial).toBe("A");
+    expect(result.current.primeiroNome).toBe("Ana");
   });
 
   it("usa 'você'/'P' quando o profile não tem full_name nem user_metadata", async () => {
     setupSupabaseMocks({ profile: {} });
     const { result } = renderHook(() => useUserMeta(), { wrapper });
 
-    await waitFor(() => expect(result.current.streak).toBeDefined());
+    await waitFor(() => expect(result.current.carregando).toBe(false));
     expect(result.current.displayName).toBe("você");
+    expect(result.current.primeiroNome).toBeNull();
     expect(result.current.initial).toBe("P");
   });
 

@@ -14,6 +14,10 @@ export type EstadoPush = "indisponivel" | "pendente" | "ativo" | "negado";
 
 const TOKEN_KEY = "polia-push-token";
 const JA_PEDIU_KEY = "polia-push-ja-pediu";
+const CONVITE_ADIADO_KEY = "polia-push-convite-adiado-em";
+
+/** "Agora não" no convite da aba Hoje: ele volta depois de 7 dias. */
+export const ESPERA_CONVITE_PUSH_MS = 7 * 24 * 60 * 60 * 1000;
 
 function lerStorage(chave: string): string | null {
   try {
@@ -60,9 +64,41 @@ export async function ativarPush(): Promise<EstadoPush> {
 }
 
 /**
+ * Convite próprio antes do pedido do Android (ONE-188, 07/11/2026): o pedido do
+ * sistema abria sozinho logo depois do login, por cima das Novidades e sem a
+ * Pólia dizer pra que serve. Agora a aba Hoje mostra um cartão explicando, e o
+ * pedido do Android só abre quando ela toca em "Quero receber os avisos".
+ */
+export function deveConvidarPush(
+  estado: EstadoPush,
+  jaPediu: string | null,
+  adiadoEm: string | null,
+  agora: number,
+): boolean {
+  if (estado !== "pendente" || jaPediu) return false;
+  const quando = Number(adiadoEm);
+  if (!adiadoEm || !Number.isFinite(quando)) return true;
+  return agora - quando >= ESPERA_CONVITE_PUSH_MS;
+}
+
+export async function precisaConvitePush(): Promise<boolean> {
+  if (!isNativeApp()) return false;
+  return deveConvidarPush(
+    await estadoPush(),
+    lerStorage(JA_PEDIU_KEY),
+    lerStorage(CONVITE_ADIADO_KEY),
+    Date.now(),
+  );
+}
+
+export function adiarConvitePush(): void {
+  gravarStorage(CONVITE_ADIADO_KEY, String(Date.now()));
+}
+
+/**
  * Liga os ouvintes uma vez por abertura da área logada: grava o token quando
- * o Firebase entrega, abre a tela do aviso tocado e, na primeira vez, pede a
- * permissão. Devolve a função que desliga os ouvintes.
+ * o Firebase entrega e abre a tela do aviso tocado. Não pede permissão: isso é
+ * do convite da aba Hoje e de Configurações. Devolve a função que desliga os ouvintes.
  */
 export async function iniciarPush(abrirRota: (rota: string) => void): Promise<() => void> {
   if (!isNativeApp()) return () => {};
@@ -93,8 +129,6 @@ export async function iniciarPush(abrirRota: (rota: string) => void): Promise<()
     // Token pode trocar (reinstalação, outra conta no mesmo celular): registra
     // de novo a cada abertura, a RPC só atualiza.
     await PushNotifications.register();
-  } else if (estado === "pendente" && !lerStorage(JA_PEDIU_KEY)) {
-    await ativarPush();
   }
 
   return () => {
