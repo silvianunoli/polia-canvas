@@ -13,23 +13,28 @@ import { vizinhosDoTutorial, type Tutorial } from "@/lib/tutoriais";
 export function ConteudoTutorial({
   tutorial: t,
   base,
+  emModal = false,
 }: {
   tutorial: Tutorial;
   base: "/como-usar" | "/tutorial";
+  /** Aberto por cima da tela (07/11/2026): sem links que tirem a usuária dela. */
+  emModal?: boolean;
 }) {
   const { anterior, proximo } = vizinhosDoTutorial(t.slug);
   const rotaSlug = base === "/como-usar" ? "/como-usar/$slug" : "/tutorial/$slug";
   return (
     <div>
-      <Link
-        to={base}
-        className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
-      >
-        <ArrowLeft size={16} aria-hidden="true" />
-        Todos os tutoriais
-      </Link>
+      {!emModal && (
+        <Link
+          to={base}
+          className="inline-flex min-h-11 items-center gap-1.5 text-[14px] font-medium text-[var(--secondary-text)] no-underline hover:underline"
+        >
+          <ArrowLeft size={16} aria-hidden="true" />
+          Todos os tutoriais
+        </Link>
+      )}
 
-      <div className="mt-4">
+      <div className={emModal ? "" : "mt-4"}>
         {t.trecho ? (
           <PlayerTutorial
             key={t.slug}
@@ -45,7 +50,9 @@ export function ConteudoTutorial({
         )}
       </div>
 
-      <div className="mt-12 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:gap-12">
+      <div
+        className={`grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] md:gap-12 ${emModal ? "mt-8" : "mt-12"}`}
+      >
         <section aria-labelledby="passo-a-passo">
           <h2
             id="passo-a-passo"
@@ -129,39 +136,41 @@ export function ConteudoTutorial({
         </aside>
       </div>
 
-      <nav
-        aria-label="Outros tutoriais"
-        className="mt-16 flex flex-col gap-3 border-t border-[var(--line)] pt-6 sm:flex-row sm:justify-between"
-      >
-        {anterior ? (
-          <Link
-            to={rotaSlug}
-            params={{ slug: anterior.slug }}
-            className="inline-flex min-h-11 items-center gap-2 text-[15px] text-[var(--ink-soft)] no-underline hover:text-[var(--ink)]"
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-            <span>
-              <span className="block text-[12px] text-[var(--muted)]">Anterior</span>
-              {anterior.nome}
-            </span>
-          </Link>
-        ) : (
-          <span />
-        )}
-        {proximo && (
-          <Link
-            to={rotaSlug}
-            params={{ slug: proximo.slug }}
-            className="inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-[var(--ink)] no-underline hover:text-[var(--secondary-text)] sm:text-right"
-          >
-            <span>
-              <span className="block text-[12px] font-normal text-[var(--muted)]">Próximo</span>
-              {proximo.nome}
-            </span>
-            <ArrowRight size={16} aria-hidden="true" />
-          </Link>
-        )}
-      </nav>
+      {!emModal && (
+        <nav
+          aria-label="Outros tutoriais"
+          className="mt-16 flex flex-col gap-3 border-t border-[var(--line)] pt-6 sm:flex-row sm:justify-between"
+        >
+          {anterior ? (
+            <Link
+              to={rotaSlug}
+              params={{ slug: anterior.slug }}
+              className="inline-flex min-h-11 items-center gap-2 text-[15px] text-[var(--ink-soft)] no-underline hover:text-[var(--ink)]"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              <span>
+                <span className="block text-[12px] text-[var(--muted)]">Anterior</span>
+                {anterior.nome}
+              </span>
+            </Link>
+          ) : (
+            <span />
+          )}
+          {proximo && (
+            <Link
+              to={rotaSlug}
+              params={{ slug: proximo.slug }}
+              className="inline-flex min-h-11 items-center gap-2 text-[15px] font-medium text-[var(--ink)] no-underline hover:text-[var(--secondary-text)] sm:text-right"
+            >
+              <span>
+                <span className="block text-[12px] font-normal text-[var(--muted)]">Próximo</span>
+                {proximo.nome}
+              </span>
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

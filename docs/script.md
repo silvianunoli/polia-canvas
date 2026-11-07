@@ -569,3 +569,11 @@ Pedido da Sil depois de ver o app no emulador Pixel_8: sem login, o app caía na
 - `capacitor.config.ts`: o app abre em `/app` e se chama "Pólia One". `useAppEntryGate`: no app e sem sessão, a home manda pra `/app`; o `AppEntryGateModal` sai.
 - `CookieConsent`: o aviso flutuante não aparece dentro do app.
 - Android: ícone da Pólia (fundo pedra), nome "Pólia One" e abertura com o símbolo; `@capacitor/splash-screen` segura a abertura até a primeira tela.
+
+## 2026-11-07 — Login no DNA v2, X da Consultoria e tutorial em modal (AND-11, ONE-186, ONE-187)
+
+Pedidos da Sil depois de ver o app no emulador. Commit e deploy autorizados por ela em 07/11.
+
+- `auth/login.tsx`: a frase do eixo antigo ("Sua marca no centro, com os números no lugar.") virou "Quem é dona, sabe.", com rodapé Pedidos · Entregas · Lucro.
+- `CartaoConsultoria`: X branco no canto; fechar esconde o cartão por 24 horas (localStorage `polia-consultoria-fechada-em`).
+- `PaginaLogada`: "Como usar esta tela" abre o tutorial num `Modal` largo por cima da tela; `ConteudoTutorial` ganhou `emModal`, sem links que tirem a usuária dali. Novidade no sino em `20261107200000_novidade_tutorial_em_modal.sql`.

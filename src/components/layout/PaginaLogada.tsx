@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Link } from "@tanstack/react-router";
 import { PlayCircle } from "lucide-react";
 
 import { DicaDaTela } from "@/components/dicas/DicaDaTela";
+import { ConteudoTutorial } from "@/components/tutorial/ConteudoTutorial";
+import { Modal } from "@/components/ui/Modal";
 import type { ChaveDicaTela } from "@/lib/dicas";
 import { tutorialDaRota, type Tutorial } from "@/lib/tutoriais";
 
@@ -94,7 +95,10 @@ export function PaginaLogada({
   // "Como usar esta tela" (28/10/2026): toda tela com tutorial ganha o atalho
   // pra ele. Lido no efeito, não no render, pra o HTML do servidor e o do
   // navegador saírem iguais; nas telas do próprio tutorial não aparece.
+  // Desde 07/11/2026 (pedido da Sil) o tutorial abre num modal por cima da tela:
+  // fechar devolve a usuária pro mesmo lugar, sem perder o que estava na tela.
   const [tutorial, setTutorial] = useState<Tutorial>();
+  const [tutorialAberto, setTutorialAberto] = useState(false);
   useEffect(() => {
     const caminho = window.location.pathname;
     if (!caminho.startsWith("/como-usar")) setTutorial(tutorialDaRota(caminho));
@@ -121,16 +125,17 @@ export function PaginaLogada({
               </p>
             )}
             {tutorial && (
-              <Link
-                to="/como-usar/$slug"
-                params={{ slug: tutorial.slug }}
+              <button
+                type="button"
+                onClick={() => setTutorialAberto(true)}
+                aria-haspopup="dialog"
                 data-track="tutorial_atalho_da_tela"
                 data-track-props={JSON.stringify({ slug: tutorial.slug })}
-                className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] no-underline hover:underline md:min-h-8"
+                className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-[13px] font-medium text-[var(--secondary-text)] hover:underline md:min-h-8"
               >
                 <PlayCircle size={15} aria-hidden="true" />
                 Como usar esta tela
-              </Link>
+              </button>
             )}
           </div>
           {/* max-w-full: com dois botões, o flex-wrap de dentro só quebra se a
@@ -140,6 +145,18 @@ export function PaginaLogada({
         {dica && <DicaDaTela chave={dica} className="mb-6" />}
         {children}
       </div>
+      {tutorial && (
+        <Modal
+          open={tutorialAberto}
+          onOpenChange={setTutorialAberto}
+          title={`Como usar: ${tutorial.nome}`}
+          description={tutorial.resumo}
+          largura="larga"
+        >
+          {/* Só monta aberto: fechar desmonta o clipe e o áudio para junto. */}
+          {tutorialAberto && <ConteudoTutorial tutorial={tutorial} base="/como-usar" emModal />}
+        </Modal>
+      )}
     </div>
   );
 }
