@@ -418,9 +418,10 @@ function LinhaCliente({
   const [orcamentoAberto, setOrcamentoAberto] = useState(false);
 
   // QA-31 (07/10/2026): excluir a cliente apaga só a linha de `clientes`. O
-  // lançamento que o antigo registrar_venda_cliente criou em `lancamentos` não tem FK pra
-  // cliente (liga só pela descrição), então continua no Financeiro: a venda
-  // aconteceu e o dinheiro entrou, sumir com ele bagunçaria o mês.
+  // lançamento que o antigo registrar_venda_cliente criou em `lancamentos` (a
+  // função saiu do banco no HIG-24) não tem FK pra cliente (liga só pela
+  // descrição), então continua no Financeiro: a venda aconteceu e o dinheiro
+  // entrou, sumir com ele bagunçaria o mês.
   const excluir = async () => {
     setExcluindo(true);
     const { error } = await (

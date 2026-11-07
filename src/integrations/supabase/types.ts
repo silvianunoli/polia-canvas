@@ -3084,10 +3084,6 @@ export type Database = {
         Returns: undefined
       }
       esquecer_aparelho_push: { Args: { p_token: string }; Returns: undefined }
-      registrar_venda_cliente: {
-        Args: { p_cliente_id: string }
-        Returns: string
-      }
       registrar_venda: {
         Args: {
           p_id: string
