@@ -1,5 +1,6 @@
 import { App, type URLOpenListenerEvent } from "@capacitor/app";
 import { Browser } from "@capacitor/browser";
+import { SplashScreen } from "@capacitor/splash-screen";
 
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeApp } from "@/lib/platform";
@@ -10,6 +11,18 @@ import { caminhoSeguro, lerRetornoDoApp, URL_RETORNO_GOOGLE } from "@/lib/linkDo
 // "o app foi aberto por um link") e com o Supabase.
 
 const DESTINO_KEY = "polia-app-destino-google";
+
+/**
+ * Abertura do app (AND-10): a tela com o símbolo da Pólia fica até a primeira
+ * página do site pintar, em vez da tela preta de carregamento. O
+ * capacitor.config.ts tira ela sozinha depois de 3 s, caso esta chamada não
+ * chegue (sem internet, por exemplo). No APK antigo, sem o plugin, a chamada
+ * falha e é ignorada.
+ */
+export function esconderAberturaDoApp(): void {
+  if (!isNativeApp()) return;
+  SplashScreen.hide().catch(() => {});
+}
 
 /**
  * "Entrar com Google" dentro do app: o Google bloqueia login em WebView

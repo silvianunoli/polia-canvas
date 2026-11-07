@@ -28,7 +28,7 @@ import { track } from "@/lib/analytics";
 import { logErroCliente } from "@/lib/error-log";
 import { recarregarSeVersaoAntiga } from "@/lib/versao-antiga";
 import { toastErro, toastInfo } from "@/lib/toast";
-import { ouvirLinksDoApp } from "@/lib/appNativo";
+import { esconderAberturaDoApp, ouvirLinksDoApp } from "@/lib/appNativo";
 import { lerLinkComErro } from "@/lib/linkComErro";
 import { urlCanonica } from "@/lib/seo";
 import { jsonLdOrganization, jsonLdWebSite, tagJsonLd } from "@/lib/jsonld";
@@ -279,6 +279,9 @@ function RootComponent() {
       }),
     [router],
   );
+
+  // App Android (AND-10): a primeira página pintou, a abertura com a marca sai.
+  useEffect(() => esconderAberturaDoApp(), []);
 
   // Link de confirmação de e-mail vencido/já usado: o Supabase volta com o
   // erro no hash da URL (não dá pro servidor ver, só o client). O link de

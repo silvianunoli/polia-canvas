@@ -1,9 +1,7 @@
 import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { AnimatePresence } from "framer-motion";
 import { linkCanonico } from "@/lib/seo";
 import { jsonLdFaq, tagJsonLd } from "@/lib/jsonld";
 import { lerUtmsDaQuery } from "@/lib/origemCampanha";
-import { AppEntryGateModal } from "@/components/site/AppEntryGateModal";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { useAppEntryGate } from "@/hooks/useAppEntryGate";
 import type { BuscaCadastro } from "@/components/landing/BlocosLanding";
@@ -45,21 +43,18 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { mostrarModal, escondendoHome, explorar } = useAppEntryGate();
+  const { escondendoHome } = useAppEntryGate();
   // Sem validateSearch, como nas landings: UTM de link da bio ou de post chega
   // inteira ao cadastro, e quem vem da home fica marcado com origem "home".
   const searchStr = useLocation({ select: (l) => l.searchStr });
   const busca: BuscaCadastro = { origem: "home", ...lerUtmsDaQuery(searchStr) };
 
-  // App Android/iOS com sessão ativa (ou sessão ainda carregando): a Home de
-  // marketing não deve piscar antes do redirect automático pro painel.
+  // Dentro do app Android a Home de marketing não aparece: ela só existe ali
+  // pelo tempo do redirect pra /app ou pra aba Hoje (AND-10).
   if (escondendoHome) return null;
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]" id="topo">
-      <AnimatePresence>
-        {mostrarModal && <AppEntryGateModal onExplorar={explorar} />}
-      </AnimatePresence>
       <SiteHeader />
       {/* Desde 03/11/2026 (COPY-43) a home tem página própria, na ordem do bench do Pode
           Postar; a /landing-b segue no PaginaMarcaB. O VSL desceu pro "Por dentro". */}

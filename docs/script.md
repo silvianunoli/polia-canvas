@@ -560,3 +560,12 @@ Decisão da Sil, entre travar, tirar o botão e ligar a ficha ao pedido: "Tirar 
 - `registrar_venda_cliente` continua no banco, porque aba aberta com o app antigo ainda chama: sai depois (ver card no Kanban).
 - Teste: `components/clientes/vendaNaListaDeClientes.test.tsx`. Tutorial "Clientes", `/ajuda`, home e landing-a atualizados; o cartão da home agora fala do quadro, com o plano certo ("Grátis até 15", "Premium sem limite"). O clipe de Clientes não mostra o botão desde o ONE-143.
 - Novidade: `20261106180000_novidade_venda_sai_de_clientes.sql`, aplicar depois do deploy.
+
+## 2026-11-07 — Tela de abertura própria do app Android (AND-10)
+
+Pedido da Sil depois de ver o app no emulador Pixel_8: sem login, o app caía na home de marketing com o modal "Você já é usuária?" e o aviso de cookies por cima ("o app não é uma cópia exata do desktop"). Wireframe em cinza e plano `docs/plano-abertura-app.md` aprovados por ela em 07/11. Decisões: ícone com fundo pedra, "Pólia One" embaixo do ícone, cookies como linha no rodapé da tela de entrada. Commit e deploy autorizados por ela em 07/11.
+
+- Rota `/app`: tela de entrada do app (Entrar, Criar conta grátis, linha de cookies). Com sessão vai pra `/hoje`.
+- `capacitor.config.ts`: o app abre em `/app` e se chama "Pólia One". `useAppEntryGate`: no app e sem sessão, a home manda pra `/app`; o `AppEntryGateModal` sai.
+- `CookieConsent`: o aviso flutuante não aparece dentro do app.
+- Android: ícone da Pólia (fundo pedra), nome "Pólia One" e abertura com o símbolo; `@capacitor/splash-screen` segura a abertura até a primeira tela.

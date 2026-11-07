@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { getCookieConsent, setCookieConsent, type CookieConsentValue } from "@/lib/cookieConsent";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import { isNativeApp } from "@/lib/platform";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 
 // Mesmos seletores de sempre pra achar o que é focável dentro do aviso —
@@ -21,6 +22,10 @@ export function CookieConsent() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (getCookieConsent() !== null) return;
+    // Dentro do app Android o aviso não flutua por cima das telas: a escolha
+    // fica na linha do rodapé da tela de entrada, /app (AND-10). Sem escolha,
+    // vale o padrão sem consentimento (só essenciais).
+    if (isNativeApp()) return;
     const t = setTimeout(() => setVisible(true), 2000);
     return () => clearTimeout(t);
   }, []);

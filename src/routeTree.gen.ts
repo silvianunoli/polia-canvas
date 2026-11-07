@@ -21,6 +21,7 @@ import { Route as LandingBRouteImport } from './routes/landing-b'
 import { Route as LandingARouteImport } from './routes/landing-a'
 import { Route as DescadastrarRouteImport } from './routes/descadastrar'
 import { Route as CompraConfirmadaRouteImport } from './routes/compra-confirmada'
+import { Route as AppRouteImport } from './routes/app'
 import { Route as AjudaRouteImport } from './routes/ajuda'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -144,6 +145,11 @@ const DescadastrarRoute = DescadastrarRouteImport.update({
 const CompraConfirmadaRoute = CompraConfirmadaRouteImport.update({
   id: '/compra-confirmada',
   path: '/compra-confirmada',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppRoute = AppRouteImport.update({
+  id: '/app',
+  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AjudaRoute = AjudaRouteImport.update({
@@ -489,6 +495,7 @@ const AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
+  '/app': typeof AppRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
@@ -566,6 +573,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ajuda': typeof AjudaRoute
+  '/app': typeof AppRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
@@ -644,6 +652,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/ajuda': typeof AjudaRoute
+  '/app': typeof AppRoute
   '/compra-confirmada': typeof CompraConfirmadaRoute
   '/descadastrar': typeof DescadastrarRoute
   '/landing-a': typeof LandingARoute
@@ -723,6 +732,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ajuda'
+    | '/app'
     | '/compra-confirmada'
     | '/descadastrar'
     | '/landing-a'
@@ -800,6 +810,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/ajuda'
+    | '/app'
     | '/compra-confirmada'
     | '/descadastrar'
     | '/landing-a'
@@ -877,6 +888,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/ajuda'
+    | '/app'
     | '/compra-confirmada'
     | '/descadastrar'
     | '/landing-a'
@@ -956,6 +968,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AjudaRoute: typeof AjudaRoute
+  AppRoute: typeof AppRoute
   CompraConfirmadaRoute: typeof CompraConfirmadaRoute
   DescadastrarRoute: typeof DescadastrarRoute
   LandingARoute: typeof LandingARoute
@@ -1072,6 +1085,13 @@ declare module '@tanstack/react-router' {
       path: '/compra-confirmada'
       fullPath: '/compra-confirmada'
       preLoaderRoute: typeof CompraConfirmadaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/app': {
+      id: '/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ajuda': {
@@ -1643,6 +1663,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AjudaRoute: AjudaRoute,
+  AppRoute: AppRoute,
   CompraConfirmadaRoute: CompraConfirmadaRoute,
   DescadastrarRoute: DescadastrarRoute,
   LandingARoute: LandingARoute,

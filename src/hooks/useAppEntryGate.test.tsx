@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { renderHook, act, cleanup } from "@testing-library/react";
+import { renderHook, cleanup } from "@testing-library/react";
 
 const { navigateMock, isNativeAppMock, useSupabaseSessionMock } = vi.hoisted(() => ({
   navigateMock: vi.fn(),
@@ -15,15 +15,12 @@ vi.mock("@/hooks/useSupabaseSession", () => ({ useSupabaseSession: useSupabaseSe
 
 const { useAppEntryGate } = await import("./useAppEntryGate");
 
-const DISMISS_KEY = "polia-app-entry-gate-dismissed";
-
 function sessao({ user = null as { id: string } | null, loading = false } = {}) {
   useSupabaseSessionMock.mockReturnValue({ user, loading, session: user ? { user } : null });
 }
 
 describe("useAppEntryGate", () => {
   beforeEach(() => {
-    sessionStorage.clear();
     isNativeAppMock.mockReturnValue(false);
     sessao();
   });
@@ -34,10 +31,10 @@ describe("useAppEntryGate", () => {
   });
 
   describe("no site (web)", () => {
-    it("nunca mostra o modal nem esconde a Home, mesmo sem sessão", () => {
+    it("não esconde a Home nem redireciona, mesmo sem sessão", () => {
       const { result } = renderHook(() => useAppEntryGate());
-      expect(result.current.mostrarModal).toBe(false);
       expect(result.current.escondendoHome).toBe(false);
+      expect(navigateMock).not.toHaveBeenCalled();
     });
 
     it("não redireciona quem já está logada", () => {
@@ -52,42 +49,24 @@ describe("useAppEntryGate", () => {
       isNativeAppMock.mockReturnValue(true);
     });
 
-    it("mostra o modal 'já é usuária?' pra quem não tem sessão", () => {
+    it("sem sessão, manda pra tela de entrada do app (replace) e esconde a Home", () => {
       const { result } = renderHook(() => useAppEntryGate());
-      expect(result.current.mostrarModal).toBe(true);
-      expect(result.current.escondendoHome).toBe(false);
-      expect(navigateMock).not.toHaveBeenCalled();
+      expect(navigateMock).toHaveBeenCalledWith({ to: "/app", replace: true });
+      expect(result.current.escondendoHome).toBe(true);
     });
 
-    // Não pode piscar marketing antes de saber se vai redirecionar.
-    it("enquanto a sessão carrega, esconde a Home e não mostra o modal", () => {
+    // Não pode mandar pra /app quem ainda pode estar logada.
+    it("enquanto a sessão carrega, esconde a Home e não redireciona", () => {
       sessao({ loading: true });
       const { result } = renderHook(() => useAppEntryGate());
       expect(result.current.escondendoHome).toBe(true);
-      expect(result.current.mostrarModal).toBe(false);
       expect(navigateMock).not.toHaveBeenCalled();
     });
 
-    it("com sessão, manda direto pra aba Hoje (replace) e esconde a Home", () => {
+    it("com sessão, manda direto pra aba Hoje (replace)", () => {
       sessao({ user: { id: "u1" } });
-      const { result } = renderHook(() => useAppEntryGate());
+      renderHook(() => useAppEntryGate());
       expect(navigateMock).toHaveBeenCalledWith({ to: "/hoje", replace: true });
-      expect(result.current.escondendoHome).toBe(true);
-      expect(result.current.mostrarModal).toBe(false);
-    });
-
-    it("não mostra o modal de novo se já foi dispensado nesta abertura do app", () => {
-      sessionStorage.setItem(DISMISS_KEY, "1");
-      const { result } = renderHook(() => useAppEntryGate());
-      expect(result.current.mostrarModal).toBe(false);
-    });
-
-    it("explorar() dispensa o modal e guarda em sessionStorage", () => {
-      const { result } = renderHook(() => useAppEntryGate());
-      expect(result.current.mostrarModal).toBe(true);
-      act(() => result.current.explorar());
-      expect(result.current.mostrarModal).toBe(false);
-      expect(sessionStorage.getItem(DISMISS_KEY)).toBe("1");
     });
 
     // SSR assume web: o Capacitor só é consultado depois do mount.
