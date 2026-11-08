@@ -33,6 +33,8 @@ const loja = (extra: Partial<LojaDoProduto> = {}) =>
     setCategoriaId: vi.fn(),
     prazo: "",
     setPrazo: vi.fn(),
+    pacote: { pesoKg: "", alturaCm: "", larguraCm: "", comprimentoCm: "" },
+    mudarPacote: vi.fn(),
     eixos: [],
     combinacoes: [],
     inicialPadrao: "",

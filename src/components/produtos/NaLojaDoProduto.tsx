@@ -237,6 +237,47 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
         </div>
       )}
 
+      <fieldset className="mb-4">
+        <legend className="mb-1 text-[13px] font-medium text-[var(--ink)]">Pacote para o frete</legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <Campo label="Peso (kg)">
+            <input
+              inputMode="decimal"
+              value={loja.pacote.pesoKg}
+              onChange={(e) => loja.mudarPacote({ pesoKg: e.target.value })}
+              className={INPUT}
+            />
+          </Campo>
+          <Campo label="Altura (cm)">
+            <input
+              inputMode="decimal"
+              value={loja.pacote.alturaCm}
+              onChange={(e) => loja.mudarPacote({ alturaCm: e.target.value })}
+              className={INPUT}
+            />
+          </Campo>
+          <Campo label="Largura (cm)">
+            <input
+              inputMode="decimal"
+              value={loja.pacote.larguraCm}
+              onChange={(e) => loja.mudarPacote({ larguraCm: e.target.value })}
+              className={INPUT}
+            />
+          </Campo>
+          <Campo label="Comprimento (cm)">
+            <input
+              inputMode="decimal"
+              value={loja.pacote.comprimentoCm}
+              onChange={(e) => loja.mudarPacote({ comprimentoCm: e.target.value })}
+              className={INPUT}
+            />
+          </Campo>
+        </div>
+        <p className="mt-1 text-[12.5px] text-[var(--muted)]">
+          Já embalado, como vai pro correio. Vazio usa a caixa padrão do envio da loja.
+        </p>
+      </fieldset>
+
       {!ehKit && (
         <>
           <p className="mb-1 text-[13px] font-medium text-[var(--ink)]">Opções do produto</p>

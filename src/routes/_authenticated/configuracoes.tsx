@@ -33,6 +33,7 @@ import {
 } from "@/lib/tiktokShop.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
+import { CardEnvioLoja } from "@/components/configuracoes/CardEnvioLoja";
 import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
 import { CardCatalogo } from "@/components/configuracoes/CardCatalogo";
 import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
@@ -965,6 +966,7 @@ function ConfiguracoesPage() {
             <CardMercadoLivre userId={userId} />
             <CardRedesSociais userId={userId} />
             <CardCatalogo userId={userId} />
+            <CardEnvioLoja userId={userId} />
             <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
               <p className="font-sans text-[var(--muted)] text-[13px]">
                 Mais integrações em breve.

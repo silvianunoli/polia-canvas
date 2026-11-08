@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { problemaDaFoto } from "@/components/catalogo/dados";
+import { lerMedida } from "@/lib/envioLoja";
 import { supabase } from "@/integrations/supabase/client";
 import {
   atualizarCombinacoes,
@@ -31,7 +32,26 @@ interface DadosDoProduto {
   categoria_id: string | null;
   prazo_dias_uteis: number | null;
   eixos_variacao: unknown;
+  peso_kg: number | null;
+  altura_cm: number | null;
+  largura_cm: number | null;
+  comprimento_cm: number | null;
 }
+
+/** Pacote para o frete (ONE-189): em texto, como a dona digita. */
+export interface PacoteDoProduto {
+  pesoKg: string;
+  alturaCm: string;
+  larguraCm: string;
+  comprimentoCm: string;
+}
+const LIMITES_PACOTE: Record<keyof PacoteDoProduto, number> = {
+  pesoKg: 100,
+  alturaCm: 200,
+  larguraCm: 200,
+  comprimentoCm: 200,
+};
+const pacoteEmTexto = (n: number | null) => (n == null ? "" : String(n).replace(".", ","));
 
 export function useLojaDoProduto(
   userId: string,
@@ -77,7 +97,9 @@ export function useLojaDoProduto(
         await Promise.all([
           supabase
             .from("produtos")
-            .select("categoria_id, prazo_dias_uteis, eixos_variacao")
+            .select(
+              "categoria_id, prazo_dias_uteis, eixos_variacao, peso_kg, altura_cm, largura_cm, comprimento_cm",
+            )
             .eq("id", produtoId!)
             .single(),
           supabase
@@ -112,6 +134,12 @@ export function useLojaDoProduto(
   const [combinacoes, setCombinacoes] = useState<CombinacaoEditavel[]>([]);
   const [inicialPadrao, setInicialPadrao] = useState("");
   const [originais, setOriginais] = useState<CombinacaoEditavel[]>([]);
+  const [pacote, setPacote] = useState<PacoteDoProduto>({
+    pesoKg: "",
+    alturaCm: "",
+    larguraCm: "",
+    comprimentoCm: "",
+  });
   const [pronto, setPronto] = useState(!produtoId);
 
   useEffect(() => {
@@ -120,6 +148,12 @@ export function useLojaDoProduto(
     const inicial = estadoDoBanco(produto.eixos_variacao, skus);
     setCategoriaId(produto.categoria_id ?? "");
     setPrazo(produto.prazo_dias_uteis == null ? "" : String(produto.prazo_dias_uteis));
+    setPacote({
+      pesoKg: pacoteEmTexto(produto.peso_kg),
+      alturaCm: pacoteEmTexto(produto.altura_cm),
+      larguraCm: pacoteEmTexto(produto.largura_cm),
+      comprimentoCm: pacoteEmTexto(produto.comprimento_cm),
+    });
     setEixos(inicial.eixos);
     setCombinacoes(inicial.combinacoes);
     setOriginais(inicial.combinacoes);
@@ -177,10 +211,21 @@ export function useLojaDoProduto(
   const prazoValido =
     !prazo.trim() || (Number.isInteger(prazoNum) && prazoNum >= 1 && prazoNum <= 120);
 
+  // Pacote para o frete: cada medida vazia ou entre 0 e o limite. Vazio usa a caixa padrão.
+  const pacoteNum = Object.fromEntries(
+    (Object.keys(LIMITES_PACOTE) as Array<keyof PacoteDoProduto>).map((k) => [k, lerMedida(pacote[k])]),
+  ) as Record<keyof PacoteDoProduto, number | null>;
+  const pacoteValido = (Object.keys(LIMITES_PACOTE) as Array<keyof PacoteDoProduto>).every((k) => {
+    const v = pacoteNum[k];
+    return v == null || (!Number.isNaN(v) && v > 0 && v <= LIMITES_PACOTE[k]);
+  });
+
   /** O motivo que impede salvar. Kit não tem combinações, só categoria e prazo. */
   const problemaPara = (ehKit: boolean): string | null => {
     if (!temLoja) return null;
     if (!prazoValido) return "O prazo vai de 1 a 120 dias úteis.";
+    if (!pacoteValido)
+      return "Confira o pacote para o frete: peso até 100 kg e medidas até 200 cm, só números.";
     return ehKit ? null : problemaDasCombinacoes(eixos, combinacoes);
   };
 
@@ -191,6 +236,10 @@ export function useLojaDoProduto(
       .update({
         categoria_id: categoriaId || null,
         prazo_dias_uteis: prazo.trim() ? prazoNum : null,
+        peso_kg: pacoteNum.pesoKg,
+        altura_cm: pacoteNum.alturaCm,
+        largura_cm: pacoteNum.larguraCm,
+        comprimento_cm: pacoteNum.comprimentoCm,
       } as never)
       .eq("id", idDoProduto);
     if (erroDados) {
@@ -226,6 +275,8 @@ export function useLojaDoProduto(
     setCategoriaId,
     prazo,
     setPrazo,
+    pacote,
+    mudarPacote: (m: Partial<PacoteDoProduto>) => setPacote((p) => ({ ...p, ...m })),
     eixos,
     combinacoes,
     inicialPadrao,

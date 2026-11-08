@@ -83,6 +83,7 @@ import { Route as AuthenticatedProdutosAnunciosMercadoLivreRouteImport } from '.
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok'
 import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre'
+import { Route as AuthenticatedConfiguracoesIntegracoesMelhorEnvioRouteImport } from './routes/_authenticated/configuracoes_.integracoes.melhor-envio'
 import { Route as AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.tiktok_.anuncios'
 import { Route as AuthenticatedConfiguracoesIntegracoesRedesRedeRouteImport } from './routes/_authenticated/configuracoes_.integracoes.redes.$rede'
 import { Route as AuthenticatedConfiguracoesIntegracoesMercadoLivreAnunciosRouteImport } from './routes/_authenticated/configuracoes_.integracoes.mercado-livre_.anuncios'
@@ -473,6 +474,12 @@ const AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute =
     path: '/configuracoes/integracoes/mercado-livre',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute =
+  AuthenticatedConfiguracoesIntegracoesMelhorEnvioRouteImport.update({
+    id: '/configuracoes_/integracoes/melhor-envio',
+    path: '/configuracoes/integracoes/melhor-envio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRoute =
   AuthenticatedConfiguracoesIntegracoesTiktokAnunciosRouteImport.update({
     id: '/configuracoes_/integracoes/tiktok_/anuncios',
@@ -561,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/loja/$slug/': typeof LojaSlugIndexRoute
+  '/configuracoes/integracoes/melhor-envio': typeof AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
@@ -638,6 +646,7 @@ export interface FileRoutesByTo {
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/loja/$slug': typeof LojaSlugIndexRoute
+  '/configuracoes/integracoes/melhor-envio': typeof AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute
   '/configuracoes/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/configuracoes/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
@@ -718,6 +727,7 @@ export interface FileRoutesById {
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/loja/$slug/': typeof LojaSlugIndexRoute
+  '/_authenticated/configuracoes_/integracoes/melhor-envio': typeof AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute
   '/_authenticated/configuracoes_/integracoes/mercado-livre': typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   '/_authenticated/configuracoes_/integracoes/tiktok': typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   '/_authenticated/planejamento/modulo/$n': typeof AuthenticatedPlanejamentoModuloNRoute
@@ -798,6 +808,7 @@ export interface FileRouteTypes {
     | '/planejamento/'
     | '/planner/'
     | '/loja/$slug/'
+    | '/configuracoes/integracoes/melhor-envio'
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
@@ -875,6 +886,7 @@ export interface FileRouteTypes {
     | '/planejamento'
     | '/planner'
     | '/loja/$slug'
+    | '/configuracoes/integracoes/melhor-envio'
     | '/configuracoes/integracoes/mercado-livre'
     | '/configuracoes/integracoes/tiktok'
     | '/planejamento/modulo/$n'
@@ -954,6 +966,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planejamento/'
     | '/_authenticated/planner/'
     | '/loja/$slug/'
+    | '/_authenticated/configuracoes_/integracoes/melhor-envio'
     | '/_authenticated/configuracoes_/integracoes/mercado-livre'
     | '/_authenticated/configuracoes_/integracoes/tiktok'
     | '/_authenticated/planejamento/modulo/$n'
@@ -1521,6 +1534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/configuracoes_/integracoes/melhor-envio': {
+      id: '/_authenticated/configuracoes_/integracoes/melhor-envio'
+      path: '/configuracoes/integracoes/melhor-envio'
+      fullPath: '/configuracoes/integracoes/melhor-envio'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesIntegracoesMelhorEnvioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios': {
       id: '/_authenticated/configuracoes_/integracoes/tiktok_/anuncios'
       path: '/configuracoes/integracoes/tiktok/anuncios'
@@ -1579,6 +1599,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedComoUsarIndexRoute: typeof AuthenticatedComoUsarIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
+  AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute: typeof AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute: typeof AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute
   AuthenticatedConfiguracoesIntegracoesTiktokRoute: typeof AuthenticatedConfiguracoesIntegracoesTiktokRoute
   AuthenticatedPlanejamentoModuloNRoute: typeof AuthenticatedPlanejamentoModuloNRoute
@@ -1624,6 +1645,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedComoUsarIndexRoute: AuthenticatedComoUsarIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
+  AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute:
+    AuthenticatedConfiguracoesIntegracoesMelhorEnvioRoute,
   AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute:
     AuthenticatedConfiguracoesIntegracoesMercadoLivreRoute,
   AuthenticatedConfiguracoesIntegracoesTiktokRoute:
