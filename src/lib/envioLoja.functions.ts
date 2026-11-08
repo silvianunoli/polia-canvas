@@ -108,7 +108,8 @@ export const iniciarConexaoMelhorEnvio = createServerFn({ method: "POST" })
     return { url: null, error: "A Pólia One não conseguiu iniciar a conexão. Tenta de novo." };
   });
 
-const finalizarInput = z.object({ code: z.string().min(1).max(1000), state: z.string().min(1).max(100) });
+// O code do Melhor Envio é longo e cresce com os escopos pedidos: passou de 1000 caracteres.
+const finalizarInput = z.object({ code: z.string().min(1).max(4096), state: z.string().min(1).max(100) });
 
 export const finalizarConexaoMelhorEnvio = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

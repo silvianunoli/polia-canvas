@@ -211,7 +211,7 @@ Deno.serve(async (req: Request) => {
     if (!ehUuid(userId)) return resposta({ erro: "user_id" }, 400);
     if (acao === "iniciar") return resposta(await iniciar(userId));
     if (acao === "trocar") {
-      const code = typeof corpo?.code === "string" ? corpo.code.slice(0, 1000) : "";
+      const code = typeof corpo?.code === "string" ? corpo.code.slice(0, 4096) : "";
       const state = typeof corpo?.state === "string" ? corpo.state.slice(0, 100) : "";
       if (!code || !state) return resposta({ ok: false, erro: "parametros" }, 400);
       return resposta(await trocar(userId, code, state));
