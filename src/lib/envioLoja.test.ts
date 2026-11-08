@@ -12,11 +12,39 @@ import {
   type EnvioLoja,
 } from "./envioLoja";
 import {
+  corpoCotacao,
   nomeDaConta,
+  opcoesDaCotacao,
   precisaRenovar,
   tokensDaResposta,
   urlAutorizacao,
 } from "../../supabase/functions/_shared/melhorEnvio.ts";
+
+describe("cotação do Melhor Envio", () => {
+  it("manda as medidas do cadastro nos nomes que a API pede", () => {
+    const c = corpoCotacao({
+      origem: "01001000",
+      destino: "05583000",
+      produtos: [{ id: "p", quantidade: 2, peso_kg: 0.4, altura_cm: 10, largura_cm: 12, comprimento_cm: 14, valor: 39.9 }],
+    });
+    expect(c.from.postal_code).toBe("01001000");
+    expect(c.to.postal_code).toBe("05583000");
+    expect(c.products[0]).toEqual({ id: "p", width: 12, height: 10, length: 14, weight: 0.4, insurance_value: 39.9, quantity: 2 });
+  });
+  it("ignora serviço com erro, ordena pelo preço e guarda o pacote", () => {
+    const o = opcoesDaCotacao([
+      { id: 2, name: "SEDEX", price: "40.10", delivery_time: 2, company: { name: "Correios" }, packages: [] },
+      { id: 1, name: "PAC", price: "22.90", custom_price: "20.15", delivery_time: 9, custom_delivery_time: 7, company: { name: "Correios" }, packages: [{ dimensions: { height: 10 }, weight: "0.4", insurance_value: "39.90" }] },
+      { id: 3, name: "Mini", error: "Transportadora não atende este trecho." },
+    ]);
+    expect(o.map((s) => s.id)).toEqual([1, 2]);
+    expect(o[0]).toMatchObject({ preco: 20.15, prazo: 7, empresa: "Correios", pacotes: [{ peso: "0.4" }] });
+  });
+  it("resposta torta vira lista vazia", () => {
+    expect(opcoesDaCotacao(null)).toEqual([]);
+    expect(opcoesDaCotacao([{ id: 1, name: "X", price: "abc", delivery_time: 1 }])).toEqual([]);
+  });
+});
 
 const completo = (): EnvioLoja => ({
   cepOrigem: "05583-000",

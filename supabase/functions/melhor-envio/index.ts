@@ -1,10 +1,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  corpoCotacao,
   MSG_RECONECTAR_ME,
   nomeDaConta,
+  opcoesDaCotacao,
   precisaRenovar,
   tokensDaResposta,
   urlAutorizacao,
+  type ProdutoCotacao,
 } from "../_shared/melhorEnvio.ts";
 
 // Único lugar que fala com o Melhor Envio (ONE-189). O segredo do aplicativo mora só nos
@@ -14,6 +17,7 @@ import {
 // verify_jwt desligado, como as outras funções deste repo.
 //
 // Etapa 1: iniciar a conexão, trocar o code, desconectar e renovar o token (cron).
+// Etapa 2: cotar o frete para o checkout da loja.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -133,6 +137,42 @@ async function desconectar(userId: string) {
   return { ok: !error };
 }
 
+const ehCep = (v: unknown): v is string => typeof v === "string" && /^[0-9]{8}$/.test(v);
+
+function produtosValidos(v: unknown): ProdutoCotacao[] | null {
+  if (!Array.isArray(v) || v.length === 0 || v.length > 50) return null;
+  const positivo = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n > 0;
+  for (const p of v as ProdutoCotacao[]) {
+    if (!p || typeof p.id !== "string" || !Number.isInteger(p.quantidade) || p.quantidade < 1 || p.quantidade > 99) return null;
+    if (!positivo(p.peso_kg) || !positivo(p.altura_cm) || !positivo(p.largura_cm) || !positivo(p.comprimento_cm)) return null;
+    if (typeof p.valor !== "number" || !Number.isFinite(p.valor) || p.valor < 0) return null;
+  }
+  return v as ProdutoCotacao[];
+}
+
+/** Quem chama já leu valor e medidas no banco. Aqui só entra o token da marca. */
+async function cotar(userId: string, origem: unknown, destino: unknown, brutos: unknown) {
+  const produtos = produtosValidos(brutos);
+  if (!ehCep(origem) || !ehCep(destino) || !produtos) return { ok: false, erro: "parametros" };
+  const { data: conexao } = await admin
+    .from("canal_conexoes")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("canal", CANAL)
+    .eq("status", "conectada")
+    .maybeSingle();
+  if (!conexao) return { ok: false, erro: "sem_conexao" };
+  const { data } = await admin.rpc("canal_token_ler", { p_conexao_id: (conexao as { id: string }).id });
+  const token = ((data as Array<{ access_token: string | null }> | null) ?? [])[0]?.access_token;
+  if (!token) return { ok: false, erro: "sem_conexao" };
+  const r = await chamarMe("/api/v2/me/shipment/calculate", { token, corpo: corpoCotacao({ origem, destino, produtos }) });
+  if (!r.ok) {
+    console.error("[melhor-envio] cotação respondeu", r.status);
+    return { ok: false, erro: "cotacao" };
+  }
+  return { ok: true, opcoes: opcoesDaCotacao(r.json) };
+}
+
 async function marcarErro(conexaoId: string) {
   await admin
     .from("canal_conexoes")
@@ -217,6 +257,7 @@ Deno.serve(async (req: Request) => {
       return resposta(await trocar(userId, code, state));
     }
     if (acao === "desconectar") return resposta(await desconectar(userId));
+    if (acao === "cotar") return resposta(await cotar(userId, corpo?.cep_origem, corpo?.cep_destino, corpo?.produtos));
     return resposta({ erro: "acao" }, 400);
   } catch (e) {
     console.error("[melhor-envio]", acao, e instanceof Error ? e.message : String(e));
