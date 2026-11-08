@@ -21,6 +21,9 @@ const base = {
   destino: "Belo Horizonte/MG",
   status: null,
   custo: null,
+  rastreioCodigo: null,
+  rastreioUrl: null,
+  rastreioStatus: null,
 };
 
 function montar(ui: ReactNode) {
@@ -70,6 +73,22 @@ describe("EtiquetaDoPedido", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancelar etiqueta" }));
     expect(acao).not.toHaveBeenCalled();
     expect(screen.getByRole("alert").textContent).toContain("antes de postar");
+  });
+
+  it("postada mostra o rastreio e tira o cancelar", async () => {
+    ler.mockResolvedValue({
+      ...base,
+      status: "gerada",
+      custo: 20,
+      rastreioStatus: "postada",
+      rastreioCodigo: "ME123",
+      rastreioUrl: "https://x.com/ME123",
+    });
+    montar(<EtiquetaDoPedido vendaId={VENDA} />);
+    expect((await screen.findByRole("link", { name: "Acompanhar" })).getAttribute("href")).toBe(
+      "https://x.com/ME123",
+    );
+    expect(screen.queryByRole("button", { name: "Cancelar etiqueta" })).toBeNull();
   });
 
   it("paga sem gerar oferece retomar", async () => {

@@ -239,6 +239,69 @@ export function mensagemDoMe(json: unknown): string | null {
   return (achar(r.errors) ?? achar(r.error) ?? achar(r.message))?.slice(0, 200) ?? null;
 }
 
+/**
+ * X-ME-Signature: HMAC-SHA256 do corpo com o secret do aplicativo. A doc não diz a
+ * codificação; o exemplo dela é base64. Hex também passa, porque não custa nada aceitar.
+ */
+export async function assinaturaMeConfere(corpoCru: string, segredo: string, assinatura: string): Promise<boolean> {
+  if (!segredo || !assinatura) return false;
+  const chave = await crypto.subtle.importKey("raw", new TextEncoder().encode(segredo), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const bytes = new Uint8Array(await crypto.subtle.sign("HMAC", chave, new TextEncoder().encode(corpoCru)));
+  const base64 = btoa(String.fromCharCode(...bytes));
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+  const iguais = (a: string, b: string) => {
+    if (a.length !== b.length) return false;
+    let dif = 0;
+    for (let i = 0; i < a.length; i++) dif |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    return dif === 0;
+  };
+  const recebida = assinatura.trim();
+  return iguais(recebida, base64) || iguais(recebida.toLowerCase(), hex);
+}
+
+export interface AvisoMe {
+  evento: string;
+  etiquetaId: string;
+  codigo: string | null;
+  url: string | null;
+}
+
+/** Corpo do aviso. Null se veio torto. O exemplo da doc traz a URL com espaço no meio. */
+export function lerAvisoMe(json: unknown): AvisoMe | null {
+  const r = (json ?? {}) as { event?: unknown; data?: Record<string, unknown> };
+  const id = r.data?.id;
+  if (typeof r.event !== "string" || typeof id !== "string" || !id) return null;
+  const codigo = typeof r.data?.tracking === "string" && r.data.tracking.trim() ? r.data.tracking.trim().slice(0, 60) : null;
+  const bruta = typeof r.data?.tracking_url === "string" ? r.data.tracking_url.replace(/\s+/g, "") : "";
+  return { evento: r.event, etiquetaId: id, codigo, url: /^https:\/\/[^<>"']{1,290}$/.test(bruta) ? bruta : null };
+}
+
+/** O que cada evento significa para o pedido. Null é evento que não muda nada aqui. */
+export function efeitoDoAviso(evento: string): "postada" | "entregue" | "problema" | "cancelada" | null {
+  if (evento === "order.posted") return "postada";
+  if (evento === "order.delivered") return "entregue";
+  if (evento === "order.undelivered" || evento === "order.paused" || evento === "order.suspended") return "problema";
+  if (evento === "order.cancelled") return "cancelada";
+  return null;
+}
+
+const escaparHtml = (t: string) =>
+  t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+/** E-mail da loja para a compradora: a voz é da marca, sem nada da Pólia. */
+export function emailPedidoEnviado(a: { marca: string; nome: string; servico: string | null; codigo: string | null; url: string | null }) {
+  const m = escaparHtml(a.marca);
+  return {
+    assunto: `Seu pedido foi enviado: ${a.marca}`,
+    html: `<div style="font-family:Arial,sans-serif;font-size:16px;line-height:1.5;max-width:560px">
+      <p>Olá, ${escaparHtml(a.nome)}.</p>
+      <p>Seu pedido em ${m} foi postado${a.servico ? ` e segue por ${escaparHtml(a.servico)}` : ""}.</p>
+      ${a.codigo ? `<p>Código de rastreio: <strong>${escaparHtml(a.codigo)}</strong></p>` : ""}
+      ${a.url ? `<p><a href="${escaparHtml(a.url)}">Acompanhar a entrega</a></p>` : "<p>A transportadora pode levar até 1 dia útil para liberar o rastreio.</p>"}
+    </div>`,
+  };
+}
+
 /** Nome que aparece no card: nome e sobrenome da conta, ou o e-mail. */
 export function nomeDaConta(json: unknown): { id: string | null; nome: string } {
   const r = (json ?? {}) as { id?: unknown; firstname?: unknown; lastname?: unknown; email?: unknown };

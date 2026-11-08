@@ -144,6 +144,9 @@ export interface EtiquetaDoPedido {
   destino: string;
   status: StatusEtiqueta;
   custo: number | null;
+  rastreioCodigo: string | null;
+  rastreioUrl: string | null;
+  rastreioStatus: "postada" | "entregue" | "problema" | null;
 }
 
 /** Só pedido pago na loja com frete tem etiqueta. Os outros devolvem null. */
@@ -153,7 +156,7 @@ export const lerEtiquetaDoPedido = createServerFn({ method: "GET" })
   .handler(async ({ data, context }): Promise<EtiquetaDoPedido | null> => {
     const { data: linha } = await supabaseAdmin
       .from("loja_checkouts" as never)
-      .select("frete, frete_servico, endereco, etiqueta_status, etiqueta_custo")
+      .select("frete, frete_servico, endereco, etiqueta_status, etiqueta_custo, rastreio_codigo, rastreio_url, rastreio_status")
       .eq("user_id", context.userId)
       .eq("venda_id", data.vendaId)
       .eq("status", "pago")
@@ -165,6 +168,9 @@ export const lerEtiquetaDoPedido = createServerFn({ method: "GET" })
       endereco: { cidade?: string; uf?: string } | null;
       etiqueta_status: StatusEtiqueta;
       etiqueta_custo: number | string | null;
+      rastreio_codigo: string | null;
+      rastreio_url: string | null;
+      rastreio_status: EtiquetaDoPedido["rastreioStatus"];
     } | null;
     if (!c) return null;
     return {
@@ -174,6 +180,9 @@ export const lerEtiquetaDoPedido = createServerFn({ method: "GET" })
       destino: [c.endereco?.cidade, c.endereco?.uf].filter(Boolean).join("/"),
       status: c.etiqueta_status,
       custo: c.etiqueta_custo == null ? null : Number(c.etiqueta_custo),
+      rastreioCodigo: c.rastreio_codigo,
+      rastreioUrl: c.rastreio_url,
+      rastreioStatus: c.rastreio_status,
     };
   });
 

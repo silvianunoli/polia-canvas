@@ -6,6 +6,12 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { acaoEtiqueta, lerEtiquetaDoPedido } from "@/lib/envioLoja.functions";
 import { recarregarDepoisDoPedido } from "./dados";
 
+const ROTULO_RASTREIO = {
+  postada: "Postada",
+  entregue: "Entregue",
+  problema: "Problema na entrega: confira no Melhor Envio",
+} as const;
+
 const LINK = "min-h-11 text-[13px] font-medium text-[var(--secondary-text)] hover:underline";
 
 /**
@@ -175,6 +181,26 @@ export function EtiquetaDoPedido({ vendaId }: { vendaId: string }) {
         </div>
       )}
 
+      {etiqueta.rastreioStatus && (
+        <p className="mt-2 text-[var(--ink)]">
+          {ROTULO_RASTREIO[etiqueta.rastreioStatus]}
+          {etiqueta.rastreioCodigo ? ` · ${etiqueta.rastreioCodigo}` : ""}
+          {etiqueta.rastreioUrl && (
+            <>
+              {" · "}
+              <a
+                href={etiqueta.rastreioUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-[var(--secondary-text)] underline"
+              >
+                Acompanhar
+              </a>
+            </>
+          )}
+        </p>
+      )}
+
       {status === "gerada" && (
         <div className="mt-2">
           {custo != null && (
@@ -189,7 +215,7 @@ export function EtiquetaDoPedido({ vendaId }: { vendaId: string }) {
             >
               {ocupado === "imprimir" ? "Abrindo..." : "Imprimir etiqueta"}
             </button>
-            {!confirmarCancelar && (
+            {!confirmarCancelar && !etiqueta.rastreioStatus && (
               <button
                 type="button"
                 onClick={() => setConfirmarCancelar(true)}

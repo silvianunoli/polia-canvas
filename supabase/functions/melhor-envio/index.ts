@@ -1,7 +1,11 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
+  assinaturaMeConfere,
   corpoCotacao,
   corpoEtiqueta,
+  efeitoDoAviso,
+  emailPedidoEnviado,
+  lerAvisoMe,
   mensagemDoMe,
   MSG_RECONECTAR_ME,
   nomeDaConta,
@@ -9,6 +13,7 @@ import {
   precisaRenovar,
   tokensDaResposta,
   urlAutorizacao,
+  type AvisoMe,
   type DadosEtiqueta,
   type ProdutoCotacao,
 } from "../_shared/melhorEnvio.ts";
@@ -22,6 +27,7 @@ import {
 // Etapa 1: iniciar a conexão, trocar o code, desconectar e renovar o token (cron).
 // Etapa 2: cotar o frete para o checkout da loja.
 // Etapa 3: comprar, gerar, imprimir e cancelar a etiqueta dos pedidos pagos.
+// Etapa 4: receber o aviso de rastreio em ?aviso=1, assinado com o secret do aplicativo.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -34,6 +40,8 @@ const ME_REDIRECT =
 const USER_AGENT = "Polia One (oi@usepolia.com.br)";
 const CANAL = "melhor_envio";
 const TRAVA_SEGUNDOS = 60;
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const LOJA_EMAIL_REMETENTE = Deno.env.get("LOJA_EMAIL_REMETENTE") ?? "naoresponda@usepolia.com.br";
 
 const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -349,6 +357,123 @@ async function etiquetaCancelar(userId: string, vendaId: string) {
   });
 }
 
+// ── rastreio (etapa 4) ─────────────────────────────────────────────────────
+// O Melhor Envio tenta 5 vezes, de 15 em 15 minutos, e espera no máximo 6 segundos.
+
+async function mandarEmailDeEnvio(c: { user_id: string; nome: string; email: string; frete_servico: { nome?: string } | null }, codigo: string | null, url: string | null) {
+  if (!RESEND_API_KEY) throw new Error("sem RESEND_API_KEY");
+  const [{ data: perfil }, { data: loja }] = await Promise.all([
+    admin.from("profiles").select("business_name").eq("id", c.user_id).maybeSingle(),
+    admin.from("lojas_marca").select("legal").eq("user_id", c.user_id).maybeSingle(),
+  ]);
+  const marca = String((perfil as { business_name?: string } | null)?.business_name ?? "Sua compra").trim();
+  const responderPara = (loja as { legal?: { email?: string } } | null)?.legal?.email;
+  const email = emailPedidoEnviado({ marca, nome: c.nome, servico: c.frete_servico?.nome ?? null, codigo, url });
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: `${marca.replace(/[<>"]/g, "")} <${LOJA_EMAIL_REMETENTE}>`,
+      to: [c.email],
+      subject: email.assunto,
+      html: email.html,
+      ...(responderPara ? { reply_to: responderPara } : {}),
+    }),
+    signal: AbortSignal.timeout(4000),
+  });
+  if (!r.ok) throw new Error(`e-mail respondeu ${r.status}`);
+}
+
+async function aplicarAviso(aviso: AvisoMe) {
+  const { data } = await admin
+    .from("loja_checkouts")
+    .select("id, user_id, venda_id, nome, email, frete_servico, rastreio_codigo, rastreio_url, rastreio_status, email_envio_em")
+    .eq("etiqueta_id", aviso.etiquetaId)
+    .maybeSingle();
+  const c = data as {
+    id: string;
+    user_id: string;
+    venda_id: string;
+    nome: string;
+    email: string;
+    frete_servico: { nome?: string } | null;
+    rastreio_codigo: string | null;
+    rastreio_url: string | null;
+    rastreio_status: string | null;
+    email_envio_em: string | null;
+  } | null;
+  if (!c) return; // Etiqueta de fora da loja, ou já cancelada por aqui.
+
+  const codigo = aviso.codigo ?? c.rastreio_codigo;
+  const url = aviso.url ?? c.rastreio_url;
+  const efeito = efeitoDoAviso(aviso.evento);
+
+  if (efeito === "cancelada") {
+    await aplicarCusto(c.user_id, c.venda_id, 0);
+    await guardarEtiqueta(c.id, {
+      etiqueta_id: null, etiqueta_status: null, etiqueta_custo: null,
+      rastreio_codigo: null, rastreio_url: null, rastreio_status: null,
+    });
+    return;
+  }
+
+  // Entregue é o fim: aviso atrasado de postagem não pode voltar o status.
+  const status = !efeito || c.rastreio_status === "entregue" ? c.rastreio_status : efeito;
+  await guardarEtiqueta(c.id, { rastreio_codigo: codigo, rastreio_url: url, rastreio_status: status });
+
+  if (efeito === "postada") {
+    await admin.from("vendas").update({ andamento: "pronto" }).eq("id", c.venda_id).in("andamento", ["a_fazer", "em_producao"]);
+  }
+  if (efeito === "entregue") {
+    await admin.from("vendas").update({ andamento: "entregue" }).eq("id", c.venda_id);
+  }
+  if (efeito === "problema" && c.rastreio_status !== "problema") {
+    await admin.from("avisos").upsert(
+      { user_id: c.user_id, tipo: "pedido", titulo: "Problema na entrega", corpo: `${c.nome}. Confira o envio no Melhor Envio.`.slice(0, 300), link: "/pedidos", ref_id: c.id },
+      { onConflict: "tipo,ref_id", ignoreDuplicates: true },
+    );
+  }
+  if ((efeito === "postada" || efeito === "entregue") && !c.email_envio_em) {
+    // Marca antes de mandar: dois avisos juntos não mandam dois e-mails.
+    const { data: marcada } = await admin
+      .from("loja_checkouts")
+      .update({ email_envio_em: new Date().toISOString() })
+      .eq("id", c.id)
+      .is("email_envio_em", null)
+      .select("id");
+    if (!(marcada as unknown[] | null)?.length) return;
+    try {
+      await mandarEmailDeEnvio(c, codigo, url);
+    } catch (e) {
+      await admin.from("loja_checkouts").update({ email_envio_em: null }).eq("id", c.id);
+      throw e;
+    }
+  }
+}
+
+async function receberAviso(req: Request): Promise<Response> {
+  const cru = await req.text();
+  const assinatura = req.headers.get("x-me-signature");
+  // Sem assinatura não faz nada: a doc não diz se o cadastro da URL manda um teste.
+  if (!assinatura) return resposta({ ok: true });
+  if (!(await assinaturaMeConfere(cru, ME_CLIENT_SECRET, assinatura))) return resposta({ erro: "assinatura" }, 401);
+  let json: unknown = null;
+  try {
+    json = JSON.parse(cru);
+  } catch {
+    return resposta({ ok: true });
+  }
+  const aviso = lerAvisoMe(json);
+  if (!aviso) return resposta({ ok: true });
+  try {
+    await aplicarAviso(aviso);
+    return resposta({ ok: true });
+  } catch (e) {
+    console.error("[melhor-envio] aviso", aviso.evento, e instanceof Error ? e.message : String(e));
+    return resposta({ erro: "falha" }, 500); // O Melhor Envio tenta de novo.
+  }
+}
+
 async function marcarErro(conexaoId: string) {
   await admin
     .from("canal_conexoes")
@@ -418,6 +543,7 @@ async function renovar() {
 
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") return resposta({ erro: "metodo" }, 405);
+  if (new URL(req.url).searchParams.get("aviso") === "1") return await receberAviso(req);
   if (!(await autorizado(req))) return resposta({ erro: "nao_autorizado" }, 401);
   const corpo = (await req.json().catch(() => null)) as Record<string, unknown> | null;
   const acao = corpo?.acao;

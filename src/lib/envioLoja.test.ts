@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   cnpjValido,
@@ -12,8 +13,12 @@ import {
   type EnvioLoja,
 } from "./envioLoja";
 import {
+  assinaturaMeConfere,
   corpoCotacao,
   corpoEtiqueta,
+  efeitoDoAviso,
+  emailPedidoEnviado,
+  lerAvisoMe,
   mensagemDoMe,
   nomeDaConta,
   opcoesDaCotacao,
@@ -21,6 +26,53 @@ import {
   tokensDaResposta,
   urlAutorizacao,
 } from "../../supabase/functions/_shared/melhorEnvio.ts";
+
+describe("aviso de rastreio do Melhor Envio", () => {
+  const corpo = '{"event":"order.posted","data":{"id":"abc"}}';
+  const assinar = (codificacao: "base64" | "hex", texto = corpo, chave = "segredo") =>
+    createHmac("sha256", chave).update(texto).digest(codificacao);
+
+  it("confere a assinatura em base64 e em hex", async () => {
+    expect(await assinaturaMeConfere(corpo, "segredo", assinar("base64"))).toBe(true);
+    expect(await assinaturaMeConfere(corpo, "segredo", assinar("hex"))).toBe(true);
+  });
+  it("barra corpo mexido, chave errada e assinatura vazia", async () => {
+    expect(await assinaturaMeConfere(`${corpo} `, "segredo", assinar("base64"))).toBe(false);
+    expect(await assinaturaMeConfere(corpo, "outra", assinar("base64"))).toBe(false);
+    expect(await assinaturaMeConfere(corpo, "segredo", "")).toBe(false);
+    expect(await assinaturaMeConfere(corpo, "", assinar("base64", corpo, ""))).toBe(false);
+  });
+  it("lê o aviso e limpa a URL com espaço do exemplo da doc", () => {
+    expect(lerAvisoMe({ event: "order.posted", data: { id: "a", tracking: " ME1 ", tracking_url: "https: //www.melhorrastreio.com.br/rastreio/ME1" } })).toEqual({
+      evento: "order.posted",
+      etiquetaId: "a",
+      codigo: "ME1",
+      url: "https://www.melhorrastreio.com.br/rastreio/ME1",
+    });
+  });
+  it("recusa URL que não é https e corpo torto", () => {
+    expect(lerAvisoMe({ event: "order.posted", data: { id: "a", tracking: null, tracking_url: "javascript:alert(1)" } })?.url).toBeNull();
+    expect(lerAvisoMe({ event: "order.posted" })).toBeNull();
+    expect(lerAvisoMe(null)).toBeNull();
+  });
+  it("traduz os eventos", () => {
+    expect(efeitoDoAviso("order.posted")).toBe("postada");
+    expect(efeitoDoAviso("order.delivered")).toBe("entregue");
+    expect(efeitoDoAviso("order.paused")).toBe("problema");
+    expect(efeitoDoAviso("order.cancelled")).toBe("cancelada");
+    expect(efeitoDoAviso("order.generated")).toBeNull();
+  });
+  it("e-mail com rastreio tem o link e escapa o nome", () => {
+    const { assunto, html } = emailPedidoEnviado({ marca: "Mundo de Aimer", nome: "<Ana>", servico: "PAC", codigo: "ME1", url: "https://x.com/ME1" });
+    expect(assunto).toContain("Mundo de Aimer");
+    expect(html).toContain("&lt;Ana&gt;");
+    expect(html).toContain('href="https://x.com/ME1"');
+    expect(html).not.toContain("Pólia");
+  });
+  it("sem link avisa que o rastreio demora", () => {
+    expect(emailPedidoEnviado({ marca: "M", nome: "A", servico: null, codigo: null, url: null }).html).toContain("1 dia útil");
+  });
+});
 
 describe("etiqueta do Melhor Envio", () => {
   const remetente = {
