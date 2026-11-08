@@ -71,11 +71,7 @@ const medirServerFn = createMiddleware({ type: "function" }).server(
     try {
       return await next();
     } catch (error) {
-      ok = false;
-      status =
-        error != null && typeof error === "object" && "statusCode" in error
-          ? Number((error as { statusCode: unknown }).statusCode) || 500
-          : 500;
+      ({ ok, status } = telemetria.classificarFalhaServerFn(error));
       throw error;
     } finally {
       const latenciaMs = Date.now() - t0;

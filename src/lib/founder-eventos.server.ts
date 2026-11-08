@@ -80,6 +80,28 @@ export function registrarChamadaApi(input: {
   );
 }
 
+// Mensagens do requireSupabaseAuth quando a chamada chega sem token nenhum. Sem
+// sessão no navegador, o attachSupabaseAuth não manda o header.
+const SEM_TOKEN = new Set([
+  "Unauthorized: No authorization header provided",
+  "Unauthorized: Only Bearer tokens are supported",
+  "Unauthorized: No token provided",
+]);
+
+// Como uma server function que lançou erro entra na medição. Chamada sem token é
+// quem saiu ou trocou de conta com a tela aberta: fica registrada como 401, mas não
+// conta como erro de API (FND-16). Token inválido segue contando, porque é assim
+// que uma pane geral de login aparece no alerta.
+export function classificarFalhaServerFn(error: unknown): { ok: boolean; status: number } {
+  if (error != null && typeof error === "object" && "statusCode" in error) {
+    return { ok: false, status: Number((error as { statusCode: unknown }).statusCode) || 500 };
+  }
+  const mensagem = error instanceof Error ? error.message : "";
+  if (SEM_TOKEN.has(mensagem)) return { ok: true, status: 401 };
+  if (mensagem.startsWith("Unauthorized:")) return { ok: false, status: 401 };
+  return { ok: false, status: 500 };
+}
+
 // Só pra atribuir a chamada à conta na telemetria: lê o `sub` do JWT sem
 // validar assinatura. Autorização de verdade continua no requireSupabaseAuth.
 export function subDoBearer(authorization: string | null): string | null {

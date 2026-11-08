@@ -16,6 +16,7 @@ import {
   registrarEventoSistema,
   registrarChamadaApi,
   subDoBearer,
+  classificarFalhaServerFn,
 } from "./founder-eventos.server";
 
 beforeEach(() => {
@@ -109,6 +110,32 @@ describe("registrarChamadaApi", () => {
         user_id: null,
       }),
     );
+  });
+});
+
+describe("classificarFalhaServerFn", () => {
+  it("chamada sem token fica como 401 e não conta como erro", () => {
+    for (const m of [
+      "Unauthorized: No authorization header provided",
+      "Unauthorized: Only Bearer tokens are supported",
+      "Unauthorized: No token provided",
+    ]) {
+      expect(classificarFalhaServerFn(new Error(m))).toEqual({ ok: true, status: 401 });
+    }
+  });
+
+  it("token inválido é 401 e continua contando, pra uma pane de login disparar o alerta", () => {
+    expect(classificarFalhaServerFn(new Error("Unauthorized: Invalid token"))).toEqual({
+      ok: false,
+      status: 401,
+    });
+  });
+
+  it("erro comum continua 500 e statusCode é respeitado", () => {
+    expect(classificarFalhaServerFn(new Error("quebrou"))).toEqual({ ok: false, status: 500 });
+    expect(classificarFalhaServerFn("texto solto")).toEqual({ ok: false, status: 500 });
+    expect(classificarFalhaServerFn({ statusCode: 403 })).toEqual({ ok: false, status: 403 });
+    expect(classificarFalhaServerFn({ statusCode: "x" })).toEqual({ ok: false, status: 500 });
   });
 });
 
