@@ -4,6 +4,7 @@ import { Campo } from "@/components/ui/Campo";
 import { fmt } from "@/components/produtos/tipos";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { ANDAMENTOS, ROTULO_ANDAMENTO, rotuloEntrega, type AndamentoPedido } from "@/lib/pedidos";
+import { EtiquetaDoPedido } from "./EtiquetaDoPedido";
 import type { PedidoLinha } from "./dados";
 
 const INPUT =
@@ -104,6 +105,8 @@ export function ModalPedido({
             </button>
           )}
         </div>
+
+        {pedido.canal === "site" && <EtiquetaDoPedido vendaId={pedido.id} />}
 
         <div className="border-t border-[var(--line)] pt-4">
           {pedido.status === "a_receber" ? (

@@ -1,12 +1,15 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import {
   corpoCotacao,
+  corpoEtiqueta,
+  mensagemDoMe,
   MSG_RECONECTAR_ME,
   nomeDaConta,
   opcoesDaCotacao,
   precisaRenovar,
   tokensDaResposta,
   urlAutorizacao,
+  type DadosEtiqueta,
   type ProdutoCotacao,
 } from "../_shared/melhorEnvio.ts";
 
@@ -18,6 +21,7 @@ import {
 //
 // Etapa 1: iniciar a conexão, trocar o code, desconectar e renovar o token (cron).
 // Etapa 2: cotar o frete para o checkout da loja.
+// Etapa 3: comprar, gerar, imprimir e cancelar a etiqueta dos pedidos pagos.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -150,10 +154,8 @@ function produtosValidos(v: unknown): ProdutoCotacao[] | null {
   return v as ProdutoCotacao[];
 }
 
-/** Quem chama já leu valor e medidas no banco. Aqui só entra o token da marca. */
-async function cotar(userId: string, origem: unknown, destino: unknown, brutos: unknown) {
-  const produtos = produtosValidos(brutos);
-  if (!ehCep(origem) || !ehCep(destino) || !produtos) return { ok: false, erro: "parametros" };
+/** Token da marca conectada. Null se a conexão não está de pé. */
+async function tokenDaMarca(userId: string): Promise<string | null> {
   const { data: conexao } = await admin
     .from("canal_conexoes")
     .select("id")
@@ -161,9 +163,16 @@ async function cotar(userId: string, origem: unknown, destino: unknown, brutos: 
     .eq("canal", CANAL)
     .eq("status", "conectada")
     .maybeSingle();
-  if (!conexao) return { ok: false, erro: "sem_conexao" };
+  if (!conexao) return null;
   const { data } = await admin.rpc("canal_token_ler", { p_conexao_id: (conexao as { id: string }).id });
-  const token = ((data as Array<{ access_token: string | null }> | null) ?? [])[0]?.access_token;
+  return ((data as Array<{ access_token: string | null }> | null) ?? [])[0]?.access_token ?? null;
+}
+
+/** Quem chama já leu valor e medidas no banco. Aqui só entra o token da marca. */
+async function cotar(userId: string, origem: unknown, destino: unknown, brutos: unknown) {
+  const produtos = produtosValidos(brutos);
+  if (!ehCep(origem) || !ehCep(destino) || !produtos) return { ok: false, erro: "parametros" };
+  const token = await tokenDaMarca(userId);
   if (!token) return { ok: false, erro: "sem_conexao" };
   const r = await chamarMe("/api/v2/me/shipment/calculate", { token, corpo: corpoCotacao({ origem, destino, produtos }) });
   if (!r.ok) {
@@ -171,6 +180,173 @@ async function cotar(userId: string, origem: unknown, destino: unknown, brutos: 
     return { ok: false, erro: "cotacao" };
   }
   return { ok: true, opcoes: opcoesDaCotacao(r.json) };
+}
+
+// ── etiqueta (etapa 3) ──────────────────────────────────────────────────────
+// Andamento: sem nada > carrinho > paga > gerada. Cada passo grava antes do próximo, para
+// um erro no meio retomar de onde parou e nunca pagar duas vezes.
+
+interface CompraDaEtiqueta {
+  id: string;
+  nome: string;
+  email: string;
+  whatsapp: string;
+  cpf: string | null;
+  endereco: Record<string, string> | null;
+  itens: DadosEtiqueta["itens"];
+  frete_servico: DadosEtiqueta["servico"] | null;
+  etiqueta_id: string | null;
+  etiqueta_status: "carrinho" | "paga" | "gerada" | null;
+  etiqueta_custo: number | string | null;
+}
+
+async function compraDaVenda(userId: string, vendaId: string): Promise<CompraDaEtiqueta | null> {
+  const { data } = await admin
+    .from("loja_checkouts")
+    .select("id, nome, email, whatsapp, cpf, endereco, itens, frete_servico, etiqueta_id, etiqueta_status, etiqueta_custo")
+    .eq("user_id", userId)
+    .eq("venda_id", vendaId)
+    .eq("status", "pago")
+    .eq("entrega_tipo", "frete")
+    .maybeSingle();
+  return (data as CompraDaEtiqueta | null) ?? null;
+}
+
+const guardarEtiqueta = (id: string, campos: Record<string, unknown>) =>
+  admin.from("loja_checkouts").update({ ...campos, updated_at: new Date().toISOString() }).eq("id", id);
+
+const aplicarCusto = (userId: string, vendaId: string, custo: number) =>
+  admin.rpc("loja_etiqueta_aplicar_custo", { p_user_id: userId, p_venda_id: vendaId, p_custo: custo });
+
+async function comTrava<T>(chave: string, fn: () => Promise<T>): Promise<T | { ok: false; erro: "ocupado" }> {
+  const { data: dono } = await admin.rpc("pegar_trava_com_dono", { p_chave: chave, p_segundos: TRAVA_SEGUNDOS });
+  if (typeof dono !== "string" || !dono) return { ok: false, erro: "ocupado" };
+  try {
+    return await fn();
+  } finally {
+    await admin.rpc("soltar_trava_com_dono", { p_chave: chave, p_dono: dono });
+  }
+}
+
+async function saldoDaCarteira(token: string): Promise<number | null> {
+  const r = await chamarMe("/api/v2/me/balance", { token });
+  const saldo = r.ok ? Number((r.json as { balance?: unknown } | null)?.balance) : Number.NaN;
+  return Number.isFinite(saldo) ? saldo : null;
+}
+
+/** Põe no carrinho do Melhor Envio e devolve o custo real e o saldo. Ainda não cobra. */
+async function etiquetaPreparar(userId: string, vendaId: string) {
+  const c = await compraDaVenda(userId, vendaId);
+  if (!c) return { ok: false, erro: "sem_pedido" };
+  const token = await tokenDaMarca(userId);
+  if (!token) return { ok: false, erro: "sem_conexao" };
+  let custo = c.etiqueta_custo == null ? null : Number(c.etiqueta_custo);
+  if (!c.etiqueta_id) {
+    if (!c.cpf || !c.endereco || !c.frete_servico) return { ok: false, erro: "dados" };
+    const { data: loja } = await admin.from("lojas_marca").select("envio").eq("user_id", userId).maybeSingle();
+    const remetente = ((loja as { envio?: { remetente?: Record<string, string> } } | null)?.envio?.remetente) ?? {};
+    const montado = corpoEtiqueta({
+      vendaId,
+      remetente,
+      nome: c.nome,
+      email: c.email,
+      whatsapp: c.whatsapp,
+      cpf: c.cpf,
+      endereco: c.endereco,
+      servico: c.frete_servico,
+      itens: c.itens,
+    });
+    if ("erro" in montado) return { ok: false, erro: montado.erro };
+    const r = await chamarMe("/api/v2/me/cart", { token, corpo: montado.corpo });
+    const json = r.json as { id?: unknown; price?: unknown } | null;
+    custo = Number(json?.price);
+    if (!r.ok || typeof json?.id !== "string" || !Number.isFinite(custo)) {
+      console.error("[melhor-envio] carrinho respondeu", r.status);
+      return { ok: false, erro: "carrinho", mensagem: mensagemDoMe(r.json) };
+    }
+    await guardarEtiqueta(c.id, { etiqueta_id: json.id, etiqueta_status: "carrinho", etiqueta_custo: custo });
+  }
+  return { ok: true, status: c.etiqueta_status ?? "carrinho", custo, saldo: await saldoDaCarteira(token) };
+}
+
+async function linkDeImpressao(token: string, etiquetaId: string): Promise<string | null> {
+  const r = await chamarMe("/api/v2/me/shipment/print", { token, corpo: { mode: "public", orders: [etiquetaId] } });
+  const url = (r.json as { url?: unknown } | null)?.url;
+  return r.ok && typeof url === "string" && url.startsWith("https://") ? url : null;
+}
+
+/** Paga e gera, retomando de onde parou. Devolve o link de impressão. */
+async function etiquetaComprar(userId: string, vendaId: string) {
+  const inicio = await compraDaVenda(userId, vendaId);
+  if (!inicio?.etiqueta_id) return { ok: false, erro: "sem_pedido" };
+  return await comTrava(`me_etiqueta:${inicio.id}`, async () => {
+    // Relê depois da trava: outro clique pode ter andado na frente.
+    const c = await compraDaVenda(userId, vendaId);
+    if (!c?.etiqueta_id) return { ok: false, erro: "sem_pedido" };
+    const token = await tokenDaMarca(userId);
+    if (!token) return { ok: false, erro: "sem_conexao" };
+    const ordens = { orders: [c.etiqueta_id] };
+    let status = c.etiqueta_status;
+
+    if (status === "carrinho") {
+      const r = await chamarMe("/api/v2/me/shipment/checkout", { token, corpo: ordens });
+      const mensagem = mensagemDoMe(r.json);
+      if (!r.ok && !/já foram pagas/i.test(mensagem ?? "")) {
+        console.error("[melhor-envio] compra respondeu", r.status);
+        return { ok: false, erro: "compra", mensagem };
+      }
+      await guardarEtiqueta(c.id, { etiqueta_status: "paga" });
+      await aplicarCusto(userId, vendaId, Number(c.etiqueta_custo ?? 0));
+      status = "paga";
+    }
+    if (status === "paga") {
+      const r = await chamarMe("/api/v2/me/shipment/generate", { token, corpo: ordens });
+      const gerada = (r.json as Record<string, { status?: unknown }> | null)?.[c.etiqueta_id]?.status === true;
+      if (!r.ok || !gerada) {
+        console.error("[melhor-envio] geração respondeu", r.status);
+        return { ok: false, erro: "gerar", status: "paga", mensagem: mensagemDoMe(r.json) };
+      }
+      await guardarEtiqueta(c.id, { etiqueta_status: "gerada" });
+    }
+    return { ok: true, status: "gerada", url: await linkDeImpressao(token, c.etiqueta_id) };
+  });
+}
+
+async function etiquetaImprimir(userId: string, vendaId: string) {
+  const c = await compraDaVenda(userId, vendaId);
+  if (!c?.etiqueta_id || c.etiqueta_status !== "gerada") return { ok: false, erro: "sem_pedido" };
+  const token = await tokenDaMarca(userId);
+  if (!token) return { ok: false, erro: "sem_conexao" };
+  const url = await linkDeImpressao(token, c.etiqueta_id);
+  return url ? { ok: true, status: "gerada", url } : { ok: false, erro: "imprimir" };
+}
+
+/** Do carrinho, só tira. Paga ou gerada, cancela no Melhor Envio e o custo sai da venda. */
+async function etiquetaCancelar(userId: string, vendaId: string) {
+  const inicio = await compraDaVenda(userId, vendaId);
+  if (!inicio?.etiqueta_id) return { ok: false, erro: "sem_pedido" };
+  return await comTrava(`me_etiqueta:${inicio.id}`, async () => {
+    const c = await compraDaVenda(userId, vendaId);
+    if (!c?.etiqueta_id) return { ok: false, erro: "sem_pedido" };
+    const token = await tokenDaMarca(userId);
+    if (!token) return { ok: false, erro: "sem_conexao" };
+    if (c.etiqueta_status === "carrinho") {
+      await chamarMe(`/api/v2/me/cart/${encodeURIComponent(c.etiqueta_id)}`, { method: "DELETE", token });
+    } else {
+      const r = await chamarMe("/api/v2/me/shipment/cancel", {
+        token,
+        corpo: { order: { id: c.etiqueta_id, reason_id: "2", description: "Cancelada pela loja" } },
+      });
+      const cancelada = (r.json as Record<string, { canceled?: unknown }> | null)?.[c.etiqueta_id]?.canceled === true;
+      if (!r.ok || !cancelada) {
+        console.error("[melhor-envio] cancelamento respondeu", r.status);
+        return { ok: false, erro: "cancelar", mensagem: mensagemDoMe(r.json) };
+      }
+      await aplicarCusto(userId, vendaId, 0);
+    }
+    await guardarEtiqueta(c.id, { etiqueta_id: null, etiqueta_status: null, etiqueta_custo: null });
+    return { ok: true, status: null };
+  });
 }
 
 async function marcarErro(conexaoId: string) {
@@ -258,6 +434,14 @@ Deno.serve(async (req: Request) => {
     }
     if (acao === "desconectar") return resposta(await desconectar(userId));
     if (acao === "cotar") return resposta(await cotar(userId, corpo?.cep_origem, corpo?.cep_destino, corpo?.produtos));
+    if (typeof acao === "string" && acao.startsWith("etiqueta_")) {
+      const vendaId = corpo?.venda_id;
+      if (!ehUuid(vendaId)) return resposta({ ok: false, erro: "parametros" }, 400);
+      if (acao === "etiqueta_preparar") return resposta(await etiquetaPreparar(userId, vendaId));
+      if (acao === "etiqueta_comprar") return resposta(await etiquetaComprar(userId, vendaId));
+      if (acao === "etiqueta_imprimir") return resposta(await etiquetaImprimir(userId, vendaId));
+      if (acao === "etiqueta_cancelar") return resposta(await etiquetaCancelar(userId, vendaId));
+    }
     return resposta({ erro: "acao" }, 400);
   } catch (e) {
     console.error("[melhor-envio]", acao, e instanceof Error ? e.message : String(e));

@@ -13,12 +13,66 @@ import {
 } from "./envioLoja";
 import {
   corpoCotacao,
+  corpoEtiqueta,
+  mensagemDoMe,
   nomeDaConta,
   opcoesDaCotacao,
   precisaRenovar,
   tokensDaResposta,
   urlAutorizacao,
 } from "../../supabase/functions/_shared/melhorEnvio.ts";
+
+describe("etiqueta do Melhor Envio", () => {
+  const remetente = {
+    nome: "Marca Ltda", documento: "18305925000106", telefone: "11977435996", email: "a@b.com", cep: "04364030",
+    rua: "Rua A", numero: "1", complemento: "", bairro: "B", cidade: "São Paulo", uf: "SP",
+  };
+  const dados = {
+    vendaId: "v1",
+    remetente,
+    nome: "Ana",
+    email: "ana@x.com",
+    whatsapp: "5511999990000",
+    cpf: "52998224725",
+    endereco: { cep: "30130010", rua: "Praça", numero: "7", complemento: "", bairro: "Centro", cidade: "BH", uf: "MG" },
+    servico: { id: 3, empresa: "Jadlog", pacotes: [{ dimensoes: { height: "12.5", width: 20, length: 20 }, peso: "2.00" }] },
+    itens: [{ produto_nome: "Caneca", variacao: "Azul", quantidade: 2, preco: "39.9" }],
+  };
+  const corpo = (d = dados) => {
+    const r = corpoEtiqueta(d);
+    if ("erro" in r) throw new Error(r.erro);
+    return r.corpo as Record<string, any>;
+  };
+
+  it("CNPJ vai em company_document, e a declaração de conteúdo não leva nota", () => {
+    const c = corpo();
+    expect(c.from).toMatchObject({ company_document: "18305925000106", document: "", state_register: "" });
+    expect(c.options).toMatchObject({ non_commercial: true, insurance_value: 79.8 });
+    expect(c.options.invoice).toBeUndefined();
+  });
+  it("CPF do remetente vai em document", () => {
+    const c = corpo({ ...dados, remetente: { ...remetente, documento: "52998224725" } });
+    expect(c.from).toMatchObject({ document: "52998224725", company_document: "" });
+  });
+  it("destinatário sem o 55 e volume em centímetro inteiro", () => {
+    const c = corpo();
+    expect(c.to).toMatchObject({ phone: "11999990000", document: "52998224725", postal_code: "30130010" });
+    expect(c.volumes).toEqual([{ height: 13, width: 20, length: 20, weight: 2 }]);
+    expect(c.products[0]).toEqual({ name: "Caneca Azul", quantity: "2", unitary_value: "39.90" });
+  });
+  it("recusa sem pacote, pacote torto e duas caixas nos Correios", () => {
+    expect(corpoEtiqueta({ ...dados, servico: { id: 1, pacotes: [] } })).toEqual({ erro: "sem_pacote" });
+    expect(corpoEtiqueta({ ...dados, servico: { id: 1, pacotes: [{ dimensoes: {}, peso: "1" }] } })).toEqual({ erro: "dados" });
+    const duas = [dados.servico.pacotes[0], dados.servico.pacotes[0]];
+    expect(corpoEtiqueta({ ...dados, servico: { id: 1, empresa: "Correios", pacotes: duas } })).toEqual({ erro: "varias_caixas" });
+    expect("corpo" in corpoEtiqueta({ ...dados, servico: { id: 3, empresa: "Jadlog", pacotes: duas } })).toBe(true);
+  });
+  it("acha a primeira frase de erro do Melhor Envio", () => {
+    expect(mensagemDoMe({ error: { volumes: [["Peso do pacote 1 não informado"]] } })).toBe("Peso do pacote 1 não informado");
+    expect(mensagemDoMe({ message: "x", errors: { orders: ["Já foram pagas."] } })).toBe("Já foram pagas.");
+    expect(mensagemDoMe(null)).toBeNull();
+  });
+});
 
 describe("cotação do Melhor Envio", () => {
   it("manda as medidas do cadastro nos nomes que a API pede", () => {
