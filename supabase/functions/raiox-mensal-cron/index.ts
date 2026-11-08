@@ -117,20 +117,37 @@ interface Lancamento {
   tipo: string;
   valor: number;
   data: string;
+  categoria: string | null;
+}
+
+// Mesma regra de ehCompraDeEquipamento (src/lib/projecao.functions.ts): a função
+// roda no Deno e não importa de src. A compra de máquina fica fora do resultado.
+function ehCompraDeEquipamento(categoria: string | null): boolean {
+  return (categoria ?? "").trim().toLocaleLowerCase("pt-BR") === "compra de equipamento";
 }
 
 function resultadoDoMes(lancamentos: Lancamento[], mes: number, ano: number) {
   let entradas = 0;
   let saidas = 0;
+  let compraDeEquipamento = 0;
   let total = 0;
   for (const l of lancamentos) {
     const [y, m] = l.data.split("-").map(Number);
     if (y !== ano || m !== mes) continue;
     total++;
     if (l.tipo === "entrada") entradas += Number(l.valor);
-    else if (l.tipo === "saida") saidas += Number(l.valor);
+    else if (l.tipo === "saida") {
+      saidas += Number(l.valor);
+      if (ehCompraDeEquipamento(l.categoria)) compraDeEquipamento += Number(l.valor);
+    }
   }
-  return { entradas, saidas, resultado: entradas - saidas, total };
+  return {
+    entradas,
+    saidas,
+    compraDeEquipamento,
+    resultado: entradas - saidas + compraDeEquipamento,
+    total,
+  };
 }
 
 // ── Meta do mês (cópia de metaDoMes.ts + escolherMetaDoRaioX) ───────────────
@@ -369,6 +386,7 @@ interface ContextoRaioX {
   entradas: number;
   saidas: number;
   resultado: number;
+  compraDeEquipamento: number;
   metaAlvo: number | null;
   metaAtual: number | null;
   produtos: { nome: string; sobraPct: number }[];
@@ -383,6 +401,11 @@ function montarPromptRaioX(ctx: ContextoRaioX): string {
     `Saídas: ${moedaParaPrompt(ctx.saidas)}`,
     `Resultado (quanto lucrou): ${moedaParaPrompt(ctx.resultado)}`,
   ];
+  if (ctx.compraDeEquipamento > 0) {
+    partes.push(
+      `Compra de equipamento no mês: ${moedaParaPrompt(ctx.compraDeEquipamento)}. Está nas saídas e fica fora do resultado, porque a máquina se paga aos poucos pela reserva.`,
+    );
+  }
   if (ctx.metaAlvo != null) {
     partes.push(
       `Meta do mês: ${moedaParaPrompt(ctx.metaAlvo)} (atingido: ${moedaParaPrompt(ctx.metaAtual ?? 0)})`,
@@ -607,7 +630,7 @@ async function processarUsuaria(
       lerTodasAsPaginas<Lancamento>((de, ate) =>
         supabaseAdmin
           .from("lancamentos")
-          .select("tipo, valor, data")
+          .select("tipo, valor, data, categoria")
           .eq("user_id", userId)
           .gte("data", periodo.inicio)
           .lt("data", periodo.fimExclusivo)
@@ -643,7 +666,7 @@ async function processarUsuaria(
     return "erro";
   }
 
-  const { entradas, saidas, resultado, total } = resultadoDoMes(
+  const { entradas, saidas, compraDeEquipamento, resultado, total } = resultadoDoMes(
     lancamentos,
     periodo.mes,
     periodo.ano,
@@ -665,6 +688,7 @@ async function processarUsuaria(
     entradas,
     saidas,
     resultado,
+    compraDeEquipamento,
     metaAlvo: escolhaMeta.valorAlvo,
     // "Atingido" = entradas do mês lido, a mesma conta do Financeiro.
     metaAtual: escolhaMeta.valorAlvo != null ? entradas : null,

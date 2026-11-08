@@ -24,6 +24,7 @@ export function BlocoCustosFixos({
   detalhe,
   onDetalhe,
   doFinanceiro,
+  reservaEquipamentos = 0,
 }: {
   total: string;
   onTotal: (v: string) => void;
@@ -33,6 +34,8 @@ export function BlocoCustosFixos({
   onDetalhe: (d: DetalheFixos) => void;
   /** Saídas fixas do mês no Financeiro, por item. null = ainda carregando ou sem lançamento. */
   doFinanceiro: Record<ChaveCustoFixo, number> | null;
+  /** Reserva do mês da aba Equipamentos. Zero esconde o botão. */
+  reservaEquipamentos?: number;
 }) {
   const painelId = useId();
   const soma = somarCustosFixos(detalhe);
@@ -42,10 +45,16 @@ export function BlocoCustosFixos({
 
   // Ao abrir, um total digitado antes que não bate com o detalhe vai pra
   // "Outros": o número dela não some. Ao fechar, o total vira a soma.
+  const detalheAoAbrir = (): DetalheFixos =>
+    Math.abs(soma - num(total)) >= 0.01 ? (num(total) > 0 ? { outros: total } : {}) : detalhe;
   const abrir = () => {
-    if (Math.abs(somarCustosFixos(detalhe) - num(total)) >= 0.01) {
-      onDetalhe(num(total) > 0 ? { outros: total } : {});
-    }
+    onDetalhe(detalheAoAbrir());
+    onDetalhado(true);
+  };
+
+  const usarReserva = () => {
+    const base = detalhado ? detalhe : detalheAoAbrir();
+    onDetalhe({ ...base, equipamento: String(reservaEquipamentos) });
     onDetalhado(true);
   };
   const fechar = () => {
@@ -60,6 +69,8 @@ export function BlocoCustosFixos({
       const v = doFinanceiro[i.chave];
       if (v > 0) novo[i.chave] = String(Math.round(v * 100) / 100);
     }
+    // A reserva não é saída do Financeiro: puxar não pode apagar o que ela usou.
+    if (!novo.equipamento && detalhe.equipamento) novo.equipamento = detalhe.equipamento;
     onDetalhe(novo);
     onDetalhado(true);
   };
@@ -111,6 +122,15 @@ export function BlocoCustosFixos({
             className="inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
           >
             Puxar do Financeiro deste mês ({fmt(totalFinanceiro)})
+          </button>
+        )}
+        {reservaEquipamentos > 0 && (
+          <button
+            type="button"
+            onClick={usarReserva}
+            className="inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+          >
+            Usar a reserva dos equipamentos ({fmt(reservaEquipamentos)})
           </button>
         )}
       </div>

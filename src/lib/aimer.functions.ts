@@ -165,6 +165,8 @@ export function montarContextoProjete(dados: {
   resultado: number;
   /** O resultado descontou o custo de cada produto vendido (lib/lucroDoMes). */
   resultadoPeloCusto?: boolean;
+  /** Compra de equipamento do mês: está nas saídas e fora do resultado. */
+  compraDeEquipamento?: number;
   metaAlvo: number | null;
   metaAtual: number | null;
 }): string | null {
@@ -177,6 +179,11 @@ export function montarContextoProjete(dados: {
   if (dados.resultadoPeloCusto) {
     partes.push(
       "O resultado desconta o custo de cada produto vendido (cadastrado em Produtos), por isso não é entradas menos saídas; compra de insumo não sai de novo. É o mesmo número do Painel.",
+    );
+  }
+  if (dados.compraDeEquipamento) {
+    partes.push(
+      `Compra de equipamento no mês: ${moedaParaPrompt(dados.compraDeEquipamento)}. Está nas saídas e fica fora do resultado, porque a máquina se paga aos poucos pela reserva.`,
     );
   }
   if (dados.metaAlvo != null) {
@@ -337,6 +344,7 @@ export const perguntarAimer = createServerFn({ method: "POST" })
         saidas,
         resultado: lucro.valor,
         resultadoPeloCusto: lucro.fonte === "vendas",
+        compraDeEquipamento: lucro.compraDeEquipamento,
         metaAlvo: meta?.valor_alvo ?? null,
         // O "atingido" da Meta do mês são as entradas do mês, igual ao Painel,
         // ao Financeiro e a Metas (08/10/2026); valor_atual não é mais usado.

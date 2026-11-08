@@ -149,7 +149,8 @@ const LISTA = [
       "No Grátis, o Painel lança entradas e saídas só do mês atual. O histórico dos outros meses fica no Financeiro, do Premium.",
       'A Meta do mês nasce em Metas, em "Criar a Meta do mês".',
       'Saída lançada em "Insumos / estoque" não sai de novo do "Quanto lucrou": o material já está no custo de cada produto vendido.',
-      'Sem venda registrada no mês, o "Quanto lucrou" é entradas menos saídas. Venda de produto sem custo entra inteira, e a frase embaixo do número diz quantas são.',
+      'Saída em "Compra de equipamento" também fica fora do "Quanto lucrou": a máquina se paga aos poucos, pela reserva.',
+      'Sem venda registrada no mês, o "Quanto lucrou" é entradas menos saídas, sem a compra de equipamento. Venda de produto sem custo entra inteira, e a frase embaixo do número diz quantas são.',
       'Venda "a receber" já conta no "Quanto lucrou" do mês em que foi feita, como no cartão de Vendas. A frase embaixo do número diz quanto ainda vai entrar.',
     ],
     duvidas: [
@@ -307,7 +308,7 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas e Assistente.",
-      `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda e Resumo pro contador.`,
+      `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda, Equipamentos e Resumo pro contador.`,
       `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
@@ -361,12 +362,24 @@ const LISTA = [
           '"Arquivar" tira o produto do catálogo sem apagar. Ele continua guardado.',
         ],
       },
+      {
+        titulo: "Guardar os equipamentos da marca",
+        itens: [
+          'Na aba "Equipamentos", clique em "Adicionar equipamento".',
+          'Preencha o "Nome", o "Preço (R$)" e os "Meses de uso". A tela mostra quanto reservar por mês.',
+          'Quando comprar, clique em "Marcar como comprado", confira a "Data da compra" e o "Quanto pagou (R$)" e clique em "Registrar compra". A saída entra no Financeiro em "Compra de equipamento".',
+          'Comprou errado? "Desfazer compra" exclui a saída e o equipamento volta pra planejado.',
+          'O topo da aba mostra "Investido até agora", "Falta comprar" e "Reserva do mês".',
+        ],
+      },
     ],
     bomSaber: [
       "No plano Grátis cabem 5 produtos ativos. No Premium e no Pro, sem limite.",
       "Produto não se apaga, só se arquiva, pra não perder o histórico de venda.",
       "A planilha aceita .csv ou .txt, até 5 MB e até 1000 produtos por vez.",
-      'As abas "Estoque" e "Insumos e produção" ficam na mesma tela, ao lado do "Catálogo".',
+      'As abas "Estoque", "Insumos e produção" e "Equipamentos" ficam na mesma tela, ao lado do "Catálogo".',
+      'A aba "Equipamentos" é do Premium e do Pro.',
+      'Equipamento planejado entra na "Reserva do mês", mas não vira saída. Só a compra marcada aparece no Financeiro.',
     ],
     duvidas: [
       {
@@ -397,7 +410,7 @@ const LISTA = [
           'Escolha a aba: "Produto (físico/digital)", "Serviço (por hora)" ou "Encomenda (sob medida)".',
           'Em "Qual produto?", escreva o nome, como "Caderno A5". No Serviço o campo é "Qual serviço?" e na Encomenda, "Qual encomenda?".',
           'Em "Custos diretos (por unidade)", coloque matéria-prima, embalagem, mão de obra e outros custos de cada peça.',
-          'Em "Custos fixos e salário", entre com os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados.',
+          'Em "Custos fixos e salário", entre com os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados, e "Usar a reserva dos equipamentos" preenche a "Reserva de equipamento" com o total da aba "Equipamentos".',
           'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e, em "Quanto quer lucrar (%)", o lucro que a marca quer em cada venda.',
           'O resultado mostra o "Preço sugerido", o custo por unidade, o preço mínimo pra não ter prejuízo e quanto a marca lucra.',
         ],
@@ -595,7 +608,7 @@ const LISTA = [
       "O Financeiro é do Premium e do Pro. No Grátis, a entrada e a saída do mês são lançadas pelo Painel.",
       'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês, que nasce em Metas.',
       "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
-      '"Lucro do mês" é a mesma conta do "Quanto lucrou" do Painel: desconta o custo de cada produto vendido em Vendas, por isso pode ser menor que entradas menos saídas. Saída em "Insumos / estoque" não sai de novo.',
+      '"Lucro do mês" é a mesma conta do "Quanto lucrou" do Painel: desconta o custo de cada produto vendido em Vendas, por isso pode ser menor que entradas menos saídas. Saída em "Insumos / estoque" não sai de novo, e "Compra de equipamento" fica fora.',
       "Excluir um lançamento não tem volta.",
       'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
     ],
@@ -612,6 +625,11 @@ const LISTA = [
         pergunta: "Comprei insumo. Conta como custo fixo",
         resposta:
           'Lance na categoria "Insumos / estoque". A Projeção deixa essa categoria fora dos custos fixos, porque ela muda com a produção, e o "Lucro do mês" não tira essa saída de novo quando as vendas do mês têm o custo de cada produto.',
+      },
+      {
+        pergunta: "Comprei uma máquina. Como lanço",
+        resposta:
+          'Cadastre na aba "Equipamentos", em Produtos, e clique em "Marcar como comprado". A saída aparece aqui em "Compra de equipamento" e fica fora do "Lucro do mês" e dos custos fixos. A parcela de cada mês entra no preço pela "Reserva de equipamento" da Calculadora.',
       },
     ],
   },

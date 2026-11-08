@@ -729,7 +729,11 @@ function FinanceiroPage() {
         open={!!lancamentoExcluir}
         onOpenChange={(open) => !open && setLancamentoExcluir(null)}
         titulo="Excluir lançamento"
-        descricao="Essa ação não pode ser desfeita."
+        descricao={
+          lancamentoExcluir?.id_externo?.startsWith("equipamento:")
+            ? "Essa ação não pode ser desfeita. O equipamento volta pra planejado na aba Equipamentos."
+            : "Essa ação não pode ser desfeita."
+        }
         textoConfirmar="Excluir"
         destrutivo
         carregando={excluindoLancamento}

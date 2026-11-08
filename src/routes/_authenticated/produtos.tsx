@@ -9,7 +9,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
-import { COTAS_CONFERE } from "@/lib/planos";
+import { COTAS_CONFERE, temNumerosDoMes } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { toastErro } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
@@ -20,11 +20,12 @@ import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { fmt, fmtData, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 import { AbaEstoque } from "@/components/produtos/AbaEstoque";
+import { AbaEquipamentos } from "@/components/produtos/AbaEquipamentos";
 import { AbaInsumos } from "@/components/produtos/AbaInsumos";
 import { useProdutosComEstoque, type SkuProduto } from "@/components/vendas/dados";
 import { estoqueBaixo } from "@/lib/vendas";
 
-type AbaProdutos = "catalogo" | "estoque" | "insumos";
+type AbaProdutos = "catalogo" | "estoque" | "insumos" | "equipamentos";
 
 interface ProdutosSearch {
   aba?: AbaProdutos;
@@ -32,7 +33,10 @@ interface ProdutosSearch {
 
 export const Route = createFileRoute("/_authenticated/produtos")({
   validateSearch: (search: Record<string, unknown>): ProdutosSearch => ({
-    aba: search.aba === "estoque" || search.aba === "insumos" ? search.aba : undefined,
+    aba:
+      search.aba === "estoque" || search.aba === "insumos" || search.aba === "equipamentos"
+        ? search.aba
+        : undefined,
   }),
   head: () => ({
     meta: [
@@ -177,6 +181,7 @@ function ProdutosPage() {
             { id: "catalogo", label: "Catálogo" },
             { id: "estoque", label: "Estoque" },
             { id: "insumos", label: "Insumos e produção" },
+            { id: "equipamentos", label: "Equipamentos" },
           ] as { id: AbaProdutos; label: string }[]
         ).map((a) => (
           <button
@@ -191,7 +196,12 @@ function ProdutosPage() {
         ))}
       </div>
 
-      {aba === "insumos" && userId ? (
+      {aba === "equipamentos" && userId ? (
+        <AbaEquipamentos
+          userId={userId}
+          bloqueado={!meta.carregando && !temNumerosDoMes(meta.plano)}
+        />
+      ) : aba === "insumos" && userId ? (
         <AbaInsumos userId={userId} onAbrirCatalogo={() => trocarAba("catalogo")} />
       ) : aba === "estoque" && userId ? (
         <AbaEstoque

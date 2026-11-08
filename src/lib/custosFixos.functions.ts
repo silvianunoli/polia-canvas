@@ -10,7 +10,7 @@
 
 import { CATEGORIA_PRO_LABORE, pertenceAoMes } from "@/lib/resumoContador.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
-import { ehCategoriaInsumos } from "@/lib/projecao.functions";
+import { ehCategoriaInsumos, ehCompraDeEquipamento } from "@/lib/projecao.functions";
 
 export const ITENS_CUSTO_FIXO = [
   {
@@ -95,7 +95,7 @@ const CHAVE_POR_CATEGORIA = new Map<string, ChaveCustoFixo>(
 
 /**
  * Saídas do mês somadas por item de custo fixo. Mesmo recorte de
- * custosFixosDoMes (projecao.functions.ts): sem insumo e sem pró-labore, então
+ * custosFixosDoMes (projecao.functions.ts): sem insumo, sem compra de equipamento e sem pró-labore, então
  * a soma dos itens bate com o "Custos fixos do mês" da Projeção. Categoria
  * criada por ela ("+ nova categoria") ou sem categoria cai em "Outros".
  */
@@ -110,7 +110,13 @@ export function custosFixosPorItem(
   >;
   for (const l of lancamentos) {
     if (l.tipo !== "saida" || !pertenceAoMes(l.data, mes, ano)) continue;
-    if (l.categoria === CATEGORIA_PRO_LABORE || ehCategoriaInsumos(l.categoria)) continue;
+    if (
+      l.categoria === CATEGORIA_PRO_LABORE ||
+      ehCategoriaInsumos(l.categoria) ||
+      ehCompraDeEquipamento(l.categoria)
+    ) {
+      continue;
+    }
     const chave = (l.categoria && CHAVE_POR_CATEGORIA.get(normalizar(l.categoria))) || "outros";
     total[chave] += Number(l.valor);
   }

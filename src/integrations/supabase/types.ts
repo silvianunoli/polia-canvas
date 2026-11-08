@@ -1375,6 +1375,50 @@ export type Database = {
         }
         Relationships: []
       }
+      equipamentos: {
+        Row: {
+          arquivado: boolean
+          created_at: string
+          id: string
+          lancamento_id: string | null
+          meses_uso: number
+          nome: string
+          updated_at: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          arquivado?: boolean
+          created_at?: string
+          id?: string
+          lancamento_id?: string | null
+          meses_uso: number
+          nome: string
+          updated_at?: string
+          user_id: string
+          valor: number
+        }
+        Update: {
+          arquivado?: boolean
+          created_at?: string
+          id?: string
+          lancamento_id?: string | null
+          meses_uso?: number
+          nome?: string
+          updated_at?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "equipamentos_lancamento_id_fkey"
+            columns: ["lancamento_id"]
+            isOneToOne: false
+            referencedRelation: "lancamentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       insumos: {
         Row: {
           arquivado: boolean
@@ -3180,6 +3224,23 @@ export type Database = {
         Returns: string
       }
       arquivar_insumo: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      salvar_equipamento: {
+        Args: {
+          p_id: string | null
+          p_meses: number
+          p_nome: string
+          p_valor: number
+        }
+        Returns: string
+      }
+      marcar_equipamento_comprado: {
+        Args: { p_data: string; p_id: string; p_valor: number }
+        Returns: string
+      }
+      arquivar_equipamento: {
         Args: { p_id: string }
         Returns: undefined
       }

@@ -6,7 +6,7 @@
 // da lista dos campos da calculadora (custosFixos.functions.ts), pro "puxar do
 // Financeiro" de lá cair no campo certo.
 
-import { CATEGORIA_INSUMOS } from "@/lib/projecao.functions";
+import { CATEGORIA_EQUIPAMENTO, CATEGORIA_INSUMOS } from "@/lib/projecao.functions";
 import { CATEGORIAS_CUSTO_FIXO } from "@/lib/custosFixos.functions";
 import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
 import { CATEGORIAS_DE_VENDA } from "@/lib/numerosDoMes";
@@ -17,6 +17,7 @@ export const CATEGORIAS_ENTRADA: string[] = [...CATEGORIAS_DE_VENDA, "Outros"];
 export const CATEGORIAS_SAIDA: string[] = [
   CATEGORIA_INSUMOS,
   ...CATEGORIAS_CUSTO_FIXO,
+  CATEGORIA_EQUIPAMENTO,
   CATEGORIA_PRO_LABORE,
   "Outros",
 ];

@@ -3,7 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { formatarReais, percentualDe } from "@/lib/formatarReais";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { chaveDoMes, numerosDoMes, type LancamentoDoMes } from "@/lib/numerosDoMes";
-import { ehCategoriaInsumos } from "@/lib/projecao.functions";
+import { ehCategoriaInsumos, ehCompraDeEquipamento } from "@/lib/projecao.functions";
 import { subtotalDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
 
 /**
@@ -21,6 +21,8 @@ import { subtotalDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
  *         + entradas do mês que não vieram de venda registrada (avulsas)
  *         - saídas do mês, menos as de Insumos (o material já está no custo
  *           de cada produto; tirar de novo contava o mesmo dinheiro duas vezes)
+ *           e menos as de Compra de equipamento (ONE-193: fica fora também na
+ *           conta de caixa, porque é no mês sem venda que a loja compra a máquina)
  *
  * Item vendido sem custo (01/11/2026, ONE-166): entra inteiro, sem custo
  * descontado, e conta em `semCusto` pra legenda pedir o custo. Antes um item
@@ -65,6 +67,8 @@ export interface LucroDoMes {
   aReceber: number;
   /** Vendas com algum item sem custo: entraram sem esse custo descontado. */
   semCusto: number;
+  /** Compra de equipamento do mês, que ficou fora do valor. Sem compra, ausente. */
+  compraDeEquipamento?: number;
 }
 
 const centavos = (v: number) => Math.round(v * 100) / 100;
@@ -86,13 +90,20 @@ export function lucroDoMes(
   mes: number,
 ): LucroDoMes {
   const n = numerosDoMes(lancamentos, ano, mes);
+  const chave = chaveDoMes(ano, mes);
+  const doMes = lancamentos.filter((l) => l.data && l.data.slice(0, 7) === chave);
+  const compraDeEquipamento = doMes
+    .filter((l) => l.tipo === "saida" && ehCompraDeEquipamento(l.categoria))
+    .reduce((soma, l) => soma + (Number.isFinite(Number(l.valor)) ? Number(l.valor) : 0), 0);
+  const foraDoValor = compraDeEquipamento > 0 ? centavos(compraDeEquipamento) : undefined;
   const caixa = (motivo: MotivoContaDeCaixa): LucroDoMes => ({
-    valor: centavos(n.sobra),
+    valor: centavos(n.sobra + compraDeEquipamento),
     base: n.entradas,
     fonte: "caixa",
     motivo,
     aReceber: 0,
     semCusto: 0,
+    compraDeEquipamento: foraDoValor,
   });
 
   if (vendas == null) return caixa("vendas_nao_lidas");
@@ -116,8 +127,6 @@ export function lucroDoMes(
     else recebido += liquido;
   }
 
-  const chave = chaveDoMes(ano, mes);
-  const doMes = lancamentos.filter((l) => l.data && l.data.slice(0, 7) === chave);
   const origemConhecida = doMes.every((l) => l.id_externo !== undefined);
 
   let avulsas = 0;
@@ -126,7 +135,13 @@ export function lucroDoMes(
     const valor = Number(l.valor);
     if (!Number.isFinite(valor)) continue;
     if (l.tipo === "entrada" && origemConhecida && !ehLancamentoDeVenda(l)) avulsas += valor;
-    if (l.tipo === "saida" && !ehCategoriaInsumos(l.categoria)) saidasSemInsumo += valor;
+    if (
+      l.tipo === "saida" &&
+      !ehCategoriaInsumos(l.categoria) &&
+      !ehCompraDeEquipamento(l.categoria)
+    ) {
+      saidasSemInsumo += valor;
+    }
   }
   // Sem a origem de cada lançamento, a avulsa é o que entrou além do que as
   // vendas recebidas deixaram no caixa.
@@ -139,6 +154,7 @@ export function lucroDoMes(
     motivo: null,
     aReceber: centavos(aReceber),
     semCusto,
+    compraDeEquipamento: foraDoValor,
   };
 }
 
@@ -163,9 +179,13 @@ export function legendaDoLucro(l: LucroDoMes): string {
           : `${l.semCusto} vendas sem custo, preencha em Produtos`;
     return `${base} · ${custo}`;
   }
+  const semMaquina = l.compraDeEquipamento ? " · sem a compra de equipamento" : "";
   if (l.motivo === "vendas_nao_lidas")
-    return "entradas menos saídas · as vendas não carregaram agora";
-  return l.base > 0 ? `${pct}% de tudo que entrou` : "registre entradas e saídas pra ver";
+    return `entradas menos saídas · as vendas não carregaram agora${semMaquina}`;
+  if (l.base > 0) return `${pct}% de tudo que entrou${semMaquina}`;
+  return l.compraDeEquipamento
+    ? "sem a compra de equipamento"
+    : "registre entradas e saídas pra ver";
 }
 
 type ClienteVendas = Pick<SupabaseClient<Database>, "from">;

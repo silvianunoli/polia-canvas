@@ -15,6 +15,7 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { registrar } from "@/lib/founder-eventos";
 import {
   acaoDaMeta,
+  CATEGORIA_EQUIPAMENTO,
   CATEGORIA_INSUMOS,
   custosFixosDoMes,
   custoMedio,
@@ -455,8 +456,8 @@ function ProjecaoPage() {
                   label="Custos fixos do mês (R$)"
                   hint={
                     insumosForaBase > 0
-                      ? `Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto.`
-                      : `Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto.`
+                      ? `Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
+                      : `Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
                   }
                   error={erroValidacao.custosFixos}
                 >

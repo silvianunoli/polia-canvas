@@ -80,6 +80,7 @@ export function Calculadora({
   onCancelarRecalculo,
   onAtualizado,
   fixosDoFinanceiro = null,
+  reservaEquipamentos = 0,
   perfilInicial,
   temPreco = true,
   onPrimeiroPrecoGuardado,
@@ -98,6 +99,8 @@ export function Calculadora({
   onAtualizado?: () => void;
   /** Saídas fixas do mês corrente no Financeiro, por item (null = sem dado). */
   fixosDoFinanceiro?: Record<ChaveCustoFixo, number> | null;
+  /** Reserva do mês da aba Equipamentos (0 = sem equipamento ou sem leitura). */
+  reservaEquipamentos?: number;
   /**
    * Aba de abertura pedida pela URL (?tipo=, vindo dos "Primeiros passos" do
    * Painel). O produto recalculado tem prioridade: a aba dele é a do breakdown.
@@ -876,6 +879,7 @@ export function Calculadora({
                 detalhe={fixosDetalhe}
                 onDetalhe={setFixosDetalhe}
                 doFinanceiro={fixosDoFinanceiro}
+                reservaEquipamentos={reservaEquipamentos}
               />
             </div>
             <CampoNum
@@ -932,6 +936,7 @@ export function Calculadora({
                 detalhe={fixosDetalhe}
                 onDetalhe={setFixosDetalhe}
                 doFinanceiro={fixosDoFinanceiro}
+                reservaEquipamentos={reservaEquipamentos}
               />
             </div>
             <CampoNum

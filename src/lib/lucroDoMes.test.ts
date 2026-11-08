@@ -6,7 +6,7 @@ import {
   type LancamentoComOrigem,
   type VendaDoMes,
 } from "./lucroDoMes";
-import { CATEGORIA_INSUMOS } from "./projecao.functions";
+import { CATEGORIA_EQUIPAMENTO, CATEGORIA_INSUMOS } from "./projecao.functions";
 
 const lanc = (
   tipo: "entrada" | "saida",
@@ -82,6 +82,44 @@ describe("lucroDoMes", () => {
       11,
     );
     expect(r.valor).toBe(16.16);
+  });
+
+  it("venda + compra de equipamento: a máquina não sai do lucro do mês", () => {
+    const r = lucroDoMes(
+      [entradaDaVenda, lanc("saida", 1359, { categoria: CATEGORIA_EQUIPAMENTO })],
+      [vendaCaderno()],
+      2026,
+      11,
+    );
+    expect(r.valor).toBe(16.16);
+  });
+
+  it("mês sem venda: a compra de equipamento fica fora, a outra saída não", () => {
+    const r = lucroDoMes(
+      [
+        lanc("saida", 1359, { categoria: CATEGORIA_EQUIPAMENTO }),
+        lanc("saida", 30, { categoria: "Internet" }),
+        lanc("saida", 2000, { categoria: CATEGORIA_EQUIPAMENTO, data: "2026-10-05" }),
+      ],
+      [],
+      2026,
+      11,
+    );
+    expect(r.valor).toBe(-30);
+    expect(r.fonte).toBe("caixa");
+    expect(r.compraDeEquipamento).toBe(1359);
+  });
+
+  it("legenda avisa quando a compra de equipamento ficou fora", () => {
+    const so = lucroDoMes(
+      [lanc("saida", 1359, { categoria: CATEGORIA_EQUIPAMENTO })],
+      [],
+      2026,
+      11,
+    );
+    expect(so.valor).toBe(0);
+    expect(legendaDoLucro(so)).toBe("sem a compra de equipamento");
+    expect(legendaDoLucro(lucroDoMes([], [], 2026, 11))).toBe("registre entradas e saídas pra ver");
   });
 
   it("entrada avulsa sem venda no mês: fica na conta de caixa", () => {

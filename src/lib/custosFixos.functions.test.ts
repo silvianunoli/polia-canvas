@@ -5,7 +5,12 @@ import {
   custosFixosPorItem,
   somarCustosFixos,
 } from "@/lib/custosFixos.functions";
-import { CATEGORIA_INSUMOS, custosFixosDoMes } from "@/lib/projecao.functions";
+import {
+  CATEGORIA_EQUIPAMENTO,
+  CATEGORIA_INSUMOS,
+  custosFixosDoMes,
+  ehCompraDeEquipamento,
+} from "@/lib/projecao.functions";
 import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 import {
@@ -47,6 +52,8 @@ describe("custosFixosPorItem", () => {
     lanc({ categoria: null, valor: 10 }),
     lanc({ categoria: CATEGORIA_INSUMOS, valor: 1000 }),
     lanc({ categoria: CATEGORIA_PRO_LABORE, valor: 3000 }),
+    lanc({ categoria: CATEGORIA_EQUIPAMENTO, valor: 1359 }),
+    lanc({ categoria: " compra de EQUIPAMENTO ", valor: 500 }),
     lanc({ tipo: "entrada", categoria: "Marketing", valor: 999 }),
     lanc({ data: "2026-09-30", categoria: "Marketing", valor: 999 }),
   ];
@@ -61,11 +68,17 @@ describe("custosFixosPorItem", () => {
     expect(r.contador).toBe(0);
   });
 
-  it("deixa insumo e pró-labore de fora e bate com o total da Projeção", () => {
+  it("deixa insumo, equipamento e pró-labore de fora e bate com o total da Projeção", () => {
     const r = custosFixosPorItem(lancamentos, 10, 2026);
     const soma = Object.values(r).reduce((a, b) => a + b, 0);
     expect(soma).toBe(1220);
     expect(soma).toBe(custosFixosDoMes(lancamentos, 10, 2026));
+  });
+
+  it("reconhece a compra de equipamento sem ligar pra caixa e espaço", () => {
+    expect(ehCompraDeEquipamento(" COMPRA de equipamento ")).toBe(true);
+    expect(ehCompraDeEquipamento("Reserva de equipamento")).toBe(false);
+    expect(ehCompraDeEquipamento(null)).toBe(false);
   });
 });
 

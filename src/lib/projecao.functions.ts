@@ -115,19 +115,37 @@ export function ehCategoriaInsumos(categoria: string | null | undefined): boolea
   );
 }
 
+// A compra da máquina acontece uma vez e o preço já entra como reserva por mês
+// (ONE-193). Contar a compra inteira no mês em que foi paga derrubava o lucro e
+// o ponto de empate daquele mês. A mesma string está na RPC
+// marcar_equipamento_comprado: renomear aqui exige migration.
+export const CATEGORIA_EQUIPAMENTO = "Compra de equipamento";
+
+export function ehCompraDeEquipamento(categoria: string | null | undefined): boolean {
+  if (!categoria) return false;
+  return (
+    categoria.trim().toLocaleLowerCase("pt-BR") === CATEGORIA_EQUIPAMENTO.toLocaleLowerCase("pt-BR")
+  );
+}
+
 function saidasDoMes(lancamentos: LancamentoResumo[], mes: number, ano: number) {
   return lancamentos.filter((l) => l.tipo === "saida" && pertenceAoMes(l.data, mes, ano));
 }
 
-// Custos fixos = saídas do mês menos pró-labore (tem linha própria) e menos
-// insumo (já está no custo de cada produto).
+// Custos fixos = saídas do mês menos pró-labore (tem linha própria), menos
+// insumo (já está no custo de cada produto) e menos compra de equipamento.
 export function custosFixosDoMes(
   lancamentos: LancamentoResumo[],
   mes: number,
   ano: number,
 ): number {
   return saidasDoMes(lancamentos, mes, ano)
-    .filter((l) => l.categoria !== CATEGORIA_PRO_LABORE && !ehCategoriaInsumos(l.categoria))
+    .filter(
+      (l) =>
+        l.categoria !== CATEGORIA_PRO_LABORE &&
+        !ehCategoriaInsumos(l.categoria) &&
+        !ehCompraDeEquipamento(l.categoria),
+    )
     .reduce((acc, l) => acc + Number(l.valor), 0);
 }
 

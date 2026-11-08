@@ -10,6 +10,8 @@ import { ehPlanoGratis } from "@/lib/planoGratis";
 import { buscarMetaDoMes } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { custosFixosPorItem } from "@/lib/custosFixos.functions";
+import { resumoEquipamentos } from "@/lib/equipamentos";
+import { useEquipamentos } from "@/components/produtos/equipamentosDados";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
@@ -122,6 +124,9 @@ function CalculadoraPage() {
       return custosFixosPorItem(lancamentos, mes, ano);
     },
   });
+
+  // Reserva da aba Equipamentos (ONE-193). Leitura opcional, como a de cima.
+  const equipamentosQuery = useEquipamentos(userId);
 
   // Quantos produtos ativos ela já tem, pra avisar da cota antes de abrir o
   // modal de salvar (só o Grátis tem teto).
@@ -268,6 +273,7 @@ function CalculadoraPage() {
         valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
         valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
         fixosDoFinanceiro={fixosFinanceiroQuery.data ?? null}
+        reservaEquipamentos={resumoEquipamentos(equipamentosQuery.data ?? []).reservaDoMes}
         produtoRecalcular={produtoRecalcular}
         // Catálogo do Grátis cheio (produtos vindos do Planejamento, sem
         // breakdown): o insert seria recusado, fica o fluxo de sempre com o aviso.

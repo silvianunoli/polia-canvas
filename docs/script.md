@@ -585,3 +585,15 @@ Achados no emulador depois do login. Correção e deploy autorizados pela Sil em
 - `BarraAbasApp`: a barra mora fora do wrapper `.polia-v3`, então `--bg`/`--line` não existiam (fundo transparente) e `--muted` caía no rosa do `:root`. Ganhou a classe `polia-v3`.
 - `push.ts` + `ConviteAvisosApp`: o app não pede mais a permissão do Android sozinho no login. A aba Hoje mostra o cartão "Avisos no celular" e o pedido do sistema só abre no toque; "Agora não" segura 7 dias.
 - `useUserMeta.primeiroNome`: saudação de Hoje e Painel vira "Boa noite." quando o nome não chegou ou não existe, em vez de "Boa noite, você."; a inicial do avatar sem nome volta a ser "P".
+
+## 2026-11-08 — Aba Equipamentos em Produtos (ONE-193)
+
+Nasceu no orçamento da Mundo de Aimer. Sil aprovou a proposta e o wireframe no chat em 08/11 ("Pode construir"). Commit, deploy e migration só com o ok dela.
+
+- Problema: compra de máquina lançada no Financeiro saía inteira do lucro do mês, entrava nos custos fixos da Projeção e "Puxar do Financeiro" a levava cheia pra Reserva de equipamento.
+- Migration `20261108200000_equipamentos.sql`: tabela só de leitura pela API, escrita por RPC. Comprado é quem tem `lancamento_id`; `on delete set null` devolve pra planejado quando a saída é excluída.
+- `lib/equipamentos.ts` (+ testes): reserva = preço / meses, somando comprados e planejados.
+- Categoria "Compra de equipamento" (`CATEGORIA_EQUIPAMENTO`): fora de `custosFixosDoMes`, `custosFixosPorItem` e `lucroDoMes`, inclusive na conta de caixa, porque é no mês sem venda que a loja compra a máquina.
+- Calculadora: botão "Usar a reserva dos equipamentos" no bloco de custos fixos. Produto salvo só muda ao recalcular.
+- Premium, Pro e beta: `temNumerosDoMes` na tela e `equipamentos_exigir_plano` no banco.
+- Tutoriais: Produtos, Calculadora, Painel, Financeiro e Planos. Novidade em `20261108200100_novidade_equipamentos.sql`, aplicar junto com o deploy.

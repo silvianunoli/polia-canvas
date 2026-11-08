@@ -121,6 +121,8 @@ export interface ContextoRaioX {
    * então não é entradas - saídas. A IA precisa saber pra não "corrigir".
    */
   resultadoPeloCusto?: boolean;
+  /** Compra de equipamento do mês: está nas saídas e fora do resultado. */
+  compraDeEquipamento?: number;
   metaAlvo: number | null;
   metaAtual: number | null;
   produtos: ProdutoPorSobra[];
@@ -142,6 +144,11 @@ export function montarPromptRaioX(ctx: ContextoRaioX): {
   if (ctx.resultadoPeloCusto) {
     partes.push(
       "O resultado desconta o custo de cada produto vendido (cadastrado em Produtos), por isso não é entradas menos saídas; compra de insumo não sai de novo.",
+    );
+  }
+  if (ctx.compraDeEquipamento) {
+    partes.push(
+      `Compra de equipamento no mês: ${moedaParaPrompt(ctx.compraDeEquipamento)}. Está nas saídas e fica fora do resultado, porque a máquina se paga aos poucos pela reserva.`,
     );
   }
   if (ctx.metaAlvo != null) {
@@ -443,6 +450,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
       saidas,
       resultado: lucro.valor,
       resultadoPeloCusto: lucro.fonte === "vendas",
+      compraDeEquipamento: lucro.compraDeEquipamento,
       metaAlvo: escolhaMeta.valorAlvo,
       // "Atingido" = entradas do mês lido, a mesma conta do Financeiro. Antes
       // ia o valor_atual de hoje, que é digitado à mão e não é do mês lido.
