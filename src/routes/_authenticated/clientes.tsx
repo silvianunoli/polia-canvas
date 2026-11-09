@@ -20,6 +20,7 @@ import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalOrcamento } from "@/components/orcamentos/ModalOrcamento";
+import { DaLojaOnline } from "@/components/clientes/DaLojaOnline";
 import { FichaCliente } from "@/components/clientes/FichaCliente";
 import { ModalLinkCaptura } from "@/components/clientes/ModalLinkCaptura";
 import { useCompradoPorCliente } from "@/components/clientes/dados";
@@ -389,6 +390,7 @@ function ClientesPage() {
           }}
         />
       )}
+      {user && <DaLojaOnline userId={user.id} />}
     </PaginaLogada>
   );
 }
