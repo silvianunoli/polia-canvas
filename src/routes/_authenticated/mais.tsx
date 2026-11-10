@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BookOpen,
+  CalendarClock,
   CalendarDays,
   ChevronRight,
   LayoutList,
@@ -27,6 +28,7 @@ import type { FerramentaInterna } from "@/lib/ferramentasInternas";
 import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
 import { useAppNativo } from "@/hooks/useAppNativo";
 import { AcoesTopo } from "@/components/avisos/AcoesTopo";
+import { useAgendaRedesVisivel } from "@/components/agenda-redes/comum";
 
 // Aba "Mais" do app Android (AND-07): tudo da Pólia One que não ganhou aba
 // própria. Mesma regra de cadeado do menu lateral (recursoLiberado): sem o
@@ -55,6 +57,7 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
     itens: [
       { to: "/vendas", label: "Vendas", icon: ShoppingBag },
       { to: "/catalogo", label: "Catálogo", icon: Store },
+      { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
       { to: "/financeiro", label: "Financeiro", icon: Wallet },
       { to: "/clientes", label: "Clientes", icon: Users },
       { to: "/produtos", label: "Produtos", icon: Package },
@@ -89,6 +92,7 @@ const LINHA =
 function Mais() {
   const meta = useUserMeta();
   const internas = useFerramentasInternas();
+  const agendaVisivel = useAgendaRedesVisivel();
   // No app Android não há barra de topo: Suporte e sino moram aqui (ONE-152).
   const appNativo = useAppNativo();
 
@@ -106,6 +110,7 @@ function Mais() {
             <ul className="divide-y divide-[var(--line)] overflow-hidden rounded-2xl border border-[var(--line)] bg-white">
               {grupo.itens
                 .filter((item) => !item.interna || internas[item.interna])
+                .filter((item) => item.to !== "/agenda-redes" || agendaVisivel)
                 .map((item) => {
                   const Icon = item.icon;
                   // Enquanto o plano não chega, sem cadeado (igual ao menu lateral):

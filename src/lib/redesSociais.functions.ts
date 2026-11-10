@@ -3,7 +3,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { registrarEventoSistema } from "@/lib/founder-eventos.server";
-import { temProjete } from "@/lib/planos";
+import { acessoAgendaRedes } from "@/lib/redesSociaisAcesso.server";
 import {
   NOME_REDE,
   REDES,
@@ -19,7 +19,6 @@ import {
   perfilInstagram,
   perfilTiktok,
   redeConfigurada,
-  redesAbertasParaClientes,
   revogarAutorizacaoTiktok,
   trocarCodigoDoInstagram,
   trocarCodigoTiktok,
@@ -59,16 +58,7 @@ async function lerConexao(userId: string, rede: Rede): Promise<ConexaoRow | null
 }
 
 async function acessoDaConta(userId: string): Promise<{ visivel: boolean; pro: boolean }> {
-  const { data } = await supabaseAdmin
-    .from("profiles")
-    .select("plano, is_admin")
-    .eq("id", userId)
-    .maybeSingle();
-  const perfil = data as { plano?: string | null; is_admin?: boolean | null } | null;
-  return {
-    visivel: redesAbertasParaClientes() || perfil?.is_admin === true,
-    pro: temProjete(perfil?.plano),
-  };
+  return acessoAgendaRedes(userId);
 }
 
 const SO_NO_PRO = "A Agenda das redes é do plano Pro.";

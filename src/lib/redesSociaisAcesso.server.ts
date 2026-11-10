@@ -5,7 +5,8 @@ import {
   acessoPertoDeVencer,
   type Rede,
 } from "../../supabase/functions/_shared/redesSociais.ts";
-import { renovarInstagram, renovarTokenTiktok } from "./redesSociaisApi";
+import { temProjete } from "@/lib/planos";
+import { redesAbertasParaClientes, renovarInstagram, renovarTokenTiktok } from "./redesSociaisApi";
 
 // Acesso à conta conectada (ONE-154): lê o token do Vault pela RPC só de
 // servidor e, no TikTok, renova quando faltam menos de 5 minutos (o de acesso
@@ -13,6 +14,25 @@ import { renovarInstagram, renovarTokenTiktok } from "./redesSociaisApi";
 // diário (redes-token-renovar); aqui só renova se estiver a 5 minutos do fim.
 // Se a rede recusar a renovação, a conexão vira "erro" e o card pede para
 // conectar de novo.
+
+/**
+ * Quem vê a Agenda das redes: admin, ou todo mundo com REDES_SOCIAIS_ABERTO=1.
+ * Quem usa: só o Pro. Os dois juntos (conexão e posts) leem daqui.
+ */
+export async function acessoAgendaRedes(
+  userId: string,
+): Promise<{ visivel: boolean; pro: boolean }> {
+  const { data } = await supabaseAdmin
+    .from("profiles")
+    .select("plano, is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+  const perfil = data as { plano?: string | null; is_admin?: boolean | null } | null;
+  return {
+    visivel: redesAbertasParaClientes() || perfil?.is_admin === true,
+    pro: temProjete(perfil?.plano),
+  };
+}
 
 export type AcessoRede = { conexaoId: string; accessToken: string; contaId: string | null };
 

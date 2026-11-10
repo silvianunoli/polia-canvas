@@ -1011,6 +1011,68 @@ const LISTA = [
     ],
   },
   {
+    // Agenda das redes (ONE-155): fica fora da lista até abrir pras clientes
+    // (depois das revisões do TikTok e da Meta). Hoje só admin vê a tela.
+    slug: "agenda-redes",
+    nome: "Agenda das redes",
+    grupo: "Clientes e rotina",
+    rota: "/agenda-redes",
+    abrir: "Abrir a Agenda das redes",
+    resumo:
+      "O post da marca preparado uma vez, com o horário marcado, pra sair no Instagram e no TikTok conectados em Configurações.",
+    plano: "Pro",
+    interno: true,
+    passos: [
+      {
+        titulo: "Conectar as redes",
+        itens: [
+          'Em Configurações, na parte de Integrações, clique em "Conectar" no card do Instagram ou do TikTok e entre com a conta da marca.',
+          "O Instagram precisa ser conta profissional (comercial ou de criador de conteúdo).",
+        ],
+      },
+      {
+        titulo: "Montar o post",
+        itens: [
+          'Em "Agenda das redes", clique em "Novo post". Em "1. Arquivos", clique em "Adicionar" e escolha as fotos ou um vídeo. As setas mudam a ordem.',
+          'Em "2. Onde sai", marque o Instagram, o TikTok ou os dois. Em "3. Legenda", escreva a legenda com as hashtags. Post de fotos no TikTok tem também um título opcional.',
+        ],
+      },
+      {
+        titulo: "Fazer as escolhas do TikTok",
+        itens: [
+          'Com o TikTok marcado, aparece "4. Regras do TikTok", com a conta onde o post vai sair. Em "Quem pode ver", escolha uma opção: nenhuma vem marcada, e o botão só libera depois da escolha.',
+          "Marque se quem segue pode comentar e, em vídeo, fazer dueto e stitch. O que a conta desligou no TikTok aparece em cinza.",
+          'Se o post divulga uma marca, produto ou serviço, ligue a opção e marque "Sua marca", "Conteúdo de marca" ou os dois. Conteúdo de marca não pode ficar "Só eu".',
+        ],
+      },
+      {
+        titulo: "Escolher o horário",
+        itens: [
+          'Em "Quando", escolha "Escolher dia e hora" (horário de Brasília, de 5 minutos até 60 dias à frente) ou "Publicar agora", e clique no botão.',
+          'Na lista, cada post mostra como está em cada rede: agendado, publicando, publicado (com "ver post") ou não publicou, com o motivo.',
+        ],
+      },
+    ],
+    bomSaber: [
+      "Foto vira JPEG antes de subir. O Instagram aceita até 10 fotos por post, de 4:5 (em pé) a 1,91:1 (deitada); o TikTok, até 35.",
+      "Vídeo em MP4 ou MOV, de 3 segundos até 50 MB. O TikTok ainda limita a duração de acordo com a conta.",
+      'Enquanto nenhuma rede começou a publicar, "Cancelar" tira o post da agenda e apaga os arquivos dele.',
+      '"Publicar agora" começa a sair em até 1 minuto. Depois que sai, o post pode levar alguns minutos pra aparecer no perfil.',
+      'Se a rede não confirmar se o post saiu, a Pólia não manda de novo: o post aparece como "não publicou", pedindo pra conferir no app da rede antes de agendar outra vez.',
+    ],
+    duvidas: [
+      {
+        pergunta: "Dá pra mandar story",
+        resposta: "Ainda não. A Agenda das redes publica foto, carrossel e vídeo.",
+      },
+      {
+        pergunta: "O que a Pólia faz na minha conta",
+        resposta:
+          "Só publica os posts agendados e confirmados na Pólia. Ela não lê mensagens, não comenta, não curte e não segue ninguém.",
+      },
+    ],
+  },
+  {
     slug: "calendario",
     nome: "Calendário",
     grupo: "Clientes e rotina",

@@ -1,5 +1,6 @@
 import {
   Calculator,
+  CalendarClock,
   CalendarDays,
   ClipboardList,
   CreditCard,
@@ -36,6 +37,7 @@ export const ICONE_TUTORIAL: Record<SlugTutorial, LucideIcon> = {
   anuncios: Link2,
   vendas: ShoppingBag,
   catalogo: Store,
+  "agenda-redes": CalendarClock,
   financeiro: Wallet,
   metas: Target,
   projecao: TrendingUp,

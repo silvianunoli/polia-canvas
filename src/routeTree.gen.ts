@@ -70,6 +70,7 @@ import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedPlanejamentoIndexRouteImport } from './routes/_authenticated/planejamento.index'
 import { Route as AuthenticatedComoUsarIndexRouteImport } from './routes/_authenticated/como-usar.index'
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
+import { Route as AuthenticatedAgendaRedesIndexRouteImport } from './routes/_authenticated/agenda-redes.index'
 import { Route as LojaSlugProdutoRouteImport } from './routes/loja.$slug.$produto'
 import { Route as AuthenticatedProdutosAnunciosRouteImport } from './routes/_authenticated/produtos_.anuncios'
 import { Route as AuthenticatedPlannerPedidosRouteImport } from './routes/_authenticated/planner.pedidos'
@@ -78,6 +79,7 @@ import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/
 import { Route as AuthenticatedComoUsarTourRouteImport } from './routes/_authenticated/como-usar.tour'
 import { Route as AuthenticatedComoUsarSlugRouteImport } from './routes/_authenticated/como-usar.$slug'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
+import { Route as AuthenticatedAgendaRedesNovoRouteImport } from './routes/_authenticated/agenda-redes.novo'
 import { Route as AuthenticatedProdutosAnunciosTiktokRouteImport } from './routes/_authenticated/produtos_.anuncios_.tiktok'
 import { Route as AuthenticatedProdutosAnunciosMercadoLivreRouteImport } from './routes/_authenticated/produtos_.anuncios_.mercado-livre'
 import { Route as AuthenticatedPlanejamentoModuloNRouteImport } from './routes/_authenticated/planejamento.modulo.$n'
@@ -398,6 +400,12 @@ const AuthenticatedChamadosIndexRoute =
     path: '/chamados/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAgendaRedesIndexRoute =
+  AuthenticatedAgendaRedesIndexRouteImport.update({
+    id: '/agenda-redes/',
+    path: '/agenda-redes/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const LojaSlugProdutoRoute = LojaSlugProdutoRouteImport.update({
   id: '/$produto',
   path: '/$produto',
@@ -444,6 +452,12 @@ const AuthenticatedChamadosIdRoute = AuthenticatedChamadosIdRouteImport.update({
   path: '/chamados/$id',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAgendaRedesNovoRoute =
+  AuthenticatedAgendaRedesNovoRouteImport.update({
+    id: '/agenda-redes/novo',
+    path: '/agenda-redes/novo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProdutosAnunciosTiktokRoute =
   AuthenticatedProdutosAnunciosTiktokRouteImport.update({
     id: '/produtos_/anuncios_/tiktok',
@@ -555,6 +569,7 @@ export interface FileRoutesByFullPath {
   '/blog/': typeof BlogIndexRoute
   '/quiz/': typeof QuizIndexRoute
   '/tutorial/': typeof TutorialIndexRoute
+  '/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
@@ -563,6 +578,7 @@ export interface FileRoutesByFullPath {
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
+  '/agenda-redes/': typeof AuthenticatedAgendaRedesIndexRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/como-usar/': typeof AuthenticatedComoUsarIndexRoute
   '/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
@@ -633,6 +649,7 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogIndexRoute
   '/quiz': typeof QuizIndexRoute
   '/tutorial': typeof TutorialIndexRoute
+  '/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
@@ -641,6 +658,7 @@ export interface FileRoutesByTo {
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
+  '/agenda-redes': typeof AuthenticatedAgendaRedesIndexRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
   '/como-usar': typeof AuthenticatedComoUsarIndexRoute
   '/planejamento': typeof AuthenticatedPlanejamentoIndexRoute
@@ -714,6 +732,7 @@ export interface FileRoutesById {
   '/blog/': typeof BlogIndexRoute
   '/quiz/': typeof QuizIndexRoute
   '/tutorial/': typeof TutorialIndexRoute
+  '/_authenticated/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/_authenticated/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
@@ -722,6 +741,7 @@ export interface FileRoutesById {
   '/_authenticated/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
   '/_authenticated/produtos_/anuncios': typeof AuthenticatedProdutosAnunciosRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
+  '/_authenticated/agenda-redes/': typeof AuthenticatedAgendaRedesIndexRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
   '/_authenticated/como-usar/': typeof AuthenticatedComoUsarIndexRoute
   '/_authenticated/planejamento/': typeof AuthenticatedPlanejamentoIndexRoute
@@ -795,6 +815,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/quiz/'
     | '/tutorial/'
+    | '/agenda-redes/novo'
     | '/chamados/$id'
     | '/como-usar/$slug'
     | '/como-usar/tour'
@@ -803,6 +824,7 @@ export interface FileRouteTypes {
     | '/planner/pedidos'
     | '/produtos/anuncios'
     | '/loja/$slug/$produto'
+    | '/agenda-redes/'
     | '/chamados/'
     | '/como-usar/'
     | '/planejamento/'
@@ -873,6 +895,7 @@ export interface FileRouteTypes {
     | '/blog'
     | '/quiz'
     | '/tutorial'
+    | '/agenda-redes/novo'
     | '/chamados/$id'
     | '/como-usar/$slug'
     | '/como-usar/tour'
@@ -881,6 +904,7 @@ export interface FileRouteTypes {
     | '/planner/pedidos'
     | '/produtos/anuncios'
     | '/loja/$slug/$produto'
+    | '/agenda-redes'
     | '/chamados'
     | '/como-usar'
     | '/planejamento'
@@ -953,6 +977,7 @@ export interface FileRouteTypes {
     | '/blog/'
     | '/quiz/'
     | '/tutorial/'
+    | '/_authenticated/agenda-redes/novo'
     | '/_authenticated/chamados/$id'
     | '/_authenticated/como-usar/$slug'
     | '/_authenticated/como-usar/tour'
@@ -961,6 +986,7 @@ export interface FileRouteTypes {
     | '/_authenticated/planner/pedidos'
     | '/_authenticated/produtos_/anuncios'
     | '/loja/$slug/$produto'
+    | '/_authenticated/agenda-redes/'
     | '/_authenticated/chamados/'
     | '/_authenticated/como-usar/'
     | '/_authenticated/planejamento/'
@@ -1443,6 +1469,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChamadosIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/agenda-redes/': {
+      id: '/_authenticated/agenda-redes/'
+      path: '/agenda-redes'
+      fullPath: '/agenda-redes/'
+      preLoaderRoute: typeof AuthenticatedAgendaRedesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/loja/$slug/$produto': {
       id: '/loja/$slug/$produto'
       path: '/$produto'
@@ -1497,6 +1530,13 @@ declare module '@tanstack/react-router' {
       path: '/chamados/$id'
       fullPath: '/chamados/$id'
       preLoaderRoute: typeof AuthenticatedChamadosIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/agenda-redes/novo': {
+      id: '/_authenticated/agenda-redes/novo'
+      path: '/agenda-redes/novo'
+      fullPath: '/agenda-redes/novo'
+      preLoaderRoute: typeof AuthenticatedAgendaRedesNovoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/produtos_/anuncios_/tiktok': {
@@ -1588,6 +1628,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRaioxRoute: typeof AuthenticatedRaioxRoute
   AuthenticatedUpgradeRoute: typeof AuthenticatedUpgradeRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
+  AuthenticatedAgendaRedesNovoRoute: typeof AuthenticatedAgendaRedesNovoRoute
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedComoUsarSlugRoute: typeof AuthenticatedComoUsarSlugRoute
   AuthenticatedComoUsarTourRoute: typeof AuthenticatedComoUsarTourRoute
@@ -1595,6 +1636,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
   AuthenticatedPlannerPedidosRoute: typeof AuthenticatedPlannerPedidosRoute
   AuthenticatedProdutosAnunciosRoute: typeof AuthenticatedProdutosAnunciosRoute
+  AuthenticatedAgendaRedesIndexRoute: typeof AuthenticatedAgendaRedesIndexRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedComoUsarIndexRoute: typeof AuthenticatedComoUsarIndexRoute
   AuthenticatedPlanejamentoIndexRoute: typeof AuthenticatedPlanejamentoIndexRoute
@@ -1633,6 +1675,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRaioxRoute: AuthenticatedRaioxRoute,
   AuthenticatedUpgradeRoute: AuthenticatedUpgradeRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
+  AuthenticatedAgendaRedesNovoRoute: AuthenticatedAgendaRedesNovoRoute,
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
   AuthenticatedComoUsarSlugRoute: AuthenticatedComoUsarSlugRoute,
   AuthenticatedComoUsarTourRoute: AuthenticatedComoUsarTourRoute,
@@ -1641,6 +1684,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
   AuthenticatedPlannerPedidosRoute: AuthenticatedPlannerPedidosRoute,
   AuthenticatedProdutosAnunciosRoute: AuthenticatedProdutosAnunciosRoute,
+  AuthenticatedAgendaRedesIndexRoute: AuthenticatedAgendaRedesIndexRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedComoUsarIndexRoute: AuthenticatedComoUsarIndexRoute,
   AuthenticatedPlanejamentoIndexRoute: AuthenticatedPlanejamentoIndexRoute,

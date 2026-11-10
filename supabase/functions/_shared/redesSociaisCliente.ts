@@ -20,6 +20,7 @@ import {
   type RespostaTrocaInstagram,
   type TokensTiktok,
 } from "./redesSociais.ts";
+import type { RespostaCriadorTiktok } from "./redesPosts.ts";
 
 export const PRAZO_CHAMADA_MS = 10_000;
 
@@ -110,6 +111,31 @@ export async function perfilTiktok(accessToken: string): Promise<PerfilRede> {
     info as { data?: { user?: Record<string, unknown> } } | null,
     criadora as { data?: Record<string, unknown> } | null,
   );
+}
+
+/**
+ * creator_info da hora (ONE-155): as regras do TikTok mandam buscar ao abrir a
+ * tela de postar e de novo antes de enviar. null = não deu pra falar com o TikTok.
+ */
+export async function lerCriadorTiktok(accessToken: string): Promise<RespostaCriadorTiktok | null> {
+  try {
+    const res = await fetch(`${TIKTOK_API}/post/publish/creator_info/query/`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json; charset=UTF-8",
+      },
+      signal: AbortSignal.timeout(PRAZO_CHAMADA_MS),
+    });
+    const r = (await lerJson(res)) as RespostaCriadorTiktok;
+    if (!res.ok && !r.error) {
+      console.warn("TikTok creator_info:", res.status);
+      return null;
+    }
+    return r;
+  } catch {
+    return null;
+  }
 }
 
 /** Desconectar tira a autorização no TikTok também. Melhor esforço: não trava a saída. */

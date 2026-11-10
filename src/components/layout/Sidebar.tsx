@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   PlayCircle,
+  CalendarClock,
   CalendarDays,
   Lock,
   TrendingUp,
@@ -38,6 +39,7 @@ import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
 import { useCanaisConectados } from "@/hooks/useCanaisConectados";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { rotaVisivel } from "@/lib/ferramentasInternas";
+import { useAgendaRedesVisivel } from "@/components/agenda-redes/comum";
 import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 
 // Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
@@ -58,6 +60,8 @@ const NAV: NavItem[] = [
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   // Loja do catálogo (ONE-148), só no Pro: o cadeado vem de recursoLiberado.
   { to: "/catalogo", label: "Catálogo", icon: Store },
+  // Agenda das redes (ONE-155): só aparece pra quem o servidor deixa ver.
+  { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
   { to: "/calculadora", label: "Calculadora", icon: Calculator },
   { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
@@ -119,6 +123,7 @@ function Body({
   const anunciosAtivo = isActive(ANUNCIOS_CANAIS, pathname);
   // Planner e Caderno (28/10/2026) e Planejamento (31/10/2026) só pra conta interna.
   const acessoInterno = useFerramentasInternas();
+  const agendaVisivel = useAgendaRedesVisivel();
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -188,7 +193,10 @@ function Body({
           aria-label="Navegação principal"
           className="flex flex-1 flex-col gap-1 px-2 py-2 md:gap-0"
         >
-          {NAV.filter((item) => rotaVisivel(item.to, acessoInterno)).map((item) => {
+          {NAV.filter(
+            (item) =>
+              rotaVisivel(item.to, acessoInterno) && (item.to !== "/agenda-redes" || agendaVisivel),
+          ).map((item) => {
             // Em "Anúncios nos canais" o destaque fica no subnível, não em Produtos.
             const active =
               isActive(item.to, pathname) && !(item.to === "/produtos" && anunciosAtivo);

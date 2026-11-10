@@ -82,6 +82,7 @@ function respostaRobots(): Response {
 // devolve 200 com a casca da tela mesmo sem sessão (o dado em si só chega via
 // RLS, autenticado), então sem isso o Google poderia indexar a tela logada.
 const PREFIXOS_AUTENTICADOS = [
+  "/agenda-redes",
   "/aimer",
   "/assinar",
   "/caderno",
@@ -209,6 +210,12 @@ export default {
       url.hostname = HOSTNAME_CANONICO;
       url.port = "";
       return Response.redirect(url.toString(), 301);
+    }
+    // Foto de post da Agenda das redes que o TikTok baixa (ONE-156). Fica
+    // depois do 301: o prefixo verificado no TikTok é o do domínio oficial.
+    if (url.pathname.startsWith("/api/redes/midia/")) {
+      const { responderMidiaRedes } = await import("./lib/redesMidia.server");
+      return await responderMidiaRedes(request, url);
     }
     if (url.pathname === "/sitemap.xml") return await respostaSitemap();
     if (url.pathname === "/robots.txt") return respostaRobots();

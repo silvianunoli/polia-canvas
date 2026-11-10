@@ -597,3 +597,26 @@ Nasceu no orçamento da Mundo de Aimer. Sil aprovou a proposta e o wireframe no 
 - Calculadora: botão "Usar a reserva dos equipamentos" no bloco de custos fixos. Produto salvo só muda ao recalcular.
 - Premium, Pro e beta: `temNumerosDoMes` na tela e `equipamentos_exigir_plano` no banco.
 - Tutoriais: Produtos, Calculadora, Painel, Financeiro e Planos. Novidade em `20261108200100_novidade_equipamentos.sql`, aplicar junto com o deploy.
+
+## 2026-11-10 — Agenda das redes, fase 3: tela de criar e agendar post (ONE-155)
+
+Sil, 09/11: "Sim, pode construir" e, depois do wireframe em cinza, "Aprovado, pode codar". Em 09/11 ela também mandou tornar oi@usepolia.com.br admin pelo banco (feito), então a Agenda aparece nessa conta sem lista nova. Commit, deploy e migration só com o ok dela.
+
+- Duas telas: `/agenda-redes` (lista dos posts com o status por rede) e `/agenda-redes/novo` (arquivos, onde sai, legenda, regras do TikTok, quando). Só Pro, e até as revisões do TikTok e da Meta só admin ou `REDES_SOCIAIS_ABERTO=1`.
+- Regras puras em `supabase/functions/_shared/redesPosts.ts`, pra o publicador da fase 4 usar as mesmas.
+- Regras do TikTok (Content Sharing Guidelines, lidas em 09/11): `creator_info` buscado ao abrir e de novo ao agendar; privacidade sem padrão; comentário, dueto e stitch desmarcados e travados quando a conta desligou; conteúdo comercial com "Sua marca" e "Conteúdo de marca", que não pode ser privado; frase da Confirmação de Uso de Música; duração máxima da conta.
+- Fotos viram JPEG de até 1080 px no navegador (o Instagram só aceita JPEG; o TikTok aceita JPEG até 1080p). Vídeo até 50 MB (limite padrão de arquivo do Storage; subir depois de conferir no painel).
+- Nesta fase nada publica: o post fica "agendado" até o publicador (ONE-156) existir.
+- Sem novidade no sino: a tela não aparece pras clientes. A novidade entra quando abrir (ONE-159).
+
+## 2026-11-10 — Agenda das redes, fase 4: o publicador (ONE-156)
+
+Sil, 10/11: "Sim, seguir" (fazer o publicador antes de subir a fase 3). Commit, deploy, migration e segredo só com o ok dela.
+
+- Edge function `redes-publicar`, chamada a cada minuto pelo pg_cron só quando há trabalho. Mesmo segredo do Vault da `redes-token-renovar`.
+- Fila e trava no banco (`redes_publicar_tomar`, `for update skip locked`): o post agendado vencido vira "publicando" numa transação, então o cancelar e a rodada seguinte não pegam o mesmo post. Cada destino tem trava de 2 minutos.
+- Contra post duplicado (lição da Fábrica, 28/10): a hora em que o pedido de publicar sai pra rede fica gravada antes da chamada. Se a rodada morrer depois disso sem guardar a resposta, o destino vira "não publicou" pedindo pra conferir na rede, nunca reenvia sozinho.
+- TikTok: `creator_info` de novo antes de enviar e as mesmas regras da fase 3 com as escolhas gravadas. Vídeo sobe pelo FILE_UPLOAD (um pedaço só, até 50 MB). Foto só sai por PULL_FROM_URL de domínio verificado: endereço `one.usepolia.com.br/api/redes/midia/<token>`, servido pelo Worker com token de uso curto gravado na mídia. Falta verificar esse prefixo no portal do TikTok.
+- Instagram: contêiner (foto, carrossel ou Reels) com link assinado do Storage, confere o processamento nas rodadas seguintes e só então `media_publish`.
+- Status do post sai dos destinos: tudo publicado = publicado; parte = parcial; nada = erro.
+- `agendarPostRedes` grava o post como rascunho e só vira "agendado" depois das mídias e destinos, pra o publicador não pegar post pela metade.
