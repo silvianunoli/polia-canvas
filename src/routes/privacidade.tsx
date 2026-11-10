@@ -59,6 +59,12 @@ const DADOS = [
       "Nome de exibição, @ ou número de telefone, identificador da conta no canal e o conteúdo da conversa (texto, fotos, áudios e arquivos), quando alguém escreve, comenta, responde ou menciona a Pólia",
     origem: "Enviado pela própria pessoa no Instagram ou no WhatsApp",
   },
+  {
+    categoria: "Contas do TikTok e do Instagram conectadas (Agenda das redes)",
+    exemplos:
+      "Identificador da conta na rede (open_id no TikTok, id no Instagram), @, nome de exibição, foto de perfil, permissões concedidas e as chaves de acesso, guardadas criptografadas. Também os vídeos, fotos, legendas e escolhas de cada post agendado",
+    origem: "Autorizado pela titular ao conectar a conta, e enviado por ela ao montar cada post",
+  },
 ];
 
 /** Leitura confortável pro texto corrido do documento jurídico. */
@@ -92,7 +98,7 @@ function PrivacidadePage() {
                 Política de Privacidade
               </h1>
               <p className="mt-3 text-[14px] text-[var(--ink-soft)]">
-                Última atualização: 02/11/2026 · Alinhada à LGPD (Lei 13.709/2018)
+                Última atualização: 10/11/2026 · Alinhada à LGPD (Lei 13.709/2018)
               </p>
               <p className="mt-6 text-[17px] leading-[1.7] text-[var(--ink-soft)]">
                 Os dados são da titular. Esta política explica, sem enrolação, o que a Pólia coleta,
@@ -254,6 +260,16 @@ function PrivacidadePage() {
                   contrato. Essas mensagens não são usadas para publicidade nem vendidas.
                 </li>
                 <li>
+                  <strong className="text-[var(--ink)]">
+                    Publicar no TikTok e no Instagram o que a titular agendou
+                  </strong>{" "}
+                  (Agenda das redes) · base: execução de contrato. A Pólia usa a conta conectada só
+                  pra mostrar qual conta vai publicar, ler as opções de publicação que a rede
+                  permite e publicar os posts que a própria titular montou e confirmou, no horário
+                  que ela escolheu. A Pólia não lê mensagens, não comenta, não curte, não segue
+                  ninguém e não publica nada que a titular não tenha agendado.
+                </li>
+                <li>
                   <strong className="text-[var(--ink)]">Cumprir obrigações legais</strong> · base:
                   obrigação legal.
                 </li>
@@ -319,6 +335,13 @@ function PrivacidadePage() {
                   : entrega das mensagens trocadas com a Pólia nesses canais, que passam pela
                   infraestrutura da própria Meta
                 </li>
+                <li>
+                  <strong className="text-[var(--ink)]">TikTok e Meta (Instagram)</strong>, quando a
+                  titular conecta a conta na Agenda das redes: o vídeo ou as fotos, a legenda e as
+                  escolhas de cada post vão para a rede escolhida, no horário marcado, pelas APIs
+                  oficiais (Content Posting API do TikTok e API do Instagram). Depois de publicado,
+                  o post segue as regras de cada rede
+                </li>
                 <li>Autoridades, quando exigido por lei</li>
               </ul>
               <p>Esses parceiros tratam os dados como operadores, seguindo as nossas instruções.</p>
@@ -356,15 +379,24 @@ function PrivacidadePage() {
                 As conversas pelo Instagram e pelo WhatsApp ficam guardadas enquanto houver
                 relacionamento com a pessoa e são apagadas a pedido, pelo contato da seção 12.
               </p>
+              <p>
+                As chaves de acesso de uma conta do TikTok ou do Instagram são apagadas quando a
+                titular desconecta a conta em{" "}
+                <strong className="text-[var(--ink)]">Configurações → Integrações</strong> (no
+                TikTok, a autorização também é revogada na hora) ou quando exclui a conta da Pólia.
+                Ela também pode tirar o acesso pelo próprio app do TikTok ou do Instagram. Os
+                arquivos de um post cancelado são apagados na hora; os dos outros posts ficam
+                guardados enquanto a conta existir.
+              </p>
 
               <h2 id="internacional">9. Transferência internacional</h2>
               <p>
                 Os dados são armazenados em servidores nos Estados Unidos (Supabase, região US
                 East). Provedores como Cloudflare, Stripe, Resend, Google (Analytics, Ads e Gemini),
-                Meta (Meta Ads, Instagram e WhatsApp) e TikTok (TikTok Ads) também podem processar
-                dados fora do Brasil. Nesses casos, a transferência se apoia nas garantias adequadas
-                previstas na LGPD (art. 33), como as cláusulas contratuais e os acordos de
-                tratamento de dados (DPA) desses provedores.
+                Meta (Meta Ads, Instagram e WhatsApp) e TikTok (TikTok Ads e publicação dos posts
+                agendados) também podem processar dados fora do Brasil. Nesses casos, a
+                transferência se apoia nas garantias adequadas previstas na LGPD (art. 33), como as
+                cláusulas contratuais e os acordos de tratamento de dados (DPA) desses provedores.
               </p>
 
               <h2 id="encarregado">10. Encarregado (DPO)</h2>

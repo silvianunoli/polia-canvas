@@ -620,3 +620,12 @@ Sil, 10/11: "Sim, seguir" (fazer o publicador antes de subir a fase 3). Commit, 
 - Instagram: contêiner (foto, carrossel ou Reels) com link assinado do Storage, confere o processamento nas rodadas seguintes e só então `media_publish`.
 - Status do post sai dos destinos: tudo publicado = publicado; parte = parcial; nada = erro.
 - `agendarPostRedes` grava o post como rascunho e só vira "agendado" depois das mídias e destinos, pra o publicador não pegar post pela metade.
+
+## 2026-11-10 — Privacidade cobre a Agenda das redes (ONE-157)
+
+Sil, 10/11: "Aprovo, pode subir". Exigência da auditoria do TikTok (e da App Review da Meta): a política precisa dizer o que a Pólia guarda da conta conectada.
+
+- Tabela de dados: linha "Contas do TikTok e do Instagram conectadas (Agenda das redes)", com identificador, @, nome, foto, permissões, chaves criptografadas e os arquivos de cada post.
+- Uso: publicar só o que a titular agendou; a Pólia não lê mensagens, não comenta, não curte, não segue.
+- Compartilhamento com TikTok e Meta pelas APIs oficiais; retenção (desconectar apaga as chaves e revoga no TikTok; arquivo de post cancelado sai na hora); transferência internacional; data 10/11/2026.
+- Primeiro post real saiu em 10/11 pela conta de teste @sil.noli (Sandbox, "Só eu"); vídeo da auditoria e rascunho do Production prontos no portal, envio com a Sil.
