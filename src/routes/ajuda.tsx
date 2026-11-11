@@ -575,7 +575,7 @@ function AjudaPage() {
                         {/* Honeypot anti-spam: escondido de humanos e de leitores de tela. */}
                         <input
                           type="text"
-                          name="empresa_site"
+                          name="xq_campo_7"
                           tabIndex={-1}
                           autoComplete="off"
                           aria-hidden="true"
