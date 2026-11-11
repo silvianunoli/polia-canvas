@@ -39,7 +39,8 @@ const ERRO_REDE =
   "A Pólia não conseguiu salvar agora. O que foi digitado continua aqui, é só tentar de novo.";
 const ERRO_EMAIL = "Esse e-mail não parece completo. Confere o endereço?";
 const ERRO_TELEFONE = "Esse WhatsApp parece incompleto. Confere o DDD e o número?";
-const ERRO_TURNSTILE = "Falta confirmar ali em cima que não é um robô.";
+const ERRO_TURNSTILE = "Falta marcar a verificação da Cloudflare, o quadradinho logo acima do botão.";
+const ERRO_CONSENT = "Falta marcar a autorização pra Pólia mandar o material.";
 const ERRO_TURNSTILE_CARREGAMENTO =
   "A verificação de segurança não carregou. Pode ser bloqueador de anúncios ou de privacidade ativo. Recarrega a página e tenta de novo.";
 
@@ -196,6 +197,7 @@ function CartaoPedido({
   const [aceite, setAceite] = useState(false);
   const [erroEmail, setErroEmail] = useState<string | undefined>();
   const [erroTelefone, setErroTelefone] = useState<string | undefined>();
+  const [erroConsent, setErroConsent] = useState<string | undefined>();
   const [erroEnvio, setErroEnvio] = useState<string | undefined>();
   const [enviando, setEnviando] = useState(false);
   const [hp, setHp] = useState("");
@@ -212,7 +214,10 @@ function CartaoPedido({
   };
   const evento = { isca: isca.slug, origem: origem ?? isca.origemPadrao };
 
-  const podeEnviar = emailValido(email) && telefoneValido(telefone) && aceite && !enviando;
+  // O botão só trava enquanto envia. Antes ele ficava apagado até tudo estar
+  // certo e o clique "não fazia nada" (Sil, 11/11): agora o clique sempre
+  // responde e aponta o que falta.
+  const podeEnviar = !enviando;
 
   // A tela troca no lugar do formulário; o foco vai junto pra quem usa leitor
   // de tela ouvir o "pronto" em vez de silêncio.
@@ -233,9 +238,14 @@ function CartaoPedido({
       telefoneRef.current?.focus();
       return;
     }
-    if (!aceite) return;
+    if (!aceite) {
+      setErroConsent(ERRO_CONSENT);
+      document.getElementById(ids.consent)?.focus();
+      return;
+    }
     if (!ts.token) {
       setErroEnvio(ERRO_TURNSTILE);
+      ts.containerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
@@ -443,7 +453,12 @@ function CartaoPedido({
                 id={ids.consent}
                 type="checkbox"
                 checked={aceite}
-                onChange={(e) => setAceite(e.target.checked)}
+                onChange={(e) => {
+                  setAceite(e.target.checked);
+                  if (e.target.checked) setErroConsent(undefined);
+                }}
+                aria-invalid={!!erroConsent || undefined}
+                aria-describedby={erroConsent ? `${ids.consent}-erro` : undefined}
                 className="mt-[2px] h-[18px] w-[18px] flex-none accent-[var(--secondary)]"
               />
               <span>
@@ -460,6 +475,7 @@ function CartaoPedido({
                 </Link>
               </span>
             </div>
+            <FieldError id={`${ids.consent}-erro`}>{erroConsent}</FieldError>
 
             <TurnstileWidget containerRef={ts.containerRef} />
             {ts.erroCarregamento && (
