@@ -200,7 +200,6 @@ function CartaoPedido({
   const [erroConsent, setErroConsent] = useState<string | undefined>();
   const [erroEnvio, setErroEnvio] = useState<string | undefined>();
   const [enviando, setEnviando] = useState(false);
-  const [hp, setHp] = useState("");
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const telefoneRef = useRef<HTMLInputElement>(null);
@@ -227,7 +226,9 @@ function CartaoPedido({
 
   async function enviar(e: FormEvent) {
     e.preventDefault();
-    if (hp) return;
+    // Sem armadilha anti-robô de campo escondido nesta página (Sil, 11/11): o
+    // autopreenchimento do Chrome preenchia o campo e o envio parava calado. A
+    // proteção é o Turnstile, validado no servidor.
     if (!emailValido(email)) {
       setErroEmail(ERRO_EMAIL);
       emailRef.current?.focus();
@@ -374,20 +375,6 @@ function CartaoPedido({
           )}
 
           <div className="mt-6 grid gap-4">
-            <input
-              type="text"
-              // Nome sem sentido de propósito (Sil, 11/11): "empresa_site" era
-              // preenchido pelo autopreenchimento do Chrome (empresa/site), a
-              // armadilha disparava e o envio parava calado pra gente de verdade.
-              name="xq_campo_7"
-              tabIndex={-1}
-              autoComplete="off"
-              aria-hidden="true"
-              value={hp}
-              onChange={(e) => setHp(e.target.value)}
-              className="absolute left-[-9999px] h-0 w-0 opacity-0"
-            />
-
             <div>
               <label
                 htmlFor={ids.email}
