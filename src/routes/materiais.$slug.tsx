@@ -376,7 +376,10 @@ function CartaoPedido({
           <div className="mt-6 grid gap-4">
             <input
               type="text"
-              name="empresa_site"
+              // Nome sem sentido de propósito (Sil, 11/11): "empresa_site" era
+              // preenchido pelo autopreenchimento do Chrome (empresa/site), a
+              // armadilha disparava e o envio parava calado pra gente de verdade.
+              name="xq_campo_7"
               tabIndex={-1}
               autoComplete="off"
               aria-hidden="true"
