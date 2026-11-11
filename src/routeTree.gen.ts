@@ -32,6 +32,7 @@ import { Route as TutorialTourRouteImport } from './routes/tutorial.tour'
 import { Route as TutorialSlugRouteImport } from './routes/tutorial.$slug'
 import { Route as QuizSplatRouteImport } from './routes/quiz.$'
 import { Route as OTokenRouteImport } from './routes/o.$token'
+import { Route as MateriaisSlugRouteImport } from './routes/materiais.$slug'
 import { Route as LojaSlugRouteImport } from './routes/loja.$slug'
 import { Route as LSlugRouteImport } from './routes/l.$slug'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
@@ -202,6 +203,11 @@ const QuizSplatRoute = QuizSplatRouteImport.update({
 const OTokenRoute = OTokenRouteImport.update({
   id: '/o/$token',
   path: '/o/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MateriaisSlugRoute = MateriaisSlugRouteImport.update({
+  id: '/materiais/$slug',
+  path: '/materiais/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LojaSlugRoute = LojaSlugRouteImport.update({
@@ -562,6 +568,7 @@ export interface FileRoutesByFullPath {
   '/blog/$slug': typeof BlogSlugRoute
   '/l/$slug': typeof LSlugRoute
   '/loja/$slug': typeof LojaSlugRouteWithChildren
+  '/materiais/$slug': typeof MateriaisSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/tutorial/$slug': typeof TutorialSlugRoute
@@ -642,6 +649,7 @@ export interface FileRoutesByTo {
   '/auth/verificacao': typeof AuthVerificacaoRoute
   '/blog/$slug': typeof BlogSlugRoute
   '/l/$slug': typeof LSlugRoute
+  '/materiais/$slug': typeof MateriaisSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/tutorial/$slug': typeof TutorialSlugRoute
@@ -725,6 +733,7 @@ export interface FileRoutesById {
   '/blog/$slug': typeof BlogSlugRoute
   '/l/$slug': typeof LSlugRoute
   '/loja/$slug': typeof LojaSlugRouteWithChildren
+  '/materiais/$slug': typeof MateriaisSlugRoute
   '/o/$token': typeof OTokenRoute
   '/quiz/$': typeof QuizSplatRoute
   '/tutorial/$slug': typeof TutorialSlugRoute
@@ -808,6 +817,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/l/$slug'
     | '/loja/$slug'
+    | '/materiais/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/tutorial/$slug'
@@ -888,6 +898,7 @@ export interface FileRouteTypes {
     | '/auth/verificacao'
     | '/blog/$slug'
     | '/l/$slug'
+    | '/materiais/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/tutorial/$slug'
@@ -970,6 +981,7 @@ export interface FileRouteTypes {
     | '/blog/$slug'
     | '/l/$slug'
     | '/loja/$slug'
+    | '/materiais/$slug'
     | '/o/$token'
     | '/quiz/$'
     | '/tutorial/$slug'
@@ -1031,6 +1043,7 @@ export interface RootRouteChildren {
   BlogSlugRoute: typeof BlogSlugRoute
   LSlugRoute: typeof LSlugRoute
   LojaSlugRoute: typeof LojaSlugRouteWithChildren
+  MateriaisSlugRoute: typeof MateriaisSlugRoute
   OTokenRoute: typeof OTokenRoute
   QuizSplatRoute: typeof QuizSplatRoute
   TutorialSlugRoute: typeof TutorialSlugRoute
@@ -1201,6 +1214,13 @@ declare module '@tanstack/react-router' {
       path: '/o/$token'
       fullPath: '/o/$token'
       preLoaderRoute: typeof OTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materiais/$slug': {
+      id: '/materiais/$slug'
+      path: '/materiais/$slug'
+      fullPath: '/materiais/$slug'
+      preLoaderRoute: typeof MateriaisSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/loja/$slug': {
@@ -1754,6 +1774,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogSlugRoute: BlogSlugRoute,
   LSlugRoute: LSlugRoute,
   LojaSlugRoute: LojaSlugRouteWithChildren,
+  MateriaisSlugRoute: MateriaisSlugRoute,
   OTokenRoute: OTokenRoute,
   QuizSplatRoute: QuizSplatRoute,
   TutorialSlugRoute: TutorialSlugRoute,

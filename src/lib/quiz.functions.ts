@@ -45,9 +45,9 @@ export type ResultadoGravacao =
 // é validado como uuid antes de encostar no banco, e a resposta NUNCA devolve
 // o e-mail da linha: quem tem o token pode sair da lista, não ler quem é.
 //
-// Atende as DUAS iscas (quiz_leads e manual_leads): o link do rodapé é o mesmo
-// /descadastrar nos dois e-mails, e os tokens são uuid aleatórios, então um
-// token pertence a uma tabela só. Procura na primeira; não achou, na segunda.
+// Atende as TRÊS listas (quiz_leads, manual_leads e isca_leads): o link do rodapé é o mesmo
+// /descadastrar em todos os e-mails, e os tokens são uuid aleatórios, então um
+// token pertence a uma tabela só. Procura uma por vez, na ordem.
 //
 // Sem Turnstile aqui de propósito: exigir prova de humanidade pra alguém sair
 // de uma lista é o padrão escuro que a LGPD existe pra evitar. Sair tem que
@@ -80,10 +80,37 @@ async function marcarDescadastro(token: string, saindo: boolean): Promise<Result
     console.error("[Manual] Falha ao atualizar o descadastro:", manual.error);
     return { ok: false };
   }
+  if ((manual.data?.length ?? 0) > 0) return { ok: true };
+
+  // Iscas em PDF (/materiais/<slug>, 11/11/2026): uma pessoa tem uma linha por
+  // isca, cada uma com seu token. Sair (ou voltar) por um link vale pra TODAS
+  // as iscas do mesmo e-mail: quem pediu pra sair do e-mail da Black Friday
+  // não quer receber o do Natal. O e-mail é lido aqui só pra filtrar o update
+  // e nunca sai na resposta.
+  const isca = await supabaseAdmin
+    .from("isca_leads")
+    .select("email")
+    .eq("descadastro_token", token)
+    .maybeSingle();
+  if (isca.error) {
+    console.error("[Iscas] Falha ao buscar o descadastro:", isca.error);
+    return { ok: false };
+  }
   // Token que não existe em lista nenhuma cai aqui. A tela trata igual a
-  // falha, sem dizer qual dos dois foi: confirmar que um token é inválido já
-  // é informação.
-  return { ok: (manual.data?.length ?? 0) > 0 };
+  // falha, sem dizer qual foi: confirmar que um token é inválido já é
+  // informação.
+  if (!isca.data) return { ok: false };
+
+  const iscas = await supabaseAdmin
+    .from("isca_leads")
+    .update({ descadastrado_em })
+    .eq("email", isca.data.email)
+    .select("id");
+  if (iscas.error) {
+    console.error("[Iscas] Falha ao atualizar o descadastro:", iscas.error);
+    return { ok: false };
+  }
+  return { ok: (iscas.data?.length ?? 0) > 0 };
 }
 
 export const descadastrarLeadQuiz = createServerFn({ method: "POST" })

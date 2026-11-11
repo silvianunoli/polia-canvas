@@ -41,7 +41,7 @@ const gravar = gravarLeadQuiz as unknown as Chamavel;
 const descadastrar = descadastrarLeadQuiz as unknown as Chamavel;
 const reinscrever = reinscreverLeadQuiz as unknown as Chamavel;
 
-const METODOS = ["upsert", "select", "single", "update", "eq"] as const;
+const METODOS = ["upsert", "select", "single", "maybeSingle", "update", "eq"] as const;
 type Consulta = {
   [K in (typeof METODOS)[number]]: Mock<(...args: unknown[]) => Consulta>;
 } & PromiseLike<unknown>;
@@ -201,7 +201,7 @@ describe("gravarLeadQuiz: gravação e diagnóstico", () => {
   });
 });
 
-describe("descadastro (quiz_leads e manual_leads pelo mesmo link)", () => {
+describe("descadastro (quiz_leads, manual_leads e isca_leads pelo mesmo link)", () => {
   it("token que não é uuid rejeita antes de encostar no banco", async () => {
     await expect(descadastrar({ data: { token: "abc" } })).rejects.toThrow();
     expect(from).not.toHaveBeenCalled();
@@ -228,7 +228,47 @@ describe("descadastro (quiz_leads e manual_leads pelo mesmo link)", () => {
   it("token de lista nenhuma devolve ok false, igual a erro (não confirma o que é)", async () => {
     from.mockReturnValueOnce(consulta({ data: [], error: null }));
     from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: null, error: null }));
     expect(await descadastrar({ data: { token: TOKEN } })).toEqual({ ok: false });
+    expect(from).toHaveBeenLastCalledWith("isca_leads");
+  });
+
+  it("achou na manual_leads: nem olha isca_leads", async () => {
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: [{ id: 9 }], error: null }));
+    expect(await descadastrar({ data: { token: TOKEN } })).toEqual({ ok: true });
+    expect(from).toHaveBeenCalledTimes(2);
+  });
+
+  it("isca_leads: o token acha o e-mail e o descadastro vale pra todas as iscas dele", async () => {
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    const busca = consulta({ data: { email: "ana@exemplo.com" }, error: null });
+    from.mockReturnValueOnce(busca);
+    const atualiza = consulta({ data: [{ id: 1 }, { id: 2 }], error: null });
+    from.mockReturnValueOnce(atualiza);
+    expect(await descadastrar({ data: { token: TOKEN } })).toEqual({ ok: true });
+    expect(busca.eq).toHaveBeenCalledWith("descadastro_token", TOKEN);
+    expect(atualiza.update).toHaveBeenCalledWith({ descadastrado_em: expect.any(String) });
+    expect(atualiza.eq).toHaveBeenCalledWith("email", "ana@exemplo.com");
+  });
+
+  it("isca_leads: reinscrever zera descadastrado_em de todas as iscas do e-mail", async () => {
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: { email: "ana@exemplo.com" }, error: null }));
+    const atualiza = consulta({ data: [{ id: 1 }], error: null });
+    from.mockReturnValueOnce(atualiza);
+    expect(await reinscrever({ data: { token: TOKEN } })).toEqual({ ok: true });
+    expect(atualiza.update).toHaveBeenCalledWith({ descadastrado_em: null });
+  });
+
+  it("isca_leads: erro na busca devolve ok false sem update", async () => {
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: [], error: null }));
+    from.mockReturnValueOnce(consulta({ data: null, error: { message: "x" } }));
+    expect(await descadastrar({ data: { token: TOKEN } })).toEqual({ ok: false });
+    expect(from).toHaveBeenCalledTimes(3);
   });
 
   it("erro do banco em qualquer tabela devolve ok false", async () => {

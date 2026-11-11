@@ -8,6 +8,7 @@ import { corpoAssetLinks } from "./lib/assetLinks";
 import { deveRedirecionarParaHostCanonico, HOSTNAME_CANONICO } from "./lib/seo";
 import { montarSitemap, type PostSitemap } from "./lib/sitemap";
 import { ehCaminhoDeDownload } from "./lib/manual/download";
+import { slugDoDownloadDeIsca } from "./lib/iscas/download";
 import {
   comContextoDeExecucao,
   drenarSegundoPlano,
@@ -229,6 +230,13 @@ export default {
     if (ehCaminhoDeDownload(url.pathname)) {
       const { responderDownloadManual } = await import("./lib/manual/download.server");
       return await responderDownloadManual(url);
+    }
+    // Download das iscas em PDF (/materiais/<slug>/baixar?t=...), mesmo
+    // desenho do manual: bucket privado `iscas`, token de isca_leads.
+    const slugIsca = slugDoDownloadDeIsca(url.pathname);
+    if (slugIsca) {
+      const { responderDownloadIsca } = await import("./lib/iscas/download.server");
+      return await responderDownloadIsca(url, slugIsca);
     }
 
     try {

@@ -1643,6 +1643,57 @@ export type Database = {
         }
         Relationships: []
       }
+      isca_leads: {
+        Row: {
+          baixado_em: string | null
+          consent_texto: string | null
+          consentimento: boolean
+          created_at: string
+          descadastrado_em: string | null
+          descadastro_token: string
+          download_token: string
+          downloads: number
+          email: string
+          id: string
+          isca_slug: string
+          origem: string
+          telefone: string
+          updated_at: string | null
+        }
+        Insert: {
+          baixado_em?: string | null
+          consent_texto?: string | null
+          consentimento: boolean
+          created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
+          download_token?: string
+          downloads?: number
+          email: string
+          id?: string
+          isca_slug: string
+          origem?: string
+          telefone: string
+          updated_at?: string | null
+        }
+        Update: {
+          baixado_em?: string | null
+          consent_texto?: string | null
+          consentimento?: boolean
+          created_at?: string
+          descadastrado_em?: string | null
+          descadastro_token?: string
+          download_token?: string
+          downloads?: number
+          email?: string
+          id?: string
+          isca_slug?: string
+          origem?: string
+          telefone?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       manual_leads: {
         Row: {
           baixado_em: string | null
