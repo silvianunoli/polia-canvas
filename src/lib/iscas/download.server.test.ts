@@ -83,7 +83,10 @@ describe("responderDownloadIsca: entrega", () => {
     from.mockReturnValueOnce(consulta({ data: { id: "l-1", downloads: 2 }, error: null }));
     const contagem = consulta({ error: null });
     from.mockReturnValueOnce(contagem);
-    download.mockResolvedValue({ data: new Blob(["%PDF"]), error: null });
+    // Mesmo cuidado do teste do manual: sob jsdom o Blob (jsdom) e o Response
+    // (Node) são de runtimes diferentes e quebram no CI (Node 22). No Worker são
+    // o mesmo runtime. O que se prova é que o corpo passa intacto.
+    download.mockResolvedValue({ data: "%PDF", error: null });
 
     const res = await responderDownloadIsca(url(TOKEN), SLUG);
 
