@@ -96,6 +96,40 @@ export const ISCAS: Record<string, Isca> = {
       fechamento: "Boa Black Friday.",
     },
   },
+  "marca-pronta": {
+    slug: "marca-pronta",
+    rotulo: "Checklist gratuito",
+    titulo: "Sua marca está pronta para crescer?",
+    destaque: "pronta para crescer?",
+    subtitulo:
+      "12 pontos, metade de marca e metade de operação, pra descobrir o que falta primeiro na sua: ser desejada lá fora ou organizada aqui dentro.",
+    bullets: [
+      "Seis pontos de marca: posicionamento, fotos, perfil, atendimento e o porquê de comprarem de você",
+      "Seis pontos de operação: pedidos, custo, preço, dinheiro separado, fechamento do mês e estoque",
+      "O resultado que mostra por onde a sua marca começa",
+      "Um PDF pra marcar sim ou não, no celular ou impresso",
+    ],
+    nomeCurto: "o checklist",
+    cta: "Quero o checklist",
+    descricao:
+      "Checklist gratuito com 12 pontos de marca e operação pra descobrir por onde a sua marca começa a crescer. O PDF baixa na hora.",
+    nomeArquivo: "checklist-marca-pronta-polia.pdf",
+    objeto: "checklist-marca-pronta-polia.pdf",
+    consentTexto: CONSENT_PADRAO,
+    origemPadrao: "instagram_direct",
+    email: {
+      assunto: "Seu checklist da marca pronta pra crescer chegou",
+      preheader: "12 pontos de marca e operação, num PDF só.",
+      headline: "Seu checklist chegou.",
+      paragrafos: [
+        "Aqui está o checklist com os 12 pontos pra descobrir se a sua marca está pronta pra crescer.",
+        "Metade olha pra marca, metade olha pra operação. No fim, o resultado mostra por onde começar.",
+        "Vale abrir no celular ou imprimir e marcar com calma, pensando na marca como ela está hoje.",
+      ],
+      cta: "Baixar o checklist",
+      fechamento: "Bom checklist.",
+    },
+  },
 };
 
 /** Formato aceito de slug: minúsculas, números e hífen. É o que vai na URL e
