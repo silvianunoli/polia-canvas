@@ -8,7 +8,7 @@
 //
 // Arquivo puro (sem import) pra carregar no cliente e no servidor.
 //
-// Próximas previstas: marca-pronta, quanto-lucra, marca-premium, natal.
+// Próximas previstas: quanto-lucra, marca-premium.
 //
 // Regras de copy que valem pra toda entrada (CLAUDE.md da raiz): sem
 // travessão, sem "jornada", "etapa", "trilha", "no seu ritmo"; "margem" vira
@@ -128,6 +128,40 @@ export const ISCAS: Record<string, Isca> = {
       ],
       cta: "Baixar o checklist",
       fechamento: "Bom checklist.",
+    },
+  },
+  natal: {
+    slug: "natal",
+    rotulo: "Calendário gratuito",
+    titulo: "Calendário de Natal da sua marca",
+    destaque: "de Natal",
+    subtitulo:
+      "A data limite das encomendas, decidida com a fila na frente, e o que fazer em cada semana até o dia 24.",
+    bullets: [
+      "A conta da sua data limite, com espaço pra fazer a sua",
+      "O calendário de 23/11 a 24/12, semana a semana",
+      "Uma tabela pra acompanhar vagas, encomendas, sinal pago e entregas",
+      "Quatro mensagens de WhatsApp prontas pra copiar",
+    ],
+    nomeCurto: "o calendário",
+    cta: "Quero o calendário",
+    descricao:
+      "Calendário gratuito pra decidir até que dia aceitar encomenda de Natal e organizar dezembro semana a semana. O PDF baixa na hora.",
+    nomeArquivo: "calendario-natal-polia.pdf",
+    objeto: "calendario-natal-polia.pdf",
+    consentTexto: CONSENT_PADRAO,
+    origemPadrao: "instagram_direct",
+    email: {
+      assunto: "Seu calendário de Natal chegou",
+      preheader: "A conta da data limite, dezembro semana a semana e mensagens prontas.",
+      headline: "Seu calendário de Natal chegou.",
+      paragrafos: [
+        "Aqui está o calendário pra decidir até que dia você aceita encomenda de Natal.",
+        "Ele começa pela conta da sua data limite, passa por dezembro semana a semana e traz quatro mensagens prontas pra avisar as clientes.",
+        "Vale imprimir a tabela da fila e atualizar toda segunda.",
+      ],
+      cta: "Baixar o calendário",
+      fechamento: "Bom dezembro.",
     },
   },
 };
