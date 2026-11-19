@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ISCAS, SLUG_ISCA, buscarIsca } from "./catalogo";
+import { ISCAS, SLUG_ISCA, buscarIsca, hojeEmBrasilia, iscasNaVitrine } from "./catalogo";
 import { caminhoDownloadIsca, slugDoDownloadDeIsca, urlDownloadIsca } from "./download";
 import { montarEmailIsca } from "./email";
 
@@ -116,5 +116,42 @@ describe("e-mail de entrega da isca", () => {
     expect(email.html).toContain(`href="${DOWNLOAD}"`);
     expect(email.text).toContain(DESCADASTRO);
     expect(email.html).toContain(DESCADASTRO);
+  });
+});
+
+describe("vitrine de /materiais", () => {
+  it("põe na frente a que vence primeiro e deixa a sem prazo no fim", () => {
+    expect(iscasNaVitrine("2026-11-19").map((i) => i.slug)).toEqual([
+      "black-friday",
+      "natal",
+      "marca-pronta",
+    ]);
+  });
+
+  it("ainda mostra a isca no último dia do prazo", () => {
+    expect(iscasNaVitrine("2026-11-27").map((i) => i.slug)).toContain("black-friday");
+  });
+
+  it("tira a isca da lista no dia seguinte ao prazo", () => {
+    expect(iscasNaVitrine("2026-11-28").map((i) => i.slug)).toEqual(["natal", "marca-pronta"]);
+    expect(iscasNaVitrine("2026-12-25").map((i) => i.slug)).toEqual(["marca-pronta"]);
+  });
+
+  it("a isca que saiu da vitrine continua achável pelo link", () => {
+    expect(buscarIsca("black-friday")).toBeDefined();
+  });
+
+  it("prazo, quando existe, é uma data AAAA-MM-DD", () => {
+    for (const i of Object.values(ISCAS)) {
+      if (i.ate) expect(i.ate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});
+
+describe("hojeEmBrasilia", () => {
+  it("usa o dia de Brasília, não o de Greenwich", () => {
+    // 28/11 às 01h UTC ainda é 27/11 às 22h em Brasília.
+    expect(hojeEmBrasilia(new Date("2026-11-28T01:00:00Z"))).toBe("2026-11-27");
+    expect(hojeEmBrasilia(new Date("2026-11-28T03:00:00Z"))).toBe("2026-11-28");
   });
 });

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { z } from "zod";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
@@ -10,7 +10,7 @@ import { pixelLead } from "@/lib/metaPixel";
 import { tiktokLead } from "@/lib/tiktokPixel";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
-import { PoliaWordmark } from "@/components/brand/PoliaLogo";
+import { CascaMaterial } from "@/components/site/CascaMaterial";
 import { mascararTelefone, whatsappDaConta } from "@/lib/telefone";
 import { FieldError } from "@/components/ui/FieldError";
 import { Reveal, RevealGroup, RevealItem } from "@/components/site/Reveal";
@@ -116,54 +116,6 @@ function iniciarDownload(url: string, nomeArquivo: string) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-}
-
-// ── Casca ───────────────────────────────────────────────────────────────────
-// Igual à do /manual: sem SiteHeader, sem link no wordmark. A página é destino
-// de link do Direct, não tem rota de fuga pro resto do site. O rodapé é o
-// mínimo que a LGPD pede: privacidade, termos e o perfil.
-function Casca({ children }: { children: ReactNode }) {
-  return (
-    <div className="polia-v3 flex min-h-screen flex-col bg-[var(--bg)] text-[var(--ink)]">
-      <a href="#conteudo" className="skip-link">
-        Pular para o conteúdo
-      </a>
-      <header className="border-b border-[var(--line)] bg-[var(--bg)]">
-        <div className={`${CONTAINER} flex items-center py-4 md:py-5`}>
-          <PoliaWordmark className="h-6 w-auto" />
-        </div>
-      </header>
-      <main id="conteudo" className="flex-1">
-        {children}
-      </main>
-      <footer className="border-t border-[var(--line)] py-8 text-[14px] text-[var(--ink-soft)] md:py-12">
-        <div className={`${CONTAINER} flex flex-wrap items-start justify-between gap-6`}>
-          <div>
-            <PoliaWordmark className="h-5 w-auto" />
-            <p className="mt-3 max-w-[38ch] leading-[1.5]">
-              Pequenas marcas. Grandes sonhos. Um material gratuito da Pólia.
-            </p>
-          </div>
-          <nav className="flex flex-wrap gap-6" aria-label="Links do rodapé">
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[var(--ink)] no-underline hover:underline"
-            >
-              @polialab
-            </a>
-            <Link to="/privacidade" className="text-[var(--ink)] no-underline hover:underline">
-              Privacidade
-            </Link>
-            <Link to="/termos" className="text-[var(--ink)] no-underline hover:underline">
-              Termos
-            </Link>
-          </nav>
-        </div>
-      </footer>
-    </div>
-  );
 }
 
 // ── Título com o grifo amarelo no trecho de destaque ───────────────────────
@@ -501,7 +453,7 @@ function MaterialPage() {
   const { origem, aviso } = Route.useSearch();
 
   return (
-    <Casca>
+    <CascaMaterial>
       <section className={`${CONTAINER} py-[clamp(32px,7vw,96px)]`}>
         {/* No celular a ordem é título, formulário, o que tem dentro. No
         desktop o formulário vai pra coluna da direita, ao lado dos dois. */}
@@ -548,14 +500,14 @@ function MaterialPage() {
           </div>
         </div>
       </section>
-    </Casca>
+    </CascaMaterial>
   );
 }
 
 // ── 404 amigável: slug que não está no catálogo ─────────────────────────────
 function MaterialNaoEncontrado() {
   return (
-    <Casca>
+    <CascaMaterial>
       <section className={`${CONTAINER} ${SECAO}`}>
         <Eyebrow>Material gratuito</Eyebrow>
         <h1 className="mt-4 max-w-[20ch] text-[clamp(1.9rem,5vw,3rem)] font-bold leading-[1.08] tracking-[-0.02em] text-balance">
@@ -575,6 +527,6 @@ function MaterialNaoEncontrado() {
           <span aria-hidden="true">→</span>
         </a>
       </section>
-    </Casca>
+    </CascaMaterial>
   );
 }

@@ -55,6 +55,11 @@ export interface Isca {
   consentTexto: string;
   /** Valor de isca_leads.origem quando o link chega sem ?origem=. */
   origemPadrao: string;
+  /** Último dia em que a isca aparece na vitrine de /materiais, em
+   *  AAAA-MM-DD (data de Brasília). Sem o campo, fica sempre. A página
+   *  /materiais/<slug> continua respondendo depois do prazo, pra quem já tem
+   *  o link. */
+  ate?: string;
   email: EmailIsca;
 }
 
@@ -83,6 +88,7 @@ export const ISCAS: Record<string, Isca> = {
     objeto: "checklist-black-friday-polia.pdf",
     consentTexto: CONSENT_PADRAO,
     origemPadrao: "instagram_direct",
+    ate: "2026-11-27",
     email: {
       assunto: "Seu checklist da Black Friday chegou",
       preheader: "Desconto, estoque, prazos e mensagens prontas, num PDF só.",
@@ -151,6 +157,7 @@ export const ISCAS: Record<string, Isca> = {
     objeto: "calendario-natal-polia.pdf",
     consentTexto: CONSENT_PADRAO,
     origemPadrao: "instagram_direct",
+    ate: "2026-12-24",
     email: {
       assunto: "Seu calendário de Natal chegou",
       preheader: "A conta da data limite, dezembro semana a semana e mensagens prontas.",
@@ -175,4 +182,24 @@ export function buscarIsca(slug: string | null | undefined): Isca | undefined {
   // hasOwn em vez de ISCAS[slug] direto: "constructor" ou "__proto__" não
   // podem virar isca.
   return Object.prototype.hasOwnProperty.call(ISCAS, slug) ? ISCAS[slug] : undefined;
+}
+
+/** Data de hoje em Brasília, AAAA-MM-DD. Recebe o instante de fora pra ser
+ *  testável e pra nunca virar constante de módulo (no Worker, uma data
+ *  calculada na carga do módulo fica parada, incidente de 06/11/2026). */
+export function hojeEmBrasilia(agora: Date): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(agora);
+}
+
+/** Iscas da vitrine de /materiais em `hoje` (AAAA-MM-DD): só as que ainda
+ *  estão no prazo, a que vence primeiro na frente e as sem prazo no fim. */
+export function iscasNaVitrine(hoje: string): Isca[] {
+  return Object.values(ISCAS)
+    .filter((i) => !i.ate || i.ate >= hoje)
+    .sort((a, b) => (a.ate ?? "9999-12-31").localeCompare(b.ate ?? "9999-12-31"));
 }

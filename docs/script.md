@@ -629,3 +629,13 @@ Sil, 10/11: "Aprovo, pode subir". Exigência da auditoria do TikTok (e da App Re
 - Uso: publicar só o que a titular agendou; a Pólia não lê mensagens, não comenta, não curte, não segue.
 - Compartilhamento com TikTok e Meta pelas APIs oficiais; retenção (desconectar apaga as chaves e revoga no TikTok; arquivo de post cancelado sai na hora); transferência internacional; data 10/11/2026.
 - Primeiro post real saiu em 10/11 pela conta de teste @sil.noli (Sandbox, "Só eu"); vídeo da auditoria e rascunho do Production prontos no portal, envio com a Sil.
+
+## 2026-11-19 — Página dos materiais gratuitos (/materiais, SERV-132)
+
+Sil, 19/11: E11 da consultoria da Pólia One virou "Página de materiais", começando "com as 3" iscas; plano aprovado ("Aprovo, pode construir"). Plano em `Polia Lab/clientes/polia-one/08-materiais/PLANO.md`. Commit e deploy só depois do ok dela nos prints.
+
+- Rota nova `materiais.index.tsx` (one.usepolia.com.br/materiais): um cartão por isca, que leva pra `/materiais/<slug>?origem=pagina_materiais`.
+- Lê o mesmo `src/lib/iscas/catalogo.ts`. Campo opcional `ate` (último dia na vitrine, data de Brasília): Black até 27/11, Natal até 24/12. A página de cada isca continua respondendo depois do prazo.
+- Casca (topo sem menu e rodapé LGPD) sai de `materiais.$slug.tsx` pra `components/site/CascaMaterial.tsx`, usada pelas duas rotas.
+- Data de hoje calculada no loader, nunca em `const` de módulo (incidente do relógio do Worker, 06/11).
+- Entra no sitemap.

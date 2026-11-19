@@ -27,6 +27,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TutorialIndexRouteImport } from './routes/tutorial.index'
 import { Route as QuizIndexRouteImport } from './routes/quiz.index'
+import { Route as MateriaisIndexRouteImport } from './routes/materiais.index'
 import { Route as BlogIndexRouteImport } from './routes/blog.index'
 import { Route as TutorialTourRouteImport } from './routes/tutorial.tour'
 import { Route as TutorialSlugRouteImport } from './routes/tutorial.$slug'
@@ -178,6 +179,11 @@ const TutorialIndexRoute = TutorialIndexRouteImport.update({
 const QuizIndexRoute = QuizIndexRouteImport.update({
   id: '/quiz/',
   path: '/quiz/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MateriaisIndexRoute = MateriaisIndexRouteImport.update({
+  id: '/materiais/',
+  path: '/materiais/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogIndexRoute = BlogIndexRouteImport.update({
@@ -574,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/tutorial/$slug': typeof TutorialSlugRoute
   '/tutorial/tour': typeof TutorialTourRoute
   '/blog/': typeof BlogIndexRoute
+  '/materiais/': typeof MateriaisIndexRoute
   '/quiz/': typeof QuizIndexRoute
   '/tutorial/': typeof TutorialIndexRoute
   '/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
@@ -655,6 +662,7 @@ export interface FileRoutesByTo {
   '/tutorial/$slug': typeof TutorialSlugRoute
   '/tutorial/tour': typeof TutorialTourRoute
   '/blog': typeof BlogIndexRoute
+  '/materiais': typeof MateriaisIndexRoute
   '/quiz': typeof QuizIndexRoute
   '/tutorial': typeof TutorialIndexRoute
   '/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
@@ -739,6 +747,7 @@ export interface FileRoutesById {
   '/tutorial/$slug': typeof TutorialSlugRoute
   '/tutorial/tour': typeof TutorialTourRoute
   '/blog/': typeof BlogIndexRoute
+  '/materiais/': typeof MateriaisIndexRoute
   '/quiz/': typeof QuizIndexRoute
   '/tutorial/': typeof TutorialIndexRoute
   '/_authenticated/agenda-redes/novo': typeof AuthenticatedAgendaRedesNovoRoute
@@ -823,6 +832,7 @@ export interface FileRouteTypes {
     | '/tutorial/$slug'
     | '/tutorial/tour'
     | '/blog/'
+    | '/materiais/'
     | '/quiz/'
     | '/tutorial/'
     | '/agenda-redes/novo'
@@ -904,6 +914,7 @@ export interface FileRouteTypes {
     | '/tutorial/$slug'
     | '/tutorial/tour'
     | '/blog'
+    | '/materiais'
     | '/quiz'
     | '/tutorial'
     | '/agenda-redes/novo'
@@ -987,6 +998,7 @@ export interface FileRouteTypes {
     | '/tutorial/$slug'
     | '/tutorial/tour'
     | '/blog/'
+    | '/materiais/'
     | '/quiz/'
     | '/tutorial/'
     | '/_authenticated/agenda-redes/novo'
@@ -1049,6 +1061,7 @@ export interface RootRouteChildren {
   TutorialSlugRoute: typeof TutorialSlugRoute
   TutorialTourRoute: typeof TutorialTourRoute
   BlogIndexRoute: typeof BlogIndexRoute
+  MateriaisIndexRoute: typeof MateriaisIndexRoute
   QuizIndexRoute: typeof QuizIndexRoute
   TutorialIndexRoute: typeof TutorialIndexRoute
 }
@@ -1179,6 +1192,13 @@ declare module '@tanstack/react-router' {
       path: '/quiz'
       fullPath: '/quiz/'
       preLoaderRoute: typeof QuizIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/materiais/': {
+      id: '/materiais/'
+      path: '/materiais'
+      fullPath: '/materiais/'
+      preLoaderRoute: typeof MateriaisIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/blog/': {
@@ -1780,6 +1800,7 @@ const rootRouteChildren: RootRouteChildren = {
   TutorialSlugRoute: TutorialSlugRoute,
   TutorialTourRoute: TutorialTourRoute,
   BlogIndexRoute: BlogIndexRoute,
+  MateriaisIndexRoute: MateriaisIndexRoute,
   QuizIndexRoute: QuizIndexRoute,
   TutorialIndexRoute: TutorialIndexRoute,
 }
