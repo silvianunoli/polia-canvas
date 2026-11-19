@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   dataCurta,
+  diferencaDoPagamento,
+  dividirEmParcelas,
+  fraseDiferenca,
   frasePrazo,
   ordenarContas,
   proximoVencimento,
   resumoContas,
+  rotuloDaParcela,
   rotuloDoVencimento,
   situacaoDaConta,
   validarConta,
@@ -21,6 +25,11 @@ const conta = (vencimento: string, valor: number, extra: Partial<ContaPagar> = {
   diaRecorrencia: null,
   status: "a_pagar",
   pagoEm: null,
+  fornecedor: null,
+  documento: null,
+  valorPago: null,
+  parcela: null,
+  parcelas: null,
   ...extra,
 });
 
@@ -134,5 +143,73 @@ describe("validarConta", () => {
       "valor_alto",
     );
     expect(validarConta({ descricao: "Luz", valor: 10, vencimento: "2026-10-23" })).toBeNull();
+  });
+});
+
+describe("validarConta com parcelas", () => {
+  const base = { descricao: "Forno", valor: 900, vencimento: "2026-11-19" };
+  it("aceita de 2 a 60 parcelas inteiras", () => {
+    expect(validarConta({ ...base, parcelas: 3 })).toBeNull();
+    expect(validarConta({ ...base, parcelas: 60 })).toBeNull();
+    expect(validarConta({ ...base, parcelas: 1 })).toBe("parcelas_fora");
+    expect(validarConta({ ...base, parcelas: 61 })).toBe("parcelas_fora");
+    expect(validarConta({ ...base, parcelas: 2.5 })).toBe("parcelas_fora");
+  });
+  it("recusa parcela abaixo de um centavo", () => {
+    expect(validarConta({ ...base, valor: 0.02, parcelas: 3 })).toBe("parcela_sem_valor");
+  });
+});
+
+describe("dividirEmParcelas", () => {
+  it("põe os centavos que sobram na primeira e a soma bate com o total", () => {
+    const p = dividirEmParcelas(100, 3, "2026-11-10");
+    expect(p.map((x) => x.valor)).toEqual([33.34, 33.33, 33.33]);
+    expect(Math.round(p.reduce((s, x) => s + x.valor, 0) * 100)).toBe(10000);
+    expect(p.map((x) => [x.parcela, x.parcelas])).toEqual([
+      [1, 3],
+      [2, 3],
+      [3, 3],
+    ]);
+  });
+  it("vence todo mês no mesmo dia, encurtando no mês curto", () => {
+    const p = dividirEmParcelas(300, 3, "2027-01-31");
+    expect(p.map((x) => x.vencimento)).toEqual(["2027-01-31", "2027-02-28", "2027-03-31"]);
+  });
+  it("vira o ano", () => {
+    const p = dividirEmParcelas(200, 2, "2026-12-05");
+    expect(p.map((x) => x.vencimento)).toEqual(["2026-12-05", "2027-01-05"]);
+  });
+});
+
+describe("rotuloDaParcela", () => {
+  it("só fala em parcela quando a conta é parcelada", () => {
+    expect(rotuloDaParcela({ parcela: 2, parcelas: 3 })).toBe("parcela 2 de 3");
+    expect(rotuloDaParcela({ parcela: null, parcelas: null })).toBe("");
+  });
+});
+
+describe("diferencaDoPagamento", () => {
+  it("pagou mais é juros, pagou menos é desconto (exemplo da planilha: 400 pagos 412,08)", () => {
+    expect(diferencaDoPagamento(400, 412.08)).toEqual({ tipo: "juros", valor: 12.08 });
+    expect(diferencaDoPagamento(100, 95)).toEqual({ tipo: "desconto", valor: 5 });
+  });
+  it("igual ou sem valor pago não tem diferença", () => {
+    expect(diferencaDoPagamento(2972.27, 2972.27)).toBeNull();
+    expect(diferencaDoPagamento(685, null)).toBeNull();
+  });
+  it("não se perde em float", () => {
+    expect(diferencaDoPagamento(0.1 + 0.2, 0.3)).toBeNull();
+  });
+});
+
+describe("fraseDiferenca", () => {
+  it("diz quanto e o porquê provável", () => {
+    expect(fraseDiferenca({ tipo: "juros", valor: 12.08 })).toMatch(
+      /^R\$\s12,08 a mais que o original \(juros ou multa\)$/,
+    );
+    expect(fraseDiferenca({ tipo: "desconto", valor: 5 })).toMatch(
+      /^R\$\s5,00 a menos que o original \(desconto\)$/,
+    );
+    expect(fraseDiferenca(null)).toBe("");
   });
 });

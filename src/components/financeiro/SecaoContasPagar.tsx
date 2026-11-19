@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { CalendarClock } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
@@ -13,10 +13,13 @@ import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import {
   dataCurta,
+  diferencaDoPagamento,
+  fraseDiferenca,
   frasePrazo,
   ordenarContas,
   proximoVencimento,
   resumoContas,
+  rotuloDaParcela,
   rotuloDoVencimento,
   situacaoDaConta,
   type ContaPagar,
@@ -81,6 +84,13 @@ export function SecaoContasPagar({
     [contas],
   );
   const resumo = useMemo(() => resumoContas(aPagar, hoje), [aPagar, hoje]);
+  const fornecedores = useMemo(
+    () =>
+      [...new Set(contas.map((c) => c.fornecedor).filter((f): f is string => !!f))].sort((a, b) =>
+        a.localeCompare(b, "pt-BR"),
+      ),
+    [contas],
+  );
 
   // "Ver contas" do Painel chega com #contas-a-pagar, mas a seção só existe
   // depois que o Financeiro carrega: o navegador não acha a âncora sozinho.
@@ -114,18 +124,21 @@ export function SecaoContasPagar({
     toastSucesso("Pagamento desfeito. A conta voltou pra lista e a saída saiu do histórico.");
   };
 
-  const pagar = async (c: ContaPagar, data: string) => {
+  const pagar = async (c: ContaPagar, data: string, valorPago?: number) => {
     setOcupada(c.id);
-    const { error } = await pagarConta(c.id, data);
+    const { error } = await pagarConta(c.id, data, valorPago);
     setOcupada(null);
     if (error) {
       console.error("conta_pagar_pagar", error);
       toastErro("A Pólia One não conseguiu marcar a conta como paga. Tenta de novo.");
       return false;
     }
+    const diferenca = diferencaDoPagamento(c.valor, valorPago ?? null);
     track("conta_pagar_paga", {
       mensal: c.recorrencia === "mensal",
+      parcelada: !!c.parcelas,
       data_diferente: data !== hoje,
+      valor_diferente: diferenca?.tipo ?? "igual",
     });
     recarregar();
     const proxima =
@@ -139,8 +152,9 @@ export function SecaoContasPagar({
     return true;
   };
 
-  // Atrasada pergunta a data: paga em 30/09 e marcada em 02/10 entraria como
-  // saída de outubro, e o número dos dois meses ficaria errado.
+  // Atrasada pergunta a data (e o valor, que costuma vir com juros): paga em
+  // 30/09 e marcada em 02/10 entraria como saída de outubro, e o número dos
+  // dois meses ficaria errado.
   const clicarPaguei = (c: ContaPagar) => {
     if (situacaoDaConta(c.vencimento, hoje) === "atrasada") setPagarEmData(c);
     else void pagar(c, hoje);
@@ -250,14 +264,23 @@ export function SecaoContasPagar({
                     className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-[14px] text-[var(--ink-soft)]">{c.descricao}</p>
+                      <p className="truncate text-[14px] text-[var(--ink-soft)]">
+                        {c.descricao}
+                        {c.fornecedor && (
+                          <span className="text-[var(--muted)]"> · {c.fornecedor}</span>
+                        )}
+                      </p>
                       <p className="text-[12px] text-[var(--muted)]">
                         paga em {c.pagoEm ? dataCurta(c.pagoEm, hoje) : ""}
+                        {c.parcelas ? ` · ${rotuloDaParcela(c)}` : ""}
+                        {c.valorPago !== null &&
+                          diferencaDoPagamento(c.valor, c.valorPago) &&
+                          ` · ${fraseDiferenca(diferencaDoPagamento(c.valor, c.valorPago))}`}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       <p className="font-cabinet text-[16px] tabular-nums text-[var(--ink-soft)]">
-                        {fmt(c.valor)}
+                        {fmt(c.valorPago ?? c.valor)}
                       </p>
                       <button
                         type="button"
@@ -283,6 +306,7 @@ export function SecaoContasPagar({
           vencimentoPadrao={hoje}
           contaEdit={modal.conta}
           categoriasDoHistorico={categoriasDoHistorico}
+          fornecedoresConhecidos={fornecedores}
           onClose={() => setModal({ aberto: false, conta: null })}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: chaveContas(userId) });
@@ -292,12 +316,12 @@ export function SecaoContasPagar({
       )}
 
       {pagarEmData && (
-        <ModalPagarEmData
+        <ModalPagar
           conta={pagarEmData}
           hoje={hoje}
           onClose={() => setPagarEmData(null)}
-          onConfirmar={async (data) => {
-            if (await pagar(pagarEmData, data)) setPagarEmData(null);
+          onConfirmar={async (data, valorPago) => {
+            if (await pagar(pagarEmData, data, valorPago)) setPagarEmData(null);
           }}
           salvando={ocupada === pagarEmData.id}
         />
@@ -350,10 +374,19 @@ function LinhaConta({
   return (
     <li className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[15px] text-[var(--ink-soft)]">{c.descricao}</p>
+        <p className="truncate text-[15px] text-[var(--ink-soft)]">
+          {c.descricao}
+          {c.fornecedor && <span className="text-[var(--muted)]"> · {c.fornecedor}</span>}
+        </p>
         <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px]">
           <span className={corDoPrazo}>{rotuloDoVencimento(c.vencimento, hoje)}</span>
           {c.recorrencia === "mensal" && <span className="text-[var(--muted)]">todo mês</span>}
+          {c.parcelas && <span className="text-[var(--muted)]">{rotuloDaParcela(c)}</span>}
+          {c.documento && (
+            <span className="max-w-[220px] truncate text-[var(--muted)]" title={c.documento}>
+              doc. {c.documento}
+            </span>
+          )}
           {c.categoria && (
             <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
               {c.categoria}
@@ -376,7 +409,7 @@ function LinhaConta({
           align="end"
           ariaLabel={`Opções da conta ${c.descricao}`}
           itens={[
-            { label: "Paguei em outra data", onClick: onPagarEmOutraData },
+            { label: "Paguei em outra data ou valor", onClick: onPagarEmOutraData },
             { label: "Editar", onClick: onEditar },
             { label: "Excluir", onClick: onExcluir, destrutivo: true },
           ]}
@@ -386,7 +419,7 @@ function LinhaConta({
   );
 }
 
-function ModalPagarEmData({
+function ModalPagar({
   conta,
   hoje,
   salvando,
@@ -397,10 +430,20 @@ function ModalPagarEmData({
   hoje: string;
   salvando: boolean;
   onClose: () => void;
-  onConfirmar: (data: string) => void;
+  /** `valorPago` vem undefined quando bate com o original. */
+  onConfirmar: (data: string, valorPago?: number) => void;
 }) {
   const [data, setData] = useState(hoje);
-  const valida = /^\d{4}-\d{2}-\d{2}$/.test(data) && data <= hoje;
+  const [cents, setCents] = useState(() => Math.round(conta.valor * 100));
+  const valorPago = cents / 100;
+  const dataValida = /^\d{4}-\d{2}-\d{2}$/.test(data) && data <= hoje;
+  const valorValido = cents > 0 && valorPago <= 99_999_999;
+  const diferenca = diferencaDoPagamento(conta.valor, valorPago);
+
+  const onValorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const digitos = e.target.value.replace(/\D/g, "");
+    setCents(digitos ? Number(digitos.slice(0, 11)) : 0);
+  };
 
   return (
     <Modal
@@ -408,8 +451,8 @@ function ModalPagarEmData({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={`Quando você pagou: ${conta.descricao}`}
-      description={`${fmt(conta.valor)} entram como saída no mês da data escolhida.`}
+      title={`Quando e quanto você pagou: ${conta.descricao}`}
+      description={`O valor original é ${fmt(conta.valor)}. O que você pagou entra como saída no mês da data escolhida.`}
       footer={
         <>
           <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>
@@ -417,8 +460,8 @@ function ModalPagarEmData({
           </button>
           <button
             type="button"
-            onClick={() => onConfirmar(data)}
-            disabled={salvando || !valida}
+            onClick={() => onConfirmar(data, diferenca ? valorPago : undefined)}
+            disabled={salvando || !dataValida || !valorValido}
             className={BTN_ACAO}
           >
             {salvando ? "Marcando..." : "Marcar como paga"}
@@ -426,20 +469,39 @@ function ModalPagarEmData({
         </>
       }
     >
-      <Campo
-        label="Paguei em"
-        required
-        error={data > hoje ? "A data do pagamento não pode ser depois de hoje" : undefined}
-      >
-        <input
-          type="date"
-          value={data}
-          max={hoje}
-          autoFocus
-          onChange={(e) => setData(e.target.value)}
-          className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-        />
-      </Campo>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo
+          label="Paguei em"
+          required
+          error={data > hoje ? "A data do pagamento não pode ser depois de hoje" : undefined}
+        >
+          <input
+            type="date"
+            value={data}
+            max={hoje}
+            autoFocus
+            onChange={(e) => setData(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          />
+        </Campo>
+        <Campo
+          label="Valor pago (R$)"
+          required
+          error={cents === 0 ? "Falta o valor pago" : undefined}
+          hint={diferenca ? fraseDiferenca(diferenca) : "igual ao original"}
+        >
+          <input
+            type="text"
+            inputMode="numeric"
+            value={
+              cents ? valorPago.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : ""
+            }
+            onChange={onValorChange}
+            placeholder="R$ 0,00"
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[18px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          />
+        </Campo>
+      </div>
     </Modal>
   );
 }

@@ -19,6 +19,15 @@ export interface ContaPagar {
   diaRecorrencia: number | null;
   status: StatusConta;
   pagoEm: string | null;
+  /** Quem recebe. Desde ONE-207 (planilha de conciliação). */
+  fornecedor: string | null;
+  /** NF-e, boleto, ID da transação do Pix. */
+  documento: string | null;
+  /** O que saiu de fato. Null em conta paga antes do ONE-207 = pagou o valor original. */
+  valorPago: number | null;
+  /** "2" de "2 de 3". Null quando a conta não é parcelada. */
+  parcela: number | null;
+  parcelas: number | null;
 }
 
 /** Onde a conta está em relação a hoje. "semana" = vence nos próximos 7 dias. */
@@ -117,16 +126,94 @@ export function ordenarContas(contas: ContaPagar[]): ContaPagar[] {
   return [...contas].sort((a, b) => a.vencimento.localeCompare(b.vencimento) || b.valor - a.valor);
 }
 
-export type ErroConta = "sem_descricao" | "sem_valor" | "sem_vencimento" | "valor_alto";
+export type ErroConta =
+  | "sem_descricao"
+  | "sem_valor"
+  | "sem_vencimento"
+  | "valor_alto"
+  | "parcelas_fora"
+  | "parcela_sem_valor";
+
+export const MAX_PARCELAS = 60;
 
 export function validarConta(c: {
   descricao: string;
   valor: number;
   vencimento: string;
+  /** Só na criação de conta parcelada; o valor é o total. */
+  parcelas?: number;
 }): ErroConta | null {
   if (!c.descricao.trim()) return "sem_descricao";
   if (!(c.valor > 0)) return "sem_valor";
   if (c.valor > 99_999_999) return "valor_alto";
   if (!/^\d{4}-\d{2}-\d{2}$/.test(c.vencimento)) return "sem_vencimento";
+  if (c.parcelas !== undefined) {
+    if (!Number.isInteger(c.parcelas) || c.parcelas < 2 || c.parcelas > MAX_PARCELAS)
+      return "parcelas_fora";
+    if (Math.round(c.valor * 100) < c.parcelas) return "parcela_sem_valor";
+  }
   return null;
+}
+
+export interface ParcelaGerada {
+  parcela: number;
+  parcelas: number;
+  valor: number;
+  vencimento: string;
+}
+
+/**
+ * Divide o total em parcelas mensais a partir do primeiro vencimento, com o
+ * mesmo dia de vencimento todo mês (31/01 → 28/02 → 31/03, regra de
+ * proximoVencimento). Os centavos que não dividem certo vão na primeira:
+ * R$ 100,00 em 3 = 33,34 + 33,33 + 33,33, e a soma bate com o total.
+ */
+export function dividirEmParcelas(
+  total: number,
+  parcelas: number,
+  primeiroVencimento: string,
+): ParcelaGerada[] {
+  const totalCents = Math.round(total * 100);
+  const base = Math.floor(totalCents / parcelas);
+  const sobra = totalCents - base * parcelas;
+  const dia = Number(primeiroVencimento.slice(8, 10));
+  const lista: ParcelaGerada[] = [];
+  let vencimento = primeiroVencimento;
+  for (let i = 1; i <= parcelas; i++) {
+    lista.push({
+      parcela: i,
+      parcelas,
+      valor: (base + (i === 1 ? sobra : 0)) / 100,
+      vencimento,
+    });
+    vencimento = proximoVencimento(vencimento, dia);
+  }
+  return lista;
+}
+
+/** "parcela 2 de 3", ou vazio quando a conta não é parcelada. */
+export function rotuloDaParcela(c: Pick<ContaPagar, "parcela" | "parcelas">): string {
+  return c.parcela && c.parcelas ? `parcela ${c.parcela} de ${c.parcelas}` : "";
+}
+
+export type Diferenca = { tipo: "juros" | "desconto"; valor: number } | null;
+
+/**
+ * Diferença entre o que saiu e o valor original da conta. Pagou mais = juros
+ * ou multa; pagou menos = desconto. Igual (ou conta antiga sem valor pago) = null.
+ */
+export function diferencaDoPagamento(original: number, pago: number | null): Diferenca {
+  if (pago === null) return null;
+  const dif = Math.round(pago * 100) - Math.round(original * 100);
+  if (dif === 0) return null;
+  return { tipo: dif > 0 ? "juros" : "desconto", valor: Math.abs(dif) / 100 };
+}
+
+/** "R$ 12,08 a mais que o original (juros ou multa)". Vazio quando bate. */
+export function fraseDiferenca(d: Diferenca): string {
+  if (!d) return "";
+  const v = formatarReais(d.valor, { sempreCentavos: true });
+  return d.tipo === "juros"
+    ? `${v} a mais que o original (juros ou multa)`
+    : `${v} a menos que o original (desconto)`;
 }

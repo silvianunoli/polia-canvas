@@ -1347,20 +1347,29 @@ export type Database = {
           created_at: string
           descricao: string
           dia_recorrencia: number | null
+          documento: string | null
+          fornecedor: string | null
           id: string
           lancamento_id: string | null
           pago_em: string | null
+          parcela: number | null
+          parcelas: number | null
           proxima_id: string | null
           recorrencia: string
           status: string
           updated_at: string
           user_id: string
           valor: number
+          valor_pago: number | null
           vencimento: string
         }
         Insert: {
           categoria?: string | null
           descricao: string
+          documento?: string | null
+          fornecedor?: string | null
+          parcela?: number | null
+          parcelas?: number | null
           recorrencia?: string
           user_id: string
           valor: number
@@ -1369,6 +1378,8 @@ export type Database = {
         Update: {
           categoria?: string | null
           descricao?: string
+          documento?: string | null
+          fornecedor?: string | null
           recorrencia?: string
           valor?: number
           vencimento?: string
@@ -3244,7 +3255,7 @@ export type Database = {
         Returns: undefined
       }
       pagar_conta: {
-        Args: { p_conta_id: string; p_data: string }
+        Args: { p_conta_id: string; p_data: string; p_valor?: number | null }
         Returns: string
       }
       desfazer_pagamento: {

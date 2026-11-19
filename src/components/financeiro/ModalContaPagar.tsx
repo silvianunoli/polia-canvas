@@ -4,7 +4,15 @@ import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { CATEGORIAS_SAIDA } from "@/lib/categoriasLancamento";
 import { track } from "@/lib/analytics";
-import { validarConta, type ContaPagar, type ErroConta } from "@/lib/contasPagar";
+import { formatarReais } from "@/lib/formatarReais";
+import {
+  dividirEmParcelas,
+  MAX_PARCELAS,
+  rotuloDaParcela,
+  validarConta,
+  type ContaPagar,
+  type ErroConta,
+} from "@/lib/contasPagar";
 import { categoriaParaSalvar, clicarCategoria, type SelecaoCategoria } from "./categoriaLancamento";
 import { salvarConta } from "./contasPagarDados";
 
@@ -13,7 +21,15 @@ const MENSAGEM_ERRO: Record<ErroConta, string> = {
   sem_valor: "Falta o valor",
   sem_vencimento: "Falta o vencimento",
   valor_alto: "Esse valor passou do limite. Confere os zeros.",
+  parcelas_fora: `Parcelas: de 2 a ${MAX_PARCELAS}`,
+  parcela_sem_valor: "O valor não dá um centavo por parcela",
 };
+
+const CLASSE_INPUT =
+  "w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
+
+const fmt = (v: number) => formatarReais(v, { sempreCentavos: true });
+const dataBr = (iso: string) => iso.split("-").reverse().join("/");
 
 // Mesmo botão e mesma regra de seleção do ModalLancamento (categoriaLancamento.ts).
 const NOVA_CATEGORIA = "+ nova categoria";
@@ -27,6 +43,7 @@ export function ModalContaPagar({
   vencimentoPadrao,
   contaEdit,
   categoriasDoHistorico,
+  fornecedoresConhecidos,
   onClose,
   onSaved,
 }: {
@@ -39,12 +56,15 @@ export function ModalContaPagar({
    * "Paguei" caía em outra categoria no histórico.
    */
   categoriasDoHistorico: string[];
+  /** Fornecedores das contas já cadastradas, pra sugerir sem redigitar. */
+  fornecedoresConhecidos: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const edit = !!contaEdit;
   const categoriaLabelId = useId();
   const faltaId = useId();
+  const listaFornecedoresId = useId();
   const [descricao, setDescricao] = useState(contaEdit?.descricao ?? "");
   const [cents, setCents] = useState(() => (contaEdit ? Math.round(contaEdit.valor * 100) : 0));
   const [vencimento, setVencimento] = useState(contaEdit?.vencimento ?? vencimentoPadrao);
@@ -53,7 +73,13 @@ export function ModalContaPagar({
     novaAberta: false,
     novaTexto: "",
   });
+  const [fornecedor, setFornecedor] = useState(contaEdit?.fornecedor ?? "");
+  const [documento, setDocumento] = useState(contaEdit?.documento ?? "");
   const [mensal, setMensal] = useState(contaEdit?.recorrencia === "mensal");
+  // Parcelar só na criação: editar uma parcela não refaz o parcelamento.
+  const [parcelado, setParcelado] = useState(false);
+  const [numParcelas, setNumParcelas] = useState("2");
+  const ehParcela = !!contaEdit?.parcelas;
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -67,7 +93,10 @@ export function ModalContaPagar({
   }, [categoriasDoHistorico, contaEdit?.categoria]);
 
   const valor = cents / 100;
-  const problema = validarConta({ descricao, valor, vencimento });
+  const parcelas = parcelado ? Number(numParcelas) : undefined;
+  const problema = validarConta({ descricao, valor, vencimento, parcelas });
+  const previa =
+    parcelado && !problema && parcelas ? dividirEmParcelas(valor, parcelas, vencimento) : null;
   const moedaFmt = valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   const onValorChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -86,7 +115,10 @@ export function ModalContaPagar({
         valor,
         vencimento,
         categoria: categoriaParaSalvar(selecao),
-        recorrencia: mensal ? "mensal" : "nenhuma",
+        recorrencia: mensal && !parcelado && !ehParcela ? "mensal" : "nenhuma",
+        fornecedor,
+        documento,
+        parcelas,
       },
       contaEdit?.id,
     );
@@ -99,7 +131,12 @@ export function ModalContaPagar({
       setErro("A Pólia One não conseguiu salvar a conta agora. Tenta de novo.");
       return;
     }
-    track(edit ? "conta_pagar_editada" : "conta_pagar_criada", { mensal });
+    track(edit ? "conta_pagar_editada" : "conta_pagar_criada", {
+      mensal,
+      parcelas: parcelas ?? 0,
+      com_fornecedor: !!fornecedor.trim(),
+      com_documento: !!documento.trim(),
+    });
     onSaved();
   };
 
@@ -136,13 +173,41 @@ export function ModalContaPagar({
             maxLength={120}
             autoFocus
             placeholder="ex: aluguel do ateliê"
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            className={CLASSE_INPUT}
           />
         </Campo>
       </div>
 
       <div className="mb-4 grid gap-4 sm:grid-cols-2">
-        <Campo label="Valor (R$)" required>
+        <Campo label="Fornecedor" hint="opcional, quem recebe">
+          <input
+            value={fornecedor}
+            onChange={(e) => setFornecedor(e.target.value)}
+            maxLength={80}
+            list={listaFornecedoresId}
+            autoComplete="off"
+            placeholder="ex: atacado da esquina"
+            className={CLASSE_INPUT}
+          />
+        </Campo>
+        <datalist id={listaFornecedoresId}>
+          {fornecedoresConhecidos.map((f) => (
+            <option key={f} value={f} />
+          ))}
+        </datalist>
+        <Campo label="Documento" hint="opcional, nota, boleto ou ID do Pix">
+          <input
+            value={documento}
+            onChange={(e) => setDocumento(e.target.value)}
+            maxLength={80}
+            placeholder="ex: NF-e 95308"
+            className={CLASSE_INPUT}
+          />
+        </Campo>
+      </div>
+
+      <div className="mb-4 grid gap-4 sm:grid-cols-2">
+        <Campo label={parcelado ? "Valor total (R$)" : "Valor (R$)"} required>
           <input
             type="text"
             inputMode="numeric"
@@ -152,30 +217,87 @@ export function ModalContaPagar({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[18px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
-        <Campo label="Vence em" required>
+        <Campo label={parcelado ? "Primeira parcela vence em" : "Vence em"} required>
           <input
             type="date"
             value={vencimento}
             onChange={(e) => setVencimento(e.target.value)}
-            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            className={CLASSE_INPUT}
           />
         </Campo>
       </div>
 
-      <label className="mb-4 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink-soft)]">
-        <input
-          type="checkbox"
-          checked={mensal}
-          onChange={(e) => setMensal(e.target.checked)}
-          className="h-4 w-4 accent-[var(--secondary-text)]"
-        />
-        <span>
-          Repete todo mês
-          <span className="block text-[12px] text-[var(--muted)]">
-            Ao pagar, a Pólia One já deixa a do mês seguinte agendada.
-          </span>
-        </span>
-      </label>
+      {ehParcela && contaEdit ? (
+        <p className="mb-4 text-[13px] text-[var(--muted)]">
+          Esta é a {rotuloDaParcela(contaEdit)}. Mudar aqui muda só esta parcela.
+        </p>
+      ) : (
+        <>
+          <label className="mb-2 flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink-soft)]">
+            <input
+              type="checkbox"
+              checked={mensal}
+              onChange={(e) => {
+                setMensal(e.target.checked);
+                if (e.target.checked) setParcelado(false);
+              }}
+              className="h-4 w-4 accent-[var(--secondary-text)]"
+            />
+            <span>
+              Repete todo mês
+              <span className="block text-[12px] text-[var(--muted)]">
+                Ao pagar, a Pólia One já deixa a do mês seguinte agendada.
+              </span>
+            </span>
+          </label>
+
+          {!edit && (
+            <div className="mb-4 rounded-lg border border-[var(--line)] bg-white px-3 py-2">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[var(--ink-soft)]">
+                <input
+                  type="checkbox"
+                  checked={parcelado}
+                  onChange={(e) => {
+                    setParcelado(e.target.checked);
+                    if (e.target.checked) setMensal(false);
+                  }}
+                  className="h-4 w-4 accent-[var(--secondary-text)]"
+                />
+                <span>
+                  Dividir em parcelas
+                  <span className="block text-[12px] text-[var(--muted)]">
+                    Uma conta por mês, no mesmo dia, até a última parcela.
+                  </span>
+                </span>
+              </label>
+              {parcelado && (
+                <div className="mt-2 pb-2">
+                  <Campo label="Quantas parcelas" required>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={2}
+                      max={MAX_PARCELAS}
+                      step={1}
+                      value={numParcelas}
+                      onChange={(e) => setNumParcelas(e.target.value)}
+                      className={`${CLASSE_INPUT} max-w-[120px]`}
+                    />
+                  </Campo>
+                  {previa && (
+                    <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
+                      {previa.length} parcelas de {fmt(previa[previa.length - 1].valor)}
+                      {previa[0].valor !== previa[previa.length - 1].valor &&
+                        ` (a primeira de ${fmt(previa[0].valor)})`}
+                      , a última vence em {dataBr(previa[previa.length - 1].vencimento)}.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </>
+      )}
 
       <div>
         <span id={categoriaLabelId} className="mb-1 block text-[12px] text-[var(--muted)]">
@@ -217,7 +339,7 @@ export function ModalContaPagar({
                 }}
                 placeholder="Nome da categoria"
                 maxLength={40}
-                className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                className={CLASSE_INPUT}
               />
             </Campo>
           </div>

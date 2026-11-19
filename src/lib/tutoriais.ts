@@ -599,8 +599,10 @@ const LISTA = [
       {
         titulo: "Não esquecer as contas do mês",
         itens: [
-          'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. Marque "Repete todo mês" pra conta fixa.',
+          'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',
+          'Marque "Repete todo mês" pra conta fixa, ou "Dividir em parcelas" pra compra parcelada: a Pólia One cria uma conta por mês e mostra quanto fica cada parcela.',
           'Quando pagar, clique em "Paguei". Só aí ela vira uma saída do mês.',
+          'Pagou com juros, com desconto ou em outro dia? Use "Paguei em outra data ou valor" no menu da conta. A saída entra com o valor pago, e a conta guarda o original pra comparar.',
         ],
       },
     ],
@@ -616,6 +618,11 @@ const LISTA = [
       {
         pergunta: "Importar o mesmo extrato duas vezes duplica",
         resposta: "Não. A Pólia One reconhece as linhas que já entraram e deixa elas desmarcadas.",
+      },
+      {
+        pergunta: "Editar uma parcela muda as outras",
+        resposta:
+          "Não. Cada parcela é uma conta: mudar o valor ou o vencimento de uma não mexe nas outras. Pra apagar o parcelamento inteiro, exclua parcela por parcela.",
       },
       {
         pergunta: "As vendas de Vendas aparecem aqui",

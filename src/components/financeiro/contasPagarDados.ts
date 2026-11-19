@@ -4,7 +4,12 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { ContaPagar, RecorrenciaConta, StatusConta } from "@/lib/contasPagar";
+import {
+  dividirEmParcelas,
+  type ContaPagar,
+  type RecorrenciaConta,
+  type StatusConta,
+} from "@/lib/contasPagar";
 
 type ContaBanco = {
   id: string;
@@ -16,6 +21,11 @@ type ContaBanco = {
   dia_recorrencia: number | null;
   status: string;
   pago_em: string | null;
+  fornecedor: string | null;
+  documento: string | null;
+  valor_pago: number | null;
+  parcela: number | null;
+  parcelas: number | null;
 };
 
 const daLinha = (r: ContaBanco): ContaPagar => ({
@@ -28,6 +38,11 @@ const daLinha = (r: ContaBanco): ContaPagar => ({
   diaRecorrencia: r.dia_recorrencia,
   status: r.status as StatusConta,
   pagoEm: r.pago_em,
+  fornecedor: r.fornecedor,
+  documento: r.documento,
+  valorPago: r.valor_pago === null ? null : Number(r.valor_pago),
+  parcela: r.parcela,
+  parcelas: r.parcelas,
 });
 
 export const chaveContas = (userId: string | undefined) => ["contas-pagar", userId] as const;
@@ -45,7 +60,7 @@ export function useContasPagar(userId: string | undefined, pagasDesde: string) {
       const { data, error } = await supabase
         .from("contas_pagar")
         .select(
-          "id, descricao, valor, vencimento, categoria, recorrencia, dia_recorrencia, status, pago_em",
+          "id, descricao, valor, vencimento, categoria, recorrencia, dia_recorrencia, status, pago_em, fornecedor, documento, valor_pago, parcela, parcelas",
         )
         .eq("user_id", userId!)
         .or(`status.eq.a_pagar,pago_em.gte.${pagasDesde}`)
@@ -59,10 +74,15 @@ export function useContasPagar(userId: string | undefined, pagasDesde: string) {
 
 export interface ContaParaSalvar {
   descricao: string;
+  /** Na criação parcelada, o total: vira N contas, uma por mês. */
   valor: number;
   vencimento: string;
   categoria: string | null;
   recorrencia: RecorrenciaConta;
+  fornecedor: string | null;
+  documento: string | null;
+  /** Só na criação. 2 ou mais divide o valor em parcelas mensais. */
+  parcelas?: number;
 }
 
 export type ResultadoSalvar = "ok" | "ja_paga" | "erro";
@@ -72,9 +92,28 @@ export async function salvarConta(
   conta: ContaParaSalvar,
   idEdicao?: string,
 ): Promise<ResultadoSalvar> {
-  const payload = { ...conta, descricao: conta.descricao.trim() };
+  const { parcelas, ...campos } = conta;
+  const payload = {
+    ...campos,
+    descricao: campos.descricao.trim(),
+    fornecedor: campos.fornecedor?.trim() || null,
+    documento: campos.documento?.trim() || null,
+  };
   if (!idEdicao) {
-    const { error } = await supabase.from("contas_pagar").insert({ user_id: userId, ...payload });
+    // Parcelada entra como N linhas num insert só: ou entram todas, ou nenhuma.
+    const linhas =
+      parcelas && parcelas >= 2
+        ? dividirEmParcelas(payload.valor, parcelas, payload.vencimento).map((p) => ({
+            user_id: userId,
+            ...payload,
+            recorrencia: "nenhuma" as const,
+            valor: p.valor,
+            vencimento: p.vencimento,
+            parcela: p.parcela,
+            parcelas: p.parcelas,
+          }))
+        : [{ user_id: userId, ...payload }];
+    const { error } = await supabase.from("contas_pagar").insert(linhas);
     if (error) console.error("conta_pagar_salvar", error);
     return error ? "erro" : "ok";
   }
@@ -92,8 +131,13 @@ export async function salvarConta(
   return data && data.length > 0 ? "ok" : "ja_paga";
 }
 
-export const pagarConta = (id: string, data: string) =>
-  supabase.rpc("pagar_conta", { p_conta_id: id, p_data: data });
+/** `valorPago` vazio = pagou o valor original da conta. */
+export const pagarConta = (id: string, data: string, valorPago?: number) =>
+  supabase.rpc("pagar_conta", {
+    p_conta_id: id,
+    p_data: data,
+    ...(valorPago !== undefined ? { p_valor: valorPago } : {}),
+  });
 
 export const desfazerPagamento = (id: string) =>
   supabase.rpc("desfazer_pagamento", { p_conta_id: id });
