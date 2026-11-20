@@ -1,3 +1,4 @@
+import { FORMAS_RECEBIMENTO, ROTULO_TAXA, type FormaRecebimento } from "@/lib/taxas";
 import { useId, useMemo, useState, type ChangeEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
@@ -35,6 +36,8 @@ export interface Lancamento {
   categoria: string | null;
   /** Origem ("venda:<id>" quando veio de uma venda). Só vem nas leituras que pedem a coluna. */
   id_externo?: string | null;
+  /** Forma de recebimento da entrada (ONE-207 Fase 3). Só vem nas leituras que pedem a coluna. */
+  forma?: string | null;
   created_at: string;
 }
 
@@ -96,6 +99,12 @@ export function ModalLancamento({
     novaTexto: "",
   }));
   const { categoria, novaAberta: novaCategoriaAberta, novaTexto: novaCategoriaTexto } = selecao;
+  // Forma da entrada pro fechamento do mês (ONE-207 Fase 3). Fica fora do
+  // Painel do Grátis (somenteMesCorrente): o fechamento é do Premium e do Pro.
+  const [forma, setForma] = useState<FormaRecebimento | "">(
+    (lancamentoEdit?.forma as FormaRecebimento | null | undefined) ?? "",
+  );
+  const mostraForma = tipo === "entrada" && !somenteMesCorrente;
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -163,6 +172,9 @@ export function ModalLancamento({
       data,
       descricao: descricao.trim() || null,
       categoria: categoriaFinal,
+      // Saída não tem forma; no Grátis o campo não aparece e a forma que já
+      // existia fica como estava.
+      ...(mostraForma ? { forma: forma || null } : tipo === "saida" ? { forma: null } : {}),
     };
     const { error } =
       edit && lancamentoEdit
@@ -274,6 +286,25 @@ export function ModalLancamento({
           />
         </Campo>
       </div>
+
+      {mostraForma && (
+        <div className="mb-4">
+          <Campo label="Forma de recebimento" hint="opcional, entra no fechamento do mês">
+            <select
+              value={forma}
+              onChange={(e) => setForma(e.target.value as FormaRecebimento | "")}
+              className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            >
+              <option value="">Não informar</option>
+              {FORMAS_RECEBIMENTO.map((f) => (
+                <option key={f} value={f}>
+                  {ROTULO_TAXA[f]}
+                </option>
+              ))}
+            </select>
+          </Campo>
+        </div>
+      )}
 
       {/* Descrição */}
       <div className="mb-4">

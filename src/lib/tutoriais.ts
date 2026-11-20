@@ -606,6 +606,15 @@ const LISTA = [
         ],
       },
       {
+        titulo: "Fechar o mês",
+        itens: [
+          'Em "Fechamento do mês", escolha o "Mês". Os cartões mostram quanto entrou em cada forma de recebimento, pra bater com o extrato do banco e o relatório da maquininha.',
+          'A forma vem do que você escolhe em "Forma de recebimento": no lançamento de entrada, na venda e no "Recebi". Entrada sem forma aparece em "Não informada".',
+          '"Ver o dia a dia" abre a tabela de cada dia por forma, com as saídas ao lado. Embaixo dos cartões aparecem as taxas descontadas no recebimento e os juros pagos nas contas.',
+          '"Baixar planilha do mês" baixa um arquivo que abre no Excel, com cliente ou fornecedor, documento, forma, valor original e valor pago ou recebido de cada lançamento.',
+        ],
+      },
+      {
         titulo: "Não esquecer as contas do mês",
         itens: [
           'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',

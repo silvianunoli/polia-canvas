@@ -1632,6 +1632,7 @@ export type Database = {
           created_at: string
           data: string
           descricao: string | null
+          forma: string | null
           id: string
           id_externo: string | null
           importacao_id: string | null
@@ -1644,6 +1645,7 @@ export type Database = {
           created_at?: string
           data?: string
           descricao?: string | null
+          forma?: string | null
           id?: string
           id_externo?: string | null
           importacao_id?: string | null
@@ -1656,6 +1658,7 @@ export type Database = {
           created_at?: string
           data?: string
           descricao?: string | null
+          forma?: string | null
           id?: string
           id_externo?: string | null
           importacao_id?: string | null
@@ -2383,6 +2386,7 @@ export type Database = {
           data: string
           desconto: number
           entrega_em: string | null
+          forma: string | null
           andamento: string | null
           frete: number
           id: string
@@ -3307,6 +3311,10 @@ export type Database = {
           p_forma?: string | null
         }
         Returns: string
+      }
+      definir_forma_venda: {
+        Args: { p_venda_id: string; p_forma: string | null }
+        Returns: undefined
       }
       desfazer_recebimento: {
         Args: { p_conta_id: string }

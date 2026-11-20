@@ -343,6 +343,15 @@ export async function salvarKit(kitId: string, componentes: readonly ComponenteK
   });
 }
 
+/**
+ * Grava a forma de recebimento na venda e, se ela já virou entrada, no
+ * lançamento dela (ONE-207 Fase 3). Fica fora do registrar_venda pra nenhuma
+ * RPC grande de venda mudar de assinatura.
+ */
+export async function definirFormaVenda(vendaId: string, forma: string | null) {
+  return supabase.rpc("definir_forma_venda", { p_venda_id: vendaId, p_forma: forma });
+}
+
 export async function receberVenda(vendaId: string, data: string) {
   return supabase.rpc("receber_venda", { p_venda_id: vendaId, p_data: data });
 }

@@ -38,6 +38,7 @@ const venda = (vencimento: string, liquido: number): VendaAReceber => ({
   canal: "whatsapp",
   clienteNome: "Ana",
   liquido,
+  forma: null,
 });
 
 describe("listaAReceber", () => {

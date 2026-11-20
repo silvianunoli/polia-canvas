@@ -38,6 +38,8 @@ import {
 import { ModalImportar } from "@/components/financeiro/ModalImportar";
 import { SecaoContasPagar } from "@/components/financeiro/SecaoContasPagar";
 import { SecaoAReceber } from "@/components/financeiro/SecaoAReceber";
+import { SecaoFechamento } from "@/components/financeiro/SecaoFechamento";
+import { chaveDaForma, ROTULO_FORMA } from "@/lib/fechamentoDoMes";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface FinanceiroSearch {
@@ -162,7 +164,7 @@ function FinanceiroPage() {
         lerTodasAsPaginas<Lancamento>((de, ate) =>
           supabase
             .from("lancamentos")
-            .select("id, tipo, valor, data, descricao, categoria, id_externo, created_at")
+            .select("id, tipo, valor, data, descricao, categoria, id_externo, forma, created_at")
             .eq("user_id", userId!)
             .order("data", { ascending: false })
             .order("id", { ascending: true })
@@ -569,6 +571,12 @@ function FinanceiroPage() {
           />
         )}
 
+        {/* ───────── Fechamento do mês (ONE-207 Fase 3) ─────────
+            Só depois do "agora" do cliente: o mês inicial vem de hoje. */}
+        {userId && hojeISOStr && (
+          <SecaoFechamento userId={userId} hoje={hojeISOStr} lancamentos={lancamentos} />
+        )}
+
         {/* ───────── 4. Histórico ───────── */}
         <section className="mt-12">
           <h2 className="text-[20px] leading-tight text-[var(--ink)]">Histórico</h2>
@@ -792,6 +800,7 @@ function LinhaLancamento({
               {l.categoria}
             </span>
           )}
+          {entrada && l.forma && <span>{ROTULO_FORMA[chaveDaForma(l.forma)]}</span>}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">

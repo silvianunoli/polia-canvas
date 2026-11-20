@@ -24,7 +24,7 @@ import {
 } from "@/lib/contasReceber";
 import { FORMAS_RECEBIMENTO, ROTULO_TAXA, type FormaRecebimento } from "@/lib/taxas";
 import { CANAL_LABEL, type CanalVenda } from "@/lib/vendas";
-import { receberVenda } from "@/components/vendas/dados";
+import { definirFormaVenda, receberVenda } from "@/components/vendas/dados";
 import { useTaxas } from "@/components/vendas/taxasDados";
 import {
   chaveAReceber,
@@ -123,6 +123,12 @@ export function SecaoAReceber({
     forma?: FormaRecebimento | null,
   ) => {
     setOcupada(item.id);
+    // Venda: a forma vai pra venda antes do recebimento, e o lançamento que o
+    // receber_venda cria herda dela (gatilho da migration 20261120100000).
+    if (item.tipo === "venda" && (forma ?? null) !== item.venda.forma) {
+      const { error: erroForma } = await definirFormaVenda(item.id, forma ?? null);
+      if (erroForma) console.error("venda_forma", erroForma);
+    }
     const { error } =
       item.tipo === "conta"
         ? await receberConta(item.id, data, valorRecebido, forma)
@@ -418,8 +424,9 @@ function MetaVenda({ venda, hoje }: { venda: VendaAReceber; hoje: string }) {
 }
 
 /**
- * "Recebi": data sempre; forma e valor que caiu só na conta avulsa. A venda
- * entra pelo líquido que Vendas já calculou (total - taxa - frete pago por ela).
+ * "Recebi": data e forma sempre; valor que caiu só na conta avulsa. A venda
+ * entra pelo líquido que Vendas já calculou (total - taxa - frete pago por ela),
+ * e a forma dela vem marcada quando foi escolhida no registro.
  */
 function ModalReceber({
   userId,
@@ -441,7 +448,9 @@ function ModalReceber({
   const original = item.valor;
   const taxas = useTaxas(ehConta ? userId : undefined);
   const [data, setData] = useState(hoje);
-  const [forma, setForma] = useState<FormaRecebimento | "">("");
+  const [forma, setForma] = useState<FormaRecebimento | "">(
+    item.tipo === "venda" ? (item.venda.forma ?? "") : "",
+  );
   const [cents, setCents] = useState(() => Math.round(original * 100));
   // Valor digitado por ela não é sobrescrito pela taxa da forma.
   const [valorDigitado, setValorDigitado] = useState(false);
@@ -452,7 +461,7 @@ function ModalReceber({
 
   const escolherForma = (nova: FormaRecebimento | "") => {
     setForma(nova);
-    if (valorDigitado) return;
+    if (!ehConta || valorDigitado) return;
     const regra = nova ? taxas.data?.[nova] : undefined;
     setCents(Math.round(valorQueDeveCair(original, regra) * 100));
   };
@@ -488,7 +497,7 @@ function ModalReceber({
               onConfirmar(
                 data,
                 ehConta && Math.round(original * 100) !== cents ? valorRecebido : undefined,
-                ehConta && forma ? forma : null,
+                forma || null,
               )
             }
             disabled={salvando || !dataValida || (ehConta && !valorValido)}
@@ -514,22 +523,27 @@ function ModalReceber({
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
         </Campo>
-        {ehConta && (
-          <Campo label="Forma de recebimento" hint="opcional, puxa a taxa cadastrada em Vendas">
-            <select
-              value={forma}
-              onChange={(e) => escolherForma(e.target.value as FormaRecebimento | "")}
-              className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-            >
-              <option value="">Não informar</option>
-              {FORMAS_RECEBIMENTO.map((f) => (
-                <option key={f} value={f}>
-                  {ROTULO_TAXA[f]}
-                </option>
-              ))}
-            </select>
-          </Campo>
-        )}
+        <Campo
+          label="Forma de recebimento"
+          hint={
+            ehConta
+              ? "opcional, puxa a taxa cadastrada em Vendas"
+              : "opcional, entra no fechamento do mês"
+          }
+        >
+          <select
+            value={forma}
+            onChange={(e) => escolherForma(e.target.value as FormaRecebimento | "")}
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          >
+            <option value="">Não informar</option>
+            {FORMAS_RECEBIMENTO.map((f) => (
+              <option key={f} value={f}>
+                {ROTULO_TAXA[f]}
+              </option>
+            ))}
+          </select>
+        </Campo>
       </div>
       {ehConta && (
         <div className="mt-4 sm:max-w-[50%] sm:pr-2">

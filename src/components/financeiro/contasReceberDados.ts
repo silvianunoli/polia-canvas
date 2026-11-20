@@ -48,7 +48,7 @@ const daLinha = (r: ContaBanco): ContaReceber => ({
 
 // custo_envio ainda não está nos tipos gerados (mesmo jeito de pedidos/dados.ts).
 const COLUNAS_VENDA_A_RECEBER: string =
-  "id, data, entrega_em, canal, cliente_nome, total, taxa_canal, custo_envio";
+  "id, data, entrega_em, canal, cliente_nome, total, taxa_canal, custo_envio, forma";
 
 export const chaveAReceber = (userId: string | undefined) => ["a-receber", userId] as const;
 
@@ -91,6 +91,7 @@ export function useAReceber(userId: string | undefined, recebidasDesde: string) 
         total: number;
         taxa_canal: number;
         custo_envio: number | null;
+        forma: string | null;
       };
       const vendas: VendaAReceber[] = ((vendasRes.data ?? []) as unknown as VendaBanco[]).map(
         (v) => ({
@@ -99,6 +100,7 @@ export function useAReceber(userId: string | undefined, recebidasDesde: string) 
           vencimento: v.entrega_em ?? v.data,
           canal: v.canal,
           clienteNome: v.cliente_nome,
+          forma: v.forma as FormaRecebimento | null,
           liquido: liquidoDaVenda(
             Number(v.total),
             Number(v.taxa_canal),

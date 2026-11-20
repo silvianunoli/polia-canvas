@@ -29,7 +29,12 @@ import {
   regraEstaVazia,
   type FormaRecebimento,
 } from "@/lib/taxas";
-import { registrarVenda, useProdutosComEstoque, type ProdutoVendavel } from "./dados";
+import {
+  definirFormaVenda,
+  registrarVenda,
+  useProdutosComEstoque,
+  type ProdutoVendavel,
+} from "./dados";
 import { custoDoKit, kitsQueDaPraMontar } from "@/lib/kits";
 import { chaveTaxas, useTaxas } from "./taxasDados";
 import { ModalTaxas } from "./ModalTaxas";
@@ -311,7 +316,14 @@ export function ModalRegistrarVenda({
       );
       return;
     }
+    // A forma vai num segundo passo (definir_forma_venda). Se falhar, a venda
+    // já está salva e certa; só o fechamento do mês fica sem a forma dela.
+    if (forma) {
+      const { error: erroForma } = await definirFormaVenda(idVenda, forma);
+      if (erroForma) console.error("venda_forma", erroForma);
+    }
     track("venda_registrada", {
+      forma: forma || "nao_informada",
       canal,
       itens: itensValidos.length,
       origem: prefill?.orcamentoId ? "orcamento" : "vendas",

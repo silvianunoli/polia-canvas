@@ -42,6 +42,8 @@ export interface VendaAReceber {
   clienteNome: string | null;
   /** O que vai entrar no Financeiro: total - taxa - frete pago por ela (igual à RPC receber_venda). */
   liquido: number;
+  /** Forma escolhida ao registrar a venda (ONE-207 Fase 3), quando tem. */
+  forma: FormaRecebimento | null;
 }
 
 export type ItemAReceber =
