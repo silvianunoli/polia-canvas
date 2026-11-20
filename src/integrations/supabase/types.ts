@@ -1386,6 +1386,47 @@ export type Database = {
         }
         Relationships: []
       }
+      contas_receber: {
+        Row: {
+          categoria: string | null
+          cliente: string | null
+          created_at: string
+          descricao: string
+          documento: string | null
+          forma: string | null
+          id: string
+          lancamento_id: string | null
+          parcela: number | null
+          parcelas: number | null
+          recebido_em: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          valor: number
+          valor_recebido: number | null
+          vencimento: string
+        }
+        Insert: {
+          categoria?: string | null
+          cliente?: string | null
+          descricao: string
+          documento?: string | null
+          parcela?: number | null
+          parcelas?: number | null
+          user_id: string
+          valor: number
+          vencimento: string
+        }
+        Update: {
+          categoria?: string | null
+          cliente?: string | null
+          descricao?: string
+          documento?: string | null
+          valor?: number
+          vencimento?: string
+        }
+        Relationships: []
+      }
       equipamentos: {
         Row: {
           arquivado: boolean
@@ -3257,6 +3298,19 @@ export type Database = {
       pagar_conta: {
         Args: { p_conta_id: string; p_data: string; p_valor?: number | null }
         Returns: string
+      }
+      receber_conta: {
+        Args: {
+          p_conta_id: string
+          p_data: string
+          p_valor?: number | null
+          p_forma?: string | null
+        }
+        Returns: string
+      }
+      desfazer_recebimento: {
+        Args: { p_conta_id: string }
+        Returns: undefined
       }
       desfazer_pagamento: {
         Args: { p_conta_id: string }

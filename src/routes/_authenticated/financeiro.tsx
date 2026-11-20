@@ -37,6 +37,7 @@ import {
 } from "@/components/financeiro/ModalLancamento";
 import { ModalImportar } from "@/components/financeiro/ModalImportar";
 import { SecaoContasPagar } from "@/components/financeiro/SecaoContasPagar";
+import { SecaoAReceber } from "@/components/financeiro/SecaoAReceber";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface FinanceiroSearch {
@@ -278,6 +279,18 @@ function FinanceiroPage() {
       ...new Set(
         lancamentos
           .filter((l) => l.tipo === "saida" && l.categoria && l.categoria.trim())
+          .map((l) => l.categoria!.trim()),
+      ),
+    ],
+    [lancamentos],
+  );
+
+  // Categorias de entrada que ela já usa, pras contas a receber (ONE-207).
+  const categoriasDeEntrada = useMemo(
+    () => [
+      ...new Set(
+        lancamentos
+          .filter((l) => l.tipo === "entrada" && l.categoria && l.categoria.trim())
           .map((l) => l.categoria!.trim()),
       ),
     ],
@@ -535,6 +548,16 @@ function FinanceiroPage() {
             + Registrar saída
           </button>
         </section>
+
+        {/* ───────── A receber (ONE-207 Fase 2) ───────── */}
+        {userId && (
+          <SecaoAReceber
+            userId={userId}
+            hoje={hojeISOStr}
+            categoriasDoHistorico={categoriasDeEntrada}
+            onLancamentosMudaram={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
+          />
+        )}
 
         {/* ───────── Contas a pagar (ONE-127) ───────── */}
         {userId && (

@@ -597,6 +597,15 @@ const LISTA = [
         ],
       },
       {
+        titulo: "Acompanhar o que falta receber",
+        itens: [
+          'A seção "A receber" junta as vendas marcadas como a receber em Vendas e as contas que você cadastra em "+ Nova conta a receber": fiado, resto de encomenda, parcela da cliente.',
+          'Na conta nova, preencha o que vai receber, o valor e a data combinada. "Cliente" e "Documento" são opcionais, e "Dividir em parcelas" cria uma conta por mês.',
+          'Quando o dinheiro cair, clique em "Recebi". Na conta, escolha a "Forma de recebimento": se a forma tem taxa cadastrada em Vendas, a Pólia One já mostra quanto deve cair, e você confere em "Valor que caiu (R$)".',
+          'Só depois do "Recebi" o valor vira uma entrada do mês.',
+        ],
+      },
+      {
         titulo: "Não esquecer as contas do mês",
         itens: [
           'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',
@@ -626,7 +635,13 @@ const LISTA = [
       },
       {
         pergunta: "As vendas de Vendas aparecem aqui",
-        resposta: "Aparecem, assim que o dinheiro é marcado como recebido.",
+        resposta:
+          'Aparecem no histórico assim que o dinheiro é marcado como recebido. Enquanto estão a receber, ficam na seção "A receber", com o "Recebi" ali mesmo.',
+      },
+      {
+        pergunta: "Marquei recebido por engano",
+        resposta:
+          'Na conta a receber, abra "Ver as recebidas nos últimos 30 dias" e clique em "Desfazer". A venda de Vendas se corrige cancelando ela em Vendas.',
       },
       {
         pergunta: "Comprei insumo. Conta como custo fixo",
