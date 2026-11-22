@@ -23,6 +23,9 @@ import {
   CHAVE_CATALOGO,
   CHAVE_PRODUTOS_CATALOGO,
   alternarNaLoja,
+  chaveCategorias,
+  criarCategoria,
+  mudarCategoria,
   moverNaLista,
   removerBanner,
   removerFotoProduto,
@@ -32,6 +35,7 @@ import {
   subirCapa,
   subirFotoProduto,
   useBannersDaVitrine,
+  useCategoriasDaVitrine,
   useProdutosDoCatalogo,
   type BannerDaVitrine,
   type ProdutoDoCatalogo,
@@ -367,7 +371,7 @@ function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => vo
   return (
     <Secao
       titulo="Produtos na vitrine"
-      texto="Preço, nome e variações vêm de Produtos. Cada um leva até 4 fotos: a primeira é a da vitrine. Use as setas pra escolher quem aparece primeiro."
+      texto="Preço, nome e variações vêm de Produtos. Cada um leva até 4 fotos: a primeira é a da vitrine. Use as setas pra escolher quem aparece primeiro e a categoria pra cliente filtrar a vitrine."
     >
       {q.isError ? (
         <BlockError message="A Pólia One não conseguiu abrir os produtos agora." onRetry={() => q.refetch()} />
@@ -624,6 +628,7 @@ function LinhaProduto({
         </div>
         <Switch checked={p.noCatalogo} disabled={ocupado} onCheckedChange={alternar} aria-label={`${p.nome} na vitrine`} />
       </div>
+      {p.noCatalogo && <SeletorCategoria p={p} userId={userId} onMudou={onMudou} />}
       {p.noCatalogo && (
         <div className="flex flex-wrap items-center gap-3">
           {p.fotos.map((f, i) => (
@@ -655,5 +660,122 @@ function LinhaProduto({
         </div>
       )}
     </li>
+  );
+}
+
+const NOVA = "__nova__";
+
+/**
+ * Categoria do produto na vitrine (22/11/2026). A cliente filtra a vitrine por
+ * ela. Mesma tabela da loja de marca (produto_categorias): criar aqui aparece lá.
+ */
+function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId: string; onMudou: () => void }) {
+  const qc = useQueryClient();
+  const cats = useCategoriasDaVitrine(userId);
+  const [criando, setCriando] = useState(false);
+  const [nome, setNome] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const idSelect = `cat-${p.id}`;
+  const idNova = `cat-nova-${p.id}`;
+
+  const escolher = async (valor: string) => {
+    if (valor === NOVA) {
+      setCriando(true);
+      setErro(null);
+      return;
+    }
+    setOcupado(true);
+    const r = await mudarCategoria(p.id, valor || null);
+    setOcupado(false);
+    if (r.error) return toastErro(r.error);
+    onMudou();
+  };
+  const criar = async () => {
+    setOcupado(true);
+    setErro(null);
+    const r = await criarCategoria(userId, nome);
+    if (r.error || !r.id) {
+      setOcupado(false);
+      return setErro(r.error);
+    }
+    await qc.invalidateQueries({ queryKey: chaveCategorias(userId) });
+    const m = await mudarCategoria(p.id, r.id);
+    setOcupado(false);
+    if (m.error) return toastErro(m.error);
+    setCriando(false);
+    setNome("");
+    toastSucesso("Categoria criada.");
+    onMudou();
+  };
+
+  if (criando)
+    return (
+      <div className="space-y-1">
+        <label htmlFor={idNova} className="font-sans text-[13px] font-medium text-[var(--ink)]">
+          Nome da categoria nova
+        </label>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            id={idNova}
+            className={`${INPUT} max-w-[260px]`}
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void criar();
+            }}
+            maxLength={60}
+            placeholder="Ex.: Bolsas"
+            aria-invalid={!!erro}
+            aria-describedby={erro ? `${idNova}-erro` : undefined}
+            autoFocus
+          />
+          <button type="button" className={BTN_MIUDO} onClick={() => void criar()} disabled={ocupado || !nome.trim()}>
+            {ocupado ? "Criando..." : "Criar"}
+          </button>
+          <button
+            type="button"
+            className="min-h-11 px-2 font-sans text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+            onClick={() => {
+              setCriando(false);
+              setNome("");
+              setErro(null);
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+        {erro && (
+          <p id={`${idNova}-erro`} role="alert" className="font-sans text-[12px] text-[var(--danger)]">
+            {erro}
+          </p>
+        )}
+      </div>
+    );
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <label htmlFor={idSelect} className="font-sans text-[13px] font-medium text-[var(--ink)]">
+        Categoria
+      </label>
+      <select
+        id={idSelect}
+        className={`${INPUT} max-w-[260px] py-2`}
+        value={p.categoriaId ?? ""}
+        onChange={(e) => void escolher(e.target.value)}
+        disabled={ocupado || cats.isLoading}
+      >
+        <option value="">Sem categoria</option>
+        {(cats.data ?? []).map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.nome}
+          </option>
+        ))}
+        <option value={NOVA}>+ Nova categoria</option>
+      </select>
+      {cats.isError && (
+        <span className="font-sans text-[12px] text-[var(--danger)]">A Pólia One não conseguiu ler as categorias.</span>
+      )}
+    </div>
   );
 }

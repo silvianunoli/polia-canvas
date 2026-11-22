@@ -1013,6 +1013,7 @@ const LISTA = [
         itens: [
           'Em "Banner rotativo", clique em "Subir o primeiro banner". Cabem até 5 imagens (JPG, PNG ou WEBP, até 3 MB), de preferência deitadas, em 1600 x 600 px.',
           "Na vitrine, elas passam sozinhas no topo, uma a cada 5 segundos. As setas de cada banner mudam a ordem e a lixeira tira.",
+          "Com banner, o nome da loja fica em cima dele e a capa sai do topo. A chamada, se tiver, aparece logo abaixo.",
         ],
       },
       {
@@ -1028,6 +1029,7 @@ const LISTA = [
         itens: [
           'Em "Produtos na vitrine", ligue cada produto que deve aparecer. Nome, preço e variações vêm de Produtos.',
           "Os produtos ligados aparecem numa lista numerada: as setas pra cima e pra baixo escolhem quem aparece primeiro na vitrine. Produto que você liga depois entra no fim.",
+          'Em "Categoria", escolha a de cada produto ou crie uma em "+ Nova categoria". Quando a categoria separa os produtos (duas categorias, ou uma e produtos sem categoria), a vitrine mostra botões pra cliente filtrar.',
           'Clique em "Foto" pra subir até 4 fotos por produto (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine.',
         ],
       },

@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { BannerLoja } from "@/components/loja/BannerLoja";
 import { GradeProdutos } from "@/components/loja/GradeProdutos";
 import { IconeWhatsapp } from "@/components/loja/icones";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { SelosLoja } from "@/components/loja/SelosLoja";
-import type { LojaPublica } from "@/lib/loja";
+import { produtosDaCategoria, temFiltroDeCategoria, type LojaPublica } from "@/lib/loja";
 import { linkWhatsapp } from "@/lib/lojaVitrine";
 
 // Vitrine da loja (página inicial de /loja/<endereço>). Loader, head e casca
@@ -19,11 +20,26 @@ function VitrinePage() {
   const { loja } = useLojaVitrine();
   const contato = linkWhatsapp(loja.whatsapp, "Oi, vim pela loja online e queria tirar uma dúvida.");
   const dias = `${loja.prazoDiasUteis} ${loja.prazoDiasUteis === 1 ? "dia útil" : "dias úteis"}`;
+  const temBanner = (loja.banners ?? []).length > 0;
+  const [categoria, setCategoria] = useState<string | null>(null);
+  const filtro = temFiltroDeCategoria(loja);
+  const lista = filtro ? produtosDaCategoria(loja.produtos, categoria) : loja.produtos;
 
   return (
     <>
+      {temBanner && (
+        // Com banner, o nome da loja sobe pra cima dele e aparece uma vez só.
+        // Sem chamada, ele é o h1 da página (com o visual do olho).
+        <div className="wrap topo-banner">
+          {loja.chamada ? (
+            <span className="olho">{loja.nome}</span>
+          ) : (
+            <h1 className="olho">{loja.nome}</h1>
+          )}
+        </div>
+      )}
       <BannerLoja banners={loja.banners ?? []} nome={loja.nome} />
-      <Abertura loja={loja} dias={dias} />
+      <Abertura loja={loja} dias={dias} temBanner={temBanner} />
 
       <div className="wrap">
         <SelosLoja loja={loja} />
@@ -37,8 +53,25 @@ function VitrinePage() {
           </div>
           {loja.produtos.length > 0 && <p>Toque num produto pra ver as fotos, as opções e pôr no carrinho.</p>}
         </div>
+        {filtro && (
+          <div className="categorias" role="group" aria-label="Filtrar por categoria">
+            <button type="button" aria-pressed={categoria === null} onClick={() => setCategoria(null)}>
+              Todos
+            </button>
+            {loja.categorias.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                aria-pressed={categoria === c.id}
+                onClick={() => setCategoria(c.id)}
+              >
+                {c.nome}
+              </button>
+            ))}
+          </div>
+        )}
         {loja.produtos.length ? (
-          <GradeProdutos slug={loja.slug} produtos={loja.produtos} />
+          <GradeProdutos slug={loja.slug} produtos={lista} />
         ) : (
           <p className="vazio-loja">A vitrine está sendo montada. Volte daqui a pouco pra ver os produtos.</p>
         )}
@@ -91,14 +124,23 @@ function VitrinePage() {
   );
 }
 
-function Abertura({ loja, dias }: { loja: LojaPublica; dias: string }) {
-  const comFoto = loja.produtos.filter((p) => p.fotos.length > 0).slice(0, 3);
-  const temImagem = !!loja.capaUrl || comFoto.length > 0;
+function Abertura({ loja, dias, temBanner }: { loja: LojaPublica; dias: string; temBanner: boolean }) {
+  // Com banner, ele já é a imagem do topo: capa e colagem saem.
+  const comFoto = temBanner ? [] : loja.produtos.filter((p) => p.fotos.length > 0).slice(0, 3);
+  const capa = temBanner ? null : loja.capaUrl;
+  const temImagem = !!capa || comFoto.length > 0;
+  // O nome aparece uma vez só: como olho em cima da chamada, ou como o título
+  // quando não há chamada. Com banner, ele já ficou em cima do banner.
+  const titulo = loja.chamada ?? (temBanner ? null : loja.nome);
   return (
-    <section className={`wrap abertura${temImagem ? " com-imagem" : ""}`} aria-labelledby="t-abertura">
+    <section
+      className={`wrap abertura${temImagem ? " com-imagem" : ""}${temBanner ? " sob-banner" : ""}`}
+      aria-labelledby={titulo ? "t-abertura" : undefined}
+      aria-label={titulo ? undefined : `Sobre a ${loja.nome}`}
+    >
       <div>
-        <span className="olho">{loja.nome}</span>
-        <h1 id="t-abertura">{loja.chamada ?? loja.nome}</h1>
+        {loja.chamada && !temBanner && <span className="olho">{loja.nome}</span>}
+        {titulo && <h1 id="t-abertura">{titulo}</h1>}
         {loja.subchamada && <p className="sub">{loja.subchamada}</p>}
         <div className="acoes">
           <a className="btn" href="#produtos">
@@ -109,9 +151,9 @@ function Abertura({ loja, dias }: { loja: LojaPublica; dias: string }) {
           </a>
         </div>
       </div>
-      {loja.capaUrl ? (
+      {capa ? (
         <div className="capa">
-          <img src={loja.capaUrl} alt={`Capa da loja ${loja.nome}`} fetchPriority="high" />
+          <img src={capa} alt={`Capa da loja ${loja.nome}`} fetchPriority="high" />
         </div>
       ) : comFoto.length > 0 ? (
         <div className={`colagem n${comFoto.length}`}>

@@ -4,7 +4,9 @@ import {
   linhaDaConfig,
   mensagemDoPedido,
   observacaoDoPedidoLoja,
+  produtosDaCategoria,
   reais,
+  temFiltroDeCategoria,
   type ConfigLoja,
 } from "./loja";
 
@@ -134,5 +136,24 @@ describe("configLojaSchema", () => {
   it("recusa cor que não é hex de 6 dígitos e aceita vazio", () => {
     expect(configLojaSchema.safeParse({ ...configBase, corDestaque: "rosa" }).success).toBe(false);
     expect(configLojaSchema.safeParse({ ...configBase, corDestaque: "" }).success).toBe(true);
+  });
+});
+
+describe("categorias da vitrine", () => {
+  const prod = (id: string, categoriaId: string | null) => ({ id, categoriaId });
+  const bolsas = { id: "c1", nome: "Bolsas" };
+  const chaveiros = { id: "c2", nome: "Chaveiros" };
+
+  it("filtro só aparece quando separa alguma coisa", () => {
+    expect(temFiltroDeCategoria({ categorias: [], produtos: [] })).toBe(false);
+    expect(temFiltroDeCategoria({ categorias: [bolsas], produtos: [prod("a", "c1")] as never })).toBe(false);
+    expect(temFiltroDeCategoria({ categorias: [bolsas], produtos: [prod("a", "c1"), prod("b", null)] as never })).toBe(true);
+    expect(temFiltroDeCategoria({ categorias: [bolsas, chaveiros], produtos: [] })).toBe(true);
+  });
+
+  it("filtra pela categoria; null mostra todos", () => {
+    const lista = [prod("a", "c1"), prod("b", "c2"), prod("c", null)];
+    expect(produtosDaCategoria(lista, "c1").map((p) => p.id)).toEqual(["a"]);
+    expect(produtosDaCategoria(lista, null)).toHaveLength(3);
   });
 });

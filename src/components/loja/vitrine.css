@@ -1341,8 +1341,53 @@
 }
 
 /* Banner rotativo do topo (22/11/2026): até 5 imagens da dona, uma por vez. */
+.loja-vitrine .topo-banner {
+  padding-top: 24px;
+}
+.loja-vitrine h1.olho {
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+}
 .loja-vitrine .banner-loja {
-  padding-top: 16px;
+  padding-top: 12px;
+}
+.loja-vitrine .abertura.sob-banner {
+  padding-block: 24px 40px;
+}
+
+/* Filtro por categoria acima da grade (22/11/2026). */
+.loja-vitrine .categorias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.loja-vitrine .categorias button {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--linha);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.loja-vitrine .categorias button:hover {
+  border-color: var(--texto);
+}
+.loja-vitrine .categorias button[aria-pressed="true"] {
+  background: var(--botao);
+  color: var(--botao-texto);
+  border-color: var(--botao);
+}
+.loja-vitrine .categorias button:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
 }
 .loja-vitrine .banner-trilho {
   position: relative;

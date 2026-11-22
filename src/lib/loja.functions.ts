@@ -71,16 +71,23 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, categoria_id, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
       .order("catalogo_ordem" as never, { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true });
-    const lista = (prods ?? []) as unknown as Array<{ id: string; nome: string; descricao: string | null; preco_venda: number }>;
+    const lista = (prods ?? []) as unknown as Array<{
+      id: string;
+      nome: string;
+      descricao: string | null;
+      preco_venda: number;
+      categoria_id: string | null;
+    }>;
     const ids = lista.map((p) => p.id);
 
-    const [{ data: fotos }, { data: skus }, { data: banners }] = await Promise.all([
+    const idsCategorias = [...new Set(lista.map((p) => p.categoria_id).filter((c): c is string => !!c))];
+    const [{ data: fotos }, { data: skus }, { data: banners }, { data: categorias }] = await Promise.all([
       ids.length
         ? supabaseAdmin.from("produto_fotos" as never).select("produto_id, path, ordem").in("produto_id", ids).order("ordem")
         : Promise.resolve({ data: [] }),
@@ -94,6 +101,15 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
             .order("variacao")
         : Promise.resolve({ data: [] }),
       supabaseAdmin.from("catalogo_banners" as never).select("path, ordem").eq("user_id", c.user_id).order("ordem"),
+      idsCategorias.length
+        ? supabaseAdmin
+            .from("produto_categorias" as never)
+            .select("id, nome")
+            .eq("user_id", c.user_id)
+            .in("id", idsCategorias)
+            .order("ordem")
+            .order("nome")
+        : Promise.resolve({ data: [] }),
     ]);
     const fotosPor = new Map<string, string[]>();
     for (const f of (fotos ?? []) as unknown as Array<{ produto_id: string; path: string }>) {
@@ -132,6 +148,11 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           preco: Number(p.preco_venda),
           fotos: fotosPor.get(p.id) ?? [],
           variacoes: varPor.get(p.id) ?? [],
+          categoriaId: p.categoria_id ?? null,
+        })),
+        categorias: ((categorias ?? []) as unknown as Array<{ id: string; nome: string }>).map((k) => ({
+          id: k.id,
+          nome: k.nome,
         })),
       },
     };

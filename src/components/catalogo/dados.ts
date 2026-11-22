@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { slugDaCategoria } from "@/lib/lojaCombinacoes";
 import { FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
 
 // Dados da tela Vitrine online (rota /catalogo; ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
@@ -25,6 +26,8 @@ export interface ProdutoDoCatalogo {
   noCatalogo: boolean;
   /** Posição na vitrine (produtos.catalogo_ordem); null quando ela nunca ordenou. */
   ordem: number | null;
+  /** produto_categorias.id; null = sem categoria. */
+  categoriaId: string | null;
   fotos: FotoProduto[];
   variacoes: number;
 }
@@ -38,7 +41,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
     queryFn: async (): Promise<ProdutoDoCatalogo[]> => {
       const { data: prods, error } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, created_at")
+        .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, categoria_id, created_at")
         .eq("user_id", userId!)
         .eq("arquivado", false)
         // Mesma ordem da loja pública (lerLojaPublica): a dela primeiro, depois a de cadastro.
@@ -51,6 +54,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         preco_venda: number;
         no_catalogo: boolean;
         catalogo_ordem: number | null;
+        categoria_id: string | null;
       }>;
       const ids = lista.map((p) => p.id);
       if (!ids.length) return [];
@@ -72,6 +76,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         preco: Number(p.preco_venda),
         noCatalogo: !!p.no_catalogo,
         ordem: p.catalogo_ordem ?? null,
+        categoriaId: p.categoria_id ?? null,
         fotos: fotosPor.get(p.id) ?? [],
         variacoes: varPor.get(p.id) ?? 0,
       }));
@@ -101,6 +106,55 @@ export function moverNaLista<T>(lista: readonly T[], indice: number, direcao: -1
   const nova = [...lista];
   [nova[indice], nova[alvo]] = [nova[alvo], nova[indice]];
   return nova;
+}
+
+// ── categorias (mesma tabela da loja de marca, produto_categorias) ─────────
+
+export interface CategoriaDaVitrine {
+  id: string;
+  nome: string;
+}
+
+/** Mesma chave da janela de produto (useLojaDoProduto): as duas telas ficam iguais. */
+export const chaveCategorias = (userId: string | undefined) => ["produto-categorias", userId] as const;
+
+export function useCategoriasDaVitrine(userId: string | undefined) {
+  return useQuery({
+    queryKey: chaveCategorias(userId),
+    enabled: !!userId,
+    queryFn: async (): Promise<CategoriaDaVitrine[]> => {
+      const { data, error } = await supabase
+        .from("produto_categorias" as never)
+        .select("id, nome")
+        .eq("user_id" as never, userId! as never)
+        .order("ordem" as never)
+        .order("nome" as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as CategoriaDaVitrine[];
+    },
+  });
+}
+
+export async function mudarCategoria(produtoId: string, categoriaId: string | null) {
+  const { error } = await supabase.from("produtos").update({ categoria_id: categoriaId } as never).eq("id", produtoId);
+  return { error: error ? "A Pólia One não conseguiu mudar a categoria agora." : null };
+}
+
+/** Cria a categoria e devolve o id. Nome repetido volta com o motivo. */
+export async function criarCategoria(userId: string, nome: string): Promise<{ id: string | null; error: string | null }> {
+  const limpo = nome.trim().slice(0, 60);
+  const slug = slugDaCategoria(limpo);
+  if (!limpo || !slug) return { id: null, error: "Escreva um nome com letras ou números." };
+  const { data, error } = await supabase
+    .from("produto_categorias" as never)
+    .insert({ user_id: userId, nome: limpo, slug } as never)
+    .select("id")
+    .single();
+  if (error || !data) {
+    if (error?.code === "23505") return { id: null, error: "Já existe uma categoria com esse nome." };
+    return { id: null, error: "A Pólia One não conseguiu criar a categoria. Tenta de novo." };
+  }
+  return { id: (data as unknown as { id: string }).id, error: null };
 }
 
 // ── banner rotativo (migration 20261122150000) ─────────────────────────────

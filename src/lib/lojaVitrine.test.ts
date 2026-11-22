@@ -45,8 +45,9 @@ const produtos: ProdutoLoja[] = [
       { id: ROSA, nome: "Rosa" },
       { id: AZUL, nome: "Azul" },
     ],
+    categoriaId: null,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [] },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null },
 ];
 
 describe("limparCarrinho", () => {

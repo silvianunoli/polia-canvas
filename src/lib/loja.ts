@@ -70,6 +70,13 @@ export interface ProdutoLoja {
   preco: number;
   fotos: string[];
   variacoes: VariacaoLoja[];
+  /** Categoria do produto (produto_categorias); null = sem categoria. */
+  categoriaId: string | null;
+}
+
+export interface CategoriaLoja {
+  id: string;
+  nome: string;
 }
 
 /** Só o que a loja pública mostra: sem user_id, custo, estoque ou dado de cliente. */
@@ -91,6 +98,22 @@ export interface LojaPublica {
   pedeEndereco: boolean;
   aviso: string | null;
   produtos: ProdutoLoja[];
+  /** Só as categorias que têm produto na vitrine, na ordem da dona. */
+  categorias: CategoriaLoja[];
+}
+
+/**
+ * O filtro por categoria só aparece quando separa alguma coisa: duas ou mais
+ * categorias, ou uma categoria e produtos sem categoria.
+ */
+export function temFiltroDeCategoria(loja: Pick<LojaPublica, "categorias" | "produtos">): boolean {
+  if (loja.categorias.length >= 2) return true;
+  return loja.categorias.length === 1 && loja.produtos.some((p) => !p.categoriaId);
+}
+
+/** Produtos de uma categoria; null = todos. */
+export function produtosDaCategoria<T extends Pick<ProdutoLoja, "categoriaId">>(produtos: T[], categoriaId: string | null): T[] {
+  return categoriaId ? produtos.filter((p) => p.categoriaId === categoriaId) : produtos;
 }
 
 /** Pedido que a loja manda: produto, variação e quantidade. Preço e nome saem do banco. */
