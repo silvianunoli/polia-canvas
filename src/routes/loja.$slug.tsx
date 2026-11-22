@@ -2,9 +2,15 @@ import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import vitrineCss from "@/components/loja/vitrine.css?url";
 import { VitrineLoja, VitrineSimples } from "@/components/loja/VitrineLoja";
-import { descricaoDaLoja, FONTES_VITRINE, metaDaLoja, type LeituraLoja } from "@/components/loja/leituraLoja";
+import {
+  descricaoDaLoja,
+  FONTES_VITRINE,
+  metaDaLoja,
+  type LeituraLoja,
+} from "@/components/loja/leituraLoja";
 import { lerLojaPublica } from "@/lib/loja.functions";
-import { linkCanonico } from "@/lib/seo";
+import { META_LOJA_SLUG } from "@/lib/lojaDominio";
+import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
 // Loja pública do catálogo (ONE-148): /loja/<endereço>. Este arquivo é o
 // layout: carrega a loja uma vez, põe a casca (topo, carrinho, rodapé) e as
@@ -26,20 +32,26 @@ export const Route = createFileRoute("/loja/$slug")({
   },
   head: ({ loaderData, params }) => {
     const loja = loaderData?.ok ? loaderData.loja : null;
-    const imagem = loja ? (loja.produtos.find((p) => p.fotos.length)?.fotos[0] ?? loja.logoUrl) : null;
+    const imagem = loja
+      ? (loja.produtos.find((p) => p.fotos.length)?.fotos[0] ?? loja.logoUrl)
+      : null;
     return {
-      meta: metaDaLoja({
-        titulo: loja?.nome ?? "Loja",
-        descricao: loja ? descricaoDaLoja(loja) : "Essa loja não está aberta agora.",
-        imagem,
-        caminho: `/loja/${params.slug}`,
-        indexar: !!loja,
-        marca: loja?.nome ?? "Loja",
-      }),
+      meta: [
+        // O navegador lê isto pra saber de qual loja é o domínio próprio (ONE-221).
+        ...(loja ? [{ name: META_LOJA_SLUG, content: loja.slug }] : []),
+        ...metaDaLoja({
+          titulo: loja?.nome ?? "Loja",
+          descricao: loja ? descricaoDaLoja(loja) : "Essa loja não está aberta agora.",
+          imagem,
+          caminho: `/loja/${params.slug}`,
+          indexar: !!loja,
+          marca: loja?.nome ?? "Loja",
+        }),
+      ],
       links: [
         { rel: "stylesheet", href: FONTES_VITRINE },
         { rel: "stylesheet", href: vitrineCss },
-        ...(loja ? [linkCanonico(`/loja/${loja.slug}`)] : []),
+        ...(loja ? [{ rel: "canonical", href: urlPublicaDaLoja(`/loja/${loja.slug}`) }] : []),
       ],
     };
   },
@@ -54,7 +66,9 @@ function LojaLayout() {
         <Outlet />
       </VitrineLoja>
     );
-  return <VitrineSimples>{leitura.motivo === "rede" ? <ErroDeRede /> : <LojaFechada />}</VitrineSimples>;
+  return (
+    <VitrineSimples>{leitura.motivo === "rede" ? <ErroDeRede /> : <LojaFechada />}</VitrineSimples>
+  );
 }
 
 function LojaFechada() {
@@ -62,8 +76,8 @@ function LojaFechada() {
     <div className="estado" role="alert">
       <h1>Essa loja não está aberta agora.</h1>
       <p>
-        O endereço pode ter vindo cortado, ou a loja fechou por enquanto. Fale com a marca pelo perfil onde você achou
-        o link.
+        O endereço pode ter vindo cortado, ou a loja fechou por enquanto. Fale com a marca pelo
+        perfil onde você achou o link.
       </p>
     </div>
   );

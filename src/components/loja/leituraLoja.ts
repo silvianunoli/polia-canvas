@@ -1,5 +1,5 @@
 import { reais, type LojaPublica } from "@/lib/loja";
-import { urlCanonica } from "@/lib/seo";
+import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
 /** O que o loader de /loja/$slug devolve (mesmo desenho do /l/$slug). */
 export type LeituraLoja = { ok: true; loja: LojaPublica } | { ok: false; motivo: "nao_existe" | "rede" };
@@ -29,7 +29,8 @@ export function metaDaLoja(p: {
   indexar: boolean;
   marca: string;
 }) {
-  const url = urlCanonica(p.caminho);
+  // No domínio próprio da marca (ONE-221), a URL pública é a dela.
+  const url = urlPublicaDaLoja(p.caminho);
   return [
     { title: p.titulo },
     { name: "description", content: p.descricao },

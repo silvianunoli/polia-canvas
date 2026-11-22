@@ -1060,7 +1060,7 @@ const LISTA = [
       {
         pergunta: "Posso usar um domínio meu",
         resposta:
-          "O domínio próprio (suamarca.com.br) é um serviço da Pólia Lab. A Vitrine online mora no endereço da Pólia.",
+          "O domínio próprio (suamarca.com.br) é um serviço da Pólia Lab. Com ele, o domínio mostra a mesma Vitrine online, com tudo o que você monta aqui: banner, categorias, ordem, cores e produtos. Sem ele, a Vitrine online mora no endereço da Pólia.",
       },
       {
         pergunta: "A cliente precisa ter conta",

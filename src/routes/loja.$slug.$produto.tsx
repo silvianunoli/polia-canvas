@@ -8,7 +8,7 @@ import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { BeneficiosLoja } from "@/components/loja/SelosLoja";
 import { reais, type ProdutoLoja } from "@/lib/loja";
 import { sinalDoPreco } from "@/lib/lojaVitrine";
-import { linkCanonico } from "@/lib/seo";
+import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
 // Página de um produto da loja (/loja/<endereço>/<id do produto>): galeria,
 // preço com o sinal, escolha da variação (obrigatória quando existe),
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/loja/$slug/$produto")({
         indexar: true,
         marca: loja.nome,
       }),
-      links: [linkCanonico(`/loja/${loja.slug}/${p.id}`)],
+      links: [{ rel: "canonical", href: urlPublicaDaLoja(`/loja/${loja.slug}/${p.id}`) }],
     };
   },
   component: ProdutoPage,

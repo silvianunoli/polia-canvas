@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } fr
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { reais } from "@/lib/loja";
+import { urlCanonica } from "@/lib/seo";
 import { enviarPedidoLoja } from "@/lib/loja.functions";
 import {
   linkWhatsapp,
@@ -437,9 +438,10 @@ function Checkout() {
           )}
           <p className="dica">
             Seu nome, WhatsApp e endereço vão só pra {loja.nome}, que recebe o pedido pela Pólia One.{" "}
-            <Link to="/privacidade" target="_blank" rel="noopener">
+            {/* Endereço completo: no domínio próprio da marca, "/privacidade" seria da loja (ONE-221). */}
+            <a href={urlCanonica("/privacidade")} target="_blank" rel="noopener">
               Política de privacidade
-            </Link>
+            </a>
           </p>
         </div>
       </div>
