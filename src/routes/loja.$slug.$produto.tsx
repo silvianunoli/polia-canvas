@@ -59,7 +59,8 @@ function ProdutoNaoEncontrado({ slug }: { slug: string }) {
 function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
   const { loja, adicionar } = useLojaVitrine();
   const [foto, setFoto] = useState(0);
-  const [escolha, setEscolha] = useState<string | null>(null);
+  // Produto com paleta começa na "Cor da foto", como na Loveless.
+  const [escolha, setEscolha] = useState<string | null>(p.usaPaleta ? "foto" : null);
   const [faltaEscolher, setFaltaEscolher] = useState(false);
   const [barra, setBarra] = useState(false);
   const botaoRef = useRef<HTMLButtonElement>(null);
@@ -149,13 +150,13 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                 className={`escolha${faltaEscolher && !variacao ? " com-erro" : ""}`}
                 aria-describedby={faltaEscolher && !variacao ? `${uid}-erro` : undefined}
               >
-                <legend>Escolha a opção</legend>
+                <legend>{p.usaPaleta ? "Escolha a cor" : "Escolha a opção"}</legend>
                 <p className="escolhida" aria-live="polite">
                   {variacao ? variacao.nome : "Nenhuma escolhida ainda"}
                 </p>
-                <div className="chips">
+                <div className={`chips${p.usaPaleta ? " amostras" : ""}`}>
                   {p.variacoes.map((v) => (
-                    <label key={v.id} className="chip">
+                    <label key={v.id} className={`chip${v.hex ? " amostra" : ""}`} title={v.hex ? v.nome : undefined}>
                       <input
                         type="radio"
                         name={`${uid}-variacao`}
@@ -166,10 +167,18 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                           setFaltaEscolher(false);
                         }}
                       />
-                      {v.nome}
+                      {v.hex ? (
+                        <>
+                          <i style={{ background: v.hex }} aria-hidden="true" />
+                          <span className="sr-only">{v.nome}</span>
+                        </>
+                      ) : (
+                        v.nome
+                      )}
                     </label>
                   ))}
                 </div>
+                {p.usaPaleta && loja.avisoCor && <p className="aviso-cor">{loja.avisoCor}</p>}
                 {faltaEscolher && !variacao && (
                   <p id={`${uid}-erro`} className="erro">
                     Escolha uma opção antes de pôr no carrinho.

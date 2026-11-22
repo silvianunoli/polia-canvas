@@ -69,6 +69,11 @@ function Casca({ children }: { children: ReactNode }) {
             <Link to="/loja/$slug" params={{ slug: loja.slug }} hash="produtos">
               Produtos
             </Link>
+            {loja.mostrarCores && loja.cores.length > 0 && (
+              <Link to="/loja/$slug" params={{ slug: loja.slug }} hash="cores">
+                Cores
+              </Link>
+            )}
             <Link to="/loja/$slug" params={{ slug: loja.slug }} hash="como">
               Como encomendar
             </Link>

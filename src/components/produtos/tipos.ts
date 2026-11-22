@@ -23,6 +23,10 @@ export interface Produto {
   controla_estoque: boolean;
   /** Aparece na Vitrine online (Pro). Liga na janela do produto desde 22/11/2026. */
   no_catalogo?: boolean;
+  /** Na vitrine, a cliente escolhe a cor da paleta da loja (ONE-217). */
+  usa_paleta?: boolean;
+  /** Nome da cor que aparece na foto ("Cor da foto (Preto e branco)"). */
+  cor_da_foto?: string | null;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

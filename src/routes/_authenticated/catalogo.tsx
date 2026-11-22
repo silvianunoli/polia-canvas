@@ -15,12 +15,19 @@ import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { temProjete } from "@/lib/planos";
 import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
-import { MAX_BANNERS, MAX_FOTOS_PRODUTO, reais, slugValido, type ConfigLoja } from "@/lib/loja";
+import { MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
 import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
 import { useIdentidadeMarca } from "@/components/orcamentos/dados";
 import {
   CHAVE_BANNERS_CATALOGO,
   CHAVE_CATALOGO,
+  CHAVE_CORES_CATALOGO,
+  adicionarCores,
+  atualizarCor,
+  removerCor,
+  salvarOrdemDasCores,
+  useCoresDaVitrine,
+  type CorDaPaleta,
   CHAVE_PRODUTOS_CATALOGO,
   chaveCategorias,
   criarCategoria,
@@ -95,6 +102,8 @@ function CatalogoPage() {
       entregaTexto: cat?.entrega_texto ?? "",
       pedeEndereco: cat?.pede_endereco ?? true,
       aviso: cat?.aviso ?? "",
+      mostrarCores: cat?.mostrar_cores ?? true,
+      avisoCor: cat?.aviso_cor ?? "",
     });
   }, [catQuery.isSuccess, cat, form, marca.data]);
 
@@ -272,6 +281,14 @@ function CatalogoPage() {
               <input className={INPUT} value={form.aviso ?? ""} onChange={(e) => set("aviso", e.target.value)} maxLength={300} />
             </Campo>
           </Secao>
+
+          <PaletaDeCores
+            userId={userId!}
+            mostrar={form.mostrarCores ?? true}
+            aviso={form.avisoCor ?? ""}
+            onMostrar={(v) => set("mostrarCores", v)}
+            onAviso={(v) => set("avisoCor", v)}
+          />
 
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" className={BTN_ACAO} onClick={() => enviar()} disabled={salvar.isPending}>
@@ -761,5 +778,236 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
         <span className="font-sans text-[12px] text-[var(--danger)]">A Pólia One não conseguiu ler as categorias.</span>
       )}
     </div>
+  );
+}
+
+/**
+ * Paleta de cores da loja (ONE-217, modelo da Loveless). Cada cor salva na
+ * hora; a chave "mostrar" e o aviso vão com o "Salvar a loja", como o resto
+ * da configuração. Cada conta tem a sua paleta.
+ */
+function PaletaDeCores({
+  userId,
+  mostrar,
+  aviso,
+  onMostrar,
+  onAviso,
+}: {
+  userId: string;
+  mostrar: boolean;
+  aviso: string;
+  onMostrar: (v: boolean) => void;
+  onAviso: (v: string) => void;
+}) {
+  const qc = useQueryClient();
+  const q = useCoresDaVitrine(userId);
+  const lista = q.data ?? [];
+  const chave = [CHAVE_CORES_CATALOGO, userId];
+  const recarregar = () => qc.invalidateQueries({ queryKey: chave });
+  const [ocupado, setOcupado] = useState(false);
+  const [nova, setNova] = useState({ codigo: "", nome: "", hex: "#C8387F" });
+  const [erroNova, setErroNova] = useState<string | null>(null);
+  const [colando, setColando] = useState(false);
+  const [colado, setColado] = useState("");
+  const [avisoColado, setAvisoColado] = useState<string | null>(null);
+
+  const adicionarUma = async () => {
+    if (!nova.nome.trim()) return setErroNova("Escreva o nome da cor.");
+    setErroNova(null);
+    setOcupado(true);
+    const r = await adicionarCores(userId, [{ codigo: nova.codigo || null, nome: nova.nome, hex: nova.hex }], lista.length);
+    setOcupado(false);
+    if (r.error) return toastErro(r.error);
+    setNova((n) => ({ ...n, codigo: "", nome: "" }));
+    recarregar();
+  };
+  const adicionarColadas = async () => {
+    const { cores, ignoradas } = lerCoresColadas(colado);
+    if (!cores.length) {
+      setAvisoColado("Nenhuma linha com cor. Use uma por linha, por exemplo: 801 Azul Bondi #6DA9D2");
+      return;
+    }
+    setOcupado(true);
+    const r = await adicionarCores(userId, cores, lista.length);
+    setOcupado(false);
+    if (r.error) return toastErro(r.error);
+    toastSucesso(`${cores.length} ${cores.length === 1 ? "cor entrou" : "cores entraram"} na paleta.`);
+    setAvisoColado(ignoradas ? `${ignoradas} ${ignoradas === 1 ? "linha ficou" : "linhas ficaram"} de fora, sem cor no formato #RRGGBB.` : null);
+    setColado("");
+    if (!ignoradas) setColando(false);
+    recarregar();
+  };
+  const salvarCampo = async (c: CorDaPaleta, campos: Partial<Pick<CorDaPaleta, "codigo" | "nome" | "hex">>) => {
+    if (campos.nome !== undefined && !campos.nome.trim()) return recarregar();
+    const r = await atualizarCor(c.id, campos);
+    if (r.error) toastErro(r.error);
+    recarregar();
+  };
+  const mover = async (i: number, direcao: -1 | 1) => {
+    const nova = moverNaLista(lista, i, direcao);
+    qc.setQueryData<CorDaPaleta[]>(chave, nova.map((c, k) => ({ ...c, ordem: k })));
+    setOcupado(true);
+    const r = await salvarOrdemDasCores(nova);
+    setOcupado(false);
+    if (r.error) toastErro(r.error);
+    recarregar();
+  };
+  const tirar = async (c: CorDaPaleta) => {
+    setOcupado(true);
+    const r = await removerCor(c.id);
+    setOcupado(false);
+    if (r.error) return toastErro(r.error);
+    recarregar();
+  };
+
+  return (
+    <Secao
+      titulo="Paleta de cores"
+      texto="As cores que a cliente pode escolher. Valem pra todo produto marcado, em Produtos, com “A cliente escolhe a cor da paleta”. Cada cor salva na hora."
+    >
+      {q.isError ? (
+        <BlockError message="A Pólia One não conseguiu abrir a paleta agora." onRetry={() => q.refetch()} />
+      ) : q.isLoading ? (
+        <div className="h-24 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
+      ) : (
+        <div className="space-y-3">
+          {lista.length > 0 ? (
+            <ol
+              className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]"
+              aria-label="Cores da paleta, na ordem em que aparecem"
+            >
+              {lista.map((c, i) => (
+                <li key={c.id} className="flex flex-wrap items-center gap-2 p-3">
+                  <input
+                    type="color"
+                    defaultValue={c.hex}
+                    onBlur={(e) => e.target.value.toUpperCase() !== c.hex.toUpperCase() && void salvarCampo(c, { hex: e.target.value.toUpperCase() })}
+                    className="h-11 w-11 cursor-pointer rounded-lg border border-[var(--line)] bg-[var(--surface)]"
+                    aria-label={`Cor de ${c.nome}`}
+                  />
+                  <input
+                    className={`${INPUT} w-20`}
+                    defaultValue={c.codigo ?? ""}
+                    maxLength={12}
+                    placeholder="Código"
+                    onBlur={(e) => e.target.value.trim() !== (c.codigo ?? "") && void salvarCampo(c, { codigo: e.target.value.trim() || null })}
+                    aria-label={`Código de ${c.nome}`}
+                  />
+                  <input
+                    className={`${INPUT} min-w-[140px] flex-1`}
+                    defaultValue={c.nome}
+                    maxLength={40}
+                    onBlur={(e) => e.target.value.trim() !== c.nome && void salvarCampo(c, { nome: e.target.value.trim() })}
+                    aria-label={`Nome da cor ${i + 1}`}
+                  />
+                  <button type="button" className={BTN_SETA} onClick={() => void mover(i, -1)} disabled={ocupado || i === 0} aria-label={`Subir ${c.nome}`}>
+                    <ArrowUp size={16} aria-hidden="true" />
+                  </button>
+                  <button type="button" className={BTN_SETA} onClick={() => void mover(i, 1)} disabled={ocupado || i === lista.length - 1} aria-label={`Descer ${c.nome}`}>
+                    <ArrowDown size={16} aria-hidden="true" />
+                  </button>
+                  <button type="button" className={`${BTN_SETA} hover:text-[var(--danger)]`} onClick={() => void tirar(c)} disabled={ocupado} aria-label={`Tirar ${c.nome}`}>
+                    <Trash2 size={15} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="font-sans text-[13px] text-[var(--ink-soft)]">
+              Nenhuma cor ainda. Adicione uma por uma ou cole a lista inteira.
+            </p>
+          )}
+
+          <div className="space-y-1 rounded-xl border border-dashed border-[var(--line)] p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="color"
+                value={nova.hex}
+                onChange={(e) => setNova((n) => ({ ...n, hex: e.target.value.toUpperCase() }))}
+                className="h-11 w-11 cursor-pointer rounded-lg border border-[var(--line)] bg-[var(--surface)]"
+                aria-label="Cor nova"
+              />
+              <input
+                className={`${INPUT} w-20`}
+                value={nova.codigo}
+                onChange={(e) => setNova((n) => ({ ...n, codigo: e.target.value }))}
+                maxLength={12}
+                placeholder="Código"
+                aria-label="Código da cor nova (opcional)"
+              />
+              <input
+                className={`${INPUT} min-w-[140px] flex-1`}
+                value={nova.nome}
+                onChange={(e) => {
+                  setNova((n) => ({ ...n, nome: e.target.value }));
+                  setErroNova(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void adicionarUma();
+                }}
+                maxLength={40}
+                placeholder="Nome, ex.: Azul Bondi"
+                aria-label="Nome da cor nova"
+                aria-invalid={!!erroNova}
+              />
+              <button type="button" className={BTN_MIUDO} onClick={() => void adicionarUma()} disabled={ocupado}>
+                Adicionar cor
+              </button>
+            </div>
+            {erroNova && (
+              <p role="alert" className="font-sans text-[12px] text-[var(--danger)]">
+                {erroNova}
+              </p>
+            )}
+          </div>
+
+          {colando ? (
+            <div className="space-y-2">
+              <Campo label="Cole a lista, uma cor por linha" hint="Código (opcional), nome e a cor no formato #RRGGBB. Ex.: 801 Azul Bondi #6DA9D2">
+                <textarea className={INPUT} rows={6} value={colado} onChange={(e) => setColado(e.target.value)} />
+              </Campo>
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" className={BTN_MIUDO} onClick={() => void adicionarColadas()} disabled={ocupado || !colado.trim()}>
+                  Adicionar as cores
+                </button>
+                <button
+                  type="button"
+                  className="min-h-11 px-2 font-sans text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                  onClick={() => {
+                    setColando(false);
+                    setColado("");
+                    setAvisoColado(null);
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className={BTN_MIUDO} onClick={() => setColando(true)}>
+              Colar várias de uma vez
+            </button>
+          )}
+          {avisoColado && (
+            <p role="status" className="font-sans text-[12px] text-[var(--ink-soft)]">
+              {avisoColado}
+            </p>
+          )}
+
+          <div className="flex items-center justify-between gap-4 rounded-xl border border-[var(--line)] p-4">
+            <div>
+              <p className="font-sans text-[14px] font-medium text-[var(--ink)]">Mostrar as cores na página inicial</p>
+              <p className="font-sans text-[12px] text-[var(--ink-soft)]">
+                Uma faixa com a paleta e a seção “Escolha a sua cor”. Vale depois de “Salvar a loja”.
+              </p>
+            </div>
+            <Switch checked={mostrar} onCheckedChange={onMostrar} aria-label="Mostrar as cores na página inicial" />
+          </div>
+          <Campo label="Aviso sobre as cores" hint="Aparece junto da paleta. Ex.: as cores da tela são uma referência e podem variar no fio. Vale depois de “Salvar a loja”.">
+            <input className={INPUT} value={aviso} onChange={(e) => onAviso(e.target.value)} maxLength={300} />
+          </Campo>
+        </div>
+      )}
+    </Secao>
   );
 }

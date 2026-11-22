@@ -1358,6 +1358,88 @@
   padding-block: 24px 40px;
 }
 
+/* Paleta de cores (22/11/2026, ONE-217): faixa, seção Cores e amostras. */
+.loja-vitrine .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.loja-vitrine .faixa-cores {
+  overflow: hidden;
+  margin-top: 8px;
+}
+.loja-vitrine .faixa-trilho {
+  display: flex;
+  width: max-content;
+  animation: loja-faixa 60s linear infinite;
+}
+.loja-vitrine .faixa-trilho i {
+  width: 48px;
+  height: 14px;
+  flex: none;
+}
+@keyframes loja-faixa {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.loja-vitrine .cores-grade {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+.loja-vitrine .cor-cartao {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--suave);
+}
+.loja-vitrine .cor-cartao i {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  border: 1px solid var(--linha);
+}
+.loja-vitrine .cor-cartao b {
+  color: var(--texto);
+  font-weight: 600;
+}
+.loja-vitrine .chips.amostras {
+  gap: 10px;
+}
+.loja-vitrine .chip.amostra {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 4px;
+  border-radius: 999px;
+}
+.loja-vitrine .chip.amostra i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  border: 1px solid var(--linha);
+}
+.loja-vitrine .chip:has(input:focus-visible) {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+.loja-vitrine .aviso-cor {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--suave);
+}
+
 /* Filtro por categoria acima da grade (22/11/2026). */
 .loja-vitrine .categorias {
   display: flex;

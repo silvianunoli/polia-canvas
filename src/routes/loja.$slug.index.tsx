@@ -24,6 +24,7 @@ function VitrinePage() {
   const [categoria, setCategoria] = useState<string | null>(null);
   const filtro = temFiltroDeCategoria(loja);
   const lista = filtro ? produtosDaCategoria(loja.produtos, categoria) : loja.produtos;
+  const mostraCores = loja.mostrarCores && loja.cores.length > 0;
 
   return (
     <>
@@ -40,6 +41,17 @@ function VitrinePage() {
       )}
       <BannerLoja banners={loja.banners ?? []} nome={loja.nome} />
       <Abertura loja={loja} dias={dias} temBanner={temBanner} />
+
+      {mostraCores && (
+        // Faixa que corre com a paleta inteira (duas voltas pra emendar sem salto).
+        <div className="faixa-cores" aria-hidden="true">
+          <div className="faixa-trilho">
+            {[...loja.cores, ...loja.cores].map((c, i) => (
+              <i key={`${c.id}-${i}`} style={{ background: c.hex }} />
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="wrap">
         <SelosLoja loja={loja} />
@@ -76,6 +88,29 @@ function VitrinePage() {
           <p className="vazio-loja">A vitrine está sendo montada. Volte daqui a pouco pra ver os produtos.</p>
         )}
       </section>
+
+      {mostraCores && (
+        <section className="wrap secao" id="cores" aria-labelledby="t-cores">
+          <div className="secao-topo">
+            <div>
+              <span className="olho">
+                {loja.cores.length} {loja.cores.length === 1 ? "cor" : "cores"}
+              </span>
+              <h2 id="t-cores">Escolha a sua cor</h2>
+            </div>
+            {loja.avisoCor && <p>{loja.avisoCor}</p>}
+          </div>
+          <ul className="cores-grade">
+            {loja.cores.map((c) => (
+              <li key={c.id} className="cor-cartao">
+                <i style={{ background: c.hex }} aria-hidden="true" />
+                {c.codigo && <b>{c.codigo}</b>}
+                <span>{c.nome}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="wrap secao" id="como" aria-labelledby="t-como">
         <div className="secao-topo">

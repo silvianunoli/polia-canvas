@@ -36,6 +36,9 @@ export const configLojaSchema = z.object({
   entregaTexto: z.string().trim().max(200).optional(),
   pedeEndereco: z.boolean(),
   aviso: z.string().trim().max(300).optional(),
+  /** Paleta de cores (ONE-217): mostra a faixa e a seção "Cores" na loja. */
+  mostrarCores: z.boolean().optional(),
+  avisoCor: z.string().trim().max(300).optional(),
 });
 export type ConfigLoja = z.infer<typeof configLojaSchema>;
 
@@ -55,12 +58,63 @@ export function linhaDaConfig(c: ConfigLoja) {
     entrega_texto: vazio(c.entregaTexto),
     pede_endereco: c.pedeEndereco,
     aviso: vazio(c.aviso),
+    mostrar_cores: c.mostrarCores ?? true,
+    aviso_cor: vazio(c.avisoCor),
   };
 }
 
 export interface VariacaoLoja {
   id: string;
   nome: string;
+  /** Só nas opções da paleta: a cor da amostra. "foto" não tem. */
+  hex?: string | null;
+}
+
+/** Cor da paleta da loja (catalogo_cores). */
+export interface CorLoja {
+  id: string;
+  codigo: string | null;
+  nome: string;
+  hex: string;
+}
+
+/** Id da opção "Cor da foto" no produto com paleta. */
+export const OPCAO_COR_DA_FOTO = "foto";
+
+/** "Cor 812 Hibisco" / "Cor Hibisco": o mesmo texto que o banco grava no pedido. */
+export const rotuloDaCor = (c: Pick<CorLoja, "codigo" | "nome">) =>
+  `Cor ${c.codigo ? `${c.codigo} ` : ""}${c.nome}`;
+
+/**
+ * Opções de um produto com paleta: "Cor da foto" primeiro, depois a paleta.
+ * Sem paleta cadastrada, nenhuma opção (o pedido entra como cor da foto).
+ */
+export function opcoesDaPaleta(cores: CorLoja[], corDaFoto: string | null): VariacaoLoja[] {
+  if (!cores.length) return [];
+  return [
+    { id: OPCAO_COR_DA_FOTO, nome: `Cor da foto${corDaFoto ? ` (${corDaFoto})` : ""}`, hex: null },
+    ...cores.map((c) => ({ id: c.id, nome: rotuloDaCor(c), hex: c.hex })),
+  ];
+}
+
+/** Uma cor por linha: "801 Azul Bondi #6DA9D2", "Azul Bondi #6da9d2" ou "#6DA9D2 Azul". */
+export function lerCoresColadas(texto: string): { cores: Array<Omit<CorLoja, "id">>; ignoradas: number } {
+  const cores: Array<Omit<CorLoja, "id">> = [];
+  let ignoradas = 0;
+  for (const bruta of texto.split(/\r?\n/)) {
+    const linha = bruta.trim();
+    if (!linha) continue;
+    const m = linha.match(/#[0-9A-Fa-f]{6}\b/);
+    const resto = m ? linha.replace(m[0], " ").replace(/\s+/g, " ").trim() : "";
+    if (!m || !resto) {
+      ignoradas++;
+      continue;
+    }
+    const cod = resto.match(/^(\d{1,12})\s+(.+)$/);
+    const nome = (cod ? cod[2] : resto).slice(0, 40);
+    cores.push({ codigo: cod ? cod[1] : null, nome, hex: m[0].toUpperCase() });
+  }
+  return { cores, ignoradas };
 }
 
 export interface ProdutoLoja {
@@ -72,6 +126,8 @@ export interface ProdutoLoja {
   variacoes: VariacaoLoja[];
   /** Categoria do produto (produto_categorias); null = sem categoria. */
   categoriaId: string | null;
+  /** A cliente escolhe a cor da paleta da loja: `variacoes` são as cores. */
+  usaPaleta: boolean;
 }
 
 export interface CategoriaLoja {
@@ -100,6 +156,11 @@ export interface LojaPublica {
   produtos: ProdutoLoja[];
   /** Só as categorias que têm produto na vitrine, na ordem da dona. */
   categorias: CategoriaLoja[];
+  /** Paleta da loja (vazia quando ela não montou). */
+  cores: CorLoja[];
+  /** Faixa e seção "Cores" na página inicial. */
+  mostrarCores: boolean;
+  avisoCor: string | null;
 }
 
 /**
@@ -124,7 +185,8 @@ export const pedidoLojaSchema = z.object({
     .array(
       z.object({
         produtoId: z.string().uuid(),
-        skuId: z.string().uuid().nullable().optional(),
+        // Produto com paleta: id da cor ou "foto" (a função do banco confere).
+        skuId: z.union([z.string().uuid(), z.literal("foto")]).nullable().optional(),
         quantidade: z.number().int().min(1).max(1000),
       }),
     )

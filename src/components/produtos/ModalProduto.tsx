@@ -83,6 +83,8 @@ export function ModalProduto({
   const meta = useUserMeta();
   const ehPro = temProjete(meta.plano);
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
+  const [usaPaleta, setUsaPaleta] = useState(produtoEdit?.usa_paleta ?? false);
+  const [corDaFoto, setCorDaFoto] = useState(produtoEdit?.cor_da_foto ?? "");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -142,7 +144,11 @@ export function ModalProduto({
         canal: canal.trim() || null,
         updated_at: new Date().toISOString(),
       };
-      if (ehPro) update.no_catalogo = naVitrine;
+      if (ehPro) {
+        update.no_catalogo = naVitrine;
+        update.usa_paleta = usaPaleta;
+        update.cor_da_foto = corDaFoto.trim().slice(0, 60) || null;
+      }
 
       // Histórico de preço: só registra quando o preço de venda mudou.
       if (Number(produtoEdit.preco_venda) !== precoVendaNum) {
@@ -187,7 +193,9 @@ export function ModalProduto({
           observacao_interna: observacaoInterna.trim() || null,
           canal: canal.trim() || null,
           calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
-          ...(ehPro ? { no_catalogo: naVitrine } : {}),
+          ...(ehPro
+            ? { no_catalogo: naVitrine, usa_paleta: usaPaleta, cor_da_foto: corDaFoto.trim().slice(0, 60) || null }
+            : {}),
         } as never)
         .select("id")
         .single();
@@ -447,6 +455,36 @@ export function ModalProduto({
           <p id="produto-vitrine-ajuda" className="text-[12px] text-[var(--muted)]">
             A primeira foto é a da vitrine. A ordem e a categoria ficam em Vitrine online, no menu.
           </p>
+          {naVitrine && (
+            <div className="mt-3 border-t border-[var(--line)] pt-3">
+              <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[var(--ink)]">
+                <input
+                  type="checkbox"
+                  checked={usaPaleta}
+                  onChange={(e) => setUsaPaleta(e.target.checked)}
+                  aria-describedby="produto-paleta-ajuda"
+                  className="h-4 w-4 accent-[var(--secondary-text)]"
+                />
+                A cliente escolhe a cor da paleta da loja
+              </label>
+              <p id="produto-paleta-ajuda" className="text-[12px] text-[var(--muted)]">
+                A paleta fica em Vitrine online. Na loja, as cores aparecem no lugar das variações, sem estoque por cor.
+              </p>
+              {usaPaleta && (
+                <div className="mt-2">
+                  <Campo label="Cor da foto (opcional)">
+                    <input
+                      value={corDaFoto}
+                      onChange={(e) => setCorDaFoto(e.target.value)}
+                      maxLength={60}
+                      className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                      placeholder="ex: Preto e branco"
+                    />
+                  </Campo>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

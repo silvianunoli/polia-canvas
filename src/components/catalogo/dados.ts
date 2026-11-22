@@ -155,6 +155,80 @@ export async function criarCategoria(userId: string, nome: string): Promise<{ id
   return { id: (data as unknown as { id: string }).id, error: null };
 }
 
+// ── paleta de cores (migration 20261122180000) ─────────────────────────────
+
+export const CHAVE_CORES_CATALOGO = "catalogo-cores";
+export const MAX_CORES = 200;
+
+export interface CorDaPaleta {
+  id: string;
+  codigo: string | null;
+  nome: string;
+  hex: string;
+  ordem: number;
+}
+
+export function useCoresDaVitrine(userId: string | undefined) {
+  return useQuery({
+    queryKey: [CHAVE_CORES_CATALOGO, userId],
+    enabled: !!userId,
+    queryFn: async (): Promise<CorDaPaleta[]> => {
+      const { data, error } = await supabase
+        .from("catalogo_cores" as never)
+        .select("id, codigo, nome, hex, ordem")
+        .eq("user_id" as never, userId! as never)
+        .order("ordem" as never)
+        .order("created_at" as never);
+      if (error) throw error;
+      return (data ?? []) as unknown as CorDaPaleta[];
+    },
+  });
+}
+
+/** Põe as cores no fim da paleta, na ordem em que vieram. */
+export async function adicionarCores(
+  userId: string,
+  novas: Array<{ codigo: string | null; nome: string; hex: string }>,
+  jaTem: number,
+) {
+  if (!novas.length) return { error: null };
+  if (jaTem + novas.length > MAX_CORES) return { error: `A paleta leva até ${MAX_CORES} cores.` };
+  const linhas = novas.map((c, i) => ({
+    user_id: userId,
+    codigo: c.codigo?.trim() || null,
+    nome: c.nome.trim().slice(0, 40),
+    hex: c.hex.toUpperCase(),
+    ordem: Math.min(1000, jaTem + i),
+  }));
+  const { error } = await supabase.from("catalogo_cores" as never).insert(linhas as never);
+  return { error: error ? "A Pólia One não conseguiu guardar as cores agora." : null };
+}
+
+export async function atualizarCor(id: string, campos: Partial<Pick<CorDaPaleta, "codigo" | "nome" | "hex">>) {
+  const { error } = await supabase
+    .from("catalogo_cores" as never)
+    .update(campos as never)
+    .eq("id" as never, id as never);
+  return { error: error ? "A Pólia One não conseguiu salvar a cor agora." : null };
+}
+
+export async function removerCor(id: string) {
+  const { error } = await supabase
+    .from("catalogo_cores" as never)
+    .delete()
+    .eq("id" as never, id as never);
+  return { error: error ? "A Pólia One não conseguiu tirar a cor agora." : null };
+}
+
+export async function salvarOrdemDasCores(lista: CorDaPaleta[]) {
+  const r = await Promise.all(
+    lista.map((c, i) =>
+      supabase.from("catalogo_cores" as never).update({ ordem: Math.min(1000, i) } as never).eq("id" as never, c.id as never),
+    ),
+  );
+  return { error: r.some((x) => x.error) ? "A Pólia One não conseguiu salvar a ordem das cores agora." : null };
+}
+
 // ── banner rotativo (migration 20261122150000) ─────────────────────────────
 
 export interface BannerDaVitrine {

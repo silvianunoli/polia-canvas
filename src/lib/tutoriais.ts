@@ -341,6 +341,8 @@ const LISTA = [
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'No plano Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
+          'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
+          'O botão "Ordem na vitrine", ao lado de "Importar planilha", abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
           'Com muitos produtos, o campo "Buscar pelo nome" acima dos cartões acha o produto sem diferença de maiúscula ou acento.',
@@ -1015,6 +1017,15 @@ const LISTA = [
           'Em "Banner rotativo", clique em "Subir o primeiro banner". Cabem até 5 imagens (JPG, PNG ou WEBP, até 3 MB), de preferência deitadas, em 1600 x 600 px.',
           "Na vitrine, elas passam sozinhas no topo, uma a cada 5 segundos. As setas de cada banner mudam a ordem e a lixeira tira.",
           "Com banner, o nome da loja fica em cima dele e a capa sai do topo. A chamada, se tiver, aparece logo abaixo.",
+        ],
+      },
+      {
+        titulo: "Montar a paleta de cores",
+        itens: [
+          'Em "Paleta de cores", escolha a cor, escreva o código (opcional) e o nome e clique em "Adicionar cor". Cada cor salva na hora.',
+          '"Colar várias de uma vez" aceita uma lista, uma cor por linha: código, nome e a cor no formato #RRGGBB (ex.: 801 Azul Bondi #6DA9D2).',
+          'Pra cliente escolher a cor, abra o produto em Produtos e marque "A cliente escolhe a cor da paleta da loja". Na página do produto, as cores aparecem em bolinhas, com "Cor da foto" primeiro.',
+          '"Mostrar as cores na página inicial" põe uma faixa com a paleta e a seção "Escolha a sua cor". Ela e o "Aviso sobre as cores" valem depois de "Salvar a loja".',
         ],
       },
       {

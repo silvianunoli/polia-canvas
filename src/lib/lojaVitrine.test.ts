@@ -45,9 +45,9 @@ const produtos: ProdutoLoja[] = [
       { id: ROSA, nome: "Rosa" },
       { id: AZUL, nome: "Azul" },
     ],
-    categoriaId: null,
+    categoriaId: null, usaPaleta: false,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false },
 ];
 
 describe("limparCarrinho", () => {

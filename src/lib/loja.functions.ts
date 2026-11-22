@@ -11,7 +11,9 @@ import {
   linhaDaConfig,
   observacaoDoPedidoLoja,
   pedidoLojaSchema,
+  opcoesDaPaleta,
   slugValido,
+  type CorLoja,
   type LojaPublica,
   type ResultadoPedidoLoja,
 } from "@/lib/loja";
@@ -40,6 +42,8 @@ interface LinhaCatalogo {
   entrega_texto: string | null;
   pede_endereco: boolean;
   aviso: string | null;
+  mostrar_cores: boolean;
+  aviso_cor: string | null;
 }
 
 export type LeituraLoja = { ok: true; loja: LojaPublica } | { ok: false };
@@ -71,7 +75,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, categoria_id, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -83,11 +87,13 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       descricao: string | null;
       preco_venda: number;
       categoria_id: string | null;
+      usa_paleta: boolean;
+      cor_da_foto: string | null;
     }>;
     const ids = lista.map((p) => p.id);
 
     const idsCategorias = [...new Set(lista.map((p) => p.categoria_id).filter((c): c is string => !!c))];
-    const [{ data: fotos }, { data: skus }, { data: banners }, { data: categorias }] = await Promise.all([
+    const [{ data: fotos }, { data: skus }, { data: banners }, { data: categorias }, { data: coresBanco }] = await Promise.all([
       ids.length
         ? supabaseAdmin.from("produto_fotos" as never).select("produto_id, path, ordem").in("produto_id", ids).order("ordem")
         : Promise.resolve({ data: [] }),
@@ -110,7 +116,19 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
             .order("ordem")
             .order("nome")
         : Promise.resolve({ data: [] }),
+      supabaseAdmin
+        .from("catalogo_cores" as never)
+        .select("id, codigo, nome, hex")
+        .eq("user_id", c.user_id)
+        .order("ordem")
+        .order("created_at"),
     ]);
+    const cores = ((coresBanco ?? []) as unknown as CorLoja[]).map((k) => ({
+      id: k.id,
+      codigo: k.codigo,
+      nome: k.nome,
+      hex: k.hex,
+    }));
     const fotosPor = new Map<string, string[]>();
     for (const f of (fotos ?? []) as unknown as Array<{ produto_id: string; path: string }>) {
       const url = urlPublica("produtos-fotos", f.path);
@@ -147,9 +165,14 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           descricao: p.descricao,
           preco: Number(p.preco_venda),
           fotos: fotosPor.get(p.id) ?? [],
-          variacoes: varPor.get(p.id) ?? [],
+          // Com paleta, as opções são as cores da loja (o SKU fica pro estoque).
+          variacoes: p.usa_paleta && cores.length ? opcoesDaPaleta(cores, p.cor_da_foto) : (varPor.get(p.id) ?? []),
           categoriaId: p.categoria_id ?? null,
+          usaPaleta: !!p.usa_paleta && cores.length > 0,
         })),
+        cores,
+        mostrarCores: c.mostrar_cores !== false,
+        avisoCor: c.aviso_cor ?? null,
         categorias: ((categorias ?? []) as unknown as Array<{ id: string; nome: string }>).map((k) => ({
           id: k.id,
           nome: k.nome,

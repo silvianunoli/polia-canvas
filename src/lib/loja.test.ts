@@ -4,8 +4,11 @@ import {
   linhaDaConfig,
   mensagemDoPedido,
   observacaoDoPedidoLoja,
+  lerCoresColadas,
+  opcoesDaPaleta,
   produtosDaCategoria,
   reais,
+  rotuloDaCor,
   temFiltroDeCategoria,
   type ConfigLoja,
 } from "./loja";
@@ -155,5 +158,34 @@ describe("categorias da vitrine", () => {
     const lista = [prod("a", "c1"), prod("b", "c2"), prod("c", null)];
     expect(produtosDaCategoria(lista, "c1").map((p) => p.id)).toEqual(["a"]);
     expect(produtosDaCategoria(lista, null)).toHaveLength(3);
+  });
+});
+
+describe("paleta de cores", () => {
+  const hibisco = { id: "c1", codigo: "812", nome: "Hibisco", hex: "#C84D69" };
+
+  it("rótulo igual ao que o banco grava no pedido", () => {
+    expect(rotuloDaCor(hibisco)).toBe("Cor 812 Hibisco");
+    expect(rotuloDaCor({ codigo: null, nome: "Hibisco" })).toBe("Cor Hibisco");
+  });
+
+  it("cor da foto vem primeiro; sem paleta, nenhuma opção", () => {
+    expect(opcoesDaPaleta([], "Preto")).toEqual([]);
+    const ops = opcoesDaPaleta([hibisco], "Preto e branco");
+    expect(ops.map((o) => o.id)).toEqual(["foto", "c1"]);
+    expect(ops[0].nome).toBe("Cor da foto (Preto e branco)");
+    expect(ops[1]).toEqual({ id: "c1", nome: "Cor 812 Hibisco", hex: "#C84D69" });
+  });
+
+  it("lê a lista colada, uma cor por linha", () => {
+    const r = lerCoresColadas(
+      ["801 Azul Bondi #6da9d2", "", "Verde Hortelã #A7D8C3", "#25304A Midnight", "sem cor aqui", "#FFFFFF"].join(String.fromCharCode(10)),
+    );
+    expect(r.cores).toEqual([
+      { codigo: "801", nome: "Azul Bondi", hex: "#6DA9D2" },
+      { codigo: null, nome: "Verde Hortelã", hex: "#A7D8C3" },
+      { codigo: null, nome: "Midnight", hex: "#25304A" },
+    ]);
+    expect(r.ignoradas).toBe(2);
   });
 });
