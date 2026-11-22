@@ -3,7 +3,7 @@ import { ShoppingBag } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { GradeProdutos } from "@/components/loja/GradeProdutos";
 import { SemFoto } from "@/components/loja/icones";
-import { descricaoDoProduto, lojaDosMatches, metaDaLoja } from "@/components/loja/leituraLoja";
+import { descricaoDoProduto, lojaDosMatches, metaDaLoja, type LeituraLoja } from "@/components/loja/leituraLoja";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { BeneficiosLoja } from "@/components/loja/SelosLoja";
 import { reais, type ProdutoLoja } from "@/lib/loja";
@@ -16,8 +16,12 @@ import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 // loja.$slug.tsx; o id que não existe mostra um aviso com volta pra vitrine.
 
 export const Route = createFileRoute("/loja/$slug/$produto")({
-  head: ({ matches, params }) => {
-    const loja = lojaDosMatches(matches);
+  // A loja já vem do layout; repetir aqui faz o head() do servidor enxergá-la.
+  // Sem isto, o HTML do produto saía com o título "Loja" e a prévia da loja
+  // inteira (os matches do head no servidor ainda não tinham o loaderData).
+  loader: async ({ parentMatchPromise }) => (await parentMatchPromise).loaderData as LeituraLoja | undefined,
+  head: ({ matches, params, loaderData }) => {
+    const loja = loaderData?.ok ? loaderData.loja : lojaDosMatches(matches);
     const p = loja?.produtos.find((x) => x.id === params.produto);
     if (!loja || !p) return { meta: [{ title: loja ? `Produto não encontrado · ${loja.nome}` : "Loja" }] };
     return {

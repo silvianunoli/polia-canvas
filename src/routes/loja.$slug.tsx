@@ -30,8 +30,10 @@ export const Route = createFileRoute("/loja/$slug")({
       return { ok: false, motivo: "rede" };
     }
   },
-  head: ({ loaderData, params }) => {
+  head: ({ loaderData, params, matches }) => {
     const loja = loaderData?.ok ? loaderData.loja : null;
+    // Na página de produto, o canonical é o do produto (só um por página).
+    const ehProduto = matches.some((m) => (m.routeId as string) === "/loja/$slug/$produto");
     const imagem = loja
       ? (loja.produtos.find((p) => p.fotos.length)?.fotos[0] ?? loja.logoUrl)
       : null;
@@ -51,7 +53,7 @@ export const Route = createFileRoute("/loja/$slug")({
       links: [
         { rel: "stylesheet", href: FONTES_VITRINE },
         { rel: "stylesheet", href: vitrineCss },
-        ...(loja ? [{ rel: "canonical", href: urlPublicaDaLoja(`/loja/${loja.slug}`) }] : []),
+        ...(loja && !ehProduto ? [{ rel: "canonical", href: urlPublicaDaLoja(`/loja/${loja.slug}`) }] : []),
       ],
     };
   },
