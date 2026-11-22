@@ -22,7 +22,6 @@ import {
   CHAVE_BANNERS_CATALOGO,
   CHAVE_CATALOGO,
   CHAVE_PRODUTOS_CATALOGO,
-  alternarNaLoja,
   chaveCategorias,
   criarCategoria,
   mudarCategoria,
@@ -371,26 +370,31 @@ function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => vo
   return (
     <Secao
       titulo="Produtos na vitrine"
-      texto="Preço, nome e variações vêm de Produtos. Cada um leva até 4 fotos: a primeira é a da vitrine. Use as setas pra escolher quem aparece primeiro e a categoria pra cliente filtrar a vitrine."
+      texto="Quem entra na vitrine se escolhe em Produtos: abra o produto e marque “Mostrar na Vitrine online”. Aqui ficam a ordem, a categoria e as fotos (até 4, a primeira é a da vitrine)."
     >
       {q.isError ? (
         <BlockError message="A Pólia One não conseguiu abrir os produtos agora." onRetry={() => q.refetch()} />
       ) : q.isLoading ? (
         <div className="h-24 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
-      ) : !q.data?.length ? (
+      ) : !naVitrine.length ? (
         <Vazio
           icone={Store}
-          titulo="Nenhum produto cadastrado ainda"
-          texto="A vitrine mostra os produtos de Produtos. Cadastre o primeiro e volte aqui."
+          titulo={q.data?.length ? "Nenhum produto na vitrine ainda" : "Nenhum produto cadastrado ainda"}
+          texto={
+            q.data?.length
+              ? "Abra um produto em Produtos e marque “Mostrar na Vitrine online”. Ele aparece aqui, pra você escolher a ordem e a categoria."
+              : "A vitrine mostra os produtos de Produtos. Cadastre o primeiro e marque “Mostrar na Vitrine online”."
+          }
           acao={<LinkInterno href="/produtos" className={BTN_ACAO}>Abrir Produtos</LinkInterno>}
           denso
         />
       ) : (
         <>
           <p className="font-sans text-[13px] text-[var(--ink-soft)]">
-            {naVitrine.length === 0
-              ? "Nenhum produto na vitrine ainda. Ligue o interruptor do produto pra ele aparecer."
-              : `${naVitrine.length} ${naVitrine.length === 1 ? "produto na vitrine" : "produtos na vitrine"}, nesta ordem.`}
+            {`${naVitrine.length} ${naVitrine.length === 1 ? "produto na vitrine" : "produtos na vitrine"}, nesta ordem.`}{" "}
+            <LinkInterno href="/produtos" className="font-medium text-[var(--secondary-text)] hover:underline">
+              Pôr ou tirar produtos em Produtos
+            </LinkInterno>
           </p>
           {naVitrine.length > 0 && (
             <ol
@@ -414,18 +418,6 @@ function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => vo
                 />
               ))}
             </ol>
-          )}
-          {fora.length > 0 && (
-            <>
-              <h3 className="font-accent pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-                Fora da vitrine
-              </h3>
-              <ul className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]">
-                {fora.map((p) => (
-                  <LinhaProduto key={p.id} p={p} userId={userId} onMudou={onMudou} />
-                ))}
-              </ul>
-            </>
           )}
         </>
       )}
@@ -580,13 +572,6 @@ function LinhaProduto({
 }) {
   const input = useRef<HTMLInputElement>(null);
   const [ocupado, setOcupado] = useState(false);
-  const alternar = async (v: boolean) => {
-    setOcupado(true);
-    const { error } = await alternarNaLoja(p.id, v);
-    setOcupado(false);
-    if (error) return toastErro("A Pólia One não conseguiu mudar o produto agora.");
-    onMudou();
-  };
   const subir = async (arquivo: File | undefined) => {
     if (!arquivo) return;
     setOcupado(true);
@@ -623,10 +608,9 @@ function LinhaProduto({
           <p className="font-sans text-[12px] text-[var(--ink-soft)]">
             {reais(p.preco)}
             {p.variacoes ? ` · ${p.variacoes} ${p.variacoes === 1 ? "variação" : "variações"}` : ""}
-            {p.noCatalogo && !p.fotos.length ? " · sem foto ainda" : ""}
+            {!p.fotos.length ? " · sem foto ainda" : ""}
           </p>
         </div>
-        <Switch checked={p.noCatalogo} disabled={ocupado} onCheckedChange={alternar} aria-label={`${p.nome} na vitrine`} />
       </div>
       {p.noCatalogo && <SeletorCategoria p={p} userId={userId} onMudou={onMudou} />}
       {p.noCatalogo && (

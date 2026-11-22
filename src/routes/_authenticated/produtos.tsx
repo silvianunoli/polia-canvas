@@ -88,7 +88,7 @@ function ProdutosPage() {
       const { data, error } = await supabase
         .from("produtos")
         .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
+          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
         )
         .eq("user_id", userId!)
         .eq("arquivado", false)
@@ -458,6 +458,7 @@ function ProdutoCard({
         {somenteLeitura
           ? "somente leitura · acima da cota do plano Grátis"
           : (TIPO_LABEL[produto.tipo] ?? produto.tipo)}
+        {!somenteLeitura && produto.no_catalogo && " · na Vitrine online"}
       </p>
 
       {/* Preço de venda */}

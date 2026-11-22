@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { ImageUp, X } from "lucide-react";
 import { hojeISO } from "@/lib/data.functions";
+import { temProjete } from "@/lib/planos";
+import { useUserMeta } from "@/hooks/useUserMeta";
 import { FOTO_TIPOS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
@@ -76,6 +78,11 @@ export function ModalProduto({
     produtoEdit?.id ?? null,
     produtoEdit?.controla_estoque ?? false,
   );
+  // Vitrine online (Pro): ligar o produto na loja mora aqui, junto do cadastro
+  // (pedido da Sil, 22/11/2026). Ordem, categoria e fotos seguem na Vitrine.
+  const meta = useUserMeta();
+  const ehPro = temProjete(meta.plano);
+  const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -135,6 +142,7 @@ export function ModalProduto({
         canal: canal.trim() || null,
         updated_at: new Date().toISOString(),
       };
+      if (ehPro) update.no_catalogo = naVitrine;
 
       // Histórico de preço: só registra quando o preço de venda mudou.
       if (Number(produtoEdit.preco_venda) !== precoVendaNum) {
@@ -179,6 +187,7 @@ export function ModalProduto({
           observacao_interna: observacaoInterna.trim() || null,
           canal: canal.trim() || null,
           calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
+          ...(ehPro ? { no_catalogo: naVitrine } : {}),
         } as never)
         .select("id")
         .single();
@@ -422,6 +431,24 @@ export function ModalProduto({
           />
         </Campo>
       </div>
+
+      {ehPro && (
+        <div className="mb-4 rounded-xl border border-[var(--line)] p-3">
+          <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[var(--ink)]">
+            <input
+              type="checkbox"
+              checked={naVitrine}
+              onChange={(e) => setNaVitrine(e.target.checked)}
+              aria-describedby="produto-vitrine-ajuda"
+              className="h-4 w-4 accent-[var(--secondary-text)]"
+            />
+            Mostrar na Vitrine online
+          </label>
+          <p id="produto-vitrine-ajuda" className="text-[12px] text-[var(--muted)]">
+            A primeira foto é a da vitrine. A ordem e a categoria ficam em Vitrine online, no menu.
+          </p>
+        </div>
+      )}
 
       {tipo === "fisico" && <KitDoProduto produtoId={produtoEdit?.id ?? null} kit={kit} />}
       {tipo !== "fisico" && kit.eraKit && (

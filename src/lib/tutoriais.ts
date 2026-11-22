@@ -340,6 +340,7 @@ const LISTA = [
           'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o cartão já mostra quanto a marca lucra por venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
+          'No plano Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
           'Com muitos produtos, o campo "Buscar pelo nome" acima dos cartões acha o produto sem diferença de maiúscula ou acento.',
@@ -1027,7 +1028,8 @@ const LISTA = [
       {
         titulo: "Escolher os produtos e as fotos",
         itens: [
-          'Em "Produtos na vitrine", ligue cada produto que deve aparecer. Nome, preço e variações vêm de Produtos.',
+          'Quem entra na vitrine se escolhe em Produtos: abra o produto e marque "Mostrar na Vitrine online" (desmarque pra tirar). Nome, preço e variações vêm de lá.',
+          'Os produtos marcados aparecem em "Produtos na vitrine", aqui na Vitrine online.',
           "Os produtos ligados aparecem numa lista numerada: as setas pra cima e pra baixo escolhem quem aparece primeiro na vitrine. Produto que você liga depois entra no fim.",
           'Em "Categoria", escolha a de cada produto ou crie uma em "+ Nova categoria". Quando a categoria separa os produtos (duas categorias, ou uma e produtos sem categoria), a vitrine mostra botões pra cliente filtrar.',
           'Clique em "Foto" pra subir até 4 fotos por produto (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine.',

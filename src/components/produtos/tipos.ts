@@ -21,6 +21,8 @@ export interface Produto {
   canal: string | null;
   /** Liga o estoque (VND-03). Nasce false. */
   controla_estoque: boolean;
+  /** Aparece na Vitrine online (Pro). Liga na janela do produto desde 22/11/2026. */
+  no_catalogo?: boolean;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

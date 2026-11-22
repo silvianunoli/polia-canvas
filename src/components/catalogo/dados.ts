@@ -84,8 +84,6 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
   });
 }
 
-export const alternarNaLoja = (produtoId: string, noCatalogo: boolean) =>
-  supabase.from("produtos").update({ no_catalogo: noCatalogo } as never).eq("id", produtoId);
 
 /**
  * Grava a ordem da vitrine: a posição de cada id na lista vira catalogo_ordem
