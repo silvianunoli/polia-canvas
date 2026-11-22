@@ -27,6 +27,8 @@ export interface Produto {
   usa_paleta?: boolean;
   /** Nome da cor que aparece na foto ("Cor da foto (Preto e branco)"). */
   cor_da_foto?: string | null;
+  /** Na vitrine: pronta entrega (sai sem prazo de produção). false = sob encomenda. */
+  pronta_entrega?: boolean;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

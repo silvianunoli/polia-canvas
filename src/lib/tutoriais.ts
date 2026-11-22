@@ -308,8 +308,8 @@ const LISTA = [
     ],
     bomSaber: [
       "Grátis, R$ 0: Painel, Calculadora, Produtos (até 5), Pedidos (até 15 abertos), Metas e Assistente.",
-      `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda, Equipamentos e Resumo pro contador.`,
-      `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre e a vitrine online ligada aos Pedidos.`,
+      `Premium, ${reaisDoPlano(PRECOS.controle.precoMensal)} por mês: Produtos e Pedidos sem limite, mais Vendas, Financeiro, Clientes, Calendário, Projeção, Raio-x, Encomenda, Equipamentos, Resumo pro contador e a Vitrine online ligada aos Pedidos.`,
+      `Pro, ${reaisDoPlano(PRECOS.projete.precoMensal)} por mês: tudo do Premium, mais a conexão com o Mercado Livre.`,
       "Nos 7 dias seguintes à contratação, dá pra desistir e receber o valor de volta.",
     ],
     duvidas: [
@@ -340,7 +340,8 @@ const LISTA = [
           'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o cartão já mostra quanto a marca lucra por venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
-          'No plano Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
+          'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
+          'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'O botão "Ordem na vitrine", ao lado de "Importar planilha", abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
@@ -944,7 +945,7 @@ const LISTA = [
         ],
       },
       {
-        titulo: "Receber os pedidos da Vitrine online (Pro)",
+        titulo: "Receber os pedidos da Vitrine online (Premium e Pro)",
         itens: [
           'Monte a loja em "Vitrine online", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
@@ -1051,7 +1052,8 @@ const LISTA = [
       "O preço do pedido é sempre o de Produtos na hora da compra: a loja não deixa mudar o valor pelo navegador.",
       'Pedido da loja entra em Pedidos como "a receber", em "A fazer", e a cliente vira ficha em Clientes pelo WhatsApp.',
       "O endereço da loja fica com a marca: depois de usado, não passa pra outra conta.",
-      "Fora do Pro, a loja fecha e mostra que não está aberta agora. Os produtos e as fotos continuam guardados.",
+      'Produto de "Pronta entrega" ganha a etiqueta na vitrine. Pedido só com pronta entrega entra em Pedidos com entrega pra hoje; misturado com encomenda, vale o prazo de produção da loja.',
+      "A Vitrine online é do Premium e do Pro. No Grátis, a loja fecha e mostra que não está aberta agora; os produtos e as fotos continuam guardados.",
       "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",
     ],
     duvidas: [
@@ -1105,6 +1107,7 @@ const LISTA = [
     bomSaber: [
       "Categoria é o tipo do produto (Canecas, Papelaria) e aparece no menu do topo. Coleção é o tema da estampa (Natal, Clube das Exaustas) e aparece nas bolinhas e em Explore por coleção.",
       'A categoria e a coleção de cada produto se escolhem em Produtos, na parte "Na loja" do produto.',
+      'Ainda em "Na loja", "Detalhes do produto" monta a tabela que aparece na página do produto, na aba ao lado da descrição: uma linha por medida ou informação, como Capacidade e 325 ml. Cabem até 20 linhas; sem nenhuma, a aba não aparece.',
       "O primeiro carrossel mostra os mais vendidos dos últimos 90 dias. Com pouca venda, completa com a ordem da vitrine.",
     ],
     duvidas: [

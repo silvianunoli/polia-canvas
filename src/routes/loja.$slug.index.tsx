@@ -25,6 +25,8 @@ function VitrinePage() {
   const filtro = temFiltroDeCategoria(loja);
   const lista = filtro ? produtosDaCategoria(loja.produtos, categoria) : loja.produtos;
   const mostraCores = loja.mostrarCores && loja.cores.length > 0;
+  // Loja só de pronta entrega: selo e passo final sem prazo de produção.
+  const todasProntas = loja.produtos.length > 0 && loja.produtos.every((p) => p.prontaEntrega);
 
   return (
     <>
@@ -54,7 +56,7 @@ function VitrinePage() {
       )}
 
       <div className="wrap">
-        <SelosLoja loja={loja} />
+        <SelosLoja loja={loja} prontaEntrega={todasProntas} />
       </div>
 
       <section className="wrap secao" id="produtos" aria-labelledby="t-produtos">
@@ -133,9 +135,11 @@ function VitrinePage() {
             <p>{loja.nome} fala com você pelo WhatsApp pra acertar pagamento e entrega.</p>
           </li>
           <li className="passo">
-            <b>Produção e entrega</b>
+            <b>{todasProntas ? "Separação e entrega" : "Produção e entrega"}</b>
             <p>
-              Fica pronto em até {dias} depois da confirmação
+              {todasProntas
+                ? "Sai depois da confirmação"
+                : `${loja.produtos.some((p) => p.prontaEntrega) ? "Pronta entrega sai depois da confirmação; sob encomenda fica" : "Fica"} pronto em até ${dias} depois da confirmação`}
               {loja.entregaTexto ? ` e segue pra entrega: ${loja.entregaTexto}` : " e segue pra entrega como combinado"}.
             </p>
           </li>

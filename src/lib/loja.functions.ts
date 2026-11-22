@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { verificarTurnstileServer } from "@/lib/turnstile.server";
 import { normalizarWhatsapp } from "@/lib/leads";
-import { temProjete } from "@/lib/planos";
+import { temVitrine } from "@/lib/planos";
 import {
   configLojaSchema,
   linhaDaConfig,
@@ -15,6 +15,7 @@ import {
   slugValido,
   type CorLoja,
   type LojaPublica,
+  type VariacaoLoja,
   type ResultadoPedidoLoja,
 } from "@/lib/loja";
 
@@ -68,14 +69,14 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       .select("business_name, logo_path, cor_marca, plano")
       .eq("id", c.user_id)
       .maybeSingle();
-    // Fora do Pro, a loja some como loja desligada. Sem nome de marca também.
-    if (!perfil || !temProjete(perfil.plano)) return { ok: false };
+    // Fora do Premium e do Pro, a loja some como loja desligada. Sem nome de marca também.
+    if (!perfil || !temVitrine(perfil.plano)) return { ok: false };
     const nome = perfil.business_name?.trim();
     if (!nome) return { ok: false };
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -89,6 +90,8 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       categoria_id: string | null;
       usa_paleta: boolean;
       cor_da_foto: string | null;
+      pronta_entrega: boolean;
+      controla_estoque: boolean;
     }>;
     const ids = lista.map((p) => p.id);
 
@@ -123,6 +126,20 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         .order("ordem")
         .order("created_at"),
     ]);
+    // Saldo só de quem é pronta entrega com estoque ligado: é o que vira "Esgotado".
+    const comSaldo = lista.filter((p) => p.pronta_entrega && p.controla_estoque).map((p) => p.id);
+    const { data: saldos } = comSaldo.length
+      ? await supabaseAdmin
+          .from("estoque_saldos" as never)
+          .select("sku_id, produto_id, variacao, saldo")
+          .in("produto_id", comSaldo)
+      : { data: [] };
+    const saldoDoSku = new Map<string, number>();
+    const saldoSemVariacao = new Map<string, number>();
+    for (const e of (saldos ?? []) as unknown as Array<{ sku_id: string; produto_id: string; variacao: string | null; saldo: number }>) {
+      saldoDoSku.set(e.sku_id, Number(e.saldo));
+      if (e.variacao == null) saldoSemVariacao.set(e.produto_id, (saldoSemVariacao.get(e.produto_id) ?? 0) + Number(e.saldo));
+    }
     const cores = ((coresBanco ?? []) as unknown as CorLoja[]).map((k) => ({
       id: k.id,
       codigo: k.codigo,
@@ -159,17 +176,30 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         entregaTexto: c.entrega_texto,
         pedeEndereco: c.pede_endereco,
         aviso: c.aviso,
-        produtos: lista.map((p) => ({
+        produtos: lista.map((p) => {
+          const usaPaleta = !!p.usa_paleta && cores.length > 0;
+          const contaSaldo = p.pronta_entrega && p.controla_estoque;
+          const variacoes: VariacaoLoja[] = usaPaleta
+            ? opcoesDaPaleta(cores, p.cor_da_foto)
+            : (varPor.get(p.id) ?? []).map((v) => (contaSaldo ? { ...v, esgotada: (saldoDoSku.get(v.id) ?? 0) <= 0 } : v));
+          // Com variação própria, esgota quando todas esgotam; sem, olha o SKU sem variação.
+          const esgotado =
+            contaSaldo &&
+            (!usaPaleta && variacoes.length ? variacoes.every((v) => v.esgotada) : (saldoSemVariacao.get(p.id) ?? 0) <= 0);
+          return {
           id: p.id,
           nome: p.nome,
           descricao: p.descricao,
           preco: Number(p.preco_venda),
           fotos: fotosPor.get(p.id) ?? [],
           // Com paleta, as opções são as cores da loja (o SKU fica pro estoque).
-          variacoes: p.usa_paleta && cores.length ? opcoesDaPaleta(cores, p.cor_da_foto) : (varPor.get(p.id) ?? []),
+          variacoes,
           categoriaId: p.categoria_id ?? null,
-          usaPaleta: !!p.usa_paleta && cores.length > 0,
-        })),
+          usaPaleta,
+          prontaEntrega: !!p.pronta_entrega,
+          esgotado,
+          };
+        }),
         cores,
         mostrarCores: c.mostrar_cores !== false,
         avisoCor: c.aviso_cor ?? null,
@@ -220,7 +250,7 @@ export const enviarPedidoLoja = createServerFn({ method: "POST" })
 
 async function temPro(userId: string): Promise<boolean> {
   const { data } = await supabaseAdmin.from("profiles").select("plano").eq("id", userId).maybeSingle();
-  return temProjete(data?.plano as string | null | undefined);
+  return temVitrine(data?.plano as string | null | undefined);
 }
 
 export const lerMeuCatalogo = createServerFn({ method: "GET" })
@@ -241,7 +271,7 @@ export const salvarCatalogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => configLojaSchema.parse(input))
   .handler(async ({ context, data }) => {
-    if (!(await temPro(context.userId))) return { ok: false as const, error: "A Vitrine online é do plano Pro." };
+    if (!(await temPro(context.userId))) return { ok: false as const, error: "A Vitrine online é do Premium e do Pro." };
     if (data.whatsapp && !normalizarWhatsapp(data.whatsapp))
       return { ok: false as const, error: "Confira o WhatsApp da loja, com DDD." };
     const { error } = await supabaseAdmin
@@ -262,7 +292,7 @@ export const abrirFecharLoja = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ ativo: z.boolean() }).parse(input))
   .handler(async ({ context, data }) => {
     if (data.ativo && !(await temPro(context.userId)))
-      return { ok: false as const, error: "A Vitrine online é do plano Pro." };
+      return { ok: false as const, error: "A Vitrine online é do Premium e do Pro." };
     const { data: linha, error } = await supabaseAdmin
       .from("catalogos" as never)
       .update({ ativo: data.ativo } as never)

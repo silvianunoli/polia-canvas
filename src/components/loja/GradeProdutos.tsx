@@ -26,6 +26,11 @@ function CartaoProduto({ slug, produto: p }: { slug: string; produto: ProdutoLoj
         <span className="ver" aria-hidden="true">
           {opcoes > 1 ? "Ver as opções" : "Ver detalhes"}
         </span>
+        {(p.esgotado || p.prontaEntrega) && (
+          <span className={`etiqueta-produto${p.esgotado ? " esgotado" : ""}`}>
+            {p.esgotado ? "Esgotado" : "Pronta entrega"}
+          </span>
+        )}
       </div>
       <div className="txt">
         <h3>{p.nome}</h3>

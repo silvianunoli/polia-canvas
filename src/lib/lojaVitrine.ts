@@ -44,12 +44,12 @@ export function limparCarrinho(bruto: unknown, produtos: ProdutoLoja[]): ItemCar
     const i = cru as Partial<ItemCarrinho>;
     if (typeof i.produtoId !== "string") continue;
     const produto = porId.get(i.produtoId);
-    if (!produto) continue;
+    if (!produto || produto.esgotado) continue;
     const skuId = typeof i.skuId === "string" ? i.skuId : null;
     let variacaoNome: string | null = null;
     if (produto.variacoes.length) {
       const v = produto.variacoes.find((x) => x.id === skuId);
-      if (!v) continue;
+      if (!v || v.esgotada) continue;
       variacaoNome = v.nome;
     } else if (skuId) continue;
     const qtd = Math.floor(Number(i.quantidade));
@@ -195,17 +195,21 @@ export interface Selo {
   texto: string;
 }
 
-/** Só o que a dona configurou vira selo; nada inventado. */
+/**
+ * Só o que a dona configurou vira selo; nada inventado. `prontaEntrega` troca o
+ * selo do prazo (página de produto de pronta entrega, ou loja toda assim).
+ */
 export function selosDaLoja(
   loja: Pick<LojaPublica, "prazoDiasUteis" | "sinalPercentual" | "entregaTexto" | "whatsapp">,
+  prontaEntrega = false,
 ): Selo[] {
   const selos: Selo[] = [];
   const dias = loja.prazoDiasUteis;
-  selos.push({
-    icone: "relogio",
-    titulo: `Pronto em ${dias} ${dias === 1 ? "dia útil" : "dias úteis"}`,
-    texto: "depois da confirmação",
-  });
+  selos.push(
+    prontaEntrega
+      ? { icone: "relogio", titulo: "Pronta entrega", texto: "sai depois da confirmação" }
+      : { icone: "relogio", titulo: `Pronto em ${dias} ${dias === 1 ? "dia útil" : "dias úteis"}`, texto: "depois da confirmação" },
+  );
   if (loja.sinalPercentual > 0)
     selos.push({ icone: "carteira", titulo: `Sinal de ${loja.sinalPercentual}%`, texto: "pra começar o pedido" });
   if (loja.entregaTexto?.trim()) selos.push({ icone: "entrega", titulo: "Entrega", texto: loja.entregaTexto.trim() });

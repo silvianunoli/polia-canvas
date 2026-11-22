@@ -68,6 +68,8 @@ export interface VariacaoLoja {
   nome: string;
   /** Só nas opções da paleta: a cor da amostra. "foto" não tem. */
   hex?: string | null;
+  /** Pronta entrega com estoque ligado e saldo zerado nesta opção. */
+  esgotada?: boolean;
 }
 
 /** Cor da paleta da loja (catalogo_cores). */
@@ -128,6 +130,10 @@ export interface ProdutoLoja {
   categoriaId: string | null;
   /** A cliente escolhe a cor da paleta da loja: `variacoes` são as cores. */
   usaPaleta: boolean;
+  /** Pronta entrega (sai sem prazo de produção); false = sob encomenda. */
+  prontaEntrega: boolean;
+  /** Pronta entrega com estoque ligado e nada pra vender. */
+  esgotado: boolean;
 }
 
 export interface CategoriaLoja {

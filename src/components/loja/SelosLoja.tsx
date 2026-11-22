@@ -3,8 +3,8 @@ import { selosDaLoja } from "@/lib/lojaVitrine";
 import { IconeSeloLoja } from "./icones";
 
 /** Selos de confiança da vitrine: só o que a dona configurou. */
-export function SelosLoja({ loja }: { loja: LojaPublica }) {
-  const selos = selosDaLoja(loja);
+export function SelosLoja({ loja, prontaEntrega = false }: { loja: LojaPublica; prontaEntrega?: boolean }) {
+  const selos = selosDaLoja(loja, prontaEntrega);
   return (
     <ul className="selos" aria-label="Como a loja trabalha">
       {selos.map((s) => (
@@ -21,10 +21,10 @@ export function SelosLoja({ loja }: { loja: LojaPublica }) {
 }
 
 /** Os mesmos selos em lista, na página do produto. */
-export function BeneficiosLoja({ loja }: { loja: LojaPublica }) {
+export function BeneficiosLoja({ loja, prontaEntrega = false }: { loja: LojaPublica; prontaEntrega?: boolean }) {
   return (
     <ul className="beneficios">
-      {selosDaLoja(loja).map((s) => (
+      {selosDaLoja(loja, prontaEntrega).map((s) => (
         <li key={s.icone}>
           <IconeSeloLoja icone={s.icone} />
           <span>

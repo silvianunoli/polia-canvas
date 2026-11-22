@@ -13,7 +13,7 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { Switch } from "@/components/ui/switch";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
-import { temProjete } from "@/lib/planos";
+import { temVitrine } from "@/lib/planos";
 import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
 import { MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
 import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
@@ -49,7 +49,7 @@ import {
   type TipoDaCategoria,
 } from "@/components/catalogo/dados";
 
-// Vitrine online (ONE-148, fases 2 e 3, só no Pro; até 22/11/2026 o menu
+// Vitrine online (ONE-148, fases 2 e 3; Premium e Pro desde 22/11/2026, antes só Pro; até essa data o menu
 // chamava de "Catálogo", a rota continua /catalogo). A dona monta a loja da
 // marca: endereço, cara da loja, banner rotativo, como vende e quais produtos
 // aparecem e em que ordem, com até 4 fotos cada. A loja pública é
@@ -75,7 +75,7 @@ function CatalogoPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const meta = useUserMeta();
-  const ehPro = temProjete(meta.plano);
+  const ehPro = temVitrine(meta.plano);
   const qc = useQueryClient();
   const marca = useIdentidadeMarca(userId);
 
@@ -133,7 +133,7 @@ function CatalogoPage() {
     return (
       <UpgradeGate
         eyebrow="Vitrine online"
-        titulo="A Vitrine online é do Pro"
+        titulo="A Vitrine online é do Premium e do Pro"
         feature="Uma loja com os produtos da Pólia One, as fotos e as variações de cada um, carrinho e pedido que cai direto em Pedidos."
         rota="/catalogo"
       />

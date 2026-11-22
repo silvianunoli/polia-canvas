@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ImageUp, X } from "lucide-react";
 import { hojeISO } from "@/lib/data.functions";
-import { temProjete } from "@/lib/planos";
+import { temVitrine } from "@/lib/planos";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { FOTO_TIPOS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,13 +78,14 @@ export function ModalProduto({
     produtoEdit?.id ?? null,
     produtoEdit?.controla_estoque ?? false,
   );
-  // Vitrine online (Pro): ligar o produto na loja mora aqui, junto do cadastro
+  // Vitrine online (Premium e Pro): ligar o produto na loja mora aqui, junto do cadastro
   // (pedido da Sil, 22/11/2026). Ordem, categoria e fotos seguem na Vitrine.
   const meta = useUserMeta();
-  const ehPro = temProjete(meta.plano);
+  const ehPro = temVitrine(meta.plano);
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
   const [usaPaleta, setUsaPaleta] = useState(produtoEdit?.usa_paleta ?? false);
   const [corDaFoto, setCorDaFoto] = useState(produtoEdit?.cor_da_foto ?? "");
+  const [prontaEntrega, setProntaEntrega] = useState(produtoEdit?.pronta_entrega ?? false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -148,6 +149,7 @@ export function ModalProduto({
         update.no_catalogo = naVitrine;
         update.usa_paleta = usaPaleta;
         update.cor_da_foto = corDaFoto.trim().slice(0, 60) || null;
+        update.pronta_entrega = prontaEntrega;
       }
 
       // Histórico de preço: só registra quando o preço de venda mudou.
@@ -194,7 +196,12 @@ export function ModalProduto({
           canal: canal.trim() || null,
           calculadora_breakdown: prefill?.calculadora_breakdown ?? null,
           ...(ehPro
-            ? { no_catalogo: naVitrine, usa_paleta: usaPaleta, cor_da_foto: corDaFoto.trim().slice(0, 60) || null }
+            ? {
+                no_catalogo: naVitrine,
+                usa_paleta: usaPaleta,
+                cor_da_foto: corDaFoto.trim().slice(0, 60) || null,
+                pronta_entrega: prontaEntrega,
+              }
             : {}),
         } as never)
         .select("id")
@@ -456,6 +463,31 @@ export function ModalProduto({
             A primeira foto é a da vitrine. A ordem e a categoria ficam em Vitrine online, no menu.
           </p>
           {naVitrine && (
+            <div
+              role="radiogroup"
+              aria-label="Como o produto sai na vitrine"
+              className="mt-3 flex flex-wrap gap-x-6 border-t border-[var(--line)] pt-3"
+            >
+              {[
+                { v: false, rotulo: "Sob encomenda", ajuda: "usa o prazo de produção da loja" },
+                { v: true, rotulo: "Pronta entrega", ajuda: "sai depois da confirmação; com estoque ligado, esgota quando acaba" },
+              ].map((o) => (
+                <label key={o.rotulo} className="flex min-h-11 cursor-pointer items-center gap-2 text-[14px] text-[var(--ink)]">
+                  <input
+                    type="radio"
+                    name="produto-tipo-entrega"
+                    checked={prontaEntrega === o.v}
+                    onChange={() => setProntaEntrega(o.v)}
+                    className="h-4 w-4 accent-[var(--secondary-text)]"
+                  />
+                  <span>
+                    {o.rotulo} <span className="text-[12px] text-[var(--muted)]">({o.ajuda})</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+          {naVitrine && (
             <div className="mt-3 border-t border-[var(--line)] pt-3">
               <label className="flex min-h-11 cursor-pointer items-center gap-3 text-[14px] text-[var(--ink)]">
                 <input
@@ -468,7 +500,7 @@ export function ModalProduto({
                 A cliente escolhe a cor da paleta da loja
               </label>
               <p id="produto-paleta-ajuda" className="text-[12px] text-[var(--muted)]">
-                A paleta fica em Vitrine online. Na loja, as cores aparecem no lugar das variações, sem estoque por cor.
+                A paleta fica em Vitrine online. Na loja, as cores aparecem no lugar das variações; o estoque, se ligado, é o do produto, sem separar por cor.
               </p>
               {usaPaleta && (
                 <div className="mt-2">

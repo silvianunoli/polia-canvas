@@ -33,6 +33,15 @@ export function temProjete(plano: string | null | undefined): boolean {
   return ehBeta(plano) || plano === "projete";
 }
 
+/**
+ * Vitrine online (/catalogo e /loja): Premium e Pro desde 22/11/2026 (Sil:
+ * "precisa valer para a conta premium tbm"). Antes era só do Pro. A ligação
+ * do site feito pela Pólia Lab (catálogo online por domínio) segue no Pro.
+ */
+export function temVitrine(plano: string | null | undefined): boolean {
+  return temProjete(plano) || plano === "controle";
+}
+
 // ── Virada de preços (PAY-43/44/45, decisão da Sil em 30/10/2026) ───────────
 // O Premium vai a R$ 39,90 e ganha Raio-x, Projeção, Calculadora de encomenda e
 // Resumo pro contador; o Pro vai a R$ 79,90. Era pra 01/12 e a Sil antecipou pra
@@ -69,7 +78,7 @@ export function tierDosNumeros(agora: number = Date.now()): TierPago {
 // lateral não tem como saber que são pagas e mostra três itens SEM cadeado que a
 // usuária do Premium não consegue usar. Raio-x e Projeção descem pro Premium na
 // virada de preços. O Plano de conteúdo saiu da Pólia One em 02/11/2026.
-const ROTAS_PROJETE = ["/catalogo", "/agenda-redes"];
+const ROTAS_PROJETE = ["/agenda-redes"];
 const ROTAS_PROJETE_ATE_A_VIRADA = ["/raiox", "/projecao"];
 
 export function ehRotaProjete(pathname: string, agora: number = Date.now()): boolean {
@@ -132,8 +141,8 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/como-usar", tier: "confere" }, // tutorial narrado: todo plano assiste
   { prefixo: "/raiox", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Resumo/Encomenda
   { prefixo: "/projecao", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
-  { prefixo: "/catalogo", tier: "controle" }, // loja do catálogo (ONE-148): Pro-only por dentro
-  { prefixo: "/agenda-redes", tier: "controle" }, // Agenda das redes (ONE-155): Pro-only por dentro
+  { prefixo: "/catalogo", tier: "controle" }, // Vitrine online: Premium e Pro desde 22/11/2026
+  { prefixo: "/agenda-redes", tier: "controle" },
   // Loja da marca (22/11/2026): serviço do Pólia Lab, vale pra quem tem a loja, em qualquer plano.
   { prefixo: "/loja-da-marca", tier: "confere" },
   // Metas é do plano Grátis desde 03/09/2026 (decisão COPY-03): o card do plano
@@ -405,8 +414,9 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
       { id: "resumo-contador", texto: "Resumo do mês pro contador, em PDF e CSV" },
       { id: "assistente", texto: "Assistente que lê os números da conta antes de responder" },
       {
-        // ONE-148/ONE-149, 29/10/2026: só no Pro, decisão da Sil.
-        id: "catalogo",
+        // ONE-148/ONE-149, 29/10/2026: só no Pro. Desce pro Premium em 22/11/2026
+        // (Sil): entra em IDS_QUE_DESCEM e sai da lista do Pro depois da virada.
+        id: "vitrine",
         texto:
           "Vitrine online ligada aos Pedidos: o pedido que a cliente confirma na vitrine entra no quadro, com a variação de cada peça",
         novoAte: "2026-11-28",
@@ -436,7 +446,7 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
 
 // Os quatro recursos que descem do Pro pro Premium na virada, na ordem em que
 // entram na lista do Premium (logo depois do Financeiro). "Novo" em dezembro.
-const IDS_QUE_DESCEM = ["raiox", "projecao", "resumo-contador", "encomenda"];
+const IDS_QUE_DESCEM = ["raiox", "projecao", "resumo-contador", "encomenda", "vitrine"];
 const NOVO_DEZ_2026 = "2026-12-31";
 
 function montarTiersDez2026(): Record<TierPago, InfoTierPago> {

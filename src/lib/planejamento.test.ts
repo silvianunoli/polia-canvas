@@ -218,7 +218,9 @@ describe("marca antes do dinheiro", () => {
 
 describe("hrefUpgrade", () => {
   it("leva o plano que a rota exige, não um Premium fixo", () => {
-    expect(hrefUpgrade("/catalogo")).toBe("/upgrade?rota=%2Fcatalogo&tier=projete");
+    expect(hrefUpgrade("/agenda-redes")).toBe("/upgrade?rota=%2Fagenda-redes&tier=projete");
+    // A Vitrine online desceu pro Premium em 22/11/2026.
+    expect(hrefUpgrade("/catalogo")).toBe("/upgrade?rota=%2Fcatalogo&tier=controle");
     expect(hrefUpgrade("/raiox")).toBe("/upgrade?rota=%2Fraiox&tier=controle");
     expect(hrefUpgrade("/financeiro")).toBe("/upgrade?rota=%2Ffinanceiro&tier=controle");
   });

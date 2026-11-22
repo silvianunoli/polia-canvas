@@ -115,7 +115,7 @@ describe("ehRotaProjete", () => {
   it("reconhece as rotas exclusivas, inclusive subrota", () => {
     expect(ehRotaProjete("/raiox", NOV)).toBe(true);
     expect(ehRotaProjete("/projecao", NOV)).toBe(true);
-    expect(ehRotaProjete("/catalogo")).toBe(true);
+    expect(ehRotaProjete("/catalogo")).toBe(false);
     expect(ehRotaProjete("/plano-conteudo")).toBe(false);
     expect(ehRotaProjete("/raiox/2026-07", NOV)).toBe(true);
   });
@@ -131,10 +131,11 @@ describe("recursoLiberado", () => {
   // trava de rota, e como Raio-x/Projeção/Catálogo são tier "controle",
   // a usuária do Controle via os três SEM cadeado e só descobria que eram pagos
   // depois de clicar e bater no portão de dentro da página. Depois da virada, só
-  // o Catálogo segue no Pro.
+  // a Agenda das redes segue no Pro (a Vitrine desceu pro Premium em 22/11/2026).
   it("nega rota Projete pra quem está no Controle, mesmo a rota passando no guard", () => {
-    expect(rotaLiberada("/catalogo", "controle")).toBe(true);
-    expect(recursoLiberado("/catalogo", "controle")).toBe(false);
+    expect(rotaLiberada("/agenda-redes", "controle")).toBe(true);
+    expect(recursoLiberado("/agenda-redes", "controle")).toBe(false);
+    expect(recursoLiberado("/catalogo", "controle")).toBe(true);
     expect(recursoLiberado("/raiox", "controle")).toBe(true);
     expect(recursoLiberado("/projecao", "controle")).toBe(true);
   });
@@ -157,7 +158,7 @@ describe("recursoLiberado", () => {
 
 describe("tierPagoDaRota", () => {
   it("nomeia o plano certo pra tela de upgrade", () => {
-    expect(tierPagoDaRota("/catalogo")).toBe("projete");
+    expect(tierPagoDaRota("/catalogo")).toBe("controle");
     expect(tierPagoDaRota("/raiox")).toBe("controle");
     expect(tierPagoDaRota("/financeiro")).toBe("controle");
   });
@@ -315,7 +316,7 @@ describe("virada de preços, antecipada pra 06/11/2026 (PAY-43/44/45)", () => {
     }
     // O Pro continua com o que é canal e automação.
     expect(ids(tiersPagos(DEZ).projete.beneficios)).toEqual(
-      expect.arrayContaining(["assistente", "catalogo", "marketplaces"]),
+      expect.arrayContaining(["assistente", "marketplaces"]),
     );
   });
 
@@ -332,19 +333,20 @@ describe("virada de preços, antecipada pra 06/11/2026 (PAY-43/44/45)", () => {
     expect(tierDosNumeros(DEZ)).toBe("controle");
   });
 
-  it("Raio-x e Projeção deixam de ser rota do Pro; o Catálogo segue", () => {
+  it("Raio-x e Projeção deixam de ser rota do Pro; a Vitrine também (22/11/2026)", () => {
     expect(ehRotaProjete("/raiox", NOV)).toBe(true);
     expect(ehRotaProjete("/projecao", NOV)).toBe(true);
     expect(ehRotaProjete("/raiox", DEZ)).toBe(false);
     expect(ehRotaProjete("/projecao", DEZ)).toBe(false);
     expect(tierPagoDaRota("/raiox", DEZ)).toBe("controle");
-    expect(ehRotaProjete("/catalogo", DEZ)).toBe(true);
+    expect(ehRotaProjete("/catalogo", DEZ)).toBe(false);
   });
 
   it("recursoLiberado segue a data de hoje (sem cadeado do Raio-x pro Premium depois da virada)", () => {
     const esperado = depoisDaVirada();
     expect(recursoLiberado("/raiox", "controle")).toBe(esperado);
-    expect(recursoLiberado("/catalogo", "controle")).toBe(false);
+    expect(recursoLiberado("/catalogo", "controle")).toBe(true);
+    expect(recursoLiberado("/catalogo", "confere")).toBe(false);
   });
 });
 

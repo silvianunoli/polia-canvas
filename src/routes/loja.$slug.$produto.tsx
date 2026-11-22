@@ -82,6 +82,7 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
   }, []);
 
   const porNoCarrinho = () => {
+    if (p.esgotado) return;
     if (temVariacao && !variacao) {
       setFaltaEscolher(true);
       const grupo = escolhaRef.current;
@@ -142,6 +143,9 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
               <span className="preco-g">{reais(p.preco)}</span>
               {sinal > 0 && <span className="sinal-tag">Comece com {reais(sinal)} de sinal</span>}
             </div>
+            <p className={`tipo-entrega${p.esgotado ? " esgotado" : ""}`}>
+              {p.esgotado ? "Esgotado no momento" : p.prontaEntrega ? "Pronta entrega" : "Feito sob encomenda"}
+            </p>
             {p.descricao && <p className="desc">{p.descricao}</p>}
 
             {temVariacao && (
@@ -161,6 +165,7 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                         type="radio"
                         name={`${uid}-variacao`}
                         value={v.id}
+                        disabled={!!v.esgotada}
                         checked={escolha === v.id}
                         onChange={() => {
                           setEscolha(v.id);
@@ -173,7 +178,10 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                           <span className="sr-only">{v.nome}</span>
                         </>
                       ) : (
-                        v.nome
+                        <>
+                          {v.nome}
+                          {v.esgotada && <span className="esgotada"> · esgotada</span>}
+                        </>
                       )}
                     </label>
                   ))}
@@ -188,12 +196,12 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
             )}
 
             <div className="comprar">
-              <button ref={botaoRef} type="button" className="btn largo" onClick={porNoCarrinho}>
+              <button ref={botaoRef} type="button" className="btn largo" onClick={porNoCarrinho} disabled={p.esgotado}>
                 <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
-                <span>Adicionar ao carrinho</span>
+                <span>{p.esgotado ? "Esgotado" : "Adicionar ao carrinho"}</span>
               </button>
             </div>
-            <BeneficiosLoja loja={loja} />
+            <BeneficiosLoja loja={loja} prontaEntrega={p.prontaEntrega} />
           </div>
         </div>
 
@@ -215,9 +223,9 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
           <b>{p.nome}</b>
           {variacao ? `${variacao.nome} · ${reais(p.preco)}` : reais(p.preco)}
         </div>
-        <button type="button" className="btn" onClick={porNoCarrinho} tabIndex={barra ? 0 : -1}>
+        <button type="button" className="btn" onClick={porNoCarrinho} tabIndex={barra ? 0 : -1} disabled={p.esgotado}>
           <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
-          <span>Adicionar</span>
+          <span>{p.esgotado ? "Esgotado" : "Adicionar"}</span>
         </button>
       </div>
     </>

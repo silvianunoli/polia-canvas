@@ -9,7 +9,7 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
-import { COTAS_CONFERE, temNumerosDoMes, temProjete } from "@/lib/planos";
+import { COTAS_CONFERE, temNumerosDoMes, temVitrine } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { toastErro } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
@@ -80,9 +80,9 @@ function ProdutosPage() {
   const [produtoParaArquivar, setProdutoParaArquivar] = useState<Produto | null>(null);
   const [arquivando, setArquivando] = useState(false);
   const [importarAberto, setImportarAberto] = useState(false);
-  // Ordem da Vitrine online também daqui (Pro), além da tela Vitrine online.
+  // Ordem da Vitrine online também daqui (Premium e Pro), além da tela Vitrine online.
   const [ordemAberta, setOrdemAberta] = useState(false);
-  const ehPro = temProjete(meta.plano);
+  const ehPro = temVitrine(meta.plano);
   const [busca, setBusca] = useState("");
 
   const produtosQuery = useQuery({
@@ -92,7 +92,7 @@ function ProdutosPage() {
       const { data, error } = await supabase
         .from("produtos")
         .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
+          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, pronta_entrega, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
         )
         .eq("user_id", userId!)
         .eq("arquivado", false)

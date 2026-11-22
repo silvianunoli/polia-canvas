@@ -1440,6 +1440,40 @@
   color: var(--suave);
 }
 
+/* Sob encomenda ou pronta entrega (22/11/2026). */
+.loja-vitrine .etiqueta-produto {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: var(--superficie);
+  color: var(--texto);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.loja-vitrine .etiqueta-produto.esgotado {
+  background: var(--texto);
+  color: var(--superficie);
+}
+.loja-vitrine .tipo-entrega {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--suave);
+}
+.loja-vitrine .tipo-entrega.esgotado {
+  color: var(--erro);
+}
+.loja-vitrine .chip:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.loja-vitrine .chip .esgotada {
+  font-weight: 400;
+}
+
 /* Filtro por categoria acima da grade (22/11/2026). */
 .loja-vitrine .categorias {
   display: flex;

@@ -371,12 +371,12 @@ export function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
     {
       nome: "Pro",
       praQuem: virou
-        ? "Pra quem vende no catálogo, no Instagram e nos marketplaces e quer tudo na mesma conta."
+        ? "Pra quem vende também nos marketplaces e quer tudo na mesma conta."
         : "Pra quem quer saber quanto falta pra marca pagar a dona.",
       mensal: precoBR(pro.precoMensal),
       anual: precoBR(pro.precoAnual),
       base: pro.base,
-      itens: beneficiosNaOrdem(pro.beneficios, [virou ? "catalogo" : "projecao"]),
+      itens: beneficiosNaOrdem(pro.beneficios, [virou ? "marketplaces" : "projecao"]),
     },
   ];
 }

@@ -186,12 +186,12 @@ function montarPlanos(agora: number = Date.now()): PlanoLanding[] {
     {
       nome: "Pro",
       praQuem: virou
-        ? "Pra quem vende no catálogo, no Instagram e nos marketplaces e quer tudo na mesma conta."
+        ? "Pra quem vende também nos marketplaces e quer tudo na mesma conta."
         : "Pra quem faz encomenda sob medida e quer saber quantas vendas faltam.",
       mensal: precoBR(pro.precoMensal),
       anual: precoBR(pro.precoAnual),
       base: pro.base,
-      itens: beneficiosNaOrdem(pro.beneficios, virou ? ["catalogo"] : ["encomenda", "projecao"]),
+      itens: beneficiosNaOrdem(pro.beneficios, virou ? ["marketplaces"] : ["encomenda", "projecao"]),
     },
   ];
 }

@@ -45,9 +45,9 @@ const produtos: ProdutoLoja[] = [
       { id: ROSA, nome: "Rosa" },
       { id: AZUL, nome: "Azul" },
     ],
-    categoriaId: null, usaPaleta: false,
+    categoriaId: null, usaPaleta: false, prontaEntrega: false, esgotado: false,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, prontaEntrega: false, esgotado: false },
 ];
 
 describe("limparCarrinho", () => {
@@ -300,5 +300,28 @@ describe("linkWhatsapp", () => {
   it("sem número, sem link", () => {
     expect(linkWhatsapp(null, "x")).toBeNull();
     expect(linkWhatsapp("123", "x")).toBeNull();
+  });
+});
+
+describe("pronta entrega (22/11/2026)", () => {
+  it("selo troca o prazo por pronta entrega", () => {
+    const s = selosDaLoja({ prazoDiasUteis: 5, sinalPercentual: 0, entregaTexto: null, whatsapp: null }, true);
+    expect(s[0]).toEqual({ icone: "relogio", titulo: "Pronta entrega", texto: "sai depois da confirmação" });
+  });
+
+  it("carrinho guardado perde produto esgotado e variação esgotada", () => {
+    const esgotados: ProdutoLoja[] = [
+      { ...produtos[0], prontaEntrega: true, variacoes: [{ id: ROSA, nome: "Rosa", esgotada: true }, { id: AZUL, nome: "Azul" }] },
+      { ...produtos[1], prontaEntrega: true, esgotado: true },
+    ];
+    const itens = limparCarrinho(
+      [
+        { produtoId: BOLSA, skuId: ROSA, quantidade: 1 },
+        { produtoId: BOLSA, skuId: AZUL, quantidade: 2 },
+        { produtoId: CHAVEIRO, skuId: null, quantidade: 1 },
+      ],
+      esgotados,
+    );
+    expect(itens).toEqual([{ produtoId: BOLSA, skuId: AZUL, variacaoNome: "Azul", quantidade: 2 }]);
   });
 });
