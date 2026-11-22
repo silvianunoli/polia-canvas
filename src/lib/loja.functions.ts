@@ -78,7 +78,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -95,6 +95,9 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       pronta_entrega: boolean;
       controla_estoque: boolean;
       max_cores: number | null;
+      preco_sob_consulta: boolean;
+      cor_sob_consulta: boolean;
+      tamanho_sob_consulta: boolean;
     }>;
     const ids = lista.map((p) => p.id);
 
@@ -181,7 +184,8 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         pedeEndereco: c.pede_endereco,
         aviso: c.aviso,
         produtos: lista.map((p) => {
-          const usaPaleta = !!p.usa_paleta && cores.length > 0;
+          // Cor sob consulta tira a paleta desse produto: a cliente não escolhe cor.
+          const usaPaleta = !!p.usa_paleta && cores.length > 0 && !p.cor_sob_consulta;
           const contaSaldo = p.pronta_entrega && p.controla_estoque;
           const variacoes: VariacaoLoja[] = usaPaleta
             ? opcoesDaPaleta(cores, p.cor_da_foto)
@@ -201,6 +205,9 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           categoriaId: p.categoria_id ?? null,
           usaPaleta,
           maxCores: usaPaleta ? maxCoresValido(p.max_cores) : 1,
+          precoSobConsulta: !!p.preco_sob_consulta,
+          corSobConsulta: !!p.cor_sob_consulta,
+          tamanhoSobConsulta: !!p.tamanho_sob_consulta,
           prontaEntrega: !!p.pronta_entrega,
           esgotado,
           };

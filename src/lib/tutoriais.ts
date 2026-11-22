@@ -343,6 +343,7 @@ const LISTA = [
           'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
+          'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
           'O botão "Ordem na vitrine", ao lado de "Importar planilha", abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
@@ -1028,7 +1029,7 @@ const LISTA = [
           '"Colar várias de uma vez" aceita uma lista, uma cor por linha: código, nome e a cor no formato #RRGGBB (ex.: 801 Azul Bondi #6DA9D2).',
           'Pra cliente escolher a cor, abra o produto em Produtos e marque "A cliente escolhe a cor da paleta da loja". Na página do produto, as cores aparecem em bolinhas, com "Cor da foto" primeiro.',
           'Se o produto aceita "Até 2 cores misturadas" (ou 3), a cliente marca uma cor ou mistura até esse número, e o pedido chega com as cores na ordem em que ela tocou, por exemplo "Cores 812 Hibisco + 806 Off White".',
-          '"Mostrar as cores na página inicial" põe uma faixa com a paleta e a seção "Escolha a sua cor". Ela e o "Aviso sobre as cores" valem depois de "Salvar a loja".',
+          '"Mostrar as cores na página inicial" põe uma faixa com a paleta logo abaixo do topo. As cores pra escolher ficam na página de cada produto, com o "Aviso sobre as cores" embaixo. Os dois valem depois de "Salvar a loja".',
         ],
       },
       {

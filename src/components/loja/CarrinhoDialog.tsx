@@ -7,6 +7,7 @@ import { reais } from "@/lib/loja";
 import { urlCanonica } from "@/lib/seo";
 import { enviarPedidoLoja } from "@/lib/loja.functions";
 import {
+  detalheDoItem,
   linkWhatsapp,
   mascararCep,
   mascararWhatsapp,
@@ -216,7 +217,7 @@ function Checkout() {
               <span className="mini">{l.produto.fotos[0] ? <img src={l.produto.fotos[0]} alt="" /> : <SemFoto />}</span>
               <div className="it">
                 <b>{l.produto.nome}</b>
-                {l.variacaoNome && <span>{l.variacaoNome}</span>}
+                {detalheDoItem(l.produto, l.variacaoNome) && <span>{detalheDoItem(l.produto, l.variacaoNome)}</span>}
                 <span>{reais(l.produto.preco)} cada</span>
                 <div className="qtd">
                   <button

@@ -9,6 +9,7 @@ import {
   coresDaVitrine,
   MAX_QUANTIDADE_ITEM,
   adicionarItem,
+  detalheDoItem,
   assinaturaDoPedido,
   enderecoEmLinha,
   idDoPedido,
@@ -45,9 +46,9 @@ const produtos: ProdutoLoja[] = [
       { id: ROSA, nome: "Rosa" },
       { id: AZUL, nome: "Azul" },
     ],
-    categoriaId: null, usaPaleta: false, maxCores: 1, prontaEntrega: false, esgotado: false,
+    categoriaId: null, usaPaleta: false, maxCores: 1, precoSobConsulta: false, corSobConsulta: false, tamanhoSobConsulta: false, prontaEntrega: false, esgotado: false,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, maxCores: 1, prontaEntrega: false, esgotado: false },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, maxCores: 1, precoSobConsulta: false, corSobConsulta: false, tamanhoSobConsulta: false, prontaEntrega: false, esgotado: false },
 ];
 
 describe("limparCarrinho", () => {
@@ -341,6 +342,9 @@ describe("limparCarrinho com várias cores (22/11/2026)", () => {
     categoriaId: null,
     usaPaleta: true,
     maxCores: 2,
+    precoSobConsulta: false,
+    corSobConsulta: false,
+    tamanhoSobConsulta: false,
     prontaEntrega: false,
     esgotado: false,
   };
@@ -353,5 +357,19 @@ describe("limparCarrinho com várias cores (22/11/2026)", () => {
   it("tira a mistura quando o produto volta a aceitar uma cor só", () => {
     const itens = limparCarrinho([{ produtoId: BOLSA, skuId: `${ROSA}+${AZUL}`, quantidade: 1 }], [{ ...PALETA, maxCores: 1 }]);
     expect(itens).toEqual([]);
+  });
+});
+
+describe("sob consulta (22/11/2026)", () => {
+  const base = produtos[1];
+  it("produto com preço sob consulta sai do carrinho guardado", () => {
+    expect(limparCarrinho([{ produtoId: CHAVEIRO, skuId: null, quantidade: 1 }], [{ ...base, precoSobConsulta: true }])).toEqual([]);
+  });
+  it("detalhe do item junta a opção e o que é sob consulta", () => {
+    expect(detalheDoItem(base, null)).toBeNull();
+    expect(detalheDoItem({ ...base, corSobConsulta: true }, null)).toBe("Cor sob consulta");
+    expect(detalheDoItem({ ...base, corSobConsulta: true, tamanhoSobConsulta: true }, "Rosa")).toBe(
+      "Rosa · Cor sob consulta · Tamanho sob consulta",
+    );
   });
 });

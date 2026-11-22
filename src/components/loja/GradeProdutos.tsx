@@ -34,7 +34,7 @@ function CartaoProduto({ slug, produto: p }: { slug: string; produto: ProdutoLoj
       </div>
       <div className="txt">
         <h3>{p.nome}</h3>
-        <span className="vl">{reais(p.preco)}</span>
+        <span className="vl">{p.precoSobConsulta ? "Preço sob consulta" : reais(p.preco)}</span>
       </div>
       {opcoes > 1 && <p className="opcoes">{opcoes} opções</p>}
     </Link>

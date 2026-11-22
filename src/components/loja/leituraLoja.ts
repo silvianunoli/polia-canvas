@@ -52,7 +52,9 @@ export function descricaoDaLoja(loja: LojaPublica): string {
   return (base || `Produtos de ${loja.nome}. Escolha, monte o pedido e confirme pelo site.`).slice(0, 200);
 }
 
-export function descricaoDoProduto(nome: string, descricao: string | null, preco: number): string {
+/** Preço null = sob consulta: a prévia não mostra valor. */
+export function descricaoDoProduto(nome: string, descricao: string | null, preco: number | null): string {
   const d = descricao?.trim().replace(/\s+/g, " ");
-  return (d ? `${d} ${reais(preco)}.` : `${nome} por ${reais(preco)}.`).slice(0, 200);
+  const valor = preco == null ? "Preço sob consulta" : reais(preco);
+  return (d ? `${d} ${valor}.` : preco == null ? `${nome}. ${valor}.` : `${nome} por ${valor}.`).slice(0, 200);
 }

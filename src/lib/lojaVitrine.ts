@@ -44,7 +44,8 @@ export function limparCarrinho(bruto: unknown, produtos: ProdutoLoja[]): ItemCar
     const i = cru as Partial<ItemCarrinho>;
     if (typeof i.produtoId !== "string") continue;
     const produto = porId.get(i.produtoId);
-    if (!produto || produto.esgotado) continue;
+    // Preço sob consulta não entra no carrinho (o banco também recusa).
+    if (!produto || produto.esgotado || produto.precoSobConsulta) continue;
     const skuId = typeof i.skuId === "string" ? i.skuId : null;
     let variacaoNome: string | null = null;
     if (produto.variacoes.length) {
@@ -349,10 +350,26 @@ export function gerarIdPedido(): string {
 }
 
 /** Itens no formato que mensagemDoPedido espera. */
+/**
+ * O que vai embaixo do nome do item: a opção escolhida e o que é sob consulta,
+ * no mesmo texto que o banco grava ("Cor sob consulta · Tamanho sob consulta").
+ */
+export function detalheDoItem(
+  produto: Pick<ProdutoLoja, "corSobConsulta" | "tamanhoSobConsulta">,
+  variacaoNome: string | null,
+): string | null {
+  const partes = [
+    variacaoNome,
+    produto.corSobConsulta ? "Cor sob consulta" : null,
+    produto.tamanhoSobConsulta ? "Tamanho sob consulta" : null,
+  ].filter(Boolean);
+  return partes.length ? partes.join(" · ") : null;
+}
+
 export function itensDaMensagem(linhas: LinhaCarrinho[]) {
   return linhas.map((l) => ({
     nome: l.produto.nome,
-    variacao: l.variacaoNome,
+    variacao: detalheDoItem(l.produto, l.variacaoNome),
     quantidade: l.quantidade,
     preco: l.produto.preco,
   }));

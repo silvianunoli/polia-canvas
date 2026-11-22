@@ -29,6 +29,10 @@ export interface Produto {
   cor_da_foto?: string | null;
   /** Com paleta: quantas cores a cliente pode misturar na vitrine (1 a 3). */
   max_cores?: number;
+  /** Na vitrine, combinado pelo WhatsApp: preço (sem carrinho), cor, tamanho. */
+  preco_sob_consulta?: boolean;
+  cor_sob_consulta?: boolean;
+  tamanho_sob_consulta?: boolean;
   /** Na vitrine: pronta entrega (sai sem prazo de produção). false = sob encomenda. */
   pronta_entrega?: boolean;
   arquivado: boolean;

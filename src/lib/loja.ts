@@ -207,6 +207,12 @@ export interface ProdutoLoja {
   usaPaleta: boolean;
   /** Com paleta: quantas cores a cliente pode misturar (1 a 3). */
   maxCores: number;
+  /** Sob consulta (22/11/2026): preço não aparece e o produto não vai pro carrinho. */
+  precoSobConsulta: boolean;
+  /** Cor combinada depois, pelo WhatsApp: sem escolha de cor na loja. */
+  corSobConsulta: boolean;
+  /** Tamanho combinado depois, pelo WhatsApp. */
+  tamanhoSobConsulta: boolean;
   /** Pronta entrega (sai sem prazo de produção); false = sob encomenda. */
   prontaEntrega: boolean;
   /** Pronta entrega com estoque ligado e nada pra vender. */

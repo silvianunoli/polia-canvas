@@ -1074,7 +1074,7 @@ function PaletaDeCores({
             <div>
               <p className="font-sans text-[14px] font-medium text-[var(--ink)]">Mostrar as cores na página inicial</p>
               <p className="font-sans text-[12px] text-[var(--ink-soft)]">
-                Uma faixa com a paleta e a seção “Escolha a sua cor”. Vale depois de “Salvar a loja”.
+                Uma faixa com a paleta logo abaixo do topo. As cores pra escolher ficam na página de cada produto. Vale depois de “Salvar a loja”.
               </p>
             </div>
             <Switch checked={mostrar} onCheckedChange={onMostrar} aria-label="Mostrar as cores na página inicial" />

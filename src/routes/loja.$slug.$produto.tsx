@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ShoppingBag } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { GradeProdutos } from "@/components/loja/GradeProdutos";
-import { SemFoto } from "@/components/loja/icones";
+import { IconeWhatsapp, SemFoto } from "@/components/loja/icones";
 import {
   descricaoDoProduto,
   lojaDosMatches,
@@ -12,7 +12,7 @@ import {
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { BeneficiosLoja } from "@/components/loja/SelosLoja";
 import { OPCAO_COR_DA_FOTO, opcaoDasCores, reais, type ProdutoLoja } from "@/lib/loja";
-import { sinalDoPreco } from "@/lib/lojaVitrine";
+import { linkWhatsapp, sinalDoPreco } from "@/lib/lojaVitrine";
 import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
 // Página de um produto da loja (/loja/<endereço>/<id do produto>): galeria,
@@ -34,7 +34,7 @@ export const Route = createFileRoute("/loja/$slug/$produto")({
     return {
       meta: metaDaLoja({
         titulo: `${p.nome} · ${loja.nome}`,
-        descricao: descricaoDoProduto(p.nome, p.descricao, p.preco),
+        descricao: descricaoDoProduto(p.nome, p.descricao, p.precoSobConsulta ? null : p.preco),
         imagem: p.fotos[0] ?? loja.logoUrl,
         caminho: `/loja/${loja.slug}/${p.id}`,
         indexar: true,
@@ -113,8 +113,16 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
     return () => io.disconnect();
   }, []);
 
+  // Preço sob consulta: no lugar do carrinho, um botão pro WhatsApp da loja.
+  const consulta = p.precoSobConsulta
+    ? linkWhatsapp(
+        loja.whatsapp,
+        `Oi, ${loja.nome}. Vi ${p.nome} na loja online e queria saber o preço.`,
+      )
+    : null;
+
   const porNoCarrinho = () => {
-    if (p.esgotado) return;
+    if (p.esgotado || p.precoSobConsulta) return;
     if (temVariacao && !variacao) {
       setFaltaEscolher(true);
       const grupo = escolhaRef.current;
@@ -176,8 +184,14 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
             <span className="olho">{loja.nome}</span>
             <h1>{p.nome}</h1>
             <div className="preco-linha">
-              <span className="preco-g">{reais(p.preco)}</span>
-              {sinal > 0 && <span className="sinal-tag">Comece com {reais(sinal)} de sinal</span>}
+              {p.precoSobConsulta ? (
+                <span className="preco-g consulta">Preço sob consulta</span>
+              ) : (
+                <span className="preco-g">{reais(p.preco)}</span>
+              )}
+              {sinal > 0 && !p.precoSobConsulta && (
+                <span className="sinal-tag">Comece com {reais(sinal)} de sinal</span>
+              )}
             </div>
             <p className={`tipo-entrega${p.esgotado ? " esgotado" : ""}`}>
               {p.esgotado
@@ -271,17 +285,43 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
               </fieldset>
             )}
 
+            {(p.corSobConsulta || p.tamanhoSobConsulta) && (
+              <ul className="sob-consulta">
+                {p.corSobConsulta && (
+                  <li>Cor sob consulta: a loja combina com você pelo WhatsApp depois do pedido.</li>
+                )}
+                {p.tamanhoSobConsulta && (
+                  <li>
+                    Tamanho sob consulta: a loja combina com você pelo WhatsApp depois do pedido.
+                  </li>
+                )}
+              </ul>
+            )}
+
             <div className="comprar">
-              <button
-                ref={botaoRef}
-                type="button"
-                className="btn largo"
-                onClick={porNoCarrinho}
-                disabled={p.esgotado}
-              >
-                <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
-                <span>{p.esgotado ? "Esgotado" : "Adicionar ao carrinho"}</span>
-              </button>
+              {p.precoSobConsulta ? (
+                consulta ? (
+                  <a className="btn largo zap" href={consulta} target="_blank" rel="noopener">
+                    <IconeWhatsapp />
+                    <span>Consultar o preço no WhatsApp</span>
+                  </a>
+                ) : (
+                  <p className="sob-consulta">
+                    Fale com a loja pelo perfil onde você achou o link pra saber o preço.
+                  </p>
+                )
+              ) : (
+                <button
+                  ref={botaoRef}
+                  type="button"
+                  className="btn largo"
+                  onClick={porNoCarrinho}
+                  disabled={p.esgotado}
+                >
+                  <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
+                  <span>{p.esgotado ? "Esgotado" : "Adicionar ao carrinho"}</span>
+                </button>
+              )}
             </div>
             <BeneficiosLoja loja={loja} prontaEntrega={p.prontaEntrega} />
           </div>
@@ -300,22 +340,24 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
         )}
       </div>
 
-      <div className={`barra-produto${barra ? " on" : ""}`}>
-        <div className="nome">
-          <b>{p.nome}</b>
-          {variacao ? `${variacao.nome} · ${reais(p.preco)}` : reais(p.preco)}
+      {!p.precoSobConsulta && (
+        <div className={`barra-produto${barra ? " on" : ""}`}>
+          <div className="nome">
+            <b>{p.nome}</b>
+            {variacao ? `${variacao.nome} · ${reais(p.preco)}` : reais(p.preco)}
+          </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={porNoCarrinho}
+            tabIndex={barra ? 0 : -1}
+            disabled={p.esgotado}
+          >
+            <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
+            <span>{p.esgotado ? "Esgotado" : "Adicionar"}</span>
+          </button>
         </div>
-        <button
-          type="button"
-          className="btn"
-          onClick={porNoCarrinho}
-          tabIndex={barra ? 0 : -1}
-          disabled={p.esgotado}
-        >
-          <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
-          <span>{p.esgotado ? "Esgotado" : "Adicionar"}</span>
-        </button>
-      </div>
+      )}
     </>
   );
 }

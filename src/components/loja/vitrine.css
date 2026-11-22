@@ -1446,6 +1446,19 @@
   outline: 2px solid var(--texto);
   outline-offset: 2px;
 }
+/* Sob consulta (22/11/2026): preço, cor e tamanho combinados pelo WhatsApp. */
+.loja-vitrine .preco-g.consulta {
+  font-size: 22px;
+}
+.loja-vitrine .sob-consulta {
+  list-style: none;
+  margin-top: 16px;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--suave);
+}
+
 /* Várias cores no mesmo produto (22/11/2026): número da ordem na amostra. */
 .loja-vitrine .chip.amostra {
   position: relative;

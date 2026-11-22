@@ -91,28 +91,7 @@ function VitrinePage() {
         )}
       </section>
 
-      {mostraCores && (
-        <section className="wrap secao" id="cores" aria-labelledby="t-cores">
-          <div className="secao-topo">
-            <div>
-              <span className="olho">
-                {loja.cores.length} {loja.cores.length === 1 ? "cor" : "cores"}
-              </span>
-              <h2 id="t-cores">Escolha a sua cor</h2>
-            </div>
-            {loja.avisoCor && <p>{loja.avisoCor}</p>}
-          </div>
-          <ul className="cores-grade">
-            {loja.cores.map((c) => (
-              <li key={c.id} className="cor-cartao">
-                <i style={{ background: c.hex }} aria-hidden="true" />
-                {c.codigo && <b>{c.codigo}</b>}
-                <span>{c.nome}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      {/* A grade "Escolha a sua cor" saiu em 22/11/2026 (Sil): as cores já aparecem na página de cada produto. */}
 
       <section className="wrap secao" id="como" aria-labelledby="t-como">
         <div className="secao-topo">
