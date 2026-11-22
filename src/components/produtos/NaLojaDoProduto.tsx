@@ -8,12 +8,19 @@ import { Campo } from "@/components/ui/Campo";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { FOTO_TIPOS } from "@/lib/loja";
 import { MAX_EIXOS } from "@/lib/lojaCombinacoes";
+import { MAX_DETALHE_NOME, MAX_DETALHE_VALOR, MAX_DETALHES } from "@/lib/lojaDaMarca";
 import { urlDaFotoVariacao, type LojaDoProduto, type TipoDaCategoria } from "./useLojaDoProduto";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
 
-function NovaCategoria({ loja, tipo = "categoria" }: { loja: LojaDoProduto; tipo?: TipoDaCategoria }) {
+function NovaCategoria({
+  loja,
+  tipo = "categoria",
+}: {
+  loja: LojaDoProduto;
+  tipo?: TipoDaCategoria;
+}) {
   const palavra = tipo === "colecao" ? "coleção" : "categoria";
   const [aberta, setAberta] = useState(false);
   const [nome, setNome] = useState("");
@@ -185,7 +192,10 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
       </div>
 
       <div className="mb-4">
-        <Campo label="Coleção" hint="O tema da estampa, como Natal. Na loja, fica nas bolinhas e em Explore por coleção.">
+        <Campo
+          label="Coleção"
+          hint="O tema da estampa, como Natal. Na loja, fica nas bolinhas e em Explore por coleção."
+        >
           <select
             value={loja.colecaoId}
             onChange={(e) => loja.setColecaoId(e.target.value)}
@@ -201,6 +211,8 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
         </Campo>
         <NovaCategoria loja={loja} tipo="colecao" />
       </div>
+
+      <DetalhesDoProduto loja={loja} />
 
       {ehKit ? (
         <p className="mb-4 text-[13px] text-[var(--ink-soft)]">
@@ -257,7 +269,9 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
       )}
 
       <fieldset className="mb-4">
-        <legend className="mb-1 text-[13px] font-medium text-[var(--ink)]">Pacote para o frete</legend>
+        <legend className="mb-1 text-[13px] font-medium text-[var(--ink)]">
+          Pacote para o frete
+        </legend>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           <Campo label="Peso (kg)">
             <input
@@ -436,6 +450,71 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
               </div>
             ))}
         </>
+      )}
+    </fieldset>
+  );
+}
+
+/** Tabela "Detalhes do produto" da página do produto na loja: medidas, material, cuidados. */
+function DetalhesDoProduto({ loja }: { loja: LojaDoProduto }) {
+  const id = useId();
+  const linhas = loja.detalhes;
+  const mudar = (i: number, m: Partial<{ nome: string; valor: string }>) =>
+    loja.setDetalhes(linhas.map((l, j) => (j === i ? { ...l, ...m } : l)));
+  return (
+    <fieldset className="mb-4">
+      <legend className="mb-1 text-[13px] font-medium text-[var(--ink)]">
+        Detalhes do produto
+      </legend>
+      <p id={`${id}-dica`} className="mb-2 text-[12.5px] text-[var(--muted)]">
+        Viram a tabela da aba "Detalhes do produto" na loja, ao lado da descrição. Ex.: Capacidade,
+        325 ml.
+      </p>
+      {linhas.length > 0 && (
+        <ul className="mb-2 flex flex-col gap-2">
+          {linhas.map((l, i) => (
+            <li key={i} className="flex items-center gap-2">
+              <input
+                value={l.nome}
+                onChange={(e) => mudar(i, { nome: e.target.value })}
+                maxLength={MAX_DETALHE_NOME}
+                placeholder="Nome, como Altura"
+                aria-label={`Detalhe ${i + 1}: nome`}
+                aria-describedby={`${id}-dica`}
+                className={`${INPUT} w-2/5`}
+              />
+              <input
+                value={l.valor}
+                onChange={(e) => mudar(i, { valor: e.target.value })}
+                maxLength={MAX_DETALHE_VALOR}
+                placeholder="Valor, como 9,5 cm"
+                aria-label={`Detalhe ${i + 1}: valor`}
+                className={`${INPUT} flex-1`}
+              />
+              <button
+                type="button"
+                onClick={() => loja.setDetalhes(linhas.filter((_, j) => j !== i))}
+                aria-label={`Apagar o detalhe ${i + 1}`}
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--danger)] focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)]"
+              >
+                <Trash2 size={16} aria-hidden="true" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button
+        type="button"
+        className={BTN_MIUDO}
+        disabled={linhas.length >= MAX_DETALHES}
+        onClick={() => loja.setDetalhes([...linhas, { nome: "", valor: "" }])}
+      >
+        + Adicionar detalhe
+      </button>
+      {linhas.length >= MAX_DETALHES && (
+        <p className="mt-1 text-[12.5px] text-[var(--muted)]">
+          A tabela vai até {MAX_DETALHES} linhas.
+        </p>
       )}
     </fieldset>
   );

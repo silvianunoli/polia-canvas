@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   arquivosQueSairam,
   corpoDaVitrine,
+  detalhesParaSalvar,
   lerBanners,
+  lerDetalhes,
   lerTitulos,
   problemaDoLink,
+  problemaDosDetalhes,
   problemaParaSalvar,
   titulosVisiveis,
 } from "./lojaDaMarca";
@@ -82,5 +85,32 @@ describe("salvar", () => {
       { imagemPath: "u/b.png", celularPath: "u/b-cel.png", link: "", alt: "" },
     ];
     expect(arquivosQueSairam(antes, [banner])).toEqual(["u/b.png", "u/b-cel.png"]);
+  });
+});
+
+describe("detalhes do produto", () => {
+  it("lê o banco e ignora linha torta", () => {
+    expect(lerDetalhes([{ nome: "Capacidade", valor: "325 ml" }, "x", null])).toEqual([
+      { nome: "Capacidade", valor: "325 ml" },
+    ]);
+    expect(lerDetalhes("torto")).toEqual([]);
+  });
+
+  it("linha toda vazia sai, o resto vai aparado", () => {
+    expect(
+      detalhesParaSalvar([
+        { nome: " Material ", valor: " Cerâmica " },
+        { nome: " ", valor: "" },
+      ]),
+    ).toEqual([{ nome: "Material", valor: "Cerâmica" }]);
+  });
+
+  it("linha pela metade, longa ou demais trava", () => {
+    expect(problemaDosDetalhes([{ nome: "Altura", valor: "" }])).toMatch(/linha 1/);
+    expect(problemaDosDetalhes([{ nome: "x".repeat(61), valor: "1" }])).not.toBeNull();
+    expect(
+      problemaDosDetalhes(Array.from({ length: 21 }, (_, i) => ({ nome: `n${i}`, valor: "v" }))),
+    ).not.toBeNull();
+    expect(problemaDosDetalhes([{ nome: "Altura", valor: "9,5 cm" }])).toBeNull();
   });
 });

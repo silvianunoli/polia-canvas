@@ -29,6 +29,8 @@ const loja = (extra: Partial<LojaDoProduto> = {}) =>
     colecoes: [],
     colecaoId: "",
     setColecaoId: () => {},
+    detalhes: [],
+    setDetalhes: () => {},
     saldoPadrao: null,
     controla: false,
     setControla: vi.fn(),

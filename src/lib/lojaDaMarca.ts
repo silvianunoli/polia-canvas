@@ -127,3 +127,45 @@ export function arquivosQueSairam(antes: BannerDaLoja[], depois: BannerDaLoja[])
     .flatMap((b) => [b.imagemPath, b.celularPath ?? ""])
     .filter((p) => p && !ficam.has(p));
 }
+
+/** Tabela "Detalhes do produto" na loja (22/11/2026): medidas, material, cuidados. */
+export const MAX_DETALHES = 20;
+export const MAX_DETALHE_NOME = 60;
+export const MAX_DETALHE_VALOR = 200;
+
+export interface DetalheDoProduto {
+  nome: string;
+  valor: string;
+}
+
+/** Lê o que veio do banco; linha torta some. */
+export function lerDetalhes(valor: unknown): DetalheDoProduto[] {
+  if (!Array.isArray(valor)) return [];
+  return valor.flatMap((l) => {
+    if (!l || typeof l !== "object") return [];
+    const o = l as Record<string, unknown>;
+    return [{ nome: texto(o.nome), valor: texto(o.valor) }];
+  });
+}
+
+/** Linha toda vazia sai; o resto vai aparado, na ordem da tela. */
+export function detalhesParaSalvar(linhas: DetalheDoProduto[]): DetalheDoProduto[] {
+  return linhas
+    .map((l) => ({ nome: l.nome.trim(), valor: l.valor.trim() }))
+    .filter((l) => l.nome || l.valor);
+}
+
+/** O motivo que impede salvar, ou null. Mesmas regras de produto_detalhes_validos no banco. */
+export function problemaDosDetalhes(linhas: DetalheDoProduto[]): string | null {
+  const limpas = detalhesParaSalvar(linhas);
+  if (limpas.length > MAX_DETALHES) return `A tabela de detalhes vai até ${MAX_DETALHES} linhas.`;
+  for (const [i, l] of limpas.entries()) {
+    if (!l.nome || !l.valor)
+      return `Detalhes do produto, linha ${i + 1}: preencha o nome e o valor, ou apague a linha.`;
+    if (l.nome.length > MAX_DETALHE_NOME)
+      return `Detalhes do produto, linha ${i + 1}: o nome vai até ${MAX_DETALHE_NOME} caracteres.`;
+    if (l.valor.length > MAX_DETALHE_VALOR)
+      return `Detalhes do produto, linha ${i + 1}: o valor vai até ${MAX_DETALHE_VALOR} caracteres.`;
+  }
+  return null;
+}

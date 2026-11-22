@@ -6,6 +6,12 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { problemaDaFoto } from "@/components/catalogo/dados";
 import { lerMedida } from "@/lib/envioLoja";
+import {
+  detalhesParaSalvar,
+  lerDetalhes,
+  problemaDosDetalhes,
+  type DetalheDoProduto,
+} from "@/lib/lojaDaMarca";
 import { supabase } from "@/integrations/supabase/client";
 import {
   atualizarCombinacoes,
@@ -41,6 +47,7 @@ interface DadosDoProduto {
   altura_cm: number | null;
   largura_cm: number | null;
   comprimento_cm: number | null;
+  detalhes_loja: unknown;
 }
 
 /** Pacote para o frete (ONE-189): em texto, como a dona digita. */
@@ -103,7 +110,7 @@ export function useLojaDoProduto(
           supabase
             .from("produtos")
             .select(
-              "categoria_id, colecao_id, prazo_dias_uteis, eixos_variacao, peso_kg, altura_cm, largura_cm, comprimento_cm",
+              "categoria_id, colecao_id, prazo_dias_uteis, eixos_variacao, peso_kg, altura_cm, largura_cm, comprimento_cm, detalhes_loja",
             )
             .eq("id", produtoId!)
             .single(),
@@ -135,6 +142,7 @@ export function useLojaDoProduto(
   const [controla, setControla] = useState(controlaInicial);
   const [categoriaId, setCategoriaId] = useState("");
   const [colecaoId, setColecaoId] = useState("");
+  const [detalhes, setDetalhes] = useState<DetalheDoProduto[]>([]);
   const [prazo, setPrazo] = useState("");
   const [eixos, setEixos] = useState<EixoEditavel[]>([]);
   const [combinacoes, setCombinacoes] = useState<CombinacaoEditavel[]>([]);
@@ -154,6 +162,7 @@ export function useLojaDoProduto(
     const inicial = estadoDoBanco(produto.eixos_variacao, skus);
     setCategoriaId(produto.categoria_id ?? "");
     setColecaoId(produto.colecao_id ?? "");
+    setDetalhes(lerDetalhes(produto.detalhes_loja));
     setPrazo(produto.prazo_dias_uteis == null ? "" : String(produto.prazo_dias_uteis));
     setPacote({
       pesoKg: pacoteEmTexto(produto.peso_kg),
@@ -195,7 +204,10 @@ export function useLojaDoProduto(
   };
 
   /** Cria a categoria (ou a coleção) e já deixa escolhida. Devolve o motivo quando não dá. */
-  const criarCategoria = async (nome: string, tipo: TipoDaCategoria = "categoria"): Promise<string | null> => {
+  const criarCategoria = async (
+    nome: string,
+    tipo: TipoDaCategoria = "categoria",
+  ): Promise<string | null> => {
     const limpo = nome.trim().slice(0, 60);
     const slug = slugDaCategoria(limpo);
     if (!limpo || !slug) return "Escreva um nome com letras ou números.";
@@ -222,7 +234,10 @@ export function useLojaDoProduto(
 
   // Pacote para o frete: cada medida vazia ou entre 0 e o limite. Vazio usa a caixa padrão.
   const pacoteNum = Object.fromEntries(
-    (Object.keys(LIMITES_PACOTE) as Array<keyof PacoteDoProduto>).map((k) => [k, lerMedida(pacote[k])]),
+    (Object.keys(LIMITES_PACOTE) as Array<keyof PacoteDoProduto>).map((k) => [
+      k,
+      lerMedida(pacote[k]),
+    ]),
   ) as Record<keyof PacoteDoProduto, number | null>;
   const pacoteValido = (Object.keys(LIMITES_PACOTE) as Array<keyof PacoteDoProduto>).every((k) => {
     const v = pacoteNum[k];
@@ -233,6 +248,8 @@ export function useLojaDoProduto(
   const problemaPara = (ehKit: boolean): string | null => {
     if (!temLoja) return null;
     if (!prazoValido) return "O prazo vai de 1 a 120 dias úteis.";
+    const problemaDetalhes = problemaDosDetalhes(detalhes);
+    if (problemaDetalhes) return problemaDetalhes;
     if (!pacoteValido)
       return "Confira o pacote para o frete: peso até 100 kg e medidas até 200 cm, só números.";
     return ehKit ? null : problemaDasCombinacoes(eixos, combinacoes);
@@ -245,6 +262,7 @@ export function useLojaDoProduto(
       .update({
         categoria_id: categoriaId || null,
         colecao_id: colecaoId || null,
+        detalhes_loja: detalhesParaSalvar(detalhes),
         prazo_dias_uteis: prazo.trim() ? prazoNum : null,
         peso_kg: pacoteNum.pesoKg,
         altura_cm: pacoteNum.alturaCm,
@@ -286,6 +304,8 @@ export function useLojaDoProduto(
     setCategoriaId,
     colecaoId,
     setColecaoId,
+    detalhes,
+    setDetalhes,
     prazo,
     setPrazo,
     pacote,
