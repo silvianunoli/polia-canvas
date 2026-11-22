@@ -23,13 +23,18 @@ const BUCKET = "produtos-fotos";
 export const urlDaFotoVariacao = (path: string) =>
   supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
+/** Categoria é o tipo do produto (menu da loja); coleção é o tema (22/11/2026). */
+export type TipoDaCategoria = "categoria" | "colecao";
+
 export interface CategoriaDaLoja {
   id: string;
   nome: string;
+  tipo: TipoDaCategoria;
 }
 
 interface DadosDoProduto {
   categoria_id: string | null;
+  colecao_id: string | null;
   prazo_dias_uteis: number | null;
   eixos_variacao: unknown;
   peso_kg: number | null;
@@ -80,7 +85,7 @@ export function useLojaDoProduto(
     queryFn: async (): Promise<CategoriaDaLoja[]> => {
       const { data, error } = await supabase
         .from("produto_categorias" as never)
-        .select("id, nome")
+        .select("id, nome, tipo")
         .eq("user_id", userId)
         .order("ordem")
         .order("nome");
@@ -98,7 +103,7 @@ export function useLojaDoProduto(
           supabase
             .from("produtos")
             .select(
-              "categoria_id, prazo_dias_uteis, eixos_variacao, peso_kg, altura_cm, largura_cm, comprimento_cm",
+              "categoria_id, colecao_id, prazo_dias_uteis, eixos_variacao, peso_kg, altura_cm, largura_cm, comprimento_cm",
             )
             .eq("id", produtoId!)
             .single(),
@@ -129,6 +134,7 @@ export function useLojaDoProduto(
 
   const [controla, setControla] = useState(controlaInicial);
   const [categoriaId, setCategoriaId] = useState("");
+  const [colecaoId, setColecaoId] = useState("");
   const [prazo, setPrazo] = useState("");
   const [eixos, setEixos] = useState<EixoEditavel[]>([]);
   const [combinacoes, setCombinacoes] = useState<CombinacaoEditavel[]>([]);
@@ -147,6 +153,7 @@ export function useLojaDoProduto(
     const { produto, skus } = dadosQuery.data;
     const inicial = estadoDoBanco(produto.eixos_variacao, skus);
     setCategoriaId(produto.categoria_id ?? "");
+    setColecaoId(produto.colecao_id ?? "");
     setPrazo(produto.prazo_dias_uteis == null ? "" : String(produto.prazo_dias_uteis));
     setPacote({
       pesoKg: pacoteEmTexto(produto.peso_kg),
@@ -187,23 +194,25 @@ export function useLojaDoProduto(
     return null;
   };
 
-  /** Cria a categoria e já deixa escolhida. Devolve o motivo quando não dá. */
-  const criarCategoria = async (nome: string): Promise<string | null> => {
+  /** Cria a categoria (ou a coleção) e já deixa escolhida. Devolve o motivo quando não dá. */
+  const criarCategoria = async (nome: string, tipo: TipoDaCategoria = "categoria"): Promise<string | null> => {
     const limpo = nome.trim().slice(0, 60);
     const slug = slugDaCategoria(limpo);
     if (!limpo || !slug) return "Escreva um nome com letras ou números.";
     const { data, error } = await supabase
       .from("produto_categorias" as never)
-      .insert({ user_id: userId, nome: limpo, slug } as never)
+      .insert({ user_id: userId, nome: limpo, slug, tipo } as never)
       .select("id")
       .single();
     if (error || !data) {
-      if (error?.code === "23505") return "Já existe uma categoria com esse nome.";
+      if (error?.code === "23505") return "Já existe uma categoria ou coleção com esse nome.";
       console.error("categoria_criar", error);
       return "A Pólia One não conseguiu criar a categoria. Tenta de novo.";
     }
     await qc.invalidateQueries({ queryKey: ["produto-categorias", userId] });
-    setCategoriaId((data as unknown as { id: string }).id);
+    const id = (data as unknown as { id: string }).id;
+    if (tipo === "colecao") setColecaoId(id);
+    else setCategoriaId(id);
     return null;
   };
 
@@ -235,6 +244,7 @@ export function useLojaDoProduto(
       .from("produtos")
       .update({
         categoria_id: categoriaId || null,
+        colecao_id: colecaoId || null,
         prazo_dias_uteis: prazo.trim() ? prazoNum : null,
         peso_kg: pacoteNum.pesoKg,
         altura_cm: pacoteNum.alturaCm,
@@ -267,12 +277,15 @@ export function useLojaDoProduto(
     temLoja,
     carregando: lojaQuery.isLoading || (temLoja && !!produtoId && !pronto && !dadosQuery.isError),
     erroAoCarregar: dadosQuery.isError,
-    categorias: categoriasQuery.data ?? [],
+    categorias: (categoriasQuery.data ?? []).filter((c) => c.tipo !== "colecao"),
+    colecoes: (categoriasQuery.data ?? []).filter((c) => c.tipo === "colecao"),
     saldoPadrao: dadosQuery.data?.saldoPadrao ?? null,
     controla,
     setControla,
     categoriaId,
     setCategoriaId,
+    colecaoId,
+    setColecaoId,
     prazo,
     setPrazo,
     pacote,

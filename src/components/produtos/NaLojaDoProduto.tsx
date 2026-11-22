@@ -8,12 +8,13 @@ import { Campo } from "@/components/ui/Campo";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { FOTO_TIPOS } from "@/lib/loja";
 import { MAX_EIXOS } from "@/lib/lojaCombinacoes";
-import { urlDaFotoVariacao, type LojaDoProduto } from "./useLojaDoProduto";
+import { urlDaFotoVariacao, type LojaDoProduto, type TipoDaCategoria } from "./useLojaDoProduto";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
 
-function NovaCategoria({ loja }: { loja: LojaDoProduto }) {
+function NovaCategoria({ loja, tipo = "categoria" }: { loja: LojaDoProduto; tipo?: TipoDaCategoria }) {
+  const palavra = tipo === "colecao" ? "coleção" : "categoria";
   const [aberta, setAberta] = useState(false);
   const [nome, setNome] = useState("");
   const [erro, setErro] = useState<string | null>(null);
@@ -26,13 +27,13 @@ function NovaCategoria({ loja }: { loja: LojaDoProduto }) {
         onClick={() => setAberta(true)}
         className={`${BTN_MIUDO} mt-2 bg-white`}
       >
-        + Nova categoria
+        {tipo === "colecao" ? "+ Nova coleção" : "+ Nova categoria"}
       </button>
     );
 
   const criar = async () => {
     setSalvando(true);
-    const problema = await loja.criarCategoria(nome);
+    const problema = await loja.criarCategoria(nome, tipo);
     setSalvando(false);
     setErro(problema);
     if (!problema) {
@@ -43,7 +44,7 @@ function NovaCategoria({ loja }: { loja: LojaDoProduto }) {
 
   return (
     <div className="mt-2">
-      <Campo label="Nome da nova categoria" error={erro ?? undefined}>
+      <Campo label={`Nome da nova ${palavra}`} error={erro ?? undefined}>
         <input
           value={nome}
           maxLength={60}
@@ -181,6 +182,24 @@ export function NaLojaDoProduto({ loja, ehKit }: { loja: LojaDoProduto; ehKit: b
           </select>
         </Campo>
         <NovaCategoria loja={loja} />
+      </div>
+
+      <div className="mb-4">
+        <Campo label="Coleção" hint="O tema da estampa, como Natal. Na loja, fica nas bolinhas e em Explore por coleção.">
+          <select
+            value={loja.colecaoId}
+            onChange={(e) => loja.setColecaoId(e.target.value)}
+            className={INPUT}
+          >
+            <option value="">Sem coleção</option>
+            {loja.colecoes.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nome}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <NovaCategoria loja={loja} tipo="colecao" />
       </div>
 
       {ehKit ? (

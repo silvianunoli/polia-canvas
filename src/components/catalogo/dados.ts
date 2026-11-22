@@ -28,6 +28,8 @@ export interface ProdutoDoCatalogo {
   ordem: number | null;
   /** produto_categorias.id; null = sem categoria. */
   categoriaId: string | null;
+  /** produto_categorias.id de tipo coleção; null = sem coleção. */
+  colecaoId: string | null;
   fotos: FotoProduto[];
   variacoes: number;
 }
@@ -41,7 +43,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
     queryFn: async (): Promise<ProdutoDoCatalogo[]> => {
       const { data: prods, error } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, categoria_id, created_at")
+        .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, categoria_id, colecao_id, created_at")
         .eq("user_id", userId!)
         .eq("arquivado", false)
         // Mesma ordem da loja pública (lerLojaPublica): a dela primeiro, depois a de cadastro.
@@ -55,6 +57,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         no_catalogo: boolean;
         catalogo_ordem: number | null;
         categoria_id: string | null;
+        colecao_id: string | null;
       }>;
       const ids = lista.map((p) => p.id);
       if (!ids.length) return [];
@@ -77,6 +80,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         noCatalogo: !!p.no_catalogo,
         ordem: p.catalogo_ordem ?? null,
         categoriaId: p.categoria_id ?? null,
+        colecaoId: p.colecao_id ?? null,
         fotos: fotosPor.get(p.id) ?? [],
         variacoes: varPor.get(p.id) ?? 0,
       }));
@@ -108,9 +112,13 @@ export function moverNaLista<T>(lista: readonly T[], indice: number, direcao: -1
 
 // ── categorias (mesma tabela da loja de marca, produto_categorias) ─────────
 
+/** Categoria é o tipo do produto (menu da loja); coleção é o tema da estampa (22/11/2026). */
+export type TipoDaCategoria = "categoria" | "colecao";
+
 export interface CategoriaDaVitrine {
   id: string;
   nome: string;
+  tipo: TipoDaCategoria;
 }
 
 /** Mesma chave da janela de produto (useLojaDoProduto): as duas telas ficam iguais. */
@@ -123,7 +131,7 @@ export function useCategoriasDaVitrine(userId: string | undefined) {
     queryFn: async (): Promise<CategoriaDaVitrine[]> => {
       const { data, error } = await supabase
         .from("produto_categorias" as never)
-        .select("id, nome")
+        .select("id, nome, tipo")
         .eq("user_id" as never, userId! as never)
         .order("ordem" as never)
         .order("nome" as never);
@@ -133,24 +141,29 @@ export function useCategoriasDaVitrine(userId: string | undefined) {
   });
 }
 
-export async function mudarCategoria(produtoId: string, categoriaId: string | null) {
-  const { error } = await supabase.from("produtos").update({ categoria_id: categoriaId } as never).eq("id", produtoId);
-  return { error: error ? "A Pólia One não conseguiu mudar a categoria agora." : null };
+export async function mudarCategoria(produtoId: string, categoriaId: string | null, tipo: TipoDaCategoria = "categoria") {
+  const campo = tipo === "colecao" ? { colecao_id: categoriaId } : { categoria_id: categoriaId };
+  const { error } = await supabase.from("produtos").update(campo as never).eq("id", produtoId);
+  return { error: error ? `A Pólia One não conseguiu mudar a ${tipo === "colecao" ? "coleção" : "categoria"} agora.` : null };
 }
 
-/** Cria a categoria e devolve o id. Nome repetido volta com o motivo. */
-export async function criarCategoria(userId: string, nome: string): Promise<{ id: string | null; error: string | null }> {
+/** Cria a categoria (ou a coleção) e devolve o id. Nome repetido volta com o motivo. */
+export async function criarCategoria(
+  userId: string,
+  nome: string,
+  tipo: TipoDaCategoria = "categoria",
+): Promise<{ id: string | null; error: string | null }> {
   const limpo = nome.trim().slice(0, 60);
   const slug = slugDaCategoria(limpo);
   if (!limpo || !slug) return { id: null, error: "Escreva um nome com letras ou números." };
   const { data, error } = await supabase
     .from("produto_categorias" as never)
-    .insert({ user_id: userId, nome: limpo, slug } as never)
+    .insert({ user_id: userId, nome: limpo, slug, tipo } as never)
     .select("id")
     .single();
   if (error || !data) {
-    if (error?.code === "23505") return { id: null, error: "Já existe uma categoria com esse nome." };
-    return { id: null, error: "A Pólia One não conseguiu criar a categoria. Tenta de novo." };
+    if (error?.code === "23505") return { id: null, error: "Já existe uma categoria ou coleção com esse nome." };
+    return { id: null, error: `A Pólia One não conseguiu criar a ${tipo === "colecao" ? "coleção" : "categoria"}. Tenta de novo.` };
   }
   return { id: (data as unknown as { id: string }).id, error: null };
 }

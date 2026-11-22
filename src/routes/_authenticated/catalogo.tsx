@@ -18,6 +18,7 @@ import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
 import { MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
 import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
 import { useIdentidadeMarca } from "@/components/orcamentos/dados";
+import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 import {
   CHAVE_BANNERS_CATALOGO,
   CHAVE_CATALOGO,
@@ -45,6 +46,7 @@ import {
   useProdutosDoCatalogo,
   type BannerDaVitrine,
   type ProdutoDoCatalogo,
+  type TipoDaCategoria,
 } from "@/components/catalogo/dados";
 
 // Vitrine online (ONE-148, fases 2 e 3, só no Pro; até 22/11/2026 o menu
@@ -606,6 +608,8 @@ function LinhaProduto({
     onMudou();
   };
   const idInput = `foto-${p.id}`;
+  // Coleção só existe na loja da marca (site próprio); a Vitrine online filtra por categoria.
+  const lojaDaMarca = useTemLojaDaMarca(userId);
   return (
     <li className="p-4 space-y-3">
       <div className="flex items-center justify-between gap-4">
@@ -629,7 +633,12 @@ function LinhaProduto({
           </p>
         </div>
       </div>
-      {p.noCatalogo && <SeletorCategoria p={p} userId={userId} onMudou={onMudou} />}
+      {p.noCatalogo && (
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <SeletorCategoria p={p} userId={userId} onMudou={onMudou} />
+          {lojaDaMarca.data === true && <SeletorCategoria p={p} userId={userId} onMudou={onMudou} tipo="colecao" />}
+        </div>
+      )}
       {p.noCatalogo && (
         <div className="flex flex-wrap items-center gap-3">
           {p.fotos.map((f, i) => (
@@ -669,16 +678,31 @@ const NOVA = "__nova__";
 /**
  * Categoria do produto na vitrine (22/11/2026). A cliente filtra a vitrine por
  * ela. Mesma tabela da loja de marca (produto_categorias): criar aqui aparece lá.
+ * Com tipo "colecao", o mesmo seletor escolhe a coleção (tema da estampa).
  */
-function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId: string; onMudou: () => void }) {
+function SeletorCategoria({
+  p,
+  userId,
+  onMudou,
+  tipo = "categoria",
+}: {
+  p: ProdutoDoCatalogo;
+  userId: string;
+  onMudou: () => void;
+  tipo?: TipoDaCategoria;
+}) {
   const qc = useQueryClient();
-  const cats = useCategoriasDaVitrine(userId);
+  const todas = useCategoriasDaVitrine(userId);
+  const ehColecao = tipo === "colecao";
+  const palavra = ehColecao ? "coleção" : "categoria";
+  const opcoes = (todas.data ?? []).filter((c) => (ehColecao ? c.tipo === "colecao" : c.tipo !== "colecao"));
+  const atual = ehColecao ? p.colecaoId : p.categoriaId;
   const [criando, setCriando] = useState(false);
   const [nome, setNome] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
-  const idSelect = `cat-${p.id}`;
-  const idNova = `cat-nova-${p.id}`;
+  const idSelect = `${tipo}-${p.id}`;
+  const idNova = `${tipo}-nova-${p.id}`;
 
   const escolher = async (valor: string) => {
     if (valor === NOVA) {
@@ -687,7 +711,7 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
       return;
     }
     setOcupado(true);
-    const r = await mudarCategoria(p.id, valor || null);
+    const r = await mudarCategoria(p.id, valor || null, tipo);
     setOcupado(false);
     if (r.error) return toastErro(r.error);
     onMudou();
@@ -695,18 +719,18 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
   const criar = async () => {
     setOcupado(true);
     setErro(null);
-    const r = await criarCategoria(userId, nome);
+    const r = await criarCategoria(userId, nome, tipo);
     if (r.error || !r.id) {
       setOcupado(false);
       return setErro(r.error);
     }
     await qc.invalidateQueries({ queryKey: chaveCategorias(userId) });
-    const m = await mudarCategoria(p.id, r.id);
+    const m = await mudarCategoria(p.id, r.id, tipo);
     setOcupado(false);
     if (m.error) return toastErro(m.error);
     setCriando(false);
     setNome("");
-    toastSucesso("Categoria criada.");
+    toastSucesso(ehColecao ? "Coleção criada." : "Categoria criada.");
     onMudou();
   };
 
@@ -714,7 +738,7 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
     return (
       <div className="space-y-1">
         <label htmlFor={idNova} className="font-sans text-[13px] font-medium text-[var(--ink)]">
-          Nome da categoria nova
+          Nome da {palavra} nova
         </label>
         <div className="flex flex-wrap items-center gap-2">
           <input
@@ -726,7 +750,7 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
               if (e.key === "Enter") void criar();
             }}
             maxLength={60}
-            placeholder="Ex.: Bolsas"
+            placeholder={ehColecao ? "Ex.: Natal" : "Ex.: Bolsas"}
             aria-invalid={!!erro}
             aria-describedby={erro ? `${idNova}-erro` : undefined}
             autoFocus
@@ -757,24 +781,24 @@ function SeletorCategoria({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId
   return (
     <div className="flex flex-wrap items-center gap-2">
       <label htmlFor={idSelect} className="font-sans text-[13px] font-medium text-[var(--ink)]">
-        Categoria
+        {ehColecao ? "Coleção" : "Categoria"}
       </label>
       <select
         id={idSelect}
         className={`${INPUT} max-w-[260px] py-2`}
-        value={p.categoriaId ?? ""}
+        value={atual ?? ""}
         onChange={(e) => void escolher(e.target.value)}
-        disabled={ocupado || cats.isLoading}
+        disabled={ocupado || todas.isLoading}
       >
-        <option value="">Sem categoria</option>
-        {(cats.data ?? []).map((c) => (
+        <option value="">{ehColecao ? "Sem coleção" : "Sem categoria"}</option>
+        {opcoes.map((c) => (
           <option key={c.id} value={c.id}>
             {c.nome}
           </option>
         ))}
-        <option value={NOVA}>+ Nova categoria</option>
+        <option value={NOVA}>{ehColecao ? "+ Nova coleção" : "+ Nova categoria"}</option>
       </select>
-      {cats.isError && (
+      {todas.isError && (
         <span className="font-sans text-[12px] text-[var(--danger)]">A Pólia One não conseguiu ler as categorias.</span>
       )}
     </div>

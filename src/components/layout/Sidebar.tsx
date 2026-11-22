@@ -25,6 +25,7 @@ import {
   ShoppingBag,
   Store,
   Link2,
+  Globe,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
@@ -33,6 +34,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
@@ -41,6 +43,7 @@ import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { rotaVisivel } from "@/lib/ferramentasInternas";
 import { useAgendaRedesVisivel } from "@/components/agenda-redes/comum";
 import { AcoesTopo } from "@/components/avisos/AcoesTopo";
+import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 
 // Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
 // conectado, pra quem não vende em marketplace não ver um item vazio.
@@ -60,6 +63,8 @@ const NAV: NavItem[] = [
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   // Loja do catálogo (ONE-148), só no Pro: o cadeado vem de recursoLiberado.
   { to: "/catalogo", label: "Vitrine online", icon: Store },
+  // Loja da marca (22/11/2026): só pra conta com loja white label (lojas_marca).
+  { to: "/loja-da-marca", label: "Loja da marca", icon: Globe },
   // Agenda das redes (ONE-155): só aparece pra quem o servidor deixa ver.
   { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
@@ -124,6 +129,8 @@ function Body({
   // Planner e Caderno (28/10/2026) e Planejamento (31/10/2026) só pra conta interna.
   const acessoInterno = useFerramentasInternas();
   const agendaVisivel = useAgendaRedesVisivel();
+  const { user } = useSupabaseSession();
+  const lojaDaMarca = useTemLojaDaMarca(user?.id);
 
   return (
     <TooltipProvider delayDuration={150}>
@@ -195,7 +202,9 @@ function Body({
         >
           {NAV.filter(
             (item) =>
-              rotaVisivel(item.to, acessoInterno) && (item.to !== "/agenda-redes" || agendaVisivel),
+              rotaVisivel(item.to, acessoInterno) &&
+              (item.to !== "/agenda-redes" || agendaVisivel) &&
+              (item.to !== "/loja-da-marca" || lojaDaMarca.data === true),
           ).map((item) => {
             // Em "Anúncios nos canais" o destaque fica no subnível, não em Produtos.
             const active =

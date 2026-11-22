@@ -1067,6 +1067,54 @@ const LISTA = [
     ],
   },
   {
+    // Loja da marca (22/11/2026): o site próprio que o Pólia Lab monta (lojas_marca).
+    // Interno porque só a conta com essa loja vê a tela; o "Como usar" acha pela rota.
+    slug: "loja-da-marca",
+    nome: "Loja da marca",
+    grupo: "Clientes e rotina",
+    rota: "/loja-da-marca",
+    abrir: "Abrir a Loja da marca",
+    resumo:
+      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo e a capa de cada coleção.",
+    interno: true,
+    passos: [
+      {
+        titulo: "Trocar os títulos",
+        itens: [
+          'Em "Títulos dos carrosséis", cada bloco da página inicial tem o título e uma linha pequena em cima, opcional. Vazio, a loja usa o título padrão, que aparece em cinza no campo.',
+          'Clique em "Salvar títulos e banners". A loja mostra o título novo na próxima vez que a página abrir.',
+        ],
+      },
+      {
+        titulo: "Montar os banners",
+        itens: [
+          'Em "Banners do topo", clique em "Subir o primeiro banner" (ou "Adicionar banner"). Cabem até 5, em JPG, PNG ou WEBP até 5 MB: deitado, 1600 x 600 px, pro computador.',
+          'Em "Celular", suba uma versão mais alta (800 x 800 px). Sem ela, o celular usa a do computador.',
+          'Em "Link ao clicar", escreva o caminho da loja, como /categoria/natal, ou um endereço que comece com https://. Em "O que o banner diz", escreva o texto da imagem.',
+          'As setas mudam a ordem e a lixeira tira. Nada muda na loja até "Salvar títulos e banners".',
+        ],
+      },
+      {
+        titulo: "Escolher a capa das coleções",
+        itens: [
+          'Em "Capas das coleções", clique em "Subir capa" na coleção. A imagem vai pras bolinhas e pros cartões de Explore por coleção e vale na hora, sem salvar.',
+          '"Tirar" volta pra foto do primeiro produto da coleção.',
+        ],
+      },
+    ],
+    bomSaber: [
+      "Categoria é o tipo do produto (Canecas, Papelaria) e aparece no menu do topo. Coleção é o tema da estampa (Natal, Clube das Exaustas) e aparece nas bolinhas e em Explore por coleção.",
+      'A categoria e a coleção de cada produto se escolhem em Produtos, na parte "Na loja" do produto.',
+      "O primeiro carrossel mostra os mais vendidos dos últimos 90 dias. Com pouca venda, completa com a ordem da vitrine.",
+    ],
+    duvidas: [
+      {
+        pergunta: "Onde mudo o produto, o preço ou a foto",
+        resposta: "Em Produtos. A Loja da marca só cuida da página inicial: títulos, banners e capas.",
+      },
+    ],
+  },
+  {
     // Agenda das redes (ONE-155): fica fora da lista até abrir pras clientes
     // (depois das revisões do TikTok e da Meta). Hoje só admin vê a tela.
     slug: "agenda-redes",

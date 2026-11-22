@@ -57,6 +57,7 @@ import { Route as AuthenticatedMetasRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedMercadoRouteImport } from './routes/_authenticated/mercado'
 import { Route as AuthenticatedMarcaRouteImport } from './routes/_authenticated/marca'
 import { Route as AuthenticatedMaisRouteImport } from './routes/_authenticated/mais'
+import { Route as AuthenticatedLojaDaMarcaRouteImport } from './routes/_authenticated/loja-da-marca'
 import { Route as AuthenticatedHojeRouteImport } from './routes/_authenticated/hoje'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -331,6 +332,12 @@ const AuthenticatedMaisRoute = AuthenticatedMaisRouteImport.update({
   path: '/mais',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedLojaDaMarcaRoute =
+  AuthenticatedLojaDaMarcaRouteImport.update({
+    id: '/loja-da-marca',
+    path: '/loja-da-marca',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedHojeRoute = AuthenticatedHojeRouteImport.update({
   id: '/hoje',
   path: '/hoje',
@@ -551,6 +558,7 @@ export interface FileRoutesByFullPath {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/hoje': typeof AuthenticatedHojeRoute
+  '/loja-da-marca': typeof AuthenticatedLojaDaMarcaRoute
   '/mais': typeof AuthenticatedMaisRoute
   '/marca': typeof AuthenticatedMarcaRoute
   '/mercado': typeof AuthenticatedMercadoRoute
@@ -634,6 +642,7 @@ export interface FileRoutesByTo {
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/hoje': typeof AuthenticatedHojeRoute
+  '/loja-da-marca': typeof AuthenticatedLojaDaMarcaRoute
   '/mais': typeof AuthenticatedMaisRoute
   '/marca': typeof AuthenticatedMarcaRoute
   '/mercado': typeof AuthenticatedMercadoRoute
@@ -718,6 +727,7 @@ export interface FileRoutesById {
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/hoje': typeof AuthenticatedHojeRoute
+  '/_authenticated/loja-da-marca': typeof AuthenticatedLojaDaMarcaRoute
   '/_authenticated/mais': typeof AuthenticatedMaisRoute
   '/_authenticated/marca': typeof AuthenticatedMarcaRoute
   '/_authenticated/mercado': typeof AuthenticatedMercadoRoute
@@ -803,6 +813,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/hoje'
+    | '/loja-da-marca'
     | '/mais'
     | '/marca'
     | '/mercado'
@@ -886,6 +897,7 @@ export interface FileRouteTypes {
     | '/configuracoes'
     | '/financeiro'
     | '/hoje'
+    | '/loja-da-marca'
     | '/mais'
     | '/marca'
     | '/mercado'
@@ -969,6 +981,7 @@ export interface FileRouteTypes {
     | '/_authenticated/configuracoes'
     | '/_authenticated/financeiro'
     | '/_authenticated/hoje'
+    | '/_authenticated/loja-da-marca'
     | '/_authenticated/mais'
     | '/_authenticated/marca'
     | '/_authenticated/mercado'
@@ -1404,6 +1417,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMaisRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/loja-da-marca': {
+      id: '/_authenticated/loja-da-marca'
+      path: '/loja-da-marca'
+      fullPath: '/loja-da-marca'
+      preLoaderRoute: typeof AuthenticatedLojaDaMarcaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/hoje': {
       id: '/_authenticated/hoje'
       path: '/hoje'
@@ -1656,6 +1676,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedHojeRoute: typeof AuthenticatedHojeRoute
+  AuthenticatedLojaDaMarcaRoute: typeof AuthenticatedLojaDaMarcaRoute
   AuthenticatedMaisRoute: typeof AuthenticatedMaisRoute
   AuthenticatedMarcaRoute: typeof AuthenticatedMarcaRoute
   AuthenticatedMercadoRoute: typeof AuthenticatedMercadoRoute
@@ -1703,6 +1724,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedHojeRoute: AuthenticatedHojeRoute,
+  AuthenticatedLojaDaMarcaRoute: AuthenticatedLojaDaMarcaRoute,
   AuthenticatedMaisRoute: AuthenticatedMaisRoute,
   AuthenticatedMarcaRoute: AuthenticatedMarcaRoute,
   AuthenticatedMercadoRoute: AuthenticatedMercadoRoute,

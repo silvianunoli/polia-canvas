@@ -134,6 +134,8 @@ const ROTAS_TIER: { prefixo: string; tier: Tier }[] = [
   { prefixo: "/projecao", tier: "controle" }, // Pro-only por dentro, mesmo padrão do Raio-x
   { prefixo: "/catalogo", tier: "controle" }, // loja do catálogo (ONE-148): Pro-only por dentro
   { prefixo: "/agenda-redes", tier: "controle" }, // Agenda das redes (ONE-155): Pro-only por dentro
+  // Loja da marca (22/11/2026): serviço do Pólia Lab, vale pra quem tem a loja, em qualquer plano.
+  { prefixo: "/loja-da-marca", tier: "confere" },
   // Metas é do plano Grátis desde 03/09/2026 (decisão COPY-03): o card do plano
   // grátis promete "até 3 metas acompanhadas" e a rota redirecionava pro
   // upgrade — a usuária tinha zero metas, não três. O teto de 3 ativas por vez
