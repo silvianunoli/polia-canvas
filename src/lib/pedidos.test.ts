@@ -67,6 +67,13 @@ describe("ficaNoQuadro", () => {
     expect(ficaNoQuadro(p({ status: "cancelada" }), HOJE)).toBe(false);
   });
 
+  it("entregue atrasado finalizado agora fica, pelo dia em que virou entregue", () => {
+    const velho = p({ andamento: "entregue", entregaEm: "2026-10-01" });
+    expect(ficaNoQuadro({ ...velho, entregueEm: `${HOJE}T13:39:50+00:00` }, HOJE)).toBe(true);
+    expect(ficaNoQuadro({ ...velho, entregueEm: "2026-10-02T10:00:00+00:00" }, HOJE)).toBe(false);
+    expect(ficaNoQuadro({ ...velho, entregueEm: null }, HOJE)).toBe(false);
+  });
+
   it("ordena pelo que vence primeiro", () => {
     const lista = ordenarPorEntrega([
       p({ entregaEm: "2026-11-02" }),

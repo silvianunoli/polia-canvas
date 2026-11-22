@@ -7,9 +7,11 @@
 
 import {
   descreverRegra,
+  regraEstaVazia,
   taxaDaVenda,
   ROTULO_TAXA,
   type ChaveTaxa,
+  type MarketplaceProprio,
   type RegraTaxa,
 } from "@/lib/taxas";
 import {
@@ -99,7 +101,8 @@ export function precoParaLucrar(p: {
 }
 
 export interface LinhaCanal {
-  chave: ChaveTaxa;
+  /** ChaveTaxa ou, no marketplace criado à mão, mkt_<nome>. */
+  chave: string;
   rotulo: string;
   regra: RegraTaxa;
   /** "3,99% + R$ 0,50" ou, no TikTok Shop, as faixas da tabela oficial. */
@@ -108,12 +111,15 @@ export interface LinhaCanal {
   precoParaMesmoLucro: number | null;
 }
 
-/** TikTok Shop cobra pela tabela oficial, por item; o resto, pela regra cadastrada. */
+/**
+ * TikTok Shop em branco cobra pela tabela oficial, por item; preenchido (desde
+ * 22/11/2026), vale a regra dela, como o resto.
+ */
 function taxaDoCanal(
-  chave: ChaveTaxa,
+  chave: string,
   regra: RegraTaxa & { freteGratis?: boolean },
 ): { taxa?: TaxaPorPreco; descricao: string } {
-  if (chave !== "tiktok_shop") return { descricao: descreverRegra(regra) };
+  if (chave !== "tiktok_shop" || !regraEstaVazia(regra)) return { descricao: descreverRegra(regra) };
   const freteGratis = regra.freteGratis === true;
   return {
     taxa: (preco) => taxaTiktokDoItem(preco, { freteGratis }),
@@ -127,14 +133,19 @@ export function linhasPorCanal(p: {
   custo: number;
   impostosPct: number;
   lucroBase: number;
-  taxas: Partial<Record<ChaveTaxa, RegraTaxa & { freteGratis?: boolean }>>;
+  taxas: Partial<Record<ChaveTaxa, RegraTaxa & { freteGratis?: boolean }>> & {
+    proprios?: readonly MarketplaceProprio[];
+  };
 }): LinhaCanal[] {
-  return ORDEM_CHAVES.filter((c) => p.taxas[c]).map((chave) => {
-    const regra = p.taxas[chave]!;
+  const canais: Array<{ chave: string; rotulo: string; regra: RegraTaxa & { freteGratis?: boolean } }> = [
+    ...ORDEM_CHAVES.filter((c) => p.taxas[c]).map((c) => ({ chave: c, rotulo: ROTULO_TAXA[c], regra: p.taxas[c]! })),
+    ...(p.taxas.proprios ?? []).map((m) => ({ chave: m.chave, rotulo: m.nome, regra: m.regra })),
+  ];
+  return canais.map(({ chave, rotulo, regra }) => {
     const { taxa, descricao } = taxaDoCanal(chave, regra);
     return {
       chave,
-      rotulo: ROTULO_TAXA[chave],
+      rotulo,
       regra,
       descricaoTaxa: descricao,
       lucro: lucroNoCanal({

@@ -56,7 +56,7 @@ const GRUPOS: { titulo: string; itens: Item[] }[] = [
     titulo: "Dia a dia",
     itens: [
       { to: "/vendas", label: "Vendas", icon: ShoppingBag },
-      { to: "/catalogo", label: "Catálogo", icon: Store },
+      { to: "/catalogo", label: "Vitrine online", icon: Store },
       { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
       { to: "/financeiro", label: "Financeiro", icon: Wallet },
       { to: "/clientes", label: "Clientes", icon: Users },

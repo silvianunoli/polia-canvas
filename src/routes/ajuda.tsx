@@ -91,7 +91,7 @@ const CATEGORIAS = [
       {
         pergunta: "Colocar o logo e a cor da marca",
         resposta:
-          "Em Configurações, na parte Logo e cor. Os dois vão no topo do orçamento que a cliente abre pelo link e na loja do Catálogo.",
+          "Em Configurações, na parte Logo e cor. Os dois vão no topo do orçamento que a cliente abre pelo link e na Vitrine online.",
       },
       {
         pergunta: "Mudar o que vendo depois",

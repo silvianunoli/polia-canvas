@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, ImagePlus, Store, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ExternalLink, ImagePlus, Store, Trash2 } from "lucide-react";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -15,28 +15,38 @@ import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { temProjete } from "@/lib/planos";
 import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
-import { MAX_FOTOS_PRODUTO, reais, slugValido, type ConfigLoja } from "@/lib/loja";
-import { lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
+import { MAX_BANNERS, MAX_FOTOS_PRODUTO, reais, slugValido, type ConfigLoja } from "@/lib/loja";
+import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
 import { useIdentidadeMarca } from "@/components/orcamentos/dados";
 import {
+  CHAVE_BANNERS_CATALOGO,
   CHAVE_CATALOGO,
   CHAVE_PRODUTOS_CATALOGO,
   alternarNaLoja,
+  moverNaLista,
+  removerBanner,
   removerFotoProduto,
+  salvarOrdemDaVitrine,
+  salvarOrdemDosBanners,
+  subirBanner,
   subirCapa,
   subirFotoProduto,
+  useBannersDaVitrine,
   useProdutosDoCatalogo,
+  type BannerDaVitrine,
   type ProdutoDoCatalogo,
 } from "@/components/catalogo/dados";
 
-// Catálogo (ONE-148, fases 2 e 3, só no Pro). A dona monta a loja da marca:
-// endereço, cara da loja, como vende e quais produtos aparecem, com até 4 fotos
-// cada. A loja pública é /loja/<endereço> e o pedido cai em Pedidos.
+// Vitrine online (ONE-148, fases 2 e 3, só no Pro; até 22/11/2026 o menu
+// chamava de "Catálogo", a rota continua /catalogo). A dona monta a loja da
+// marca: endereço, cara da loja, banner rotativo, como vende e quais produtos
+// aparecem e em que ordem, com até 4 fotos cada. A loja pública é
+// /loja/<endereço> e o pedido cai em Pedidos.
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
     meta: [
-      { title: "Catálogo · Pólia One" },
+      { title: "Vitrine online · Pólia One" },
       { name: "description", content: "A loja da marca, com os produtos da Pólia One e pedido direto no quadro." },
     ],
   }),
@@ -66,6 +76,7 @@ function CatalogoPage() {
 
   const [form, setForm] = useState<Form | null>(null);
   const [tentou, setTentou] = useState(false);
+  const [trocandoAberta, setTrocandoAberta] = useState(false);
   useEffect(() => {
     if (form || !catQuery.isSuccess) return;
     setForm({
@@ -99,7 +110,7 @@ function CatalogoPage() {
 
   if (meta.carregando) {
     return (
-      <PaginaLogada eyebrow="Catálogo" titulo="A loja da marca.">
+      <PaginaLogada eyebrow="Vitrine online" titulo="A loja da marca.">
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       </PaginaLogada>
     );
@@ -107,8 +118,8 @@ function CatalogoPage() {
   if (!ehPro) {
     return (
       <UpgradeGate
-        eyebrow="Catálogo"
-        titulo="A loja do catálogo é do Pro"
+        eyebrow="Vitrine online"
+        titulo="A Vitrine online é do Pro"
         feature="Uma loja com os produtos da Pólia One, as fotos e as variações de cada um, carrinho e pedido que cai direto em Pedidos."
         rota="/catalogo"
       />
@@ -124,16 +135,42 @@ function CatalogoPage() {
     sinal: tentou && !(sinal >= 0 && sinal <= 100) ? "Entre 0 e 100%." : undefined,
   };
   const aberta = !!cat?.ativo;
-  const enviar = () => {
+  const enviar = (f: Form | null = form) => {
     setTentou(true);
-    if (!form || !slugOk || erros.prazo || erros.sinal || !(prazo >= 1 && prazo <= 60) || !(sinal >= 0 && sinal <= 100)) return;
-    salvar.mutate(form);
+    if (!f || !slugValido(f.slug) || !(prazo >= 1 && prazo <= 60) || !(sinal >= 0 && sinal <= 100)) return false;
+    salvar.mutate(f);
+    return true;
   };
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
+  // O interruptor grava na hora: antes ele só mudava a tela e a loja seguia
+  // fechada até o "Salvar a loja", lá embaixo (bug relatado em 22/11/2026).
+  const abrirOuFechar = async (ativo: boolean) => {
+    if (!form) return;
+    set("ativo", ativo);
+    if (!cat) {
+      if (!enviar({ ...form, ativo })) set("ativo", !ativo);
+      return;
+    }
+    setTrocandoAberta(true);
+    try {
+      const r = await abrirFecharLoja({ data: { ativo } });
+      if (!r.ok) {
+        set("ativo", !ativo);
+        return toastErro(r.error);
+      }
+      qc.invalidateQueries({ queryKey: [CHAVE_CATALOGO, userId] });
+      toastSucesso(ativo ? "Loja aberta. O endereço já recebe pedidos." : "Loja fechada. Nenhum pedido novo entra.");
+    } catch {
+      set("ativo", !ativo);
+      toastErro("A Pólia One não conseguiu mudar a loja agora. Tenta de novo.");
+    } finally {
+      setTrocandoAberta(false);
+    }
+  };
 
   return (
     <PaginaLogada
-      eyebrow="Catálogo"
+      eyebrow="Vitrine online"
       titulo="A loja da marca, com pedido direto no quadro."
       subtitulo="A cliente escolhe, monta o carrinho e confirma. O pedido entra em Pedidos e ela segue pro WhatsApp da loja."
       acao={
@@ -145,7 +182,7 @@ function CatalogoPage() {
       }
     >
       {catQuery.isError ? (
-        <BlockError message="A Pólia One não conseguiu abrir o catálogo agora." onRetry={() => catQuery.refetch()} />
+        <BlockError message="A Pólia One não conseguiu abrir a Vitrine online agora." onRetry={() => catQuery.refetch()} />
       ) : !form ? (
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       ) : (
@@ -158,10 +195,16 @@ function CatalogoPage() {
               <div>
                 <p className="font-sans text-[14px] font-medium text-[var(--ink)]">Loja aberta</p>
                 <p className="font-sans text-[12px] text-[var(--ink-soft)]">
-                  Fechada, o endereço mostra que a loja não está aberta agora e nenhum pedido entra.
+                  Vale na hora, sem precisar salvar. Fechada, o endereço mostra que a loja não está aberta agora e
+                  nenhum pedido entra.
                 </p>
               </div>
-              <Switch checked={form.ativo} onCheckedChange={(v) => set("ativo", v)} aria-label="Loja aberta" />
+              <Switch
+                checked={form.ativo}
+                disabled={trocandoAberta || salvar.isPending}
+                onCheckedChange={(v) => void abrirOuFechar(v)}
+                aria-label="Loja aberta"
+              />
             </div>
           </Secao>
 
@@ -195,6 +238,8 @@ function CatalogoPage() {
             </Campo>
           </Secao>
 
+          <BannerRotativo userId={userId!} />
+
           <Secao titulo="Como a loja vende" texto="Aparece pra cliente antes de ela confirmar e vai junto no pedido.">
             <div className="grid gap-4 sm:grid-cols-2">
               <Campo label="WhatsApp da loja" hint="Pra onde a cliente manda o pedido depois de confirmar.">
@@ -226,7 +271,7 @@ function CatalogoPage() {
           </Secao>
 
           <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className={BTN_ACAO} onClick={enviar} disabled={salvar.isPending}>
+            <button type="button" className={BTN_ACAO} onClick={() => enviar()} disabled={salvar.isPending}>
               {salvar.isPending ? "Salvando..." : "Salvar a loja"}
             </button>
             {!cat && <span className="font-sans text-[13px] text-[var(--ink-soft)]">Salve uma vez pra poder subir a capa.</span>}
@@ -296,12 +341,33 @@ function Capa({ userId, capaUrl, temLoja }: { userId: string; capaUrl: string | 
 }
 
 function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => void }) {
+  const qc = useQueryClient();
   const q = useProdutosDoCatalogo(userId, true);
-  const naLoja = (q.data ?? []).filter((p) => p.noCatalogo).length;
+  const [ordenando, setOrdenando] = useState(false);
+  const naVitrine = (q.data ?? []).filter((p) => p.noCatalogo);
+  const fora = (q.data ?? []).filter((p) => !p.noCatalogo);
+
+  // Sobe ou desce um produto. A tela muda na hora e a ordem inteira é regravada
+  // (0, 1, 2...), a mesma que a loja pública lê em catalogo_ordem.
+  const mover = async (indice: number, direcao: -1 | 1) => {
+    const nova = moverNaLista(naVitrine, indice, direcao);
+    const chave = [CHAVE_PRODUTOS_CATALOGO, userId];
+    const antes = qc.getQueryData<ProdutoDoCatalogo[]>(chave);
+    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i })), ...fora]);
+    setOrdenando(true);
+    const r = await salvarOrdemDaVitrine(nova.map((p) => p.id));
+    setOrdenando(false);
+    if (r.error) {
+      qc.setQueryData(chave, antes);
+      return toastErro(r.error);
+    }
+    onMudou();
+  };
+
   return (
     <Secao
-      titulo="Produtos na loja"
-      texto="Preço, nome e variações vêm de Produtos. Cada um leva até 4 fotos: a primeira é a da vitrine."
+      titulo="Produtos na vitrine"
+      texto="Preço, nome e variações vêm de Produtos. Cada um leva até 4 fotos: a primeira é a da vitrine. Use as setas pra escolher quem aparece primeiro."
     >
       {q.isError ? (
         <BlockError message="A Pólia One não conseguiu abrir os produtos agora." onRetry={() => q.refetch()} />
@@ -311,27 +377,203 @@ function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => vo
         <Vazio
           icone={Store}
           titulo="Nenhum produto cadastrado ainda"
-          texto="A loja mostra os produtos de Produtos. Cadastre o primeiro e volte aqui."
+          texto="A vitrine mostra os produtos de Produtos. Cadastre o primeiro e volte aqui."
           acao={<LinkInterno href="/produtos" className={BTN_ACAO}>Abrir Produtos</LinkInterno>}
           denso
         />
       ) : (
         <>
           <p className="font-sans text-[13px] text-[var(--ink-soft)]">
-            {naLoja === 0 ? "Nenhum produto na loja ainda." : `${naLoja} ${naLoja === 1 ? "produto na loja" : "produtos na loja"}.`}
+            {naVitrine.length === 0
+              ? "Nenhum produto na vitrine ainda. Ligue o interruptor do produto pra ele aparecer."
+              : `${naVitrine.length} ${naVitrine.length === 1 ? "produto na vitrine" : "produtos na vitrine"}, nesta ordem.`}
           </p>
-          <ul className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]">
-            {q.data.map((p) => (
-              <LinhaProduto key={p.id} p={p} userId={userId} onMudou={onMudou} />
-            ))}
-          </ul>
+          {naVitrine.length > 0 && (
+            <ol
+              className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]"
+              aria-label="Produtos na vitrine, na ordem em que aparecem"
+            >
+              {naVitrine.map((p, i) => (
+                <LinhaProduto
+                  key={p.id}
+                  p={p}
+                  userId={userId}
+                  onMudou={onMudou}
+                  posicao={{
+                    numero: i + 1,
+                    primeiro: i === 0,
+                    ultimo: i === naVitrine.length - 1,
+                    ocupado: ordenando,
+                    subir: () => void mover(i, -1),
+                    descer: () => void mover(i, 1),
+                  }}
+                />
+              ))}
+            </ol>
+          )}
+          {fora.length > 0 && (
+            <>
+              <h3 className="font-accent pt-2 text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+                Fora da vitrine
+              </h3>
+              <ul className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]">
+                {fora.map((p) => (
+                  <LinhaProduto key={p.id} p={p} userId={userId} onMudou={onMudou} />
+                ))}
+              </ul>
+            </>
+          )}
         </>
       )}
     </Secao>
   );
 }
 
-function LinhaProduto({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId: string; onMudou: () => void }) {
+interface Posicao {
+  numero: number;
+  primeiro: boolean;
+  ultimo: boolean;
+  ocupado: boolean;
+  subir: () => void;
+  descer: () => void;
+}
+
+const BTN_SETA =
+  "flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--secondary-text)] focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)] disabled:opacity-40 disabled:pointer-events-none";
+
+function BannerRotativo({ userId }: { userId: string }) {
+  const qc = useQueryClient();
+  const q = useBannersDaVitrine(userId, true);
+  const input = useRef<HTMLInputElement>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const lista = q.data ?? [];
+  const chave = [CHAVE_BANNERS_CATALOGO, userId];
+  const recarregar = () => qc.invalidateQueries({ queryKey: chave });
+
+  const subir = async (arquivo: File | undefined) => {
+    if (!arquivo) return;
+    setOcupado(true);
+    const r = await subirBanner(userId, arquivo, lista);
+    setOcupado(false);
+    if (input.current) input.current.value = "";
+    if (r.error) return toastErro(r.error);
+    toastSucesso("Banner na vitrine.");
+    recarregar();
+  };
+  const tirar = async (b: BannerDaVitrine) => {
+    setOcupado(true);
+    const r = await removerBanner(b);
+    setOcupado(false);
+    if (r.error) return toastErro(r.error);
+    recarregar();
+  };
+  const mover = async (i: number, direcao: -1 | 1) => {
+    const nova = moverNaLista(lista, i, direcao);
+    qc.setQueryData<BannerDaVitrine[]>(chave, nova.map((b, k) => ({ ...b, ordem: k })));
+    setOcupado(true);
+    const r = await salvarOrdemDosBanners(nova);
+    setOcupado(false);
+    if (r.error) toastErro(r.error);
+    recarregar();
+  };
+
+  return (
+    <Secao
+      titulo="Banner rotativo"
+      texto={`Até ${MAX_BANNERS} imagens que passam sozinhas no topo da vitrine, uma a cada 5 segundos. Use imagem deitada, de 1600 x 600 px, em JPG, PNG ou WEBP de até 3 MB. Sem banner, o topo fica como está.`}
+    >
+      {q.isError ? (
+        <BlockError message="A Pólia One não conseguiu abrir os banners agora." onRetry={() => q.refetch()} />
+      ) : q.isLoading ? (
+        <div className="h-24 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
+      ) : (
+        <div className="space-y-3">
+          {lista.length > 0 && (
+            <ol className="grid gap-3 sm:grid-cols-2" aria-label="Banners, na ordem em que passam">
+              {lista.map((b, i) => (
+                <li key={b.id} className="space-y-2 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3">
+                  <img
+                    src={b.url}
+                    alt={`Banner ${i + 1}`}
+                    className="aspect-[8/3] w-full rounded-lg border border-[var(--line)] object-cover"
+                  />
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-sans text-[13px] text-[var(--ink-soft)]">{i + 1}º a aparecer</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className={BTN_SETA}
+                        onClick={() => void mover(i, -1)}
+                        disabled={ocupado || i === 0}
+                        aria-label={`Passar o banner ${i + 1} pra antes`}
+                      >
+                        <ArrowLeft size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className={BTN_SETA}
+                        onClick={() => void mover(i, 1)}
+                        disabled={ocupado || i === lista.length - 1}
+                        aria-label={`Passar o banner ${i + 1} pra depois`}
+                      >
+                        <ArrowRight size={16} aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${BTN_SETA} hover:text-[var(--danger)]`}
+                        onClick={() => void tirar(b)}
+                        disabled={ocupado}
+                        aria-label={`Tirar o banner ${i + 1}`}
+                      >
+                        <Trash2 size={15} aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+          {lista.length < MAX_BANNERS ? (
+            <>
+              <input
+                ref={input}
+                id="banner-loja"
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="sr-only"
+                onChange={(e) => void subir(e.target.files?.[0])}
+                disabled={ocupado}
+              />
+              <label
+                htmlFor="banner-loja"
+                className={`${BTN_MIUDO} ${ocupado ? "pointer-events-none opacity-50" : "cursor-pointer"}`}
+              >
+                <ImagePlus size={14} aria-hidden="true" />{" "}
+                {ocupado ? "Subindo..." : lista.length ? "Subir mais um banner" : "Subir o primeiro banner"}
+              </label>
+            </>
+          ) : (
+            <p className="font-sans text-[13px] text-[var(--ink-soft)]">
+              Os {MAX_BANNERS} lugares estão ocupados. Tire um pra subir outro.
+            </p>
+          )}
+        </div>
+      )}
+    </Secao>
+  );
+}
+
+function LinhaProduto({
+  p,
+  userId,
+  onMudou,
+  posicao,
+}: {
+  p: ProdutoDoCatalogo;
+  userId: string;
+  onMudou: () => void;
+  posicao?: Posicao;
+}) {
   const input = useRef<HTMLInputElement>(null);
   const [ocupado, setOcupado] = useState(false);
   const alternar = async (v: boolean) => {
@@ -361,7 +603,18 @@ function LinhaProduto({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId: st
   return (
     <li className="p-4 space-y-3">
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
+        {posicao && (
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="w-6 text-right font-sans text-[13px] font-medium text-[var(--muted)]">{posicao.numero}º</span>
+            <button type="button" className={BTN_SETA} onClick={posicao.subir} disabled={posicao.ocupado || posicao.primeiro} aria-label={`Subir ${p.nome} na vitrine`}>
+              <ArrowUp size={16} aria-hidden="true" />
+            </button>
+            <button type="button" className={BTN_SETA} onClick={posicao.descer} disabled={posicao.ocupado || posicao.ultimo} aria-label={`Descer ${p.nome} na vitrine`}>
+              <ArrowDown size={16} aria-hidden="true" />
+            </button>
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
           <p className="font-sans text-[14px] font-medium text-[var(--ink)] truncate">{p.nome}</p>
           <p className="font-sans text-[12px] text-[var(--ink-soft)]">
             {reais(p.preco)}
@@ -369,7 +622,7 @@ function LinhaProduto({ p, userId, onMudou }: { p: ProdutoDoCatalogo; userId: st
             {p.noCatalogo && !p.fotos.length ? " · sem foto ainda" : ""}
           </p>
         </div>
-        <Switch checked={p.noCatalogo} disabled={ocupado} onCheckedChange={alternar} aria-label={`${p.nome} na loja`} />
+        <Switch checked={p.noCatalogo} disabled={ocupado} onCheckedChange={alternar} aria-label={`${p.nome} na vitrine`} />
       </div>
       {p.noCatalogo && (
         <div className="flex flex-wrap items-center gap-3">

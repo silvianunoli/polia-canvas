@@ -64,3 +64,22 @@ export function descreverTabelaTiktok(freteGratis = false): string {
   const base = `${t.abaixo.percentual}% + R$ ${t.abaixo.fixoPorItem} por item abaixo de R$ ${t.limiteFaixa}; ${t.acima.percentual}% + R$ ${t.acima.fixoPorItem} a partir de R$ ${t.limiteFaixa}`;
   return freteGratis ? `${base}; mais ${t.freteGratis.percentual}% do Frete Grátis` : base;
 }
+
+/**
+ * Taxa do pedido quando a vendedora preencheu a do TikTok Shop no modal de
+ * taxas (22/11/2026): percentual do total + fixo por venda, como as outras
+ * formas (lib/taxas.ts, taxaDaVenda). Sem nada preenchido, devolve null e
+ * quem chama usa a tabela oficial.
+ */
+export function taxaTiktokPelaRegraDela(
+  itens: ReadonlyArray<{ preco_unitario: number; quantidade: number }>,
+  regra: { percentual: number; fixo: number } | null | undefined,
+): number | null {
+  if (!regra || (!(regra.percentual > 0) && !(regra.fixo > 0))) return null;
+  let totalCents = 0;
+  for (const i of itens) totalCents += Math.max(0, Math.floor(i.quantidade)) * emCentavos(i.preco_unitario);
+  if (!(totalCents > 0)) return 0;
+  const taxa =
+    Math.round((totalCents * Math.round(regra.percentual * 100)) / 10_000) + emCentavos(regra.fixo);
+  return Math.min(Math.max(taxa, 0), totalCents) / 100;
+}

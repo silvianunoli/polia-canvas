@@ -59,7 +59,7 @@ const NAV: NavItem[] = [
   // Pedidos (GRW-93) no lugar do Planner, que ficou só pra conta interna.
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   // Loja do catálogo (ONE-148), só no Pro: o cadeado vem de recursoLiberado.
-  { to: "/catalogo", label: "Catálogo", icon: Store },
+  { to: "/catalogo", label: "Vitrine online", icon: Store },
   // Agenda das redes (ONE-155): só aparece pra quem o servidor deixa ver.
   { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },

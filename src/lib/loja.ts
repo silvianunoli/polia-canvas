@@ -10,8 +10,9 @@ export { slugValido };
 export const MAX_FOTOS_PRODUTO = 4;
 export const FOTO_TIPOS = ["image/png", "image/jpeg", "image/webp"] as const;
 export const FOTO_MAX_BYTES = 3 * 1024 * 1024;
+export const MAX_BANNERS = 5;
 
-/** O que a dona configura na tela Catálogo (vazio vira null no banco). */
+/** O que a dona configura na tela Vitrine online (vazio vira null no banco). */
 export const configLojaSchema = z.object({
   slug: z.string().trim().toLowerCase().refine(slugValido, "Use de 3 a 40 letras, números ou hífen."),
   ativo: z.boolean(),
@@ -77,6 +78,8 @@ export interface LojaPublica {
   nome: string;
   logoUrl: string | null;
   capaUrl: string | null;
+  /** Banner rotativo do topo da vitrine (até 5, na ordem da dona). */
+  banners: string[];
   cor: string | null;
   chamada: string | null;
   subchamada: string | null;

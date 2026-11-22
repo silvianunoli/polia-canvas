@@ -19,16 +19,18 @@ import {
 export interface PedidoLinha extends VendaLinha {
   andamento: AndamentoPedido;
   entregaEm: string;
+  /** Quando virou entregue (gatilho no banco); null fora de Entregue. */
+  entregueEm: string | null;
 }
 
 export const chavePedidos = (userId: string | undefined) => ["pedidos", userId] as const;
 
 const SELECT =
-  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, andamento, entrega_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
+  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, andamento, entrega_em, entregue_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
 
 /**
  * Pedidos do quadro: abertos de qualquer data e entregues com entrega
- * combinada nos últimos 7 dias. Cancelado não vem.
+ * combinada ou finalizados nos últimos 7 dias. Cancelado não vem.
  */
 export function usePedidos(userId: string | undefined, hoje: string) {
   return useQuery({
@@ -42,7 +44,7 @@ export function usePedidos(userId: string | undefined, hoje: string) {
         .eq("user_id", userId!)
         .not("andamento", "is", null)
         .neq("status", "cancelada")
-        .or(`andamento.neq.entregue,entrega_em.gte.${desde}`)
+        .or(`andamento.neq.entregue,entrega_em.gte.${desde},entregue_em.gte.${desde}`)
         .order("entrega_em", { ascending: true })
         .limit(500);
       // Leitura que falha não pode virar "nenhum pedido": a tela mostra o erro.
@@ -83,12 +85,13 @@ export function usePedidosDoPeriodo(
 }
 
 function paraPedidos(data: unknown): PedidoLinha[] {
-  return ((data ?? []) as (VendaBanco & { andamento: string; entrega_em: string })[])
+  return ((data ?? []) as (VendaBanco & { andamento: string; entrega_em: string; entregue_em?: string | null })[])
     .filter((v) => ehAndamento(v.andamento) && !!v.entrega_em)
     .map((v) => ({
       ...vendaDoBanco(v),
       andamento: v.andamento as AndamentoPedido,
       entregaEm: v.entrega_em,
+      entregueEm: v.entregue_em ?? null,
     }));
 }
 

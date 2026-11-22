@@ -80,7 +80,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
     const lista = (prods ?? []) as unknown as Array<{ id: string; nome: string; descricao: string | null; preco_venda: number }>;
     const ids = lista.map((p) => p.id);
 
-    const [{ data: fotos }, { data: skus }] = await Promise.all([
+    const [{ data: fotos }, { data: skus }, { data: banners }] = await Promise.all([
       ids.length
         ? supabaseAdmin.from("produto_fotos" as never).select("produto_id, path, ordem").in("produto_id", ids).order("ordem")
         : Promise.resolve({ data: [] }),
@@ -93,6 +93,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
             .not("variacao", "is", null)
             .order("variacao")
         : Promise.resolve({ data: [] }),
+      supabaseAdmin.from("catalogo_banners" as never).select("path, ordem").eq("user_id", c.user_id).order("ordem"),
     ]);
     const fotosPor = new Map<string, string[]>();
     for (const f of (fotos ?? []) as unknown as Array<{ produto_id: string; path: string }>) {
@@ -111,6 +112,9 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         nome,
         logoUrl: urlPublica("marca-logos", perfil.logo_path),
         capaUrl: urlPublica("marca-logos", c.capa_path),
+        banners: ((banners ?? []) as unknown as Array<{ path: string }>)
+          .map((b) => urlPublica("produtos-fotos", b.path))
+          .filter((u): u is string => !!u),
         cor: c.cor_destaque ?? perfil.cor_marca ?? null,
         chamada: c.chamada,
         subchamada: c.subchamada,
@@ -193,7 +197,7 @@ export const salvarCatalogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => configLojaSchema.parse(input))
   .handler(async ({ context, data }) => {
-    if (!(await temPro(context.userId))) return { ok: false as const, error: "A loja do catálogo é do plano Pro." };
+    if (!(await temPro(context.userId))) return { ok: false as const, error: "A Vitrine online é do plano Pro." };
     if (data.whatsapp && !normalizarWhatsapp(data.whatsapp))
       return { ok: false as const, error: "Confira o WhatsApp da loja, com DDD." };
     const { error } = await supabaseAdmin
@@ -205,6 +209,27 @@ export const salvarCatalogo = createServerFn({ method: "POST" })
       console.error("[Loja] salvar", error.code, error.message);
       return { ok: false as const, error: "A Pólia One não conseguiu salvar a loja agora." };
     }
+    return { ok: true as const };
+  });
+
+/** O interruptor "Loja aberta" grava na hora, sem esperar o "Salvar a loja". */
+export const abrirFecharLoja = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ ativo: z.boolean() }).parse(input))
+  .handler(async ({ context, data }) => {
+    if (data.ativo && !(await temPro(context.userId)))
+      return { ok: false as const, error: "A Vitrine online é do plano Pro." };
+    const { data: linha, error } = await supabaseAdmin
+      .from("catalogos" as never)
+      .update({ ativo: data.ativo } as never)
+      .eq("user_id", context.userId)
+      .select("slug")
+      .maybeSingle();
+    if (error) {
+      console.error("[Loja] abrir/fechar", error.code, error.message);
+      return { ok: false as const, error: "A Pólia One não conseguiu mudar a loja agora. Tenta de novo." };
+    }
+    if (!linha) return { ok: false as const, error: "Salve a loja uma vez antes de abrir." };
     return { ok: true as const };
   });
 

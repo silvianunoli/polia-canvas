@@ -4,7 +4,9 @@
 //
 // Na venda manual quem cobra é a forma de recebimento (maquininha, link), não o
 // Instagram. Shopee, TikTok Shop e Mercado Livre cobram pelo canal; ficam aqui pra a
-// integração (VND-05) e o lucro por canal (VND-07) usarem a mesma regra.
+// integração (VND-05) e o lucro por canal (VND-07) usarem a mesma regra. Desde
+// 22/11/2026 a dona também cria marketplace à mão (chave mkt_..., fim do arquivo),
+// e o TikTok Shop preenchido vale no lugar da tabela oficial.
 
 export const FORMAS_RECEBIMENTO = [
   "pix",
@@ -117,4 +119,32 @@ export function lerNumero(texto: string): number {
   if (!t) return 0;
   const normal = t.includes(",") ? t.replace(/\./g, "").replace(",", ".") : t;
   return /^\d+(\.\d*)?$/.test(normal) ? Number(normal) : Number.NaN;
+}
+
+// ── marketplace cadastrado à mão (22/11/2026, migration 20261122150200) ─────
+
+/** Marketplace que a dona cria nas taxas (Elo7, Amazon...): chave mkt_<nome>. */
+export interface MarketplaceProprio {
+  chave: string;
+  nome: string;
+  regra: RegraTaxa;
+}
+
+export const PREFIXO_MARKETPLACE = "mkt_";
+export const MAX_NOME_MARKETPLACE = 40;
+
+/** "Elo7 Pro" vira "mkt_elo7_pro". Nome sem letra nem número volta null. */
+export function chaveDoMarketplace(nome: string): string | null {
+  const base = nome
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, MAX_NOME_MARKETPLACE);
+  return base ? `${PREFIXO_MARKETPLACE}${base}` : null;
+}
+
+export function ehChaveDeMarketplaceProprio(chave: string): boolean {
+  return /^mkt_[a-z0-9_]{1,40}$/.test(chave);
 }

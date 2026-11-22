@@ -35,6 +35,7 @@ const pedido = (over: Partial<PedidoLinha> = {}): PedidoLinha => ({
   ],
   andamento: "a_fazer",
   entregaEm: "2026-10-30",
+  entregueEm: null,
   ...over,
 });
 

@@ -1340,6 +1340,93 @@
   width: 100%;
 }
 
+/* Banner rotativo do topo (22/11/2026): até 5 imagens da dona, uma por vez. */
+.loja-vitrine .banner-loja {
+  padding-top: 16px;
+}
+.loja-vitrine .banner-trilho {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--superficie);
+  aspect-ratio: 4 / 3;
+}
+@media (min-width: 640px) {
+  .loja-vitrine .banner-trilho {
+    aspect-ratio: 8 / 3;
+    border-radius: 28px;
+  }
+}
+.loja-vitrine .banner-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.6s ease, visibility 0.6s;
+}
+.loja-vitrine .banner-slide.ativo {
+  opacity: 1;
+  visibility: visible;
+}
+.loja-vitrine .banner-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.loja-vitrine .banner-seta {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--linha);
+  background: var(--superficie);
+  color: var(--texto);
+  font-size: 26px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.loja-vitrine .banner-seta.ant {
+  left: 12px;
+}
+.loja-vitrine .banner-seta.prox {
+  right: 12px;
+}
+.loja-vitrine .banner-seta:focus-visible,
+.loja-vitrine .banner-pontos button:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+.loja-vitrine .banner-pontos {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+}
+.loja-vitrine .banner-pontos button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+.loja-vitrine .banner-pontos button::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  background: var(--linha);
+}
+.loja-vitrine .banner-pontos button.ativo::after {
+  background: var(--destaque);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .loja-vitrine *,
   .loja-vitrine *::before,

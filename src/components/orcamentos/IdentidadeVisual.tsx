@@ -137,7 +137,7 @@ export function IdentidadeVisual({ userId }: { userId: string }) {
         Logo e cor
       </h2>
       <p className="mt-1 text-[13px] text-[var(--muted)]">
-        Vão no topo do orçamento que a cliente abre pelo link e na loja do Catálogo.
+        Vão no topo do orçamento que a cliente abre pelo link e na Vitrine online.
       </p>
 
       <div className="mt-5 grid gap-6 md:grid-cols-2">

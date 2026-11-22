@@ -540,6 +540,7 @@ const LISTA = [
           'Use as abas "Todas as vendas", "Mais vendidos", "Quem compra" e "Orçamentos".',
           'Abra uma venda pra "Marcar como recebida" ou "Cancelar venda". Cancelada, os itens voltam pro estoque e o lançamento sai do Financeiro.',
           'Em "Taxas de recebimento", salve a porcentagem de cada forma de pagamento. A Pólia One usa esses números no lucro de cada venda.',
+          'Na parte "Marketplaces" do mesmo modal, preencha o que a Shopee, o TikTok Shop e o Mercado Livre cobram. Vende em outro lugar? "Adicionar marketplace" cria uma linha com o nome que você escrever. O TikTok Shop em branco segue a tarifa oficial do TikTok.',
           '"Ver como quadro" abre o quadro de Pedidos, com os pedidos que têm dia de entrega.',
         ],
       },
@@ -940,9 +941,9 @@ const LISTA = [
         ],
       },
       {
-        titulo: "Receber os pedidos da loja do catálogo (Pro)",
+        titulo: "Receber os pedidos da Vitrine online (Pro)",
         itens: [
-          'Monte a loja em "Catálogo", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
+          'Monte a loja em "Vitrine online", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
           'Se a marca tem um site próprio feito pela Pólia Lab, ele liga em "Configurações", na parte "Integrações", no cartão "Vitrine online": escreva o domínio (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
         ],
@@ -953,11 +954,11 @@ const LISTA = [
       'Pedido da vitrine online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Catálogo online". A cliente vira ficha em Clientes, pelo WhatsApp.',
       'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
-      '"Entregue" mostra os últimos 7 dias. Os mais antigos continuam em Vendas.',
+      '"Entregue" mostra o que foi entregue nos últimos 7 dias, contando a entrega combinada ou o dia em que o pedido chegou em "Entregue". Pedido atrasado que você finaliza hoje continua ali. Os mais antigos continuam em Vendas.',
       "No plano Grátis cabem 15 pedidos abertos ao mesmo tempo. No Premium e no Pro, sem limite.",
       'Lançar a próxima encomenda e levar um pedido até "Entregue" são os dois primeiros dos Primeiros passos do Painel.',
       'O cartão mostra quanto o pedido lucra quando o produto tem custo. Sem custo, ele avisa "falta o custo pra mostrar o lucro": coloque em Produtos e a Pólia One corrige a venda.',
-      "Pedido novo que chega pela loja do Catálogo também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
+      "Pedido novo que chega pela Vitrine online também aparece no sino, no alto da tela, com o nome da cliente e o valor.",
       'Às 18h da véspera, a Pólia One manda um e-mail com os pedidos que têm entrega no dia seguinte e ainda não foram entregues, e um aviso no celular se o app estiver instalado. Sem entrega amanhã, não sai nada. Pra desligar, abra "Configurações" e, em "Notificações", desligue "Entregas de amanhã".',
     ],
     duvidas: [
@@ -976,27 +977,28 @@ const LISTA = [
         resposta: 'Abra o pedido, troque a data em "Entrega" e clique em "Salvar a nova data".',
       },
       {
-        pergunta: "O pedido do catálogo veio com outro preço",
+        pergunta: "O pedido da vitrine veio com outro preço",
         resposta:
-          "O preço é o que estava no catálogo na hora do pedido. Confirme com a cliente pelo WhatsApp antes de começar a produção.",
+          "O preço é o que estava na vitrine na hora do pedido. Confirme com a cliente pelo WhatsApp antes de começar a produção.",
       },
     ],
   },
   {
     slug: "catalogo",
-    nome: "Catálogo",
+    nome: "Vitrine online",
     grupo: "Clientes e rotina",
     rota: "/catalogo",
-    abrir: "Abrir o Catálogo",
+    abrir: "Abrir a Vitrine online",
     resumo:
       "A loja da marca num endereço da Pólia, com os produtos, as fotos e as variações de Produtos. A cliente monta o carrinho e confirma, e o pedido cai em Pedidos.",
-    trecho: "catalogo",
+    // trecho "catalogo" fora desde 22/11/2026: o clipe mostra o menu antigo
+    // ("Catálogo"). Volta quando a narração nova sair (card no Kanban).
     passos: [
       {
         titulo: "Abrir a loja",
         itens: [
-          'No menu, abra "Catálogo". Em "Endereço", confira o endereço da loja: ele fica em one.usepolia.com.br/loja/ seguido do nome que você escolher.',
-          'Ligue "Loja aberta" e clique em "Salvar a loja". Com a loja salva, o botão "Ver a loja" abre a vitrine como a cliente vê.',
+          'No menu, abra "Vitrine online". Em "Endereço", confira o endereço da loja: ele fica em one.usepolia.com.br/loja/ seguido do nome que você escolher.',
+          'Clique em "Salvar a loja" e ligue "Loja aberta": o interruptor vale na hora, sem precisar salvar de novo. Com a loja aberta, o botão "Ver a loja" abre a vitrine como a cliente vê.',
         ],
       },
       {
@@ -1004,6 +1006,13 @@ const LISTA = [
         itens: [
           'O logo e a cor vêm de Configurações, em "Logo e cor" ("Trocar o logo em Configurações" leva até lá). Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
           "Sem capa, a loja monta a abertura com as fotos dos produtos.",
+        ],
+      },
+      {
+        titulo: "Pôr um banner rotativo",
+        itens: [
+          'Em "Banner rotativo", clique em "Subir o primeiro banner". Cabem até 5 imagens (JPG, PNG ou WEBP, até 3 MB), de preferência deitadas, em 1600 x 600 px.',
+          "Na vitrine, elas passam sozinhas no topo, uma a cada 5 segundos. As setas de cada banner mudam a ordem e a lixeira tira.",
         ],
       },
       {
@@ -1017,7 +1026,8 @@ const LISTA = [
       {
         titulo: "Escolher os produtos e as fotos",
         itens: [
-          'Em "Produtos na loja", ligue cada produto que deve aparecer. Nome, preço e variações vêm de Produtos.',
+          'Em "Produtos na vitrine", ligue cada produto que deve aparecer. Nome, preço e variações vêm de Produtos.',
+          "Os produtos ligados aparecem numa lista numerada: as setas pra cima e pra baixo escolhem quem aparece primeiro na vitrine. Produto que você liga depois entra no fim.",
           'Clique em "Foto" pra subir até 4 fotos por produto (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine.',
         ],
       },
@@ -1033,7 +1043,7 @@ const LISTA = [
       {
         pergunta: "Posso usar um domínio meu",
         resposta:
-          "O domínio próprio (suamarca.com.br) é um serviço da Pólia Lab. A loja do Catálogo mora no endereço da Pólia.",
+          "O domínio próprio (suamarca.com.br) é um serviço da Pólia Lab. A Vitrine online mora no endereço da Pólia.",
       },
       {
         pergunta: "A cliente precisa ter conta",

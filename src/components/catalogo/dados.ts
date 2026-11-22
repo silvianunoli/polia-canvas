@@ -1,14 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { FOTO_MAX_BYTES, FOTO_TIPOS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
+import { FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
 
-// Dados da tela Catálogo (ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
+// Dados da tela Vitrine online (rota /catalogo; ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
 // direto pelo Supabase, com RLS de dona (produtos: update; produto_fotos e o
 // bucket produtos-fotos: só na pasta dela). A configuração da loja passa pelo
 // servidor (loja.functions.ts), que confere o Pro.
 
 export const CHAVE_CATALOGO = "catalogo-loja";
 export const CHAVE_PRODUTOS_CATALOGO = "catalogo-produtos";
+export const CHAVE_BANNERS_CATALOGO = "catalogo-banners";
 
 export interface FotoProduto {
   id: string;
@@ -22,6 +23,8 @@ export interface ProdutoDoCatalogo {
   nome: string;
   preco: number;
   noCatalogo: boolean;
+  /** Posição na vitrine (produtos.catalogo_ordem); null quando ela nunca ordenou. */
+  ordem: number | null;
   fotos: FotoProduto[];
   variacoes: number;
 }
@@ -35,12 +38,20 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
     queryFn: async (): Promise<ProdutoDoCatalogo[]> => {
       const { data: prods, error } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda, no_catalogo, created_at")
+        .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, created_at")
         .eq("user_id", userId!)
         .eq("arquivado", false)
+        // Mesma ordem da loja pública (lerLojaPublica): a dela primeiro, depois a de cadastro.
+        .order("catalogo_ordem" as never, { ascending: true, nullsFirst: false })
         .order("created_at", { ascending: true });
       if (error) throw error;
-      const lista = (prods ?? []) as unknown as Array<{ id: string; nome: string; preco_venda: number; no_catalogo: boolean }>;
+      const lista = (prods ?? []) as unknown as Array<{
+        id: string;
+        nome: string;
+        preco_venda: number;
+        no_catalogo: boolean;
+        catalogo_ordem: number | null;
+      }>;
       const ids = lista.map((p) => p.id);
       if (!ids.length) return [];
       const [{ data: fotos, error: e1 }, { data: skus, error: e2 }] = await Promise.all([
@@ -60,6 +71,7 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         nome: p.nome,
         preco: Number(p.preco_venda),
         noCatalogo: !!p.no_catalogo,
+        ordem: p.catalogo_ordem ?? null,
         fotos: fotosPor.get(p.id) ?? [],
         variacoes: varPor.get(p.id) ?? 0,
       }));
@@ -69,6 +81,87 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
 
 export const alternarNaLoja = (produtoId: string, noCatalogo: boolean) =>
   supabase.from("produtos").update({ no_catalogo: noCatalogo } as never).eq("id", produtoId);
+
+/**
+ * Grava a ordem da vitrine: a posição de cada id na lista vira catalogo_ordem
+ * (0, 1, 2...). Recebe a lista inteira já na ordem nova, pra não sobrar empate.
+ */
+export async function salvarOrdemDaVitrine(idsNaOrdem: string[]) {
+  const resultados = await Promise.all(
+    idsNaOrdem.map((id, i) => supabase.from("produtos").update({ catalogo_ordem: i } as never).eq("id", id)),
+  );
+  const falhou = resultados.find((r) => r.error);
+  return { error: falhou ? "A Pólia One não conseguiu salvar a ordem agora. Tenta de novo." : null };
+}
+
+/** Troca o item de lugar com o vizinho (-1 sobe, +1 desce). Fora da lista, devolve igual. */
+export function moverNaLista<T>(lista: readonly T[], indice: number, direcao: -1 | 1): T[] {
+  const alvo = indice + direcao;
+  if (indice < 0 || indice >= lista.length || alvo < 0 || alvo >= lista.length) return [...lista];
+  const nova = [...lista];
+  [nova[indice], nova[alvo]] = [nova[alvo], nova[indice]];
+  return nova;
+}
+
+// ── banner rotativo (migration 20261122150000) ─────────────────────────────
+
+export interface BannerDaVitrine {
+  id: string;
+  path: string;
+  ordem: number;
+  url: string;
+}
+
+export function useBannersDaVitrine(userId: string | undefined, habilitado: boolean) {
+  return useQuery({
+    queryKey: [CHAVE_BANNERS_CATALOGO, userId],
+    enabled: !!userId && habilitado,
+    queryFn: async (): Promise<BannerDaVitrine[]> => {
+      const { data, error } = await supabase
+        .from("catalogo_banners" as never)
+        .select("id, path, ordem")
+        .eq("user_id" as never, userId! as never)
+        .order("ordem" as never);
+      if (error) throw error;
+      return ((data ?? []) as unknown as Array<{ id: string; path: string; ordem: number }>).map((b) => ({
+        ...b,
+        url: urlDaFoto(b.path),
+      }));
+    },
+  });
+}
+
+/** Sobe o banner no fim da fila. Mesmo bucket e limite das fotos de produto (3 MB). */
+export async function subirBanner(userId: string, arquivo: File, atuais: BannerDaVitrine[]) {
+  if (atuais.length >= MAX_BANNERS) return { error: `O banner leva até ${MAX_BANNERS} imagens.` };
+  const problema = problemaDaFoto(arquivo);
+  if (problema) return { error: problema };
+  const ordem = [0, 1, 2, 3, 4].find((o) => !atuais.some((b) => b.ordem === o)) ?? atuais.length;
+  const ext = arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
+  const path = `${userId}/banner-loja-${Date.now()}.${ext}`;
+  const up = await supabase.storage.from("produtos-fotos").upload(path, arquivo, { contentType: arquivo.type, upsert: false });
+  if (up.error) return { error: "A Pólia One não conseguiu subir o banner agora." };
+  const { error } = await supabase.from("catalogo_banners" as never).insert({ user_id: userId, path, ordem } as never);
+  if (error) {
+    await supabase.storage.from("produtos-fotos").remove([path]);
+    return { error: "A Pólia One não conseguiu guardar o banner agora." };
+  }
+  return { error: null };
+}
+
+export async function removerBanner(b: BannerDaVitrine) {
+  const { error } = await supabase.from("catalogo_banners" as never).delete().eq("id" as never, b.id as never);
+  if (!error) await supabase.storage.from("produtos-fotos").remove([b.path]);
+  return { error: error ? "A Pólia One não conseguiu tirar o banner agora." : null };
+}
+
+/** Regrava a ordem dos banners (0 a 4) na sequência da lista. */
+export async function salvarOrdemDosBanners(lista: BannerDaVitrine[]) {
+  const resultados = await Promise.all(
+    lista.map((b, i) => supabase.from("catalogo_banners" as never).update({ ordem: i } as never).eq("id" as never, b.id as never)),
+  );
+  return { error: resultados.some((r) => r.error) ? "A Pólia One não conseguiu salvar a ordem dos banners agora." : null };
+}
 
 /** Recusa arquivo fora do tipo ou do tamanho antes de subir. null = pode subir. */
 export function problemaDaFoto(arquivo: File): string | null {

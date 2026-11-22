@@ -82,10 +82,16 @@ describe("TikTok Shop pela tabela oficial", () => {
   // Caneca de R$ 39,90 com custo de R$ 15: 10% + R$ 4 = R$ 7,99 de taxa.
   const base = { preco: 39.9, custo: 15, impostosPct: 0, lucroBase: 24.9 };
 
-  it("ignora o percentual cadastrado e usa a faixa do preço", () => {
-    const [l] = linhasPorCanal({ ...base, taxas: { tiktok_shop: { percentual: 50, fixo: 0 } } });
+  it("em branco usa a faixa do preço", () => {
+    const [l] = linhasPorCanal({ ...base, taxas: { tiktok_shop: { percentual: 0, fixo: 0 } } });
     expect(l.lucro).toBe(16.91);
     expect(l.descricaoTaxa).toMatch(/^10% \+ R\$ 4 por item abaixo de R\$ 50/);
+  });
+
+  it("preenchido pela dona vale no lugar da tabela (22/11/2026)", () => {
+    const [l] = linhasPorCanal({ ...base, taxas: { tiktok_shop: { percentual: 12, fixo: 2 } } });
+    expect(l.lucro).toBe(18.11); // 39,90 - 15 - (4,79 + 2)
+    expect(l.descricaoTaxa).toMatch(/^12% \+ R\$\s2,00$/);
   });
 
   it("Frete Grátis soma 6% do item", () => {
@@ -107,6 +113,24 @@ describe("TikTok Shop pela tabela oficial", () => {
         .lucro;
     expect(lucro(preco)).toBeGreaterThanOrEqual(24.9);
     expect(lucro(preco - 0.01)).toBeLessThan(24.9);
+  });
+});
+
+describe("marketplace criado à mão", () => {
+  it("entra no fim, com o nome que ela deu", () => {
+    const linhas = linhasPorCanal({
+      preco: 100,
+      custo: 40,
+      impostosPct: 0,
+      lucroBase: 60,
+      taxas: {
+        pix: { percentual: 0, fixo: 0 },
+        proprios: [{ chave: "mkt_elo7", nome: "Elo7", regra: { percentual: 20, fixo: 1 } }],
+      },
+    });
+    expect(linhas.map((l) => l.rotulo)).toEqual(["Pix", "Elo7"]);
+    expect(linhas[1].lucro).toBe(39);
+    expect(linhas[1].chave).toBe("mkt_elo7");
   });
 });
 

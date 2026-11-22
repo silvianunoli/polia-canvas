@@ -7,7 +7,7 @@ import {
   statusVendaDoPedido,
   type PedidoApiTiktok,
 } from "../_shared/tiktokShop.ts";
-import { taxaTiktokDaVenda } from "../_shared/taxaTiktokShop.ts";
+import { taxaTiktokDaVenda, taxaTiktokPelaRegraDela } from "../_shared/taxaTiktokShop.ts";
 import {
   atualizarEstoqueTiktok,
   buscarPedidosAlterados,
@@ -170,11 +170,17 @@ async function varrer(c: Conexao, acesso: Acesso): Promise<number> {
   return total;
 }
 
+/** Linha do TikTok Shop em taxas_recebimento: regra dela (se preencheu) e o Frete Grátis. */
+interface TaxaDaConexao {
+  freteGratis: boolean;
+  regra: { percentual: number; fixo: number } | null;
+}
+
 async function processarPedido(
   c: Conexao,
   pedido: PedidoApiTiktok,
   vinculos: Map<string, string>,
-  freteGratis: boolean,
+  taxa: TaxaDaConexao,
 ): Promise<string | null> {
   const status = statusVendaDoPedido(pedido.status);
   if (status === null) return null; // ainda não pago: quando pagar, o TikTok avisa de novo
@@ -201,8 +207,11 @@ async function processarPedido(
     p_id_externo: String(pedido.id),
     p_data: dataDoPedido(pedido.paid_time ?? pedido.create_time),
     p_itens: itens,
-    // Tabela oficial do TikTok, por item e por faixa de preço (_shared/taxaTiktokShop.ts).
-    p_taxa_canal: taxaTiktokDaVenda(itens, { freteGratis }),
+    // A taxa que ela preencheu no modal de taxas; em branco, a tabela oficial do
+    // TikTok, por item e por faixa de preço (_shared/taxaTiktokShop.ts).
+    p_taxa_canal:
+      taxaTiktokPelaRegraDela(itens, taxa.regra) ??
+      taxaTiktokDaVenda(itens, { freteGratis: taxa.freteGratis }),
     p_observacao: observacao,
   });
   return error ? error.message : null;
@@ -423,7 +432,7 @@ async function sincronizar() {
         .eq("canal", CANAL),
       supabaseAdmin
         .from("taxas_recebimento")
-        .select("frete_gratis")
+        .select("frete_gratis, percentual, fixo")
         .eq("user_id", c.user_id)
         .eq("chave", CANAL)
         .maybeSingle(),
@@ -434,7 +443,11 @@ async function sincronizar() {
         v.sku_id,
       ]),
     );
-    const freteGratis = (taxa as { frete_gratis: boolean } | null)?.frete_gratis === true;
+    const linhaTaxa = taxa as { frete_gratis: boolean; percentual: number; fixo: number } | null;
+    const taxaConexao: TaxaDaConexao = {
+      freteGratis: linhaTaxa?.frete_gratis === true,
+      regra: linhaTaxa ? { percentual: Number(linhaTaxa.percentual), fixo: Number(linhaTaxa.fixo) } : null,
+    };
 
     for (let i = 0; i < lista.length; i += 50) {
       const lote = lista.slice(i, i + 50);
@@ -456,7 +469,7 @@ async function sincronizar() {
           await marcarEventos([e.id], "pedido não veio no detalhe");
           continue;
         }
-        const erro = await processarPedido(c, pedido, vinculos, freteGratis);
+        const erro = await processarPedido(c, pedido, vinculos, taxaConexao);
         if (!erro && statusVendaDoPedido(pedido.status) === "a_receber") vendas++;
         await marcarEventos([e.id], erro);
       }

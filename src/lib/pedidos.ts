@@ -91,12 +91,15 @@ export function rotuloEntrega(
  * nos últimos 7 dias. Cancelado sai.
  */
 export function ficaNoQuadro(
-  p: Pick<PedidoResumo, "andamento" | "status" | "entregaEm">,
+  p: Pick<PedidoResumo, "andamento" | "status" | "entregaEm"> & { entregueEm?: string | null },
   hoje: string,
 ) {
   if (p.status === "cancelada") return false;
   if (p.andamento !== "entregue") return true;
-  return p.entregaEm >= somarDias(hoje, -DIAS_ENTREGUE_NO_QUADRO);
+  const limite = somarDias(hoje, -DIAS_ENTREGUE_NO_QUADRO);
+  // Pedido atrasado finalizado hoje fica: vale o dia em que virou entregue
+  // (vendas.entregue_em, migration 20261122150100), não só a entrega combinada.
+  return p.entregaEm >= limite || (!!p.entregueEm && p.entregueEm.slice(0, 10) >= limite);
 }
 
 /** Ordem dentro da coluna: o que vence primeiro em cima. */

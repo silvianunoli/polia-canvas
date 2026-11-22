@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { BannerLoja } from "@/components/loja/BannerLoja";
 import { GradeProdutos } from "@/components/loja/GradeProdutos";
 import { IconeWhatsapp } from "@/components/loja/icones";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
@@ -8,7 +9,7 @@ import { linkWhatsapp } from "@/lib/lojaVitrine";
 
 // Vitrine da loja (página inicial de /loja/<endereço>). Loader, head e casca
 // ficam no layout loja.$slug.tsx; aqui só as seções, na ordem do modelo do
-// Lab: abertura, selos, produtos, como encomendar e o fechamento no WhatsApp.
+// Lab: banner rotativo (quando a dona sobe), abertura, selos, produtos, como encomendar e o fechamento no WhatsApp.
 
 export const Route = createFileRoute("/loja/$slug/")({
   component: VitrinePage,
@@ -21,6 +22,7 @@ function VitrinePage() {
 
   return (
     <>
+      <BannerLoja banners={loja.banners ?? []} nome={loja.nome} />
       <Abertura loja={loja} dias={dias} />
 
       <div className="wrap">

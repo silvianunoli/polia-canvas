@@ -219,7 +219,8 @@ export function ModalRegistrarVenda({
   const lucro = lucroDaVenda(valores);
   const regraDaForma = forma ? taxasQuery.data?.[forma] : undefined;
   const regraDaFormaTemValor = !regraEstaVazia(regraDaForma);
-  const temAlgumaTaxa = Object.values(taxasQuery.data ?? {}).some((r) => !regraEstaVazia(r));
+  const { proprios: _proprios, ...taxasFixas } = taxasQuery.data ?? {};
+  const temAlgumaTaxa = Object.values(taxasFixas).some((r) => !regraEstaVazia(r));
 
   // Regra em lib/taxas.ts (decidirTaxa): só reescreve taxa que veio da regra.
   useEffect(() => {
