@@ -3,10 +3,15 @@ import { ShoppingBag } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { GradeProdutos } from "@/components/loja/GradeProdutos";
 import { SemFoto } from "@/components/loja/icones";
-import { descricaoDoProduto, lojaDosMatches, metaDaLoja, type LeituraLoja } from "@/components/loja/leituraLoja";
+import {
+  descricaoDoProduto,
+  lojaDosMatches,
+  metaDaLoja,
+  type LeituraLoja,
+} from "@/components/loja/leituraLoja";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { BeneficiosLoja } from "@/components/loja/SelosLoja";
-import { reais, type ProdutoLoja } from "@/lib/loja";
+import { OPCAO_COR_DA_FOTO, opcaoDasCores, reais, type ProdutoLoja } from "@/lib/loja";
 import { sinalDoPreco } from "@/lib/lojaVitrine";
 import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
@@ -19,11 +24,13 @@ export const Route = createFileRoute("/loja/$slug/$produto")({
   // A loja já vem do layout; repetir aqui faz o head() do servidor enxergá-la.
   // Sem isto, o HTML do produto saía com o título "Loja" e a prévia da loja
   // inteira (os matches do head no servidor ainda não tinham o loaderData).
-  loader: async ({ parentMatchPromise }) => (await parentMatchPromise).loaderData as LeituraLoja | undefined,
+  loader: async ({ parentMatchPromise }) =>
+    (await parentMatchPromise).loaderData as LeituraLoja | undefined,
   head: ({ matches, params, loaderData }) => {
     const loja = loaderData?.ok ? loaderData.loja : lojaDosMatches(matches);
     const p = loja?.produtos.find((x) => x.id === params.produto);
-    if (!loja || !p) return { meta: [{ title: loja ? `Produto não encontrado · ${loja.nome}` : "Loja" }] };
+    if (!loja || !p)
+      return { meta: [{ title: loja ? `Produto não encontrado · ${loja.nome}` : "Loja" }] };
     return {
       meta: metaDaLoja({
         titulo: `${p.nome} · ${loja.nome}`,
@@ -64,14 +71,33 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
   const { loja, adicionar } = useLojaVitrine();
   const [foto, setFoto] = useState(0);
   // Produto com paleta começa na "Cor da foto", como na Loveless.
-  const [escolha, setEscolha] = useState<string | null>(p.usaPaleta ? "foto" : null);
+  const [escolha, setEscolha] = useState<string | null>(p.usaPaleta ? OPCAO_COR_DA_FOTO : null);
+  // Produto que deixa misturar cores (max_cores 2 ou 3): as cores marcadas, na
+  // ordem do toque. "Cor da foto" e as cores não se misturam.
+  const variasCores = p.usaPaleta && p.maxCores > 1;
+  const [cores, setCores] = useState<string[]>([]);
   const [faltaEscolher, setFaltaEscolher] = useState(false);
   const [barra, setBarra] = useState(false);
   const botaoRef = useRef<HTMLButtonElement>(null);
   const escolhaRef = useRef<HTMLFieldSetElement>(null);
   const uid = useId();
   const temVariacao = p.variacoes.length > 0;
-  const variacao = p.variacoes.find((v) => v.id === escolha) ?? null;
+  const variacao =
+    variasCores && cores.length
+      ? opcaoDasCores(p, cores)
+      : (p.variacoes.find((v) => v.id === escolha) ?? null);
+  const noLimite = variasCores && cores.length >= p.maxCores;
+  const marcarCor = (id: string) => {
+    setFaltaEscolher(false);
+    setEscolha(null);
+    setCores((atuais) =>
+      atuais.includes(id)
+        ? atuais.filter((x) => x !== id)
+        : atuais.length < p.maxCores
+          ? [...atuais, id]
+          : atuais,
+    );
+  };
   const sinal = sinalDoPreco(p.preco, loja.sinalPercentual);
   const outros = loja.produtos.filter((x) => x.id !== p.id).slice(0, 4);
 
@@ -80,7 +106,9 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
   useEffect(() => {
     const alvo = botaoRef.current;
     if (!alvo || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([x]) => setBarra(!x.isIntersecting && x.boundingClientRect.top < 0));
+    const io = new IntersectionObserver(([x]) =>
+      setBarra(!x.isIntersecting && x.boundingClientRect.top < 0),
+    );
     io.observe(alvo);
     return () => io.disconnect();
   }, []);
@@ -120,7 +148,11 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
         <div className="produto">
           <div className={`galeria${p.fotos.length > 1 ? " com-miniaturas" : ""}`}>
             <div className="principal">
-              {fotoAtual ? <img src={fotoAtual} alt={`${p.nome}, foto ${foto + 1}`} fetchPriority="high" /> : <SemFoto />}
+              {fotoAtual ? (
+                <img src={fotoAtual} alt={`${p.nome}, foto ${foto + 1}`} fetchPriority="high" />
+              ) : (
+                <SemFoto />
+              )}
             </div>
             {p.fotos.length > 1 && (
               <div className="miniaturas" role="group" aria-label="Fotos do produto">
@@ -148,7 +180,11 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
               {sinal > 0 && <span className="sinal-tag">Comece com {reais(sinal)} de sinal</span>}
             </div>
             <p className={`tipo-entrega${p.esgotado ? " esgotado" : ""}`}>
-              {p.esgotado ? "Esgotado no momento" : p.prontaEntrega ? "Pronta entrega" : "Feito sob encomenda"}
+              {p.esgotado
+                ? "Esgotado no momento"
+                : p.prontaEntrega
+                  ? "Pronta entrega"
+                  : "Feito sob encomenda"}
             </p>
             {p.descricao && <p className="desc">{p.descricao}</p>}
 
@@ -158,37 +194,73 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                 className={`escolha${faltaEscolher && !variacao ? " com-erro" : ""}`}
                 aria-describedby={faltaEscolher && !variacao ? `${uid}-erro` : undefined}
               >
-                <legend>{p.usaPaleta ? "Escolha a cor" : "Escolha a opção"}</legend>
+                <legend>
+                  {variasCores
+                    ? `Escolha até ${p.maxCores} cores`
+                    : p.usaPaleta
+                      ? "Escolha a cor"
+                      : "Escolha a opção"}
+                </legend>
+                {variasCores && (
+                  <p className="dica-cores">
+                    Uma cor só ou até {p.maxCores} misturadas, na ordem em que você tocar.
+                    {noLimite ? " Pra trocar, toque numa cor escolhida." : ""}
+                  </p>
+                )}
                 <p className="escolhida" aria-live="polite">
                   {variacao ? variacao.nome : "Nenhuma escolhida ainda"}
                 </p>
                 <div className={`chips${p.usaPaleta ? " amostras" : ""}`}>
-                  {p.variacoes.map((v) => (
-                    <label key={v.id} className={`chip${v.hex ? " amostra" : ""}`} title={v.hex ? v.nome : undefined}>
-                      <input
-                        type="radio"
-                        name={`${uid}-variacao`}
-                        value={v.id}
-                        disabled={!!v.esgotada}
-                        checked={escolha === v.id}
-                        onChange={() => {
-                          setEscolha(v.id);
-                          setFaltaEscolher(false);
-                        }}
-                      />
-                      {v.hex ? (
-                        <>
-                          <i style={{ background: v.hex }} aria-hidden="true" />
-                          <span className="sr-only">{v.nome}</span>
-                        </>
-                      ) : (
-                        <>
-                          {v.nome}
-                          {v.esgotada && <span className="esgotada"> · esgotada</span>}
-                        </>
-                      )}
-                    </label>
-                  ))}
+                  {p.variacoes.map((v) => {
+                    const marcavel = variasCores && v.id !== OPCAO_COR_DA_FOTO;
+                    const posicao = marcavel ? cores.indexOf(v.id) : -1;
+                    return (
+                      <label
+                        key={v.id}
+                        className={`chip${v.hex ? " amostra" : ""}`}
+                        title={v.hex ? v.nome : undefined}
+                      >
+                        {marcavel ? (
+                          <input
+                            type="checkbox"
+                            value={v.id}
+                            disabled={!!v.esgotada || (noLimite && posicao < 0)}
+                            checked={posicao >= 0}
+                            onChange={() => marcarCor(v.id)}
+                          />
+                        ) : (
+                          <input
+                            type="radio"
+                            name={`${uid}-variacao`}
+                            value={v.id}
+                            disabled={!!v.esgotada}
+                            checked={escolha === v.id && !cores.length}
+                            onChange={() => {
+                              setCores([]);
+                              setEscolha(v.id);
+                              setFaltaEscolher(false);
+                            }}
+                          />
+                        )}
+                        {posicao >= 0 && cores.length > 1 && (
+                          <b className="ordem-cor" aria-hidden="true">
+                            {posicao + 1}
+                          </b>
+                        )}
+                        {v.hex ? (
+                          <>
+                            <i style={{ background: v.hex }} aria-hidden="true" />
+                            <span className="sr-only">{v.nome}</span>
+                          </>
+                        ) : (
+                          <>
+                            {v.nome}
+                            {v.esgotada && <span className="esgotada"> · esgotada</span>}
+                          </>
+                        )}
+                      </label>
+                    );
+                  })}
                 </div>
                 {p.usaPaleta && loja.avisoCor && <p className="aviso-cor">{loja.avisoCor}</p>}
                 {faltaEscolher && !variacao && (
@@ -200,7 +272,13 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
             )}
 
             <div className="comprar">
-              <button ref={botaoRef} type="button" className="btn largo" onClick={porNoCarrinho} disabled={p.esgotado}>
+              <button
+                ref={botaoRef}
+                type="button"
+                className="btn largo"
+                onClick={porNoCarrinho}
+                disabled={p.esgotado}
+              >
                 <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
                 <span>{p.esgotado ? "Esgotado" : "Adicionar ao carrinho"}</span>
               </button>
@@ -227,7 +305,13 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
           <b>{p.nome}</b>
           {variacao ? `${variacao.nome} · ${reais(p.preco)}` : reais(p.preco)}
         </div>
-        <button type="button" className="btn" onClick={porNoCarrinho} tabIndex={barra ? 0 : -1} disabled={p.esgotado}>
+        <button
+          type="button"
+          className="btn"
+          onClick={porNoCarrinho}
+          tabIndex={barra ? 0 : -1}
+          disabled={p.esgotado}
+        >
           <ShoppingBag aria-hidden="true" strokeWidth={1.7} />
           <span>{p.esgotado ? "Esgotado" : "Adicionar"}</span>
         </button>

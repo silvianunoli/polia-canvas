@@ -15,8 +15,8 @@ import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { temVitrine } from "@/lib/planos";
 import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
-import { MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
-import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo } from "@/lib/loja.functions";
+import { BANNER_ALTURA, BANNER_LARGURA, FAVICON_MAX, FAVICON_MIN, MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
+import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo, trocarFaviconCatalogo } from "@/lib/loja.functions";
 import { useIdentidadeMarca } from "@/components/orcamentos/dados";
 import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 import {
@@ -40,6 +40,7 @@ import {
   salvarOrdemDosBanners,
   subirBanner,
   subirCapa,
+  subirFavicon,
   subirFotoProduto,
   useBannersDaVitrine,
   useCategoriasDaVitrine,
@@ -232,6 +233,7 @@ function CatalogoPage() {
               <LinkInterno href="/configuracoes#logo-e-cor" className={BTN_MIUDO}>Trocar o logo em Configurações</LinkInterno>
             </div>
             <Capa userId={userId!} capaUrl={cat?.capaUrl ?? null} temLoja={!!cat} />
+            <Favicon userId={userId!} faviconUrl={cat?.faviconUrl ?? null} temLoja={!!cat} />
             <Campo label="Cor de destaque" hint="Botões, preço do sinal e detalhes da loja. Vazio usa a cor da marca.">
               <div className="flex items-center gap-3">
                 <input
@@ -358,6 +360,56 @@ function Capa({ userId, capaUrl, temLoja }: { userId: string; capaUrl: string | 
           Tirar a capa
         </button>
       )}
+    </div>
+  );
+}
+
+// Ícone da aba da loja (22/11/2026). Sem ele, a aba mostra o da Pólia.
+function Favicon({ userId, faviconUrl, temLoja }: { userId: string; faviconUrl: string | null; temLoja: boolean }) {
+  const qc = useQueryClient();
+  const input = useRef<HTMLInputElement>(null);
+  const [subindo, setSubindo] = useState(false);
+  const trocar = async (arquivo: File | null) => {
+    setSubindo(true);
+    try {
+      let caminho: string | null = null;
+      if (arquivo) {
+        const up = await subirFavicon(userId, arquivo);
+        if (up.error) return toastErro(up.error);
+        caminho = up.caminho;
+      }
+      const r = await trocarFaviconCatalogo({ data: { caminho } });
+      if (!r.ok) return toastErro(r.error);
+      qc.invalidateQueries({ queryKey: [CHAVE_CATALOGO, userId] });
+      toastSucesso(arquivo ? "Favicon trocado." : "Favicon tirado. A aba mostra o ícone da Pólia.");
+    } finally {
+      setSubindo(false);
+      if (input.current) input.current.value = "";
+    }
+  };
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-4">
+        {faviconUrl ? (
+          <img src={faviconUrl} alt="Favicon da loja" className="h-12 w-12 rounded-lg border border-[var(--line)] bg-white object-contain p-1" />
+        ) : (
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-[var(--line)] bg-white p-2">
+            <img src="/favicon.svg" alt="Ícone da Pólia, usado enquanto a loja não tem favicon" className="h-full w-full" />
+          </div>
+        )}
+        <input ref={input} type="file" accept="image/png" className="sr-only" id="favicon-loja" onChange={(e) => trocar(e.target.files?.[0] ?? null)} disabled={!temLoja || subindo} />
+        <label htmlFor="favicon-loja" className={`${BTN_MIUDO} ${!temLoja || subindo ? "opacity-50 pointer-events-none" : "cursor-pointer"}`}>
+          <ImagePlus size={14} aria-hidden="true" /> {subindo ? "Subindo..." : faviconUrl ? "Trocar o favicon" : "Subir um favicon"}
+        </label>
+        {faviconUrl && (
+          <button type="button" className={BTN_MIUDO} onClick={() => trocar(null)} disabled={subindo}>
+            Tirar o favicon
+          </button>
+        )}
+      </div>
+      <p className="font-sans text-[12px] text-[var(--muted)]">
+        Favicon é o ícone pequeno da aba do navegador. PNG quadrado, de {FAVICON_MIN} a {FAVICON_MAX} px (o ideal é 512 x 512), até 1 MB. Sem favicon, a aba mostra o ícone da Pólia.
+      </p>
     </div>
   );
 }
@@ -495,7 +547,7 @@ function BannerRotativo({ userId }: { userId: string }) {
   return (
     <Secao
       titulo="Banner rotativo"
-      texto={`Até ${MAX_BANNERS} imagens que passam sozinhas no topo da vitrine, uma a cada 5 segundos. Use imagem deitada, de 1600 x 600 px, em JPG, PNG ou WEBP de até 3 MB. Sem banner, o topo fica como está.`}
+      texto={`Até ${MAX_BANNERS} imagens que passam sozinhas no topo da vitrine, uma a cada 5 segundos. Cada banner precisa ter exatamente ${BANNER_LARGURA} x ${BANNER_ALTURA} px, em JPG ou PNG de até 3 MB: assim ele aparece inteiro, sem corte, no computador e no celular. Imagem de outro tamanho não sobe. Sem banner, o topo fica como está.`}
     >
       {q.isError ? (
         <BlockError message="A Pólia One não conseguiu abrir os banners agora." onRetry={() => q.refetch()} />
@@ -554,7 +606,7 @@ function BannerRotativo({ userId }: { userId: string }) {
                 ref={input}
                 id="banner-loja"
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept="image/png,image/jpeg"
                 className="sr-only"
                 onChange={(e) => void subir(e.target.files?.[0])}
                 disabled={ocupado}

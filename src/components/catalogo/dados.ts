@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { slugDaCategoria } from "@/lib/lojaCombinacoes";
-import { FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO } from "@/lib/loja";
+import { BANNER_TIPOS, FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO, problemaDoBanner, problemaDoFavicon } from "@/lib/loja";
 
 // Dados da tela Vitrine online (rota /catalogo; ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
 // direto pelo Supabase, com RLS de dona (produtos: update; produto_fotos e o
@@ -270,13 +270,33 @@ export function useBannersDaVitrine(userId: string | undefined, habilitado: bool
   });
 }
 
+/** Largura e altura reais da imagem, lidas no navegador. null se não abrir. */
+async function medidaDaImagem(arquivo: File): Promise<{ largura: number; altura: number } | null> {
+  try {
+    const bmp = await createImageBitmap(arquivo);
+    const medida = { largura: bmp.width, altura: bmp.height };
+    bmp.close();
+    return medida;
+  } catch {
+    return null;
+  }
+}
+
 /** Sobe o banner no fim da fila. Mesmo bucket e limite das fotos de produto (3 MB). */
 export async function subirBanner(userId: string, arquivo: File, atuais: BannerDaVitrine[]) {
   if (atuais.length >= MAX_BANNERS) return { error: `O banner leva até ${MAX_BANNERS} imagens.` };
   const problema = problemaDaFoto(arquivo);
   if (problema) return { error: problema };
+  // Medida exata e só JPG/PNG: fora disso a vitrine cortaria o banner.
+  if (!(BANNER_TIPOS as readonly string[]).includes(arquivo.type)) {
+    return { error: problemaDoBanner(arquivo.type, 0, 0) };
+  }
+  const medida = await medidaDaImagem(arquivo);
+  if (!medida) return { error: "A Pólia One não conseguiu abrir essa imagem. Confira se é um JPG ou PNG." };
+  const foraDaMedida = problemaDoBanner(arquivo.type, medida.largura, medida.altura);
+  if (foraDaMedida) return { error: foraDaMedida };
   const ordem = [0, 1, 2, 3, 4].find((o) => !atuais.some((b) => b.ordem === o)) ?? atuais.length;
-  const ext = arquivo.type === "image/png" ? "png" : arquivo.type === "image/webp" ? "webp" : "jpg";
+  const ext = arquivo.type === "image/png" ? "png" : "jpg";
   const path = `${userId}/banner-loja-${Date.now()}.${ext}`;
   const up = await supabase.storage.from("produtos-fotos").upload(path, arquivo, { contentType: arquivo.type, upsert: false });
   if (up.error) return { error: "A Pólia One não conseguiu subir o banner agora." };
@@ -336,6 +356,19 @@ export async function removerFotoProduto(foto: FotoProduto) {
 }
 
 /** Capa da loja: no bucket do logo (marca-logos), na pasta da dona. Devolve o caminho. */
+/** Sobe o favicon (PNG quadrado, 48 a 512 px). Quem grava na loja é trocarFaviconCatalogo. */
+export async function subirFavicon(userId: string, arquivo: File) {
+  if (arquivo.size > 1024 * 1024) return { error: "O favicon passa de 1 MB. Diminua o tamanho e tente de novo.", caminho: null };
+  const medida = arquivo.type === "image/png" ? await medidaDaImagem(arquivo) : { largura: 0, altura: 0 };
+  if (!medida) return { error: "A Pólia One não conseguiu abrir essa imagem. Confira se é um PNG.", caminho: null };
+  const problema = problemaDoFavicon(arquivo.type, medida.largura, medida.altura);
+  if (problema) return { error: problema, caminho: null };
+  const caminho = `${userId}/favicon-loja-${Date.now()}.png`;
+  const up = await supabase.storage.from("marca-logos").upload(caminho, arquivo, { contentType: "image/png", upsert: false });
+  if (up.error) return { error: "A Pólia One não conseguiu subir o favicon agora.", caminho: null };
+  return { error: null, caminho };
+}
+
 export async function subirCapa(userId: string, arquivo: File) {
   const problema = problemaDaFoto(arquivo);
   if (problema) return { error: problema, caminho: null };

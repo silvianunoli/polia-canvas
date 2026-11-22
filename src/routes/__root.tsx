@@ -79,7 +79,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
+  head: ({ matches }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -115,7 +115,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:image", content: OG_IMAGE },
     ],
     links: [
-      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      // Na Vitrine online, quem põe o ícone é o layout da loja (o dela ou o da Pólia).
+      ...(matches.some((m) => (m.routeId as string).startsWith("/loja/$slug"))
+        ? []
+        : [{ rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }]),
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       // Mesmo tratamento do Google Fonts: adianta a conexão TLS pro domínio que

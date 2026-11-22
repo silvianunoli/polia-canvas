@@ -85,6 +85,7 @@ export function ModalProduto({
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
   const [usaPaleta, setUsaPaleta] = useState(produtoEdit?.usa_paleta ?? false);
   const [corDaFoto, setCorDaFoto] = useState(produtoEdit?.cor_da_foto ?? "");
+  const [maxCores, setMaxCores] = useState(produtoEdit?.max_cores ?? 1);
   const [prontaEntrega, setProntaEntrega] = useState(produtoEdit?.pronta_entrega ?? false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -149,6 +150,7 @@ export function ModalProduto({
         update.no_catalogo = naVitrine;
         update.usa_paleta = usaPaleta;
         update.cor_da_foto = corDaFoto.trim().slice(0, 60) || null;
+        update.max_cores = maxCores;
         update.pronta_entrega = prontaEntrega;
       }
 
@@ -200,6 +202,7 @@ export function ModalProduto({
                 no_catalogo: naVitrine,
                 usa_paleta: usaPaleta,
                 cor_da_foto: corDaFoto.trim().slice(0, 60) || null,
+                max_cores: maxCores,
                 pronta_entrega: prontaEntrega,
               }
             : {}),
@@ -503,7 +506,22 @@ export function ModalProduto({
                 A paleta fica em Vitrine online. Na loja, as cores aparecem no lugar das variações; o estoque, se ligado, é o do produto, sem separar por cor.
               </p>
               {usaPaleta && (
-                <div className="mt-2">
+                <div className="mt-2 grid gap-2">
+                  <Campo label="Quantas cores a cliente pode escolher">
+                    <select
+                      value={maxCores}
+                      onChange={(e) => setMaxCores(Number(e.target.value))}
+                      aria-describedby="produto-max-cores-ajuda"
+                      className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+                    >
+                      <option value={1}>Uma cor só</option>
+                      <option value={2}>Até 2 cores misturadas</option>
+                      <option value={3}>Até 3 cores misturadas</option>
+                    </select>
+                  </Campo>
+                  <p id="produto-max-cores-ajuda" className="-mt-1 text-[12px] text-[var(--muted)]">
+                    Na página do produto, a cliente marca uma cor ou mistura até esse número, e o pedido chega com as cores na ordem que ela escolheu.
+                  </p>
                   <Campo label="Cor da foto (opcional)">
                     <input
                       value={corDaFoto}

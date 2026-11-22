@@ -45,9 +45,9 @@ const produtos: ProdutoLoja[] = [
       { id: ROSA, nome: "Rosa" },
       { id: AZUL, nome: "Azul" },
     ],
-    categoriaId: null, usaPaleta: false, prontaEntrega: false, esgotado: false,
+    categoriaId: null, usaPaleta: false, maxCores: 1, prontaEntrega: false, esgotado: false,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, prontaEntrega: false, esgotado: false },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, maxCores: 1, prontaEntrega: false, esgotado: false },
 ];
 
 describe("limparCarrinho", () => {
@@ -323,5 +323,35 @@ describe("pronta entrega (22/11/2026)", () => {
       esgotados,
     );
     expect(itens).toEqual([{ produtoId: BOLSA, skuId: AZUL, variacaoNome: "Azul", quantidade: 2 }]);
+  });
+});
+
+describe("limparCarrinho com várias cores (22/11/2026)", () => {
+  const PALETA: ProdutoLoja = {
+    id: BOLSA,
+    nome: "Bolsa Lua",
+    descricao: null,
+    preco: 189,
+    fotos: [],
+    variacoes: [
+      { id: "foto", nome: "Cor da foto", hex: null },
+      { id: ROSA, nome: "Cor 812 Rosa", hex: "#B05468" },
+      { id: AZUL, nome: "Cor 801 Azul", hex: "#6DA9D2" },
+    ],
+    categoriaId: null,
+    usaPaleta: true,
+    maxCores: 2,
+    prontaEntrega: false,
+    esgotado: false,
+  };
+  it("guarda duas cores juntas com o nome do pedido", () => {
+    const itens = limparCarrinho([{ produtoId: BOLSA, skuId: `${ROSA}+${AZUL}`, quantidade: 1 }], [PALETA]);
+    expect(itens).toEqual([
+      { produtoId: BOLSA, skuId: `${ROSA}+${AZUL}`, variacaoNome: "Cores 812 Rosa + 801 Azul", quantidade: 1 },
+    ]);
+  });
+  it("tira a mistura quando o produto volta a aceitar uma cor só", () => {
+    const itens = limparCarrinho([{ produtoId: BOLSA, skuId: `${ROSA}+${AZUL}`, quantidade: 1 }], [{ ...PALETA, maxCores: 1 }]);
+    expect(itens).toEqual([]);
   });
 });

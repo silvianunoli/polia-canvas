@@ -342,7 +342,7 @@ const LISTA = [
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
-          'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
+          'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'O botão "Ordem na vitrine", ao lado de "Importar planilha", abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
@@ -1009,13 +1009,14 @@ const LISTA = [
         titulo: "Dar a cara da marca",
         itens: [
           'O logo e a cor vêm de Configurações, em "Logo e cor" ("Trocar o logo em Configurações" leva até lá). Em "Cara da loja", dá pra subir uma capa, trocar a cor de destaque e escrever a chamada e o texto de apoio.',
+          'Ainda em "Cara da loja", "Subir um favicon" troca o ícone da aba do navegador: PNG quadrado, de 48 a 512 px (o ideal é 512 x 512), até 1 MB. Sem favicon, a aba mostra o ícone da Pólia.',
           "Sem capa, a loja monta a abertura com as fotos dos produtos.",
         ],
       },
       {
         titulo: "Pôr um banner rotativo",
         itens: [
-          'Em "Banner rotativo", clique em "Subir o primeiro banner". Cabem até 5 imagens (JPG, PNG ou WEBP, até 3 MB), de preferência deitadas, em 1600 x 600 px.',
+          'Em "Banner rotativo", clique em "Subir o primeiro banner". Cabem até 5 imagens, cada uma com exatamente 1600 x 600 px, em JPG ou PNG de até 3 MB. Imagem de outro tamanho não sobe: assim o banner aparece inteiro, sem corte.',
           "Na vitrine, elas passam sozinhas no topo, uma a cada 5 segundos. As setas de cada banner mudam a ordem e a lixeira tira.",
           "Com banner, o nome da loja fica em cima dele e a capa sai do topo. A chamada, se tiver, aparece logo abaixo.",
         ],
@@ -1026,6 +1027,7 @@ const LISTA = [
           'Em "Paleta de cores", escolha a cor, escreva o código (opcional) e o nome e clique em "Adicionar cor". Cada cor salva na hora.',
           '"Colar várias de uma vez" aceita uma lista, uma cor por linha: código, nome e a cor no formato #RRGGBB (ex.: 801 Azul Bondi #6DA9D2).',
           'Pra cliente escolher a cor, abra o produto em Produtos e marque "A cliente escolhe a cor da paleta da loja". Na página do produto, as cores aparecem em bolinhas, com "Cor da foto" primeiro.',
+          'Se o produto aceita "Até 2 cores misturadas" (ou 3), a cliente marca uma cor ou mistura até esse número, e o pedido chega com as cores na ordem em que ela tocou, por exemplo "Cores 812 Hibisco + 806 Off White".',
           '"Mostrar as cores na página inicial" põe uma faixa com a paleta e a seção "Escolha a sua cor". Ela e o "Aviso sobre as cores" valem depois de "Salvar a loja".',
         ],
       },

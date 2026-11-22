@@ -3,7 +3,7 @@
 // as máscaras do checkout. Não conhece React nem localStorage; o hook
 // useCarrinhoLoja (components/loja) guarda e lê, e chama daqui.
 import { normalizarWhatsapp } from "@/lib/leads";
-import type { LojaPublica, PedidoLoja, ProdutoLoja, ResultadoPedidoLoja } from "@/lib/loja";
+import { opcaoDoItem, type LojaPublica, type PedidoLoja, type ProdutoLoja, type ResultadoPedidoLoja } from "@/lib/loja";
 
 /** Teto de itens e de quantidade que o pedidoLojaSchema aceita. */
 export const MAX_ITENS_CARRINHO = 50;
@@ -48,7 +48,8 @@ export function limparCarrinho(bruto: unknown, produtos: ProdutoLoja[]): ItemCar
     const skuId = typeof i.skuId === "string" ? i.skuId : null;
     let variacaoNome: string | null = null;
     if (produto.variacoes.length) {
-      const v = produto.variacoes.find((x) => x.id === skuId);
+      // Várias cores juntas ("<id>+<id>") passam pela mesma regra do banco.
+      const v = opcaoDoItem(produto, skuId);
       if (!v || v.esgotada) continue;
       variacaoNome = v.nome;
     } else if (skuId) continue;

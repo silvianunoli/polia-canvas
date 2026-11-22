@@ -53,6 +53,10 @@ export const Route = createFileRoute("/loja/$slug")({
       links: [
         { rel: "stylesheet", href: FONTES_VITRINE },
         { rel: "stylesheet", href: vitrineCss },
+        // Favicon da loja; sem ele, o da Pólia (22/11/2026).
+        loja?.faviconUrl
+          ? { rel: "icon", type: "image/png", href: loja.faviconUrl }
+          : { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
         ...(loja && !ehProduto ? [{ rel: "canonical", href: urlPublicaDaLoja(`/loja/${loja.slug}`) }] : []),
       ],
     };

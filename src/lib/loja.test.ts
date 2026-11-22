@@ -6,6 +6,10 @@ import {
   observacaoDoPedidoLoja,
   lerCoresColadas,
   opcoesDaPaleta,
+  opcaoDasCores,
+  opcaoDoItem,
+  maxCoresValido,
+  pedidoLojaSchema,
   produtosDaCategoria,
   reais,
   rotuloDaCor,
@@ -187,5 +191,53 @@ describe("paleta de cores", () => {
       { codigo: null, nome: "Midnight", hex: "#25304A" },
     ]);
     expect(r.ignoradas).toBe(2);
+  });
+});
+
+describe("várias cores no mesmo produto (22/11/2026)", () => {
+  const a = { id: "11111111-1111-4111-8111-111111111111", nome: "Cor 812 Hibisco", hex: "#B05468" };
+  const b = { id: "22222222-2222-4222-8222-222222222222", nome: "Cor 806 Off White", hex: "#F1EFE7" };
+  const c = { id: "33333333-3333-4333-8333-333333333333", nome: "Cor Azul", hex: "#6DA9D2" };
+  const foto = { id: "foto", nome: "Cor da foto", hex: null };
+  const produto = { usaPaleta: true, maxCores: 2, variacoes: [foto, a, b, c] };
+
+  it("junta as cores na ordem, com o texto que o banco grava", () => {
+    expect(opcaoDasCores(produto, [a.id, b.id])).toEqual({
+      id: `${a.id}+${b.id}`,
+      nome: "Cores 812 Hibisco + 806 Off White",
+      hex: null,
+    });
+    expect(opcaoDasCores(produto, [b.id, a.id])?.nome).toBe("Cores 806 Off White + 812 Hibisco");
+  });
+  it("uma cor só é a própria opção", () => {
+    expect(opcaoDasCores(produto, [a.id])).toEqual(a);
+  });
+  it("recusa acima do máximo, repetida, cor de fora e cor da foto no meio", () => {
+    expect(opcaoDasCores(produto, [a.id, b.id, c.id])).toBeNull();
+    expect(opcaoDasCores(produto, [a.id, a.id])).toBeNull();
+    expect(opcaoDasCores(produto, [a.id, "44444444-4444-4444-8444-444444444444"])).toBeNull();
+    expect(opcaoDasCores(produto, ["foto", a.id])).toBeNull();
+    expect(opcaoDasCores({ ...produto, usaPaleta: false }, [a.id])).toBeNull();
+  });
+  it("lê de volta o que ficou guardado no carrinho", () => {
+    expect(opcaoDoItem(produto, `${a.id}+${b.id}`)?.nome).toBe("Cores 812 Hibisco + 806 Off White");
+    expect(opcaoDoItem(produto, "foto")).toEqual(foto);
+    expect(opcaoDoItem({ ...produto, maxCores: 1 }, `${a.id}+${b.id}`)).toBeNull();
+    expect(opcaoDoItem(produto, null)).toBeNull();
+  });
+  it("máximo de cores fica entre 1 e 3", () => {
+    expect(maxCoresValido(2)).toBe(2);
+    expect(maxCoresValido(9)).toBe(3);
+    expect(maxCoresValido(0)).toBe(1);
+    expect(maxCoresValido(null)).toBe(1);
+  });
+  it("o pedido aceita até 3 cores juntas e nada além", () => {
+    const item = (skuId: string) => ({ produtoId: a.id, skuId, quantidade: 1 });
+    const pedido = (skuId: string) =>
+      pedidoLojaSchema.shape.itens.safeParse([item(skuId)]).success;
+    expect(pedido(`${a.id}+${b.id}`)).toBe(true);
+    expect(pedido(`${a.id}+${b.id}+${c.id}`)).toBe(true);
+    expect(pedido(`${a.id}+${b.id}+${c.id}+${a.id}`)).toBe(false);
+    expect(pedido(`${a.id}+foto`)).toBe(false);
   });
 });

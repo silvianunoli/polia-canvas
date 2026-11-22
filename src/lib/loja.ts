@@ -88,6 +88,81 @@ export const rotuloDaCor = (c: Pick<CorLoja, "codigo" | "nome">) =>
   `Cor ${c.codigo ? `${c.codigo} ` : ""}${c.nome}`;
 
 /**
+ * Banner da Vitrine online (22/11/2026, Sil: "precisa colocar uma especificação de
+ * qual tamanho deve ser o banner, em jpg e png pra nao ficar cortado, se ela colocar
+ * maior ou menor que a especificação, mostrar um erro e não permitir subir").
+ * A vitrine mostra o banner sempre em 8:3, então 1600 x 600 aparece inteiro.
+ */
+export const BANNER_LARGURA = 1600;
+export const BANNER_ALTURA = 600;
+export const BANNER_TIPOS = ["image/jpeg", "image/png"] as const;
+
+/** Por que o banner não pode subir, ou null se pode. */
+export function problemaDoBanner(tipo: string, largura: number, altura: number): string | null {
+  if (!(BANNER_TIPOS as readonly string[]).includes(tipo)) return "O banner precisa ser JPG ou PNG.";
+  if (largura !== BANNER_LARGURA || altura !== BANNER_ALTURA)
+    return `Essa imagem tem ${largura} x ${altura} px. O banner precisa ter exatamente ${BANNER_LARGURA} x ${BANNER_ALTURA} px pra aparecer inteiro, sem corte.`;
+  return null;
+}
+
+/** Favicon da loja (ícone da aba): PNG quadrado, de 48 a 512 px. Sem ele, vale o da Pólia. */
+export const FAVICON_MIN = 48;
+export const FAVICON_MAX = 512;
+export function problemaDoFavicon(tipo: string, largura: number, altura: number): string | null {
+  if (tipo !== "image/png") return "O favicon precisa ser PNG.";
+  if (largura !== altura) return `Essa imagem tem ${largura} x ${altura} px. O favicon precisa ser quadrado.`;
+  if (largura < FAVICON_MIN || largura > FAVICON_MAX)
+    return `Essa imagem tem ${largura} x ${altura} px. O favicon precisa ter entre ${FAVICON_MIN} e ${FAVICON_MAX} px de lado (o ideal é 512 x 512).`;
+  return null;
+}
+
+/** Quantas cores a cliente pode misturar num produto com paleta (produtos.max_cores). */
+export const MAX_CORES_PRODUTO = 3;
+/** Cores juntas no mesmo item do carrinho e do pedido: "<id>+<id>" (o banco confere). */
+export const SEPARADOR_CORES = "+";
+
+/** Prende o máximo de cores entre 1 e 3 (dado estranho vira 1, uma cor só). */
+export function maxCoresValido(n: unknown): number {
+  const v = Math.floor(Number(n));
+  return Number.isFinite(v) && v >= 1 ? Math.min(MAX_CORES_PRODUTO, v) : 1;
+}
+
+/**
+ * Escolha de mais de uma cor vira uma opção só, com id "<id>+<id>" e o mesmo
+ * texto que o banco grava: "Cores 812 Hibisco + 806 Off White". Uma cor só
+ * devolve a própria opção. null quando a escolha não vale pro produto.
+ */
+export function opcaoDasCores(
+  produto: Pick<ProdutoLoja, "usaPaleta" | "maxCores" | "variacoes">,
+  ids: string[],
+): VariacaoLoja | null {
+  if (!produto.usaPaleta || ids.length < 1 || ids.length > produto.maxCores) return null;
+  if (new Set(ids).size !== ids.length) return null;
+  if (ids.length === 1) return produto.variacoes.find((v) => v.id === ids[0]) ?? null;
+  const cores: VariacaoLoja[] = [];
+  for (const id of ids) {
+    const v = produto.variacoes.find((x) => x.id === id);
+    if (!v || v.id === OPCAO_COR_DA_FOTO) return null;
+    cores.push(v);
+  }
+  return {
+    id: ids.join(SEPARADOR_CORES),
+    nome: `Cores ${cores.map((c) => c.nome.replace(/^Cor /, "")).join(" + ")}`,
+    hex: null,
+  };
+}
+
+/** A opção guardada (uma cor, várias cores juntas ou variação comum) de volta. */
+export function opcaoDoItem(
+  produto: Pick<ProdutoLoja, "usaPaleta" | "maxCores" | "variacoes">,
+  skuId: string | null,
+): VariacaoLoja | null {
+  if (!skuId) return null;
+  if (produto.usaPaleta && skuId.includes(SEPARADOR_CORES)) return opcaoDasCores(produto, skuId.split(SEPARADOR_CORES));
+  return produto.variacoes.find((v) => v.id === skuId) ?? null;
+}
+
+/**
  * Opções de um produto com paleta: "Cor da foto" primeiro, depois a paleta.
  * Sem paleta cadastrada, nenhuma opção (o pedido entra como cor da foto).
  */
@@ -130,6 +205,8 @@ export interface ProdutoLoja {
   categoriaId: string | null;
   /** A cliente escolhe a cor da paleta da loja: `variacoes` são as cores. */
   usaPaleta: boolean;
+  /** Com paleta: quantas cores a cliente pode misturar (1 a 3). */
+  maxCores: number;
   /** Pronta entrega (sai sem prazo de produção); false = sob encomenda. */
   prontaEntrega: boolean;
   /** Pronta entrega com estoque ligado e nada pra vender. */
@@ -147,6 +224,8 @@ export interface LojaPublica {
   nome: string;
   logoUrl: string | null;
   capaUrl: string | null;
+  /** Ícone da aba da loja; null = o da Pólia. */
+  faviconUrl: string | null;
   /** Banner rotativo do topo da vitrine (até 5, na ordem da dona). */
   banners: string[];
   cor: string | null;
@@ -191,8 +270,16 @@ export const pedidoLojaSchema = z.object({
     .array(
       z.object({
         produtoId: z.string().uuid(),
-        // Produto com paleta: id da cor ou "foto" (a função do banco confere).
-        skuId: z.union([z.string().uuid(), z.literal("foto")]).nullable().optional(),
+        // Produto com paleta: id da cor, até 3 cores juntas ("<id>+<id>") ou
+        // "foto". A função do banco confere cada cor e o máximo do produto.
+        skuId: z
+          .union([
+            z.string().uuid(),
+            z.literal("foto"),
+            z.string().regex(/^[0-9a-f-]{36}(\+[0-9a-f-]{36}){1,2}$/i),
+          ])
+          .nullable()
+          .optional(),
         quantidade: z.number().int().min(1).max(1000),
       }),
     )

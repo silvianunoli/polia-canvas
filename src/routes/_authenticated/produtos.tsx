@@ -92,7 +92,7 @@ function ProdutosPage() {
       const { data, error } = await supabase
         .from("produtos")
         .select(
-          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, pronta_entrega, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
+          "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, pronta_entrega, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at",
         )
         .eq("user_id", userId!)
         .eq("arquivado", false)

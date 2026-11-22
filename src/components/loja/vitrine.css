@@ -309,6 +309,18 @@
   gap: 12px;
   margin-top: 30px;
 }
+/* Sem imagem ao lado (com banner em cima, por exemplo), o texto fica no centro
+   (Sil, 22/11/2026: "centralizar o texto e os botões abaixo do slogan"). */
+.loja-vitrine .abertura:not(.com-imagem) {
+  text-align: center;
+  justify-items: center;
+}
+.loja-vitrine .abertura:not(.com-imagem) p.sub {
+  margin-inline: auto;
+}
+.loja-vitrine .abertura:not(.com-imagem) .acoes {
+  justify-content: center;
+}
 .loja-vitrine .capa {
   background: var(--superficie);
   border-radius: 28px;
@@ -1434,6 +1446,34 @@
   outline: 2px solid var(--texto);
   outline-offset: 2px;
 }
+/* Várias cores no mesmo produto (22/11/2026): número da ordem na amostra. */
+.loja-vitrine .chip.amostra {
+  position: relative;
+}
+.loja-vitrine .chip:has(input:disabled) {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.loja-vitrine .ordem-cor {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--texto);
+  color: var(--superficie);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
+}
+.loja-vitrine .dica-cores {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--suave);
+}
 .loja-vitrine .aviso-cor {
   margin-top: 12px;
   font-size: 13px;
@@ -1510,11 +1550,11 @@
   overflow: hidden;
   border-radius: 20px;
   background: var(--superficie);
-  aspect-ratio: 4 / 3;
+  /* Mesma proporção do banner que a dona sobe (1600 x 600): aparece inteiro. */
+  aspect-ratio: 8 / 3;
 }
 @media (min-width: 640px) {
   .loja-vitrine .banner-trilho {
-    aspect-ratio: 8 / 3;
     border-radius: 28px;
   }
 }

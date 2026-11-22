@@ -11,6 +11,7 @@ import {
   linhaDaConfig,
   observacaoDoPedidoLoja,
   pedidoLojaSchema,
+  maxCoresValido,
   opcoesDaPaleta,
   slugValido,
   type CorLoja,
@@ -36,6 +37,7 @@ interface LinhaCatalogo {
   subchamada: string | null;
   cor_destaque: string | null;
   capa_path: string | null;
+  favicon_path: string | null;
   whatsapp: string | null;
   instagram: string | null;
   prazo_dias_uteis: number;
@@ -76,7 +78,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -92,6 +94,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       cor_da_foto: string | null;
       pronta_entrega: boolean;
       controla_estoque: boolean;
+      max_cores: number | null;
     }>;
     const ids = lista.map((p) => p.id);
 
@@ -163,6 +166,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         nome,
         logoUrl: urlPublica("marca-logos", perfil.logo_path),
         capaUrl: urlPublica("marca-logos", c.capa_path),
+        faviconUrl: urlPublica("marca-logos", c.favicon_path),
         banners: ((banners ?? []) as unknown as Array<{ path: string }>)
           .map((b) => urlPublica("produtos-fotos", b.path))
           .filter((u): u is string => !!u),
@@ -196,6 +200,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           variacoes,
           categoriaId: p.categoria_id ?? null,
           usaPaleta,
+          maxCores: usaPaleta ? maxCoresValido(p.max_cores) : 1,
           prontaEntrega: !!p.pronta_entrega,
           esgotado,
           };
@@ -263,7 +268,9 @@ export const lerMeuCatalogo = createServerFn({ method: "GET" })
     const c = data as unknown as LinhaCatalogo | null;
     return {
       liberado: pro,
-      catalogo: c ? { ...c, capaUrl: urlPublica("marca-logos", c.capa_path) } : null,
+      catalogo: c
+        ? { ...c, capaUrl: urlPublica("marca-logos", c.capa_path), faviconUrl: urlPublica("marca-logos", c.favicon_path) }
+        : null,
     };
   });
 
@@ -307,23 +314,33 @@ export const abrirFecharLoja = createServerFn({ method: "POST" })
     return { ok: true as const };
   });
 
+/** Grava a capa ou o favicon da loja (arquivo já no marca-logos) e apaga o anterior. */
+async function trocarImagemDaLoja(userId: string, coluna: "capa_path" | "favicon_path", caminho: string | null, nome: string) {
+  if (caminho && !caminho.startsWith(`${userId}/`)) return { ok: false as const, error: `Caminho de ${nome} inválido.` };
+  const { data: atual } = await supabaseAdmin
+    .from("catalogos" as never)
+    .select(coluna)
+    .eq("user_id", userId)
+    .maybeSingle();
+  const { error } = await supabaseAdmin
+    .from("catalogos" as never)
+    .update({ [coluna]: caminho } as never)
+    .eq("user_id", userId);
+  if (error) return { ok: false as const, error: `A Pólia One não conseguiu salvar ${nome === "capa" ? "a capa" : "o favicon"} agora.` };
+  const antiga = (atual as unknown as Record<string, string | null> | null)?.[coluna];
+  if (antiga && antiga !== caminho) await supabaseAdmin.storage.from("marca-logos").remove([antiga]);
+  return { ok: true as const };
+}
+
+const caminhoDaImagem = (input: unknown) => z.object({ caminho: z.string().max(200).nullable() }).parse(input);
+
 export const trocarCapaCatalogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => z.object({ caminho: z.string().max(200).nullable() }).parse(input))
-  .handler(async ({ context, data }) => {
-    if (data.caminho && !data.caminho.startsWith(`${context.userId}/`))
-      return { ok: false as const, error: "Caminho de capa inválido." };
-    const { data: atual } = await supabaseAdmin
-      .from("catalogos" as never)
-      .select("capa_path")
-      .eq("user_id", context.userId)
-      .maybeSingle();
-    const { error } = await supabaseAdmin
-      .from("catalogos" as never)
-      .update({ capa_path: data.caminho } as never)
-      .eq("user_id", context.userId);
-    if (error) return { ok: false as const, error: "A Pólia One não conseguiu salvar a capa agora." };
-    const antiga = (atual as unknown as { capa_path: string | null } | null)?.capa_path;
-    if (antiga && antiga !== data.caminho) await supabaseAdmin.storage.from("marca-logos").remove([antiga]);
-    return { ok: true as const };
-  });
+  .inputValidator(caminhoDaImagem)
+  .handler(({ context, data }) => trocarImagemDaLoja(context.userId, "capa_path", data.caminho, "capa"));
+
+/** Favicon da Vitrine online (22/11/2026). null volta pro ícone da Pólia. */
+export const trocarFaviconCatalogo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(caminhoDaImagem)
+  .handler(({ context, data }) => trocarImagemDaLoja(context.userId, "favicon_path", data.caminho, "favicon"));
