@@ -32,6 +32,7 @@ import {
   pagarConta,
   useContasPagar,
 } from "./contasPagarDados";
+import { FORMAS_SAIDA, ROTULO_FORMA_LANCAMENTO, type FormaLancamento } from "@/lib/formas";
 import { ModalContaPagar } from "./ModalContaPagar";
 
 const fmt = (v: number) => formatarReais(v, { sempreCentavos: true });
@@ -124,9 +125,14 @@ export function SecaoContasPagar({
     toastSucesso("Pagamento desfeito. A conta voltou pra lista e a saída saiu do histórico.");
   };
 
-  const pagar = async (c: ContaPagar, data: string, valorPago?: number) => {
+  const pagar = async (
+    c: ContaPagar,
+    data: string,
+    valorPago?: number,
+    forma?: FormaLancamento | null,
+  ) => {
     setOcupada(c.id);
-    const { error } = await pagarConta(c.id, data, valorPago);
+    const { error } = await pagarConta(c.id, data, valorPago, forma);
     setOcupada(null);
     if (error) {
       console.error("conta_pagar_pagar", error);
@@ -320,7 +326,7 @@ export function SecaoContasPagar({
           conta={pagarEmData}
           hoje={hoje}
           onClose={() => setPagarEmData(null)}
-          onConfirmar={async (data, valorPago) => {
+          onConfirmar={async (data, valorPago, forma) => {
             if (await pagar(pagarEmData, data, valorPago)) setPagarEmData(null);
           }}
           salvando={ocupada === pagarEmData.id}
@@ -382,6 +388,9 @@ function LinhaConta({
           <span className={corDoPrazo}>{rotuloDoVencimento(c.vencimento, hoje)}</span>
           {c.recorrencia === "mensal" && <span className="text-[var(--muted)]">todo mês</span>}
           {c.parcelas && <span className="text-[var(--muted)]">{rotuloDaParcela(c)}</span>}
+          {c.forma && (
+            <span className="text-[var(--muted)]">{ROTULO_FORMA_LANCAMENTO[c.forma]}</span>
+          )}
           {c.documento && (
             <span className="max-w-[220px] truncate text-[var(--muted)]" title={c.documento}>
               doc. {c.documento}
@@ -431,9 +440,10 @@ function ModalPagar({
   salvando: boolean;
   onClose: () => void;
   /** `valorPago` vem undefined quando bate com o original. */
-  onConfirmar: (data: string, valorPago?: number) => void;
+  onConfirmar: (data: string, valorPago?: number, forma?: FormaLancamento | null) => void;
 }) {
   const [data, setData] = useState(hoje);
+  const [forma, setForma] = useState<FormaLancamento | "">(conta.forma ?? "");
   const [cents, setCents] = useState(() => Math.round(conta.valor * 100));
   const valorPago = cents / 100;
   const dataValida = /^\d{4}-\d{2}-\d{2}$/.test(data) && data <= hoje;
@@ -460,7 +470,7 @@ function ModalPagar({
           </button>
           <button
             type="button"
-            onClick={() => onConfirmar(data, diferenca ? valorPago : undefined)}
+            onClick={() => onConfirmar(data, diferenca ? valorPago : undefined, forma || null)}
             disabled={salvando || !dataValida || !valorValido}
             className={BTN_ACAO}
           >
@@ -500,6 +510,22 @@ function ModalPagar({
             placeholder="R$ 0,00"
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-right text-[18px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
           />
+        </Campo>
+      </div>
+      <div className="mt-4 sm:max-w-[50%] sm:pr-2">
+        <Campo label="Forma de pagamento" hint="opcional, entra no fechamento do mês">
+          <select
+            value={forma}
+            onChange={(e) => setForma(e.target.value as FormaLancamento | "")}
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          >
+            <option value="">Não informar</option>
+            {FORMAS_SAIDA.map((f) => (
+              <option key={f} value={f}>
+                {ROTULO_FORMA_LANCAMENTO[f]}
+              </option>
+            ))}
+          </select>
         </Campo>
       </div>
     </Modal>

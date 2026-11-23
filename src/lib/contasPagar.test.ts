@@ -27,6 +27,7 @@ const conta = (vencimento: string, valor: number, extra: Partial<ContaPagar> = {
   pagoEm: null,
   fornecedor: null,
   documento: null,
+  forma: null,
   valorPago: null,
   parcela: null,
   parcelas: null,

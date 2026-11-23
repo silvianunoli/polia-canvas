@@ -20,6 +20,11 @@ export interface VendaLinha extends Venda {
   data: string;
   clienteId: string | null;
   clienteNome: string | null;
+  /**
+   * Entrada que a venda criou no Financeiro. Null em venda recebida = a
+   * entrada foi apagada lá (a FK zera). `undefined` quando a leitura não pediu.
+   */
+  lancamentoId?: string | null;
   subtotal: number;
   frete: number;
   total: number;
@@ -81,6 +86,7 @@ export type VendaBanco = {
   frete: number;
   taxa_canal: number;
   custo_envio?: number | null;
+  lancamento_id?: string | null;
   total: number;
   observacao: string | null;
   venda_itens: ItemBanco[] | null;
@@ -94,6 +100,7 @@ export function vendaDoBanco(v: VendaBanco): VendaLinha {
     status: v.status as StatusVenda,
     clienteId: v.cliente_id,
     clienteNome: v.cliente_nome,
+    ...(v.lancamento_id !== undefined ? { lancamentoId: v.lancamento_id } : {}),
     subtotal: n(v.subtotal),
     desconto: n(v.desconto),
     frete: n(v.frete),
@@ -124,7 +131,7 @@ export function useVendas(userId: string | undefined, de: string, ate: string) {
       const { data, error } = await supabase
         .from("vendas")
         .select(
-          "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)",
+          "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, lancamento_id, total, observacao, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)",
         )
         .eq("user_id", userId!)
         .gte("data", de)

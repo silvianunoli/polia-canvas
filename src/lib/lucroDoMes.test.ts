@@ -3,6 +3,7 @@ import {
   legendaDoLucro,
   lerVendasDoPeriodo,
   lucroDoMes,
+  vendaSemEntrada,
   type LancamentoComOrigem,
   type VendaDoMes,
 } from "./lucroDoMes";
@@ -118,7 +119,9 @@ describe("lucroDoMes", () => {
       11,
     );
     expect(so.valor).toBe(0);
-    expect(legendaDoLucro(so)).toBe("sem a compra de equipamento");
+    expect(legendaDoLucro(so)).toMatch(
+      /^entrou R\$\s0,00 e saiu R\$\s0,00 · compra de equipamento \(R\$\s1\.359,00\) fica fora$/,
+    );
     expect(legendaDoLucro(lucroDoMes([], [], 2026, 11))).toBe("registre entradas e saídas pra ver");
   });
 
@@ -321,8 +324,24 @@ describe("legendaDoLucro", () => {
   it("sem venda: a frase de sempre", () => {
     expect(
       legendaDoLucro(lucroDoMes([lanc("entrada", 100), lanc("saida", 40)], [], 2026, 11)),
-    ).toBe("60% de tudo que entrou");
+    ).toMatch(/^entrou R\$\s100,00 e saiu R\$\s40,00$/);
     expect(legendaDoLucro(lucroDoMes([], [], 2026, 11))).toBe("registre entradas e saídas pra ver");
+  });
+
+  it("compra de equipamento: a frase diz quanto ficou fora (o caso do print da Sil, 23/11)", () => {
+    const l = lucroDoMes(
+      [
+        lanc("saida", 2811.77, { categoria: CATEGORIA_EQUIPAMENTO }),
+        lanc("saida", 448.79, { categoria: "Embalagem" }),
+      ],
+      [],
+      2026,
+      11,
+    );
+    expect(l.valor).toBe(-448.79);
+    expect(legendaDoLucro(l)).toMatch(
+      /^entrou R\$\s0,00 e saiu R\$\s448,79 · compra de equipamento \(R\$\s2\.811,77\) fica fora$/,
+    );
   });
 
   it("vendas que não carregaram: avisa", () => {
@@ -400,5 +419,34 @@ describe("lerVendasDoPeriodo", () => {
     await expect(
       lerVendasDoPeriodo({ from: () => consulta } as never, "u1", "2026-11-01", "2026-11-30"),
     ).rejects.toThrow("falhou");
+  });
+});
+
+describe("venda recebida com a entrada apagada do Financeiro (23/11/2026)", () => {
+  it("sai do lucro: sem entrada e só com saída, o mês dá prejuízo, não lucro", () => {
+    const saida = lanc("saida", 100, { categoria: "Embalagem" });
+    const r = lucroDoMes([saida], [vendaCaderno({ lancamentoId: null })], 2026, 11);
+    expect(r.fonte).toBe("caixa");
+    expect(r.motivo).toBe("sem_vendas");
+    expect(r.valor).toBe(-100);
+    expect(r.base).toBe(0);
+  });
+
+  it("só a venda sem entrada sai; a que ainda tem entrada continua", () => {
+    const r = lucroDoMes(
+      [entradaDaVenda],
+      [vendaCaderno({ lancamentoId: "l1" }), vendaCaderno({ lancamentoId: null })],
+      2026,
+      11,
+    );
+    expect(r.valor).toBe(16.16);
+    expect(r.base).toBe(46.16);
+  });
+
+  it("venda a receber, venda sem líquido e leitura sem a coluna continuam contando", () => {
+    expect(vendaSemEntrada(vendaCaderno({ status: "a_receber", lancamentoId: null }))).toBe(false);
+    expect(vendaSemEntrada(vendaCaderno({ total: 0, lancamentoId: null }))).toBe(false);
+    expect(vendaSemEntrada(vendaCaderno())).toBe(false);
+    expect(vendaSemEntrada(vendaCaderno({ lancamentoId: null }))).toBe(true);
   });
 });

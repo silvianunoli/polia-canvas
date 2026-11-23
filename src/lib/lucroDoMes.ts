@@ -33,6 +33,11 @@ import { subtotalDaVenda, type ItemVenda, type Venda } from "@/lib/vendas";
  * Venda a receber entra no lucro do mês em que foi vendida, como no cartão de
  * Vendas (regime de competência); a legenda diz quanto ainda vai entrar.
  *
+ * Venda recebida cuja entrada foi apagada do Financeiro fica fora (23/11/2026,
+ * Sil: "apaguei as entradas, mas o lucro continua aparecendo"). Apagar a
+ * entrada diz que esse dinheiro não entrou; a venda continua em Vendas, e a
+ * confirmação de exclusão avisa que pra desfazer a venda inteira é cancelar lá.
+ *
  * Cai na conta antiga (entradas - saídas) quando não dá pra usar as vendas:
  * mês sem venda registrada ou leitura das vendas que falhou.
  */
@@ -51,7 +56,18 @@ export interface LancamentoComOrigem extends LancamentoDoMes {
 export type VendaDoMes = Pick<Venda, "status" | "desconto" | "taxaCanal" | "custoEnvio"> & {
   total: number;
   itens: ItemVenda[];
+  /**
+   * Entrada que a venda criou no Financeiro. Null em venda recebida com
+   * líquido = a entrada foi apagada. `undefined` = a leitura não trouxe: conta.
+   */
+  lancamentoId?: string | null;
 };
+
+/** Venda recebida com dinheiro a entrar, mas sem a entrada no Financeiro (foi apagada). */
+export function vendaSemEntrada(v: VendaDoMes): boolean {
+  if (v.status !== "recebida" || v.lancamentoId !== null) return false;
+  return centavos(v.total - v.taxaCanal - (v.custoEnvio ?? 0)) > 0;
+}
 
 export type MotivoContaDeCaixa = "sem_vendas" | "vendas_nao_lidas";
 
@@ -107,7 +123,7 @@ export function lucroDoMes(
   });
 
   if (vendas == null) return caixa("vendas_nao_lidas");
-  const validas = vendas.filter((v) => v.status !== "cancelada");
+  const validas = vendas.filter((v) => v.status !== "cancelada" && !vendaSemEntrada(v));
   if (validas.length === 0) return caixa("sem_vendas");
 
   let lucroVendas = 0;
@@ -165,6 +181,13 @@ export function lucroDoMes(
  */
 export function legendaDoLucro(l: LucroDoMes): string {
   const pct = percentualDe(l.valor, l.base);
+  const reais = (v: number) => formatarReais(v, { sempreCentavos: true });
+  // A compra de equipamento fica fora do número (ONE-193). Dizer o valor dela
+  // (23/11/2026, Sil: "não entendi esse cálculo do lucro"): "sem a compra de
+  // equipamento" sozinho não dizia que tinha uma saída grande fora da conta.
+  const semMaquina = l.compraDeEquipamento
+    ? ` · compra de equipamento (${reais(l.compraDeEquipamento)}) fica fora`
+    : "";
   if (l.fonte === "vendas") {
     const base =
       l.aReceber > 0
@@ -177,15 +200,15 @@ export function legendaDoLucro(l: LucroDoMes): string {
         : l.semCusto === 1
           ? "1 venda sem custo, preencha em Produtos"
           : `${l.semCusto} vendas sem custo, preencha em Produtos`;
-    return `${base} · ${custo}`;
+    return `${base} · ${custo}${semMaquina}`;
   }
-  const semMaquina = l.compraDeEquipamento ? " · sem a compra de equipamento" : "";
   if (l.motivo === "vendas_nao_lidas")
     return `entradas menos saídas · as vendas não carregaram agora${semMaquina}`;
-  if (l.base > 0) return `${pct}% de tudo que entrou${semMaquina}`;
-  return l.compraDeEquipamento
-    ? "sem a compra de equipamento"
-    : "registre entradas e saídas pra ver";
+  if (l.base === 0 && l.valor === 0 && !l.compraDeEquipamento)
+    return "registre entradas e saídas pra ver";
+  // Conta de caixa: a frase mostra a própria conta (entrou - saiu = o número).
+  const saiu = centavos(l.base - l.valor);
+  return `entrou ${reais(l.base)} e saiu ${reais(saiu)}${semMaquina}`;
 }
 
 type ClienteVendas = Pick<SupabaseClient<Database>, "from">;
@@ -196,6 +219,7 @@ type VendaLida = {
   taxa_canal: number | string | null;
   custo_envio: number | string | null;
   total: number | string | null;
+  lancamento_id?: string | null;
   venda_itens:
     | {
         produto_id: string | null;
@@ -225,7 +249,7 @@ export async function lerVendasDoPeriodo(
     client
       .from("vendas")
       .select(
-        "status, desconto, taxa_canal, custo_envio, total, venda_itens(produto_id, produto_nome, quantidade, preco_unitario, custo_unitario)",
+        "status, desconto, taxa_canal, custo_envio, total, lancamento_id, venda_itens(produto_id, produto_nome, quantidade, preco_unitario, custo_unitario)",
       )
       .eq("user_id", userId)
       .gte("data", de)
@@ -240,6 +264,8 @@ export async function lerVendasDoPeriodo(
     taxaCanal: num(v.taxa_canal),
     custoEnvio: num(v.custo_envio),
     total: num(v.total),
+    // Sem a coluna na linha, fica de fora (undefined): a venda conta como sempre.
+    ...(v.lancamento_id !== undefined ? { lancamentoId: v.lancamento_id } : {}),
     itens: (v.venda_itens ?? []).map((i) => ({
       produtoId: i.produto_id,
       produtoNome: i.produto_nome,

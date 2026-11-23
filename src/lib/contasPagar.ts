@@ -4,6 +4,7 @@
 // criam a conta do mês seguinte numa transação só.
 
 import { formatarReais } from "@/lib/formatarReais";
+import type { FormaLancamento } from "@/lib/formas";
 
 export type RecorrenciaConta = "nenhuma" | "mensal";
 export type StatusConta = "a_pagar" | "paga";
@@ -23,6 +24,8 @@ export interface ContaPagar {
   fornecedor: string | null;
   /** NF-e, boleto, ID da transação do Pix. */
   documento: string | null;
+  /** Como ela costuma pagar essa conta; na paga, como pagou. */
+  forma: FormaLancamento | null;
   /** O que saiu de fato. Null em conta paga antes do ONE-207 = pagou o valor original. */
   valorPago: number | null;
   /** "2" de "2 de 3". Null quando a conta não é parcelada. */

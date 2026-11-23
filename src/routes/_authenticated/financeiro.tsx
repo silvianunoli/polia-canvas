@@ -763,7 +763,9 @@ function FinanceiroPage() {
         descricao={
           lancamentoExcluir?.id_externo?.startsWith("equipamento:")
             ? "Essa ação não pode ser desfeita. O equipamento volta pra planejado na aba Equipamentos."
-            : "Essa ação não pode ser desfeita."
+            : lancamentoExcluir?.id_externo?.startsWith("venda:")
+              ? "Essa entrada veio de uma venda. Excluir aqui tira o dinheiro do Financeiro e a venda sai do lucro do mês, mas continua em Vendas e o estoque não volta. Pra desfazer a venda inteira, cancele a venda em Vendas. Essa ação não pode ser desfeita."
+              : "Essa ação não pode ser desfeita."
         }
         textoConfirmar="Excluir"
         destrutivo
@@ -800,7 +802,7 @@ function LinhaLancamento({
               {l.categoria}
             </span>
           )}
-          {entrada && l.forma && <span>{ROTULO_FORMA[chaveDaForma(l.forma)]}</span>}
+          {l.forma && <span>{ROTULO_FORMA[chaveDaForma(l.forma)]}</span>}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-1">

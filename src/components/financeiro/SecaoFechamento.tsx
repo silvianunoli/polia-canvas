@@ -138,30 +138,25 @@ export function SecaoFechamento({
           />
         ) : (
           <>
-            {fechamento.porForma.length > 0 ? (
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {fechamento.porForma.map((f) => (
-                  <li key={f.chave} className="rounded-xl border border-[var(--line)] bg-white p-4">
-                    <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-                      {ROTULO_FORMA[f.chave]}
-                    </p>
-                    <p className="font-cabinet mt-1 text-[22px] leading-none tabular-nums text-[var(--ink)]">
-                      {fmt(f.total)}
-                    </p>
-                    <p className="mt-1 text-[12px] text-[var(--muted)]">
-                      {f.quantidade} {f.quantidade === 1 ? "entrada" : "entradas"}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-[14px] text-[var(--ink-soft)]">Nenhuma entrada em {nomeDoMes}.</p>
-            )}
+            <BlocoPorForma
+              titulo="Entradas por forma de recebimento"
+              itens={fechamento.porForma}
+              unidade={["entrada", "entradas"]}
+              vazio={`Nenhuma entrada em ${nomeDoMes}.`}
+            />
+            <BlocoPorForma
+              titulo="Saídas por forma de pagamento"
+              itens={fechamento.saidasPorForma}
+              unidade={["saída", "saídas"]}
+              vazio={`Nenhuma saída em ${nomeDoMes}.`}
+            />
 
             <p className="mt-4 text-[13px] text-[var(--ink-soft)]">
               Entrou {fmt(fechamento.entradas)} e saiu {fmt(fechamento.saidas)} em {nomeDoMes}.
-              {fechamento.porForma.some((f) => f.chave === "nao_informada") &&
-                " Entrada sem forma fica em “Não informada”: dá pra escolher a forma editando o lançamento no histórico."}
+              {[...fechamento.porForma, ...fechamento.saidasPorForma].some(
+                (f) => f.chave === "nao_informada",
+              ) &&
+                " Lançamento sem forma fica em “Não informada”: dá pra escolher a forma editando o lançamento no histórico."}
             </p>
             {diferencas && diferencas.length > 0 && (
               <p className="mt-1 text-[13px] text-[var(--muted)]">{diferencas.join(" · ")}</p>
@@ -225,5 +220,42 @@ export function SecaoFechamento({
         )}
       </div>
     </section>
+  );
+}
+
+function BlocoPorForma({
+  titulo,
+  itens,
+  unidade,
+  vazio,
+}: {
+  titulo: string;
+  itens: { chave: ChaveForma; total: number; quantidade: number }[];
+  unidade: [string, string];
+  vazio: string;
+}) {
+  return (
+    <div className="mt-4 first:mt-0">
+      <h3 className="text-[13px] font-medium text-[var(--ink-soft)]">{titulo}</h3>
+      {itens.length > 0 ? (
+        <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {itens.map((f) => (
+            <li key={f.chave} className="rounded-xl border border-[var(--line)] bg-white p-4">
+              <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
+                {ROTULO_FORMA[f.chave]}
+              </p>
+              <p className="font-cabinet mt-1 text-[22px] leading-none tabular-nums text-[var(--ink)]">
+                {fmt(f.total)}
+              </p>
+              <p className="mt-1 text-[12px] text-[var(--muted)]">
+                {f.quantidade} {f.quantidade === 1 ? unidade[0] : unidade[1]}
+              </p>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-[14px] text-[var(--muted)]">{vazio}</p>
+      )}
+    </div>
   );
 }

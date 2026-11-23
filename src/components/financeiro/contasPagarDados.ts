@@ -4,6 +4,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { FormaLancamento } from "@/lib/formas";
 import {
   dividirEmParcelas,
   type ContaPagar,
@@ -23,6 +24,7 @@ type ContaBanco = {
   pago_em: string | null;
   fornecedor: string | null;
   documento: string | null;
+  forma: string | null;
   valor_pago: number | null;
   parcela: number | null;
   parcelas: number | null;
@@ -39,6 +41,7 @@ const daLinha = (r: ContaBanco): ContaPagar => ({
   status: r.status as StatusConta,
   pagoEm: r.pago_em,
   fornecedor: r.fornecedor,
+  forma: r.forma as FormaLancamento | null,
   documento: r.documento,
   valorPago: r.valor_pago === null ? null : Number(r.valor_pago),
   parcela: r.parcela,
@@ -60,7 +63,7 @@ export function useContasPagar(userId: string | undefined, pagasDesde: string) {
       const { data, error } = await supabase
         .from("contas_pagar")
         .select(
-          "id, descricao, valor, vencimento, categoria, recorrencia, dia_recorrencia, status, pago_em, fornecedor, documento, valor_pago, parcela, parcelas",
+          "id, descricao, valor, vencimento, categoria, recorrencia, dia_recorrencia, status, pago_em, fornecedor, documento, forma, valor_pago, parcela, parcelas",
         )
         .eq("user_id", userId!)
         .or(`status.eq.a_pagar,pago_em.gte.${pagasDesde}`)
@@ -81,6 +84,7 @@ export interface ContaParaSalvar {
   recorrencia: RecorrenciaConta;
   fornecedor: string | null;
   documento: string | null;
+  forma: FormaLancamento | null;
   /** Só na criação. 2 ou mais divide o valor em parcelas mensais. */
   parcelas?: number;
 }
@@ -132,11 +136,18 @@ export async function salvarConta(
 }
 
 /** `valorPago` vazio = pagou o valor original da conta. */
-export const pagarConta = (id: string, data: string, valorPago?: number) =>
+/** `forma` vazia = a forma cadastrada na conta. */
+export const pagarConta = (
+  id: string,
+  data: string,
+  valorPago?: number,
+  forma?: FormaLancamento | null,
+) =>
   supabase.rpc("pagar_conta", {
     p_conta_id: id,
     p_data: data,
     ...(valorPago !== undefined ? { p_valor: valorPago } : {}),
+    ...(forma ? { p_forma: forma } : {}),
   });
 
 export const desfazerPagamento = (id: string) =>

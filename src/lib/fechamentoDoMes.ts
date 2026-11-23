@@ -11,16 +11,16 @@
 // Puro: sem React nem Supabase. Quem lê o banco é components/financeiro/
 // fechamentoDados.ts; a junção é pelo lancamento_id que cada conta e venda guarda.
 
-import { FORMAS_RECEBIMENTO, ROTULO_TAXA, type FormaRecebimento } from "@/lib/taxas";
+import { ROTULO_FORMA_LANCAMENTO, TODAS_AS_FORMAS, type FormaLancamento } from "@/lib/formas";
 
-export type ChaveForma = FormaRecebimento | "nao_informada";
+export type ChaveForma = FormaLancamento | "nao_informada";
 
 export const ROTULO_FORMA: Record<ChaveForma, string> = {
-  ...ROTULO_TAXA,
+  ...ROTULO_FORMA_LANCAMENTO,
   nao_informada: "Não informada",
-} as Record<ChaveForma, string>;
+};
 
-export const ORDEM_FORMAS: ChaveForma[] = [...FORMAS_RECEBIMENTO, "nao_informada"];
+export const ORDEM_FORMAS: ChaveForma[] = [...TODAS_AS_FORMAS, "nao_informada"];
 
 export interface LancamentoDoFechamento {
   id: string;
@@ -78,7 +78,10 @@ export interface DiaDoFechamento {
 }
 
 export interface FechamentoDoMes {
+  /** Entradas por forma de recebimento. */
   porForma: { chave: ChaveForma; total: number; quantidade: number }[];
+  /** Saídas por forma de pagamento (Sil, 23/11). */
+  saidasPorForma: { chave: ChaveForma; total: number; quantidade: number }[];
   entradas: number;
   saidas: number;
   porDia: DiaDoFechamento[];
@@ -94,8 +97,8 @@ const centavos = (v: number) => Math.round(v * 100) / 100;
 const soma = (a: number, b: number) => centavos(a + b);
 
 export function chaveDaForma(forma: string | null | undefined): ChaveForma {
-  return (FORMAS_RECEBIMENTO as readonly string[]).includes(forma ?? "")
-    ? (forma as FormaRecebimento)
+  return (TODAS_AS_FORMAS as readonly string[]).includes(forma ?? "")
+    ? (forma as FormaLancamento)
     : "nao_informada";
 }
 
@@ -123,6 +126,7 @@ export function fechamentoDoMes(
   const ids = new Set(doMes.map((l) => l.id));
 
   const porForma = new Map<ChaveForma, { total: number; quantidade: number }>();
+  const saidasPorForma = new Map<ChaveForma, { total: number; quantidade: number }>();
   const porDia = new Map<string, DiaDoFechamento>();
   let entradas = 0;
   let saidas = 0;
@@ -138,6 +142,12 @@ export function fechamentoDoMes(
       dia.entradas = soma(dia.entradas, valor);
       entradas = soma(entradas, valor);
     } else if (l.tipo === "saida") {
+      const chave = chaveDaForma(l.forma);
+      const atual = saidasPorForma.get(chave) ?? { total: 0, quantidade: 0 };
+      saidasPorForma.set(chave, {
+        total: soma(atual.total, valor),
+        quantidade: atual.quantidade + 1,
+      });
       dia.saidas = soma(dia.saidas, valor);
       saidas = soma(saidas, valor);
     }
@@ -171,6 +181,10 @@ export function fechamentoDoMes(
     porForma: ORDEM_FORMAS.filter((f) => porForma.has(f)).map((chave) => ({
       chave,
       ...porForma.get(chave)!,
+    })),
+    saidasPorForma: ORDEM_FORMAS.filter((f) => saidasPorForma.has(f)).map((chave) => ({
+      chave,
+      ...saidasPorForma.get(chave)!,
     })),
     entradas,
     saidas,
@@ -254,7 +268,7 @@ export function linhasDaPlanilha(
         dataBr(l.data),
         quem,
         documento,
-        l.tipo === "entrada" ? ROTULO_FORMA[chaveDaForma(l.forma)] : "",
+        ROTULO_FORMA[chaveDaForma(l.forma)],
         l.descricao ?? "",
         l.categoria ?? "",
         reais(original),

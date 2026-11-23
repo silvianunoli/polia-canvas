@@ -1348,6 +1348,7 @@ export type Database = {
           descricao: string
           dia_recorrencia: number | null
           documento: string | null
+          forma: string | null
           fornecedor: string | null
           id: string
           lancamento_id: string | null
@@ -1367,6 +1368,7 @@ export type Database = {
           categoria?: string | null
           descricao: string
           documento?: string | null
+          forma?: string | null
           fornecedor?: string | null
           parcela?: number | null
           parcelas?: number | null
@@ -1379,6 +1381,7 @@ export type Database = {
           categoria?: string | null
           descricao?: string
           documento?: string | null
+          forma?: string | null
           fornecedor?: string | null
           recorrencia?: string
           valor?: number
@@ -3300,7 +3303,12 @@ export type Database = {
         Returns: undefined
       }
       pagar_conta: {
-        Args: { p_conta_id: string; p_data: string; p_valor?: number | null }
+        Args: {
+          p_conta_id: string
+          p_data: string
+          p_valor?: number | null
+          p_forma?: string | null
+        }
         Returns: string
       }
       receber_conta: {

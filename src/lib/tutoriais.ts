@@ -150,7 +150,7 @@ const LISTA = [
       'A Meta do mês nasce em Metas, em "Criar a Meta do mês".',
       'Saída lançada em "Insumos / estoque" não sai de novo do "Quanto lucrou": o material já está no custo de cada produto vendido.',
       'Saída em "Compra de equipamento" também fica fora do "Quanto lucrou": a máquina se paga aos poucos, pela reserva.',
-      'Sem venda registrada no mês, o "Quanto lucrou" é entradas menos saídas, sem a compra de equipamento. Venda de produto sem custo entra inteira, e a frase embaixo do número diz quantas são.',
+      'Sem venda registrada no mês, o "Quanto lucrou" é entradas menos saídas, e a frase embaixo do número mostra a conta. A compra de equipamento fica fora, com o valor dito na frase. Venda de produto sem custo entra inteira, e a frase diz quantas são. Venda recebida cuja entrada foi apagada do Financeiro sai do lucro.',
       'Venda "a receber" já conta no "Quanto lucrou" do mês em que foi feita, como no cartão de Vendas. A frase embaixo do número diz quanto ainda vai entrar.',
     ],
     duvidas: [
@@ -614,8 +614,8 @@ const LISTA = [
       {
         titulo: "Fechar o mês",
         itens: [
-          'Em "Fechamento do mês", escolha o "Mês". Os cartões mostram quanto entrou em cada forma de recebimento, pra bater com o extrato do banco e o relatório da maquininha.',
-          'A forma vem do que você escolhe em "Forma de recebimento": no lançamento de entrada, na venda e no "Recebi". Entrada sem forma aparece em "Não informada".',
+          'Em "Fechamento do mês", escolha o "Mês". Os cartões mostram quanto entrou em cada forma de recebimento e quanto saiu em cada forma de pagamento, pra bater com o extrato do banco e o relatório da maquininha.',
+          'Na entrada, a forma vem do que você escolhe em "Forma de recebimento": no lançamento, na venda e no "Recebi". Na saída, vem da "Forma de pagamento": no lançamento e na conta a pagar. Lançamento sem forma aparece em "Não informada".',
           '"Ver o dia a dia" abre a tabela de cada dia por forma, com as saídas ao lado. Embaixo dos cartões aparecem as taxas descontadas no recebimento e os juros pagos nas contas.',
           '"Baixar planilha do mês" baixa um arquivo que abre no Excel, com cliente ou fornecedor, documento, forma, valor original e valor pago ou recebido de cada lançamento.',
         ],
@@ -625,8 +625,8 @@ const LISTA = [
         itens: [
           'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',
           'Marque "Repete todo mês" pra conta fixa, ou "Dividir em parcelas" pra compra parcelada: a Pólia One cria uma conta por mês e mostra quanto fica cada parcela.',
-          'Quando pagar, clique em "Paguei". Só aí ela vira uma saída do mês.',
-          'Pagou com juros, com desconto ou em outro dia? Use "Paguei em outra data ou valor" no menu da conta. A saída entra com o valor pago, e a conta guarda o original pra comparar.',
+          'Quando pagar, clique em "Paguei". Só aí ela vira uma saída do mês, com a "Forma de pagamento" que você escolheu no cadastro da conta (boleto, Pix, cartão...).',
+          'Pagou com juros, com desconto, em outro dia ou de outro jeito? Use "Paguei em outra data ou valor" no menu da conta. A saída entra com o valor e a forma de pagamento que você marcar, e a conta guarda o original pra comparar.',
         ],
       },
     ],
@@ -1116,7 +1116,8 @@ const LISTA = [
     duvidas: [
       {
         pergunta: "Onde mudo o produto, o preço ou a foto",
-        resposta: "Em Produtos. A Loja da marca só cuida da página inicial: títulos, banners e capas.",
+        resposta:
+          "Em Produtos. A Loja da marca só cuida da página inicial: títulos, banners e capas.",
       },
     ],
   },

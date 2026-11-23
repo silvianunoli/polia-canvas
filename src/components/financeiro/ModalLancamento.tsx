@@ -1,4 +1,9 @@
-import { FORMAS_RECEBIMENTO, ROTULO_TAXA, type FormaRecebimento } from "@/lib/taxas";
+import {
+  formasDoTipo,
+  formaValidaPara,
+  ROTULO_FORMA_LANCAMENTO,
+  type FormaLancamento,
+} from "@/lib/formas";
 import { useId, useMemo, useState, type ChangeEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
@@ -36,7 +41,7 @@ export interface Lancamento {
   categoria: string | null;
   /** Origem ("venda:<id>" quando veio de uma venda). Só vem nas leituras que pedem a coluna. */
   id_externo?: string | null;
-  /** Forma de recebimento da entrada (ONE-207 Fase 3). Só vem nas leituras que pedem a coluna. */
+  /** Forma de recebimento (entrada) ou de pagamento (saída), ONE-207. Só vem nas leituras que pedem a coluna. */
   forma?: string | null;
   created_at: string;
 }
@@ -99,12 +104,13 @@ export function ModalLancamento({
     novaTexto: "",
   }));
   const { categoria, novaAberta: novaCategoriaAberta, novaTexto: novaCategoriaTexto } = selecao;
-  // Forma da entrada pro fechamento do mês (ONE-207 Fase 3). Fica fora do
-  // Painel do Grátis (somenteMesCorrente): o fechamento é do Premium e do Pro.
-  const [forma, setForma] = useState<FormaRecebimento | "">(
-    (lancamentoEdit?.forma as FormaRecebimento | null | undefined) ?? "",
+  // Forma pro fechamento do mês (ONE-207): de recebimento na entrada, de
+  // pagamento na saída (Sil, 23/11). Fica fora do Painel do Grátis
+  // (somenteMesCorrente): o fechamento é do Premium e do Pro.
+  const [forma, setForma] = useState<FormaLancamento | "">(() =>
+    formaValidaPara(lancamentoEdit?.tipo ?? tipoInicial, lancamentoEdit?.forma),
   );
-  const mostraForma = tipo === "entrada" && !somenteMesCorrente;
+  const mostraForma = !somenteMesCorrente;
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -127,6 +133,8 @@ export function ModalLancamento({
 
   const trocarTipo = (t: RegistrarTipo) => {
     setTipo(t);
+    // Boleto não vale pra entrada: troca de tipo limpa a forma que não serve.
+    setForma((f) => formaValidaPara(t, f));
     // categorias dependem do tipo; volta pro padrão do tipo ao trocar
     setSelecao({ categoria: edit ? "" : categoriaPadrao(t), novaAberta: false, novaTexto: "" });
   };
@@ -172,9 +180,8 @@ export function ModalLancamento({
       data,
       descricao: descricao.trim() || null,
       categoria: categoriaFinal,
-      // Saída não tem forma; no Grátis o campo não aparece e a forma que já
-      // existia fica como estava.
-      ...(mostraForma ? { forma: forma || null } : tipo === "saida" ? { forma: null } : {}),
+      // No Grátis o campo não aparece e a forma que já existia fica como estava.
+      ...(mostraForma ? { forma: forma || null } : {}),
     };
     const { error } =
       edit && lancamentoEdit
@@ -289,16 +296,19 @@ export function ModalLancamento({
 
       {mostraForma && (
         <div className="mb-4">
-          <Campo label="Forma de recebimento" hint="opcional, entra no fechamento do mês">
+          <Campo
+            label={tipo === "saida" ? "Forma de pagamento" : "Forma de recebimento"}
+            hint="opcional, entra no fechamento do mês"
+          >
             <select
               value={forma}
-              onChange={(e) => setForma(e.target.value as FormaRecebimento | "")}
+              onChange={(e) => setForma(e.target.value as FormaLancamento | "")}
               className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             >
               <option value="">Não informar</option>
-              {FORMAS_RECEBIMENTO.map((f) => (
+              {formasDoTipo(tipo).map((f) => (
                 <option key={f} value={f}>
-                  {ROTULO_TAXA[f]}
+                  {ROTULO_FORMA_LANCAMENTO[f]}
                 </option>
               ))}
             </select>

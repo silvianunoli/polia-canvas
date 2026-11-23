@@ -5,6 +5,7 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { CATEGORIAS_SAIDA } from "@/lib/categoriasLancamento";
 import { track } from "@/lib/analytics";
 import { formatarReais } from "@/lib/formatarReais";
+import { FORMAS_SAIDA, ROTULO_FORMA_LANCAMENTO, type FormaLancamento } from "@/lib/formas";
 import {
   dividirEmParcelas,
   MAX_PARCELAS,
@@ -75,6 +76,7 @@ export function ModalContaPagar({
   });
   const [fornecedor, setFornecedor] = useState(contaEdit?.fornecedor ?? "");
   const [documento, setDocumento] = useState(contaEdit?.documento ?? "");
+  const [forma, setForma] = useState<FormaLancamento | "">(contaEdit?.forma ?? "");
   const [mensal, setMensal] = useState(contaEdit?.recorrencia === "mensal");
   // Parcelar só na criação: editar uma parcela não refaz o parcelamento.
   const [parcelado, setParcelado] = useState(false);
@@ -118,6 +120,7 @@ export function ModalContaPagar({
         recorrencia: mensal && !parcelado && !ehParcela ? "mensal" : "nenhuma",
         fornecedor,
         documento,
+        forma: forma || null,
         parcelas,
       },
       contaEdit?.id,
@@ -136,6 +139,7 @@ export function ModalContaPagar({
       parcelas: parcelas ?? 0,
       com_fornecedor: !!fornecedor.trim(),
       com_documento: !!documento.trim(),
+      forma: forma || "nao_informada",
     });
     onSaved();
   };
@@ -224,6 +228,23 @@ export function ModalContaPagar({
             onChange={(e) => setVencimento(e.target.value)}
             className={CLASSE_INPUT}
           />
+        </Campo>
+      </div>
+
+      <div className="mb-4 sm:max-w-[50%] sm:pr-2">
+        <Campo label="Forma de pagamento" hint="opcional, como você costuma pagar essa conta">
+          <select
+            value={forma}
+            onChange={(e) => setForma(e.target.value as FormaLancamento | "")}
+            className="w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+          >
+            <option value="">Não informar</option>
+            {FORMAS_SAIDA.map((f) => (
+              <option key={f} value={f}>
+                {ROTULO_FORMA_LANCAMENTO[f]}
+              </option>
+            ))}
+          </select>
         </Campo>
       </div>
 

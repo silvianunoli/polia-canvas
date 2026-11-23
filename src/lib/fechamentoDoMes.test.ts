@@ -50,6 +50,7 @@ describe("fechamentoDoMes", () => {
       { chave: "credito", total: 215.88, quantidade: 1 },
       { chave: "nao_informada", total: 57.97, quantidade: 1 },
     ]);
+    expect(f.saidasPorForma).toEqual([{ chave: "nao_informada", total: 412.08, quantidade: 1 }]);
     expect(f.entradas).toBe(339.11);
     expect(f.saidas).toBe(412.08);
   });
@@ -181,12 +182,33 @@ describe("linhasDaPlanilha", () => {
         "28/10/2026",
         "Nina Rainha das Frutas",
         "NF-e 261026 · parcela 2/3",
-        "",
+        "Não informada",
         "Frutas (2/3) · Nina",
         "",
         "400,00",
         "412,08",
       ],
     ]);
+  });
+});
+
+describe("saídas por forma de pagamento", () => {
+  it("separa boleto, Pix e não informada nas saídas, e o boleto vai pra planilha", () => {
+    const lancs = [
+      l("s1", "saida", 2972.27, "2026-10-22", "boleto", "Aluguel"),
+      l("s2", "saida", 77.8, "2026-10-28", "pix", "Leite condensado"),
+      l("s3", "saida", 110.8, "2026-10-31", "boleto", "Torneira"),
+      l("s4", "saida", 100, "2026-10-27", null, "Freelancer"),
+    ];
+    const f = fechamentoDoMes(lancs, "2026-10", semExtras);
+    expect(f.saidasPorForma).toEqual([
+      { chave: "pix", total: 77.8, quantidade: 1 },
+      { chave: "boleto", total: 3083.07, quantidade: 2 },
+      { chave: "nao_informada", total: 100, quantidade: 1 },
+    ]);
+    expect(f.porForma).toEqual([]);
+    expect(chaveDaForma("boleto")).toBe("boleto");
+    const linhas = linhasDaPlanilha(lancs, "2026-10", semExtras);
+    expect(linhas[0].slice(0, 5)).toEqual(["Saída", "22/10/2026", "", "", "Boleto"]);
   });
 });
