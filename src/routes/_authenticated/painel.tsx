@@ -28,7 +28,7 @@ import { useTestePro } from "@/hooks/useTestePro";
 import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
 import { PrimeirosPassos } from "@/components/painel/PrimeirosPassos";
 import { Modal } from "@/components/ui/Modal";
-import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
+import { CartaoProdutosVendasPainel } from "@/components/painel/CartaoProdutosVendasPainel";
 import { useVendas } from "@/components/vendas/dados";
 import { CartaoPedidosPainel } from "@/components/pedidos/CartaoPedidosPainel";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
@@ -883,10 +883,12 @@ function PainelPage() {
                 </div>
               )}
 
-              {/* Vendas do mês e estoque baixo (VND-03). Some sem venda nem estoque. */}
-              {vendasLiberado && userId && (
+              {/* Produtos e vendas do mês (23/11/2026): ativos, inativos, sem
+                  estoque, ticket médio, mais e menos vendidos. Entrou no lugar
+                  do cartão "Vendas · mês" (VND-03), em todo plano. */}
+              {userId && clientReady && (
                 <div className={SPAN_CLASS[12]}>
-                  <CartaoVendasPainel userId={userId} />
+                  <CartaoProdutosVendasPainel userId={userId} vendasLiberado={vendasLiberado} />
                 </div>
               )}
 
