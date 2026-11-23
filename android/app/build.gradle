@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Chave de envio pra Play Store (AND-01). Os dados ficam em android/keystore.properties,
+// fora do git (ver android/.gitignore). Sem esse arquivo, o build de release cai na
+// chave de teste: serve pra testar no emulador, mas a Play recusa o envio.
+def keystorePropsFile = rootProject.file('keystore.properties')
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
 android {
     namespace = "br.com.usepolia.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -7,7 +16,9 @@ android {
         applicationId "br.com.usepolia.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
+        // Subir o versionCode em 1 a cada pacote enviado pra Play (ela recusa número repetido).
+        // O app carrega o site ao vivo, então mudança de tela não pede versão nova; só mudança nativa.
+        versionCode 2
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -16,10 +27,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (keystorePropsFile.exists()) {
+            release {
+                storeFile rootProject.file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig keystorePropsFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
     }
 }
