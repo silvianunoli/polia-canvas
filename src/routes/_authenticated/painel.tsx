@@ -661,7 +661,7 @@ function PainelPage() {
           <h1
             id="painel-manchete"
             tabIndex={-1}
-            className="font-cabinet mt-2 max-w-[22em] text-[clamp(28px,5vw,44px)] leading-[1.12] text-[var(--ink)] outline-none"
+            className="font-cabinet mt-2 text-[30px] leading-[1.2] text-[var(--ink)] outline-none"
           >
             {cabecalhoPronto ? (
               headline
