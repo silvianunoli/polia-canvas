@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, BarChart3, Check, Lock } from "lucide-react";
-import { toastErro } from "@/lib/toast";
+import { Pencil, BarChart3, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
@@ -22,12 +21,13 @@ import { RegistroDoMes } from "@/components/financeiro/RegistroDoMes";
 import { BlockError } from "@/components/ui/BlockError";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BoasVindas } from "@/components/dicas/BoasVindas";
-import { BTN_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { usePrimeirosPassos } from "@/hooks/usePrimeirosPassos";
 import { useTestePro } from "@/hooks/useTestePro";
 import { DIAS_BONUS_PASSOS, podeGanharBonus } from "@/lib/testePro";
-import { PrimeirosPassos, PrimeirosPassosCarregando } from "@/components/painel/PrimeirosPassos";
+import { PrimeirosPassos } from "@/components/painel/PrimeirosPassos";
+import { Modal } from "@/components/ui/Modal";
 import { CartaoVendasPainel } from "@/components/vendas/CartaoVendasPainel";
 import { useVendas } from "@/components/vendas/dados";
 import { CartaoPedidosPainel } from "@/components/pedidos/CartaoPedidosPainel";
@@ -35,10 +35,10 @@ import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { CartaoContasPainel } from "@/components/financeiro/CartaoContasPainel";
 import { CartaoConsultoria } from "@/components/painel/CartaoConsultoria";
 import {
+  abreJanelaHoje,
   blocoPendente,
-  contaCriadaDepoisDoCorte,
+  chaveJanelaDoDia,
   contaVeBloco,
-  mancheteDoBloco,
   nichoDaConta,
   progressoPrimeirosPassos,
 } from "@/lib/primeirosPassos";
@@ -123,10 +123,6 @@ const SPAN_CLASS: Record<number, string> = {
 // usuária com 26 atrasadas ganhava um cartão de 1.328px e uma parede vermelha
 // na abertura do painel.
 const LIMITE_TAREFAS = 5;
-
-// Intenção do dia é uma frase, não um texto (QA-17: o campo não tinha limite).
-// Cabe folgado o exemplo do placeholder e não estoura a linha do cabeçalho.
-const LIMITE_INTENCAO = 160;
 
 function upgradeHref(rota: string) {
   return `/upgrade?rota=${encodeURIComponent(rota)}&tier=controle`;
@@ -231,13 +227,12 @@ function PainelPage() {
   const qc = useQueryClient();
 
   // O painel exibia métrica de rota que o plano Grátis não abre (Financeiro,
-  // Clientes, Calendário) com link direto e sem cadeado: mostrava o número,
+  // Clientes) com link direto e sem cadeado: mostrava o número,
   // mandava registrar e barrava na porta. Agora cada bloco fechado diz que é
   // fechado e leva pro /upgrade, igual à barra lateral.
   const financeiroLiberado = rotaLiberada("/financeiro", meta.plano);
   const clientesLiberado = rotaLiberada("/clientes", meta.plano);
   const vendasLiberado = rotaLiberada("/vendas", meta.plano);
-  const calendarioLiberado = rotaLiberada("/calendario", meta.plano);
   const destino = (rota: string, liberado: boolean) => (liberado ? rota : upgradeHref(rota));
 
   const dadosQuery = useQuery({
@@ -255,7 +250,6 @@ function PainelPage() {
         quadrosRes,
         tarefasRes,
         concluidasSemanaRes,
-        intencaoRes,
       ] = await Promise.all([
         supabase
           .from("planejamento_campos" as never)
@@ -332,12 +326,6 @@ function PainelPage() {
               .then((r) => ({ data: r.data as unknown as TarefaRow[] | null, error: r.error })),
           ),
         ),
-        supabase
-          .from("intencoes_dia" as never)
-          .select("texto")
-          .eq("user_id", userId!)
-          .eq("data", hoje)
-          .maybeSingle(),
       ]);
       // Leitura que falha não pode virar R$ 0: a tela de dinheiro mentiria.
       const falha = [
@@ -348,7 +336,6 @@ function PainelPage() {
         quadrosRes,
         tarefasRes,
         concluidasSemanaRes,
-        intencaoRes,
       ].find((r) => (r as { error: unknown }).error);
       if (falha) throw (falha as { error: unknown }).error;
       return {
@@ -359,8 +346,6 @@ function PainelPage() {
         quadros: (quadrosRes.data ?? []) as unknown as QuadroRow[],
         tarefas: (tarefasRes.data ?? []) as TarefaRow[],
         concluidasSemana: (concluidasSemanaRes.data ?? []) as TarefaRow[],
-        intencao:
-          (intencaoRes as unknown as { data: { texto: string } | null }).data?.texto ?? null,
       };
     },
   });
@@ -452,7 +437,6 @@ function PainelPage() {
   // Leitura que falhou não mostra o bloco: o Painel segue como era.
   const nichoPasso = useMemo(() => nichoDaConta(user?.user_metadata), [user?.user_metadata]);
   const primeiros = usePrimeirosPassos(userId, nichoPasso);
-  const escolhaTipoPasso = primeiros.dados?.escolhaTipo ?? null;
   const progressoPassos = useMemo(
     () =>
       primeiros.dados
@@ -477,10 +461,28 @@ function PainelPage() {
   // A manchete e o que vem colado nela esperam as duas leituras: sem isso a
   // conta nova via a manchete e o botão de sempre piscarem antes do bloco.
   const cabecalhoPronto = dadosQuery.isSuccess && !primeiros.carregando;
-  // Skeleton do bloco só pra quem a sessão já diz que é conta nova: conta
-  // antiga não pode ver um bloco piscar e sumir.
-  const blocoCarregando =
-    !cabecalhoPronto && !dadosQuery.isError && contaCriadaDepoisDoCorte(user?.created_at);
+  // Janela dos Primeiros passos (23/11/2026, pedido da Sil): o bloco fixo no
+  // topo empurrava os números pra baixo. Agora ele abre sozinho na primeira
+  // visita do dia ao Painel e, fechado, volta pelo botão do topo. O dia visto
+  // fica no navegador: sem acesso a ele, a janela abre a cada visita.
+  const [passosAbertos, setPassosAbertos] = useState(false);
+  useEffect(() => {
+    if (!cabecalhoPronto || !blocoVisivel || !userId) return;
+    const hoje = hojeISO();
+    let diaVisto: string | null = null;
+    try {
+      diaVisto = window.localStorage.getItem(chaveJanelaDoDia(userId));
+    } catch {
+      diaVisto = null;
+    }
+    if (!abreJanelaHoje(diaVisto, hoje)) return;
+    setPassosAbertos(true);
+    try {
+      window.localStorage.setItem(chaveJanelaDoDia(userId), hoje);
+    } catch {
+      // Sem localStorage: abre de novo na próxima visita.
+    }
+  }, [cabecalhoPronto, blocoVisivel, userId]);
 
   // O fim do onboarding antigo marcava as boas-vindas e o balão do tour como
   // vistos (a tela final já fazia esse papel). O bloco faz o mesmo: sem isso,
@@ -548,9 +550,6 @@ function PainelPage() {
 
   // ── Headline ancorada em dado real ──
   const headline: ReactNode = useMemo(() => {
-    if (blocoVisivel) {
-      return mancheteDoBloco(nichoPasso, progressoPassos?.destaque ?? null, escolhaTipoPasso);
-    }
     // Sem venda no mês, a manchete aponta pros Pedidos (31/10/2026: o
     // Planejamento saiu e a Pólia One é vendida como o sistema da marca). O
     // pedido é uma venda com dia de entrega, e o cartão dele mostra o lucro.
@@ -585,15 +584,7 @@ function PainelPage() {
         Seu mês já soma <span className="whitespace-nowrap">{fmtBRL(receitaMes)}</span>.
       </>
     );
-  }, [
-    receitaMes,
-    metaBoa,
-    metaMinima,
-    blocoVisivel,
-    nichoPasso,
-    progressoPassos,
-    escolhaTipoPasso,
-  ]);
+  }, [receitaMes, metaBoa, metaMinima]);
 
   // A manchete nomeava a próxima ação e a tela não oferecia nada clicável: era
   // uma pergunta sem botão. Os dados que escolhem o texto já estavam todos
@@ -617,58 +608,6 @@ function PainelPage() {
   // ── Semana de trabalho (tarefas concluídas por dia) ──
   const [saudacao, setSaudacao] = useState("Olá");
   useEffect(() => setSaudacao(getSaudacao()), []);
-
-  // ── Intenção do dia (persiste por dia; se ficar vazia, fica em silêncio) ──
-  const [editandoIntencao, setEditandoIntencao] = useState(false);
-  const [rascunhoIntencao, setRascunhoIntencao] = useState("");
-  const intencaoSalva = dados?.intencao ?? null;
-  const inputIntencaoRef = useRef<HTMLInputElement>(null);
-  const botaoEditarIntencaoRef = useRef<HTMLButtonElement>(null);
-  useEffect(() => {
-    if (!editandoIntencao) setRascunhoIntencao(intencaoSalva ?? "");
-  }, [intencaoSalva, editandoIntencao]);
-  // Enter/Escape desmontam o <input> (vira <span> + botão "Editar intenção") e,
-  // sem isso, o foco caía pro <body>. O input é focado ao entrar em modo edição;
-  // o botão "Editar intenção" é focado ao sair, depois que o novo elemento
-  // existe no DOM (por isso o requestAnimationFrame nos handlers abaixo).
-  useEffect(() => {
-    if (editandoIntencao) inputIntencaoRef.current?.focus();
-  }, [editandoIntencao]);
-
-  // QA-17 (08/10/2026): o modo edição fechava ANTES do upsert responder. Ao
-  // fechar, o efeito acima trocava o rascunho pelo valor velho, então quando a
-  // gravação falhava o texto novo sumia e a tela mostrava a intenção antiga.
-  // Agora o campo só fecha depois de gravado; se falhar, o texto fica no campo.
-  const [salvandoIntencao, setSalvandoIntencao] = useState(false);
-  const salvarIntencao = async () => {
-    const texto = rascunhoIntencao.trim().slice(0, LIMITE_INTENCAO);
-    if (!texto || !userId || salvandoIntencao) return;
-    setSalvandoIntencao(true);
-    const { error } = await supabase
-      .from("intencoes_dia" as never)
-      .upsert(
-        { user_id: userId, data: hojeISO(), texto, updated_at: new Date().toISOString() } as never,
-        { onConflict: "user_id,data" },
-      );
-    setSalvandoIntencao(false);
-    if (error) {
-      toastErro(
-        "A Pólia One não conseguiu guardar sua intenção. Tenta de novo, o texto continua no campo.",
-      );
-      requestAnimationFrame(() => inputIntencaoRef.current?.focus());
-      return;
-    }
-    // O cache recebe o texto novo antes de sair do modo edição, senão o efeito
-    // do rascunho piscaria o valor velho até o refetch chegar.
-    qc.setQueryData(["painel-dados", userId], (antigo: typeof dados) =>
-      antigo ? { ...antigo, intencao: texto } : antigo,
-    );
-    setEditandoIntencao(false);
-    // Enter/check desmontam o <input>; o foco vai pro botão "Editar intenção"
-    // depois que ele existe no DOM.
-    requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
-    qc.invalidateQueries({ queryKey: ["painel-dados", userId] });
-  };
 
   const dias = useMemo(() => {
     const abrevs = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -705,9 +644,10 @@ function PainelPage() {
 
   return (
     <div className="polia-v3 min-h-screen bg-[var(--bg)] text-[var(--ink)]">
-      {/* Fora enquanto o bloco "Primeiros passos" está na tela: ele já é o
-          recado de boas-vindas e já tem a ação. Esperam o cabeçalho pra conta
-          nova não ver o modal abrir antes de o bloco ser decidido. */}
+      {/* Fora enquanto faltam Primeiros passos: a janela deles já é o recado
+          de boas-vindas e já tem a ação, e duas janelas juntas seriam uma
+          demais. Espera o cabeçalho pra conta nova não ver o modal abrir antes
+          de os passos serem decididos. */}
       {/* O balão do tour (TourBoasVindas) e a faixa dos Módulos 5 e 6 saíram
           com o Planejamento em 31/10/2026: os dois apontavam pra ele. */}
       {cabecalhoPronto && !blocoVisivel && <BoasVindas />}
@@ -736,117 +676,42 @@ function PainelPage() {
           </h1>
 
           {/* Só depois dos dados: antes disso a ação piscava a de conta nova
-              pra quem já passou dela. Com o bloco "Primeiros passos" na
-              tela, a ação é a dele. */}
-          {blocoCarregando && <PrimeirosPassosCarregando />}
-          {blocoVisivel && primeiros.dados && progressoPassos && (
-            <PrimeirosPassos
-              progresso={progressoPassos}
-              nicho={nichoPasso}
-              escolhaSalva={primeiros.dados.escolhaTipo}
-              onEscolherTipo={primeiros.salvarTipo}
-              estagioSalvo={primeiros.dados.estagio}
-              onEscolherEstagio={primeiros.salvarEstagio}
-              nichoSalvo={primeiros.dados.nicho}
-              onEscolherNicho={async (n) => {
-                const ok = await primeiros.salvarNicho(n);
-                // Os três passos já estavam feitos: o bloco sai com a resposta.
-                if (ok && progressoPassos.completo) {
-                  requestAnimationFrame(() => document.getElementById("painel-manchete")?.focus());
-                }
-                return ok;
-              }}
-              bonusDias={convidaBonus ? DIAS_BONUS_PASSOS : null}
-              primeiroPreco={primeiros.dados.primeiroPreco}
-            />
-          )}
-          {!cabecalhoPronto || blocoVisivel ? null : acaoPrincipal.href ? (
-            <LinkInterno
-              href={acaoPrincipal.href}
-              data-tour="acao-principal"
-              className={`${BTN_ACAO} mt-5`}
-            >
-              {acaoPrincipal.texto}
-              <span aria-hidden="true">→</span>
-            </LinkInterno>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setRegistroAberto(true)}
-              data-tour="acao-principal"
-              className={`${BTN_ACAO} mt-5`}
-            >
-              {acaoPrincipal.texto}
-              <span aria-hidden="true">→</span>
-            </button>
-          )}
-
-          {/* A lista "Pra o Painel acender" (ListaPraAcender) saiu em
-              31/10/2026: os itens dela eram os módulos do Planejamento. */}
-
-          {/* Intenção do dia */}
-          <div className="mt-6 max-w-[560px]">
-            <p
-              id="intencao-dia-rotulo"
-              className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]"
-            >
-              {intencaoSalva && !editandoIntencao
-                ? "Intenção de hoje"
-                : "Qual é a sua intenção pra hoje?"}
-            </p>
-            {editandoIntencao || !intencaoSalva ? (
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  ref={inputIntencaoRef}
-                  type="text"
-                  value={rascunhoIntencao}
-                  onChange={(e) => setRascunhoIntencao(e.target.value)}
-                  maxLength={LIMITE_INTENCAO}
-                  readOnly={salvandoIntencao}
-                  aria-busy={salvandoIntencao || undefined}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") void salvarIntencao();
-                    if (e.key === "Escape" && intencaoSalva) {
-                      setEditandoIntencao(false);
-                      requestAnimationFrame(() => botaoEditarIntencaoRef.current?.focus());
-                    }
-                  }}
-                  placeholder="Ex: gravar a aula e não abrir o Instagram até o almoço"
-                  aria-labelledby="intencao-dia-rotulo"
-                  className="h-11 flex-1 rounded-lg border border-[var(--line)] px-3 text-[14px] text-[var(--ink-soft)] focus:border-[var(--secondary-text)]"
-                />
+              pra quem já passou dela. Os Primeiros passos saíram do topo em
+              23/11/2026: viraram janela, e o botão ao lado da ação reabre. */}
+          {cabecalhoPronto && (
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {acaoPrincipal.href ? (
+                <LinkInterno
+                  href={acaoPrincipal.href}
+                  data-tour="acao-principal"
+                  className={BTN_ACAO}
+                >
+                  {acaoPrincipal.texto}
+                  <span aria-hidden="true">→</span>
+                </LinkInterno>
+              ) : (
                 <button
                   type="button"
-                  onClick={() => void salvarIntencao()}
-                  disabled={salvandoIntencao}
-                  aria-label={salvandoIntencao ? "Guardando intenção" : "Guardar intenção"}
-                  title="Guardar intenção"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-[var(--ink)] bg-[var(--secondary)] text-[var(--secondary-ink)] transition-transform duration-150 hover:-translate-y-px disabled:cursor-wait disabled:opacity-60 disabled:hover:translate-y-0"
+                  onClick={() => setRegistroAberto(true)}
+                  data-tour="acao-principal"
+                  className={BTN_ACAO}
                 >
-                  <Check size={16} aria-hidden="true" />
+                  {acaoPrincipal.texto}
+                  <span aria-hidden="true">→</span>
                 </button>
-              </div>
-            ) : (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="min-w-0 break-words font-fraunces text-[19px] italic text-[var(--ink-soft)]">
-                  {intencaoSalva}
-                </span>
+              )}
+              {blocoVisivel && progressoPassos && (
                 <button
-                  ref={botaoEditarIntencaoRef}
                   type="button"
-                  onClick={() => {
-                    setRascunhoIntencao(intencaoSalva ?? "");
-                    setEditandoIntencao(true);
-                  }}
-                  aria-label="Editar intenção"
-                  title="Editar intenção"
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-[var(--muted)] transition-colors hover:bg-[var(--secondary-light)] hover:text-[var(--ink)]"
+                  onClick={() => setPassosAbertos(true)}
+                  aria-haspopup="dialog"
+                  className={BTN_ACAO_CONTORNO}
                 >
-                  <Pencil size={14} aria-hidden="true" />
+                  Primeiros passos · {progressoPassos.totalFeitos} de 3
                 </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {dadosQuery.isError ? (
@@ -1205,34 +1070,41 @@ function PainelPage() {
                   </div>
                 </>
               )}
-
-              {/* Agenda: link pro calendário mensal (entregas + Google, quando conectado) */}
-              <div className={SPAN_CLASS[12]}>
-                <LinkInterno
-                  href={destino("/calendario", calendarioLiberado)}
-                  className="flex items-center gap-4 rounded-xl border border-[var(--line)] bg-white px-5 py-4 text-[14px] text-[var(--ink-soft)] no-underline transition-colors hover:border-[var(--secondary)]"
-                >
-                  <span className="shrink-0 rounded-md border border-[var(--line)] px-2 py-0.5 text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-                    Calendário
-                  </span>
-                  <span>
-                    {calendarioLiberado
-                      ? "Veja o mês inteiro: as entregas dos pedidos e, se conectar, seus compromissos do Google."
-                      : "no Premium, o mês inteiro aparece num só calendário: as entregas dos pedidos e, se conectar, os compromissos do Google."}
-                  </span>
-                  {calendarioLiberado ? (
-                    <span className="ml-auto shrink-0 text-[var(--secondary-text)]">Abrir →</span>
-                  ) : (
-                    <span className="ml-auto">
-                      <SeloControle />
-                    </span>
-                  )}
-                </LinkInterno>
-              </div>
             </div>
           </>
         )}
       </div>
+
+      {blocoVisivel && primeiros.dados && progressoPassos && (
+        <Modal
+          open={passosAbertos}
+          onOpenChange={setPassosAbertos}
+          title="Primeiros passos"
+          largura="media"
+        >
+          <PrimeirosPassos
+            naJanela
+            progresso={progressoPassos}
+            nicho={nichoPasso}
+            escolhaSalva={primeiros.dados.escolhaTipo}
+            onEscolherTipo={primeiros.salvarTipo}
+            estagioSalvo={primeiros.dados.estagio}
+            onEscolherEstagio={primeiros.salvarEstagio}
+            nichoSalvo={primeiros.dados.nicho}
+            onEscolherNicho={async (n) => {
+              const ok = await primeiros.salvarNicho(n);
+              // Os três passos já estavam feitos: a janela sai com a resposta.
+              if (ok && progressoPassos.completo) {
+                setPassosAbertos(false);
+                requestAnimationFrame(() => document.getElementById("painel-manchete")?.focus());
+              }
+              return ok;
+            }}
+            bonusDias={convidaBonus ? DIAS_BONUS_PASSOS : null}
+            primeiroPreco={primeiros.dados.primeiroPreco}
+          />
+        </Modal>
+      )}
 
       {/* Registro aberto pelo botão da manchete. Mesmo componente do cartão
           "Entrou e saiu este mês" e mesma invalidação: o que for salvo aqui

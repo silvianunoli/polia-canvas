@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  abreJanelaHoje,
+  chaveJanelaDoDia,
   CORTE_PRIMEIROS_PASSOS,
   businessTypeDaEscolha,
   contaCriadaDepoisDoCorte,
@@ -303,5 +305,17 @@ describe("estágio do negócio (GRW-66)", async () => {
     expect(escolhaDoNicho({ pessoa: "Confeiteira", tipo: "produto", negocio: null })).toBe(
       "produto",
     );
+  });
+});
+
+describe("janela do dia dos Primeiros passos", () => {
+  it("abre na primeira visita do dia e não abre de novo no mesmo dia", () => {
+    expect(abreJanelaHoje(null, "2026-11-23")).toBe(true);
+    expect(abreJanelaHoje("2026-11-22", "2026-11-23")).toBe(true);
+    expect(abreJanelaHoje("2026-11-23", "2026-11-23")).toBe(false);
+  });
+
+  it("guarda o dia por conta", () => {
+    expect(chaveJanelaDoDia("a")).not.toBe(chaveJanelaDoDia("b"));
   });
 });

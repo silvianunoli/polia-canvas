@@ -68,13 +68,12 @@ const LISTA = [
     rota: "/painel",
     abrir: "Abrir o Painel",
     resumo:
-      "Os três primeiros passos que aparecem no topo do Painel: lançar a próxima encomenda, marcar como entregue e ver o lucro, e calcular o preço de um produto.",
-    trecho: "primeiros",
+      "Os três primeiros passos que abrem numa janela no Painel: lançar a próxima encomenda, marcar como entregue e ver o lucro, e calcular o preço de um produto.",
     passos: [
       {
         titulo: "Antes dos passos: o nicho",
         itens: [
-          'No topo do Painel, o bloco "Primeiros passos" pergunta qual é o nicho da marca.',
+          'Na primeira vez do dia que o Painel abre, a janela "Primeiros passos" aparece e pergunta qual é o nicho da marca.',
           'Clique no que mais combina, como "Papelaria e presentes" ou "Comida e doces". Um clique já salva. Nenhum serviu? Clique em "Outro ramo".',
         ],
       },
@@ -84,12 +83,13 @@ const LISTA = [
           '"Lançar a próxima encomenda": clique em "Quero lançar a encomenda →". No quadro de Pedidos, "Anotar o primeiro pedido" guarda a cliente, o que ela pediu e o dia da entrega. Com o catálogo vazio, "Cadastrar o produto" abre o cadastro ali mesmo e o pedido continua. Quem vende serviço lê "Lançar o próximo pedido".',
           '"Marcar como entregue e ver o lucro": clique em "Quero abrir o quadro de Pedidos →" e passe o pedido até "Entregue". O cartão do pedido mostra quanto ele lucra. Sem o custo do produto, o cartão avisa "falta o custo pra mostrar o lucro".',
           '"Calcular o preço de um produto": clique em "Quero calcular meu preço →". Sem anúncio de nicho, escolha antes "Produto", "Serviço" ou "Os dois". A Calculadora abre na aba certa e, se ainda não houver preço calculado, guarda esse primeiro sozinha.',
-          'O contador "N de 3" acompanha. Com os três feitos, o bloco some e o Painel passa a mostrar o mês.',
+          'O contador "N de 3" acompanha. Com os três feitos e o nicho respondido, a janela para de abrir.',
         ],
       },
     ],
     bomSaber: [
       "Só o primeiro passo que falta fica aceso. Os outros esperam a vez.",
+      'A janela abre sozinha uma vez por dia em cada aparelho. Fechou? O botão "Primeiros passos · N de 3", ao lado do botão principal do Painel, abre de novo.',
       "Conta nova começa com 7 dias do Pro. Com um pedido lançado e entregue durante o teste, ele ganha mais 7 dias. O preço não precisa estar calculado.",
       'O nome da marca fica em Configurações, em "Seu negócio", junto com o logo e a cor.',
       'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados" e "Central de ajuda". No app, os dois ficam na aba Mais.',
@@ -115,13 +115,12 @@ const LISTA = [
     abrir: "Abrir o Painel",
     resumo:
       "A tela de todo dia: quanto falta pro mês, o que entrou, quanto a marca lucrou e as entregas da semana.",
-    trecho: "painel",
     passos: [
       {
         titulo: "Ler o Painel",
         itens: [
           "A frase do topo muda com o mês. Sem venda no mês, ela aponta os Pedidos. Com venda, mostra quanto falta pra fechar as contas ou a Meta do mês.",
-          'O botão logo abaixo é o próximo passo: "Quero lançar um pedido →" sem venda no mês, ou o registro e o Financeiro depois dela.',
+          'O botão logo abaixo é o próximo passo: "Quero lançar um pedido →" sem venda no mês, ou o registro e o Financeiro depois dela. Enquanto faltam Primeiros passos, o botão "Primeiros passos · N de 3" fica ao lado e abre a janela deles.',
           'Os cartões "Receita · mês", "Pedidos · mês" e "Quanto lucrou · mês" resumem o mês.',
           '"Pedidos · mês" conta as vendas do mês, pagas e a receber, o mesmo número do cartão "Vendas · mês", mais as entradas de venda ou serviço lançadas à mão. "Receita · mês" soma só o que já entrou, então pedido a receber aparece nos pedidos antes de aparecer na receita.',
           '"Quanto lucrou · mês" desconta o custo de cada produto vendido, o mesmo lucro do cartão "Vendas · mês", soma as entradas que não vieram de venda e tira as saídas do mês. A frase embaixo do número diz de onde ele veio.',
@@ -135,13 +134,6 @@ const LISTA = [
           'Escolha "Entrada" ou "Saída", preencha o "Valor (R$)" e a "Data".',
           'Escolha a categoria. Venda entra como "Venda de produto" ou "Prestação de serviço".',
           'Clique em "Salvar lançamento".',
-        ],
-      },
-      {
-        titulo: "Deixar a intenção do dia",
-        itens: [
-          'Em "Qual é a sua intenção pra hoje?", escreva o que vale o dia, como "gravar a aula e não abrir o Instagram até o almoço".',
-          "Aperte Enter pra guardar. O lápis edita.",
         ],
       },
     ],

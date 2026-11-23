@@ -52,7 +52,13 @@ export function PrimeirosPassos({
   onEscolherNicho,
   bonusDias = null,
   primeiroPreco = null,
+  naJanela = false,
 }: {
+  /**
+   * Dentro da janela do Painel (23/11/2026): o título e o "X" vêm do Modal,
+   * então o bloco perde a caixa e o rótulo e fica só com a contagem.
+   */
+  naJanela?: boolean;
   progresso: ProgressoPrimeirosPassos;
   nicho: NichoDoPasso | null;
   escolhaSalva: EscolhaTipo | null;
@@ -71,6 +77,7 @@ export function PrimeirosPassos({
 }) {
   const tituloId = useId();
   const tituloRef = useRef<HTMLHeadingElement>(null);
+  const contagemRef = useRef<HTMLParagraphElement>(null);
   const servico = vendeServico(nicho, escolhaSalva);
   const preco = textoPassoPreco(nicho, escolhaSalva);
   const pedido = textoPassoPedido(servico);
@@ -101,19 +108,34 @@ export function PrimeirosPassos({
     );
   };
 
+  const contagem = `${progresso.totalFeitos} de ${ORDEM_PASSOS.length}`;
+
   return (
     <section
-      aria-labelledby={tituloId}
-      className="mt-6 max-w-[640px] rounded-xl border border-[var(--line)] bg-white p-4 sm:p-5"
+      aria-labelledby={naJanela ? undefined : tituloId}
+      aria-label={naJanela ? "Primeiros passos" : undefined}
+      className={
+        naJanela
+          ? ""
+          : "mt-6 max-w-[640px] rounded-xl border border-[var(--line)] bg-white p-4 sm:p-5"
+      }
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
-        <h2 id={tituloId} ref={tituloRef} tabIndex={-1} className={`${ROTULO} outline-none`}>
-          Primeiros passos
-        </h2>
-        <span className="text-[13px] tabular-nums text-[var(--muted)]">
-          {progresso.totalFeitos} de {ORDEM_PASSOS.length}
-        </span>
-      </div>
+      {naJanela ? (
+        <p
+          ref={contagemRef}
+          tabIndex={-1}
+          className="px-1 text-[13px] tabular-nums text-[var(--muted)] outline-none"
+        >
+          {contagem} feitos
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-baseline justify-between gap-2 px-1">
+          <h2 id={tituloId} ref={tituloRef} tabIndex={-1} className={`${ROTULO} outline-none`}>
+            Primeiros passos
+          </h2>
+          <span className="text-[13px] tabular-nums text-[var(--muted)]">{contagem}</span>
+        </div>
+      )}
       {bonusDias != null && (
         <p className="mt-1 px-1 text-[14px] text-[var(--ink-soft)]">
           {textoConviteBonus(servico, bonusDias)}
@@ -126,7 +148,8 @@ export function PrimeirosPassos({
             const ok = await onEscolherNicho(n);
             // Com os três passos feitos o bloco sai e o Painel cuida do foco;
             // senão a pergunta some e o foco vai pro rótulo do bloco.
-            if (ok && !progresso.completo) requestAnimationFrame(() => tituloRef.current?.focus());
+            if (ok && !progresso.completo)
+              requestAnimationFrame(() => (tituloRef.current ?? contagemRef.current)?.focus());
             return ok;
           }}
         />

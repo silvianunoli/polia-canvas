@@ -316,3 +316,18 @@ export function mancheteDoBloco(
     ? `${nicho.pessoa}, o próximo pedido entra no quadro por aqui.`
     : `${nicho.pessoa}, a próxima encomenda entra no quadro por aqui.`;
 }
+
+// ── Janela do dia (23/11/2026, pedido da Sil) ──
+// O bloco fixo no topo do Painel empurrava os números pra baixo enquanto a
+// conta não tinha pedido. Agora os passos abrem numa janela na primeira visita
+// do dia ao Painel; fechada, ela só volta pelo botão "Primeiros passos" do topo.
+
+/** Chave do navegador onde fica o último dia em que a janela abriu sozinha. */
+export function chaveJanelaDoDia(userId: string): string {
+  return `polia-primeiros-passos-dia:${userId}`;
+}
+
+/** A janela abre sozinha se ainda não abriu hoje (dias em AAAA-MM-DD). */
+export function abreJanelaHoje(diaVisto: string | null, hoje: string): boolean {
+  return diaVisto !== hoje;
+}
