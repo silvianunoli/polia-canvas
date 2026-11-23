@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileText, Lock, Upload, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, FileText, Lock, Upload, Wallet } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -788,27 +788,52 @@ function LinhaLancamento({
   onExcluir: () => void;
 }) {
   const entrada = l.tipo === "entrada";
+  // Entrada em turquesa e saída em vermelho (Sil, 23/11/2026: "as entradas
+  // tivessem uma cor e as saídas outras"; "saídas podem ser em vermelho").
+  // Tokens: o fundo claro no ícone e na etiqueta, o tom forte só no texto.
+  const Icone = entrada ? ArrowDownLeft : ArrowUpRight;
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border-b border-[var(--line)] px-3 py-4 transition-colors duration-150 hover:bg-white">
-      <div className="min-w-0">
-        <p className="text-[15px] text-[var(--ink-soft)]">
-          {l.descricao || (entrada ? "Entrada" : "Saída")}
-        </p>
-        <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-[var(--muted)]">
-          <span>{fmtData(l.data)}</span>
-          {l.categoria && (
-            <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
-              {l.categoria}
-            </span>
-          )}
-          {l.forma && <span>{ROTULO_FORMA[chaveDaForma(l.forma)]}</span>}
-        </p>
+      <div className="flex min-w-0 items-center gap-3">
+        <span
+          aria-hidden="true"
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+            entrada
+              ? "bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+              : "bg-[var(--danger-soft)] text-[var(--danger)]"
+          }`}
+        >
+          <Icone size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[15px] text-[var(--ink-soft)]">
+            <span className="sr-only">{entrada ? "Entrada: " : "Saída: "}</span>
+            {l.descricao || (entrada ? "Entrada" : "Saída")}
+          </p>
+          <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-[var(--muted)]">
+            <span>{fmtData(l.data)}</span>
+            {l.categoria && (
+              <span className="rounded-md border border-[var(--line)] bg-white px-2 py-0.5 text-[11px] text-[var(--ink-soft)]">
+                {l.categoria}
+              </span>
+            )}
+            {l.forma && (
+              <span
+                className={`rounded-md px-2 py-0.5 text-[11px] text-[var(--ink-soft)] ${
+                  entrada ? "bg-[var(--secondary-light)]" : "bg-[var(--danger-soft)]"
+                }`}
+              >
+                {ROTULO_FORMA[chaveDaForma(l.forma)]}
+              </span>
+            )}
+          </p>
+        </div>
       </div>
       <div className="flex shrink-0 items-center gap-1">
         <p
           className={`font-cabinet text-[19px] tabular-nums ${
-            entrada ? "text-[var(--ink)]" : "text-[var(--ink-soft)]"
+            entrada ? "text-[var(--secondary-text)]" : "text-[var(--danger)]"
           }`}
         >
           {entrada ? "+ " : "− "}
