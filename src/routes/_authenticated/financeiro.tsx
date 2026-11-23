@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDownLeft, ArrowUpRight, FileText, Lock, Upload, Wallet } from "lucide-react";
+import * as Abas from "@radix-ui/react-tabs";
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronDown,
+  FileText,
+  Lock,
+  Upload,
+  Wallet,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -12,14 +21,18 @@ import { Modal } from "@/components/ui/Modal";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { situacaoDaConta } from "@/lib/contasPagar";
+import { listaAReceber } from "@/lib/contasReceber";
+import { ehCompraDeEquipamento } from "@/lib/projecao.functions";
+import { useContasPagar } from "@/components/financeiro/contasPagarDados";
+import { useAReceber } from "@/components/financeiro/contasReceberDados";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { registrar } from "@/lib/founder-eventos";
-import { hojeISO, mesAnoAtual, mesAnoDe, ehMesAtual } from "@/lib/data.functions";
+import { hojeISO } from "@/lib/data.functions";
 import { formatarReais } from "@/lib/formatarReais";
 import { numerosDoMes } from "@/lib/numerosDoMes";
 import { legendaDoLucro, lucroDoMes } from "@/lib/lucroDoMes";
-import { intervaloDoPeriodo } from "@/lib/vendas";
 import { useVendas } from "@/components/vendas/dados";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { temNumerosDoMes, tierDosNumeros } from "@/lib/planos";
@@ -39,7 +52,7 @@ import { ModalImportar } from "@/components/financeiro/ModalImportar";
 import { SecaoContasPagar } from "@/components/financeiro/SecaoContasPagar";
 import { SecaoAReceber } from "@/components/financeiro/SecaoAReceber";
 import { SecaoFechamento } from "@/components/financeiro/SecaoFechamento";
-import { chaveDaForma, ROTULO_FORMA } from "@/lib/fechamentoDoMes";
+import { chaveDaForma, limitesDoMesISO, ROTULO_FORMA } from "@/lib/fechamentoDoMes";
 import { LinkInterno } from "@/components/ui/LinkInterno";
 
 interface FinanceiroSearch {
@@ -113,8 +126,33 @@ function numeroDe(texto: string): number {
   return Number.isFinite(v) ? v : 0;
 }
 
-type PeriodoId = "mes" | "passado" | "custom";
 type FiltroTipo = "todos" | "entrada" | "saida";
+
+/**
+ * Abas do Financeiro (23/11/2026, Sil: "ela tá bem confusa"). Antes eram 9
+ * blocos empilhados e o histórico ficava no fim, depois de três telas.
+ */
+type AbaFinanceiro = "lancamentos" | "pagar" | "receber" | "fechamento";
+
+// Âncoras que outras telas usam pra chegar aqui (Painel: "Ver contas"; sino:
+// links das novidades). Abrem a aba certa.
+const ABA_DA_ANCORA: Record<string, AbaFinanceiro> = {
+  "#contas-a-pagar": "pagar",
+  "#a-receber": "receber",
+  "#fechamento": "fechamento",
+};
+
+/** 30 dias antes de hoje: o mesmo corte que as seções usam (mesma chave de cache). */
+function trintaDiasAntes(hoje: string): string {
+  const [a, m, d] = hoje.split("-").map(Number);
+  return new Date(Date.UTC(a, m - 1, d - 30)).toISOString().slice(0, 10);
+}
+
+function nomeDoMes(anoMes: string): string {
+  const [a, m] = anoMes.split("-").map(Number);
+  if (!a || !m) return "";
+  return new Date(a, m - 1, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
 
 function FinanceiroPage() {
   const { user } = useSupabaseSession();
@@ -126,11 +164,27 @@ function FinanceiroPage() {
   // ── "Agora" só é lido no cliente pra não divergir da hidratação SSR (mesmo padrão de painel.tsx) ──
   const [clientReady, setClientReady] = useState(false);
   useEffect(() => setClientReady(true), []);
-  const { ano: anoAtual, mes: mesAtual } = useMemo(
-    () => (clientReady ? mesAnoAtual() : { ano: 0, mes: 0 }),
-    [clientReady],
-  );
   const hojeISOStr = useMemo(() => (clientReady ? hojeISO() : ""), [clientReady]);
+  const mesDeHoje = hojeISOStr.slice(0, 7);
+
+  // Um mês só pra tela inteira (cartões, lançamentos e fechamento). Antes o
+  // histórico tinha "Este mês/Mês passado/Personalizado" e o fechamento outro
+  // seletor, e dava pra estar olhando dois meses diferentes ao mesmo tempo.
+  const [mesEscolhido, setMesEscolhido] = useState("");
+  const anoMes = mesEscolhido || mesDeHoje;
+  const [anoSel, mesSel] = anoMes ? anoMes.split("-").map(Number) : [0, 0];
+  const ehMesDeHoje = !!anoMes && anoMes === mesDeHoje;
+
+  const [aba, setAba] = useState<AbaFinanceiro>("lancamentos");
+  useEffect(() => {
+    const daAncora = () => {
+      const alvo = ABA_DA_ANCORA[window.location.hash];
+      if (alvo) setAba(alvo);
+    };
+    daAncora();
+    window.addEventListener("hashchange", daAncora);
+    return () => window.removeEventListener("hashchange", daAncora);
+  }, []);
 
   // ── Modal ──
   const [modalAberto, setModalAberto] = useState(false);
@@ -145,11 +199,8 @@ function FinanceiroPage() {
   const [lancamentoExcluir, setLancamentoExcluir] = useState<Lancamento | null>(null);
   const [excluindoLancamento, setExcluindoLancamento] = useState(false);
 
-  // ── Filtros do histórico ──
-  const [periodo, setPeriodo] = useState<PeriodoId>("mes");
+  // ── Filtro dos lançamentos ──
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
-  const [customDe, setCustomDe] = useState("");
-  const [customAte, setCustomAte] = useState("");
 
   const dadosQuery = useQuery({
     queryKey: ["financeiro", userId],
@@ -223,57 +274,84 @@ function FinanceiroPage() {
 
   const initial = (user?.user_metadata?.full_name ?? user?.email ?? "P").charAt(0).toUpperCase();
 
-  // ── Computado: mês corrente ──
+  // ── Computado: mês escolhido no topo ──
   // Mesma conta do Painel e do "atual" da Meta do mês em Metas (numerosDoMes).
   const { entradas, saidas, numEntradasMes } = useMemo(() => {
-    if (!clientReady) return { entradas: 0, saidas: 0, numEntradasMes: 0 };
-    const n = numerosDoMes(lancamentos, anoAtual, mesAtual);
+    if (!anoSel) return { entradas: 0, saidas: 0, numEntradasMes: 0 };
+    const n = numerosDoMes(lancamentos, anoSel, mesSel);
     return { entradas: n.entradas, saidas: n.saidas, numEntradasMes: n.registrosDeEntrada };
-  }, [lancamentos, clientReady, anoAtual, mesAtual]);
+  }, [lancamentos, anoSel, mesSel]);
 
   // Lucro do mês: mesma conta do "Quanto lucrou" do Painel (lib/lucroDoMes,
   // 01/11/2026), que desconta o custo de cada produto vendido. Era entradas -
   // saídas, e a venda inteira aparecia como lucro em quem não tem saída.
   const periodoVendas = useMemo(
-    () => (clientReady ? intervaloDoPeriodo("mes", new Date()) : { de: "", ate: "" }),
-    [clientReady],
+    () => (anoMes ? limitesDoMesISO(anoMes) : { de: "", ate: "" }),
+    [anoMes],
   );
   const vendasMesQuery = useVendas(
-    clientReady ? userId : undefined,
+    anoMes ? userId : undefined,
     periodoVendas.de,
     periodoVendas.ate,
   );
   const lucroInfo = useMemo(() => {
-    if (!clientReady || vendasMesQuery.isLoading) return null;
+    if (!anoSel || vendasMesQuery.isLoading) return null;
     return lucroDoMes(
       lancamentos,
       vendasMesQuery.isError ? null : (vendasMesQuery.data ?? []),
-      anoAtual,
-      mesAtual,
+      anoSel,
+      mesSel,
     );
   }, [
     lancamentos,
-    clientReady,
-    anoAtual,
-    mesAtual,
+    anoSel,
+    mesSel,
     vendasMesQuery.isLoading,
     vendasMesQuery.isError,
     vendasMesQuery.data,
   ]);
 
-  const lancamentosMes = useMemo(() => {
-    if (!clientReady) return [];
-    return lancamentos.filter((l) => l.data && ehMesAtual(l.data));
-  }, [lancamentos, clientReady]);
+  const lancamentosMes = useMemo(
+    () => (anoMes ? lancamentos.filter((l) => l.data && l.data.slice(0, 7) === anoMes) : []),
+    [lancamentos, anoMes],
+  );
 
-  const maiorSaidaCategoria = useMemo(() => {
+  // O cartão "Saiu" diz quanto foi equipamento: é a diferença que o lucro
+  // deixa fora, e sem ela os dois cartões pareciam se contradizer.
+  const { maiorSaidaCategoria, saidaEmEquipamento } = useMemo(() => {
     let maior: Lancamento | null = null;
+    let equipamento = 0;
     for (const l of lancamentosMes) {
       if (l.tipo !== "saida") continue;
+      if (ehCompraDeEquipamento(l.categoria)) equipamento += Number(l.valor) || 0;
       if (!maior || Number(l.valor) > Number(maior.valor)) maior = l;
     }
-    return maior?.categoria || (maior ? "Outros" : null);
+    return {
+      maiorSaidaCategoria: maior?.categoria || (maior ? "Outros" : null),
+      saidaEmEquipamento: Math.round(equipamento * 100) / 100,
+    };
   }, [lancamentosMes]);
+
+  // Contagem das abas: mesmas leituras (e mesmo cache) das seções.
+  const corte = hojeISOStr ? trintaDiasAntes(hojeISOStr) : "";
+  const contasPagarQuery = useContasPagar(userId, corte);
+  const aReceberQuery = useAReceber(userId, corte);
+  const contagemPagar = useMemo(() => {
+    const abertas = (contasPagarQuery.data ?? []).filter((c) => c.status === "a_pagar");
+    return {
+      total: abertas.length,
+      atrasadas: hojeISOStr
+        ? abertas.filter((c) => situacaoDaConta(c.vencimento, hojeISOStr) === "atrasada").length
+        : 0,
+    };
+  }, [contasPagarQuery.data, hojeISOStr]);
+  const contagemReceber = useMemo(
+    () =>
+      aReceberQuery.data
+        ? listaAReceber(aReceberQuery.data.contas, aReceberQuery.data.vendas).length
+        : 0,
+    [aReceberQuery.data],
+  );
 
   // Categorias de saída que ela já usa, pras contas a pagar (ONE-127).
   const categoriasDeSaida = useMemo(
@@ -336,23 +414,10 @@ function FinanceiroPage() {
   }, []);
 
   // ── Histórico filtrado ──
-  const lancamentosFiltrados = useMemo(() => {
-    return lancamentos.filter((l) => {
-      if (filtroTipo !== "todos" && l.tipo !== filtroTipo) return false;
-      const { ano, mes } = mesAnoDe(l.data);
-      if (periodo === "mes") {
-        if (ano !== anoAtual || mes !== mesAtual) return false;
-      } else if (periodo === "passado") {
-        const mp = mesAtual === 1 ? 12 : mesAtual - 1;
-        const ap = mesAtual === 1 ? anoAtual - 1 : anoAtual;
-        if (ano !== ap || mes !== mp) return false;
-      } else if (periodo === "custom") {
-        if (customDe && l.data < customDe) return false;
-        if (customAte && l.data > customAte) return false;
-      }
-      return true;
-    });
-  }, [lancamentos, filtroTipo, periodo, customDe, customAte, anoAtual, mesAtual]);
+  const lancamentosFiltrados = useMemo(
+    () => lancamentosMes.filter((l) => filtroTipo === "todos" || l.tipo === filtroTipo),
+    [lancamentosMes, filtroTipo],
+  );
 
   const abrirModal = (tipo: RegistrarTipo) => {
     setLancamentoEdit(null);
@@ -414,82 +479,120 @@ function FinanceiroPage() {
     );
   }
 
+  const mesPorExtenso = nomeDoMes(anoMes);
+  const classeCartaoRotulo =
+    "text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]";
+  const classeAba =
+    "-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] data-[state=active]:border-[var(--ink)] data-[state=active]:text-[var(--ink)]";
+  const contador = (n: number, alerta = false) => (
+    <span
+      className={`rounded-full px-2 py-0.5 text-[12px] tabular-nums ${
+        alerta
+          ? "bg-[var(--danger-soft)] text-[var(--danger)]"
+          : "bg-[var(--surface)] text-[var(--ink-soft)]"
+      }`}
+    >
+      {n}
+    </span>
+  );
+
   return (
     <PaginaLogada
-      dica="financeiro"
       largura="larga"
-      eyebrow={
-        clientReady && mesAtual > 0
-          ? `Este mês · ${new Date(anoAtual, mesAtual - 1, 1).toLocaleDateString("pt-BR", { month: "long" })}`
-          : "Este mês"
-      }
+      eyebrow={mesPorExtenso ? `Mês · ${mesPorExtenso}` : "Este mês"}
       titulo="O dinheiro do mês."
       subtitulo="Tudo o que entrou e saiu, e quanto lucrou no fim."
       acao={
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
+            <span className="sr-only">Mês</span>
+            <input
+              type="month"
+              value={anoMes}
+              max={mesDeHoje || undefined}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                setMesEscolhido(e.target.value);
+                track("financeiro_mes_trocado", { mes_de_hoje: e.target.value === mesDeHoje });
+              }}
+              className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            />
+          </label>
+          <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
+            + Entrada
+          </button>
+          <button type="button" onClick={() => abrirModal("saida")} className={BTN_ACAO_CONTORNO}>
+            + Saída
+          </button>
           <button
             type="button"
-            onClick={() => setImportarAberto(true)}
+            onClick={() => setModalVendaAberto(true)}
             className={BTN_ACAO_CONTORNO}
           >
-            <Upload size={14} aria-hidden="true" />
-            Importar extrato
+            + Venda
           </button>
-          {ehProjete ? (
-            <button
-              type="button"
-              onClick={() => setResumoContadorAberto(true)}
-              className={BTN_ACAO_CONTORNO}
-            >
-              <FileText size={14} aria-hidden="true" />
-              Resumo pro contador
-            </button>
-          ) : (
-            <Link
-              to="/upgrade"
-              search={{ rota: "/financeiro/resumo", tier: tierDosNumeros() }}
-              className={`${BTN_ACAO_CONTORNO} text-[var(--muted)]`}
-            >
-              <Lock size={14} aria-hidden="true" />
-              Resumo pro contador
-            </Link>
-          )}
+          <MenuOpcoes
+            align="end"
+            ariaLabel="Mais ações do Financeiro"
+            trigger={
+              <span className="inline-flex items-center gap-1 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)]">
+                Mais
+                <ChevronDown size={14} aria-hidden="true" />
+              </span>
+            }
+            itens={[
+              { label: "Importar extrato", icone: Upload, onClick: () => setImportarAberto(true) },
+              ehProjete
+                ? {
+                    label: "Resumo pro contador",
+                    icone: FileText,
+                    onClick: () => setResumoContadorAberto(true),
+                  }
+                : {
+                    label: "Resumo pro contador (Pro)",
+                    icone: Lock,
+                    onClick: () =>
+                      navigate({
+                        to: "/upgrade",
+                        search: { rota: "/financeiro/resumo", tier: tierDosNumeros() },
+                      }),
+                  },
+            ]}
+          />
         </div>
       }
     >
       <div>
-        {/* ───────── 1. Cards de resumo ───────── */}
-        <section className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {/* ───────── 1. Os três números do mês ───────── */}
+        <section className="mt-2 grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="Números do mês">
           <div className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Entradas
-            </p>
+            <p className={classeCartaoRotulo}>Entrou</p>
             <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
               {fmt(entradas)}
             </p>
             <p className="mt-1 text-[13px] text-[var(--muted)]">
               {numEntradasMes === 0
-                ? "nenhuma entrada ainda"
-                : `${numEntradasMes} ${numEntradasMes === 1 ? "registro" : "registros"}`}
+                ? "nenhuma entrada no mês"
+                : `${numEntradasMes} ${numEntradasMes === 1 ? "entrada" : "entradas"}`}
             </p>
           </div>
 
           <div className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Saídas
-            </p>
+            <p className={classeCartaoRotulo}>Saiu</p>
             <p className="font-cabinet mt-1 text-[32px] leading-none text-[var(--ink)]">
               {fmt(saidas)}
             </p>
             <p className="mt-1 text-[13px] text-[var(--muted)]">
-              {maiorSaidaCategoria ? `maior saída: ${maiorSaidaCategoria}` : "nenhuma saída ainda"}
+              {saidaEmEquipamento > 0
+                ? `${fmt(saidaEmEquipamento)} em compra de equipamento`
+                : maiorSaidaCategoria
+                  ? `maior saída: ${maiorSaidaCategoria}`
+                  : "nenhuma saída no mês"}
             </p>
           </div>
 
           <div className="rounded-xl border border-[var(--line)] bg-white p-5">
-            <p className="text-[10px] font-accent font-bold uppercase tracking-[0.14em] text-[var(--muted)]">
-              Lucro do mês
-            </p>
+            <p className={classeCartaoRotulo}>Lucro do mês</p>
             <p
               className={`font-cabinet mt-1 text-[32px] leading-none ${
                 lucroInfo && lucroInfo.valor < 0 ? "text-[var(--danger)]" : "text-[var(--ink)]"
@@ -503,15 +606,13 @@ function FinanceiroPage() {
           </div>
         </section>
 
-        {/* ───────── 2. Meta do mês (régua) ───────── */}
-        <section className="mt-6 rounded-xl bg-[var(--surface)] p-6 md:p-8">
-          <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
-            Onde o mês está agora
-          </p>
-
-          {metaAlvo <= 0 ? (
-            <p className="mt-6 text-[14px] text-[var(--ink-soft)]">
-              Ainda sem Meta do mês ativa.{" "}
+        {/* ───────── 2. Meta do mês ─────────
+            Só no mês de hoje (a Meta do mês é a do mês corrente). Sem meta,
+            uma linha; a régua grande só quando existe meta. */}
+        {ehMesDeHoje &&
+          (metaAlvo <= 0 ? (
+            <p className="mt-4 text-[13px] text-[var(--muted)]">
+              Sem Meta do mês por enquanto.{" "}
               {/* A régua acha a meta pelo nome exato "Meta do mês": o link abre
                   em Metas o atalho que já cria com esse nome e em R$. */}
               <LinkInterno
@@ -522,90 +623,50 @@ function FinanceiroPage() {
               </LinkInterno>
             </p>
           ) : (
-            <ReguaDaMeta entradas={entradas} metaAlvo={metaAlvo} marcas={marcas} />
-          )}
+            <section className="mt-6 rounded-xl bg-[var(--surface)] p-6 md:p-8">
+              <p className="text-[11px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+                Onde o mês está agora
+              </p>
+              <ReguaDaMeta entradas={entradas} metaAlvo={metaAlvo} marcas={marcas} />
+              {/* Até 31/10/2026 o texto mandava pro Planejamento (Quanto vale), que saiu
+                  da Pólia One. As marcas continuam pra quem já tinha respondido. */}
+              <p className="mt-0 text-[13px] text-[var(--muted)]">
+                Essa barra acompanha a "Meta do mês", uma das suas metas em Metas.
+                {marcas.length > 0 &&
+                  " As marcas de mínimo e celebrar vêm das respostas que a marca já guardou."}
+              </p>
+            </section>
+          ))}
 
-          {/* Até 31/10/2026 o texto mandava pro Planejamento (Quanto vale), que saiu
-              da Pólia One. As marcas continuam pra quem já tinha respondido. */}
-          <p className="mt-0 text-[13px] text-[var(--muted)]">
-            Essa barra acompanha a "Meta do mês", uma das suas metas em Metas.
-            {marcas.length > 0 &&
-              " As marcas de mínimo e celebrar vêm das respostas que a marca já guardou."}
-          </p>
-        </section>
-
-        {/* ───────── 3. Ações rápidas ───────── */}
-        <section className="mt-6 flex flex-wrap gap-3">
-          <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
-            + Registrar entrada
-          </button>
-          <button
-            type="button"
-            onClick={() => setModalVendaAberto(true)}
-            className={BTN_ACAO_CONTORNO}
+        {/* ───────── 3. Abas ───────── */}
+        <Abas.Root
+          value={aba}
+          onValueChange={(v) => {
+            setAba(v as AbaFinanceiro);
+            track("financeiro_aba", { aba: v });
+          }}
+          className="mt-8"
+        >
+          <Abas.List
+            aria-label="Partes do Financeiro"
+            className="flex flex-wrap gap-1 border-b border-[var(--line)]"
           >
-            + Registrar venda
-          </button>
-          <button type="button" onClick={() => abrirModal("saida")} className={BTN_ACAO_CONTORNO}>
-            + Registrar saída
-          </button>
-        </section>
+            <Abas.Trigger value="lancamentos" className={classeAba}>
+              Lançamentos {contador(lancamentosMes.length)}
+            </Abas.Trigger>
+            <Abas.Trigger value="pagar" className={classeAba}>
+              A pagar {contador(contagemPagar.total, contagemPagar.atrasadas > 0)}
+            </Abas.Trigger>
+            <Abas.Trigger value="receber" className={classeAba}>
+              A receber {contador(contagemReceber)}
+            </Abas.Trigger>
+            <Abas.Trigger value="fechamento" className={classeAba}>
+              Fechamento
+            </Abas.Trigger>
+          </Abas.List>
 
-        {/* ───────── A receber (ONE-207 Fase 2) ───────── */}
-        {userId && (
-          <SecaoAReceber
-            userId={userId}
-            hoje={hojeISOStr}
-            categoriasDoHistorico={categoriasDeEntrada}
-            onLancamentosMudaram={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
-          />
-        )}
-
-        {/* ───────── Contas a pagar (ONE-127) ───────── */}
-        {userId && (
-          <SecaoContasPagar
-            userId={userId}
-            hoje={hojeISOStr}
-            categoriasDoHistorico={categoriasDeSaida}
-            onLancamentosMudaram={() => qc.invalidateQueries({ queryKey: ["financeiro", userId] })}
-          />
-        )}
-
-        {/* ───────── Fechamento do mês (ONE-207 Fase 3) ─────────
-            Só depois do "agora" do cliente: o mês inicial vem de hoje. */}
-        {userId && hojeISOStr && (
-          <SecaoFechamento userId={userId} hoje={hojeISOStr} lancamentos={lancamentos} />
-        )}
-
-        {/* ───────── 4. Histórico ───────── */}
-        <section className="mt-12">
-          <h2 className="text-[20px] leading-tight text-[var(--ink)]">Histórico</h2>
-
-          {/* Filtros */}
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="flex flex-wrap gap-2">
-              {(
-                [
-                  { id: "mes", label: "Este mês" },
-                  { id: "passado", label: "Mês passado" },
-                  { id: "custom", label: "Personalizado" },
-                ] as { id: PeriodoId; label: string }[]
-              ).map((p) => {
-                const ativo = periodo === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setPeriodo(p.id)}
-                    aria-pressed={ativo}
-                    className={`${BTN_MIUDO} ${ativo ? "!bg-[var(--secondary)]" : "bg-white"}`}
-                  >
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="flex flex-wrap gap-2">
+          <Abas.Content value="lancamentos" className="focus-visible:outline-none">
+            <div className="mt-4 flex flex-wrap gap-2">
               {(
                 [
                   { id: "todos", label: "Todos" },
@@ -627,66 +688,85 @@ function FinanceiroPage() {
                 );
               })}
             </div>
-            {periodo === "custom" && (
-              <div className="flex flex-wrap items-center gap-3">
-                <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
-                  De
-                  <input
-                    type="date"
-                    value={customDe}
-                    onChange={(e) => setCustomDe(e.target.value)}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-                  />
-                </label>
-                <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
-                  Até
-                  <input
-                    type="date"
-                    value={customAte}
-                    onChange={(e) => setCustomAte(e.target.value)}
-                    className="rounded-lg border border-[var(--line)] px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-                  />
-                </label>
-              </div>
-            )}
-          </div>
 
-          {/* Lista */}
-          <div className="mt-6">
-            {lancamentos.length === 0 ? (
-              <Vazio
-                icone={Wallet}
-                titulo="Nenhum lançamento ainda."
-                texto="Cada entrada e saída registrada aqui vira o número de quanto a marca lucra no fim do mês."
-                acao={
-                  <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
-                    Quero registrar a primeira
-                  </button>
-                }
-              />
-            ) : lancamentosFiltrados.length === 0 ? (
-              <Vazio
-                icone={Wallet}
-                titulo="Nenhum lançamento nesse período."
-                texto="Troca o filtro logo acima pra ver outro período, ou registra uma entrada agora."
-                acao={
-                  <button type="button" onClick={() => abrirModal("entrada")} className={BTN_ACAO}>
-                    Quero registrar uma entrada
-                  </button>
-                }
-              />
-            ) : (
-              lancamentosFiltrados.map((l) => (
-                <LinhaLancamento
-                  key={l.id}
-                  l={l}
-                  onEditar={() => abrirEditar(l)}
-                  onExcluir={() => excluirLancamento(l)}
+            <div className="mt-4">
+              {lancamentos.length === 0 ? (
+                <Vazio
+                  icone={Wallet}
+                  titulo="Nenhum lançamento ainda."
+                  texto="Cada entrada e saída registrada aqui vira o número de quanto a marca lucra no fim do mês."
+                  acao={
+                    <button
+                      type="button"
+                      onClick={() => abrirModal("entrada")}
+                      className={BTN_ACAO}
+                    >
+                      Quero registrar a primeira
+                    </button>
+                  }
                 />
-              ))
+              ) : lancamentosFiltrados.length === 0 ? (
+                <Vazio
+                  icone={Wallet}
+                  denso
+                  titulo={
+                    filtroTipo === "todos"
+                      ? `Nada lançado em ${mesPorExtenso}.`
+                      : `Nenhuma ${filtroTipo === "entrada" ? "entrada" : "saída"} em ${mesPorExtenso}.`
+                  }
+                  texto="Troque o mês no topo da tela ou registre agora pelos botões de cima."
+                />
+              ) : (
+                lancamentosFiltrados.map((l) => (
+                  <LinhaLancamento
+                    key={l.id}
+                    l={l}
+                    onEditar={() => abrirEditar(l)}
+                    onExcluir={() => excluirLancamento(l)}
+                  />
+                ))
+              )}
+            </div>
+          </Abas.Content>
+
+          <Abas.Content value="pagar" className="focus-visible:outline-none">
+            {userId && (
+              <SecaoContasPagar
+                userId={userId}
+                hoje={hojeISOStr}
+                categoriasDoHistorico={categoriasDeSaida}
+                onLancamentosMudaram={() =>
+                  qc.invalidateQueries({ queryKey: ["financeiro", userId] })
+                }
+              />
             )}
-          </div>
-        </section>
+          </Abas.Content>
+
+          <Abas.Content value="receber" className="focus-visible:outline-none">
+            {userId && (
+              <SecaoAReceber
+                userId={userId}
+                hoje={hojeISOStr}
+                categoriasDoHistorico={categoriasDeEntrada}
+                onLancamentosMudaram={() =>
+                  qc.invalidateQueries({ queryKey: ["financeiro", userId] })
+                }
+              />
+            )}
+          </Abas.Content>
+
+          <Abas.Content value="fechamento" className="focus-visible:outline-none">
+            {/* Só depois do "agora" do cliente: o mês vem de hoje até ela trocar. */}
+            {userId && hojeISOStr && anoMes && (
+              <SecaoFechamento
+                userId={userId}
+                hoje={hojeISOStr}
+                anoMes={anoMes}
+                lancamentos={lancamentos}
+              />
+            )}
+          </Abas.Content>
+        </Abas.Root>
       </div>
 
       {/* ───────── 5. Modal ───────── */}
@@ -777,6 +857,16 @@ function FinanceiroPage() {
   );
 }
 
+/**
+ * Nome na lista sem a categoria repetida na frente ("Compra de equipamento ·
+ * Prensa" vira "Prensa"): a categoria já aparece na etiqueta da linha.
+ */
+function nomeDoLancamento(l: Lancamento): string {
+  const d = l.descricao ?? "";
+  const prefixo = l.categoria ? `${l.categoria} · ` : "";
+  return prefixo && d.startsWith(prefixo) ? d.slice(prefixo.length) : d;
+}
+
 /* ============== Linha do histórico + menu de opções ============== */
 function LinhaLancamento({
   l,
@@ -809,7 +899,7 @@ function LinhaLancamento({
         <div className="min-w-0">
           <p className="text-[15px] text-[var(--ink-soft)]">
             <span className="sr-only">{entrada ? "Entrada: " : "Saída: "}</span>
-            {l.descricao || (entrada ? "Entrada" : "Saída")}
+            {nomeDoLancamento(l) || (entrada ? "Entrada" : "Saída")}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-2 text-[12px] text-[var(--muted)]">
             <span>{fmtData(l.data)}</span>

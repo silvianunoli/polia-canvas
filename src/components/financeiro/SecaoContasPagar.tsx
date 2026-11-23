@@ -186,7 +186,7 @@ export function SecaoContasPagar({
   return (
     <section
       id="contas-a-pagar"
-      className="mt-12 scroll-mt-24"
+      className="mt-6 scroll-mt-24"
       aria-labelledby="titulo-contas-pagar"
     >
       <div className="flex flex-wrap items-end justify-between gap-3">

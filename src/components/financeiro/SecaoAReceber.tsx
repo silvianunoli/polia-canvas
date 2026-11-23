@@ -176,7 +176,7 @@ export function SecaoAReceber({
   const prazo = fraseAReceber(resumo);
 
   return (
-    <section id="a-receber" className="mt-12 scroll-mt-24" aria-labelledby="titulo-a-receber">
+    <section id="a-receber" className="mt-6 scroll-mt-24" aria-labelledby="titulo-a-receber">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="titulo-a-receber" className="text-[20px] leading-tight text-[var(--ink)]">

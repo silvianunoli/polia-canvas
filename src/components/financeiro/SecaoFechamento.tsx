@@ -29,14 +29,16 @@ type LancamentoComOrigem = LancamentoDoFechamento & { id_externo?: string | null
 export function SecaoFechamento({
   userId,
   hoje,
+  anoMes,
   lancamentos,
 }: {
   userId: string;
   hoje: string;
+  /** "AAAA-MM": o mês escolhido no topo do Financeiro (um seletor só, 23/11/2026). */
+  anoMes: string;
   lancamentos: readonly LancamentoComOrigem[];
 }) {
   const mesAtual = hoje.slice(0, 7);
-  const [anoMes, setAnoMes] = useState(mesAtual);
   const [verDias, setVerDias] = useState(false);
 
   const doMes = useMemo(() => lancamentosDoMes(lancamentos, anoMes), [lancamentos, anoMes]);
@@ -82,7 +84,7 @@ export function SecaoFechamento({
     ].filter(Boolean);
 
   return (
-    <section id="fechamento" className="mt-12 scroll-mt-24" aria-labelledby="titulo-fechamento">
+    <section id="fechamento" className="mt-6 scroll-mt-24" aria-labelledby="titulo-fechamento">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 id="titulo-fechamento" className="text-[20px] leading-tight text-[var(--ink)]">
@@ -93,16 +95,6 @@ export function SecaoFechamento({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
-            Mês
-            <input
-              type="month"
-              value={anoMes}
-              max={mesAtual}
-              onChange={(e) => e.target.value && setAnoMes(e.target.value)}
-              className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-            />
-          </label>
           <button
             type="button"
             onClick={baixar}

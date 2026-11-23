@@ -564,7 +564,7 @@ const LISTA = [
           "Algum produto dessa venda estava sem custo no catálogo, então a Pólia One não tinha como calcular quanto lucrou. Preencha o custo em Produtos: as vendas que ficaram sem custo passam a usar esse custo, e o lucro se corrige.",
       },
       {
-        pergunta: 'Qual a diferença pra "Registrar venda" do Financeiro',
+        pergunta: 'Qual a diferença pra "+ Venda" do Financeiro',
         resposta:
           "Nenhuma. O botão do Financeiro abre o mesmo formulário de Vendas: registra a venda, guarda o custo de cada produto, baixa o estoque e lança o dinheiro.",
       },
@@ -582,22 +582,22 @@ const LISTA = [
     rota: "/financeiro",
     abrir: "Abrir o Financeiro",
     resumo: "Tudo o que entrou e saiu no mês, e quanto a marca lucrou no fim.",
-    trecho: "financeiro",
     passos: [
       {
         titulo: "Lançar uma entrada ou uma saída",
         itens: [
-          'Clique em "+ Registrar entrada" ou "+ Registrar saída".',
+          'No topo da tela, escolha o mês e clique em "+ Entrada" ou "+ Saída".',
           'Preencha o "Valor (R$)" e a "Data". A "Descrição" é opcional.',
           'Escolha a "Categoria". Se nenhuma servir, "+ nova categoria" cria a sua.',
           'Clique em "Salvar lançamento".',
-          'Venda de produto vai por "+ Registrar venda": ela abre o formulário de Vendas e guarda o custo de cada produto, que o "Lucro do mês" desconta.',
+          'Venda de produto vai por "+ Venda": ela abre o formulário de Vendas e guarda o custo de cada produto, que o "Lucro do mês" desconta.',
+          'O que foi lançado no mês fica na aba "Lançamentos". "Todos", "Entradas" e "Saídas" filtram a lista.',
         ],
       },
       {
         titulo: "Trazer o extrato do banco",
         itens: [
-          'Clique em "Importar extrato" e depois em "Escolher arquivo". Vale .ofx, .csv e .xml de nota fiscal, até vários de uma vez.',
+          'Clique em "Mais", depois em "Importar extrato" e em "Escolher arquivo". Vale .ofx, .csv e .xml de nota fiscal, até vários de uma vez.',
           "Confira cada linha, troque o tipo ou a categoria quando precisar. Linha que já foi importada vem desmarcada.",
           'Clique em "Importar N lançamentos". "Desfazer importação" volta tudo, se precisar.',
         ],
@@ -605,7 +605,7 @@ const LISTA = [
       {
         titulo: "Acompanhar o que falta receber",
         itens: [
-          'A seção "A receber" junta as vendas marcadas como a receber em Vendas e as contas que você cadastra em "+ Nova conta a receber": fiado, resto de encomenda, parcela da cliente.',
+          'A aba "A receber" junta as vendas marcadas como a receber em Vendas e as contas que você cadastra em "+ Nova conta a receber": fiado, resto de encomenda, parcela da cliente.',
           'Na conta nova, preencha o que vai receber, o valor e a data combinada. "Cliente" e "Documento" são opcionais, e "Dividir em parcelas" cria uma conta por mês.',
           'Quando o dinheiro cair, clique em "Recebi". Na conta, escolha a "Forma de recebimento": se a forma tem taxa cadastrada em Vendas, a Pólia One já mostra quanto deve cair, e você confere em "Valor que caiu (R$)".',
           'Só depois do "Recebi" o valor vira uma entrada do mês.',
@@ -614,7 +614,7 @@ const LISTA = [
       {
         titulo: "Fechar o mês",
         itens: [
-          'Em "Fechamento do mês", escolha o "Mês". Os cartões mostram quanto entrou em cada forma de recebimento e quanto saiu em cada forma de pagamento, pra bater com o extrato do banco e o relatório da maquininha.',
+          'Na aba "Fechamento", os cartões mostram quanto entrou em cada forma de recebimento e quanto saiu em cada forma de pagamento, pra bater com o extrato do banco e o relatório da maquininha.',
           'Na entrada, a forma vem do que você escolhe em "Forma de recebimento": no lançamento, na venda e no "Recebi". Na saída, vem da "Forma de pagamento": no lançamento e na conta a pagar. Lançamento sem forma aparece em "Não informada".',
           '"Ver o dia a dia" abre a tabela de cada dia por forma, com as saídas ao lado. Embaixo dos cartões aparecem as taxas descontadas no recebimento e os juros pagos nas contas.',
           '"Baixar planilha do mês" baixa um arquivo que abre no Excel, com cliente ou fornecedor, documento, forma, valor original e valor pago ou recebido de cada lançamento.',
@@ -623,7 +623,7 @@ const LISTA = [
       {
         titulo: "Não esquecer as contas do mês",
         itens: [
-          'Clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',
+          'Na aba "A pagar", clique em "+ Nova conta a pagar" e preencha a conta, o valor e o vencimento. "Fornecedor" e "Documento" (nota, boleto ou ID do Pix) são opcionais.',
           'Marque "Repete todo mês" pra conta fixa, ou "Dividir em parcelas" pra compra parcelada: a Pólia One cria uma conta por mês e mostra quanto fica cada parcela.',
           'Quando pagar, clique em "Paguei". Só aí ela vira uma saída do mês, com a "Forma de pagamento" que você escolheu no cadastro da conta (boleto, Pix, cartão...).',
           'Pagou com juros, com desconto, em outro dia ou de outro jeito? Use "Paguei em outra data ou valor" no menu da conta. A saída entra com o valor e a forma de pagamento que você marcar, e a conta guarda o original pra comparar.',
@@ -632,11 +632,12 @@ const LISTA = [
     ],
     bomSaber: [
       "O Financeiro é do Premium e do Pro. No Grátis, a entrada e a saída do mês são lançadas pelo Painel.",
-      'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês, que nasce em Metas.',
-      "Os cartões do topo mostram sempre o mês atual. Os filtros mudam só o histórico.",
+      'A barra "Onde o mês está agora" compara o que entrou com a Meta do mês, que nasce em Metas. Ela aparece no mês de hoje, quando a meta existe.',
+      'O mês escolhido no topo vale pra tela toda: os cartões "Entrou", "Saiu" e "Lucro do mês", a aba "Lançamentos" e o "Fechamento". "A pagar" e "A receber" mostram tudo o que está em aberto, de qualquer mês.',
+      'O número ao lado de cada aba conta o que tem nela. Em "A pagar", ele fica vermelho quando tem conta atrasada.',
       '"Lucro do mês" é a mesma conta do "Quanto lucrou" do Painel: desconta o custo de cada produto vendido em Vendas, por isso pode ser menor que entradas menos saídas. Saída em "Insumos / estoque" não sai de novo, e "Compra de equipamento" fica fora.',
       "Excluir um lançamento não tem volta.",
-      'No Premium e no Pro, "Resumo pro contador" baixa o mês em PDF ou CSV.',
+      'No Premium e no Pro, "Resumo pro contador", no botão "Mais", baixa o mês em PDF ou CSV.',
     ],
     duvidas: [
       {
@@ -651,12 +652,12 @@ const LISTA = [
       {
         pergunta: "As vendas de Vendas aparecem aqui",
         resposta:
-          'Aparecem no histórico assim que o dinheiro é marcado como recebido. Enquanto estão a receber, ficam na seção "A receber", com o "Recebi" ali mesmo.',
+          'Aparecem em "Lançamentos" assim que o dinheiro é marcado como recebido. Enquanto estão a receber, ficam na aba "A receber", com o "Recebi" ali mesmo.',
       },
       {
         pergunta: "Marquei recebido por engano",
         resposta:
-          'Na conta a receber, abra "Ver as recebidas nos últimos 30 dias" e clique em "Desfazer". A venda de Vendas se corrige cancelando ela em Vendas.',
+          'Na aba "A receber", abra "Ver as recebidas nos últimos 30 dias" e clique em "Desfazer". A venda de Vendas se corrige cancelando ela em Vendas.',
       },
       {
         pergunta: "Comprei insumo. Conta como custo fixo",
@@ -847,7 +848,7 @@ const LISTA = [
           "O status da cliente organiza a lista e não lança dinheiro no Financeiro.",
           'Pedido do quadro: em Pedidos, leve o cartão até "Entregue" e clique em "Sim, lançar no Financeiro".',
           'Venda fora do quadro: clique no nome da cliente pra abrir a ficha e use "Registrar venda". O formulário pede o produto, baixa o estoque e lança no Financeiro.',
-          'Venda sem produto cadastrado: no Financeiro, use "+ Registrar entrada".',
+          'Venda sem produto cadastrado: no Financeiro, use "+ Entrada".',
         ],
       },
     ],
