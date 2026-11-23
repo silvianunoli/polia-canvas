@@ -7,7 +7,7 @@ import { Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { toastSucesso } from "@/lib/toast";
 import {
   custoDaReceita,
@@ -22,6 +22,7 @@ import {
   type LinhaReceita,
 } from "@/lib/producao";
 import { useProdutosComEstoque, type ProdutoVendavel } from "@/components/vendas/dados";
+import { filtrarReceitas, type FiltroReceitas } from "@/lib/catalogoProdutos";
 import { fmt } from "./tipos";
 import { chaveInsumos, salvarInsumo, salvarReceita, useReceitas } from "./insumosDados";
 import { ModalInsumo } from "./ModalInsumo";
@@ -33,25 +34,67 @@ export function ReceitasProdutos({
   userId,
   insumos,
   onAbrirCatalogo,
+  mostrarPecas = true,
+  semTitulo = false,
 }: {
   userId: string;
   insumos: InsumoComSaldo[];
   onAbrirCatalogo: () => void;
+  /**
+   * "dá pra produzir N" e "o material acabou" só fazem sentido quando a conta
+   * conta os materiais. Sem isso, todas as receitas diziam que o material acabou.
+   */
+  mostrarPecas?: boolean;
+  /** Dentro da parte "Receitas" da aba, o botão já diz o que é: sem o título. */
+  semTitulo?: boolean;
 }) {
   const produtosQuery = useProdutosComEstoque(userId);
   const receitasQuery = useReceitas(userId);
   const [editar, setEditar] = useState<ProdutoVendavel | null>(null);
+  const [filtro, setFiltro] = useState<FiltroReceitas>("todas");
   const porId = new Map(insumos.map((i) => [i.id, i]));
-  const produtos = (produtosQuery.data ?? []).filter(produzivel);
+  const todos = (produtosQuery.data ?? []).filter(produzivel);
+  const temReceita = (id: string) => (receitasQuery.data?.get(id) ?? []).length > 0;
+  const comReceita = todos.filter((p) => temReceita(p.id)).length;
+  const produtos = filtrarReceitas(todos, temReceita, filtro);
 
   return (
-    <section className="mt-8" aria-labelledby="receitas-titulo">
-      <h2 id="receitas-titulo" className="font-cabinet text-[18px] font-semibold text-[var(--ink)]">
+    <section className={semTitulo ? "mt-4" : "mt-8"} aria-labelledby="receitas-titulo">
+      <h2
+        id="receitas-titulo"
+        className={
+          semTitulo ? "sr-only" : "font-cabinet text-[18px] font-semibold text-[var(--ink)]"
+        }
+      >
         Receitas
       </h2>
       <p className="mt-1 text-[14px] text-[var(--ink-soft)]">
-        Quanto de cada insumo vai numa peça. É isso que sai do estoque a cada produção.
+        Quanto de cada material vai numa peça. É isso que sai do estoque a cada produção.
       </p>
+      {todos.length > 0 && comReceita > 0 && comReceita < todos.length && (
+        <div role="group" aria-label="Filtrar receitas" className="mt-3 flex flex-wrap gap-2">
+          {(
+            [
+              ["todas", "Todas", todos.length],
+              ["sem", "Sem receita", todos.length - comReceita],
+              ["com", "Com receita", comReceita],
+            ] as const
+          ).map(([id, rotulo, n]) => (
+            <button
+              key={id}
+              type="button"
+              aria-pressed={filtro === id}
+              onClick={() => setFiltro(id)}
+              className={`${BTN_MIUDO} min-h-11 gap-1.5 ${
+                filtro === id ? "!bg-[var(--secondary)]" : "bg-white"
+              }`}
+            >
+              {rotulo}
+              <span className="tabular-nums text-[var(--ink-soft)]">{n}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {produtosQuery.isError || receitasQuery.isError ? (
         <p role="alert" className="mt-3 text-[13px] text-[var(--danger)]">
@@ -69,6 +112,8 @@ export function ReceitasProdutos({
         </p>
       ) : produtosQuery.isLoading || receitasQuery.isLoading ? (
         <p className="mt-3 text-[14px] text-[var(--muted)]">Carregando as receitas…</p>
+      ) : todos.length > 0 && produtos.length === 0 ? (
+        <p className="mt-3 text-[14px] text-[var(--muted)]">Nenhum produto neste filtro.</p>
       ) : produtos.length === 0 ? (
         <div className="mt-3 text-[14px] text-[var(--ink-soft)]">
           <p>Receita é de produto físico. Cadastre um no Catálogo pra montar a receita dele.</p>
@@ -99,7 +144,7 @@ export function ReceitasProdutos({
                       : [
                           `${receita.length} ${receita.length === 1 ? "insumo" : "insumos"}`,
                           custo != null ? `material ${fmt(custo)} por peça` : null,
-                          pecas != null
+                          pecas != null && mostrarPecas
                             ? pecas === 0
                               ? "o material acabou"
                               : `dá pra produzir ${fmtQtd(pecas)}`

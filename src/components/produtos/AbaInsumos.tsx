@@ -1,6 +1,12 @@
-// Aba "Insumos e produção" de Produtos (ONE-133): o material com estoque, a
-// receita de cada produto e o botão de registrar produção. Mesmo desenho da
-// aba Estoque: saldo é soma de movimentos, nada aqui sobrescreve número.
+// Aba "Materiais e receitas" de Produtos (ONE-133; era "Insumos e produção"
+// até 23/11/2026): o material com estoque, a receita de cada produto e o botão
+// de registrar produção. Mesmo desenho da aba Estoque: saldo é soma de
+// movimentos, nada aqui sobrescreve número.
+//
+// Desde 23/11/2026 (desenho em cinza aprovado pela Sil) mostra uma parte por
+// vez, "Materiais" ou "Receitas": as duas listas longas empilhadas viravam
+// uma página sem fim. Sem nenhum material contado (saldo e mínimo zerados),
+// as colunas de estoque, o "O que comprar" e o "o material acabou" somem.
 
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -9,7 +15,7 @@ import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
 import { Campo } from "@/components/ui/Campo";
 import { Modal } from "@/components/ui/Modal";
-import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO_ACAO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { toastSucesso } from "@/lib/toast";
 import {
   arred3,
@@ -17,6 +23,7 @@ import {
   fmtQtd,
   insumoBaixo,
   lerQuantidade,
+  produzivel,
   type InsumoComSaldo,
 } from "@/lib/producao";
 import { fmtData } from "./tipos";
@@ -35,6 +42,8 @@ import { useGiroPorInsumo } from "./reposicaoDados";
 import { hojeISO } from "@/lib/data.functions";
 import { contaEmPeca, diasDeHistorico } from "@/lib/reposicao";
 import { ModalProducao, ProducoesRecentes } from "./ModalProducao";
+import { useProdutosComEstoque } from "@/components/vendas/dados";
+import { controlaMateriais } from "@/lib/catalogoProdutos";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
@@ -53,8 +62,12 @@ export function AbaInsumos({
   const [movimentar, setMovimentar] = useState<InsumoComSaldo | null>(null);
   const [historico, setHistorico] = useState<InsumoComSaldo | null>(null);
   const [produzir, setProduzir] = useState(false);
+  const [parte, setParte] = useState<"materiais" | "receitas">("materiais");
+  const produtosQuery = useProdutosComEstoque(userId);
+  const totalReceitas = (produtosQuery.data ?? []).filter(produzivel).length;
 
   const insumos = query.data ?? [];
+  const contaMateriais = controlaMateriais(insumos);
   const porIdInsumo = new Map(insumos.map((i) => [i.id, i]));
   const recarregar = () => {
     void qc.invalidateQueries({ queryKey: chaveInsumos(userId) });
@@ -93,126 +106,113 @@ export function AbaInsumos({
         </>
       ) : (
         <>
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="button" onClick={() => setProduzir(true)} className={BTN_ACAO}>
-              Registrar produção
-            </button>
-            <button type="button" onClick={() => setEditar("novo")} className={BTN_ACAO_CONTORNO}>
-              + Novo insumo
-            </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <div role="group" aria-label="Parte da aba" className="flex flex-wrap gap-2">
+              {(
+                [
+                  ["materiais", "Materiais", insumos.length],
+                  ["receitas", "Receitas", totalReceitas],
+                ] as const
+              ).map(([id, rotulo, n]) => (
+                <button
+                  key={id}
+                  type="button"
+                  aria-pressed={parte === id}
+                  onClick={() => setParte(id)}
+                  className={`${BTN_MIUDO} min-h-11 gap-1.5 ${
+                    parte === id ? "!bg-[var(--secondary)]" : "bg-white"
+                  }`}
+                >
+                  {rotulo}
+                  <span className="tabular-nums text-[var(--ink-soft)]">{n}</span>
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <button type="button" onClick={() => setEditar("novo")} className={BTN_ACAO_CONTORNO}>
+                + Novo material
+              </button>
+              <button type="button" onClick={() => setProduzir(true)} className={BTN_ACAO}>
+                Registrar produção
+              </button>
+            </div>
           </div>
 
-          {/* Mesma posição de "O que repor" na aba Estoque: no topo, recolhido. */}
-          <div className="mt-6">
-            <SugestaoReposicao
-              id="repor-insumos"
-              titulo="O que comprar"
-              acao="comprar"
-              origem="producao"
-              itens={insumos.map((i) => {
-                const g = giro.data?.get(i.id);
-                return {
-                  chave: i.id,
-                  nome: i.nome,
-                  saldo: i.saldo,
-                  minimo: i.minimo,
-                  saiu: g?.saiu ?? 0,
-                  dias: diasDeHistorico(g?.inicio ?? i.criadoEm, hojeISO()),
-                };
-              })}
-              unidadeDe={(id) => {
-                const un = porIdInsumo.get(id)?.unidade;
-                return un ? ` ${un}` : "";
-              }}
-              inteiroDe={(id) => contaEmPeca(porIdInsumo.get(id)?.unidade ?? "")}
-              carregando={giro.isLoading}
-              erro={giro.isError}
-              onTentarDeNovo={() => void giro.refetch()}
-            />
-          </div>
-
-          <h2 className="font-cabinet text-[18px] font-semibold text-[var(--ink)]">Insumos</h2>
-          {/* Celular: cartão empilhado, a ação principal sempre à vista. */}
-          <ul className="mt-3 flex flex-col gap-3 sm:hidden">
-            {insumos.map((i) => (
-              <li key={i.id} className="rounded-xl border border-[var(--line)] bg-white p-4">
-                <NomeComHistorico insumo={i} onAbrir={() => setHistorico(i)} />
-                <p className="mt-1 text-[14px] text-[var(--ink-soft)]">
-                  <Saldo insumo={i} /> no estoque
-                  {i.minimo > 0 && ` · mínimo ${fmtQtd(i.minimo)} ${i.unidade}`}
+          {parte === "receitas" ? (
+            <>
+              <ReceitasProdutos
+                userId={userId}
+                insumos={insumos}
+                onAbrirCatalogo={onAbrirCatalogo}
+                mostrarPecas={contaMateriais}
+                semTitulo
+              />
+              <ProducoesRecentes userId={userId} />
+            </>
+          ) : (
+            <>
+              {!contaMateriais && (
+                <p className="mt-4 max-w-[640px] text-[13px] text-[var(--muted)]">
+                  A Pólia One ainda não conta quanto tem de cada material. Pra começar, use "Entrada
+                  ou ajuste" num material: daí aparecem o estoque, o mínimo e o que comprar.
                 </p>
-                {i.custoUnitario != null && (
-                  <p className="text-[13px] text-[var(--muted)]">
-                    {fmtCustoUnitario(i.custoUnitario)} por {i.unidade}
-                  </p>
-                )}
-                <div className="mt-3 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMovimentar(i)}
-                    className={`${BTN_MIUDO_ACAO} flex-1 bg-white`}
-                  >
-                    Entrada ou ajuste
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditar(i)}
-                    className={`${BTN_MIUDO_ACAO} bg-white`}
-                  >
-                    Editar
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+              )}
 
-          <div className="mt-3 hidden overflow-hidden rounded-xl border border-[var(--line)] bg-white sm:block">
-            <table className="w-full text-left text-[14px]">
-              <caption className="sr-only">Insumos e quanto tem de cada um</caption>
-              <thead>
-                <tr className="font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
-                  <th scope="col" className="px-4 py-3">
-                    Insumo
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right">
-                    Em estoque
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right">
-                    Mínimo
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right">
-                    Custo
-                  </th>
-                  <th scope="col" className="px-4 py-3">
-                    <span className="sr-only">Ações</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
+              {/* Mesma posição de "O que repor" na aba Estoque: no topo, recolhido. */}
+              {contaMateriais && (
+                <div className="mt-6">
+                  <SugestaoReposicao
+                    id="repor-insumos"
+                    titulo="O que comprar"
+                    acao="comprar"
+                    origem="producao"
+                    itens={insumos.map((i) => {
+                      const g = giro.data?.get(i.id);
+                      return {
+                        chave: i.id,
+                        nome: i.nome,
+                        saldo: i.saldo,
+                        minimo: i.minimo,
+                        saiu: g?.saiu ?? 0,
+                        dias: diasDeHistorico(g?.inicio ?? i.criadoEm, hojeISO()),
+                      };
+                    })}
+                    unidadeDe={(id) => {
+                      const un = porIdInsumo.get(id)?.unidade;
+                      return un ? ` ${un}` : "";
+                    }}
+                    inteiroDe={(id) => contaEmPeca(porIdInsumo.get(id)?.unidade ?? "")}
+                    carregando={giro.isLoading}
+                    erro={giro.isError}
+                    onTentarDeNovo={() => void giro.refetch()}
+                  />
+                </div>
+              )}
+
+              {/* Celular: cartão empilhado, a ação principal sempre à vista. */}
+              <ul className="mt-4 flex flex-col gap-3 sm:hidden">
                 {insumos.map((i) => (
-                  <tr key={i.id} className="border-t border-[var(--line)]">
-                    <td className="px-4 py-2">
-                      <NomeComHistorico insumo={i} onAbrir={() => setHistorico(i)} />
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums">
-                      <Saldo insumo={i} />
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-[var(--ink-soft)]">
-                      {i.minimo > 0 ? fmtQtd(i.minimo) : "não definido"}
-                    </td>
-                    <td className="px-4 py-2 text-right tabular-nums text-[var(--ink-soft)]">
-                      {i.custoUnitario != null
-                        ? `${fmtCustoUnitario(i.custoUnitario)} / ${i.unidade}`
-                        : "sem custo"}
-                    </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                  <li key={i.id} className="rounded-xl border border-[var(--line)] bg-white p-4">
+                    <NomeComHistorico insumo={i} onAbrir={() => setHistorico(i)} />
+                    {contaMateriais && (
+                      <p className="mt-1 text-[14px] text-[var(--ink-soft)]">
+                        <Saldo insumo={i} /> no estoque
+                        {i.minimo > 0 && ` · mínimo ${fmtQtd(i.minimo)} ${i.unidade}`}
+                      </p>
+                    )}
+                    {i.custoUnitario != null && (
+                      <p className="text-[13px] text-[var(--muted)]">
+                        {fmtCustoUnitario(i.custoUnitario)} por {i.unidade}
+                      </p>
+                    )}
+                    <div className="mt-3 flex gap-2">
                       <button
                         type="button"
                         onClick={() => setMovimentar(i)}
-                        className={`${BTN_MIUDO_ACAO} bg-white`}
+                        className={`${BTN_MIUDO_ACAO} flex-1 bg-white`}
                       >
                         Entrada ou ajuste
-                      </button>{" "}
+                      </button>
                       <button
                         type="button"
                         onClick={() => setEditar(i)}
@@ -220,15 +220,81 @@ export function AbaInsumos({
                       >
                         Editar
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                  </li>
                 ))}
-              </tbody>
-            </table>
-          </div>
+              </ul>
 
-          <ReceitasProdutos userId={userId} insumos={insumos} onAbrirCatalogo={onAbrirCatalogo} />
-          <ProducoesRecentes userId={userId} />
+              <div className="mt-4 hidden overflow-hidden rounded-xl border border-[var(--line)] bg-white sm:block">
+                <table className="w-full text-left text-[14px]">
+                  <caption className="sr-only">Materiais e quanto tem de cada um</caption>
+                  <thead>
+                    <tr className="font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
+                      <th scope="col" className="px-4 py-3">
+                        Material
+                      </th>
+                      {contaMateriais && (
+                        <>
+                          <th scope="col" className="px-4 py-3 text-right">
+                            Em estoque
+                          </th>
+                          <th scope="col" className="px-4 py-3 text-right">
+                            Mínimo
+                          </th>
+                        </>
+                      )}
+                      <th scope="col" className="px-4 py-3 text-right">
+                        Custo
+                      </th>
+                      <th scope="col" className="px-4 py-3">
+                        <span className="sr-only">Ações</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insumos.map((i) => (
+                      <tr key={i.id} className="border-t border-[var(--line)]">
+                        <td className="px-4 py-2">
+                          <NomeComHistorico insumo={i} onAbrir={() => setHistorico(i)} />
+                        </td>
+                        {contaMateriais && (
+                          <>
+                            <td className="px-4 py-2 text-right tabular-nums">
+                              <Saldo insumo={i} />
+                            </td>
+                            <td className="px-4 py-2 text-right tabular-nums text-[var(--ink-soft)]">
+                              {i.minimo > 0 ? fmtQtd(i.minimo) : "não definido"}
+                            </td>
+                          </>
+                        )}
+                        <td className="px-4 py-2 text-right tabular-nums text-[var(--ink-soft)]">
+                          {i.custoUnitario != null
+                            ? `${fmtCustoUnitario(i.custoUnitario)} / ${i.unidade}`
+                            : "sem custo"}
+                        </td>
+                        <td className="px-4 py-2 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setMovimentar(i)}
+                            className={`${BTN_MIUDO_ACAO} bg-white`}
+                          >
+                            Entrada ou ajuste
+                          </button>{" "}
+                          <button
+                            type="button"
+                            onClick={() => setEditar(i)}
+                            className={`${BTN_MIUDO_ACAO} bg-white`}
+                          >
+                            Editar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </>
       )}
 

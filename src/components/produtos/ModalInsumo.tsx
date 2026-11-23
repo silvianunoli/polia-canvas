@@ -106,7 +106,7 @@ export function ModalInsumo({
       onOpenChange={(next) => {
         if (!next) onClose();
       }}
-      title={insumo ? "Editar insumo" : "Novo insumo"}
+      title={insumo ? "Editar material" : "Novo material"}
       footer={
         <>
           <button type="button" onClick={onClose} className={BTN_ACAO_CONTORNO}>

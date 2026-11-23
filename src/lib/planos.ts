@@ -382,7 +382,7 @@ const TIERS_PAGOS_ATE_NOV_2026: Record<TierPago, InfoTierPago> = {
       {
         // ONE-133, no ar desde 23/10 (7430af6)
         id: "insumos",
-        texto: "Insumos e produção: o material sai do estoque quando a peça fica pronta",
+        texto: "Materiais e receitas: o material sai do estoque quando a peça fica pronta",
         novoAte: NOVO_OUT_2026,
       },
       {

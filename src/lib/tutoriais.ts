@@ -324,12 +324,11 @@ const LISTA = [
     rota: "/produtos",
     abrir: "Abrir Produtos",
     resumo: "O catálogo da marca: o que ela vende, quanto custa e quanto lucra em cada venda.",
-    trecho: "produtos",
     passos: [
       {
         titulo: "Cadastrar um produto",
         itens: [
-          'Na aba "Catálogo", clique em "+ Adicionar produto".',
+          'No topo da tela, clique em "+ Produto".',
           'Preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
           'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o cartão já mostra quanto a marca lucra por venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
@@ -338,16 +337,23 @@ const LISTA = [
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
-          'O botão "Ordem na vitrine", ao lado de "Importar planilha", abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
+          'No botão "Mais", no topo, "Ordem na vitrine" abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
-          'Com muitos produtos, o campo "Buscar pelo nome" acima dos cartões acha o produto sem diferença de maiúscula ou acento.',
+        ],
+      },
+      {
+        titulo: "Achar um produto no catálogo",
+        itens: [
+          'O campo "Buscar pelo nome" acha o produto sem diferença de maiúscula ou acento.',
+          'Os filtros ao lado separam "Todos", "Na Vitrine", "Fora da Vitrine", "Sem custo" e "Arquivados". O número de cada um aparece no botão.',
+          '"Ordenar" muda a ordem dos cartões: "Mais recentes", "Nome (A a Z)", "Maior preço" ou "Maior lucro".',
         ],
       },
       {
         titulo: "Trazer vários produtos de uma planilha",
         itens: [
-          'Clique em "Importar planilha" e depois em "Escolher planilha". Se ajudar, baixe antes a planilha modelo.',
+          'Clique em "Mais", depois em "Importar planilha" e em "Escolher planilha". Se ajudar, baixe antes a planilha modelo.',
           "A planilha precisa de duas colunas: nome e preço de venda. Tipo, custo, onde vende e descrição são opcionais.",
           "Confira a lista. Produto com nome que já existe no catálogo vem desmarcado.",
           'Clique em "Importar N produtos". Se algo saiu errado, "Desfazer importação" volta tudo.',
@@ -359,6 +365,16 @@ const LISTA = [
           'No menu do cartão, "Editar" abre o cadastro de novo.',
           '"Recalcular preço" abre a Calculadora já com esse produto e guarda o preço novo nele.',
           '"Arquivar" tira o produto do catálogo sem apagar. Ele continua guardado.',
+          'Pra trazer de volta, clique no filtro "Arquivados" e em "Reativar" no cartão do produto.',
+        ],
+      },
+      {
+        titulo: "Materiais e receitas",
+        itens: [
+          'Na aba "Materiais e receitas", "Materiais" lista o que vai em cada peça, com o custo de cada um. "+ Novo material" cadastra mais um.',
+          '"Receitas" mostra quanto de cada material vai numa peça. Os filtros "Sem receita" e "Com receita" separam o que falta montar. "Montar receita" abre a receita do produto.',
+          '"Registrar produção" baixa o material das receitas quando as peças ficam prontas.',
+          'Pra a Pólia One contar quanto tem de cada material, use "Entrada ou ajuste" no material. Daí aparecem o estoque, o mínimo e "O que comprar".',
         ],
       },
       {
@@ -376,7 +392,7 @@ const LISTA = [
       "No plano Grátis cabem 5 produtos ativos. No Premium e no Pro, sem limite.",
       "Produto não se apaga, só se arquiva, pra não perder o histórico de venda.",
       "A planilha aceita .csv ou .txt, até 5 MB e até 1000 produtos por vez.",
-      'As abas "Estoque", "Insumos e produção" e "Equipamentos" ficam na mesma tela, ao lado do "Catálogo".',
+      'As abas "Materiais e receitas", "Estoque" e "Equipamentos" ficam na mesma tela, ao lado do "Catálogo", cada uma com o número do que tem nela.',
       'A aba "Equipamentos" é do Premium e do Pro.',
       'Equipamento planejado entra na "Reserva do mês", mas não vira saída. Só a compra marcada aparece no Financeiro.',
     ],
