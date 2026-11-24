@@ -6,7 +6,7 @@ import {
   somarCustosFixos,
   type ChaveCustoFixo,
 } from "@/lib/custosFixos.functions";
-import { fmt, normalizarDigitado, num, numInvalido } from "./tipos";
+import { fmt, normalizarDigitado, num, numeroParaCampo, numInvalido } from "./tipos";
 
 export type DetalheFixos = Partial<Record<ChaveCustoFixo, string>>;
 
@@ -54,11 +54,11 @@ export function BlocoCustosFixos({
 
   const usarReserva = () => {
     const base = detalhado ? detalhe : detalheAoAbrir();
-    onDetalhe({ ...base, equipamento: String(reservaEquipamentos) });
+    onDetalhe({ ...base, equipamento: numeroParaCampo(reservaEquipamentos) });
     onDetalhado(true);
   };
   const fechar = () => {
-    onTotal(soma > 0 ? String(Math.round(soma * 100) / 100) : "");
+    onTotal(soma > 0 ? numeroParaCampo(soma) : "");
     onDetalhado(false);
   };
 
@@ -67,7 +67,7 @@ export function BlocoCustosFixos({
     const novo: DetalheFixos = {};
     for (const i of ITENS_CUSTO_FIXO) {
       const v = doFinanceiro[i.chave];
-      if (v > 0) novo[i.chave] = String(Math.round(v * 100) / 100);
+      if (v > 0) novo[i.chave] = numeroParaCampo(v);
     }
     // A reserva não é saída do Financeiro: puxar não pode apagar o que ela usou.
     if (!novo.equipamento && detalhe.equipamento) novo.equipamento = detalhe.equipamento;

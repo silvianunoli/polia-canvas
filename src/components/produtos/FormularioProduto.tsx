@@ -18,6 +18,7 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import {
   fmt,
   normalizarDigitado,
+  numeroParaCampo,
   num,
   numInvalido,
   type Prefill,
@@ -34,6 +35,8 @@ import { CategoriaDaVitrine } from "./CategoriaDaVitrine";
 import { useLojaDoProduto } from "./useLojaDoProduto";
 import { Calculadora } from "./Calculadora";
 import { useDadosDaCalculadora } from "./useDadosDaCalculadora";
+import { useCustosMarca } from "@/components/financeiro/custosMarcaDados";
+import { CANAIS_ACRESCIMO, precoNoCanal } from "@/lib/custosMarca";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none";
@@ -74,6 +77,9 @@ export function FormularioProduto({
   );
 
   const [nome, setNome] = useState(produtoEdit?.nome ?? prefill?.nome ?? "");
+  // Encomenda sob medida (ONE-258): quarto Tipo na tela; no banco é produto
+  // físico com sob_medida, pra receita, produção, kit e estoque seguirem iguais.
+  const [sobMedida, setSobMedida] = useState(produtoEdit?.sob_medida ?? false);
   const [tipo, setTipo] = useState<ProdutoTipo>(
     (produtoEdit?.tipo as ProdutoTipo) ?? prefill?.tipo ?? "fisico",
   );
@@ -81,21 +87,23 @@ export function FormularioProduto({
   const [fotoAviso, setFotoAviso] = useState<string | null>(null);
   const [precoVenda, setPrecoVenda] = useState(
     produtoEdit?.preco_venda != null
-      ? String(produtoEdit.preco_venda)
+      ? numeroParaCampo(Number(produtoEdit.preco_venda))
       : prefill?.preco_venda != null
-        ? String(prefill.preco_venda)
+        ? numeroParaCampo(prefill.preco_venda)
         : "",
   );
   // Preço promocional (ONE-239): o "por". Preenchido e menor que o preço de
   // venda, vira o preço que vale em todo o sistema (precoQueVale). Vazio = sem.
   const promocionalInicial =
-    produtoEdit?.preco_promocional != null ? String(produtoEdit.preco_promocional) : "";
+    produtoEdit?.preco_promocional != null
+      ? numeroParaCampo(Number(produtoEdit.preco_promocional))
+      : "";
   const [precoPromocional, setPrecoPromocional] = useState(promocionalInicial);
   const [precoCusto, setPrecoCusto] = useState(
     produtoEdit?.preco_custo != null
-      ? String(produtoEdit.preco_custo)
+      ? numeroParaCampo(Number(produtoEdit.preco_custo))
       : prefill?.preco_custo != null
-        ? String(prefill.preco_custo)
+        ? numeroParaCampo(prefill.preco_custo)
         : "",
   );
   // Composição da conta da Calculadora (ONE-254): vem do produto ou do prefill
@@ -125,6 +133,8 @@ export function FormularioProduto({
   // (pedido da Sil, 22/11/2026). Desde 24/11 (ONE-239) a categoria também: a lista de
   // produtos saiu da tela da Vitrine. A ordem fica na coluna Ordem de Produtos.
   const meta = useUserMeta();
+  // Acréscimo por marketplace (ONE-259), pro preço de cada canal no Resumo.
+  const custosMarca = useCustosMarca(userId);
   const ehPro = temVitrine(meta.plano);
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
   const [categoriaVitrine, setCategoriaVitrine] = useState(produtoEdit?.categoria_id ?? "");
@@ -202,6 +212,7 @@ export function FormularioProduto({
       const update: Record<string, unknown> = {
         nome: nome.trim(),
         tipo,
+        sob_medida: tipo === "fisico" && sobMedida,
         foto_url: gravadas.fotoUrl,
         preco_venda: precoVendaNum,
         preco_custo: precoCustoNum,
@@ -266,6 +277,7 @@ export function FormularioProduto({
           user_id: userId,
           nome: nome.trim(),
           tipo,
+          sob_medida: tipo === "fisico" && sobMedida,
           foto_url: fotos.link.trim() || null,
           preco_venda: precoVendaNum,
           preco_custo: precoCustoNum,
@@ -328,8 +340,8 @@ export function FormularioProduto({
     precoCusto: number | null;
     breakdown: CalculadoraBreakdown;
   }) => {
-    setPrecoVenda(String(r.precoVenda));
-    if (custoSomado == null) setPrecoCusto(r.precoCusto != null ? String(r.precoCusto) : "");
+    setPrecoVenda(numeroParaCampo(r.precoVenda));
+    if (custoSomado == null) setPrecoCusto(numeroParaCampo(r.precoCusto));
     setBreakdown(r.breakdown);
     setBreakdownMudou(true);
   };
@@ -350,6 +362,7 @@ export function FormularioProduto({
     </Campo>
   );
 
+  const tipoNaTela: ProdutoTipo | "encomenda" = sobMedida && tipo === "fisico" ? "encomenda" : tipo;
   const campoTipo = (
     <div>
       <p id="produto-tipo-rotulo" className="mb-1 block text-[12px] text-[var(--muted)]">
@@ -361,14 +374,18 @@ export function FormularioProduto({
             { id: "fisico", label: "Produto físico" },
             { id: "digital", label: "Produto digital" },
             { id: "servico", label: "Serviço" },
-          ] as { id: ProdutoTipo; label: string }[]
+            { id: "encomenda", label: "Encomenda (sob medida)" },
+          ] as { id: ProdutoTipo | "encomenda"; label: string }[]
         ).map((t) => (
           <button
             key={t.id}
             type="button"
-            aria-pressed={tipo === t.id}
-            onClick={() => setTipo(t.id)}
-            className={`${BTN_MIUDO} ${tipo === t.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
+            aria-pressed={tipoNaTela === t.id}
+            onClick={() => {
+              setTipo(t.id === "encomenda" ? "fisico" : t.id);
+              setSobMedida(t.id === "encomenda");
+            }}
+            className={`${BTN_MIUDO} ${tipoNaTela === t.id ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             {t.label}
           </button>
@@ -506,7 +523,7 @@ export function FormularioProduto({
       <input
         type="text"
         inputMode="decimal"
-        value={custoSomado != null ? String(custoSomado) : precoCusto}
+        value={custoSomado != null ? numeroParaCampo(custoSomado) : precoCusto}
         readOnly={custoSomado != null}
         onChange={(e) => setPrecoCusto(normalizarDigitado(e.target.value))}
         className={`${INPUT} read-only:bg-[var(--surface)]`}
@@ -762,6 +779,11 @@ export function FormularioProduto({
       ? num(precoPromocional)
       : precoVendaNum;
   const sobra = sobraDoProduto({ precoVenda: precoQueVale, precoCusto: precoCustoNum, breakdown });
+  const acrescimos = custosMarca.data?.acrescimoCanais ?? {};
+  const precosPorCanal = CANAIS_ACRESCIMO.map((c) => ({
+    ...c,
+    pct: acrescimos[c.chave] ?? 0,
+  })).filter((c) => c.pct > 0);
 
   return (
     <div>
@@ -822,7 +844,13 @@ export function FormularioProduto({
                 <CalculadoraNoCadastro
                   userId={userId}
                   breakdownInicial={breakdown}
-                  perfilInicial={tipo === "servico" ? "servico" : "produto"}
+                  perfil={
+                    tipoNaTela === "servico"
+                      ? "servico"
+                      : tipoNaTela === "encomenda"
+                        ? "encomenda"
+                        : "produto"
+                  }
                   onUsar={usarPrecoDaCalculadora}
                 />
               </div>
@@ -871,6 +899,25 @@ export function FormularioProduto({
               forte
             />
           </dl>
+          {precoQueVale > 0 && precosPorCanal.length > 0 && (
+            <div className="mt-4 border-t border-[var(--line)] pt-3">
+              <p className="text-[12.5px] font-medium text-[var(--ink)]">Preço por canal</p>
+              <dl className="mt-2 space-y-2 text-[13px] text-[var(--ink-soft)]">
+                <LinhaResumo rotulo="Loja da marca e venda direta" valor={fmt(precoQueVale)} />
+                {precosPorCanal.map((c) => (
+                  <LinhaResumo
+                    key={c.chave}
+                    rotulo={`${c.nome} (+${numeroParaCampo(c.pct).replace(/,00$/, "")}%)`}
+                    valor={fmt(precoNoCanal(precoQueVale, c.pct))}
+                  />
+                ))}
+              </dl>
+              <p className="mt-2 text-[12px] text-[var(--muted)]">
+                Esse é o preço pra pôr no anúncio de cada marketplace. O acréscimo fica em
+                Marketplaces.
+              </p>
+            </div>
+          )}
           <p className="mt-3 text-[12px] text-[var(--muted)]">
             {!sobra
               ? "Com preço de venda e custo preenchidos, o lucro aparece aqui."
@@ -890,12 +937,12 @@ export function FormularioProduto({
 function CalculadoraNoCadastro({
   userId,
   breakdownInicial,
-  perfilInicial,
+  perfil,
   onUsar,
 }: {
   userId: string;
   breakdownInicial: CalculadoraBreakdown | null;
-  perfilInicial: "produto" | "servico";
+  perfil: "produto" | "servico" | "encomenda";
   onUsar: (r: {
     precoVenda: number;
     precoCusto: number | null;
@@ -903,10 +950,27 @@ function CalculadoraNoCadastro({
   }) => void;
 }) {
   const dados = useDadosDaCalculadora(userId);
+  const custos = useCustosMarca(userId);
   // A composição inicial só vale na montagem: guardar a primeira evita a
   // calculadora "pular" depois do "Usar esse preço".
   const [inicial] = useState(breakdownInicial);
-  if (dados.carregando) {
+  if (custos.isError) {
+    return (
+      <div role="alert" className="space-y-2">
+        <p className="text-[14px] text-[var(--danger)]">
+          A Pólia One não conseguiu ler os custos da marca agora.
+        </p>
+        <button
+          type="button"
+          onClick={() => void custos.refetch()}
+          className="inline-flex min-h-11 items-center text-[14px] font-medium text-[var(--secondary-text)] hover:underline"
+        >
+          Tentar de novo
+        </button>
+      </div>
+    );
+  }
+  if (dados.carregando || !custos.data) {
     return <p className="text-[14px] text-[var(--muted)]">Abrindo a calculadora...</p>;
   }
   return (
@@ -919,7 +983,7 @@ function CalculadoraNoCadastro({
       valorHoraPadraoCarregando={dados.valorHoraPadraoCarregando}
       fixosDoFinanceiro={dados.fixosDoFinanceiro}
       reservaEquipamentos={dados.reservaEquipamentos}
-      noCadastro={{ breakdownInicial: inicial, perfilInicial, onUsar }}
+      noCadastro={{ breakdownInicial: inicial, perfil, custosMarca: custos.data, onUsar }}
     />
   );
 }

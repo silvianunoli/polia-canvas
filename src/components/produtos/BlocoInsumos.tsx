@@ -2,7 +2,7 @@ import { useId, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import { Campo } from "@/components/ui/Campo";
 import { custoNaPeca, maoDeObraPorPeca } from "@/lib/precificacao.functions";
-import { fmt, normalizarDigitado, num, numInvalido } from "./tipos";
+import { fmt, normalizarDigitado, num, numeroParaCampo, numInvalido } from "./tipos";
 import { itemParaConta, totalDosInsumos, type ItemInsumo } from "./insumos";
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
@@ -130,7 +130,7 @@ export function BlocoInsumos({
     onDetalhado(true);
   };
   const fechar = () => {
-    onTotal(soma > 0 ? String(round2(soma)) : "");
+    onTotal(soma > 0 ? numeroParaCampo(soma) : "");
     onDetalhado(false);
   };
 
@@ -302,7 +302,7 @@ export function BlocoMaoDeObra({
     onDetalhado(true);
   };
   const fechar = () => {
-    onTotal(calculado > 0 ? String(round2(calculado)) : total);
+    onTotal(calculado > 0 ? numeroParaCampo(calculado) : total);
     onDetalhado(false);
   };
 

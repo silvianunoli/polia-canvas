@@ -8,6 +8,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { COTAS_CONFERE } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { useDadosDaCalculadora } from "@/components/produtos/useDadosDaCalculadora";
+import { useCustosMarca } from "@/components/financeiro/custosMarcaDados";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
@@ -65,6 +66,8 @@ function CalculadoraPage() {
   // Valor-hora padrão, Meta do mês, fixos do Financeiro e reserva dos
   // equipamentos: o mesmo hook da calculadora dentro do cadastro de produto.
   const dados = useDadosDaCalculadora(userId);
+  // Custos da marca do Financeiro (ONE-258): entram já preenchidos numa conta nova.
+  const custosMarca = useCustosMarca(userId);
 
   // Quantos produtos ativos ela já tem, pra avisar da cota antes de abrir o
   // modal de salvar (só o Grátis tem teto).
@@ -201,6 +204,7 @@ function CalculadoraPage() {
         valorHoraPadraoCarregando={dados.valorHoraPadraoCarregando}
         fixosDoFinanceiro={dados.fixosDoFinanceiro}
         reservaEquipamentos={dados.reservaEquipamentos}
+        custosIniciais={custosMarca.data ?? null}
         produtoRecalcular={produtoRecalcular}
         // Catálogo do Grátis cheio (produtos vindos do Planejamento, sem
         // breakdown): o insert seria recusado, fica o fluxo de sempre com o aviso.

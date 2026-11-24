@@ -41,6 +41,8 @@ export interface Produto {
   categoria_id?: string | null;
   /** Preço promocional, o "por" (ONE-239). Vale quando menor que o preço de venda. */
   preco_promocional?: number | string | null;
+  /** Encomenda sob medida (ONE-258): o quarto Tipo da tela, produto físico no banco. */
+  sob_medida?: boolean;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];
@@ -97,6 +99,27 @@ export function normalizarDigitado(texto: string): string {
   if (t.includes(",")) return t.replace(/\./g, "");
   if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t)) return t.replace(/\./g, "");
   return t;
+}
+
+// Número que a tela põe sozinha num campo (do banco, de uma soma, do
+// Financeiro) sai com vírgula e duas casas: "34,45", "120,00". Antes saía
+// String(34.45) = "34.45" (pedido da Sil, 24/11/2026, ONE-257). Sem separador
+// de milhar, pra o campo continuar sendo lido igual por normalizarDigitado.
+export function numeroParaCampo(n: number | null | undefined): string {
+  if (n == null || !Number.isFinite(n)) return "";
+  return n.toLocaleString("pt-BR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  });
+}
+
+// Texto já salvo com ponto decimal ("74.38", composição antiga da
+// Calculadora) aparece com vírgula ("74,38"). Só mexe em número simples com
+// ponto; o resto (vazio, "1500", "12,5", nome) fica como está. Mesmo valor:
+// todo leitor troca a vírgula por ponto antes do parseFloat.
+export function virgulaNoTexto(s: string): string {
+  return /^-?\d+\.\d+$/.test(s) ? s.replace(".", ",") : s;
 }
 
 /** Valor digitado como número que não deixa custo negativo entrar na conta. */

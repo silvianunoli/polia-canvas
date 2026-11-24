@@ -1,5 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { normalizarDigitado, num, numInvalido, numPos } from "./tipos";
+import {
+  normalizarDigitado,
+  num,
+  numeroParaCampo,
+  numInvalido,
+  numPos,
+  virgulaNoTexto,
+} from "./tipos";
+
+describe("vírgula nos campos (ONE-257)", () => {
+  it("número posto pela tela sai com vírgula e duas casas, sem milhar", () => {
+    expect(numeroParaCampo(34.45)).toBe("34,45");
+    expect(numeroParaCampo(120)).toBe("120,00");
+    expect(numeroParaCampo(1500.5)).toBe("1500,50");
+    expect(numeroParaCampo(null)).toBe("");
+  });
+  it("texto salvo com ponto aparece com vírgula, e lê igual", () => {
+    expect(virgulaNoTexto("74.38")).toBe("74,38");
+    expect(num(virgulaNoTexto("74.38"))).toBe(74.38);
+    expect(virgulaNoTexto("1500")).toBe("1500");
+    expect(virgulaNoTexto("12,5")).toBe("12,5");
+    expect(virgulaNoTexto("Papel 1.5")).toBe("Papel 1.5");
+  });
+  it("o campo com vírgula volta pro mesmo número", () => {
+    expect(num(normalizarDigitado(numeroParaCampo(1500.5)))).toBe(1500.5);
+  });
+});
 
 // Revisão de 24/11/2026: o campo era type="number" e "1.500" virava R$ 1,50.
 const ler = (digitado: string) => num(normalizarDigitado(digitado));

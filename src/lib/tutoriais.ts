@@ -329,9 +329,11 @@ const LISTA = [
         titulo: "Cadastrar um produto",
         itens: [
           'No topo da tela, clique em "+ Produto". O cadastro abre numa página própria, com "Voltar pros produtos" no topo.',
-          'Em "O produto", preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
+          'Em "O produto", preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital", "Serviço" ou "Encomenda (sob medida)".',
           'Em "Preço", coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o "Resumo do preço", ao lado, e a lista já mostram quanto a marca lucra por venda.',
-          'Pra fazer a conta antes, clique em "Calcular o preço", na seção "Preço". A Calculadora abre ali mesmo, com as abas Produto, Serviço e Encomenda. Clique em "Usar esse preço" e o preço de venda e o custo são preenchidos no cadastro, que continuam dando pra mudar à mão. A conta fica guardada no produto quando você clica em "Salvar produto".',
+          'Pra fazer a conta antes, clique em "Calcular o preço", na seção "Preço". A Calculadora abre ali mesmo e segue o "Tipo" escolhido: pede só os custos da peça e "Quanto quer lucrar (%)". Os custos fixos, o salário, as peças vendidas por mês, o imposto e a taxa de recebimento vêm de Financeiro, na aba "Custos da marca", e aparecem num resumo com "Mudar no Financeiro".',
+          'Clique em "Usar esse preço" e o preço de venda e o custo são preenchidos no cadastro, que continuam dando pra mudar à mão. A conta fica guardada no produto quando você clica em "Salvar produto".',
+          'Com o acréscimo de cada marketplace cadastrado em Marketplaces, a Calculadora e o "Resumo do preço" mostram o "Preço por canal": o da Loja da marca e da venda direta, sem acréscimo, e o de cada marketplace, pra pôr no anúncio.',
           'Pra fazer uma promoção, preencha o "Preço promocional (R$)", entre o preço de venda e o custo, com um valor menor que o preço de venda. Ele vira o preço que vale em todo o sistema: a Vitrine online e a Loja da marca cobram ele, o Novo pedido e a Nova venda já vêm com ele, e o lucro da lista, a Projeção e o Raio-x do mês contam com ele. Vazio, vale o preço de venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
@@ -432,7 +434,7 @@ const LISTA = [
           'Escolha a aba: "Produto (físico/digital)", "Serviço (por hora)" ou "Encomenda (sob medida)".',
           'Em "Qual produto?", escreva o nome, como "Caderno A5". No Serviço o campo é "Qual serviço?" e na Encomenda, "Qual encomenda?".',
           'Em "Custos diretos (por unidade)", coloque matéria-prima, embalagem, mão de obra e outros custos de cada peça.',
-          'Em "Custos fixos e salário", entre com os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados, e "Usar a reserva dos equipamentos" preenche a "Reserva de equipamento" com o total da aba "Equipamentos".',
+          'Em "Custos fixos e salário", entram os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. Com os "Custos da marca" preenchidos no Financeiro, esses campos, a taxa e o imposto já vêm preenchidos numa conta nova. Dá pra mexer aqui pra simular, sem mudar o Financeiro. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados, e "Usar a reserva dos equipamentos" preenche a "Reserva de equipamento" com o total da aba "Equipamentos".',
           'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e, em "Quanto quer lucrar (%)", o lucro que a marca quer em cada venda. O lucro é uma parte do preço final, não uma porcentagem sobre o custo: com 20%, de cada R$ 100 vendidos, R$ 20 ficam pra marca.',
           'O resultado mostra o "Preço sugerido", o custo por unidade, o "Preço mínimo (sem lucro)" pra não ter prejuízo e quanto a marca lucra. No Serviço também aparece o preço mínimo.',
           'Na "Encomenda (sob medida)", os custos fixos do mês entram em "Custos fixos (rateio do mês)", junto com quantas encomendas a marca faz por mês.',
@@ -529,6 +531,7 @@ const LISTA = [
     ],
     bomSaber: [
       "Conectar um canal é do Pro.",
+      'Em "Acréscimo no preço por canal", cada marketplace ganha o seu % a mais, como 40% no Mercado Livre. Vale com ou sem conexão. O cadastro do produto mostra o preço de cada canal; a Pólia One não muda o preço do anúncio no marketplace.',
       'Os pedidos só começam a chegar em Vendas depois que os anúncios estão ligados, e entram como "a receber".',
       "No Mercado Livre, quantidade zero pausa o anúncio. Anúncio no Full continua com o estoque do Mercado Livre.",
       "A Pólia não cria anúncio, não responde compradora e não guarda dados de quem comprou.",
@@ -647,6 +650,16 @@ const LISTA = [
           'Na entrada, a forma vem do que você escolhe em "Forma de recebimento": no lançamento, na venda e no "Recebi". Na saída, vem da "Forma de pagamento": no lançamento e na conta a pagar. Lançamento sem forma aparece em "Não informada".',
           '"Ver o dia a dia" abre a tabela de cada dia por forma, com as saídas ao lado. Embaixo dos cartões aparecem as taxas descontadas no recebimento e os juros pagos nas contas.',
           '"Baixar planilha do mês" baixa um arquivo que abre no Excel, com cliente ou fornecedor, documento, forma, valor original e valor pago ou recebido de cada lançamento.',
+        ],
+      },
+      {
+        titulo: "Cadastrar os custos da marca",
+        itens: [
+          'Na aba "Custos da marca", preencha uma vez o que a marca gasta todo mês e não é de uma peça só. A Calculadora de preço usa esses números em todo produto.',
+          'Em "Custos fixos do mês", coloque o total ou clique em "Detalhar os custos fixos" pra preencher item por item. "Puxar do Financeiro deste mês" traz o que já foi lançado.',
+          'Em "Salário e vendas", preencha o "Pró-labore (seu salário) (R$)", o mesmo da Projeção, e as "Peças vendidas por mês", somando todos os produtos. Com vendas registradas, a Pólia One sugere a média dos últimos 3 meses em "Usar".',
+          'Em "Sobre cada venda (%)", preencha o "Imposto sobre a venda (%)" (no MEI, 0: o DAS entra nos custos fixos) e a "Taxa de recebimento (%)" da maquininha, do Pix ou do link.',
+          'Clique em "Salvar os custos da marca". Mudou o aluguel ou o salário? É só voltar aqui e salvar de novo.',
         ],
       },
       {

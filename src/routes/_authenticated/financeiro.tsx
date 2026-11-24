@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { SecaoCustosDaMarca } from "@/components/financeiro/SecaoCustosDaMarca";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Abas from "@radix-ui/react-tabs";
@@ -132,7 +133,8 @@ type FiltroTipo = "todos" | "entrada" | "saida";
  * Abas do Financeiro (23/11/2026, Sil: "ela tá bem confusa"). Antes eram 9
  * blocos empilhados e o histórico ficava no fim, depois de três telas.
  */
-type AbaFinanceiro = "lancamentos" | "pagar" | "receber" | "fechamento";
+// "Custos da marca" (ONE-258, 24/11/2026): o cadastro único que a Calculadora lê.
+type AbaFinanceiro = "lancamentos" | "pagar" | "receber" | "fechamento" | "custos";
 
 // Âncoras que outras telas usam pra chegar aqui (Painel: "Ver contas"; sino:
 // links das novidades). Abrem a aba certa.
@@ -140,6 +142,7 @@ const ABA_DA_ANCORA: Record<string, AbaFinanceiro> = {
   "#contas-a-pagar": "pagar",
   "#a-receber": "receber",
   "#fechamento": "fechamento",
+  "#custos-da-marca": "custos",
 };
 
 /** 30 dias antes de hoje: o mesmo corte que as seções usam (mesma chave de cache). */
@@ -663,6 +666,9 @@ function FinanceiroPage() {
             <Abas.Trigger value="fechamento" className={classeAba}>
               Fechamento
             </Abas.Trigger>
+            <Abas.Trigger value="custos" className={classeAba}>
+              Custos da marca
+            </Abas.Trigger>
           </Abas.List>
 
           <Abas.Content value="lancamentos" className="focus-visible:outline-none">
@@ -765,6 +771,10 @@ function FinanceiroPage() {
                 lancamentos={lancamentos}
               />
             )}
+          </Abas.Content>
+
+          <Abas.Content value="custos" className="focus-visible:outline-none">
+            {userId && <SecaoCustosDaMarca userId={userId} />}
           </Abas.Content>
         </Abas.Root>
       </div>

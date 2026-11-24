@@ -3,6 +3,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
 import { CardTiktokShop } from "@/components/configuracoes/CardTiktokShop";
+import { AcrescimoPorCanal } from "@/components/configuracoes/AcrescimoPorCanal";
 
 // Marketplaces (ONE-255, 24/11/2026, pedido da Sil): era "Anúncios nos
 // canais" (VND-39), que só aparecia com canal já conectado e mandava conectar
@@ -34,6 +35,8 @@ function Marketplaces() {
           conta: ela lê os anúncios e os pedidos da loja que já existe lá.
         </p>
       </div>
+
+      <AcrescimoPorCanal userId={userId} />
 
       <div className="space-y-3">
         <CardMercadoLivre userId={userId} />

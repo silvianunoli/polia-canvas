@@ -42,12 +42,15 @@ import {
   fmt,
   normalizarDigitado,
   num,
+  numeroParaCampo,
   numInvalido,
   numPos,
+  virgulaNoTexto,
   type Prefill,
   type Produto,
 } from "./tipos";
 import { LucroPorCanal } from "./LucroPorCanal";
+import { CANAIS_ACRESCIMO, precoNoCanal, rateioDaMarca, type CustosMarca } from "@/lib/custosMarca";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
 
@@ -76,10 +79,22 @@ function novoId(): string {
   return crypto.randomUUID();
 }
 
+// Campos de número das linhas salvas (insumos, materiais, extras): aparecem
+// com vírgula, como os outros (ONE-257). Nome e unidade ficam como estão.
+const CAMPOS_NUMERO_ITEM = ["pago", "rende", "uso", "quantidade", "custoUnitario", "valor"];
+
 function parseItens<T>(json: string): T[] {
   try {
     const v = JSON.parse(json);
-    return Array.isArray(v) ? (v as T[]) : [];
+    if (!Array.isArray(v)) return [];
+    return v.map((item) => {
+      if (!item || typeof item !== "object") return item;
+      const copia: Record<string, unknown> = { ...item };
+      for (const k of CAMPOS_NUMERO_ITEM) {
+        if (typeof copia[k] === "string") copia[k] = virgulaNoTexto(copia[k] as string);
+      }
+      return copia;
+    }) as T[];
   } catch {
     return [];
   }
@@ -103,6 +118,7 @@ export function Calculadora({
   onPrimeiroPrecoGuardado,
   onCompletarCadastro,
   noCadastro,
+  custosIniciais,
 }: {
   /**
    * Calculadora aberta dentro do cadastro de produto (ONE-254, 24/11/2026). Sem
@@ -113,8 +129,16 @@ export function Calculadora({
   noCadastro?: {
     /** Composição salva no produto (edição) ou a que ela já usou nesta tela. */
     breakdownInicial: CalculadoraBreakdown | null;
-    /** Aba de abertura sem composição salva: Serviço pro tipo serviço, Produto pro resto. */
-    perfilInicial: "produto" | "servico";
+    /**
+     * A conta segue o Tipo do cadastro, sem abas (ONE-258): Serviço → serviço,
+     * Encomenda (sob medida) → encomenda, o resto → produto.
+     */
+    perfil: PerfilCalc;
+    /**
+     * Custos da marca do Financeiro (ONE-258): custos fixos, pró-labore, peças
+     * por mês, imposto e taxa de recebimento saem da tela e vêm daqui.
+     */
+    custosMarca: CustosMarca & { cadastrado: boolean };
     onUsar: (r: {
       precoVenda: number;
       precoCusto: number | null;
@@ -151,18 +175,33 @@ export function Calculadora({
   onPrimeiroPrecoGuardado?: () => void;
   /** "Completar o cadastro" do primeiro preço guardado: abre o modal do catálogo. */
   onCompletarCadastro?: (produtoId: string) => void;
+  /**
+   * Calculadora avulsa: custos da marca do Financeiro (ONE-258) que já vêm
+   * preenchidos numa conta nova. Dá pra mexer pra simular; nada volta pro Financeiro.
+   */
+  custosIniciais?: CustosMarca | null;
 }) {
   const bk = produtoRecalcular?.calculadora_breakdown ?? noCadastro?.breakdownInicial ?? null;
-  const v = (campo: string) => bk?.valores?.[campo] ?? "";
+  // Valor salvo com ponto ("74.38") aparece com vírgula (ONE-257).
+  const v = (campo: string) => virgulaNoTexto(bk?.valores?.[campo] ?? "");
 
-  const [perfil, setPerfil] = useState<PerfilCalc>(
+  const [perfilEstado, setPerfil] = useState<PerfilCalc>(
     bk?.perfil ??
       (produtoRecalcular
         ? produtoRecalcular.tipo === "servico"
           ? "servico"
           : "produto"
-        : (noCadastro?.perfilInicial ?? perfilInicial ?? "produto")),
+        : (perfilInicial ?? "produto")),
   );
+  // No cadastro a conta segue o Tipo do produto, sem abas (ONE-258).
+  const perfil: PerfilCalc = noCadastro?.perfil ?? perfilEstado;
+  // No cadastro, os custos da marca vêm do Financeiro e os campos deles saem
+  // da tela. Os estados abaixo continuam valendo pra Calculadora avulsa; aqui
+  // eles são trocados pelos números do Financeiro, com o mesmo nome, pra a
+  // conta e a composição salva (lida pela Projeção) não mudarem de forma.
+  const marca = noCadastro?.custosMarca ?? null;
+  const textoMarca = (n: number) => (n > 0 ? numeroParaCampo(n) : "");
+  const pecasDaMarca = marca?.pecasMes ? String(marca.pecasMes) : "";
   // "Usar esse preço" acabou de preencher o cadastro: o aviso some quando a
   // conta muda de novo.
   const [usadoNoCadastro, setUsadoNoCadastro] = useState(false);
@@ -184,10 +223,14 @@ export function Calculadora({
   );
   const [maoObraDetalhada, setMaoObraDetalhada] = useState(() => v("maoObraDetalhada") === "1");
   const [minutosPorPeca, setMinutosPorPeca] = useState(() => v("minutosPorPeca"));
-  const [qtd, setQtd] = useState(() => v("qtd"));
-  const [proLabore, setProLabore] = useState(() => v("proLabore"));
-  const [taxaVenda, setTaxaVenda] = useState(() => v("taxaVenda"));
-  const [impostos, setImpostos] = useState(() => v("impostos"));
+  const [qtdEstado, setQtd] = useState(() => v("qtd"));
+  const [proLaboreEstado, setProLabore] = useState(() => v("proLabore"));
+  const [taxaVendaEstado, setTaxaVenda] = useState(() => v("taxaVenda"));
+  const [impostosEstado, setImpostos] = useState(() => v("impostos"));
+  const qtd = marca ? pecasDaMarca : qtdEstado;
+  const proLabore = marca ? textoMarca(marca.proLabore) : proLaboreEstado;
+  const taxaVenda = marca ? textoMarca(marca.taxaRecebimentoPct) : taxaVendaEstado;
+  const impostos = marca ? textoMarca(marca.impostoPct) : impostosEstado;
   const [margem, setMargem] = useState(() => v("margem"));
 
   // ── Perfil Serviço ──
@@ -197,16 +240,21 @@ export function Calculadora({
   const [deslocamento, setDeslocamento] = useState(() => v("deslocamento"));
   const [ferramentas, setFerramentas] = useState(() => v("ferramentas"));
   const [outrosServico, setOutrosServico] = useState(() => v("outrosServico"));
-  const [taxaVendaS, setTaxaVendaS] = useState(() => v("taxaVendaS"));
-  const [impostosS, setImpostosS] = useState(() => v("impostosS"));
+  const [taxaVendaSEstado, setTaxaVendaS] = useState(() => v("taxaVendaS"));
+  const [impostosSEstado, setImpostosS] = useState(() => v("impostosS"));
+  const taxaVendaS = marca ? textoMarca(marca.taxaRecebimentoPct) : taxaVendaSEstado;
+  const impostosS = marca ? textoMarca(marca.impostoPct) : impostosSEstado;
   const [margemSeg, setMargemSeg] = useState(() => v("margemSeg"));
-  const [qtdServicos, setQtdServicos] = useState(() => v("qtdServicos"));
+  const [qtdServicosEstado, setQtdServicos] = useState(() => v("qtdServicos"));
+  const qtdServicos = marca ? pecasDaMarca : qtdServicosEstado;
 
   // ── Custos fixos do mês (Produto e Serviço) ──
   // Mesmo estado nas duas abas, como o valor-hora: o aluguel é o mesmo,
   // vendendo peça ou serviço. Detalhado, o total é a soma dos itens.
-  const [despesasFixas, setDespesasFixas] = useState(() => v("despesasFixas"));
-  const [fixosDetalhado, setFixosDetalhado] = useState(() => v("fixosDetalhado") === "1");
+  const [despesasFixasEstado, setDespesasFixas] = useState(() => v("despesasFixas"));
+  const [fixosDetalhadoEstado, setFixosDetalhado] = useState(() => v("fixosDetalhado") === "1");
+  const despesasFixas = marca ? textoMarca(marca.fixosMes) : despesasFixasEstado;
+  const fixosDetalhado = marca ? false : fixosDetalhadoEstado;
   const [fixosDetalhe, setFixosDetalhe] = useState<DetalheFixos>(() =>
     Object.fromEntries(
       ITENS_CUSTO_FIXO.map((i) => [i.chave, v(PREFIXO_FIXO + i.chave)]).filter(([, x]) => x),
@@ -231,12 +279,15 @@ export function Calculadora({
   const [itensExtras, setItensExtras] = useState<ItemExtra[]>(() =>
     bk?.perfil === "encomenda" ? parseItens<ItemExtra>(v("itensExtras") || "[]") : [],
   );
-  const [taxaVendaE, setTaxaVendaE] = useState(() => v("taxaVendaE"));
-  const [impostosE, setImpostosE] = useState(() => v("impostosE"));
+  const [taxaVendaEEstado, setTaxaVendaE] = useState(() => v("taxaVendaE"));
+  const [impostosEEstado, setImpostosE] = useState(() => v("impostosE"));
+  const taxaVendaE = marca ? textoMarca(marca.taxaRecebimentoPct) : taxaVendaEEstado;
+  const impostosE = marca ? textoMarca(marca.impostoPct) : impostosEEstado;
   const [quantoSobraPct, setQuantoSobraPct] = useState(() => v("quantoSobraPct"));
   // Desde 24/11/2026 a Encomenda também rateia os custos fixos (antes o
   // aluguel ficava de fora e a mesma peça saía mais barata aqui que no Produto).
-  const [qtdEncomendas, setQtdEncomendas] = useState(() => v("qtdEncomendas"));
+  const [qtdEncomendasEstado, setQtdEncomendas] = useState(() => v("qtdEncomendas"));
+  const qtdEncomendas = marca ? pecasDaMarca : qtdEncomendasEstado;
   const [valorHoraSalvo, setValorHoraSalvo] = useState(false);
   const [salvandoValorHora, setSalvandoValorHora] = useState(false);
   const valorHoraFocusRef = useRef<HTMLInputElement>(null);
@@ -246,10 +297,41 @@ export function Calculadora({
   // o que ela já digitou nesta sessão).
   useEffect(() => {
     if (valorHoraPadrao != null && !valorHora) {
-      setValorHora(String(valorHoraPadrao));
+      setValorHora(numeroParaCampo(valorHoraPadrao));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valorHoraPadrao]);
+
+  // Calculadora avulsa numa conta nova: os custos da marca do Financeiro
+  // (ONE-258) entram nos campos vazios assim que carregam. Conta salva
+  // (recálculo) fica com os números dela.
+  useEffect(() => {
+    const c = custosIniciais;
+    if (!c || bk || noCadastro) return;
+    const preencher = (atual: string, set: (s: string) => void, valor: string) => {
+      if (!atual && valor) set(valor);
+    };
+    const t = (n: number) => (n > 0 ? numeroParaCampo(n) : "");
+    const pecas = c.pecasMes ? String(c.pecasMes) : "";
+    if (!despesasFixasEstado && !fixosDetalhadoEstado) {
+      if (Object.keys(c.fixosDetalhe).length > 0) {
+        setFixosDetalhe(c.fixosDetalhe as DetalheFixos);
+        setFixosDetalhado(true);
+      } else preencher(despesasFixasEstado, setDespesasFixas, t(c.fixosMes));
+    }
+    preencher(proLaboreEstado, setProLabore, t(c.proLabore));
+    preencher(qtdEstado, setQtd, pecas);
+    preencher(qtdServicosEstado, setQtdServicos, pecas);
+    preencher(qtdEncomendasEstado, setQtdEncomendas, pecas);
+    preencher(taxaVendaEstado, setTaxaVenda, t(c.taxaRecebimentoPct));
+    preencher(taxaVendaSEstado, setTaxaVendaS, t(c.taxaRecebimentoPct));
+    preencher(taxaVendaEEstado, setTaxaVendaE, t(c.taxaRecebimentoPct));
+    preencher(impostosEstado, setImpostos, t(c.impostoPct));
+    preencher(impostosSEstado, setImpostosS, t(c.impostoPct));
+    preencher(impostosEEstado, setImpostosE, t(c.impostoPct));
+    // Só na chegada dos custos: depois disso, o que ela digita manda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [custosIniciais]);
 
   // Antes o erro era ignorado e a tela dizia "salvo" do mesmo jeito.
   const salvarValorHoraPadrao = async () => {
@@ -464,15 +546,17 @@ export function Calculadora({
   const fmtPct = (p: number) => `${Math.round(p * 100) / 100}`.replace(".", ",");
   const motivoSemPreco: string | null = temCampoInvalido
     ? "Tem campo com número que a conta não entende. Corrija o que está marcado em vermelho."
-    : faltaQtd
-      ? perfil === "produto"
-        ? 'Falta "Quantas peças a marca vende por mês". Sem esse número, o custo fixo e o salário inteiros cairiam numa peça só.'
-        : perfil === "servico"
-          ? 'Falta "Quantos serviços a marca faz por mês". Sem esse número, o custo fixo inteiro cairia num serviço só.'
-          : 'Falta "Quantas encomendas a marca faz por mês". Sem esse número, o custo fixo inteiro cairia numa encomenda só.'
-      : calcBase.invalido
-        ? `Taxa, imposto e lucro somam ${fmtPct(pctSomado)}%. Aqui o lucro é uma parte do preço final, não do custo, então a soma precisa ficar abaixo de 100%. Baixe alguma delas.`
-        : null;
+    : faltaQtd && marca
+      ? "Faltam as peças vendidas por mês em Financeiro, na aba Custos da marca. Sem esse número, o custo fixo inteiro cairia numa peça só."
+      : faltaQtd
+        ? perfil === "produto"
+          ? 'Falta "Quantas peças a marca vende por mês". Sem esse número, o custo fixo e o salário inteiros cairiam numa peça só.'
+          : perfil === "servico"
+            ? 'Falta "Quantos serviços a marca faz por mês". Sem esse número, o custo fixo inteiro cairia num serviço só.'
+            : 'Falta "Quantas encomendas a marca faz por mês". Sem esse número, o custo fixo inteiro cairia numa encomenda só.'
+        : calcBase.invalido
+          ? `Taxa, imposto e lucro somam ${fmtPct(pctSomado)}%. Aqui o lucro é uma parte do preço final, não do custo, então a soma precisa ficar abaixo de 100%. Baixe alguma delas.`
+          : null;
   // `calc.invalido` passa a valer pros três motivos: todo lugar que escondia o
   // preço com as porcentagens em 100% esconde também nos outros dois.
   const calc = { ...calcBase, invalido: motivoSemPreco !== null };
@@ -881,6 +965,56 @@ export function Calculadora({
   // Encomenda é do Pro até 30/11/2026 e do Premium depois (virada de preços).
   const tierEncomenda = tierDosNumeros();
   const planoEncomenda = tiersPagos()[tierEncomenda].titulo;
+  // No cadastro: o resumo dos custos da marca no lugar dos campos que saíram
+  // (ONE-258). "Mudar no Financeiro" abre em outra aba pra não perder o cadastro;
+  // na volta, a leitura se refaz sozinha (foco na janela).
+  // Acréscimo por marketplace (ONE-259): do cadastro (marca) ou, na avulsa, do Financeiro.
+  const acrescimos = (marca ?? custosIniciais)?.acrescimoCanais ?? {};
+  const canaisComAcrescimo = CANAIS_ACRESCIMO.map((c) => ({
+    chave: c.chave,
+    nome: c.nome,
+    pct: acrescimos[c.chave] ?? 0,
+  })).filter((c) => c.pct > 0);
+
+  const blocoMarca = (onde: PerfilCalc) => {
+    if (!marca) return null;
+    const comSalario = onde === "produto";
+    const rateio = rateioDaMarca(marca, comSalario);
+    const pct = (n: number) => `${numeroParaCampo(n).replace(/,00$/, "")}%`;
+    return (
+      <div className="mt-6 rounded-xl border border-[var(--line)] bg-white p-4 text-[13px] text-[var(--ink-soft)]">
+        <p className="text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+          Custos da marca, do Financeiro
+        </p>
+        {!marca.cadastrado ? (
+          <p className="mt-2">
+            Os custos da marca ainda não foram preenchidos. Sem eles, o preço considera só os custos
+            da peça, o imposto e a taxa ficam em 0 e o aluguel não entra na conta.
+          </p>
+        ) : (
+          <p className="mt-2">
+            {marca.fixosMes > 0 || (comSalario && marca.proLabore > 0)
+              ? rateio == null
+                ? `${fmt(marca.fixosMes)} de custos fixos${comSalario && marca.proLabore > 0 ? ` e ${fmt(marca.proLabore)} de salário` : ""}, sem as peças vendidas por mês pra dividir.`
+                : `${fmt(marca.fixosMes)} de custos fixos${comSalario && marca.proLabore > 0 ? ` e ${fmt(marca.proLabore)} de salário` : ""} divididos por ${marca.pecasMes} ${marca.pecasMes === 1 ? "peça" : "peças"}: ${fmt(Math.round(rateio * 100) / 100)} em cada uma.`
+              : "Sem custos fixos cadastrados."}{" "}
+            Imposto {pct(marca.impostoPct)} e taxa de recebimento {pct(marca.taxaRecebimentoPct)}.
+            {!comSalario && " O salário entra pelo valor da hora."}
+          </p>
+        )}
+        <a
+          href="/financeiro#custos-da-marca"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-1 inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+        >
+          {marca.cadastrado ? "Mudar no Financeiro" : "Preencher no Financeiro"}
+          <span className="sr-only"> (abre em outra aba)</span>
+        </a>
+      </div>
+    );
+  };
+
   const aoTeclarNasAbas = (e: KeyboardEvent<HTMLDivElement>) => {
     const atual = abasDisponiveis.indexOf(perfil);
     const ultimo = abasDisponiveis.length - 1;
@@ -921,70 +1055,72 @@ export function Calculadora({
       {/* Seletor de perfil. Padrão ARIA de abas (ONE-68): só a aba ativa entra no
           Tab, as setas trocam de aba, e o link travado do Encomenda fica fora do
           tablist (link não é aba). */}
-      <div className="flex flex-wrap gap-2">
-        <div
-          role="tablist"
-          aria-label="Perfil da calculadora"
-          className="flex flex-wrap gap-2"
-          onKeyDown={aoTeclarNasAbas}
-        >
-          {(
-            [
-              { id: "produto", label: "Produto (físico/digital)" },
-              { id: "servico", label: "Serviço (por hora)" },
-            ] as { id: PerfilCalc; label: string }[]
-          ).map((p) => {
-            const ativo = perfil === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                id={`calc-tab-${p.id}`}
-                role="tab"
-                aria-selected={ativo}
-                tabIndex={ativo ? 0 : -1}
-                aria-controls={`calc-painel-${p.id}`}
-                onClick={() => setPerfil(p.id)}
-                className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
-                  ativo
-                    ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                    : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
-                }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
-          {/* A etiqueta "Pro" avisa antes do clique (14/10/2026). Fora do Pro a
-              aba abre mesmo assim: calcula o custo e fecha só o preço. */}
-          <button
-            type="button"
-            id="calc-tab-encomenda"
-            role="tab"
-            aria-selected={perfil === "encomenda"}
-            tabIndex={perfil === "encomenda" ? 0 : -1}
-            aria-controls="calc-painel-encomenda"
-            onClick={() => {
-              setPerfil("encomenda");
-              if (!ehProjete) track("encomenda_previa_aberta");
-            }}
-            className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] ${
-              perfil === "encomenda"
-                ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
-                : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
-            }`}
+      {!noCadastro && (
+        <div className="flex flex-wrap gap-2">
+          <div
+            role="tablist"
+            aria-label="Perfil da calculadora"
+            className="flex flex-wrap gap-2"
+            onKeyDown={aoTeclarNasAbas}
           >
-            {!ehProjete && <Lock size={13} aria-hidden="true" />}
-            Encomenda (sob medida)
-            {!ehProjete && (
-              <>
-                <span className="sr-only">, preço do plano</span>
-                <EtiquetaPlano nome={planoEncomenda} />
-              </>
-            )}
-          </button>
+            {(
+              [
+                { id: "produto", label: "Produto (físico/digital)" },
+                { id: "servico", label: "Serviço (por hora)" },
+              ] as { id: PerfilCalc; label: string }[]
+            ).map((p) => {
+              const ativo = perfil === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  id={`calc-tab-${p.id}`}
+                  role="tab"
+                  aria-selected={ativo}
+                  tabIndex={ativo ? 0 : -1}
+                  aria-controls={`calc-painel-${p.id}`}
+                  onClick={() => setPerfil(p.id)}
+                  className={`inline-flex min-h-11 items-center rounded-xl px-4 py-2 text-[13px] ${
+                    ativo
+                      ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                      : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+            {/* A etiqueta "Pro" avisa antes do clique (14/10/2026). Fora do Pro a
+              aba abre mesmo assim: calcula o custo e fecha só o preço. */}
+            <button
+              type="button"
+              id="calc-tab-encomenda"
+              role="tab"
+              aria-selected={perfil === "encomenda"}
+              tabIndex={perfil === "encomenda" ? 0 : -1}
+              aria-controls="calc-painel-encomenda"
+              onClick={() => {
+                setPerfil("encomenda");
+                if (!ehProjete) track("encomenda_previa_aberta");
+              }}
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-xl px-4 py-2 text-[13px] ${
+                perfil === "encomenda"
+                  ? "border border-[var(--secondary)] bg-[var(--secondary-light)] text-[var(--secondary-text)]"
+                  : "border border-[var(--line)] text-[var(--ink-soft)] hover:border-[var(--secondary)]"
+              }`}
+            >
+              {!ehProjete && <Lock size={13} aria-hidden="true" />}
+              Encomenda (sob medida)
+              {!ehProjete && (
+                <>
+                  <span className="sr-only">, preço do plano</span>
+                  <EtiquetaPlano nome={planoEncomenda} />
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Campos */}
       {perfil === "produto" ? (
@@ -1031,45 +1167,53 @@ export function Calculadora({
               onChange={setOutrosDiretos}
             />
           </GrupoCalc>
-          <GrupoCalc titulo="Custos fixos e salário (rateio do mês)">
-            <div className="sm:col-span-2">
-              <BlocoCustosFixos
-                total={despesasFixas}
-                onTotal={setDespesasFixas}
-                detalhado={fixosDetalhado}
-                onDetalhado={setFixosDetalhado}
-                detalhe={fixosDetalhe}
-                onDetalhe={setFixosDetalhe}
-                doFinanceiro={fixosDoFinanceiro}
-                reservaEquipamentos={reservaEquipamentos}
+          {marca ? (
+            blocoMarca("produto")
+          ) : (
+            <GrupoCalc titulo="Custos fixos e salário (rateio do mês)">
+              <div className="sm:col-span-2">
+                <BlocoCustosFixos
+                  total={despesasFixas}
+                  onTotal={setDespesasFixas}
+                  detalhado={fixosDetalhado}
+                  onDetalhado={setFixosDetalhado}
+                  detalhe={fixosDetalhe}
+                  onDetalhe={setFixosDetalhe}
+                  doFinanceiro={fixosDoFinanceiro}
+                  reservaEquipamentos={reservaEquipamentos}
+                />
+              </div>
+              <CampoNum
+                label="Pró-labore (seu salário) (R$)"
+                dica="Quanto quer tirar pra você por mês. Se a sua hora já entra na mão de obra de cada peça, deixe em branco pra não cobrar duas vezes."
+                value={proLabore}
+                onChange={setProLabore}
               />
-            </div>
-            <CampoNum
-              label="Pró-labore (seu salário) (R$)"
-              dica="Quanto quer tirar pra você por mês. Se a sua hora já entra na mão de obra de cada peça, deixe em branco pra não cobrar duas vezes."
-              value={proLabore}
-              onChange={setProLabore}
-            />
-            <CampoNum
-              label="Quantas peças a marca vende por mês"
-              dica="Some todos os produtos, não só este. O custo fixo é da marca inteira e se divide entre todas as peças; contando só este produto, o aluguel todo cai em cima dele."
-              value={qtd}
-              onChange={setQtd}
-            />
-          </GrupoCalc>
-          <GrupoCalc titulo="Sobre o preço de venda (%)">
-            <CampoNum
-              label="Taxa de maquininha / marketplace (%)"
-              dica={DICA_TAXA}
-              value={taxaVenda}
-              onChange={setTaxaVenda}
-            />
-            <CampoNum
-              label="Impostos sobre a venda (%)"
-              dica={DICA_IMPOSTO}
-              value={impostos}
-              onChange={setImpostos}
-            />
+              <CampoNum
+                label="Quantas peças a marca vende por mês"
+                dica="Some todos os produtos, não só este. O custo fixo é da marca inteira e se divide entre todas as peças; contando só este produto, o aluguel todo cai em cima dele."
+                value={qtd}
+                onChange={setQtd}
+              />
+            </GrupoCalc>
+          )}
+          <GrupoCalc titulo={marca ? "Lucro" : "Sobre o preço de venda (%)"}>
+            {!marca && (
+              <>
+                <CampoNum
+                  label="Taxa de maquininha / marketplace (%)"
+                  dica={DICA_TAXA}
+                  value={taxaVenda}
+                  onChange={setTaxaVenda}
+                />
+                <CampoNum
+                  label="Impostos sobre a venda (%)"
+                  dica={DICA_IMPOSTO}
+                  value={impostos}
+                  onChange={setImpostos}
+                />
+              </>
+            )}
             <CampoNum
               label="Quanto quer lucrar (%)"
               dica={DICA_LUCRO}
@@ -1100,42 +1244,50 @@ export function Calculadora({
             />
             <CampoNum label="Outros (R$)" value={outrosServico} onChange={setOutrosServico} />
           </GrupoCalc>
-          <GrupoCalc titulo="Custos fixos (rateio do mês)">
-            <div className="sm:col-span-2">
-              <BlocoCustosFixos
-                total={despesasFixas}
-                onTotal={setDespesasFixas}
-                detalhado={fixosDetalhado}
-                onDetalhado={setFixosDetalhado}
-                detalhe={fixosDetalhe}
-                onDetalhe={setFixosDetalhe}
-                doFinanceiro={fixosDoFinanceiro}
-                reservaEquipamentos={reservaEquipamentos}
+          {marca ? (
+            blocoMarca("servico")
+          ) : (
+            <GrupoCalc titulo="Custos fixos (rateio do mês)">
+              <div className="sm:col-span-2">
+                <BlocoCustosFixos
+                  total={despesasFixas}
+                  onTotal={setDespesasFixas}
+                  detalhado={fixosDetalhado}
+                  onDetalhado={setFixosDetalhado}
+                  detalhe={fixosDetalhe}
+                  onDetalhe={setFixosDetalhe}
+                  doFinanceiro={fixosDoFinanceiro}
+                  reservaEquipamentos={reservaEquipamentos}
+                />
+              </div>
+              <CampoNum
+                label="Quantos serviços a marca faz por mês"
+                dica="Some todos os serviços, não só este. O custo fixo é da marca inteira e se divide entre todos os atendimentos; contando só este serviço, o aluguel todo cai em cima dele."
+                value={qtdServicos}
+                onChange={setQtdServicos}
               />
-            </div>
-            <CampoNum
-              label="Quantos serviços a marca faz por mês"
-              dica="Some todos os serviços, não só este. O custo fixo é da marca inteira e se divide entre todos os atendimentos; contando só este serviço, o aluguel todo cai em cima dele."
-              value={qtdServicos}
-              onChange={setQtdServicos}
-            />
-            <p className="self-center text-[12.5px] text-[var(--muted)]">
-              O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
-            </p>
-          </GrupoCalc>
-          <GrupoCalc titulo="Sobre o preço (%)">
-            <CampoNum
-              label="Taxa / comissão (%)"
-              dica={DICA_TAXA}
-              value={taxaVendaS}
-              onChange={setTaxaVendaS}
-            />
-            <CampoNum
-              label="Impostos sobre a venda (%)"
-              dica={DICA_IMPOSTO}
-              value={impostosS}
-              onChange={setImpostosS}
-            />
+              <p className="self-center text-[12.5px] text-[var(--muted)]">
+                O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
+              </p>
+            </GrupoCalc>
+          )}
+          <GrupoCalc titulo={marca ? "Lucro" : "Sobre o preço (%)"}>
+            {!marca && (
+              <>
+                <CampoNum
+                  label="Taxa / comissão (%)"
+                  dica={DICA_TAXA}
+                  value={taxaVendaS}
+                  onChange={setTaxaVendaS}
+                />
+                <CampoNum
+                  label="Impostos sobre a venda (%)"
+                  dica={DICA_IMPOSTO}
+                  value={impostosS}
+                  onChange={setImpostosS}
+                />
+              </>
+            )}
             <CampoNum
               label="Quanto quer lucrar (%)"
               dica={DICA_LUCRO}
@@ -1242,43 +1394,51 @@ export function Calculadora({
             </button>
           </div>
 
-          <GrupoCalc titulo="Custos fixos (rateio do mês)">
-            <div className="sm:col-span-2">
-              <BlocoCustosFixos
-                total={despesasFixas}
-                onTotal={setDespesasFixas}
-                detalhado={fixosDetalhado}
-                onDetalhado={setFixosDetalhado}
-                detalhe={fixosDetalhe}
-                onDetalhe={setFixosDetalhe}
-                doFinanceiro={fixosDoFinanceiro}
-                reservaEquipamentos={reservaEquipamentos}
+          {marca ? (
+            blocoMarca("encomenda")
+          ) : (
+            <GrupoCalc titulo="Custos fixos (rateio do mês)">
+              <div className="sm:col-span-2">
+                <BlocoCustosFixos
+                  total={despesasFixas}
+                  onTotal={setDespesasFixas}
+                  detalhado={fixosDetalhado}
+                  onDetalhado={setFixosDetalhado}
+                  detalhe={fixosDetalhe}
+                  onDetalhe={setFixosDetalhe}
+                  doFinanceiro={fixosDoFinanceiro}
+                  reservaEquipamentos={reservaEquipamentos}
+                />
+              </div>
+              <CampoNum
+                label="Quantas encomendas a marca faz por mês"
+                dica="Some todas as encomendas e vendas do mês, não só esta. O custo fixo é da marca inteira e se divide entre todas."
+                value={qtdEncomendas}
+                onChange={setQtdEncomendas}
               />
-            </div>
-            <CampoNum
-              label="Quantas encomendas a marca faz por mês"
-              dica="Some todas as encomendas e vendas do mês, não só esta. O custo fixo é da marca inteira e se divide entre todas."
-              value={qtdEncomendas}
-              onChange={setQtdEncomendas}
-            />
-            <p className="self-center text-[12.5px] text-[var(--muted)]">
-              O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
-            </p>
-          </GrupoCalc>
+              <p className="self-center text-[12.5px] text-[var(--muted)]">
+                O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
+              </p>
+            </GrupoCalc>
+          )}
 
-          <GrupoCalc titulo="Sobre o preço (%)">
-            <CampoNum
-              label="Taxa / comissão (%)"
-              dica={DICA_TAXA}
-              value={taxaVendaE}
-              onChange={setTaxaVendaE}
-            />
-            <CampoNum
-              label="Impostos sobre a venda (%)"
-              dica={DICA_IMPOSTO}
-              value={impostosE}
-              onChange={setImpostosE}
-            />
+          <GrupoCalc titulo={marca ? "Lucro" : "Sobre o preço (%)"}>
+            {!marca && (
+              <>
+                <CampoNum
+                  label="Taxa / comissão (%)"
+                  dica={DICA_TAXA}
+                  value={taxaVendaE}
+                  onChange={setTaxaVendaE}
+                />
+                <CampoNum
+                  label="Impostos sobre a venda (%)"
+                  dica={DICA_IMPOSTO}
+                  value={impostosE}
+                  onChange={setImpostosE}
+                />
+              </>
+            )}
             <CampoNum
               label="Quanto quer lucrar (%)"
               dica={DICA_LUCRO}
@@ -1427,6 +1587,44 @@ export function Calculadora({
                 }
               />
             </div>
+            {/* Preço por canal (ONE-259): o acréscimo de cada marketplace, cadastrado
+                em Marketplaces, em cima do preço da venda direta. */}
+            {!encomendaTravada && !calc.invalido && canaisComAcrescimo.length > 0 && (
+              <div className="mt-4 space-y-1.5 border-t border-[var(--line)] pt-3 text-[13px] text-[var(--ink-soft)]">
+                <p className="text-[10px] font-accent font-bold uppercase tracking-[0.12em] text-[var(--muted)]">
+                  Preço por canal
+                </p>
+                <LinhaCalc
+                  label="Loja da marca e venda direta"
+                  valor={fmt(round2(calc.precoSugerido))}
+                />
+                {canaisComAcrescimo.map((c) => (
+                  <LinhaCalc
+                    key={c.chave}
+                    label={`${c.nome} (+${numeroParaCampo(c.pct).replace(/,00$/, "")}%)`}
+                    valor={fmt(precoNoCanal(round2(calc.precoSugerido), c.pct))}
+                  />
+                ))}
+              </div>
+            )}
+            {noCadastro &&
+              !encomendaTravada &&
+              !calc.invalido &&
+              canaisComAcrescimo.length === 0 && (
+                <p className="mt-3 text-[12px] text-[var(--ink-soft)]">
+                  Vende em marketplace com preço maior? Cadastre o acréscimo de cada canal em{" "}
+                  <a
+                    href="/produtos/anuncios"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-[var(--secondary-text)] hover:underline"
+                  >
+                    Marketplaces
+                    <span className="sr-only"> (abre em outra aba)</span>
+                  </a>{" "}
+                  e o preço de cada um aparece aqui.
+                </p>
+              )}
             {/* Guardar é a ação principal (20/10/2026, GRW-66): 31 contas do Grátis
                 calcularam e só 3 guardaram. O botão morava no fim da página, depois
                 do simulador de desconto, e o preço calculado sumia ao sair. */}
