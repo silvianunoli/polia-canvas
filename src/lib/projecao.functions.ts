@@ -195,6 +195,34 @@ export function custosFixosDePartida(
     : { valor: doMesAtual, origem: "mes-atual", doMesAtual, doMesAnterior };
 }
 
+// ── Reserva de equipamento (ONE-251) ──
+// A compra da máquina fica fora dos custos fixos (ver CATEGORIA_EQUIPAMENTO),
+// mas a parcela de cada mês (preço ÷ meses de uso, aba Equipamentos) é custo
+// fixo de verdade: sem ela o empate saía mais baixo pra quem tem máquina. Se
+// ela já lança a reserva no Financeiro, nessa categoria, essa saída já está
+// nos custos fixos: entra só o que falta, pra não contar duas vezes.
+export const CATEGORIA_RESERVA_EQUIPAMENTO = "Reserva de equipamento";
+
+function ehReservaDeEquipamento(categoria: string | null | undefined): boolean {
+  if (!categoria) return false;
+  return (
+    categoria.trim().toLocaleLowerCase("pt-BR") ===
+    CATEGORIA_RESERVA_EQUIPAMENTO.toLocaleLowerCase("pt-BR")
+  );
+}
+
+export function reservaForaDoFinanceiro(params: {
+  lancamentos: LancamentoResumo[];
+  mes: number;
+  ano: number;
+  reservaDoMes: number;
+}): number {
+  const lancada = saidasDoMes(params.lancamentos, params.mes, params.ano)
+    .filter((l) => ehReservaDeEquipamento(l.categoria))
+    .reduce((acc, l) => acc + Number(l.valor), 0);
+  return Math.round(Math.max(0, params.reservaDoMes - lancada) * 100) / 100;
+}
+
 // ── Salário de partida (ONE-241) ──
 // "Quanto você quer tirar por mês" é o salário DESEJADO. Antes o campo abria
 // com o pró-labore já lançado no mês corrente, que pode ser só uma parte (R$

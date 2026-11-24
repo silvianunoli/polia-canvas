@@ -709,7 +709,7 @@ const LISTA = [
       {
         pergunta: "Comprei uma máquina. Como lanço",
         resposta:
-          'Cadastre na aba "Equipamentos", em Produtos, e clique em "Marcar como comprado". A saída aparece aqui em "Compra de equipamento" e fica fora do "Lucro do mês" e dos custos fixos. A parcela de cada mês entra no preço pela "Reserva de equipamento" da Calculadora.',
+          'Cadastre na aba "Equipamentos", em Produtos, e clique em "Marcar como comprado". A saída aparece aqui em "Compra de equipamento" e fica fora do "Lucro do mês" e dos custos fixos. A parcela de cada mês entra no preço pela "Reserva de equipamento" da Calculadora e nos custos fixos da Projeção.',
       },
     ],
   },
@@ -780,7 +780,7 @@ const LISTA = [
       {
         titulo: "Ler a projeção",
         itens: [
-          "Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro, o que já entrou no mês e a Meta do mês.",
+          'Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro, a reserva da aba "Equipamentos", o que já entrou no mês e a Meta do mês.',
           '"Pra empatar" mostra quantas vendas ainda faltam pra pagar os custos fixos, com o total do mês ao lado.',
           '"Pra pagar o seu salário" soma o salário aos custos fixos.',
           '"Pra bater a meta" mostra quantas vendas faltam pra fechar a Meta do mês.',
@@ -801,6 +801,7 @@ const LISTA = [
       "A Projeção é do Premium e do Pro.",
       "Precisa de pelo menos um produto com preço. Faltando algo, a tela diz o quê e leva pra lá.",
       "Os custos fixos partem do último mês fechado. Se o mês atual já gastou mais, vale o mês atual.",
+      'A "Reserva do mês" da aba "Equipamentos" entra nos custos fixos. O que já foi lançado no Financeiro em "Reserva de equipamento" naquele mês é descontado, pra não contar duas vezes.',
       "O salário parte do que foi salvo aqui e, sem isso, do pró-labore do mês passado. O pró-labore já tirado neste mês aparece só como informação.",
       '"Salvar salário e meta" guarda só esses dois. Os outros campos voltam ao valor real.',
     ],

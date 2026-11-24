@@ -17,6 +17,7 @@ import {
   mediaTaxas,
   montarProjecao,
   proLaboreJaLancado,
+  reservaForaDoFinanceiro,
   separarForaDaCurva,
   sobraPorVenda,
   ticketMedio,
@@ -593,5 +594,35 @@ describe("montarFaltaNoMes (ONE-241: 'faltam' de verdade)", () => {
 
   it("meta null continua null", () => {
     expect(montarFaltaNoMes({ ...base, metaAlvo: null, jaEntrou: 100 })!.meta).toBeNull();
+  });
+});
+
+describe("reservaForaDoFinanceiro (ONE-251: a parcela da máquina é custo fixo)", () => {
+  it("sem reserva lançada, entra a reserva inteira da aba Equipamentos", () => {
+    const lancamentos = [lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 })];
+    expect(
+      reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 }),
+    ).toBe(73.59);
+  });
+
+  it("desconta a reserva já lançada no Financeiro naquele mês, sem contar duas vezes", () => {
+    const lancamentos = [
+      lanc({ data: "2026-10-05", categoria: " reserva de equipamento ", valor: 50 }),
+      lanc({ data: "2026-11-05", categoria: "Reserva de equipamento", valor: 999 }),
+    ];
+    expect(
+      reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 }),
+    ).toBe(23.59);
+  });
+
+  it("reserva lançada maior que a da aba não deixa número negativo", () => {
+    const lancamentos = [
+      lanc({ data: "2026-10-05", categoria: "Reserva de equipamento", valor: 200 }),
+    ];
+    expect(reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 100 })).toBe(0);
+  });
+
+  it("sem equipamento cadastrado, não soma nada", () => {
+    expect(reservaForaDoFinanceiro({ lancamentos: [], mes: 10, ano: 2026, reservaDoMes: 0 })).toBe(0);
   });
 });

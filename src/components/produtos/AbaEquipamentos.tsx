@@ -124,7 +124,7 @@ export function AbaEquipamentos({ userId, bloqueado }: { userId: string; bloquea
           <p className="mt-2 text-[13px] text-[var(--ink-soft)]">
             A reserva é o preço de cada equipamento dividido pelos meses de uso, somando os
             comprados e os planejados. Na Calculadora, esse número entra em Reserva de equipamento,
-            nos custos fixos.
+            nos custos fixos, e a Projeção soma ele aos custos fixos do mês.
           </p>
 
           <ul className="mt-6 rounded-xl border border-[var(--line)] bg-white">

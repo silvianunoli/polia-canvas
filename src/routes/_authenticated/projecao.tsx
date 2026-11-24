@@ -29,6 +29,7 @@ import {
   montarProjecao,
   paraCampoReais,
   proLaboreJaLancado,
+  reservaForaDoFinanceiro,
   salarioDePartida,
   separarForaDaCurva,
   sobraPorVenda,
@@ -40,6 +41,8 @@ import { buscarMetaDoMes, TITULO_META_DO_MES } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import type { FaltaNoMes, ProdutoResumo } from "@/lib/projecao.functions";
 import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
+import { resumoEquipamentos } from "@/lib/equipamentos";
+import { useEquipamentos } from "@/components/produtos/equipamentosDados";
 
 type ProdutoDaProjecao = ProdutoResumo & { nome: string };
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
@@ -60,6 +63,10 @@ function fmtBRL(v: number): string {
 
 function nomeDoMes(mes: number, ano: number): string {
   return new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", { month: "long" });
+}
+
+function comMaiuscula(s: string): string {
+  return s.charAt(0).toLocaleUpperCase("pt-BR") + s.slice(1);
 }
 
 function vendasTxt(n: number): string {
@@ -186,7 +193,19 @@ function ProjecaoPage() {
     () => custosFixosDePartida(lancamentos, mesAtual, anoAtual),
     [lancamentos, mesAtual, anoAtual],
   );
-  const custosFixosBase = fixos.valor;
+  // ONE-251: a parcela mensal dos equipamentos entra nos custos fixos, menos o
+  // que ela já lançou como reserva no Financeiro no mesmo mês. Se a leitura dos
+  // equipamentos falhar, a reserva fica fora e a dica do campo avisa.
+  const equipamentosQuery = useEquipamentos(userId, ehProjete);
+  const reservaDoMes = resumoEquipamentos(equipamentosQuery.data ?? []).reservaDoMes;
+  const mesDosFixos = fixos.origem === "mes-anterior" ? ant : { mes: mesAtual, ano: anoAtual };
+  const reservaEquipamentos = reservaForaDoFinanceiro({
+    lancamentos,
+    mes: mesDosFixos.mes,
+    ano: mesDosFixos.ano,
+    reservaDoMes,
+  });
+  const custosFixosBase = Math.round((fixos.valor + reservaEquipamentos) * 100) / 100;
   // Insumo do mês de onde os custos fixos vieram (só pra linha de ajuda).
   const insumosForaBase = useMemo(
     () =>
@@ -417,7 +436,24 @@ function ProjecaoPage() {
 
   const semProduto = !dadosQuery.isLoading && produtos.length === 0;
   const semCusto =
-    !dadosQuery.isLoading && !semProduto && custosFixosBase === 0 && custosFixosTxt == null;
+    !dadosQuery.isLoading && !semProduto && fixos.valor === 0 && custosFixosTxt == null;
+  // Dica do campo de custos fixos: de onde veio o número, o que ficou fora e a
+  // reserva dos equipamentos. Mês anterior zerado não vira "maiores que R$ 0,00".
+  const dicaOrigemFixos =
+    fixos.origem === "mes-anterior"
+      ? `Vem das saídas de ${nomeMesAnterior}, o último mês fechado. Em ${nomeMesAtual} já saíram ${fmtBRL(fixos.doMesAtual)} até agora.`
+      : fixos.doMesAnterior > 0
+        ? `Saídas de ${nomeMesAtual} até agora, já maiores que as de ${nomeMesAnterior} (${fmtBRL(fixos.doMesAnterior)}).`
+        : `Saídas de ${nomeMesAtual} até agora. ${comMaiuscula(nomeMesAnterior)} não tem custo fixo lançado no Financeiro.`;
+  const dicaReserva = equipamentosQuery.isError
+    ? " A reserva dos equipamentos não carregou e ficou fora dessa soma."
+    : reservaEquipamentos > 0
+      ? ` Inclui ${fmtBRL(reservaEquipamentos)} da reserva dos equipamentos (aba Equipamentos, em Produtos).`
+      : "";
+  const dicaFora =
+    insumosForaBase > 0
+      ? ` Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
+      : ` Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`;
 
   return (
     <PaginaLogada
@@ -591,15 +627,7 @@ function ProjecaoPage() {
               <div className="mt-5 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
                 <Campo
                   label="Custos fixos do mês (R$)"
-                  hint={`${
-                    fixos.origem === "mes-anterior"
-                      ? `Vem de ${nomeMesAnterior}, o último mês fechado. Em ${nomeMesAtual} já saíram ${fmtBRL(fixos.doMesAtual)} até agora.`
-                      : `Saídas de ${nomeMesAtual} até agora, já maiores que as de ${nomeMesAnterior} (${fmtBRL(fixos.doMesAnterior)}).`
-                  } ${
-                    insumosForaBase > 0
-                      ? `Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
-                      : `Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
-                  }`}
+                  hint={`${dicaOrigemFixos}${dicaReserva}${dicaFora}`}
                   error={erroValidacao.custosFixos}
                 >
                   <input
