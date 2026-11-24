@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   contagemDoCatalogo,
   controlaMateriais,
+  direcaoInicial,
   filtrarCatalogo,
   filtrarReceitas,
   mostraTipoNoCard,
@@ -15,6 +16,7 @@ const p = (
     preco_venda: number;
     preco_custo: number | null;
     no_catalogo: boolean;
+    arquivado: boolean;
     created_at: string;
   }> = {},
 ) => ({
@@ -34,23 +36,30 @@ const lista = [
 ];
 
 describe("contagemDoCatalogo", () => {
-  it("conta cada filtro, com os arquivados à parte", () => {
+  it("conta cada filtro; Todos soma ativos e inativos", () => {
     expect(contagemDoCatalogo(lista, 71)).toEqual({
-      todos: 3,
+      ativos: 3,
       vitrine: 2,
       fora: 1,
       sem_custo: 1,
-      arquivados: 71,
+      inativos: 71,
+      todos: 74,
     });
   });
 });
 
 describe("filtrarCatalogo", () => {
-  it("separa Vitrine, fora da Vitrine e sem custo", () => {
-    expect(filtrarCatalogo(lista, "vitrine").map((x) => x.nome)).toEqual(["Caneca", "Azulejo"]);
-    expect(filtrarCatalogo(lista, "fora").map((x) => x.nome)).toEqual(["Babador"]);
-    expect(filtrarCatalogo(lista, "sem_custo").map((x) => x.nome)).toEqual(["Babador"]);
-    expect(filtrarCatalogo(lista, "todos")).toHaveLength(3);
+  const inativos = [p("Teste", { created_at: "2026-10-01T00:00:00Z" })];
+  it("separa Vitrine, fora da Vitrine, sem custo, inativos e todos", () => {
+    expect(filtrarCatalogo(lista, inativos, "vitrine").map((x) => x.nome)).toEqual([
+      "Caneca",
+      "Azulejo",
+    ]);
+    expect(filtrarCatalogo(lista, inativos, "fora").map((x) => x.nome)).toEqual(["Babador"]);
+    expect(filtrarCatalogo(lista, inativos, "sem_custo").map((x) => x.nome)).toEqual(["Babador"]);
+    expect(filtrarCatalogo(lista, inativos, "inativos").map((x) => x.nome)).toEqual(["Teste"]);
+    expect(filtrarCatalogo(lista, inativos, "ativos")).toHaveLength(3);
+    expect(filtrarCatalogo(lista, inativos, "todos")).toHaveLength(4);
   });
 });
 
@@ -59,37 +68,67 @@ describe("ordenarCatalogo", () => {
     x.preco_custo == null
       ? null
       : Math.round(((x.preco_venda - x.preco_custo) / x.preco_venda) * 100);
+  const nomes = (l: typeof lista) => l.map((x) => x.nome);
 
-  it("mais recentes primeiro por padrão", () => {
-    expect(ordenarCatalogo(lista, "recentes", lucro).map((x) => x.nome)).toEqual([
+  it("mais recentes primeiro", () => {
+    expect(nomes(ordenarCatalogo(lista, "recentes", "desc", lucro))).toEqual([
       "Azulejo",
       "Caneca",
       "Babador",
     ]);
   });
 
-  it("por nome, preço e lucro (sem custo vai pro fim)", () => {
-    expect(ordenarCatalogo(lista, "nome", lucro).map((x) => x.nome)).toEqual([
+  it("por nome nas duas direções", () => {
+    expect(nomes(ordenarCatalogo(lista, "nome", "asc", lucro))).toEqual([
       "Azulejo",
       "Babador",
       "Caneca",
     ]);
-    expect(ordenarCatalogo(lista, "preco", lucro).map((x) => x.nome)).toEqual([
+    expect(nomes(ordenarCatalogo(lista, "nome", "desc", lucro))).toEqual([
+      "Caneca",
+      "Babador",
+      "Azulejo",
+    ]);
+  });
+
+  it("preço, custo e lucro; sem custo fica no fim nas duas direções", () => {
+    expect(nomes(ordenarCatalogo(lista, "preco", "desc", lucro))).toEqual([
       "Caneca",
       "Azulejo",
       "Babador",
     ]);
-    expect(ordenarCatalogo(lista, "lucro", lucro).map((x) => x.nome)).toEqual([
+    // Mesmo custo: o nome desempata.
+    expect(nomes(ordenarCatalogo(lista, "custo", "asc", lucro))).toEqual([
+      "Azulejo",
+      "Caneca",
+      "Babador",
+    ]);
+    expect(nomes(ordenarCatalogo(lista, "lucro", "desc", lucro))).toEqual([
       "Caneca",
       "Azulejo",
       "Babador",
     ]);
+    expect(nomes(ordenarCatalogo(lista, "lucro", "asc", lucro))).toEqual([
+      "Azulejo",
+      "Caneca",
+      "Babador",
+    ]);
+  });
+
+  it("status põe os ativos antes em asc", () => {
+    const misto = [p("Inativo", { arquivado: true }), p("Ativo")];
+    expect(nomes(ordenarCatalogo(misto, "status", "asc", lucro))).toEqual(["Ativo", "Inativo"]);
   });
 
   it("não mexe na lista original", () => {
-    const antes = lista.map((x) => x.nome);
-    ordenarCatalogo(lista, "nome", lucro);
-    expect(lista.map((x) => x.nome)).toEqual(antes);
+    const antes = nomes(lista);
+    ordenarCatalogo(lista, "nome", "asc", lucro);
+    expect(nomes(lista)).toEqual(antes);
+  });
+
+  it("primeiro clique: texto de A a Z, número do maior pro menor", () => {
+    expect(direcaoInicial("nome")).toBe("asc");
+    expect(direcaoInicial("lucro")).toBe("desc");
   });
 });
 

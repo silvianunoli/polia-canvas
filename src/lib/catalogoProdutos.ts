@@ -3,23 +3,31 @@
 // contagem, sem filtro e sem ordem, e os arquivados não apareciam em lugar
 // nenhum. Aqui mora só a regra; a tela é routes/_authenticated/produtos.tsx.
 
-export type FiltroCatalogo = "todos" | "vitrine" | "fora" | "sem_custo" | "arquivados";
-export type OrdemCatalogo = "recentes" | "nome" | "preco" | "lucro";
+// Desde 23/11/2026 (pedido da Sil) o Catálogo é uma lista, não uma vitrine:
+// foto, preço, custo, lucro e status, com o cabeçalho de cada coluna ordenando.
+// "Arquivados" virou "Inativos", o mesmo nome do Painel.
+
+export type FiltroCatalogo = "ativos" | "vitrine" | "fora" | "sem_custo" | "inativos" | "todos";
+export type ColunaCatalogo = "recentes" | "nome" | "preco" | "custo" | "lucro" | "status";
+export type DirecaoOrdem = "asc" | "desc";
 
 export const ROTULO_FILTRO: Record<FiltroCatalogo, string> = {
-  todos: "Todos",
+  ativos: "Ativos",
   vitrine: "Na Vitrine",
   fora: "Fora da Vitrine",
   sem_custo: "Sem custo",
-  arquivados: "Arquivados",
+  inativos: "Inativos",
+  todos: "Todos",
 };
 
-export const ROTULO_ORDEM: Record<OrdemCatalogo, string> = {
-  recentes: "Mais recentes",
-  nome: "Nome (A a Z)",
-  preco: "Maior preço",
-  lucro: "Maior lucro",
-};
+export const FILTROS_CATALOGO: FiltroCatalogo[] = [
+  "ativos",
+  "vitrine",
+  "fora",
+  "sem_custo",
+  "inativos",
+  "todos",
+];
 
 export interface ProdutoDoCatalogo {
   nome: string;
@@ -27,6 +35,7 @@ export interface ProdutoDoCatalogo {
   preco_venda: number | string | null;
   preco_custo: number | string | null;
   no_catalogo?: boolean | null;
+  arquivado?: boolean | null;
   created_at: string;
 }
 
@@ -34,10 +43,10 @@ const semCusto = (p: ProdutoDoCatalogo) => p.preco_custo == null;
 
 export type ContagemCatalogo = Record<FiltroCatalogo, number>;
 
-/** Quantos produtos cada filtro mostra. `ativos` não inclui os arquivados. */
+/** Quantos produtos cada filtro mostra. Vitrine, fora e sem custo contam só os ativos. */
 export function contagemDoCatalogo(
   ativos: readonly ProdutoDoCatalogo[],
-  arquivados: number,
+  inativos: number,
 ): ContagemCatalogo {
   let vitrine = 0;
   let semCustoN = 0;
@@ -46,54 +55,67 @@ export function contagemDoCatalogo(
     if (semCusto(p)) semCustoN += 1;
   }
   return {
-    todos: ativos.length,
+    ativos: ativos.length,
     vitrine,
     fora: ativos.length - vitrine,
     sem_custo: semCustoN,
-    arquivados,
+    inativos,
+    todos: ativos.length + inativos,
   };
 }
 
-/** Filtra os ativos. "arquivados" é outra lista, lida à parte pela tela. */
+/** A lista de cada filtro, a partir dos ativos e dos inativos (lidos à parte). */
 export function filtrarCatalogo<T extends ProdutoDoCatalogo>(
   ativos: readonly T[],
-  filtro: Exclude<FiltroCatalogo, "arquivados">,
+  inativos: readonly T[],
+  filtro: FiltroCatalogo,
 ): T[] {
   if (filtro === "vitrine") return ativos.filter((p) => !!p.no_catalogo);
   if (filtro === "fora") return ativos.filter((p) => !p.no_catalogo);
   if (filtro === "sem_custo") return ativos.filter(semCusto);
+  if (filtro === "inativos") return [...inativos];
+  if (filtro === "todos") return [...ativos, ...inativos];
   return [...ativos];
 }
 
+/** A direção que a coluna usa no primeiro clique: texto de A a Z, número do maior pro menor. */
+export function direcaoInicial(coluna: ColunaCatalogo): DirecaoOrdem {
+  return coluna === "nome" || coluna === "status" ? "asc" : "desc";
+}
+
 /**
- * Ordena sem mexer na lista original. `lucroPct` devolve o lucro em % do
- * produto, ou null sem custo: quem não tem lucro conhecido vai pro fim em
- * "Maior lucro". No empate, o nome decide.
+ * Ordena sem mexer na lista original. Quem não tem o número da coluna (sem
+ * custo, sem lucro conhecido) fica no fim nas duas direções. No empate, o
+ * nome decide. "status" põe os ativos antes dos inativos em "asc".
  */
 export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
   lista: readonly T[],
-  ordem: OrdemCatalogo,
+  coluna: ColunaCatalogo,
+  direcao: DirecaoOrdem,
   lucroPct: (p: T) => number | null,
 ): T[] {
   const porNome = (a: T, b: T) => a.nome.localeCompare(b.nome, "pt-BR");
+  const sinal = direcao === "asc" ? 1 : -1;
+  const numero = (p: T): number | null => {
+    if (coluna === "preco") return p.preco_venda == null ? null : Number(p.preco_venda);
+    if (coluna === "custo") return p.preco_custo == null ? null : Number(p.preco_custo);
+    if (coluna === "lucro") return lucroPct(p);
+    if (coluna === "status") return p.arquivado ? 1 : 0;
+    return null;
+  };
   const copia = [...lista];
-  if (ordem === "nome") return copia.sort(porNome);
-  if (ordem === "preco") {
-    return copia.sort(
-      (a, b) => Number(b.preco_venda ?? 0) - Number(a.preco_venda ?? 0) || porNome(a, b),
-    );
+  if (coluna === "nome") return copia.sort((a, b) => sinal * porNome(a, b));
+  if (coluna === "recentes") {
+    return copia.sort((a, b) => sinal * a.created_at.localeCompare(b.created_at) || porNome(a, b));
   }
-  if (ordem === "lucro") {
-    return copia.sort((a, b) => {
-      const la = lucroPct(a);
-      const lb = lucroPct(b);
-      if (la == null && lb == null) return porNome(a, b);
-      if (la == null) return 1;
-      if (lb == null) return -1;
-      return lb - la || porNome(a, b);
-    });
-  }
-  return copia.sort((a, b) => b.created_at.localeCompare(a.created_at) || porNome(a, b));
+  return copia.sort((a, b) => {
+    const na = numero(a);
+    const nb = numero(b);
+    if (na == null && nb == null) return porNome(a, b);
+    if (na == null) return 1;
+    if (nb == null) return -1;
+    return sinal * (na - nb) || porNome(a, b);
+  });
 }
 
 /**

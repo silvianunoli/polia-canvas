@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Abas from "@radix-ui/react-tabs";
 import {
-  Archive,
+  ArrowDown,
+  ArrowUp,
   Calculator,
   ChevronDown,
   ListOrdered,
@@ -16,21 +17,20 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
-import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { COTAS_CONFERE, temNumerosDoMes, temVitrine } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
-import { toastErro } from "@/lib/toast";
+import { toastErro, toastSucesso } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
-import { sobraDoProduto, taxasDoBreakdown } from "@/lib/precificacao.functions";
+import { sobraDoProduto } from "@/lib/precificacao.functions";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
-import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
+import { Switch } from "@/components/ui/switch";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { ModalOrdemVitrine } from "@/components/catalogo/ModalOrdemVitrine";
-import { fmt, fmtData, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
+import { fmt, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 import { AbaEstoque } from "@/components/produtos/AbaEstoque";
 import { AbaEquipamentos } from "@/components/produtos/AbaEquipamentos";
 import { AbaInsumos } from "@/components/produtos/AbaInsumos";
@@ -40,19 +40,19 @@ import { useEquipamentos } from "@/components/produtos/equipamentosDados";
 import { estoqueBaixo } from "@/lib/vendas";
 import {
   contagemDoCatalogo,
+  direcaoInicial,
   filtrarCatalogo,
+  FILTROS_CATALOGO,
   mostraTipoNoCard,
   ordenarCatalogo,
   ROTULO_FILTRO,
-  ROTULO_ORDEM,
+  type ColunaCatalogo,
+  type DirecaoOrdem,
   type FiltroCatalogo,
-  type OrdemCatalogo,
 } from "@/lib/catalogoProdutos";
 
 const SELECT_PRODUTO =
   "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
-
-const FILTROS: FiltroCatalogo[] = ["todos", "vitrine", "fora", "sem_custo", "arquivados"];
 
 const CLASSE_ABA =
   "-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] data-[state=active]:border-[var(--ink)] data-[state=active]:text-[var(--ink)]";
@@ -127,16 +127,18 @@ function ProdutosPage() {
   // ── Modal ──
   const [modalAberto, setModalAberto] = useState(false);
   const [produtoEdit, setProdutoEdit] = useState<Produto | null>(null);
-  const [produtoParaArquivar, setProdutoParaArquivar] = useState<Produto | null>(null);
-  const [arquivando, setArquivando] = useState(false);
   const [importarAberto, setImportarAberto] = useState(false);
   // Ordem da Vitrine online também daqui (Premium e Pro), além da tela Vitrine online.
   const [ordemAberta, setOrdemAberta] = useState(false);
   const ehPro = temVitrine(meta.plano);
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<FiltroCatalogo>("todos");
-  const [ordem, setOrdem] = useState<OrdemCatalogo>("recentes");
-  const [reativandoId, setReativandoId] = useState<string | null>(null);
+  const [filtro, setFiltro] = useState<FiltroCatalogo>("ativos");
+  const [ordem, setOrdem] = useState<{ coluna: ColunaCatalogo; direcao: DirecaoOrdem }>({
+    coluna: "recentes",
+    direcao: "desc",
+  });
+  // Produto com chave mexendo agora: a chave dele espera a gravação.
+  const [mudandoId, setMudandoId] = useState<string | null>(null);
   // Contagem das abas: mesmas leituras (e o mesmo cache) das próprias abas.
   const insumosQuery = useInsumos(userId);
   const equipamentosQuery = useEquipamentos(userId);
@@ -184,14 +186,22 @@ function ProdutosPage() {
     [produtos, arquivados.length],
   );
   const mostrarTipo = useMemo(() => mostraTipoNoCard(produtos), [produtos]);
-  const listaDoFiltro = useMemo(() => {
-    const base = filtro === "arquivados" ? arquivados : filtrarCatalogo(produtos, filtro);
-    return ordenarCatalogo(
-      base.filter((p) => nomeBate(p.nome, busca)),
-      ordem,
-      lucroPctDoProduto,
+  const listaDoFiltro = useMemo(
+    () =>
+      ordenarCatalogo(
+        filtrarCatalogo(produtos, arquivados, filtro).filter((p) => nomeBate(p.nome, busca)),
+        ordem.coluna,
+        ordem.direcao,
+        lucroPctDoProduto,
+      ),
+    [filtro, arquivados, produtos, busca, ordem],
+  );
+  const ordenarPor = (coluna: ColunaCatalogo) =>
+    setOrdem((atual) =>
+      atual.coluna === coluna
+        ? { coluna, direcao: atual.direcao === "asc" ? "desc" : "asc" }
+        : { coluna, direcao: direcaoInicial(coluna) },
     );
-  }, [filtro, arquivados, produtos, busca, ordem]);
 
   // Cota do plano Grátis: 5 produtos ativos. Os mais antigos por created_at ficam
   // dentro da cota; o excedente (de um downgrade, por ex.) vira somente
@@ -219,24 +229,6 @@ function ProdutosPage() {
     void navigate({ to: "/calculadora", search: { produto: p.id } });
   };
 
-  const confirmarArquivar = async () => {
-    if (!produtoParaArquivar) return;
-    setArquivando(true);
-    const { error } = await supabase
-      .from("produtos")
-      .update({ arquivado: true })
-      .eq("id", produtoParaArquivar.id);
-    setArquivando(false);
-    if (error) {
-      // Antes o erro era ignorado e o diálogo fechava como se tivesse arquivado.
-      console.error("produto_arquivar", error);
-      toastErro("A Pólia One não conseguiu arquivar o produto. Tenta de novo.");
-      return;
-    }
-    setProdutoParaArquivar(null);
-    recarregarCatalogo();
-  };
-
   const recarregarCatalogo = () => {
     qc.invalidateQueries({ queryKey: ["produtos", userId] });
     qc.invalidateQueries({ queryKey: ["produtos-arquivados", userId] });
@@ -244,19 +236,36 @@ function ProdutosPage() {
     qc.invalidateQueries({ queryKey: ["estoque", userId] });
   };
 
-  const reativar = async (p: Produto) => {
-    if (reativandoId) return;
-    setReativandoId(p.id);
-    const { error } = await supabase.from("produtos").update({ arquivado: false }).eq("id", p.id);
-    setReativandoId(null);
+  /**
+   * Chaves da lista (23/11/2026, pedido da Sil): "Ativo" arquiva ou reativa,
+   * "Vitrine" liga ou desliga o produto na Vitrine online. A chave espera a
+   * gravação (desabilitada) e a lista relê no fim; se falhar, nada muda e um
+   * aviso diz por quê.
+   */
+  const mudarProduto = async (
+    p: Produto,
+    mudanca: { arquivado: boolean } | { no_catalogo: boolean },
+  ) => {
+    if (mudandoId) return;
+    setMudandoId(p.id);
+    const { error } = await supabase.from("produtos").update(mudanca).eq("id", p.id);
+    setMudandoId(null);
     if (error) {
-      console.error("produto_reativar", error);
+      console.error("produto_chave", error);
+      const reativando = "arquivado" in mudanca && !mudanca.arquivado;
       toastErro(
-        cotaAtingida
-          ? `No plano Grátis cabem ${COTAS_CONFERE.produtos} produtos ativos. Arquive um pra reativar este.`
-          : "A Pólia One não conseguiu reativar o produto. Tenta de novo.",
+        reativando && cotaAtingida
+          ? `No plano Grátis cabem ${COTAS_CONFERE.produtos} produtos ativos. Desative um pra ativar este.`
+          : "A Pólia One não conseguiu salvar a mudança. Tenta de novo.",
       );
       return;
+    }
+    if ("arquivado" in mudanca && filtro !== "todos") {
+      toastSucesso(
+        mudanca.arquivado
+          ? `"${p.nome}" ficou inativo. Ele está no filtro "Inativos".`
+          : `"${p.nome}" voltou a ficar ativo.`,
+      );
     }
     recarregarCatalogo();
   };
@@ -432,8 +441,8 @@ function ProdutosPage() {
                   />
                 </div>
                 <div role="group" aria-label="Filtrar produtos" className="flex flex-wrap gap-2">
-                  {FILTROS.map((f) =>
-                    f !== "todos" && contagem[f] === 0 ? null : (
+                  {FILTROS_CATALOGO.map((f) =>
+                    f !== "ativos" && f !== "todos" && contagem[f] === 0 ? null : (
                       <button
                         key={f}
                         type="button"
@@ -449,26 +458,12 @@ function ProdutosPage() {
                     ),
                   )}
                 </div>
-                <label className="ml-auto flex items-center gap-2 text-[13px] text-[var(--muted)]">
-                  Ordenar
-                  <select
-                    value={ordem}
-                    onChange={(e) => setOrdem(e.target.value as OrdemCatalogo)}
-                    className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-2 py-1.5 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-                  >
-                    {(Object.keys(ROTULO_ORDEM) as OrdemCatalogo[]).map((o) => (
-                      <option key={o} value={o}>
-                        {ROTULO_ORDEM[o]}
-                      </option>
-                    ))}
-                  </select>
-                </label>
               </div>
 
-              {filtro === "arquivados" && (
+              {filtro === "inativos" && (
                 <p className="mt-3 text-[13px] text-[var(--muted)]">
-                  Arquivado sai do catálogo, da Vitrine e das telas de venda, com tudo guardado.
-                  "Reativar" traz de volta.
+                  Inativo sai da Vitrine e das telas de venda, com tudo guardado. A chave "Ativo"
+                  traz de volta.
                 </p>
               )}
 
@@ -479,23 +474,20 @@ function ProdutosPage() {
                     : "Nenhum produto neste filtro."}
                 </p>
               ) : (
-                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {listaDoFiltro.map((p, i) => (
-                    <ProdutoCard
-                      key={p.id}
-                      produto={p}
-                      indice={i}
-                      mostrarTipo={mostrarTipo}
-                      somenteLeitura={idsExcedentes.has(p.id)}
-                      onEditar={() => abrirEditar(p)}
-                      onArquivar={() => setProdutoParaArquivar(p)}
-                      onRecalcular={() => abrirRecalcular(p)}
-                      onReativar={p.arquivado ? () => void reativar(p) : undefined}
-                      reativando={reativandoId === p.id}
-                      skus={p.controla_estoque ? skusPorProduto.get(p.id) : undefined}
-                    />
-                  ))}
-                </div>
+                <ListaDeProdutos
+                  produtos={listaDoFiltro}
+                  ordem={ordem}
+                  onOrdenar={ordenarPor}
+                  mostrarTipo={mostrarTipo}
+                  mostrarVitrine={ehPro}
+                  idsSomenteLeitura={idsExcedentes}
+                  mudandoId={mudandoId}
+                  skusPorProduto={skusPorProduto}
+                  onEditar={abrirEditar}
+                  onRecalcular={abrirRecalcular}
+                  onAtivo={(p, ativo) => void mudarProduto(p, { arquivado: !ativo })}
+                  onVitrine={(p, ligada) => void mudarProduto(p, { no_catalogo: ligada })}
+                />
               )}
             </>
           )}
@@ -517,18 +509,6 @@ function ProdutosPage() {
         />
       )}
 
-      <ConfirmarAcao
-        open={!!produtoParaArquivar}
-        onOpenChange={(open) => {
-          if (!open) setProdutoParaArquivar(null);
-        }}
-        titulo={`Arquivar "${produtoParaArquivar?.nome ?? ""}"?`}
-        descricao="Sai do seu catálogo, mas continua guardado. Não é o mesmo que apagar."
-        textoConfirmar="Arquivar"
-        textoCarregando="Arquivando…"
-        onConfirmar={confirmarArquivar}
-        carregando={arquivando}
-      />
       {ordemAberta && userId && (
         <ModalOrdemVitrine
           userId={userId}
@@ -552,192 +532,348 @@ function ProdutosPage() {
   );
 }
 
-/* ============== Card de produto ============== */
+/* ============== Lista de produtos ============== */
 const AVATAR_BGS = ["var(--secondary-light)", "var(--surface-pink)", "var(--surface)"];
 
-function ProdutoCard({
-  produto,
-  indice,
-  mostrarTipo,
-  somenteLeitura,
-  onEditar,
-  onArquivar,
-  onRecalcular,
-  onReativar,
-  reativando = false,
-  skus,
-}: {
-  skus?: SkuProduto[];
-  produto: Produto;
-  indice: number;
-  /** Sem mistura de tipos no catálogo, "Produto físico" em todo card não diz nada. */
+type Ordem = { coluna: ColunaCatalogo; direcao: DirecaoOrdem };
+
+interface PropsLista {
+  produtos: Produto[];
+  ordem: Ordem;
+  onOrdenar: (coluna: ColunaCatalogo) => void;
+  /** Sem mistura de tipos no catálogo, "Produto físico" em toda linha não diz nada. */
   mostrarTipo: boolean;
-  somenteLeitura?: boolean;
-  onEditar: () => void;
-  onArquivar: () => void;
-  onRecalcular: () => void;
-  /** Só nos arquivados: o card troca o menu pelo botão "Reativar". */
-  onReativar?: () => void;
-  reativando?: boolean;
-}) {
-  const reduce = usePrefersReducedMotion();
-  const [shown, setShown] = useState(false);
+  /** A chave "Vitrine" só existe pra quem tem a Vitrine online (Premium e Pro). */
+  mostrarVitrine: boolean;
+  idsSomenteLeitura: Set<string>;
+  mudandoId: string | null;
+  skusPorProduto: Map<string, SkuProduto[]>;
+  onEditar: (p: Produto) => void;
+  onRecalcular: (p: Produto) => void;
+  onAtivo: (p: Produto, ativo: boolean) => void;
+  onVitrine: (p: Produto, ligada: boolean) => void;
+}
 
-  useEffect(() => {
-    if (reduce) {
-      setShown(true);
-      return;
-    }
-    const r = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
-    return () => cancelAnimationFrame(r);
-  }, [reduce]);
-
-  const precoVenda = Number(produto.preco_venda);
-  const custo = produto.preco_custo != null ? Number(produto.preco_custo) : 0;
-  // Mesma fonte que a calculadora: lê taxa/imposto do breakdown salvo (se o
-  // produto veio de lá), pra não divergir do preço sugerido na mesma sessão.
-  const { taxaVendaPct, impostosPct } = taxasDoBreakdown(produto.calculadora_breakdown);
-  // A barra usa a % presa em 0..100; o texto usa o valor com sinal, pra um
-  // produto vendido abaixo do custo não aparecer como "sobra 0%" (QA-27).
-  const sobra = sobraDoProduto({
-    precoVenda,
-    precoCusto: produto.preco_custo != null ? custo : null,
-    breakdown: produto.calculadora_breakdown,
-  });
-  const sobraPct = sobra?.pctBarra ?? 0;
-  const temTaxas = taxaVendaPct > 0 || impostosPct > 0;
+/**
+ * Catálogo em lista (23/11/2026, pedido da Sil: "deixar como lista e não
+ * parecido com uma vitrine"). Foto, preço, custo, lucro e as chaves de
+ * Vitrine e Ativo; o cabeçalho de cada coluna ordena, e o segundo clique
+ * inverte. No celular, cada produto vira um bloco com as mesmas informações.
+ */
+function ListaDeProdutos(props: PropsLista) {
+  const { produtos, ordem, onOrdenar, mostrarVitrine } = props;
 
   return (
-    <div className="group relative rounded-xl border border-[var(--line)] bg-white p-4">
-      {/* Menu de contexto (arquivado tem só "Reativar", embaixo) */}
-      <div
-        data-arquivado={!!onReativar}
-        className="absolute right-1 top-1 data-[arquivado=true]:hidden opacity-0 transition-opacity duration-150 focus-within:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
-      >
-        <MenuOpcoes
-          itens={[
-            { label: "Editar", icone: Pencil, onClick: onEditar, desabilitado: somenteLeitura },
-            {
-              label: "Recalcular preço",
-              icone: RefreshCw,
-              onClick: onRecalcular,
-              desabilitado: somenteLeitura,
-            },
-            { label: "Arquivar", icone: Archive, onClick: onArquivar },
-          ]}
-        />
+    <>
+      {/* Celular: um bloco por produto, as chaves sempre à vista. */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 sm:hidden">
+        <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
+          Ordenar por
+          <select
+            value={ordem.coluna}
+            onChange={(e) => onOrdenar(e.target.value as ColunaCatalogo)}
+            className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-2 text-[14px] text-[var(--ink)]"
+          >
+            <option value="recentes">Mais recentes</option>
+            <option value="nome">Produto</option>
+            <option value="preco">Preço</option>
+            <option value="custo">Custo</option>
+            <option value="lucro">Lucro</option>
+            <option value="status">Status</option>
+          </select>
+        </label>
       </div>
+      <ul className="mt-3 flex flex-col gap-2 sm:hidden">
+        {produtos.map((p, i) => (
+          <li key={p.id} className="rounded-xl border border-[var(--line)] bg-white p-3">
+            <div className="flex items-start gap-3">
+              <FotoDoProduto produto={p} indice={i} />
+              <div className="min-w-0 flex-1">
+                <NomeDoProduto produto={p} {...props} />
+                <p className="mt-1 text-[13px] text-[var(--ink-soft)]">
+                  {precoTexto(p)} · custo {custoTexto(p)}
+                </p>
+                <LucroDoProduto produto={p} />
+              </div>
+              <MenuDoProduto produto={p} {...props} />
+            </div>
+            <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1">
+              {mostrarVitrine && <ChaveVitrine produto={p} {...props} comRotulo />}
+              <ChaveAtivo produto={p} {...props} comRotulo />
+            </div>
+          </li>
+        ))}
+      </ul>
 
-      {/* Foto ou avatar de inicial */}
-      {produto.foto_url ? (
-        <div className="aspect-square w-full overflow-hidden rounded-lg">
-          <img
-            src={produto.foto_url}
-            alt={produto.nome}
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        </div>
-      ) : (
-        <div
-          className="flex h-14 w-14 items-center justify-center rounded-xl"
-          style={{ background: AVATAR_BGS[indice % AVATAR_BGS.length] }}
-          aria-hidden="true"
-        >
-          <span className="text-[28px] leading-none text-[var(--ink)]">
-            {(produto.nome.charAt(0) || "?").toUpperCase()}
-          </span>
-        </div>
-      )}
+      <div className="mt-4 hidden overflow-x-auto rounded-xl border border-[var(--line)] bg-white sm:block">
+        <table className="w-full text-[14px]">
+          <caption className="sr-only">
+            Produtos com preço, custo, lucro e status. Clique no título de uma coluna pra ordenar.
+          </caption>
+          <thead className="border-b border-[var(--line)]">
+            <tr>
+              <th scope="col" className="w-14 px-3 py-2">
+                <span className="sr-only">Foto</span>
+              </th>
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="nome">
+                Produto
+              </Cabecalho>
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="preco" direita>
+                Preço
+              </Cabecalho>
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="custo" direita>
+                Custo
+              </Cabecalho>
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="lucro" direita>
+                Lucro
+              </Cabecalho>
+              {mostrarVitrine && (
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-left font-accent text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--muted)]"
+                >
+                  Vitrine
+                </th>
+              )}
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="status">
+                Ativo
+              </Cabecalho>
+              <th scope="col" className="w-12 px-3 py-2">
+                <span className="sr-only">Ações</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {produtos.map((p, i) => (
+              <tr
+                key={p.id}
+                className={`border-t border-[var(--line)] first:border-t-0 ${
+                  p.arquivado ? "bg-[var(--bg)]" : ""
+                }`}
+              >
+                <td className="px-3 py-2">
+                  <FotoDoProduto produto={p} indice={i} />
+                </td>
+                <td className="max-w-[320px] px-3 py-2">
+                  <NomeDoProduto produto={p} {...props} />
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[var(--ink)]">
+                  {precoTexto(p)}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-[var(--ink-soft)]">
+                  {custoTexto(p)}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  <LucroDoProduto produto={p} />
+                </td>
+                {mostrarVitrine && (
+                  <td className="px-3 py-2">
+                    <ChaveVitrine produto={p} {...props} />
+                  </td>
+                )}
+                <td className="px-3 py-2">
+                  <ChaveAtivo produto={p} {...props} />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MenuDoProduto produto={p} {...props} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+}
 
-      {/* Nome */}
-      <p className="mt-3 flex items-center gap-1.5 text-[var(--ink)]">
-        {produto.nome}
+function Cabecalho({
+  coluna,
+  children,
+  direita = false,
+  ordem,
+  onOrdenar,
+}: {
+  coluna: ColunaCatalogo;
+  children: string;
+  direita?: boolean;
+  ordem: Ordem;
+  onOrdenar: (coluna: ColunaCatalogo) => void;
+}) {
+  const ativa = ordem.coluna === coluna;
+  const Seta = ordem.direcao === "asc" ? ArrowUp : ArrowDown;
+  return (
+    <th
+      scope="col"
+      aria-sort={ativa ? (ordem.direcao === "asc" ? "ascending" : "descending") : "none"}
+      className={`px-3 py-2 ${direita ? "text-right" : "text-left"}`}
+    >
+      <button
+        type="button"
+        onClick={() => onOrdenar(coluna)}
+        className={`inline-flex min-h-11 items-center gap-1 font-accent text-[11px] font-bold uppercase tracking-[0.08em] hover:text-[var(--ink)] ${
+          ativa ? "text-[var(--ink)]" : "text-[var(--muted)]"
+        }`}
+      >
+        {children}
+        {ativa && <Seta size={12} aria-hidden="true" />}
+      </button>
+    </th>
+  );
+}
+
+function precoTexto(p: Produto): string {
+  const preco = Number(p.preco_venda);
+  return preco > 0 ? fmt(preco) : "a definir";
+}
+
+function custoTexto(p: Produto): string {
+  return p.preco_custo != null ? fmt(Number(p.preco_custo)) : "sem custo";
+}
+
+function FotoDoProduto({ produto, indice }: { produto: Produto; indice: number }) {
+  if (produto.foto_url) {
+    return (
+      <img
+        src={produto.foto_url}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="h-10 w-10 shrink-0 rounded-lg object-cover"
+      />
+    );
+  }
+  return (
+    <span
+      aria-hidden="true"
+      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-[16px] text-[var(--ink)]"
+      style={{ background: AVATAR_BGS[indice % AVATAR_BGS.length] }}
+    >
+      {(produto.nome.charAt(0) || "?").toUpperCase()}
+    </span>
+  );
+}
+
+function NomeDoProduto({
+  produto,
+  mostrarTipo,
+  idsSomenteLeitura,
+  skusPorProduto,
+}: { produto: Produto } & PropsLista) {
+  const somenteLeitura = idsSomenteLeitura.has(produto.id);
+  const skus = produto.controla_estoque ? skusPorProduto.get(produto.id) : undefined;
+  const detalhe = somenteLeitura
+    ? "somente leitura · acima da cota do plano Grátis"
+    : mostrarTipo
+      ? (TIPO_LABEL[produto.tipo] ?? produto.tipo)
+      : null;
+  return (
+    <div className="min-w-0">
+      <p
+        className={`flex items-center gap-1.5 ${
+          produto.arquivado ? "text-[var(--muted)]" : "text-[var(--ink)]"
+        }`}
+      >
+        <span className="truncate" title={produto.nome}>
+          {produto.nome}
+        </span>
         {somenteLeitura && (
           <Lock size={13} className="shrink-0 text-[var(--muted)]" aria-hidden="true" />
         )}
       </p>
-
-      {/* Tipo e Vitrine */}
-      {(() => {
-        const partes = somenteLeitura
-          ? ["somente leitura · acima da cota do plano Grátis"]
-          : [
-              mostrarTipo ? (TIPO_LABEL[produto.tipo] ?? produto.tipo) : null,
-              produto.arquivado ? "arquivado" : produto.no_catalogo ? "na Vitrine online" : null,
-            ].filter(Boolean);
-        return partes.length > 0 ? (
-          <p className="text-[12px] text-[var(--muted)]">{partes.join(" · ")}</p>
-        ) : null;
-      })()}
-
-      {/* Preço de venda */}
-      <p className="font-cabinet mt-2 text-[18px] text-[var(--ink)]">
-        {precoVenda > 0 ? (
-          fmt(precoVenda)
-        ) : (
-          <span className="text-[14px] text-[var(--muted)]">preço a definir</span>
-        )}
-      </p>
-
-      {/* Barra de margem */}
-      {/* Sem custo cadastrado a sobra não existe: nem barra, nem número. */}
-      {precoVenda > 0 && (
-        <>
-          {produto.preco_custo != null && (
-            <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-[var(--line)]">
-              <div
-                className="h-full w-full origin-left rounded-full bg-[var(--secondary)]"
-                style={{
-                  transform: `scaleX(${shown ? sobraPct / 100 : 0})`,
-                  transition: reduce ? "none" : "transform 200ms cubic-bezier(0.22,1,0.36,1)",
-                }}
-              />
-            </div>
-          )}
-          <p
-            className={`mt-1.5 text-[12px] ${
-              sobra?.prejuizo ? "text-[var(--danger)]" : "text-[var(--muted)]"
-            }`}
-          >
-            {sobra == null
-              ? "sem custo cadastrado · cadastre o custo pra saber o lucro"
-              : sobra.prejuizo
-                ? `custo ${fmt(custo)} · prejuízo de ${fmt(-sobra.valor)} por venda${temTaxas ? "" : " (sem taxa/imposto)"}`
-                : `custo ${fmt(custo)} · lucro de ${sobra.pct}%${temTaxas ? "" : " (sem taxa/imposto)"}`}
-          </p>
-        </>
-      )}
-
-      {/* Estoque (VND-03): soma das variações e quantas estão baixas */}
+      {detalhe && <p className="text-[12px] text-[var(--muted)]">{detalhe}</p>}
       {skus && <LinhaEstoqueDoCard skus={skus} />}
-
-      {/* Canal de venda */}
-      {produto.canal && (
-        <p className="mt-1 text-[12px] text-[var(--muted)]">onde compra: {produto.canal}</p>
-      )}
-
-      {onReativar && (
-        <button
-          type="button"
-          onClick={onReativar}
-          disabled={reativando}
-          aria-busy={reativando || undefined}
-          className={`${BTN_MIUDO} mt-3 min-h-11 bg-white`}
-        >
-          {reativando ? "Reativando…" : "Reativar"}
-          <span className="sr-only"> {produto.nome}</span>
-        </button>
-      )}
-
-      {/* Atualizado em */}
-      {produto.preco_atualizado_em && (
-        <p className="mt-1 text-[11px] text-[var(--muted)]">
-          atualizado em {fmtData(produto.preco_atualizado_em)}
-        </p>
-      )}
     </div>
+  );
+}
+
+function LucroDoProduto({ produto }: { produto: Produto }) {
+  const preco = Number(produto.preco_venda);
+  const sobra = sobraDoProduto({
+    precoVenda: preco,
+    precoCusto: produto.preco_custo != null ? Number(produto.preco_custo) : null,
+    breakdown: produto.calculadora_breakdown,
+  });
+  if (sobra == null) return <span className="text-[13px] text-[var(--muted)]">sem custo</span>;
+  return (
+    <span className={sobra.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink)]"}>
+      {sobra.prejuizo ? `prejuízo de ${fmt(-sobra.valor)}` : `${fmt(sobra.valor)} · ${sobra.pct}%`}
+    </span>
+  );
+}
+
+function ChaveVitrine({
+  produto,
+  mudandoId,
+  onVitrine,
+  comRotulo = false,
+}: { produto: Produto; comRotulo?: boolean } & PropsLista) {
+  const ligada = !!produto.no_catalogo;
+  const inativo = !!produto.arquivado;
+  return (
+    <label
+      className="inline-flex min-h-11 items-center gap-2 text-[13px] text-[var(--ink-soft)]"
+      title={inativo ? "Produto inativo não aparece na Vitrine online." : undefined}
+    >
+      <Switch
+        checked={ligada && !inativo}
+        disabled={inativo || mudandoId === produto.id}
+        aria-busy={mudandoId === produto.id || undefined}
+        onCheckedChange={(v) => onVitrine(produto, v)}
+        aria-label={comRotulo ? undefined : `Na Vitrine online: ${produto.nome}`}
+      />
+      {comRotulo && "Na Vitrine"}
+    </label>
+  );
+}
+
+function ChaveAtivo({
+  produto,
+  mudandoId,
+  onAtivo,
+  comRotulo = false,
+}: { produto: Produto; comRotulo?: boolean } & PropsLista) {
+  const ativo = !produto.arquivado;
+  return (
+    <label className="inline-flex min-h-11 items-center gap-2 text-[13px] text-[var(--ink-soft)]">
+      <Switch
+        checked={ativo}
+        disabled={mudandoId === produto.id}
+        aria-busy={mudandoId === produto.id || undefined}
+        onCheckedChange={(v) => onAtivo(produto, v)}
+        aria-label={comRotulo ? undefined : `Ativo: ${produto.nome}`}
+      />
+      <span className={comRotulo ? "" : "sr-only sm:not-sr-only"}>
+        {ativo ? "Ativo" : "Inativo"}
+      </span>
+    </label>
+  );
+}
+
+function MenuDoProduto({
+  produto,
+  idsSomenteLeitura,
+  onEditar,
+  onRecalcular,
+}: { produto: Produto } & PropsLista) {
+  const somenteLeitura = idsSomenteLeitura.has(produto.id);
+  return (
+    <MenuOpcoes
+      ariaLabel={`Ações de ${produto.nome}`}
+      itens={[
+        {
+          label: "Editar",
+          icone: Pencil,
+          onClick: () => onEditar(produto),
+          desabilitado: somenteLeitura,
+        },
+        {
+          label: "Recalcular preço",
+          icone: RefreshCw,
+          onClick: () => onRecalcular(produto),
+          desabilitado: somenteLeitura || !!produto.arquivado,
+        },
+      ]}
+    />
   );
 }
 

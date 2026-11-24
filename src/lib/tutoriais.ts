@@ -330,10 +330,10 @@ const LISTA = [
         itens: [
           'No topo da tela, clique em "+ Produto".',
           'Preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
-          'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o cartão já mostra quanto a marca lucra por venda.',
+          'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, a lista já mostra quanto a marca lucra por venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
-          'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. O cartão passa a mostrar "na Vitrine online".',
+          'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. Na lista, a chave "Vitrine" faz o mesmo sem abrir o cadastro.',
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
@@ -346,8 +346,9 @@ const LISTA = [
         titulo: "Achar um produto no catálogo",
         itens: [
           'O campo "Buscar pelo nome" acha o produto sem diferença de maiúscula ou acento.',
-          'Os filtros ao lado separam "Todos", "Na Vitrine", "Fora da Vitrine", "Sem custo" e "Arquivados". O número de cada um aparece no botão.',
-          '"Ordenar" muda a ordem dos cartões: "Mais recentes", "Nome (A a Z)", "Maior preço" ou "Maior lucro".',
+          'O Catálogo é uma lista: foto, "Preço", "Custo", "Lucro" (em reais e em porcentagem) e as chaves "Vitrine" e "Ativo".',
+          'Os filtros ao lado separam "Ativos", "Na Vitrine", "Fora da Vitrine", "Sem custo", "Inativos" e "Todos". O número de cada um aparece no botão.',
+          'Clique no título de uma coluna ("Produto", "Preço", "Custo", "Lucro" ou "Ativo") pra ordenar por ela. Clique de novo pra inverter. No celular, use "Ordenar por".',
         ],
       },
       {
@@ -362,10 +363,10 @@ const LISTA = [
       {
         titulo: "Mexer num produto que já existe",
         itens: [
-          'No menu do cartão, "Editar" abre o cadastro de novo.',
+          'No menu "⋯" da linha, "Editar" abre o cadastro de novo.',
           '"Recalcular preço" abre a Calculadora já com esse produto e guarda o preço novo nele.',
-          '"Arquivar" tira o produto do catálogo sem apagar. Ele continua guardado.',
-          'Pra trazer de volta, clique no filtro "Arquivados" e em "Reativar" no cartão do produto.',
+          'A chave "Ativo" desligada deixa o produto inativo: ele sai da Vitrine e das telas de venda, sem apagar nada, e vai pro filtro "Inativos". Ligar a chave de novo traz ele de volta.',
+          'A chave "Vitrine" liga e desliga o produto na Vitrine online. Produto inativo não aparece na Vitrine, mesmo com ela ligada.',
         ],
       },
       {
@@ -390,7 +391,7 @@ const LISTA = [
     ],
     bomSaber: [
       "No plano Grátis cabem 5 produtos ativos. No Premium e no Pro, sem limite.",
-      "Produto não se apaga, só se arquiva, pra não perder o histórico de venda.",
+      "Produto não se apaga, só fica inativo, pra não perder o histórico de venda.",
       "A planilha aceita .csv ou .txt, até 5 MB e até 1000 produtos por vez.",
       'As abas "Materiais e receitas", "Estoque" e "Equipamentos" ficam na mesma tela, ao lado do "Catálogo", cada uma com o número do que tem nela.',
       'A aba "Equipamentos" é do Premium e do Pro.',
@@ -398,14 +399,14 @@ const LISTA = [
     ],
     duvidas: [
       {
-        pergunta: "Por que o cartão não mostra o lucro",
+        pergunta: "Por que a lista não mostra o lucro",
         resposta:
-          'Falta o custo. Sem ele, o cartão avisa "cadastre o custo pra saber o lucro". Edite o produto e preencha o "Custo de produção (R$)".',
+          'Falta o custo. Sem ele, a linha mostra "sem custo" no custo e no lucro. Edite o produto e preencha o "Custo de produção (R$)".',
       },
       {
-        pergunta: 'O que quer dizer "(sem taxa/imposto)"',
+        pergunta: "O lucro da lista desconta taxa e imposto",
         resposta:
-          'O lucro do cartão só desconta taxa e imposto quando o preço veio da Calculadora. Use "Recalcular preço" pra entrar com essas porcentagens.',
+          'Só quando o preço veio da Calculadora. Use "Recalcular preço", no menu "⋯" da linha, pra entrar com essas porcentagens.',
       },
     ],
   },
