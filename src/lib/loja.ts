@@ -237,15 +237,6 @@ export function lerCoresColadas(texto: string): { cores: Array<Omit<CorLoja, "id
   return { cores, ignoradas };
 }
 
-/**
- * Preço de-por (24/11/2026, ONE-239): o "antes" só vale quando é maior que o
- * preço de venda. Igual ou menor, a loja mostra só o preço.
- */
-export function precoDeValido(de: number | string | null | undefined, por: number): number | null {
-  const n = de == null || de === "" ? NaN : Number(de);
-  return Number.isFinite(n) && n > por && por > 0 ? Math.round(n * 100) / 100 : null;
-}
-
 /** O selo "-25%" do preço de-por; null quando não há desconto de pelo menos 1%. */
 export function descontoDoDePor(de: number | null, por: number): number | null {
   if (de == null || !(de > por) || !(por > 0)) return null;
@@ -258,7 +249,10 @@ export interface ProdutoLoja {
   nome: string;
   descricao: string | null;
   preco: number;
-  /** Preço "antes", riscado ao lado do preço; null quando não tem (precoDeValido). */
+  /**
+   * Preço de venda riscado quando o produto tem preço promocional (ONE-239):
+   * `preco` é o promocional e `precoDe`, o de venda. null sem promoção.
+   */
   precoDe: number | null;
   fotos: string[];
   variacoes: VariacaoLoja[];

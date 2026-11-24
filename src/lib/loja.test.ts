@@ -10,7 +10,6 @@ import {
   opcaoDoItem,
   maxCoresValido,
   pedidoLojaSchema,
-  precoDeValido,
   buscarProdutos,
   descontoDoDePor,
   problemaDaOrigemDoBanner,
@@ -279,15 +278,6 @@ describe("recorte do banner (ONE-239)", () => {
 });
 
 describe("preço de-por (ONE-239)", () => {
-  it("o antes só vale quando é maior que o preço de venda", () => {
-    expect(precoDeValido("59.9", 44.9)).toBe(59.9);
-    expect(precoDeValido(44.9, 44.9)).toBeNull();
-    expect(precoDeValido(30, 44.9)).toBeNull();
-    expect(precoDeValido(null, 44.9)).toBeNull();
-    expect(precoDeValido("", 44.9)).toBeNull();
-    expect(precoDeValido(10, 0)).toBeNull();
-  });
-
   it("o selo arredonda a porcentagem e some abaixo de 1%", () => {
     expect(descontoDoDePor(59.9, 44.9)).toBe(25);
     expect(descontoDoDePor(100, 99.6)).toBeNull();

@@ -24,6 +24,7 @@ import { ehPlanoGratis } from "@/lib/planoGratis";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
 import { sobraDoProduto } from "@/lib/precificacao.functions";
+import { precoQueVale, promocionalQueVale } from "@/lib/precoPromocional";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { Switch } from "@/components/ui/switch";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
@@ -53,7 +54,7 @@ import {
 } from "@/lib/catalogoProdutos";
 
 const SELECT_PRODUTO =
-  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, catalogo_ordem, categoria_id, preco_de, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
+  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, catalogo_ordem, categoria_id, preco_promocional, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
 
 const CLASSE_ABA =
   "-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] data-[state=active]:border-[var(--ink)] data-[state=active]:text-[var(--ink)]";
@@ -67,10 +68,10 @@ function Contador({ n }: { n: number | null | undefined }) {
   );
 }
 
-/** Lucro em % do produto, ou null sem custo. Mesma conta do card. */
+/** Lucro em % do produto, ou null sem custo. Mesma conta do card, no preço que vale. */
 function lucroPctDoProduto(p: Produto): number | null {
   const sobra = sobraDoProduto({
-    precoVenda: Number(p.preco_venda),
+    precoVenda: precoQueVale(p.preco_venda, p.preco_promocional),
     precoCusto: p.preco_custo != null ? Number(p.preco_custo) : null,
     breakdown: p.calculadora_breakdown,
   });
@@ -631,7 +632,7 @@ function ListaDeProdutos(props: PropsLista) {
               <div className="min-w-0 flex-1">
                 <NomeDoProduto produto={p} {...props} />
                 <p className="mt-1 text-[13px] text-[var(--ink-soft)]">
-                  {precoTexto(p)} · custo {custoTexto(p)}
+                  <PrecoDoProduto produto={p} emLinha /> · custo {custoTexto(p)}
                 </p>
                 <LucroDoProduto produto={p} />
               </div>
@@ -705,13 +706,13 @@ function ListaDeProdutos(props: PropsLista) {
                   <NomeDoProduto produto={p} {...props} />
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-[var(--ink)]">
-                  {precoTexto(p)}
+                  <PrecoDoProduto produto={p} />
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums text-[var(--ink-soft)]">
                   {custoTexto(p)}
                 </td>
                 <td className="px-3 py-2 text-right tabular-nums">
-                  <LucroDoProduto produto={p} />
+                  <LucroDoProduto produto={p} empilhado />
                 </td>
                 {mostrarVitrine && (
                   <td className="px-3 py-2">
@@ -771,6 +772,33 @@ function Cabecalho({
 function precoTexto(p: Produto): string {
   const preco = Number(p.preco_venda);
   return preco > 0 ? fmt(preco) : "a definir";
+}
+
+/**
+ * Preço na lista (24/11/2026, Sil: "o preço 'por' deve ser mostrado pequeno,
+ * embaixo do preço DE, que deve ficar riscado"). Sem promoção, só o preço.
+ */
+function PrecoDoProduto({ produto, emLinha = false }: { produto: Produto; emLinha?: boolean }) {
+  const promo = promocionalQueVale(produto.preco_venda, produto.preco_promocional);
+  if (promo == null) return <>{precoTexto(produto)}</>;
+  const de = (
+    <s className="text-[var(--muted)]">
+      <span className="sr-only">De </span>
+      {fmt(Number(produto.preco_venda))}
+    </s>
+  );
+  if (emLinha)
+    return (
+      <>
+        {de} <span className="font-medium text-[var(--ink)]">por {fmt(promo)}</span>
+      </>
+    );
+  return (
+    <span className="inline-flex flex-col items-end leading-tight">
+      {de}
+      <span className="text-[12px] font-medium text-[var(--ink)]">por {fmt(promo)}</span>
+    </span>
+  );
 }
 
 function custoTexto(p: Produto): string {
@@ -875,14 +903,29 @@ function CampoOrdem({ produto, mudandoId, onOrdem }: { produto: Produto } & Prop
   );
 }
 
-function LucroDoProduto({ produto }: { produto: Produto }) {
-  const preco = Number(produto.preco_venda);
+/**
+ * Lucro no preço que vale (com promoção, no promocional). Na tabela, empilhado:
+ * o valor em R$ em cima e a porcentagem menor embaixo (pedido da Sil, 24/11/2026).
+ */
+function LucroDoProduto({ produto, empilhado = false }: { produto: Produto; empilhado?: boolean }) {
+  const preco = precoQueVale(produto.preco_venda, produto.preco_promocional);
   const sobra = sobraDoProduto({
     precoVenda: preco,
     precoCusto: produto.preco_custo != null ? Number(produto.preco_custo) : null,
     breakdown: produto.calculadora_breakdown,
   });
   if (sobra == null) return <span className="text-[13px] text-[var(--muted)]">sem custo</span>;
+  if (empilhado)
+    return (
+      <span
+        className={`inline-flex flex-col items-end leading-tight ${sobra.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink)]"}`}
+      >
+        <span>{sobra.prejuizo ? `prejuízo de ${fmt(-sobra.valor)}` : fmt(sobra.valor)}</span>
+        <span className={`text-[12px] ${sobra.prejuizo ? "" : "text-[var(--muted)]"}`}>
+          {sobra.pct}%
+        </span>
+      </span>
+    );
   return (
     <span className={sobra.prejuizo ? "text-[var(--danger)]" : "text-[var(--ink)]"}>
       {sobra.prejuizo ? `prejuízo de ${fmt(-sobra.valor)}` : `${fmt(sobra.valor)} · ${sobra.pct}%`}

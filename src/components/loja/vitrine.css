@@ -1782,3 +1782,14 @@
   min-height: 36px;
   border-width: 1px;
 }
+
+/* Preço "por" em verde quando tem promoção (24/11/2026, Sil: "deve ficar em
+   verde para dar um destaque com os outros preços"). Verde escuro pra passar
+   AA sobre o branco do cartão. */
+.loja-vitrine {
+  --promo: #177a3f;
+}
+.loja-vitrine .card .vl .por,
+.loja-vitrine .preco-g.por {
+  color: var(--promo);
+}

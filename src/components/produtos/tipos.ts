@@ -39,8 +39,8 @@ export interface Produto {
   catalogo_ordem?: number | null;
   /** Categoria da vitrine (produto_categorias). Também é a da Loja da marca. */
   categoria_id?: string | null;
-  /** Preço "antes", riscado na Vitrine online (ONE-239). null = sem. */
-  preco_de?: number | string | null;
+  /** Preço promocional, o "por" (ONE-239). Vale quando menor que o preço de venda. */
+  preco_promocional?: number | string | null;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

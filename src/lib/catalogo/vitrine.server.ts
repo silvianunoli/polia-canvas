@@ -9,6 +9,7 @@
 // registrar_pedido_catalogo.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
+import { precoQueVale } from "@/lib/precoPromocional";
 import { normalizarDominio } from "@/lib/catalogo";
 import { temProjete } from "@/lib/planos";
 
@@ -59,7 +60,7 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
 
     const { data: prods, error: erroProdutos } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, foto_url, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, preco_promocional, foto_url, catalogo_ordem, created_at")
       .eq("user_id", uid)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -71,6 +72,7 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
       nome: string;
       descricao: string | null;
       preco_venda: number;
+      preco_promocional?: number | string | null;
       foto_url: string | null;
       catalogo_ordem: number | null;
       created_at: string;
@@ -99,7 +101,7 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
         id: p.id,
         nome: p.nome,
         descricao: p.descricao,
-        preco: Number(p.preco_venda),
+        preco: precoQueVale(p.preco_venda, p.preco_promocional),
         ordem: p.catalogo_ordem ?? null,
         fotos: daGaleria.length ? daGaleria : legado,
       };

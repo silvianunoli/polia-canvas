@@ -44,8 +44,10 @@ function CartaoProduto({ slug, produto: p }: { slug: string; produto: ProdutoLoj
               <span className="sr-only">De </span>
               {reais(p.precoDe)}
             </s>{" "}
-            <span className="sr-only">por </span>
-            {reais(p.preco)}
+            <span className="por">
+              <span className="sr-only">por </span>
+              {reais(p.preco)}
+            </span>
           </span>
         ) : (
           <span className="vl">{reais(p.preco)}</span>

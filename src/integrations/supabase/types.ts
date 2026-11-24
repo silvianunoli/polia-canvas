@@ -1671,6 +1671,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lembretes: {
+        Row: {
+          avisar_dias_antes: number | null
+          atualizado_em: string
+          criado_em: string
+          dia: string
+          feitos: string[]
+          horario: string | null
+          id: string
+          observacao: string | null
+          repeticao: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          avisar_dias_antes?: number | null
+          atualizado_em?: string
+          criado_em?: string
+          dia: string
+          feitos?: string[]
+          horario?: string | null
+          id?: string
+          observacao?: string | null
+          repeticao?: string
+          titulo: string
+          user_id?: string
+        }
+        Update: {
+          avisar_dias_antes?: number | null
+          atualizado_em?: string
+          criado_em?: string
+          dia?: string
+          feitos?: string[]
+          horario?: string | null
+          id?: string
+          observacao?: string | null
+          repeticao?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lista_espera: {
         Row: {
           criado_em: string
@@ -2220,6 +2262,7 @@ export type Database = {
           nome: string
           preco_atualizado_em: string | null
           preco_custo: number | null
+          preco_promocional: number | null
           preco_venda: number
           tipo: string
           updated_at: string
@@ -2240,6 +2283,7 @@ export type Database = {
           nome: string
           preco_atualizado_em?: string | null
           preco_custo?: number | null
+          preco_promocional?: number | null
           preco_venda?: number
           tipo?: string
           updated_at?: string
@@ -2260,6 +2304,7 @@ export type Database = {
           nome?: string
           preco_atualizado_em?: string | null
           preco_custo?: number | null
+          preco_promocional?: number | null
           preco_venda?: number
           tipo?: string
           updated_at?: string
@@ -2533,6 +2578,7 @@ export type Database = {
           nicho: string | null
           notif_dicas: boolean
           notif_entregas: boolean
+          notif_lembretes: boolean
           notif_novidades: boolean
           notif_push_resumo: boolean
           notif_push_vendas: boolean
@@ -2637,6 +2683,7 @@ export type Database = {
           nicho?: string | null
           notif_dicas?: boolean
           notif_entregas?: boolean
+          notif_lembretes?: boolean
           notif_novidades?: boolean
           notif_push_resumo?: boolean
           notif_push_vendas?: boolean
@@ -2741,6 +2788,7 @@ export type Database = {
           nicho?: string | null
           notif_dicas?: boolean
           notif_entregas?: boolean
+          notif_lembretes?: boolean
           notif_novidades?: boolean
           notif_push_resumo?: boolean
           notif_push_vendas?: boolean

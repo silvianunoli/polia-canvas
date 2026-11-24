@@ -202,7 +202,7 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
                       {reais(p.precoDe)}
                     </s>
                   )}
-                  <span className="preco-g">
+                  <span className={`preco-g${desconto ? " por" : ""}`}>
                     {desconto && <span className="sr-only">por </span>}
                     {reais(p.preco)}
                   </span>

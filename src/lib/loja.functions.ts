@@ -13,7 +13,6 @@ import {
   pedidoLojaSchema,
   maxCoresValido,
   opcoesDaPaleta,
-  precoDeValido,
   slugValido,
   type CorLoja,
   type LojaPublica,
@@ -21,6 +20,7 @@ import {
   type ResultadoPedidoLoja,
 } from "@/lib/loja";
 import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
+import { precoQueVale, promocionalQueVale } from "@/lib/precoPromocional";
 import { codigoCupomValido, normalizarCodigoCupom, type CupomLoja } from "@/lib/lojaVitrine";
 
 // Loja do catálogo próprio (ONE-148, fases 2 e 3). Mesmo desenho do link de
@@ -81,7 +81,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, preco_de, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, preco_promocional, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -92,7 +92,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       nome: string;
       descricao: string | null;
       preco_venda: number;
-      preco_de: number | string | null;
+      preco_promocional: number | string | null;
       categoria_id: string | null;
       usa_paleta: boolean;
       cor_da_foto: string | null;
@@ -205,8 +205,9 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           id: p.id,
           nome: p.nome,
           descricao: p.descricao,
-          preco: Number(p.preco_venda),
-          precoDe: precoDeValido(p.preco_de, Number(p.preco_venda)),
+          // Com promocional, a cliente paga ele e a loja risca o preço de venda.
+          preco: precoQueVale(p.preco_venda, p.preco_promocional),
+          precoDe: promocionalQueVale(p.preco_venda, p.preco_promocional) != null ? Number(p.preco_venda) : null,
           fotos: fotosPor.get(p.id) ?? [],
           // Com paleta, as opções são as cores da loja (o SKU fica pro estoque).
           variacoes,

@@ -7,6 +7,8 @@
 // foto, preço, custo, lucro e status, com o cabeçalho de cada coluna ordenando.
 // "Arquivados" virou "Inativos", o mesmo nome do Painel.
 
+import { precoQueVale } from "@/lib/precoPromocional";
+
 export type FiltroCatalogo = "ativos" | "vitrine" | "fora" | "sem_custo" | "inativos" | "todos";
 export type ColunaCatalogo = "ordem" | "recentes" | "nome" | "preco" | "custo" | "lucro" | "status";
 export type DirecaoOrdem = "asc" | "desc";
@@ -34,6 +36,8 @@ export interface ProdutoDoCatalogo {
   nome: string;
   tipo: string;
   preco_venda: number | string | null;
+  /** Preço promocional (ONE-239): com ele, a coluna Preço ordena pelo que vale. */
+  preco_promocional?: number | string | null;
   preco_custo: number | string | null;
   no_catalogo?: boolean | null;
   arquivado?: boolean | null;
@@ -129,7 +133,7 @@ export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
   const porNome = (a: T, b: T) => a.nome.localeCompare(b.nome, "pt-BR");
   const sinal = direcao === "asc" ? 1 : -1;
   const numero = (p: T): number | null => {
-    if (coluna === "preco") return p.preco_venda == null ? null : Number(p.preco_venda);
+    if (coluna === "preco") return p.preco_venda == null ? null : precoQueVale(p.preco_venda, p.preco_promocional);
     if (coluna === "custo") return p.preco_custo == null ? null : Number(p.preco_custo);
     if (coluna === "lucro") return lucroPct(p);
     if (coluna === "status") return p.arquivado ? 1 : 0;

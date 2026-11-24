@@ -9,6 +9,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { precoQueVale } from "@/lib/precoPromocional";
 import type { CanalVenda, ItemVenda, StatusVenda, Venda } from "@/lib/vendas";
 import type { ComprasDoCliente } from "@/lib/recorrencia";
 import type { ComponenteKit } from "@/lib/kits";
@@ -157,7 +158,9 @@ export function useProdutosComEstoque(userId: string | undefined) {
       const [produtos, saldos, componentes] = await Promise.all([
         supabase
           .from("produtos")
-          .select("id, nome, tipo, preco_venda, preco_custo, controla_estoque, created_at")
+          .select(
+            "id, nome, tipo, preco_venda, preco_promocional, preco_custo, controla_estoque, created_at",
+          )
           .eq("user_id", userId!)
           .eq("arquivado", false)
           .order("nome", { ascending: true }),
@@ -199,7 +202,8 @@ export function useProdutosComEstoque(userId: string | undefined) {
         id: p.id,
         nome: p.nome,
         tipo: p.tipo,
-        precoVenda: n(p.preco_venda),
+        // Com promoção, o Novo pedido e a Nova venda já vêm com o promocional (ONE-239).
+        precoVenda: precoQueVale(p.preco_venda, p.preco_promocional),
         precoCusto: nOuNull(p.preco_custo),
         controlaEstoque: !!p.controla_estoque,
         criadoEm: p.created_at,

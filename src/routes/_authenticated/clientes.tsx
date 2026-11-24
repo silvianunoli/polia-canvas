@@ -18,6 +18,7 @@ import { gerarCsv, baixarCsv } from "@/lib/csv";
 import { hojeISO } from "@/lib/data.functions";
 import { lerTodasAsPaginas } from "@/lib/leituraPaginada";
 import { formatarReais } from "@/lib/formatarReais";
+import { precoQueVale } from "@/lib/precoPromocional";
 import { ModalRegistrarVenda } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalOrcamento } from "@/components/orcamentos/ModalOrcamento";
 import { DaLojaOnline } from "@/components/clientes/DaLojaOnline";
@@ -680,11 +681,17 @@ function ModalCliente({
     queryFn: async () => {
       const { data } = await supabase
         .from("produtos")
-        .select("id, nome, preco_venda")
+        .select("id, nome, preco_venda, preco_promocional")
         .eq("user_id", userId)
         .eq("arquivado", false)
         .order("nome");
-      return data ?? [];
+      // O preço que vale: com promoção, o promocional (ONE-239).
+      return ((data ?? []) as Array<{
+        id: string;
+        nome: string;
+        preco_venda: number;
+        preco_promocional?: number | string | null;
+      }>).map((p) => ({ id: p.id, nome: p.nome, preco: precoQueVale(p.preco_venda, p.preco_promocional) }));
     },
   });
   const produtos = produtosQuery.data ?? [];
@@ -692,7 +699,7 @@ function ModalCliente({
   const selecionarProduto = (id: string) => {
     setProdutoId(id);
     const p = produtos.find((x) => x.id === id);
-    if (p) setValor(String(p.preco_venda));
+    if (p) setValor(String(p.preco));
   };
 
   const salvar = async () => {
@@ -939,7 +946,7 @@ function ModalCliente({
             )}
             {produtos.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nome} · {formatarReais(Number(p.preco_venda))}
+                {p.nome} · {formatarReais(p.preco)}
               </option>
             ))}
           </select>

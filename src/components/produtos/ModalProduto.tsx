@@ -56,6 +56,11 @@ export function ModalProduto({
         ? String(prefill.preco_venda)
         : "",
   );
+  // Preço promocional (ONE-239): o "por". Preenchido e menor que o preço de
+  // venda, vira o preço que vale em todo o sistema (precoQueVale). Vazio = sem.
+  const promocionalInicial =
+    produtoEdit?.preco_promocional != null ? String(produtoEdit.preco_promocional) : "";
+  const [precoPromocional, setPrecoPromocional] = useState(promocionalInicial);
   const [precoCusto, setPrecoCusto] = useState(
     produtoEdit?.preco_custo != null
       ? String(produtoEdit.preco_custo)
@@ -86,9 +91,6 @@ export function ModalProduto({
   const ehPro = temVitrine(meta.plano);
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
   const [categoriaVitrine, setCategoriaVitrine] = useState(produtoEdit?.categoria_id ?? "");
-  // Preço de-por (ONE-239): o "antes", riscado na vitrine. Vazio = sem.
-  const precoDeInicial = produtoEdit?.preco_de != null ? String(produtoEdit.preco_de) : "";
-  const [precoDe, setPrecoDe] = useState(precoDeInicial);
   // Com a Loja da marca, a categoria é a do bloco "Na loja" (mesma coluna).
   const gravaCategoriaVitrine = ehPro && naVitrine && !loja.carregando && !loja.temLoja;
   const [usaPaleta, setUsaPaleta] = useState(produtoEdit?.usa_paleta ?? false);
@@ -138,8 +140,13 @@ export function ModalProduto({
       setErro(problemaDaLoja);
       return;
     }
-    if (ehPro && naVitrine && precoDe.trim() && !(num(precoDe) > precoVendaNum)) {
-      setErro("O preço antes precisa ser maior que o preço de venda. Deixe vazio pra não mostrar.");
+    if (
+      precoPromocional.trim() &&
+      !(num(precoPromocional) > 0 && num(precoPromocional) < precoVendaNum)
+    ) {
+      setErro(
+        "O preço promocional precisa ser menor que o preço de venda. Deixe vazio pra vender sem promoção.",
+      );
       return;
     }
     setSalvando(true);
@@ -176,9 +183,9 @@ export function ModalProduto({
       // Só grava se mudou: quem abre o cadastro sem a coluna (Calculadora) não apaga a categoria.
       if (gravaCategoriaVitrine && categoriaVitrine !== (produtoEdit.categoria_id ?? ""))
         update.categoria_id = categoriaVitrine || null;
-      // Mesma trava: só grava o preço antes quando ele mudou nesta janela.
-      if (ehPro && precoDe !== precoDeInicial)
-        update.preco_de = precoDe.trim() ? num(precoDe) : null;
+      // Mesma trava: só grava o promocional quando ele mudou nesta janela.
+      if (precoPromocional !== promocionalInicial)
+        update.preco_promocional = precoPromocional.trim() ? num(precoPromocional) : null;
 
       // Histórico de preço: só registra quando o preço de venda mudou.
       if (Number(produtoEdit.preco_venda) !== precoVendaNum) {
@@ -236,7 +243,7 @@ export function ModalProduto({
               }
             : {}),
           ...(gravaCategoriaVitrine ? { categoria_id: categoriaVitrine || null } : {}),
-          ...(ehPro && naVitrine && precoDe.trim() ? { preco_de: num(precoDe) } : {}),
+          ...(precoPromocional.trim() ? { preco_promocional: num(precoPromocional) } : {}),
         } as never)
         .select("id")
         .single();
@@ -428,6 +435,25 @@ export function ModalProduto({
         </Campo>
       </div>
 
+      {/* Preço promocional (ONE-239): entre o preço de venda e o custo, pedido da Sil */}
+      <div className="mb-4">
+        <Campo
+          label="Preço promocional (R$)"
+          hint="Opcional. Preenchido, é o preço que a cliente paga em todo o sistema, e a vitrine mostra o preço de venda riscado. Vazio, vale o preço de venda."
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step="0.01"
+            value={precoPromocional}
+            onChange={(e) => setPrecoPromocional(e.target.value)}
+            className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
+            placeholder="Sem promoção"
+          />
+        </Campo>
+      </div>
+
       {/* Preço de custo */}
       <div className="mb-4">
         <Campo
@@ -526,25 +552,6 @@ export function ModalProduto({
                   </span>
                 </label>
               ))}
-            </div>
-          )}
-          {naVitrine && (
-            <div className="mt-3 border-t border-[var(--line)] pt-3">
-              <Campo
-                label="Preço antes, riscado (opcional)"
-                hint="A vitrine mostra este valor riscado, o preço de venda ao lado e o selo do desconto. A cliente paga o preço de venda."
-              >
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min={0}
-                  step="0.01"
-                  value={precoDe}
-                  onChange={(e) => setPrecoDe(e.target.value)}
-                  className="w-full max-w-[200px] rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
-                  placeholder="ex: 59,90"
-                />
-              </Campo>
             </div>
           )}
           {gravaCategoriaVitrine && (
