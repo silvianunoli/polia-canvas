@@ -144,9 +144,9 @@ describe("linhas e resumo", () => {
   });
   it("soma quantidade, subtotal e sinal", () => {
     const linhas = linhasDoCarrinho(itens, produtos);
-    expect(resumoDoCarrinho(linhas, 50)).toEqual({ quantidade: 3, subtotal: 408.5, desconto: 0, total: 408.5, sinal: 204.25 });
+    expect(resumoDoCarrinho(linhas, 50)).toEqual({ quantidade: 3, subtotal: 408.5, desconto: 0, total: 408.5, sinal: 204.25, cupomSemProduto: false });
     expect(resumoDoCarrinho(linhas, 0).sinal).toBe(0);
-    expect(resumoDoCarrinho([], 30)).toEqual({ quantidade: 0, subtotal: 0, desconto: 0, total: 0, sinal: 0 });
+    expect(resumoDoCarrinho([], 30)).toEqual({ quantidade: 0, subtotal: 0, desconto: 0, total: 0, sinal: 0, cupomSemProduto: false });
   });
   it("sinal de um produto só", () => {
     expect(sinalDoPreco(189, 50)).toBe(94.5);
@@ -410,5 +410,26 @@ describe("cupom no carrinho (ONE-239)", () => {
   });
   it("rótulo do cupom", () => {
     expect(rotuloDoCupom(dezPorCento)).toBe("10% de desconto");
+    expect(rotuloDoCupom({ ...dezPorCento, produtos: ["a"] })).toBe("10% de desconto em alguns produtos");
+  });
+  // Regra de produto (24/11/2026): a mesma conta de registrar_pedido_loja, conferida no banco.
+  it("cupom de categoria, coleção ou produtos: desconto só neles", () => {
+    const linhas = [
+      { produtoId: "caneca", total: 51.9, quantidade: 1 },
+      { produtoId: "caderno", total: 59.9, quantidade: 1 },
+    ] as never[];
+    const soCaneca = { codigo: "CANECA", tipo: "valor" as const, valor: 10, produtos: ["caneca"] };
+    expect(resumoDoCarrinho(linhas, 0, soCaneca)).toMatchObject({ subtotal: 111.8, desconto: 10, total: 101.8, cupomSemProduto: false });
+    const outro = { ...soCaneca, valor: 80, produtos: ["bolsa"] };
+    expect(resumoDoCarrinho(linhas, 0, outro)).toMatchObject({ desconto: 0, total: 111.8, cupomSemProduto: true });
+    expect(descontoDoCupom(111.8, { ...soCaneca, valor: 80 }, 51.9)).toBe(51.9);
+  });
+  it("cupom novo com regra", () => {
+    const base = { codigo: "REGRA10", tipo: "percentual" as const, valor: 10, limiteUsos: null };
+    expect(problemaDoCupomNovo({ ...base, alcance: "categoria", alcanceIds: [] })).toMatch(/categoria/);
+    expect(problemaDoCupomNovo({ ...base, alcance: "produtos", alcanceIds: [] })).toMatch(/produto/);
+    expect(problemaDoCupomNovo({ ...base, alcance: "colecao", alcanceIds: ["x"] })).toBeNull();
+    expect(problemaDoCupomNovo({ codigo: "FRETESP", tipo: "frete_gratis", valor: null, limiteUsos: null, cidades: ["SP:São Paulo"] })).toBeNull();
+    expect(problemaDoCupomNovo({ codigo: "FRETESP", tipo: "frete_gratis", valor: null, limiteUsos: null, cidades: ["São Paulo"] })).toMatch(/cidades/);
   });
 });

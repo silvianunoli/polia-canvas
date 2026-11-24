@@ -1109,7 +1109,8 @@ const LISTA = [
       {
         titulo: "Criar um cupom de desconto",
         itens: [
-          'Em "Cupons de desconto", no bloco "Novo cupom", escreva o "Código" (de 3 a 30 letras ou números, como NATAL10), escolha o "Tipo de desconto" ("Porcentagem (%)" ou "Valor (R$)") e o desconto.',
+          'Em "Cupons de desconto", no bloco "Novo cupom", escreva o "Código" (de 3 a 30 letras ou números, como NATAL10), escolha em "O que o cupom dá" ("Desconto em porcentagem (%)" ou "Desconto em reais (R$)") e o desconto.',
+          'Em "Vale para", o desconto pode valer em "Todos os produtos", em "Uma categoria", em "Uma coleção" ou em "Produtos escolhidos", marcados na lista.',
           '"Vale até" e "Limite de usos" são opcionais: o cupom para de valer no fim do dia escolhido ou quando chega no limite. Clique em "Criar cupom". Ele salva na hora.',
           'Na loja, a cliente digita o código no carrinho e clica em "Aplicar". O desconto, o total e o sinal aparecem antes de ela confirmar, e a Pólia confere o cupom de novo quando grava o pedido.',
           "A chave de cada cupom liga e desliga. Cupom que nunca foi usado tem a lixeira; cupom usado só desliga, pra o pedido antigo continuar mostrando o código.",
@@ -1135,6 +1136,8 @@ const LISTA = [
       "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",
       'Com 8 produtos ou mais, a loja ganha o campo "Buscar produto": ele acha pelo nome, sem ligar pra acento, e soma com a categoria escolhida.',
       'Pedido com cupom chega em Pedidos com "Cupom" e o valor do desconto, e o Financeiro entra com o total já com desconto.',
+      "Cupom de uma categoria, coleção ou produtos escolhidos dá desconto só neles. Se o carrinho não tem nenhum, a loja avisa e o pedido sai sem o cupom.",
+      'Cupom "Só no Pix", "Só no cartão" ou de "Frete grátis" vale só na loja da marca, que cobra e calcula o frete. Na Vitrine online, a loja avisa a cliente e não aplica.',
     ],
     duvidas: [
       {
@@ -1157,7 +1160,7 @@ const LISTA = [
     rota: "/loja-da-marca",
     abrir: "Abrir a Loja da marca",
     resumo:
-      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo, a capa de cada coleção e os cupons de desconto.",
+      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo, a capa de cada coleção e os cupons de desconto, com regra de produto, de Pix ou cartão e de frete grátis.",
     interno: true,
     passos: [
       {
@@ -1186,15 +1189,21 @@ const LISTA = [
       {
         titulo: "Criar um cupom de desconto",
         itens: [
-          'Em "Cupons de desconto", preencha "Código", "Tipo de desconto" e o valor. "Vale até" e "Limite de usos" são opcionais. Clique em "Criar cupom": ele vale na hora, sem salvar.',
-          "Na loja, a compradora digita o código em Finalizar compra e vê o desconto antes de pagar. O pedido chega em Pedidos com o cupom.",
+          'Em "Cupons de desconto", preencha "Código", "O que o cupom dá" e o valor. "Vale até" e "Limite de usos" são opcionais. Clique em "Criar cupom": ele vale na hora, sem salvar.',
+          'Desconto só em parte da loja: em "Vale para", escolha "Uma categoria", "Uma coleção" ou "Produtos escolhidos". Desconto só num pagamento: em "Forma de pagamento", escolha "Só no Pix" ou "Só no cartão".',
+          'Frete grátis: em "O que o cupom dá", escolha "Frete grátis" e marque os estados, ou escreva a cidade, escolha o estado dela e clique em "Pôr a cidade". Sem estado nem cidade, vale para o Brasil todo.',
+          "Na loja, a compradora digita o código no carrinho ou em Finalizar compra e vê o total antes de pagar. O pedido chega em Pedidos com o cupom.",
           "A chave liga e desliga o cupom. A lixeira só aparece em cupom que ainda não foi usado.",
         ],
       },
     ],
     bomSaber: [
       "Os cupons são os mesmos da Vitrine online: o código vale nas duas lojas e os usos somam juntos.",
-      "Na loja da marca, o cupom vale só nos produtos, nunca no frete, e deixa ao menos R$ 1,00 de produtos. O uso conta quando o pagamento entra: compra desistida não gasta o cupom.",
+      "Na loja da marca, o cupom de desconto vale só nos produtos, nunca no frete, e deixa ao menos R$ 1,00 de produtos. O uso conta quando o pagamento entra: compra desistida não gasta o cupom.",
+      'Cupom "Só no Pix" aparece no carrinho e no checkout como "Desconto no Pix", e o total no Pix vem destacado. Se a compradora pagar no cartão, paga o preço cheio e o cupom não conta uso.',
+      'Cupom de frete grátis zera o frete quando o endereço da entrega é num estado ou numa cidade do cupom; a cidade vale com ou sem acento. Em outro endereço, o frete é cobrado e o cupom não conta uso.',
+      'No frete grátis, a etiqueta continua sendo paga pela marca: o pedido chega em Pedidos com "Frete grátis pelo cupom" na observação.',
+      "Cupom de Pix, de cartão ou de frete grátis não vale na Vitrine online, que não cobra nem calcula frete. Lá, só a regra de produto vale.",
       'O preço "de" riscado aparece sozinho na loja quando o produto tem "Preço promocional" em Produtos. Variação com preço próprio é vendida pelo preço dela, sem promoção.',
       "Categoria é o tipo do produto (Canecas, Papelaria) e aparece no menu do topo. Coleção é o tema da estampa (Natal, Clube das Exaustas) e aparece nas bolinhas e em Explore por coleção.",
       'A categoria e a coleção de cada produto se escolhem em Produtos, na parte "Na loja" do produto.',

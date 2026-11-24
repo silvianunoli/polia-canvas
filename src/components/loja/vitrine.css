@@ -1302,6 +1302,10 @@
   padding-top: 8px;
   margin-top: 4px;
 }
+.loja-vitrine .resumo .nota-cupom {
+  margin: 0;
+  font-size: 13px;
+}
 .loja-vitrine .resumo .sinal {
   color: var(--destaque-texto);
   font-weight: 500;

@@ -284,12 +284,13 @@ export const enviarPedidoLoja = createServerFn({ method: "POST" })
  * A loja confere o cupom antes de mostrar o desconto (ONE-239). Só lê: quem
  * grava o desconto é registrar_pedido_loja, que confere de novo. Cupom que não
  * existe, venceu ou esgotou volta igual (null), sem dizer qual dos três.
+ * Cupom de Pix ou de frete grátis só vale na loja da marca: volta "so_loja".
  */
 export const conferirCupomLoja = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) =>
     z.object({ slug: z.string().min(3).max(40), codigo: z.string().trim().min(1).max(40) }).parse(input),
   )
-  .handler(async ({ data }): Promise<CupomLoja | null> => {
+  .handler(async ({ data }): Promise<CupomLoja | "so_loja" | null> => {
     const codigo = normalizarCodigoCupom(data.codigo);
     if (!codigoCupomValido(codigo)) return null;
     const { data: r, error } = await supabaseAdmin.rpc("cupom_da_loja" as never, {
@@ -300,9 +301,17 @@ export const conferirCupomLoja = createServerFn({ method: "POST" })
       console.error("[Loja] cupom_da_loja", error.code, error.message);
       return null;
     }
-    const c = r as unknown as { codigo?: string; tipo?: string; valor?: number | string } | null;
+    const c = r as unknown as {
+      codigo?: string;
+      tipo?: string;
+      valor?: number | string;
+      produtos?: unknown;
+      so_loja?: boolean;
+    } | null;
+    if (c?.so_loja) return "so_loja";
     if (!c?.codigo || (c.tipo !== "percentual" && c.tipo !== "valor")) return null;
-    return { codigo: c.codigo, tipo: c.tipo, valor: Number(c.valor) };
+    const produtos = Array.isArray(c.produtos) ? c.produtos.filter((x): x is string => typeof x === "string") : null;
+    return { codigo: c.codigo, tipo: c.tipo, valor: Number(c.valor), produtos };
   });
 
 // ── tela da dona ───────────────────────────────────────────────────────────

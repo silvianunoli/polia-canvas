@@ -104,6 +104,10 @@ function CampoCupom() {
     setErroCupom(null);
     try {
       const c = await conferirCupomLoja({ data: { slug: loja.slug, codigo } });
+      if (c === "so_loja") {
+        setErroCupom("Esse cupom vale só na loja online da marca.");
+        return;
+      }
       if (!c) {
         setErroCupom("Esse cupom não existe ou não vale mais.");
         return;
@@ -271,7 +275,8 @@ function Checkout() {
       setErro("Confirme a verificação anti-robô acima pra liberar o pedido.");
       return;
     }
-    const corpo = { ...montarPedido(loja.slug, itens, dados, loja.pedeEndereco), cupom: cupom?.codigo };
+    // Cupom que não vale para nenhum produto do carrinho não vai: o pedido sai sem ele.
+    const corpo = { ...montarPedido(loja.slug, itens, dados, loja.pedeEndereco), cupom: resumo.desconto > 0 ? cupom?.codigo : undefined };
     const id = idDoEnvio(corpo);
     setEnviando(true);
     setErro(null);
@@ -364,6 +369,9 @@ function Checkout() {
               <span>Cupom {cupom.codigo}</span>
               <span>- {reais(resumo.desconto)}</span>
             </div>
+          )}
+          {cupom && resumo.cupomSemProduto && (
+            <p className="nota-cupom">O cupom {cupom.codigo} vale para outros produtos da loja e não muda este pedido.</p>
           )}
           <div>
             <span>Frete</span>

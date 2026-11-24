@@ -162,11 +162,27 @@ export async function criarCategoria(
 // ── cupons de desconto (migration 20261124060000, ONE-239) ──────────────────
 export const CHAVE_CUPONS_CATALOGO = "catalogo-cupons";
 
-export interface CupomDaVitrine {
+export type TipoDoCupom = "percentual" | "valor" | "frete_gratis";
+/** Onde o desconto vale (migration 20261124230000). */
+export type AlcanceDoCupom = "todos" | "categoria" | "colecao" | "produtos";
+
+/** Regras do cupom. Pix/cartão e frete grátis só valem na loja da marca. */
+export interface RegrasDoCupom {
+  alcance: AlcanceDoCupom;
+  /** produto_categorias.id (categoria ou coleção) ou produtos.id. */
+  alcanceIds: string[];
+  meio: "pix" | "cartao" | null;
+  ufs: string[];
+  /** "UF:Nome", ex.: "SP:São Paulo". */
+  cidades: string[];
+}
+
+export interface CupomDaVitrine extends RegrasDoCupom {
   id: string;
   codigo: string;
-  tipo: "percentual" | "valor";
-  valor: number;
+  tipo: TipoDoCupom;
+  /** Null no frete grátis. */
+  valor: number | null;
   validoAte: string | null;
   limiteUsos: number | null;
   usos: number;
@@ -180,24 +196,34 @@ export function useCuponsDaVitrine(userId: string | undefined) {
     queryFn: async (): Promise<CupomDaVitrine[]> => {
       const { data, error } = await supabase
         .from("catalogo_cupons" as never)
-        .select("id, codigo, tipo, valor, valido_ate, limite_usos, usos, ativo")
+        .select("id, codigo, tipo, valor, valido_ate, limite_usos, usos, ativo, alcance, alcance_ids, meio, ufs, cidades")
         .eq("user_id" as never, userId! as never)
         .order("created_at" as never, { ascending: false });
       if (error) throw error;
       return ((data ?? []) as unknown as Array<{
         id: string;
         codigo: string;
-        tipo: "percentual" | "valor";
-        valor: number | string;
+        tipo: TipoDoCupom;
+        valor: number | string | null;
         valido_ate: string | null;
         limite_usos: number | null;
         usos: number;
         ativo: boolean;
+        alcance: AlcanceDoCupom | null;
+        alcance_ids: string[] | null;
+        meio: "pix" | "cartao" | null;
+        ufs: string[] | null;
+        cidades: string[] | null;
       }>).map((c) => ({
         id: c.id,
         codigo: c.codigo,
         tipo: c.tipo,
-        valor: Number(c.valor),
+        valor: c.valor == null ? null : Number(c.valor),
+        alcance: c.alcance ?? "todos",
+        alcanceIds: c.alcance_ids ?? [],
+        meio: c.meio ?? null,
+        ufs: c.ufs ?? [],
+        cidades: c.cidades ?? [],
         validoAte: c.valido_ate,
         limiteUsos: c.limite_usos,
         usos: c.usos,
@@ -207,10 +233,10 @@ export function useCuponsDaVitrine(userId: string | undefined) {
   });
 }
 
-export interface NovoCupom {
+export interface NovoCupom extends RegrasDoCupom {
   codigo: string;
-  tipo: "percentual" | "valor";
-  valor: number;
+  tipo: TipoDoCupom;
+  valor: number | null;
   validoAte: string | null;
   limiteUsos: number | null;
 }
@@ -223,6 +249,11 @@ export async function criarCupom(userId: string, c: NovoCupom): Promise<{ error:
     valor: c.valor,
     valido_ate: c.validoAte,
     limite_usos: c.limiteUsos,
+    alcance: c.alcance,
+    alcance_ids: c.alcanceIds,
+    meio: c.meio,
+    ufs: c.ufs,
+    cidades: c.cidades,
   } as never);
   if (!error) return { error: null };
   if (error.code === "23505") return { error: "Já existe um cupom com esse código." };

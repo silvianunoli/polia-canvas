@@ -103,6 +103,8 @@ export interface ResumoCarrinho {
   desconto: number;
   /** Subtotal menos o desconto; o frete fica a combinar, fora da conta. */
   total: number;
+  /** Cupom aplicado que não vale para nenhum produto do carrinho. */
+  cupomSemProduto: boolean;
   /** Sinal sobre o total já com desconto. */
   sinal: number;
 }
@@ -112,7 +114,12 @@ export interface CupomLoja {
   codigo: string;
   tipo: "percentual" | "valor";
   valor: number;
+  /** Ids dos produtos em que o cupom vale (categoria, coleção ou escolhidos); null ou ausente = todos. */
+  produtos?: string[] | null;
 }
+
+/** O cupom vale para este produto? */
+export const cupomValeNoProduto = (cupom: CupomLoja, produtoId: string) => !cupom.produtos || cupom.produtos.includes(produtoId);
 
 /** Código do jeito que o banco guarda: maiúsculo e sem espaço. */
 export const normalizarCodigoCupom = (t: string) => t.replace(/\s+/g, "").toUpperCase();
@@ -125,16 +132,16 @@ export const codigoCupomValido = (t: string) => /^[A-Z0-9_-]{3,30}$/.test(t);
  * registrar_pedido_loja: porcentagem arredondada nos centavos, valor fixo
  * nunca maior que o subtotal.
  */
-export function descontoDoCupom(subtotal: number, cupom: CupomLoja | null): number {
-  if (!cupom || !(subtotal > 0)) return 0;
-  const bruto = cupom.tipo === "percentual" ? (subtotal * cupom.valor) / 100 : cupom.valor;
-  return Math.min(arredondar(bruto), subtotal);
+export function descontoDoCupom(subtotal: number, cupom: CupomLoja | null, queVale: number = subtotal): number {
+  if (!cupom || !(subtotal > 0) || !(queVale > 0)) return 0;
+  const bruto = cupom.tipo === "percentual" ? (queVale * cupom.valor) / 100 : cupom.valor;
+  return Math.min(arredondar(bruto), queVale, subtotal);
 }
 
 /** Como o cupom aparece na loja: "10% de desconto", "R$ 15,00 de desconto". */
 export function rotuloDoCupom(cupom: CupomLoja): string {
   const valor = cupom.tipo === "percentual" ? `${String(cupom.valor).replace(".", ",")}%` : reais(cupom.valor);
-  return `${valor} de desconto`;
+  return `${valor} de desconto${cupom.produtos ? " em alguns produtos" : ""}`;
 }
 
 /** Soma das peças, subtotal e o sinal (frete fica a combinar, fora da conta). */
@@ -144,13 +151,16 @@ export function resumoDoCarrinho(
   cupom: CupomLoja | null = null,
 ): ResumoCarrinho {
   const subtotal = arredondar(linhas.reduce((s, l) => s + l.total, 0));
-  const desconto = descontoDoCupom(subtotal, cupom);
+  // Cupom de categoria, coleção ou produtos escolhidos: a conta é só sobre eles.
+  const queVale = cupom ? arredondar(linhas.reduce((s, l) => s + (cupomValeNoProduto(cupom, l.produtoId) ? l.total : 0), 0)) : 0;
+  const desconto = descontoDoCupom(subtotal, cupom, queVale);
   const total = arredondar(subtotal - desconto);
   return {
     quantidade: linhas.reduce((s, l) => s + l.quantidade, 0),
     subtotal,
     desconto,
     total,
+    cupomSemProduto: !!cupom && linhas.length > 0 && queVale <= 0,
     sinal: sinalPercentual > 0 ? arredondar((total * sinalPercentual) / 100) : 0,
   };
 }
@@ -451,10 +461,25 @@ export function linkWhatsapp(whatsapp: string | null, texto: string): string | n
  * Confere o cupom novo na tela da Vitrine (ONE-239) e devolve o motivo, ou
  * null se pode criar. Mesmas travas do banco (catalogo_cupons).
  */
-export function problemaDoCupomNovo(c: { codigo: string; tipo: "percentual" | "valor"; valor: number; limiteUsos: number | null }): string | null {
+export function problemaDoCupomNovo(c: {
+  codigo: string;
+  tipo: "percentual" | "valor" | "frete_gratis";
+  valor: number | null;
+  limiteUsos: number | null;
+  alcance?: "todos" | "categoria" | "colecao" | "produtos";
+  alcanceIds?: string[];
+  cidades?: string[];
+}): string | null {
   if (!codigoCupomValido(c.codigo)) return "Use de 3 a 30 letras, números, hífen ou sublinhado, sem espaço.";
-  if (!(c.valor > 0)) return "Coloque o valor do desconto.";
-  if (c.tipo === "percentual" && c.valor >= 100) return "A porcentagem precisa ser menor que 100%.";
+  if (c.tipo !== "frete_gratis") {
+    if (!(c.valor != null && c.valor > 0)) return "Coloque o valor do desconto.";
+    if (c.tipo === "percentual" && c.valor >= 100) return "A porcentagem precisa ser menor que 100%.";
+    const alcance = c.alcance ?? "todos";
+    if (alcance !== "todos" && !c.alcanceIds?.length)
+      return alcance === "produtos" ? "Escolha ao menos um produto." : `Escolha a ${alcance === "colecao" ? "coleção" : "categoria"}.`;
+    if ((c.alcanceIds?.length ?? 0) > 200) return "Escolha até 200 produtos.";
+  }
+  if (c.cidades?.some((x) => !/^[A-Z]{2}:[^:]{2,60}$/.test(x) || x.includes("\n"))) return "Confira o nome das cidades.";
   if (c.limiteUsos != null && !(Number.isInteger(c.limiteUsos) && c.limiteUsos >= 1)) return "O limite de usos precisa ser um número inteiro, a partir de 1.";
   return null;
 }
