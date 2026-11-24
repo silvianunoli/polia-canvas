@@ -783,13 +783,13 @@ const LISTA = [
     ],
     duvidas: [
       {
-        pergunta: "Por que as vendas da meta são diferentes das de empatar",
-        resposta:
-      {
         pergunta: "O que entra em \"já entraram\"",
         resposta:
           "Todas as entradas do mês no Financeiro, a mesma soma que enche a barra da Meta do mês em Metas.",
       },
+      {
+        pergunta: "Por que as vendas da meta são diferentes das de empatar",
+        resposta:
           "A meta é o que precisa entrar, então divide pelo preço. Empatar é pagar os custos, então divide pelo lucro de cada venda.",
       },
       {
