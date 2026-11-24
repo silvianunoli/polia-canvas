@@ -1226,16 +1226,36 @@ const LISTA = [
     grupo: "Clientes e rotina",
     rota: "/calendario",
     abrir: "Abrir o Calendário",
-    resumo: "O mês com o dia de entrega de cada pedido.",
+    resumo:
+      "O mês com o dia de entrega de cada pedido, os lembretes da marca e as contas a pagar, com aviso por e-mail.",
     // A conexão com o Google Calendar saiu da Pólia One em 02/11/2026.
-    trecho: "calendario",
+    // O clipe narrado (trecho "calendario") saiu em 24/11/2026 com os lembretes
+    // (ONE-244): a tela ganhou filtros e o "Novo lembrete", e o vídeo mostra a
+    // tela antiga. Volta quando a narração nova sair.
     passos: [
       {
         titulo: "Ver o mês",
         itens: [
           'Use "Mês anterior" e "Próximo mês" pra navegar. "Hoje" volta pro mês atual.',
-          "Clique num dia pra ver as entregas dele. Cada uma mostra a cliente e o que vai no pedido.",
-          'O filtro "Entregas" liga e desliga as entregas na grade.',
+          "Clique num dia pra ver o que cai nele: as entregas, com a cliente e o que vai no pedido, os lembretes e as contas a pagar.",
+          'Os filtros "Entregas", "Lembretes" e "Contas a pagar" ligam e desligam cada um na grade.',
+        ],
+      },
+      {
+        titulo: "Marcar um lembrete",
+        itens: [
+          'Clique no dia e depois em "Novo lembrete".',
+          'Escreva em "O que é", como "Mandar o relatório pra contabilidade". O "Dia" já vem com o dia que você clicou, e o "Horário (opcional)" aparece no lembrete e no aviso.',
+          'Em "Repete", escolha "Não repete", "Toda semana", "Todo mês" ou "Todo ano". Todo mês num dia 29, 30 ou 31 cai no último dia dos meses que não têm esse dia.',
+          'Em "Aviso por e-mail", escolha "No dia, às 8h", "1 dia antes, às 8h", "3 dias antes, às 8h", "1 semana antes, às 8h" ou "Não avisar". Com o app da Pólia One no celular, o aviso chega lá também.',
+          'Se quiser, escreva uma "Observação (opcional)", como o que levar. Ela vai junto no e-mail. Depois, clique em "Salvar".',
+        ],
+      },
+      {
+        titulo: "Cuidar dos lembretes",
+        itens: [
+          "No painel do dia, o quadradinho ao lado do lembrete marca como feito. Lembrete feito fica riscado e não avisa mais naquele dia. Num lembrete que repete, só aquele dia fica feito; o próximo avisa normalmente.",
+          'O lápis abre o lembrete pra mudar o que quiser. Lá dentro, "Apagar lembrete" tira ele do Calendário; num lembrete que repete, apaga todas as repetições.',
         ],
       },
       {
@@ -1247,7 +1267,9 @@ const LISTA = [
     ],
     bomSaber: [
       "O Calendário é do Premium e do Pro.",
-      "Pedido entregue continua no dia dele, riscado na grade.",
+      "Pedido entregue continua no dia dele, riscado na grade. Conta paga também, com \"paga\" ao lado do valor.",
+      "As contas a pagar aparecem no dia do vencimento. Elas são criadas e pagas no Financeiro.",
+      'O aviso dos lembretes desliga em Configurações, em Notificações, na chave "Lembretes do Calendário".',
     ],
     duvidas: [
       {
@@ -1256,9 +1278,14 @@ const LISTA = [
           'O Calendário mostra o pedido no dia da entrega, e o filtro "Entregas" precisa estar ligado. Pedido cancelado não aparece.',
       },
       {
+        pergunta: "O aviso do lembrete não chegou",
+        resposta:
+          'O e-mail sai às 8h do dia escolhido em "Aviso por e-mail" e vai pro e-mail da conta. Confira se o lembrete tem aviso, se ele não foi marcado como feito e se a chave "Lembretes do Calendário" está ligada em Configurações. Olhe também a caixa de spam.',
+      },
+      {
         pergunta: "Cadê os compromissos do Google",
         resposta:
-          "A conexão com o Google Calendar saiu da Pólia One em novembro de 2026. O Calendário mostra as entregas dos pedidos.",
+          "A conexão com o Google Calendar saiu da Pólia One em novembro de 2026. Os compromissos da marca entram como lembretes no próprio Calendário.",
       },
     ],
   },

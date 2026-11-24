@@ -12,6 +12,8 @@ import {
   Plus,
   CalendarDays,
   AlertTriangle,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -46,17 +48,37 @@ import { ddmm, distribuirTarefasPorDia, type OcorrenciaTarefa } from "@/lib/cale
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { usePedidosDoPeriodo, type PedidoLinha } from "@/components/pedidos/dados";
 import { estaAtrasado } from "@/lib/pedidos";
+import { formatarReais } from "@/lib/formatarReais";
+import { FormLembrete } from "@/components/calendario/FormLembrete";
+import {
+  chaveLembretes,
+  excluirLembrete,
+  marcarFeito,
+  salvarLembrete,
+  useContasDoPeriodo,
+  useLembretesDoPeriodo,
+  type ContaNaGrade,
+  type LembreteParaSalvar,
+} from "@/components/calendario/lembretesDados";
+import {
+  ROTULO_REPETICAO,
+  ocorrenciasNoIntervalo,
+  type Lembrete,
+} from "../../../supabase/functions/_shared/lembretesCalendario";
 
 // A integração com o Google Calendar saiu da Pólia One em 02/11/2026 (decisão
 // da Sil): o Calendário mostra as entregas dos pedidos (e o Planner, na conta
 // interna). A tabela google_calendar_conexoes ficou no banco.
+// Desde 24/11/2026 (ONE-244, pedido da Sil) ele também guarda os lembretes da
+// marca, com aviso por e-mail e push, e mostra as contas a pagar no vencimento.
 export const Route = createFileRoute("/_authenticated/calendario")({
   head: () => ({
     meta: [
       { title: "Calendário · Pólia One" },
       {
         name: "description",
-        content: "As entregas dos pedidos, o mês inteiro numa tela só.",
+        content:
+          "As entregas dos pedidos, os lembretes da marca e as contas a pagar, o mês inteiro numa tela só.",
       },
     ],
   }),
@@ -81,8 +103,10 @@ interface TarefaCal {
 
 // "pedido" = entrega do quadro de Pedidos (28/10/2026): é a fonte principal
 // desde que o Planner ficou só pra conta interna (lib/ferramentasInternas).
+// "lembrete" e "conta" desde 24/11/2026 (ONE-244).
+type Fonte = "planner" | "pedido" | "lembrete" | "conta";
 type ItemDia = {
-  fonte: "planner" | "pedido";
+  fonte: Fonte;
   id: string;
   titulo: string;
   horario: string | null;
@@ -90,7 +114,27 @@ type ItemDia = {
   concluido: boolean;
   /** "até 20/10" no começo do intervalo; "em andamento, até 20/10" no meio. */
   detalhe: string | null;
+  /** Só nos lembretes: o lembrete e o dia desta ocorrência. */
+  lembrete?: Lembrete;
+  ocorrencia?: string;
 };
+
+// Cor de cada fonte, só em borda e ponto (pêssego nunca vira texto).
+const COR_FONTE: Record<Fonte, string> = {
+  pedido: "var(--secondary)",
+  planner: "var(--secondary)",
+  lembrete: "var(--accent)",
+  conta: "var(--cat-admin)",
+};
+
+const ROTULO_FONTE: Record<Fonte, string> = {
+  pedido: "Entrega",
+  planner: "Planner",
+  lembrete: "Lembrete",
+  conta: "Conta",
+};
+
+type FormAberto = { modo: "novo" } | { modo: "editar"; lembrete: Lembrete } | null;
 
 const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
@@ -103,6 +147,9 @@ function CalendarioPage() {
   // Planner só aparece pra conta interna; pra todas, a grade é das entregas.
   const comPlanner = useFerramentasInternas().planner;
   const [mostrarEntregas, setMostrarEntregas] = useState(true);
+  const [mostrarLembretes, setMostrarLembretes] = useState(true);
+  const [mostrarContas, setMostrarContas] = useState(true);
+  const [formLembrete, setFormLembrete] = useState<FormAberto>(null);
   const [mostrarPlannerFiltro, setMostrarPlanner] = useState(true);
   const mostrarPlanner = comPlanner && mostrarPlannerFiltro;
   const [quadroFiltro, setQuadroFiltro] = useState<string>("todos");
@@ -121,6 +168,8 @@ function CalendarioPage() {
   const fimISO = format(fimGrade, "yyyy-MM-dd");
 
   const pedidosQuery = usePedidosDoPeriodo(userId, inicioISO, fimISO, mostrarEntregas);
+  const lembretesQuery = useLembretesDoPeriodo(userId, inicioISO, fimISO, mostrarLembretes);
+  const contasQuery = useContasDoPeriodo(userId, inicioISO, fimISO, mostrarContas);
 
   const quadrosQuery = useQuery({
     queryKey: ["quadros-calendario", userId],
@@ -194,6 +243,42 @@ function CalendarioPage() {
       ),
   });
 
+  const invalidarLembretes = () => qc.invalidateQueries({ queryKey: chaveLembretes(userId) });
+
+  const salvarLembreteMutation = useMutation({
+    mutationFn: ({ dados, id }: { dados: LembreteParaSalvar; id?: string }) =>
+      salvarLembrete(dados, id),
+    onSuccess: (_r, { id, dados }) => {
+      void invalidarLembretes();
+      setFormLembrete(null);
+      toastSucesso(
+        id
+          ? "Lembrete atualizado."
+          : dados.avisar_dias_antes === null
+            ? "Lembrete guardado no Calendário."
+            : "Lembrete guardado. A Pólia One avisa por e-mail às 8h.",
+      );
+    },
+    onError: () => toastErro("A Pólia One não conseguiu salvar o lembrete. Tenta de novo."),
+  });
+
+  const apagarLembreteMutation = useMutation({
+    mutationFn: (id: string) => excluirLembrete(id),
+    onSuccess: () => {
+      void invalidarLembretes();
+      setFormLembrete(null);
+      toastSucesso("Lembrete apagado.");
+    },
+    onError: () => toastErro("A Pólia One não conseguiu apagar o lembrete. Tenta de novo."),
+  });
+
+  const feitoMutation = useMutation({
+    mutationFn: ({ l, ocorrencia, feito }: { l: Lembrete; ocorrencia: string; feito: boolean }) =>
+      marcarFeito(l, ocorrencia, feito),
+    onSuccess: () => void invalidarLembretes(),
+    onError: () => toastErro("A Pólia One não conseguiu marcar o lembrete. Tenta de novo."),
+  });
+
   const abrirComposer = () => {
     setNovoTitulo("");
     setNovoQuadroId(quadros[0]?.id ?? "");
@@ -221,8 +306,33 @@ function CalendarioPage() {
     return m;
   }, [pedidosQuery.data, mostrarEntregas]);
 
+  const lembretesPorDia = useMemo(() => {
+    const m = new Map<string, { lembrete: Lembrete; ocorrencia: string }[]>();
+    if (!mostrarLembretes) return m;
+    for (const l of lembretesQuery.data ?? []) {
+      for (const dia of ocorrenciasNoIntervalo(l, inicioISO, fimISO)) {
+        const lista = m.get(dia) ?? [];
+        lista.push({ lembrete: l, ocorrencia: dia });
+        m.set(dia, lista);
+      }
+    }
+    return m;
+  }, [lembretesQuery.data, mostrarLembretes, inicioISO, fimISO]);
+
+  const contasPorDia = useMemo(() => {
+    const m = new Map<string, ContaNaGrade[]>();
+    if (!mostrarContas) return m;
+    for (const c of contasQuery.data ?? []) {
+      const lista = m.get(c.vencimento) ?? [];
+      lista.push(c);
+      m.set(c.vencimento, lista);
+    }
+    return m;
+  }, [contasQuery.data, mostrarContas]);
+
   useEffect(() => {
     setMostrarComposer(false);
+    setFormLembrete(null);
   }, [diaSelecionado]);
 
   const linkQuadro = (quadroId: string) => {
@@ -258,7 +368,29 @@ function CalendarioPage() {
         ? "atrasado"
         : x.itens.map((i) => `${i.quantidade}x ${i.produtoNome}`).join(", "),
     }));
-    return [...p, ...t].sort((a, b) => (a.horario ?? "").localeCompare(b.horario ?? ""));
+    const l: ItemDia[] = (lembretesPorDia.get(iso) ?? []).map(({ lembrete: x, ocorrencia }) => ({
+      fonte: "lembrete",
+      id: `${x.id}-${ocorrencia}`,
+      titulo: x.titulo,
+      horario: x.horario,
+      href: "",
+      concluido: x.feitos.includes(ocorrencia),
+      detalhe: x.repeticao === "nenhuma" ? x.observacao : ROTULO_REPETICAO[x.repeticao],
+      lembrete: x,
+      ocorrencia,
+    }));
+    const c: ItemDia[] = (contasPorDia.get(iso) ?? []).map((x) => ({
+      fonte: "conta",
+      id: x.id,
+      titulo: `Conta · ${x.descricao}`,
+      horario: null,
+      href: "/financeiro",
+      concluido: x.paga,
+      detalhe: `${formatarReais(x.valor, { sempreCentavos: true })}${x.paga ? " · paga" : ""}`,
+    }));
+    return [...p, ...l, ...c, ...t].sort((a, b) =>
+      (a.horario ?? "").localeCompare(b.horario ?? ""),
+    );
   };
 
   // Mês sem nenhum item desenhava 35 células em branco e mais nada: nem aviso de
@@ -270,18 +402,38 @@ function CalendarioPage() {
     for (const lista of tarefasPorDia.values()) for (const o of lista) idsTarefas.add(o.tarefa.id);
     let n = idsTarefas.size;
     for (const lista of entregasPorDia.values()) n += lista.length;
+    for (const lista of lembretesPorDia.values()) n += lista.length;
+    for (const lista of contasPorDia.values()) n += lista.length;
     return n;
-  }, [tarefasPorDia, entregasPorDia]);
+  }, [tarefasPorDia, entregasPorDia, lembretesPorDia, contasPorDia]);
   const carregandoGrade =
-    (mostrarPlanner && tarefasQuery.isLoading) || (mostrarEntregas && pedidosQuery.isLoading);
-  const textoVazioDoMes = !mostrarEntregas
-    ? 'O filtro "Entregas" está desligado. Liga ele aí em cima que as entregas voltam pra grade.'
-    : "O calendário mostra o dia de entrega de cada pedido. Nenhum cai neste mês.";
+    (mostrarPlanner && tarefasQuery.isLoading) ||
+    (mostrarEntregas && pedidosQuery.isLoading) ||
+    (mostrarLembretes && lembretesQuery.isLoading) ||
+    (mostrarContas && contasQuery.isLoading);
+  const algumFiltroLigado = mostrarEntregas || mostrarLembretes || mostrarContas || mostrarPlanner;
+  const textoVazioDoMes = !algumFiltroLigado
+    ? "Os filtros aí em cima estão desligados. Liga um deles que a grade volta a mostrar o mês."
+    : "Nenhuma entrega, lembrete ou conta cai neste mês. Clique num dia pra marcar um lembrete.";
   const itensDiaSelecionado = diaSelecionado
     ? itensDoDia(diaSelecionado, { comAndamento: true })
     : [];
   const erroTarefas =
-    (mostrarPlanner && tarefasQuery.isError) || (mostrarEntregas && pedidosQuery.isError);
+    (mostrarPlanner && tarefasQuery.isError) ||
+    (mostrarEntregas && pedidosQuery.isError) ||
+    (mostrarLembretes && lembretesQuery.isError) ||
+    (mostrarContas && contasQuery.isError);
+  const recarregando =
+    tarefasQuery.isFetching ||
+    pedidosQuery.isFetching ||
+    lembretesQuery.isFetching ||
+    contasQuery.isFetching;
+  const tentarDeNovo = () => {
+    void pedidosQuery.refetch();
+    if (mostrarLembretes) void lembretesQuery.refetch();
+    if (mostrarContas) void contasQuery.refetch();
+    if (comPlanner) void tarefasQuery.refetch();
+  };
 
   return (
     <PaginaLogada
@@ -289,7 +441,7 @@ function CalendarioPage() {
       largura="larga"
       eyebrow="Calendário"
       titulo="O mês inteiro à vista."
-      subtitulo="As entregas dos pedidos, num só lugar."
+      subtitulo="As entregas, os lembretes da marca e as contas a pagar, num só lugar."
     >
       <div>
         {/* Navegação de mês */}
@@ -334,6 +486,22 @@ function CalendarioPage() {
           >
             Entregas
           </button>
+          <button
+            type="button"
+            onClick={() => setMostrarLembretes((v) => !v)}
+            aria-pressed={mostrarLembretes}
+            className={`${BTN_MIUDO} ${mostrarLembretes ? "!bg-[var(--secondary)]" : "bg-white"}`}
+          >
+            Lembretes
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarContas((v) => !v)}
+            aria-pressed={mostrarContas}
+            className={`${BTN_MIUDO} ${mostrarContas ? "!bg-[var(--secondary)]" : "bg-white"}`}
+          >
+            Contas a pagar
+          </button>
           {comPlanner && (
             <button
               type="button"
@@ -371,20 +539,15 @@ function CalendarioPage() {
             <Vazio
               icone={AlertTriangle}
               titulo="A Pólia One não conseguiu carregar o que cai neste mês."
-              texto="Pode ter sido a conexão. Os pedidos continuam guardados, a grade só não conseguiu ler agora."
+              texto="Pode ter sido a conexão. Os pedidos, lembretes e contas continuam guardados, a grade só não conseguiu ler agora."
               acao={
                 <button
                   type="button"
-                  onClick={() => {
-                    void pedidosQuery.refetch();
-                    if (comPlanner) void tarefasQuery.refetch();
-                  }}
-                  disabled={tarefasQuery.isFetching || pedidosQuery.isFetching}
+                  onClick={tentarDeNovo}
+                  disabled={recarregando}
                   className={BTN_ACAO}
                 >
-                  {tarefasQuery.isFetching || pedidosQuery.isFetching
-                    ? "Tentando…"
-                    : "Tentar de novo"}
+                  {recarregando ? "Tentando…" : "Tentar de novo"}
                 </button>
               }
             />
@@ -439,9 +602,10 @@ function CalendarioPage() {
                     {itens.slice(0, 4).map((item) => (
                       <span
                         key={`${item.fonte}-${item.id}`}
-                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                          item.concluido ? "bg-[var(--line)]" : "bg-[var(--secondary)]"
-                        }`}
+                        className="h-1.5 w-1.5 shrink-0 rounded-full"
+                        style={{
+                          backgroundColor: item.concluido ? "var(--line)" : COR_FONTE[item.fonte],
+                        }}
                         aria-hidden="true"
                       />
                     ))}
@@ -459,8 +623,9 @@ function CalendarioPage() {
                       className={`truncate rounded px-1.5 py-0.5 text-[11px] ${
                         item.concluido
                           ? "bg-[var(--surface)] text-[var(--muted)] line-through"
-                          : "bg-white text-[var(--ink-soft)] outline outline-1 outline-[var(--secondary)]"
+                          : "bg-white text-[var(--ink-soft)] outline outline-1"
                       }`}
+                      style={item.concluido ? undefined : { outlineColor: COR_FONTE[item.fonte] }}
                     >
                       {item.titulo}
                       {item.detalhe ? ` · ${item.detalhe}` : ""}
@@ -483,7 +648,7 @@ function CalendarioPage() {
           <div className="mt-4">
             <Vazio
               icone={CalendarDays}
-              titulo={mostrarEntregas ? "Nada marcado neste mês." : "Nada aparecendo neste mês."}
+              titulo={algumFiltroLigado ? "Nada marcado neste mês." : "Nada aparecendo neste mês."}
               texto={textoVazioDoMes}
               acao={
                 mostrarEntregas ? (
@@ -514,24 +679,26 @@ function CalendarioPage() {
 
             {diaSelecionado && (
               <>
-                {!comPlanner ? (
-                  <LinkInterno
-                    href="/pedidos"
-                    className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
-                  >
-                    <Plus size={14} aria-hidden="true" /> Anotar um pedido
-                  </LinkInterno>
-                ) : quadros.length === 0 ? (
-                  <p className="mb-4 text-[13px] italic text-[var(--muted)]">
-                    Crie um quadro no{" "}
-                    <LinkInterno
-                      href="/planner"
-                      className="text-[var(--secondary-text)] hover:underline"
-                    >
-                      Planner
-                    </LinkInterno>{" "}
-                    antes de adicionar tarefas por aqui.
-                  </p>
+                {formLembrete ? (
+                  <FormLembrete
+                    key={formLembrete.modo === "editar" ? formLembrete.lembrete.id : "novo"}
+                    dia={diaSelecionado}
+                    lembrete={formLembrete.modo === "editar" ? formLembrete.lembrete : undefined}
+                    salvando={salvarLembreteMutation.isPending}
+                    apagando={apagarLembreteMutation.isPending}
+                    onSalvar={(dados) =>
+                      salvarLembreteMutation.mutate({
+                        dados,
+                        id: formLembrete.modo === "editar" ? formLembrete.lembrete.id : undefined,
+                      })
+                    }
+                    onApagar={
+                      formLembrete.modo === "editar"
+                        ? () => apagarLembreteMutation.mutate(formLembrete.lembrete.id)
+                        : undefined
+                    }
+                    onCancelar={() => setFormLembrete(null)}
+                  />
                 ) : mostrarComposer ? (
                   <div className="mb-4 flex flex-col gap-2 rounded-lg border border-[var(--line)] p-3">
                     <Campo label="Nome da tarefa">
@@ -589,13 +756,30 @@ function CalendarioPage() {
                     </div>
                   </div>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={abrirComposer}
-                    className="mb-4 inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
-                  >
-                    <Plus size={14} aria-hidden="true" /> Nova tarefa nesse dia
-                  </button>
+                  <div className="mb-4 flex flex-wrap items-center gap-x-5">
+                    <button
+                      type="button"
+                      onClick={() => setFormLembrete({ modo: "novo" })}
+                      className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
+                    >
+                      <Plus size={14} aria-hidden="true" /> Novo lembrete
+                    </button>
+                    <LinkInterno
+                      href="/pedidos"
+                      className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
+                    >
+                      <Plus size={14} aria-hidden="true" /> Anotar um pedido
+                    </LinkInterno>
+                    {comPlanner && quadros.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={abrirComposer}
+                        className="inline-flex min-h-11 items-center gap-1.5 text-[13px] text-[var(--secondary-text)] hover:underline"
+                      >
+                        <Plus size={14} aria-hidden="true" /> Nova tarefa nesse dia
+                      </button>
+                    )}
+                  </div>
                 )}
 
                 {erroTarefas ? (
@@ -605,24 +789,21 @@ function CalendarioPage() {
                     </p>
                     <button
                       type="button"
-                      onClick={() => {
-                        void pedidosQuery.refetch();
-                        if (comPlanner) void tarefasQuery.refetch();
-                      }}
-                      disabled={tarefasQuery.isFetching || pedidosQuery.isFetching}
+                      onClick={tentarDeNovo}
+                      disabled={recarregando}
                       className={`${BTN_MIUDO} mt-2 min-h-11`}
                     >
-                      {tarefasQuery.isFetching || pedidosQuery.isFetching
-                        ? "Tentando…"
-                        : "Tentar de novo"}
+                      {recarregando ? "Tentando…" : "Tentar de novo"}
                     </button>
                   </div>
                 ) : itensDiaSelecionado.length === 0 ? (
-                  <Vazio
-                    denso
-                    titulo="Nada marcado nesse dia."
-                    texto="Nenhuma entrega cai nesse dia."
-                  />
+                  formLembrete ? null : (
+                    <Vazio
+                      denso
+                      titulo="Nada marcado nesse dia."
+                      texto="Nenhuma entrega, lembrete ou conta cai nesse dia."
+                    />
+                  )
                 ) : (
                   <ul className="flex flex-col gap-2">
                     {itensDiaSelecionado.map((item) => (
@@ -630,12 +811,50 @@ function CalendarioPage() {
                         key={`${item.fonte}-${item.id}`}
                         className="flex items-center gap-3 rounded-lg border border-[var(--line)] px-3 py-2"
                       >
-                        <span
-                          className="h-2 w-2 shrink-0 rounded-full bg-[var(--secondary)]"
-                          aria-hidden="true"
-                        />
+                        {item.fonte === "lembrete" && item.lembrete && item.ocorrencia ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              feitoMutation.mutate({
+                                l: item.lembrete!,
+                                ocorrencia: item.ocorrencia!,
+                                feito: !item.concluido,
+                              })
+                            }
+                            disabled={feitoMutation.isPending}
+                            aria-pressed={item.concluido}
+                            aria-label={
+                              item.concluido
+                                ? `Desmarcar "${item.titulo}" como feito`
+                                : `Marcar "${item.titulo}" como feito`
+                            }
+                            className="-m-3 flex h-11 w-11 shrink-0 items-center justify-center disabled:opacity-60"
+                          >
+                            <span
+                              className={`flex h-5 w-5 items-center justify-center rounded border ${
+                                item.concluido
+                                  ? "border-[var(--ink-soft)] bg-[var(--ink-soft)] text-white"
+                                  : "border-[var(--accent)] bg-white"
+                              }`}
+                            >
+                              {item.concluido && <Check size={12} aria-hidden="true" />}
+                            </span>
+                          </button>
+                        ) : (
+                          <span
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: COR_FONTE[item.fonte] }}
+                            aria-hidden="true"
+                          />
+                        )}
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[14px] text-[var(--ink-soft)]">
+                          <span
+                            className={`block truncate text-[14px] ${
+                              item.concluido
+                                ? "text-[var(--muted)] line-through"
+                                : "text-[var(--ink-soft)]"
+                            }`}
+                          >
                             {item.titulo}
                           </span>
                           {item.detalhe && (
@@ -650,9 +869,21 @@ function CalendarioPage() {
                           </span>
                         )}
                         <span className="shrink-0 text-[10px] font-accent font-bold uppercase tracking-[0.1em] text-[var(--muted)]">
-                          {item.fonte === "pedido" ? "Entrega" : "Planner"}
+                          {ROTULO_FONTE[item.fonte]}
                         </span>
-                        {item.href && (
+                        {item.fonte === "lembrete" && item.lembrete ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setMostrarComposer(false);
+                              setFormLembrete({ modo: "editar", lembrete: item.lembrete! });
+                            }}
+                            className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--secondary-text)]"
+                            aria-label={`Editar "${item.titulo}"`}
+                          >
+                            <Pencil size={14} aria-hidden="true" />
+                          </button>
+                        ) : item.href ? (
                           <a
                             href={item.href}
                             className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--secondary-text)]"
@@ -660,7 +891,7 @@ function CalendarioPage() {
                           >
                             <ExternalLink size={14} aria-hidden="true" />
                           </a>
-                        )}
+                        ) : null}
                       </li>
                     ))}
                   </ul>

@@ -639,3 +639,14 @@ Sil, 19/11: E11 da consultoria da Pólia One virou "Página de materiais", come�
 - Casca (topo sem menu e rodapé LGPD) sai de `materiais.$slug.tsx` pra `components/site/CascaMaterial.tsx`, usada pelas duas rotas.
 - Data de hoje calculada no loader, nunca em `const` de módulo (incidente do relógio do Worker, 06/11).
 - Entra no sitemap.
+
+## 2026-11-24 — Lembretes no Calendário (ONE-244)
+
+Sil, 24/11: "colocar outras entradas além de pedidos... por exemplo, posso colocar o dia de enviar o relatório pra contabilidade e isso gerar lembretes por email e push". Plano aprovado ("Pode construir").
+
+- Tabela `lembretes` (título, dia, horário, repetição nenhuma/semanal/mensal/anual, aviso no dia ou 1/3/7 dias antes, observação, `feitos` por ocorrência). RLS da dona; criar e editar pedem Premium/Pro (`lembretes_plano_ok`); `user_id` vem do default, sem grant.
+- Regra de repetição única em `supabase/functions/_shared/lembretesCalendario.ts`, usada pelo Calendário e pela edge function. Dia 31 todo mês cai no último dia do mês; 29/02 todo ano cai em 28/02.
+- Aviso às 8h de Brasília (cron `lembretes-calendario`, 11h UTC), e-mail sempre e push quando há aparelho. `lembretes_envios` marca cada ocorrência antes de enviar. Interruptor "Lembretes do Calendário" (`notif_lembretes`) em Configurações.
+- O Calendário ganhou os filtros "Lembretes" e "Contas a pagar": a conta do Financeiro aparece no vencimento, riscada quando paga.
+- Sobe em duas partes, como o ONE-174: estrutura e função primeiro, teste na conta `+teste2` da Sil, e só depois cron e novidade.
+- Tutorial do Calendário reescrito; o clipe narrado (`trecho: "calendario"`) saiu até a narração nova.
