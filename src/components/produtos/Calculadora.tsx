@@ -1415,6 +1415,7 @@ export function Calculadora({
                 }
                 onTentarDeNovo={primeiroPreco.tentarDeNovo}
                 onCompletarCadastro={onCompletarCadastro}
+                servico={perfil === "servico"}
               />
             )}
             {!encomendaTravada && !modoPrimeiroPreco && (
@@ -1533,7 +1534,10 @@ function BlocoPrimeiroPreco({
   rotuloCampoNome,
   onTentarDeNovo,
   onCompletarCadastro,
+  servico,
 }: {
+  /** Aba Serviço: o convite fala em pedido do serviço, não em encomenda. */
+  servico: boolean;
   estado: EstadoPrimeiroPreco;
   erro: string | null;
   produtoId: string | null;
@@ -1589,12 +1593,31 @@ function BlocoPrimeiroPreco({
       <div aria-live="polite">{recado}</div>
       {guardado && (
         <>
+          {/* Ponte do preço pro pedido (ONE-249, 24/11/2026): desde 28/10, 19
+              de 68 contas guardaram o primeiro preço e só 3 abriram Pedidos. O
+              pedido é o que faz a conta voltar (véspera da entrega, quadro do
+              dia), então ele vira a ação principal daqui. */}
+          <p className="mt-4 text-[14px] text-[var(--ink-soft)]">
+            {servico
+              ? "Próximo passo: lançar o primeiro pedido desse serviço, com a cliente e o dia. No quadro de Pedidos, a Pólia One mostra o que fazer e quando."
+              : "Próximo passo: anotar a primeira encomenda desse produto, com a cliente e o dia da entrega. No quadro de Pedidos, a Pólia One mostra o que entregar e quando."}
+          </p>
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Link
+              to="/pedidos"
+              search={{ novo: true, produto: produtoId }}
+              onClick={() => {
+                track("primeiro_preco_para_pedido", { perfil: servico ? "servico" : "produto" });
+              }}
+              className={`${BTN_ACAO} no-underline`}
+            >
+              {servico ? "Lançar o primeiro pedido" : "Anotar a primeira encomenda"}
+            </Link>
             {onCompletarCadastro && (
               <button
                 type="button"
                 onClick={() => onCompletarCadastro(produtoId)}
-                className={BTN_ACAO}
+                className={BTN_ACAO_CONTORNO}
               >
                 Completar o cadastro
               </button>

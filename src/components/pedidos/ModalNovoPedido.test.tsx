@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AnchorHTMLAttributes } from "react";
 
 const refetch = vi.fn();
+// Catálogo do mock: vazio por padrão; o teste do produto inicial (ONE-249) põe um item.
+let catalogo: Array<Record<string, unknown>> = [];
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ to, ...rest }: AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) => (
@@ -23,14 +25,20 @@ vi.mock("@/integrations/supabase/client", () => ({
 vi.mock("@/components/vendas/dados", () => ({
   chaveEstoque: (userId: string) => ["estoque", userId],
   useProdutosComEstoque: () => ({
-    data: [],
+    data: catalogo,
     isLoading: false,
     isError: false,
     isSuccess: true,
     refetch,
   }),
 }));
-vi.mock("@/components/vendas/ModalRegistrarVenda", () => ({ ItemDaVenda: () => null }));
+vi.mock("@/components/vendas/ModalRegistrarVenda", () => ({
+  ItemDaVenda: ({ linha }: { linha: { produtoId: string; preco: string } }) => (
+    <p>
+      Linha: {linha.produtoId || "vazia"} a {linha.preco || "sem preço"}
+    </p>
+  ),
+}));
 vi.mock("@/components/produtos/ModalProduto", () => ({
   ModalProduto: ({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) => (
     <div>
@@ -48,14 +56,22 @@ vi.mock("./dados", () => ({ registrarPedido: vi.fn() }));
 
 const { ModalNovoPedido } = await import("./ModalNovoPedido");
 
-afterEach(() => cleanup());
+afterEach(() => {
+  cleanup();
+  catalogo = [];
+});
 
-function montar() {
+function montar(produtoInicialId?: string) {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const invalidar = vi.spyOn(qc, "invalidateQueries");
   render(
     <QueryClientProvider client={qc}>
-      <ModalNovoPedido userId="u1" onClose={vi.fn()} onSaved={vi.fn()} />
+      <ModalNovoPedido
+        userId="u1"
+        onClose={vi.fn()}
+        onSaved={vi.fn()}
+        produtoInicialId={produtoInicialId}
+      />
     </QueryClientProvider>,
   );
   return { invalidar };
@@ -86,5 +102,19 @@ describe("ModalNovoPedido com o catálogo vazio (ONE-175)", () => {
     await userEvent.click(screen.getByRole("button", { name: "Fechar o cadastro" }));
     expect(invalidar).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Cadastrar o produto" })).toBeTruthy();
+  });
+});
+
+describe("ModalNovoPedido com produto inicial (ONE-249)", () => {
+  it("chega com o produto da Calculadora escolhido e o preço do catálogo", () => {
+    catalogo = [{ id: "p1", nome: "Topo de bolo", precoVenda: 45, componentes: [], skus: [] }];
+    montar("p1");
+    expect(screen.getByText("Linha: p1 a 45")).toBeTruthy();
+  });
+
+  it("id fora do catálogo deixa a linha vazia, como sempre", () => {
+    catalogo = [{ id: "p1", nome: "Topo de bolo", precoVenda: 45, componentes: [], skus: [] }];
+    montar("outro");
+    expect(screen.getByText("Linha: vazia a sem preço")).toBeTruthy();
   });
 });

@@ -1,5 +1,5 @@
-import { useMemo, useState, type DragEvent } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Plus } from "lucide-react";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
@@ -54,19 +54,42 @@ export const Route = createFileRoute("/_authenticated/pedidos")({
       },
     ],
   }),
+  // `novo` abre o Novo pedido na chegada; `produto` é o id que já vem escolhido
+  // nele (ONE-249: convite da Calculadora depois do primeiro preço guardado).
+  validateSearch: (search: Record<string, unknown>): PedidosSearch => ({
+    ...(search.novo === true || search.novo === "1" || search.novo === "true"
+      ? { novo: true }
+      : {}),
+    ...(typeof search.produto === "string" && search.produto ? { produto: search.produto } : {}),
+  }),
   component: QuadroDePedidos,
 });
+
+interface PedidosSearch {
+  novo?: boolean;
+  produto?: string;
+}
 
 function QuadroDePedidos() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
+  const busca = Route.useSearch();
+  const navigate = useNavigate();
   const meta = useUserMeta();
   const ehGratis = ehPlanoGratis(meta);
   const qc = useQueryClient();
   const [hoje] = useState(() => hojeISO());
   const pedidosQuery = usePedidos(userId, hoje);
 
-  const [novoAberto, setNovoAberto] = useState(false);
+  // Chegou com ?novo: o Novo pedido já abre, e a busca sai da URL (replace) pra
+  // não reabrir ao recarregar a página nem ao voltar pelo histórico.
+  const [novoAberto, setNovoAberto] = useState(() => !!busca.novo);
+  const [produtoInicial] = useState(() => (busca.novo ? busca.produto : undefined));
+  useEffect(() => {
+    if (!busca.novo && !busca.produto) return;
+    void navigate({ to: "/pedidos", search: {}, replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [abertoId, setAbertoId] = useState<string | null>(null);
   const [ocupadoId, setOcupadoId] = useState<string | null>(null);
   const [erroDetalhe, setErroDetalhe] = useState<string | null>(null);
@@ -362,6 +385,7 @@ function QuadroDePedidos() {
       {novoAberto && userId && (
         <ModalNovoPedido
           userId={userId}
+          produtoInicialId={produtoInicial}
           onClose={() => setNovoAberto(false)}
           onSaved={() => {
             setNovoAberto(false);

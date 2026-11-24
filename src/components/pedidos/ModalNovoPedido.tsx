@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,10 +68,17 @@ export function ModalNovoPedido({
   userId,
   onClose,
   onSaved,
+  produtoInicialId,
 }: {
   userId: string;
   onClose: () => void;
   onSaved: () => void;
+  /**
+   * Produto que já chega escolhido na primeira linha (ONE-249: o convite da
+   * Calculadora depois do primeiro preço guardado). Id que não está no
+   * catálogo é ignorado e a linha fica vazia, como sempre.
+   */
+  produtoInicialId?: string;
 }) {
   const qc = useQueryClient();
   const [cadastrandoProduto, setCadastrandoProduto] = useState(false);
@@ -206,6 +213,18 @@ export function ModalNovoPedido({
       }),
     );
   };
+
+  // Escolhe o produto inicial uma vez, quando o catálogo chega, pelo mesmo
+  // caminho da escolha na mão (o preço vem do catálogo). Se ela já mexeu na
+  // linha antes do catálogo carregar, não sobrescreve.
+  const aplicouInicialRef = useRef(false);
+  useEffect(() => {
+    if (aplicouInicialRef.current || !produtoInicialId || !porId.has(produtoInicialId)) return;
+    aplicouInicialRef.current = true;
+    if (itens.length !== 1 || itens[0].produtoId) return;
+    atualizarItem(itens[0].chave, { produtoId: produtoInicialId });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [produtoInicialId, porId]);
 
   const salvar = async () => {
     setTentouSalvar(true);

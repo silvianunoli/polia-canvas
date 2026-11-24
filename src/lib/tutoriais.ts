@@ -442,6 +442,7 @@ const LISTA = [
         itens: [
           'No primeiro preço, a Pólia One guarda sozinha: com a conta parada por 2 segundos, o preço vai pro catálogo com o nome de "Qual produto?". Com o campo vazio, entra como "Primeiro produto" ou "Primeiro serviço".',
           'Pra trocar o nome depois de guardado, mude o "Qual produto?" e saia do campo. "Completar o cadastro" e "Ver no catálogo" ficam logo abaixo do preço.',
+          'Logo abaixo do primeiro preço guardado vem "Anotar a primeira encomenda" ("Lançar o primeiro pedido" na aba Serviço). O botão abre o Novo pedido em Pedidos com esse produto já escolhido: falta só a cliente e o dia da entrega.',
           'A partir do segundo preço, clique em "Guardar esse preço". O cadastro do produto abre com o nome de "Qual produto?", o preço e o custo preenchidos: confira e clique em "Salvar produto".',
         ],
       },
