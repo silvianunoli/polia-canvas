@@ -13,6 +13,7 @@
 import { hojeEmBrasilia } from "@/lib/data.functions";
 import { intervaloDoMes } from "@/lib/leituraPaginada";
 import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
+import { precoQueVale } from "@/lib/precoPromocional";
 
 export const MESES_NOME = [
   "janeiro",
@@ -70,6 +71,8 @@ export function escolherMetaDoRaioX(args: {
 export interface ProdutoDoBanco {
   nome: string;
   preco_venda: number;
+  /** Com promoção, o preço de hoje é o promocional (ONE-239, Sil 24/11/2026). */
+  preco_promocional?: number | string | null;
   preco_custo: number | null;
   calculadora_breakdown: CalculadoraBreakdown | null;
   historico_precos: unknown;
@@ -145,7 +148,7 @@ export function situacaoDoProdutoNoMes(p: ProdutoDoBanco, fimExclusivo: string):
     .filter((t) => t.data >= fimExclusivo)
     .sort((a, b) => a.data.localeCompare(b.data))[0];
 
-  let preco = Number(p.preco_venda);
+  let preco = precoQueVale(p.preco_venda, p.preco_promocional);
   let precoDoMes: boolean;
   if (trocaDepois) {
     preco = trocaDepois.preco;
@@ -189,7 +192,7 @@ export function produtosDoRaioX(
     return {
       produtos: produtos.map((p) => ({
         nome: p.nome,
-        preco_venda: Number(p.preco_venda),
+        preco_venda: precoQueVale(p.preco_venda, p.preco_promocional),
         preco_custo: p.preco_custo,
         calculadora_breakdown: p.calculadora_breakdown,
       })),

@@ -331,7 +331,7 @@ const LISTA = [
           'No topo da tela, clique em "+ Produto".',
           'Preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
           'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, a lista já mostra quanto a marca lucra por venda.',
-          'Pra fazer uma promoção, preencha o "Preço promocional (R$)", entre o preço de venda e o custo, com um valor menor que o preço de venda. Ele vira o preço que vale em todo o sistema: a Vitrine online e a Loja da marca cobram ele, o Novo pedido e a Nova venda já vêm com ele, e o lucro da lista é calculado com ele. Vazio, vale o preço de venda.',
+          'Pra fazer uma promoção, preencha o "Preço promocional (R$)", entre o preço de venda e o custo, com um valor menor que o preço de venda. Ele vira o preço que vale em todo o sistema: a Vitrine online e a Loja da marca cobram ele, o Novo pedido e a Nova venda já vêm com ele, e o lucro da lista, a Projeção e o Raio-x do mês contam com ele. Vazio, vale o preço de venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. Na lista, a chave "Vitrine" faz o mesmo sem abrir o cadastro.',

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { precoQueVale } from "@/lib/precoPromocional";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, AlertTriangle, TrendingDown } from "lucide-react";
@@ -97,7 +98,7 @@ function ProjecaoPage() {
         ),
         supabase
           .from("produtos")
-          .select("nome, preco_venda, preco_custo, calculadora_breakdown")
+          .select("nome, preco_venda, preco_promocional, preco_custo, calculadora_breakdown")
           .eq("user_id", userId!)
           .eq("arquivado", false)
           .gt("preco_venda", 0),
@@ -121,6 +122,7 @@ function ProjecaoPage() {
       const produtosRaw = (prodRes.data ?? []) as unknown as {
         nome: string;
         preco_venda: number;
+        preco_promocional: number | null;
         preco_custo: number | null;
         calculadora_breakdown: ProdutoResumo["calculadora_breakdown"];
       }[];
@@ -129,7 +131,8 @@ function ProjecaoPage() {
         produtos: produtosRaw.map(
           (p): ProdutoDaProjecao => ({
             nome: p.nome,
-            precoVenda: p.preco_venda,
+            // Com promoção, a Projeção conta o promocional (ONE-239, Sil 24/11/2026).
+            precoVenda: precoQueVale(p.preco_venda, p.preco_promocional),
             precoCusto: p.preco_custo,
             calculadora_breakdown: p.calculadora_breakdown,
           }),

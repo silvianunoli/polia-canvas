@@ -405,7 +405,7 @@ export const gerarRaioX = createServerFn({ method: "POST" })
         supabaseAdmin
           .from("produtos")
           .select(
-            "nome, preco_venda, preco_custo, calculadora_breakdown, historico_precos, preco_atualizado_em, created_at, updated_at",
+            "nome, preco_venda, preco_promocional, preco_custo, calculadora_breakdown, historico_precos, preco_atualizado_em, created_at, updated_at",
           )
           .eq("user_id", context.userId)
           .eq("arquivado", false),
