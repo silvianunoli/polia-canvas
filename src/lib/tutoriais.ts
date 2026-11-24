@@ -1122,7 +1122,7 @@ const LISTA = [
     rota: "/loja-da-marca",
     abrir: "Abrir a Loja da marca",
     resumo:
-      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo e a capa de cada coleção.",
+      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo, a capa de cada coleção e os cupons de desconto.",
     interno: true,
     passos: [
       {
@@ -1148,8 +1148,19 @@ const LISTA = [
           '"Tirar" volta pra foto do primeiro produto da coleção.',
         ],
       },
+      {
+        titulo: "Criar um cupom de desconto",
+        itens: [
+          'Em "Cupons de desconto", preencha "Código", "Tipo de desconto" e o valor. "Vale até" e "Limite de usos" são opcionais. Clique em "Criar cupom": ele vale na hora, sem salvar.',
+          "Na loja, a compradora digita o código em Finalizar compra e vê o desconto antes de pagar. O pedido chega em Pedidos com o cupom.",
+          "A chave liga e desliga o cupom. A lixeira só aparece em cupom que ainda não foi usado.",
+        ],
+      },
     ],
     bomSaber: [
+      "Os cupons são os mesmos da Vitrine online: o código vale nas duas lojas e os usos somam juntos.",
+      "Na loja da marca, o cupom vale só nos produtos, nunca no frete, e deixa ao menos R$ 1,00 de produtos. O uso conta quando o pagamento entra: compra desistida não gasta o cupom.",
+      'O preço "de" riscado aparece sozinho na loja quando o produto tem "Preço promocional" em Produtos. Variação com preço próprio é vendida pelo preço dela, sem promoção.',
       "Categoria é o tipo do produto (Canecas, Papelaria) e aparece no menu do topo. Coleção é o tema da estampa (Natal, Clube das Exaustas) e aparece nas bolinhas e em Explore por coleção.",
       'A categoria e a coleção de cada produto se escolhem em Produtos, na parte "Na loja" do produto.',
       'Ainda em "Na loja", "Detalhes do produto" monta a tabela que aparece na página do produto, na aba ao lado da descrição: uma linha por medida ou informação, como Capacidade e 325 ml. Cabem até 20 linhas; sem nenhuma, a aba não aparece.',
@@ -1159,7 +1170,7 @@ const LISTA = [
       {
         pergunta: "Onde mudo o produto, o preço ou a foto",
         resposta:
-          "Em Produtos. A Loja da marca só cuida da página inicial: títulos, banners e capas.",
+          "Em Produtos, inclusive o preço promocional. A Loja da marca cuida da página inicial (títulos, banners e capas) e dos cupons.",
       },
     ],
   },

@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ExternalLink, ImagePlus, Trash2 } from "lucide-react";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { CuponsDeDesconto } from "@/components/catalogo/CuponsDeDesconto";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
@@ -139,7 +140,7 @@ function LojaDaMarcaPage() {
     <PaginaLogada
       eyebrow="Loja da marca"
       titulo="A página inicial da loja."
-      subtitulo="Os títulos dos carrosséis, os banners do topo e a capa de cada coleção. Produto, preço, categoria e coleção de cada produto ficam em Produtos."
+      subtitulo="Os títulos dos carrosséis, os banners do topo, a capa de cada coleção e os cupons de desconto. Produto, preço, preço promocional, categoria e coleção de cada produto ficam em Produtos."
       largura="larga"
       acao={
         <a className={BTN_MIUDO} href={`https://${dados.dominio}`} target="_blank" rel="noopener">
@@ -209,6 +210,11 @@ function LojaDaMarcaPage() {
         </div>
 
         <CapasDasColecoes userId={userId} />
+
+        <CuponsDeDesconto
+          userId={userId}
+          texto="A compradora digita o código na hora de finalizar a compra e vê o desconto antes de pagar. Vale só nos produtos, nunca no frete, e o uso conta quando o pagamento entra. Os cupons são os mesmos da Vitrine online: o código vale nas duas lojas e os usos somam juntos."
+        />
       </div>
     </PaginaLogada>
   );
