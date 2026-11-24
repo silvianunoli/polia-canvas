@@ -784,7 +784,7 @@ const LISTA = [
     ],
     duvidas: [
       {
-        pergunta: "O que entra em \"já entraram\"",
+        pergunta: 'O que entra em "já entraram"',
         resposta:
           "Todas as entradas do mês no Financeiro, a mesma soma que enche a barra da Meta do mês em Metas.",
       },
@@ -1254,7 +1254,7 @@ const LISTA = [
     rota: "/calendario",
     abrir: "Abrir o Calendário",
     resumo:
-      "O mês com o dia de entrega de cada pedido, os lembretes da marca e as contas a pagar, com aviso por e-mail.",
+      "O mês com as entregas, os lembretes da marca com aviso por e-mail, as contas a pagar, os feriados e as datas do comércio.",
     // A conexão com o Google Calendar saiu da Pólia One em 02/11/2026.
     // O clipe narrado (trecho "calendario") saiu em 24/11/2026 com os lembretes
     // (ONE-244): a tela ganhou filtros e o "Novo lembrete", e o vídeo mostra a
@@ -1264,14 +1264,14 @@ const LISTA = [
         titulo: "Ver o mês",
         itens: [
           'Use "Mês anterior" e "Próximo mês" pra navegar. "Hoje" volta pro mês atual.',
-          "Clique num dia pra ver o que cai nele: as entregas, com a cliente e o que vai no pedido, os lembretes e as contas a pagar.",
-          'Os filtros "Entregas", "Lembretes" e "Contas a pagar" ligam e desligam cada um na grade.',
+          "Clique num dia pra ver o que cai nele: as entregas, com a cliente e o que vai no pedido, os lembretes, as contas a pagar, os feriados nacionais e as datas do comércio, como Dia das Mães e Black Friday.",
+          'Os filtros "Entregas", "Lembretes", "Contas a pagar" e "Feriados e datas" ligam e desligam cada um na grade.',
         ],
       },
       {
         titulo: "Marcar um lembrete",
         itens: [
-          'Clique no dia e depois em "Novo lembrete".',
+          'Clique em "Novo lembrete", ao lado de "Hoje", pra marcar no dia de hoje. Pra outro dia, clique no + do canto do dia, ou no dia e depois em "Novo lembrete".',
           'Escreva em "O que é", como "Mandar o relatório pra contabilidade". O "Dia" já vem com o dia que você clicou, e o "Horário (opcional)" aparece no lembrete e no aviso.',
           'Em "Repete", escolha "Não repete", "Toda semana", "Todo mês" ou "Todo ano". Todo mês num dia 29, 30 ou 31 cai no último dia dos meses que não têm esse dia.',
           'Em "Aviso por e-mail", escolha "No dia, às 8h", "1 dia antes, às 8h", "3 dias antes, às 8h", "1 semana antes, às 8h" ou "Não avisar". Com o app da Pólia One no celular, o aviso chega lá também.',
@@ -1282,6 +1282,7 @@ const LISTA = [
         titulo: "Cuidar dos lembretes",
         itens: [
           "No painel do dia, o quadradinho ao lado do lembrete marca como feito. Lembrete feito fica riscado e não avisa mais naquele dia. Num lembrete que repete, só aquele dia fica feito; o próximo avisa normalmente.",
+          "Numa data do comércio, o sino ao lado dela abre um lembrete já preenchido, com aviso 1 semana antes, pra dar tempo de preparar a marca.",
           'O lápis abre o lembrete pra mudar o que quiser. Lá dentro, "Apagar lembrete" tira ele do Calendário; num lembrete que repete, apaga todas as repetições.',
         ],
       },
@@ -1294,8 +1295,9 @@ const LISTA = [
     ],
     bomSaber: [
       "O Calendário é do Premium e do Pro.",
-      "Pedido entregue continua no dia dele, riscado na grade. Conta paga também, com \"paga\" ao lado do valor.",
+      'Pedido entregue continua no dia dele, riscado na grade. Conta paga também, com "paga" ao lado do valor.',
       "As contas a pagar aparecem no dia do vencimento. Elas são criadas e pagas no Financeiro.",
+      "Os feriados são os nacionais. Feriado do estado e da cidade não aparece, porque muda de lugar pra lugar: dá pra marcar como lembrete. Carnaval e Corpus Christi aparecem como ponto facultativo.",
       'O aviso dos lembretes desliga em Configurações, em Notificações, na chave "Lembretes do Calendário".',
     ],
     duvidas: [

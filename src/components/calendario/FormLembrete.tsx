@@ -12,6 +12,12 @@ import {
 } from "../../../supabase/functions/_shared/lembretesCalendario";
 import type { LembreteParaSalvar } from "./lembretesDados";
 
+/** O que já vem preenchido no Novo lembrete (ex.: a partir da Black Friday). */
+export interface InicialLembrete {
+  titulo?: string;
+  avisar_dias_antes?: number | null;
+}
+
 // Formulário do lembrete do Calendário (ONE-244). Cria (sem `lembrete`) ou edita.
 // Mora no painel lateral do dia, no lugar da lista, enquanto está aberto.
 
@@ -24,6 +30,7 @@ const AVISO_PADRAO = 1;
 export function FormLembrete({
   dia,
   lembrete,
+  inicial,
   salvando,
   apagando,
   onSalvar,
@@ -32,18 +39,23 @@ export function FormLembrete({
 }: {
   dia: string;
   lembrete?: Lembrete;
+  inicial?: InicialLembrete;
   salvando: boolean;
   apagando?: boolean;
   onSalvar: (dados: LembreteParaSalvar) => void;
   onApagar?: () => void;
   onCancelar: () => void;
 }) {
-  const [titulo, setTitulo] = useState(lembrete?.titulo ?? "");
+  const [titulo, setTitulo] = useState(lembrete?.titulo ?? inicial?.titulo ?? "");
   const [data, setData] = useState(lembrete?.dia ?? dia);
   const [horario, setHorario] = useState(lembrete?.horario ?? "");
   const [repeticao, setRepeticao] = useState<Repeticao>(lembrete?.repeticao ?? "nenhuma");
   const [aviso, setAviso] = useState<string>(
-    lembrete ? String(lembrete.avisar_dias_antes ?? "") : String(AVISO_PADRAO),
+    lembrete
+      ? String(lembrete.avisar_dias_antes ?? "")
+      : inicial && inicial.avisar_dias_antes !== undefined
+        ? String(inicial.avisar_dias_antes ?? "")
+        : String(AVISO_PADRAO),
   );
   const [observacao, setObservacao] = useState(lembrete?.observacao ?? "");
   const [confirmarApagar, setConfirmarApagar] = useState(false);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MSG_LIMITE_CARTOES } from "@/lib/planos";
 import { createFileRoute } from "@tanstack/react-router";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   Pencil,
   Check,
+  Bell,
 } from "lucide-react";
 import { Vazio } from "@/components/layout/Vazio";
 import { Campo } from "@/components/ui/Campo";
@@ -49,7 +50,8 @@ import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { usePedidosDoPeriodo, type PedidoLinha } from "@/components/pedidos/dados";
 import { estaAtrasado } from "@/lib/pedidos";
 import { formatarReais } from "@/lib/formatarReais";
-import { FormLembrete } from "@/components/calendario/FormLembrete";
+import { FormLembrete, type InicialLembrete } from "@/components/calendario/FormLembrete";
+import { datasNoIntervalo, type DataEspecial } from "@/lib/datasEspeciais";
 import {
   chaveLembretes,
   excluirLembrete,
@@ -103,8 +105,9 @@ interface TarefaCal {
 
 // "pedido" = entrega do quadro de Pedidos (28/10/2026): é a fonte principal
 // desde que o Planner ficou só pra conta interna (lib/ferramentasInternas).
-// "lembrete" e "conta" desde 24/11/2026 (ONE-244).
-type Fonte = "planner" | "pedido" | "lembrete" | "conta";
+// "lembrete" e "conta" desde 24/11/2026 (ONE-244); "feriado" e "comercio"
+// (datas calculadas em lib/datasEspeciais) desde o ONE-252.
+type Fonte = "planner" | "pedido" | "lembrete" | "conta" | "feriado" | "comercio";
 type ItemDia = {
   fonte: Fonte;
   id: string;
@@ -125,6 +128,8 @@ const COR_FONTE: Record<Fonte, string> = {
   planner: "var(--secondary)",
   lembrete: "var(--accent)",
   conta: "var(--cat-admin)",
+  feriado: "var(--muted)",
+  comercio: "var(--cat-vendas)",
 };
 
 const ROTULO_FONTE: Record<Fonte, string> = {
@@ -132,9 +137,14 @@ const ROTULO_FONTE: Record<Fonte, string> = {
   planner: "Planner",
   lembrete: "Lembrete",
   conta: "Conta",
+  feriado: "Feriado",
+  comercio: "Data do comércio",
 };
 
-type FormAberto = { modo: "novo" } | { modo: "editar"; lembrete: Lembrete } | null;
+type FormAberto =
+  | { modo: "novo"; inicial?: InicialLembrete }
+  | { modo: "editar"; lembrete: Lembrete }
+  | null;
 
 const DIAS_SEMANA = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
@@ -149,6 +159,7 @@ function CalendarioPage() {
   const [mostrarEntregas, setMostrarEntregas] = useState(true);
   const [mostrarLembretes, setMostrarLembretes] = useState(true);
   const [mostrarContas, setMostrarContas] = useState(true);
+  const [mostrarDatas, setMostrarDatas] = useState(true);
   const [formLembrete, setFormLembrete] = useState<FormAberto>(null);
   const [mostrarPlannerFiltro, setMostrarPlanner] = useState(true);
   const mostrarPlanner = comPlanner && mostrarPlannerFiltro;
@@ -330,10 +341,18 @@ function CalendarioPage() {
     return m;
   }, [contasQuery.data, mostrarContas]);
 
-  useEffect(() => {
+  // Feriados e datas do comércio: calculados, sem banco.
+  const datasPorDia = useMemo(
+    () => (mostrarDatas ? datasNoIntervalo(inicioISO, fimISO) : new Map<string, DataEspecial[]>()),
+    [mostrarDatas, inicioISO, fimISO],
+  );
+
+  /** Abre (ou fecha, com null) o painel do dia; `form` já abre o Novo lembrete. */
+  const abrirDia = (iso: string | null, form: FormAberto = null) => {
+    setDiaSelecionado(iso);
     setMostrarComposer(false);
-    setFormLembrete(null);
-  }, [diaSelecionado]);
+    setFormLembrete(form);
+  };
 
   const linkQuadro = (quadroId: string) => {
     const q = quadrosPorId.get(quadroId);
@@ -388,7 +407,16 @@ function CalendarioPage() {
       concluido: x.paga,
       detalhe: `${formatarReais(x.valor, { sempreCentavos: true })}${x.paga ? " · paga" : ""}`,
     }));
-    return [...p, ...l, ...c, ...t].sort((a, b) =>
+    const d: ItemDia[] = (datasPorDia.get(iso) ?? []).map((x) => ({
+      fonte: x.tipo,
+      id: `${x.nome}-${iso}`,
+      titulo: x.nome,
+      horario: null,
+      href: "",
+      concluido: false,
+      detalhe: x.detalhe,
+    }));
+    return [...d, ...p, ...l, ...c, ...t].sort((a, b) =>
       (a.horario ?? "").localeCompare(b.horario ?? ""),
     );
   };
@@ -467,13 +495,22 @@ function CalendarioPage() {
               <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setMes(startOfMonth(new Date()))}
-            className={BTN_MIUDO}
-          >
-            Hoje
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMes(startOfMonth(new Date()))}
+              className={BTN_MIUDO}
+            >
+              Hoje
+            </button>
+            <button
+              type="button"
+              onClick={() => abrirDia(hojeISO(), { modo: "novo" })}
+              className={`${BTN_MIUDO} !bg-[var(--secondary)]`}
+            >
+              <Plus size={14} aria-hidden="true" /> Novo lembrete
+            </button>
+          </div>
         </div>
 
         {/* Filtros */}
@@ -501,6 +538,14 @@ function CalendarioPage() {
             className={`${BTN_MIUDO} ${mostrarContas ? "!bg-[var(--secondary)]" : "bg-white"}`}
           >
             Contas a pagar
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarDatas((v) => !v)}
+            aria-pressed={mostrarDatas}
+            className={`${BTN_MIUDO} ${mostrarDatas ? "!bg-[var(--secondary)]" : "bg-white"}`}
+          >
+            Feriados e datas
           </button>
           {comPlanner && (
             <button
@@ -554,6 +599,11 @@ function CalendarioPage() {
           </div>
         )}
 
+        <p className="-mt-2 mb-4 flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
+          <Bell size={14} aria-hidden="true" />
+          Clique num dia ou no + pra marcar um lembrete. A Pólia One avisa por e-mail.
+        </p>
+
         {/* Grade mensal */}
         <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-accent font-bold uppercase tracking-[0.08em] text-[var(--muted)]">
           {DIAS_SEMANA.map((d) => (
@@ -563,81 +613,125 @@ function CalendarioPage() {
         <div className="mt-1.5 grid grid-cols-7 gap-1.5">
           {dias.map((dia) => {
             const iso = format(dia, "yyyy-MM-dd");
-            const itens = itensDoDia(iso, { comAndamento: false });
+            const itens = itensDoDia(iso, { comAndamento: false }).filter(
+              (i) => i.fonte !== "feriado" && i.fonte !== "comercio",
+            );
+            const datas = datasPorDia.get(iso) ?? [];
             const foraDoMes = !isSameMonth(dia, mes);
             const hoje = isToday(dia);
             const selecionado = diaSelecionado === iso;
             const numeroDia = format(dia, "d");
-            const rotuloDia =
-              itens.length > 0
-                ? `${numeroDia}, ${itens.length} ${itens.length === 1 ? "item" : "itens"}`
-                : numeroDia;
+            const rotuloDia = [
+              numeroDia,
+              ...datas.map((x) => x.nome),
+              itens.length > 0 ? `${itens.length} ${itens.length === 1 ? "item" : "itens"}` : null,
+            ]
+              .filter(Boolean)
+              .join(", ");
             return (
-              <button
-                type="button"
-                key={iso}
-                onClick={() => setDiaSelecionado(selecionado ? null : iso)}
-                aria-label={rotuloDia}
-                className={`flex min-h-[60px] flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors sm:min-h-[100px] ${
-                  selecionado
-                    ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
-                    : "border-[var(--line)]"
-                } ${foraDoMes && !selecionado ? "bg-[var(--bg)]" : !selecionado ? "bg-white" : ""}`}
-              >
-                <span
-                  className={`flex h-6 w-6 items-center justify-center rounded-full text-[13px] ${
-                    hoje
-                      ? "bg-[var(--ink)] font-semibold text-white"
-                      : foraDoMes
-                        ? "text-[var(--muted)]"
-                        : "text-[var(--ink-soft)]"
-                  }`}
+              <div key={iso} className="group relative">
+                <button
+                  type="button"
+                  onClick={() => abrirDia(selecionado ? null : iso)}
+                  aria-label={rotuloDia}
+                  className={`flex h-full min-h-[60px] w-full flex-col gap-1 rounded-lg border p-1.5 text-left transition-colors sm:min-h-[100px] ${
+                    selecionado
+                      ? "border-[var(--secondary)] bg-[var(--secondary-light)]"
+                      : "border-[var(--line)]"
+                  } ${foraDoMes && !selecionado ? "bg-[var(--bg)]" : !selecionado ? "bg-white" : ""}`}
                 >
-                  {format(dia, "d")}
-                </span>
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded-full text-[13px] ${
+                      hoje
+                        ? "bg-[var(--ink)] font-semibold text-white"
+                        : foraDoMes
+                          ? "text-[var(--muted)]"
+                          : "text-[var(--ink-soft)]"
+                    }`}
+                  >
+                    {format(dia, "d")}
+                  </span>
 
-                {/* Mobile: dots resumidos — chip com texto não cabe numa célula de ~42px */}
-                {itens.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-1 sm:hidden">
-                    {itens.slice(0, 4).map((item) => (
-                      <span
-                        key={`${item.fonte}-${item.id}`}
-                        className="h-1.5 w-1.5 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: item.concluido ? "var(--line)" : COR_FONTE[item.fonte],
-                        }}
-                        aria-hidden="true"
-                      />
-                    ))}
-                    {itens.length > 4 && (
-                      <span className="text-[9px] text-[var(--muted)]">+{itens.length - 4}</span>
-                    )}
-                  </div>
-                )}
-
-                {/* sm+: chips com texto, célula tem espaço de sobra */}
-                <div className="hidden flex-1 flex-col gap-1 sm:flex">
-                  {itens.slice(0, 3).map((item) => (
-                    <span
-                      key={`${item.fonte}-${item.id}`}
-                      className={`truncate rounded px-1.5 py-0.5 text-[11px] ${
-                        item.concluido
-                          ? "bg-[var(--surface)] text-[var(--muted)] line-through"
-                          : "bg-white text-[var(--ink-soft)] outline outline-1"
-                      }`}
-                      style={item.concluido ? undefined : { outlineColor: COR_FONTE[item.fonte] }}
-                    >
-                      {item.titulo}
-                      {item.detalhe ? ` · ${item.detalhe}` : ""}
-                    </span>
-                  ))}
-                  {itens.length > 3 && (
-                    <span className="text-[11px] text-[var(--muted)]">
-                      +{itens.length - 3} mais
+                  {/* Feriado e data do comércio: linha discreta, fora da conta dos 3 chips. */}
+                  {datas.length > 0 && (
+                    <span className="hidden flex-col gap-0.5 sm:flex">
+                      {datas.slice(0, 2).map((x) => (
+                        <span
+                          key={x.nome}
+                          className="flex items-center gap-1 truncate text-[11px] text-[var(--ink-soft)]"
+                        >
+                          <span
+                            className="h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: COR_FONTE[x.tipo as Fonte] }}
+                            aria-hidden="true"
+                          />
+                          <span className="truncate">{x.nome}</span>
+                        </span>
+                      ))}
                     </span>
                   )}
-                </div>
-              </button>
+
+                  {/* Mobile: dots resumidos — chip com texto não cabe numa célula de ~42px */}
+                  {itens.length + datas.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 sm:hidden">
+                      {datas.slice(0, 1).map((x) => (
+                        <span
+                          key={x.nome}
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: COR_FONTE[x.tipo as Fonte] }}
+                          aria-hidden="true"
+                        />
+                      ))}
+                      {itens.slice(0, 4).map((item) => (
+                        <span
+                          key={`${item.fonte}-${item.id}`}
+                          className="h-1.5 w-1.5 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor: item.concluido ? "var(--line)" : COR_FONTE[item.fonte],
+                          }}
+                          aria-hidden="true"
+                        />
+                      ))}
+                      {itens.length > 4 && (
+                        <span className="text-[9px] text-[var(--muted)]">+{itens.length - 4}</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* sm+: chips com texto, célula tem espaço de sobra */}
+                  <div className="hidden flex-1 flex-col gap-1 sm:flex">
+                    {itens.slice(0, 3).map((item) => (
+                      <span
+                        key={`${item.fonte}-${item.id}`}
+                        className={`truncate rounded px-1.5 py-0.5 text-[11px] ${
+                          item.concluido
+                            ? "bg-[var(--surface)] text-[var(--muted)] line-through"
+                            : "bg-white text-[var(--ink-soft)] outline outline-1"
+                        }`}
+                        style={item.concluido ? undefined : { outlineColor: COR_FONTE[item.fonte] }}
+                      >
+                        {item.titulo}
+                        {item.detalhe ? ` · ${item.detalhe}` : ""}
+                      </span>
+                    ))}
+                    {itens.length > 3 && (
+                      <span className="text-[11px] text-[var(--muted)]">
+                        +{itens.length - 3} mais
+                      </span>
+                    )}
+                  </div>
+                </button>
+                {/* O + abre o dia já no Novo lembrete. Só do sm pra cima: no
+                  celular a célula tem ~42px e o toque no dia já abre o painel. */}
+                <button
+                  type="button"
+                  onClick={() => abrirDia(iso, { modo: "novo" })}
+                  aria-label={`Novo lembrete em ${format(dia, "d 'de' MMMM", { locale: ptBR })}`}
+                  className="absolute right-1 top-1 hidden h-7 w-7 items-center justify-center rounded-full text-[var(--muted)] opacity-60 transition hover:bg-[var(--secondary-light)] hover:text-[var(--ink)] hover:opacity-100 focus-visible:opacity-100 group-hover:opacity-100 sm:flex"
+                >
+                  <Plus size={14} aria-hidden="true" />
+                </button>
+              </div>
             );
           })}
         </div>
@@ -663,7 +757,7 @@ function CalendarioPage() {
         ) : null}
 
         {/* Detalhe do dia selecionado — sidesheet, não exige scroll da página */}
-        <Sheet open={!!diaSelecionado} onOpenChange={(open) => !open && setDiaSelecionado(null)}>
+        <Sheet open={!!diaSelecionado} onOpenChange={(open) => !open && abrirDia(null)}>
           <SheetContent
             side="right"
             className="polia-v3 flex w-full flex-col gap-0 overflow-y-auto border-l border-[var(--line)] bg-white p-5 sm:max-w-md"
@@ -681,9 +775,14 @@ function CalendarioPage() {
               <>
                 {formLembrete ? (
                   <FormLembrete
-                    key={formLembrete.modo === "editar" ? formLembrete.lembrete.id : "novo"}
+                    key={
+                      formLembrete.modo === "editar"
+                        ? formLembrete.lembrete.id
+                        : `novo-${formLembrete.inicial?.titulo ?? ""}`
+                    }
                     dia={diaSelecionado}
                     lembrete={formLembrete.modo === "editar" ? formLembrete.lembrete : undefined}
+                    inicial={formLembrete.modo === "novo" ? formLembrete.inicial : undefined}
                     salvando={salvarLembreteMutation.isPending}
                     apagando={apagarLembreteMutation.isPending}
                     onSalvar={(dados) =>
@@ -882,6 +981,24 @@ function CalendarioPage() {
                             aria-label={`Editar "${item.titulo}"`}
                           >
                             <Pencil size={14} aria-hidden="true" />
+                          </button>
+                        ) : item.fonte === "comercio" ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setFormLembrete({
+                                modo: "novo",
+                                inicial: {
+                                  titulo: `Preparar: ${item.titulo}`,
+                                  avisar_dias_antes: 7,
+                                },
+                              })
+                            }
+                            className="flex h-11 w-11 shrink-0 items-center justify-center text-[var(--secondary-text)]"
+                            aria-label={`Criar lembrete pra ${item.titulo}, com aviso 1 semana antes`}
+                            title="Criar lembrete com aviso 1 semana antes"
+                          >
+                            <Bell size={14} aria-hidden="true" />
                           </button>
                         ) : item.href ? (
                           <a

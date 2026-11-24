@@ -650,3 +650,11 @@ Sil, 24/11: "colocar outras entradas além de pedidos... por exemplo, posso colo
 - O Calendário ganhou os filtros "Lembretes" e "Contas a pagar": a conta do Financeiro aparece no vencimento, riscada quando paga.
 - Sobe em duas partes, como o ONE-174: estrutura e função primeiro, teste na conta `+teste2` da Sil, e só depois cron e novidade.
 - Tutorial do Calendário reescrito; o clipe narrado (`trecho: "calendario"`) saiu até a narração nova.
+
+## 2026-11-24 — Feriados, datas do comércio e o + do Calendário (ONE-252)
+
+Sil, 24/11: "coloque um icone dentro do calendário pra pessoa entender que pode incluir lembretes e eventos... e coloque no calendário das datas sazonais [como black friday] e feriados nacionais".
+
+- `src/lib/datasEspeciais.ts`, sem banco: feriados nacionais fixos (com Consciência Negra, lei 14.759/2023), Carnaval e Corpus Christi como ponto facultativo e Sexta-feira Santa pela Páscoa; datas do comércio (Dia da Mulher, Consumidor, Páscoa, Mães e Pais no 2º domingo, Namorados, Avós, Cliente, Crianças, Professor, Black Friday no dia depois da 4ª quinta de novembro, Cyber Monday, vésperas de Natal e Ano Novo). Feriado estadual e municipal fora.
+- Na grade, as datas ficam numa linha discreta acima dos chips, sem contar nos 3; filtro "Feriados e datas".
+- O + no canto de cada dia (sm+) e o "Novo lembrete" ao lado de "Hoje" abrem o formulário direto; uma linha com sino explica que dá pra marcar lembrete. Na data do comércio, o sino cria um lembrete "Preparar: <data>" com aviso 1 semana antes.
