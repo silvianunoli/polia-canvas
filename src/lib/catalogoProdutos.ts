@@ -8,7 +8,7 @@
 // "Arquivados" virou "Inativos", o mesmo nome do Painel.
 
 export type FiltroCatalogo = "ativos" | "vitrine" | "fora" | "sem_custo" | "inativos" | "todos";
-export type ColunaCatalogo = "recentes" | "nome" | "preco" | "custo" | "lucro" | "status";
+export type ColunaCatalogo = "ordem" | "recentes" | "nome" | "preco" | "custo" | "lucro" | "status";
 export type DirecaoOrdem = "asc" | "desc";
 
 export const ROTULO_FILTRO: Record<FiltroCatalogo, string> = {
@@ -36,6 +36,8 @@ export interface ProdutoDoCatalogo {
   preco_custo: number | string | null;
   no_catalogo?: boolean | null;
   arquivado?: boolean | null;
+  /** Posição que a dona digitou (produtos.catalogo_ordem, 1 = primeiro). null = sem número. */
+  catalogo_ordem?: number | null;
   created_at: string;
 }
 
@@ -80,7 +82,7 @@ export function filtrarCatalogo<T extends ProdutoDoCatalogo>(
 
 /** A direção que a coluna usa no primeiro clique: texto de A a Z, número do maior pro menor. */
 export function direcaoInicial(coluna: ColunaCatalogo): DirecaoOrdem {
-  return coluna === "nome" || coluna === "status" ? "asc" : "desc";
+  return coluna === "nome" || coluna === "status" || coluna === "ordem" ? "asc" : "desc";
 }
 
 /**
@@ -104,6 +106,19 @@ export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
     return null;
   };
   const copia = [...lista];
+  const maisRecente = (a: T, b: T) => b.created_at.localeCompare(a.created_at);
+  if (coluna === "ordem") {
+    // Numerados primeiro, pelo número; o resto do cadastro mais recente pro
+    // mais antigo, a mesma regra da loja pública (loja_marca_publica).
+    return copia.sort((a, b) => {
+      const na = a.catalogo_ordem ?? null;
+      const nb = b.catalogo_ordem ?? null;
+      if (na == null && nb == null) return maisRecente(a, b) || porNome(a, b);
+      if (na == null) return 1;
+      if (nb == null) return -1;
+      return sinal * (na - nb) || maisRecente(a, b);
+    });
+  }
   if (coluna === "nome") return copia.sort((a, b) => sinal * porNome(a, b));
   if (coluna === "recentes") {
     return copia.sort((a, b) => sinal * a.created_at.localeCompare(b.created_at) || porNome(a, b));
@@ -116,6 +131,46 @@ export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
     if (nb == null) return -1;
     return sinal * (na - nb) || porNome(a, b);
   });
+}
+
+export interface PosicaoDoProduto {
+  id: string;
+  ordem: number | null;
+}
+
+/**
+ * O que muda quando a dona digita um número na coluna "Ordem" (23/11/2026,
+ * pedido da Sil). Número vazio tira o produto da fila numerada. Número que já
+ * tem dono: o produto entra ali e quem estava encostado desce um (3, 4, 5
+ * viram 4, 5, 6; um buraco depois para a descida). Devolve só quem mudou.
+ */
+export function reposicionar(
+  lista: readonly PosicaoDoProduto[],
+  id: string,
+  nova: number | null,
+): PosicaoDoProduto[] {
+  if (nova == null) return [{ id, ordem: null }];
+  const ocupados = new Map<number, string[]>();
+  for (const p of lista) {
+    if (p.id === id || p.ordem == null) continue;
+    ocupados.set(p.ordem, [...(ocupados.get(p.ordem) ?? []), p.id]);
+  }
+  const mudancas: PosicaoDoProduto[] = [{ id, ordem: nova }];
+  let atual = nova;
+  while (ocupados.has(atual)) {
+    for (const outro of ocupados.get(atual) ?? []) mudancas.push({ id: outro, ordem: atual + 1 });
+    atual += 1;
+  }
+  return mudancas;
+}
+
+/** Lê o que foi digitado no campo de ordem: inteiro de 1 a 9999, vazio = sem número, resto = inválido. */
+export function lerOrdemDigitada(texto: string): number | null | "invalido" {
+  const limpo = texto.trim();
+  if (limpo === "") return null;
+  if (!/^\d+$/.test(limpo)) return "invalido";
+  const n = Number(limpo);
+  return n >= 1 && n <= 9999 ? n : "invalido";
 }
 
 /**

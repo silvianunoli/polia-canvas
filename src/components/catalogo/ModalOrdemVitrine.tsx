@@ -33,7 +33,7 @@ export function ModalOrdemVitrine({ userId, onClose }: { userId: string; onClose
     const nova = moverNaLista(naVitrine, indice, direcao);
     const chave = [CHAVE_PRODUTOS_CATALOGO, userId];
     const antes = qc.getQueryData<ProdutoDoCatalogo[]>(chave);
-    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i })), ...fora]);
+    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i + 1 })), ...fora]);
     setOrdenando(true);
     const r = await salvarOrdemDaVitrine(nova.map((p) => p.id));
     setOrdenando(false);

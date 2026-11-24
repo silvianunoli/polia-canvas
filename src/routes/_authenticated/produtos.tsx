@@ -30,6 +30,7 @@ import { Switch } from "@/components/ui/switch";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { ModalOrdemVitrine } from "@/components/catalogo/ModalOrdemVitrine";
+import { CHAVE_PRODUTOS_CATALOGO } from "@/components/catalogo/dados";
 import { fmt, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
 import { AbaEstoque } from "@/components/produtos/AbaEstoque";
 import { AbaEquipamentos } from "@/components/produtos/AbaEquipamentos";
@@ -43,8 +44,10 @@ import {
   direcaoInicial,
   filtrarCatalogo,
   FILTROS_CATALOGO,
+  lerOrdemDigitada,
   mostraTipoNoCard,
   ordenarCatalogo,
+  reposicionar,
   ROTULO_FILTRO,
   type ColunaCatalogo,
   type DirecaoOrdem,
@@ -52,7 +55,7 @@ import {
 } from "@/lib/catalogoProdutos";
 
 const SELECT_PRODUTO =
-  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
+  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, catalogo_ordem, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
 
 const CLASSE_ABA =
   "-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] data-[state=active]:border-[var(--ink)] data-[state=active]:text-[var(--ink)]";
@@ -134,8 +137,8 @@ function ProdutosPage() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<FiltroCatalogo>("ativos");
   const [ordem, setOrdem] = useState<{ coluna: ColunaCatalogo; direcao: DirecaoOrdem }>({
-    coluna: "recentes",
-    direcao: "desc",
+    coluna: "ordem",
+    direcao: "asc",
   });
   // Produto com chave mexendo agora: a chave dele espera a gravação.
   const [mudandoId, setMudandoId] = useState<string | null>(null);
@@ -268,6 +271,60 @@ function ProdutosPage() {
       );
     }
     recarregarCatalogo();
+  };
+
+  /**
+   * Coluna "Ordem" (23/11/2026, pedido da Sil): o número digitado põe o
+   * produto naquela posição da lista e da loja; vazio tira o número. Quem já
+   * tinha o número desce um (regra em reposicionar). A tela muda na hora e
+   * volta atrás se a gravação falhar.
+   */
+  const mudarOrdem = async (p: Produto, texto: string): Promise<boolean> => {
+    const nova = lerOrdemDigitada(texto);
+    if (nova === "invalido") {
+      toastErro(
+        "A ordem aceita só número inteiro, a partir de 1. Pra tirar o número, deixe o campo vazio.",
+      );
+      return false;
+    }
+    if (nova === (p.catalogo_ordem ?? null)) return true;
+    if (mudandoId) return false;
+    const todos = [...produtos, ...arquivados];
+    const mudancas = reposicionar(
+      todos.map((x) => ({ id: x.id, ordem: x.catalogo_ordem ?? null })),
+      p.id,
+      nova,
+    );
+    const novaOrdem = new Map(mudancas.map((m) => [m.id, m.ordem]));
+    const aplicar = (lista: Produto[] | undefined) =>
+      lista?.map((x) => (novaOrdem.has(x.id) ? { ...x, catalogo_ordem: novaOrdem.get(x.id) } : x));
+    const chaveAtivos = ["produtos", userId];
+    const chaveInativos = ["produtos-arquivados", userId];
+    const antesAtivos = qc.getQueryData<Produto[]>(chaveAtivos);
+    const antesInativos = qc.getQueryData<Produto[]>(chaveInativos);
+    qc.setQueryData<Produto[]>(chaveAtivos, aplicar);
+    qc.setQueryData<Produto[]>(chaveInativos, aplicar);
+    setMudandoId(p.id);
+    const resultados = await Promise.all(
+      mudancas.map((m) =>
+        supabase
+          .from("produtos")
+          .update({ catalogo_ordem: m.ordem } as never)
+          .eq("id", m.id),
+      ),
+    );
+    setMudandoId(null);
+    const falhou = resultados.find((r) => r.error);
+    if (falhou) {
+      console.error("produto_ordem", falhou.error);
+      qc.setQueryData(chaveAtivos, antesAtivos);
+      qc.setQueryData(chaveInativos, antesInativos);
+      toastErro("A Pólia One não conseguiu salvar a ordem. Tenta de novo.");
+      return false;
+    }
+    recarregarCatalogo();
+    qc.invalidateQueries({ queryKey: [CHAVE_PRODUTOS_CATALOGO, userId] });
+    return true;
   };
 
   if (produtosQuery.isError) {
@@ -487,6 +544,7 @@ function ProdutosPage() {
                   onRecalcular={abrirRecalcular}
                   onAtivo={(p, ativo) => void mudarProduto(p, { arquivado: !ativo })}
                   onVitrine={(p, ligada) => void mudarProduto(p, { no_catalogo: ligada })}
+                  onOrdem={mudarOrdem}
                 />
               )}
             </>
@@ -552,6 +610,8 @@ interface PropsLista {
   onRecalcular: (p: Produto) => void;
   onAtivo: (p: Produto, ativo: boolean) => void;
   onVitrine: (p: Produto, ligada: boolean) => void;
+  /** Grava o número da coluna "Ordem"; devolve false quando não salvou. */
+  onOrdem: (p: Produto, texto: string) => Promise<boolean>;
 }
 
 /**
@@ -574,6 +634,7 @@ function ListaDeProdutos(props: PropsLista) {
             onChange={(e) => onOrdenar(e.target.value as ColunaCatalogo)}
             className="min-h-11 rounded-lg border border-[var(--line)] bg-white px-2 text-[14px] text-[var(--ink)]"
           >
+            <option value="ordem">Ordem</option>
             <option value="recentes">Mais recentes</option>
             <option value="nome">Produto</option>
             <option value="preco">Preço</option>
@@ -587,6 +648,7 @@ function ListaDeProdutos(props: PropsLista) {
         {produtos.map((p, i) => (
           <li key={p.id} className="rounded-xl border border-[var(--line)] bg-white p-3">
             <div className="flex items-start gap-3">
+              <CampoOrdem produto={p} {...props} />
               <FotoDoProduto produto={p} indice={i} />
               <div className="min-w-0 flex-1">
                 <NomeDoProduto produto={p} {...props} />
@@ -608,10 +670,14 @@ function ListaDeProdutos(props: PropsLista) {
       <div className="mt-4 hidden overflow-x-auto rounded-xl border border-[var(--line)] bg-white sm:block">
         <table className="w-full text-[14px]">
           <caption className="sr-only">
-            Produtos com preço, custo, lucro e status. Clique no título de uma coluna pra ordenar.
+            Produtos com ordem, preço, custo, lucro e status. Clique no título de uma coluna pra
+            ordenar.
           </caption>
           <thead className="border-b border-[var(--line)]">
             <tr>
+              <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="ordem">
+                Ordem
+              </Cabecalho>
               <th scope="col" className="w-14 px-3 py-2">
                 <span className="sr-only">Foto</span>
               </th>
@@ -651,6 +717,9 @@ function ListaDeProdutos(props: PropsLista) {
                   p.arquivado ? "bg-[var(--bg)]" : ""
                 }`}
               >
+                <td className="w-20 py-2 pl-3 pr-0">
+                  <CampoOrdem produto={p} {...props} />
+                </td>
                 <td className="px-3 py-2">
                   <FotoDoProduto produto={p} indice={i} />
                 </td>
@@ -783,6 +852,48 @@ function NomeDoProduto({
       {detalhe && <p className="text-[12px] text-[var(--muted)]">{detalhe}</p>}
       {skus && <LinhaEstoqueDoCard skus={skus} />}
     </div>
+  );
+}
+
+/**
+ * Número da posição, à esquerda da foto. Salva ao sair do campo ou no Enter;
+ * Esc desfaz. Vazio = sem número (o produto vai pelo cadastro mais recente).
+ */
+function CampoOrdem({ produto, mudandoId, onOrdem }: { produto: Produto } & PropsLista) {
+  const salvo = produto.catalogo_ordem != null ? String(produto.catalogo_ordem) : "";
+  const [texto, setTexto] = useState(salvo);
+  const [editando, setEditando] = useState(false);
+  const valor = editando ? texto : salvo;
+  const salvar = async () => {
+    setEditando(false);
+    if (texto.trim() === salvo) return;
+    const ok = await onOrdem(produto, texto);
+    if (!ok) setTexto(salvo);
+  };
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      maxLength={4}
+      value={valor}
+      disabled={mudandoId === produto.id}
+      aria-label={`Ordem de ${produto.nome}. Vazio deixa o produto pelo cadastro mais recente.`}
+      onFocus={() => {
+        setTexto(salvo);
+        setEditando(true);
+      }}
+      onChange={(e) => setTexto(e.target.value.replace(/\D/g, ""))}
+      onBlur={() => void salvar()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") {
+          setTexto(salvo);
+          setEditando(false);
+          e.currentTarget.blur();
+        }
+      }}
+      className="h-11 w-14 shrink-0 rounded-lg border border-[var(--line)] bg-white px-2 text-center text-[14px] tabular-nums text-[var(--ink)] placeholder:text-[var(--muted)] focus:border-[var(--secondary-text)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] disabled:opacity-50"
+    />
   );
 }
 

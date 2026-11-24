@@ -46,9 +46,9 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         .select("id, nome, preco_venda, no_catalogo, catalogo_ordem, categoria_id, colecao_id, created_at")
         .eq("user_id", userId!)
         .eq("arquivado", false)
-        // Mesma ordem da loja pública (lerLojaPublica): a dela primeiro, depois a de cadastro.
+        // Mesma ordem da loja pública (lerLojaPublica): a dela primeiro, depois do cadastro mais recente pro mais antigo.
         .order("catalogo_ordem" as never, { ascending: true, nullsFirst: false })
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       const lista = (prods ?? []) as unknown as Array<{
         id: string;
@@ -91,11 +91,11 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
 
 /**
  * Grava a ordem da vitrine: a posição de cada id na lista vira catalogo_ordem
- * (0, 1, 2...). Recebe a lista inteira já na ordem nova, pra não sobrar empate.
+ * (1, 2, 3..., o mesmo número da coluna "Ordem" de Produtos). Recebe a lista inteira já na ordem nova, pra não sobrar empate.
  */
 export async function salvarOrdemDaVitrine(idsNaOrdem: string[]) {
   const resultados = await Promise.all(
-    idsNaOrdem.map((id, i) => supabase.from("produtos").update({ catalogo_ordem: i } as never).eq("id", id)),
+    idsNaOrdem.map((id, i) => supabase.from("produtos").update({ catalogo_ordem: i + 1 } as never).eq("id", id)),
   );
   const falhou = resultados.find((r) => r.error);
   return { error: falhou ? "A Pólia One não conseguiu salvar a ordem agora. Tenta de novo." : null };

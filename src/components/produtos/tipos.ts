@@ -35,6 +35,8 @@ export interface Produto {
   tamanho_sob_consulta?: boolean;
   /** Na vitrine: pronta entrega (sai sem prazo de produção). false = sob encomenda. */
   pronta_entrega?: boolean;
+  /** Posição na lista e na loja (1 = primeiro). null = sem número, vai pelo cadastro mais recente. */
+  catalogo_ordem?: number | null;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

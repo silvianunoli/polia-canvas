@@ -5,8 +5,10 @@ import {
   direcaoInicial,
   filtrarCatalogo,
   filtrarReceitas,
+  lerOrdemDigitada,
   mostraTipoNoCard,
   ordenarCatalogo,
+  reposicionar,
 } from "@/lib/catalogoProdutos";
 
 const p = (
@@ -17,6 +19,7 @@ const p = (
     preco_custo: number | null;
     no_catalogo: boolean;
     arquivado: boolean;
+    catalogo_ordem: number | null;
     created_at: string;
   }> = {},
 ) => ({
@@ -160,5 +163,91 @@ describe("filtrarReceitas", () => {
     expect(filtrarReceitas(produtos, tem, "com")).toEqual([{ id: "a" }]);
     expect(filtrarReceitas(produtos, tem, "sem")).toEqual([{ id: "b" }]);
     expect(filtrarReceitas(produtos, tem, "todas")).toHaveLength(2);
+  });
+});
+
+describe("ordem digitada (coluna Ordem)", () => {
+  const comOrdem = [
+    p("Velho sem número", { created_at: "2026-11-01T00:00:00Z" }),
+    p("Segundo", { catalogo_ordem: 2 }),
+    p("Novo sem número", { created_at: "2026-11-20T00:00:00Z" }),
+    p("Primeiro", { catalogo_ordem: 1 }),
+  ];
+
+  it("numerados primeiro, pelo número; o resto do cadastro mais recente pro mais antigo", () => {
+    expect(ordenarCatalogo(comOrdem, "ordem", "asc", () => null).map((x) => x.nome)).toEqual([
+      "Primeiro",
+      "Segundo",
+      "Novo sem número",
+      "Velho sem número",
+    ]);
+  });
+
+  it("invertida, os numerados invertem e os sem número continuam no fim", () => {
+    expect(ordenarCatalogo(comOrdem, "ordem", "desc", () => null).map((x) => x.nome)).toEqual([
+      "Segundo",
+      "Primeiro",
+      "Novo sem número",
+      "Velho sem número",
+    ]);
+  });
+
+  it("a coluna Ordem começa do 1 pra cima", () => {
+    expect(direcaoInicial("ordem")).toBe("asc");
+  });
+
+  it("número livre: só o produto muda", () => {
+    expect(
+      reposicionar(
+        [
+          { id: "a", ordem: 1 },
+          { id: "b", ordem: null },
+        ],
+        "b",
+        5,
+      ),
+    ).toEqual([{ id: "b", ordem: 5 }]);
+  });
+
+  it("número ocupado: quem está encostado desce um, até o primeiro buraco", () => {
+    const lista2 = [
+      { id: "a", ordem: 3 },
+      { id: "b", ordem: 4 },
+      { id: "c", ordem: 6 },
+      { id: "x", ordem: null },
+    ];
+    expect(reposicionar(lista2, "x", 3)).toEqual([
+      { id: "x", ordem: 3 },
+      { id: "a", ordem: 4 },
+      { id: "b", ordem: 5 },
+    ]);
+  });
+
+  it("mudar de lugar não empurra a si mesmo", () => {
+    expect(
+      reposicionar(
+        [
+          { id: "a", ordem: 2 },
+          { id: "b", ordem: 3 },
+        ],
+        "a",
+        3,
+      ),
+    ).toEqual([
+      { id: "a", ordem: 3 },
+      { id: "b", ordem: 4 },
+    ]);
+  });
+
+  it("vazio tira o número", () => {
+    expect(reposicionar([{ id: "a", ordem: 2 }], "a", null)).toEqual([{ id: "a", ordem: null }]);
+  });
+
+  it("lê o campo: inteiro de 1 a 9999, vazio = sem número", () => {
+    expect(lerOrdemDigitada(" 7 ")).toBe(7);
+    expect(lerOrdemDigitada("")).toBeNull();
+    expect(lerOrdemDigitada("0")).toBe("invalido");
+    expect(lerOrdemDigitada("2,5")).toBe("invalido");
+    expect(lerOrdemDigitada("10000")).toBe("invalido");
   });
 });

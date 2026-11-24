@@ -422,12 +422,12 @@ function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => vo
   const fora = (q.data ?? []).filter((p) => !p.noCatalogo);
 
   // Sobe ou desce um produto. A tela muda na hora e a ordem inteira é regravada
-  // (0, 1, 2...), a mesma que a loja pública lê em catalogo_ordem.
+  // (1, 2, 3...), a mesma que a loja pública lê em catalogo_ordem.
   const mover = async (indice: number, direcao: -1 | 1) => {
     const nova = moverNaLista(naVitrine, indice, direcao);
     const chave = [CHAVE_PRODUTOS_CATALOGO, userId];
     const antes = qc.getQueryData<ProdutoDoCatalogo[]>(chave);
-    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i })), ...fora]);
+    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i + 1 })), ...fora]);
     setOrdenando(true);
     const r = await salvarOrdemDaVitrine(nova.map((p) => p.id));
     setOrdenando(false);

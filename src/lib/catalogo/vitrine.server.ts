@@ -63,7 +63,7 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
       .order("catalogo_ordem" as never, { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
     if (erroProdutos) throw erroProdutos;
     const lista = (prods ?? []) as unknown as Array<{
       id: string;

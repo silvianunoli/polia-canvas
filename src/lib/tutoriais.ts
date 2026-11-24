@@ -337,7 +337,7 @@ const LISTA = [
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
-          'No botão "Mais", no topo, "Ordem na vitrine" abre a lista dos produtos da vitrine com setas pra escolher quem aparece primeiro.',
+          'Pra escolher quem aparece primeiro, digite um número no campo "Ordem", à esquerda da foto, na lista. No botão "Mais", "Ordem na vitrine" faz o mesmo com setas, só com os produtos da vitrine.',
           'Produto físico tem o bloco "Estoque": "Quantidade agora", "Estoque mínimo" e "Código (SKU)". Abaixo do mínimo, o produto aparece como estoque baixo.',
           'Clique em "Salvar produto". O botão só libera com nome e preço de venda preenchidos.',
         ],
@@ -346,9 +346,11 @@ const LISTA = [
         titulo: "Achar um produto no catálogo",
         itens: [
           'O campo "Buscar pelo nome" acha o produto sem diferença de maiúscula ou acento.',
-          'O Catálogo é uma lista: foto, "Preço", "Custo", "Lucro" (em reais e em porcentagem) e as chaves "Vitrine" e "Ativo".',
+          'O Catálogo é uma lista: "Ordem", foto, "Preço", "Custo", "Lucro" (em reais e em porcentagem) e as chaves "Vitrine" e "Ativo".',
           'Os filtros ao lado separam "Ativos", "Na Vitrine", "Fora da Vitrine", "Sem custo", "Inativos" e "Todos". O número de cada um aparece no botão.',
-          'Clique no título de uma coluna ("Produto", "Preço", "Custo", "Lucro" ou "Ativo") pra ordenar por ela. Clique de novo pra inverter. No celular, use "Ordenar por".',
+          'A lista abre pela "Ordem": primeiro os produtos com número, do 1 em diante, depois os sem número, do cadastro mais recente pro mais antigo. A Vitrine online segue a mesma ordem.',
+          'Pra mudar a posição, digite o número no campo "Ordem" e aperte Enter ou saia do campo. Se outro produto já tem esse número, ele e os que vêm logo depois descem um. Apagar o número devolve o produto pro grupo sem número.',
+          'Clique no título de uma coluna ("Ordem", "Produto", "Preço", "Custo", "Lucro" ou "Ativo") pra ordenar por ela. Clique de novo pra inverter. No celular, use "Ordenar por".',
         ],
       },
       {

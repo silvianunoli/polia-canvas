@@ -83,7 +83,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
       .order("catalogo_ordem" as never, { ascending: true, nullsFirst: false })
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false });
     const lista = (prods ?? []) as unknown as Array<{
       id: string;
       nome: string;
