@@ -91,7 +91,7 @@ export const TEXTO_DICA: Record<ChaveDicaTela, string> = {
   calculadora:
     "Entram os custos reais da marca e sai o preço que se paga. Sem copiar o preço da concorrente.",
   projecao:
-    "E se o preço subir? E se o custo cair? Os cenários mostram quantas vendas faltam pra empatar, se pagar e bater a meta do mês.",
+    "Desconta o que já entrou no mês e mostra quantas vendas ainda faltam pra empatar, se pagar e bater a meta. Os cenários de preço e custo mostram o antes e o depois.",
   financeiro:
     "Entrou, saiu, anota aqui. Com isso o mês mostra quanto lucrou e quanto falta pra meta.",
   raiox:
