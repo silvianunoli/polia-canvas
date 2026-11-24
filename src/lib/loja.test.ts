@@ -10,6 +10,8 @@ import {
   opcaoDoItem,
   maxCoresValido,
   pedidoLojaSchema,
+  problemaDaOrigemDoBanner,
+  recorteDoBanner,
   produtosDaCategoria,
   reais,
   rotuloDaCor,
@@ -239,5 +241,36 @@ describe("várias cores no mesmo produto (22/11/2026)", () => {
     expect(pedido(`${a.id}+${b.id}+${c.id}`)).toBe(true);
     expect(pedido(`${a.id}+${b.id}+${c.id}+${a.id}`)).toBe(false);
     expect(pedido(`${a.id}+foto`)).toBe(false);
+  });
+});
+
+describe("recorte do banner (ONE-239)", () => {
+  it("imagem larga anda na horizontal e mantém 8:3", () => {
+    const r = recorteDoBanner(4000, 1000, 0);
+    expect(r).toEqual({ sx: 0, sy: 0, sw: 2667, sh: 1000, eixo: "horizontal" });
+    expect(recorteDoBanner(4000, 1000, 1).sx).toBe(4000 - 2667);
+  });
+
+  it("foto em pé anda na vertical, centralizada no meio", () => {
+    const r = recorteDoBanner(1200, 1600, 0.5);
+    expect(r.eixo).toBe("vertical");
+    expect(r.sw).toBe(1200);
+    expect(r.sh).toBe(450);
+    expect(r.sy).toBe(575);
+  });
+
+  it("imagem já em 8:3 não tem o que escolher", () => {
+    expect(recorteDoBanner(1600, 600, 0.3)).toEqual({ sx: 0, sy: 0, sw: 1600, sh: 600, eixo: null });
+  });
+
+  it("posição fora de 0 a 1 fica na borda", () => {
+    expect(recorteDoBanner(4000, 1000, 7).sx).toBe(4000 - 2667);
+    expect(recorteDoBanner(4000, 1000, -2).sx).toBe(0);
+  });
+
+  it("aceita JPG, PNG e WEBP de até 15 MB", () => {
+    expect(problemaDaOrigemDoBanner("image/webp", 1000)).toBeNull();
+    expect(problemaDaOrigemDoBanner("image/gif", 1000)).toMatch(/JPG, PNG ou WEBP/);
+    expect(problemaDaOrigemDoBanner("image/jpeg", 16 * 1024 * 1024)).toMatch(/15 MB/);
   });
 });

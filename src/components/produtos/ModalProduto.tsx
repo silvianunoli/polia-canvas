@@ -20,6 +20,7 @@ import { KitDoProduto } from "./KitDoProduto";
 import { useKitDoProduto } from "./useKitDoProduto";
 import { useFotosDoProduto } from "./useFotosDoProduto";
 import { NaLojaDoProduto } from "./NaLojaDoProduto";
+import { CategoriaDaVitrine } from "./CategoriaDaVitrine";
 import { useLojaDoProduto } from "./useLojaDoProduto";
 
 /* ============== Modal: adicionar/editar produto ============== */
@@ -79,10 +80,14 @@ export function ModalProduto({
     produtoEdit?.controla_estoque ?? false,
   );
   // Vitrine online (Premium e Pro): ligar o produto na loja mora aqui, junto do cadastro
-  // (pedido da Sil, 22/11/2026). Ordem, categoria e fotos seguem na Vitrine.
+  // (pedido da Sil, 22/11/2026). Desde 24/11 (ONE-239) a categoria também: a lista de
+  // produtos saiu da tela da Vitrine. A ordem fica na coluna Ordem de Produtos.
   const meta = useUserMeta();
   const ehPro = temVitrine(meta.plano);
   const [naVitrine, setNaVitrine] = useState(produtoEdit?.no_catalogo ?? false);
+  const [categoriaVitrine, setCategoriaVitrine] = useState(produtoEdit?.categoria_id ?? "");
+  // Com a Loja da marca, a categoria é a do bloco "Na loja" (mesma coluna).
+  const gravaCategoriaVitrine = ehPro && naVitrine && !loja.carregando && !loja.temLoja;
   const [usaPaleta, setUsaPaleta] = useState(produtoEdit?.usa_paleta ?? false);
   const [corDaFoto, setCorDaFoto] = useState(produtoEdit?.cor_da_foto ?? "");
   const [maxCores, setMaxCores] = useState(produtoEdit?.max_cores ?? 1);
@@ -161,6 +166,9 @@ export function ModalProduto({
         update.tamanho_sob_consulta = sobConsulta.tamanho;
         update.pronta_entrega = prontaEntrega;
       }
+      // Só grava se mudou: quem abre o cadastro sem a coluna (Calculadora) não apaga a categoria.
+      if (gravaCategoriaVitrine && categoriaVitrine !== (produtoEdit.categoria_id ?? ""))
+        update.categoria_id = categoriaVitrine || null;
 
       // Histórico de preço: só registra quando o preço de venda mudou.
       if (Number(produtoEdit.preco_venda) !== precoVendaNum) {
@@ -217,6 +225,7 @@ export function ModalProduto({
                 pronta_entrega: prontaEntrega,
               }
             : {}),
+          ...(gravaCategoriaVitrine ? { categoria_id: categoriaVitrine || null } : {}),
         } as never)
         .select("id")
         .single();
@@ -474,7 +483,7 @@ export function ModalProduto({
             Mostrar na Vitrine online
           </label>
           <p id="produto-vitrine-ajuda" className="text-[12px] text-[var(--muted)]">
-            A primeira foto é a da vitrine. A ordem e a categoria ficam em Vitrine online, no menu.
+            A primeira foto é a da vitrine. A ordem fica na coluna Ordem da lista de Produtos.
           </p>
           {naVitrine && (
             <div
@@ -507,6 +516,13 @@ export function ModalProduto({
                 </label>
               ))}
             </div>
+          )}
+          {gravaCategoriaVitrine && (
+            <CategoriaDaVitrine
+              userId={userId}
+              valor={categoriaVitrine}
+              onMudar={setCategoriaVitrine}
+            />
           )}
           {naVitrine && (
             <>

@@ -105,6 +105,49 @@ export function problemaDoBanner(tipo: string, largura: number, altura: number):
   return null;
 }
 
+/**
+ * Banner de qualquer tamanho (24/11/2026, ONE-239): a dona escolhe a posição e a
+ * Pólia corta em 1600 x 600 no navegador antes de subir. A conta é a mesma do
+ * `background-size: cover` da prévia, então o corte que ela vê é o que sobe.
+ */
+export const BANNER_ORIGEM_TIPOS = ["image/jpeg", "image/png", "image/webp"] as const;
+export const BANNER_ORIGEM_MAX_BYTES = 15 * 1024 * 1024;
+/** Recorte mais estreito que isso estica na loja e pode ficar borrado. */
+export const BANNER_LARGURA_BOA = 1000;
+
+export interface RecorteDoBanner {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+  /** Pra onde a posição anda; null quando a imagem já é 8:3 e não há o que escolher. */
+  eixo: "horizontal" | "vertical" | null;
+}
+
+/** Recorte 8:3 da imagem. posicao vai de 0 (topo ou esquerda) a 1 (base ou direita). */
+export function recorteDoBanner(largura: number, altura: number, posicao: number): RecorteDoBanner {
+  const p = Math.min(Math.max(Number.isFinite(posicao) ? posicao : 0.5, 0), 1);
+  const alvo = BANNER_LARGURA / BANNER_ALTURA;
+  const sobraLargura = largura - Math.round(altura * alvo);
+  const sobraAltura = altura - Math.round(largura / alvo);
+  if (sobraLargura > 0) {
+    const sw = largura - sobraLargura;
+    return { sx: Math.round(sobraLargura * p), sy: 0, sw, sh: altura, eixo: "horizontal" };
+  }
+  if (sobraAltura > 0) {
+    const sh = altura - sobraAltura;
+    return { sx: 0, sy: Math.round(sobraAltura * p), sw: largura, sh, eixo: "vertical" };
+  }
+  return { sx: 0, sy: 0, sw: largura, sh: altura, eixo: null };
+}
+
+/** Por que a imagem escolhida não serve nem pra cortar, ou null se serve. */
+export function problemaDaOrigemDoBanner(tipo: string, bytes: number): string | null {
+  if (!(BANNER_ORIGEM_TIPOS as readonly string[]).includes(tipo)) return "Use uma imagem em JPG, PNG ou WEBP.";
+  if (bytes > BANNER_ORIGEM_MAX_BYTES) return "A imagem passa de 15 MB. Diminua o tamanho e tente de novo.";
+  return null;
+}
+
 /** Favicon da loja (ícone da aba): PNG quadrado, de 48 a 512 px. Sem ele, vale o da Pólia. */
 export const FAVICON_MIN = 48;
 export const FAVICON_MAX = 512;

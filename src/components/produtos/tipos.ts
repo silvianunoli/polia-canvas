@@ -37,6 +37,8 @@ export interface Produto {
   pronta_entrega?: boolean;
   /** Posição na lista e na loja (1 = primeiro). null = sem número, vai pelo cadastro mais recente. */
   catalogo_ordem?: number | null;
+  /** Categoria da vitrine (produto_categorias). Também é a da Loja da marca. */
+  categoria_id?: string | null;
   arquivado: boolean;
   preco_atualizado_em: string | null;
   historico_precos: PrecoHistorico[];

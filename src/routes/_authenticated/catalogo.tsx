@@ -4,57 +4,63 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ExternalLink, ImagePlus, Store, Trash2 } from "lucide-react";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
+import { useAppNativo } from "@/hooks/useAppNativo";
+import { ALTURA_BARRA_APP } from "@/components/app/BarraAbasApp";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
-import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
 import { Campo } from "@/components/ui/Campo";
 import { LinkInterno } from "@/components/ui/LinkInterno";
+import { Modal } from "@/components/ui/Modal";
 import { Switch } from "@/components/ui/switch";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { temVitrine } from "@/lib/planos";
 import { formatarWhatsapp, sugerirSlug } from "@/lib/leads";
-import { BANNER_ALTURA, BANNER_LARGURA, FAVICON_MAX, FAVICON_MIN, MAX_BANNERS, MAX_FOTOS_PRODUTO, lerCoresColadas, reais, slugValido, type ConfigLoja } from "@/lib/loja";
+import {
+  BANNER_ALTURA,
+  BANNER_LARGURA,
+  BANNER_LARGURA_BOA,
+  FAVICON_MAX,
+  FAVICON_MIN,
+  MAX_BANNERS,
+  lerCoresColadas,
+  problemaDaOrigemDoBanner,
+  recorteDoBanner,
+  slugValido,
+  type ConfigLoja,
+  type RecorteDoBanner,
+} from "@/lib/loja";
 import { abrirFecharLoja, lerMeuCatalogo, salvarCatalogo, trocarCapaCatalogo, trocarFaviconCatalogo } from "@/lib/loja.functions";
 import { useIdentidadeMarca } from "@/components/orcamentos/dados";
-import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 import {
   CHAVE_BANNERS_CATALOGO,
   CHAVE_CATALOGO,
   CHAVE_CORES_CATALOGO,
   adicionarCores,
   atualizarCor,
+  cortarBanner,
   removerCor,
   salvarOrdemDasCores,
   useCoresDaVitrine,
   type CorDaPaleta,
-  CHAVE_PRODUTOS_CATALOGO,
-  chaveCategorias,
-  criarCategoria,
-  mudarCategoria,
   moverNaLista,
   removerBanner,
-  removerFotoProduto,
-  salvarOrdemDaVitrine,
   salvarOrdemDosBanners,
   subirBanner,
   subirCapa,
   subirFavicon,
-  subirFotoProduto,
   useBannersDaVitrine,
-  useCategoriasDaVitrine,
   useProdutosDoCatalogo,
   type BannerDaVitrine,
-  type ProdutoDoCatalogo,
-  type TipoDaCategoria,
 } from "@/components/catalogo/dados";
 
 // Vitrine online (ONE-148, fases 2 e 3; Premium e Pro desde 22/11/2026, antes só Pro; até essa data o menu
 // chamava de "Catálogo", a rota continua /catalogo). A dona monta a loja da
-// marca: endereço, cara da loja, banner rotativo, como vende e quais produtos
-// aparecem e em que ordem, com até 4 fotos cada. A loja pública é
-// /loja/<endereço> e o pedido cai em Pedidos.
+// marca: endereço, cara da loja, banner rotativo, como vende e paleta de cores.
+// Desde 24/11/2026 (ONE-239) os produtos ficam só em Produtos (quem entra, ordem,
+// fotos e categoria); aqui sobrou o resumo. A loja pública é /loja/<endereço> e o
+// pedido cai em Pedidos.
 
 export const Route = createFileRoute("/_authenticated/catalogo")({
   head: () => ({
@@ -90,9 +96,11 @@ function CatalogoPage() {
   const [form, setForm] = useState<Form | null>(null);
   const [tentou, setTentou] = useState(false);
   const [trocandoAberta, setTrocandoAberta] = useState(false);
+  // O que está gravado: a barra "Salvar a loja" aparece quando o form sai disso.
+  const [salvo, setSalvo] = useState<Form | null>(null);
   useEffect(() => {
     if (form || !catQuery.isSuccess) return;
-    setForm({
+    const inicial: Form = {
       slug: cat?.slug ?? sugerirSlug(marca.data?.nome ?? ""),
       ativo: cat?.ativo ?? false,
       chamada: cat?.chamada ?? "",
@@ -107,16 +115,30 @@ function CatalogoPage() {
       aviso: cat?.aviso ?? "",
       mostrarCores: cat?.mostrar_cores ?? true,
       avisoCor: cat?.aviso_cor ?? "",
-    });
+    };
+    setForm(inicial);
+    setSalvo(inicial);
   }, [catQuery.isSuccess, cat, form, marca.data]);
+
+  // "Loja aberta" grava na hora, então fica fora da conta do que falta salvar.
+  const semAtivo = (f: Form | null) => (f ? JSON.stringify({ ...f, ativo: null }) : "");
+  const mudou = !!form && !!salvo && semAtivo(form) !== semAtivo(salvo);
+  useEffect(() => {
+    if (!mudou) return;
+    const segurar = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", segurar);
+    return () => window.removeEventListener("beforeunload", segurar);
+  }, [mudou]);
+  const appNativo = useAppNativo();
 
   const salvar = useMutation({
     mutationFn: (f: Form) =>
       salvarCatalogo({
         data: { ...f, prazoDiasUteis: Number(f.prazoDiasUteis), sinalPercentual: Number(f.sinalPercentual) } as ConfigLoja,
       }),
-    onSuccess: (r) => {
+    onSuccess: (r, f) => {
       if (!r.ok) return toastErro(r.error);
+      setSalvo(f);
       qc.invalidateQueries({ queryKey: [CHAVE_CATALOGO, userId] });
       toastSucesso("Loja salva.");
     },
@@ -157,6 +179,10 @@ function CatalogoPage() {
     return true;
   };
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => (f ? { ...f, [k]: v } : f));
+  const desfazer = () => {
+    setForm((f) => (f && salvo ? { ...salvo, ativo: f.ativo } : f));
+    setTentou(false);
+  };
   // O interruptor grava na hora: antes ele só mudava a tela e a loja seguia
   // fechada até o "Salvar a loja", lá embaixo (bug relatado em 22/11/2026).
   const abrirOuFechar = async (ativo: boolean) => {
@@ -202,6 +228,8 @@ function CatalogoPage() {
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       ) : (
         <div className="space-y-6">
+          <ResumoDosProdutos userId={userId!} />
+
           <Secao titulo="Endereço" texto="Onde a loja mora. O endereço fica com a marca: depois de usado, não passa pra outra conta.">
             <Campo label="Endereço da loja" error={erros.slug} hint={`${ENDERECO_BASE}${form.slug || "sua-marca"}`}>
               <input className={INPUT} value={form.slug} onChange={(e) => set("slug", e.target.value.toLowerCase())} autoComplete="off" />
@@ -281,7 +309,7 @@ function CatalogoPage() {
               </div>
               <Switch checked={form.pedeEndereco} onCheckedChange={(v) => set("pedeEndereco", v)} aria-label="Pedir o endereço da cliente" />
             </div>
-            <Campo label="Aviso" hint="Uma frase que aparece na página do produto. Exemplo: as cores da foto podem variar na tela.">
+            <Campo label="Aviso no topo da loja" hint="Uma frase numa faixa no topo de todas as páginas da loja. Exemplo: pedidos de Natal até 10/12. Vazio, a faixa some.">
               <input className={INPUT} value={form.aviso ?? ""} onChange={(e) => set("aviso", e.target.value)} maxLength={300} />
             </Campo>
           </Secao>
@@ -294,14 +322,26 @@ function CatalogoPage() {
             onAviso={(v) => set("avisoCor", v)}
           />
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button type="button" className={BTN_ACAO} onClick={() => enviar()} disabled={salvar.isPending}>
-              {salvar.isPending ? "Salvando..." : "Salvar a loja"}
-            </button>
-            {!cat && <span className="font-sans text-[13px] text-[var(--ink-soft)]">Salve uma vez pra poder subir a capa.</span>}
-          </div>
-
-          <ProdutosDaLoja userId={userId!} onMudou={() => qc.invalidateQueries({ queryKey: [CHAVE_PRODUTOS_CATALOGO, userId] })} />
+          {(mudou || !cat) && (
+            <div
+              role="region"
+              aria-label="Salvar a loja"
+              className="sticky z-30 flex flex-wrap items-center gap-3 rounded-xl border border-[var(--ink)] bg-[var(--bg)] p-3"
+              style={{ bottom: appNativo ? `calc(${ALTURA_BARRA_APP + 12}px + env(safe-area-inset-bottom))` : 16 }}
+            >
+              <button type="button" className={BTN_ACAO} onClick={() => enviar()} disabled={salvar.isPending}>
+                {salvar.isPending ? "Salvando..." : "Salvar a loja"}
+              </button>
+              {cat && (
+                <button type="button" className={BTN_MIUDO} onClick={desfazer} disabled={salvar.isPending}>
+                  Desfazer
+                </button>
+              )}
+              <span className="font-sans text-[13px] text-[var(--ink-soft)]" aria-live="polite">
+                {cat ? "Tem mudança sem salvar." : "Salve uma vez pra poder subir a capa e os banners."}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </PaginaLogada>
@@ -317,6 +357,34 @@ function Secao({ titulo, texto, children }: { titulo: string; texto?: string; ch
       </div>
       {children}
     </section>
+  );
+}
+
+// Os produtos saíram desta tela em 24/11/2026 (ONE-239, Sil: "já temos o
+// cadastro de produtos em outra aba"). Ficou o resumo e o caminho pra Produtos,
+// onde moram a ordem (coluna Ordem), as fotos e a categoria de cada um.
+function ResumoDosProdutos({ userId }: { userId: string }) {
+  const q = useProdutosDoCatalogo(userId, true);
+  const naVitrine = (q.data ?? []).filter((p) => p.noCatalogo);
+  const semFoto = naVitrine.filter((p) => !p.fotos.length).length;
+  const n = naVitrine.length;
+  const texto = q.isError
+    ? "A Pólia One não conseguiu contar os produtos agora."
+    : q.isLoading
+      ? "Contando os produtos da vitrine..."
+      : !n
+        ? "Nenhum produto na vitrine ainda. Em Produtos, abra o produto e marque “Mostrar na Vitrine online”."
+        : `${n} ${n === 1 ? "produto na vitrine" : "produtos na vitrine"}${semFoto ? `, ${semFoto} sem foto` : ""}. A ordem, as fotos e a categoria ficam em Produtos.`;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
+      <p className="flex items-center gap-2 font-sans text-[14px] text-[var(--ink)]" aria-live="polite">
+        <Store size={18} aria-hidden="true" className="shrink-0 text-[var(--muted)]" />
+        {texto}
+      </p>
+      <LinkInterno href="/produtos" className={BTN_MIUDO}>
+        Abrir Produtos <ArrowRight size={14} aria-hidden="true" />
+      </LinkInterno>
+    </div>
   );
 }
 
@@ -414,97 +482,6 @@ function Favicon({ userId, faviconUrl, temLoja }: { userId: string; faviconUrl: 
   );
 }
 
-function ProdutosDaLoja({ userId, onMudou }: { userId: string; onMudou: () => void }) {
-  const qc = useQueryClient();
-  const q = useProdutosDoCatalogo(userId, true);
-  const [ordenando, setOrdenando] = useState(false);
-  const naVitrine = (q.data ?? []).filter((p) => p.noCatalogo);
-  const fora = (q.data ?? []).filter((p) => !p.noCatalogo);
-
-  // Sobe ou desce um produto. A tela muda na hora e a ordem inteira é regravada
-  // (1, 2, 3...), a mesma que a loja pública lê em catalogo_ordem.
-  const mover = async (indice: number, direcao: -1 | 1) => {
-    const nova = moverNaLista(naVitrine, indice, direcao);
-    const chave = [CHAVE_PRODUTOS_CATALOGO, userId];
-    const antes = qc.getQueryData<ProdutoDoCatalogo[]>(chave);
-    qc.setQueryData<ProdutoDoCatalogo[]>(chave, [...nova.map((p, i) => ({ ...p, ordem: i + 1 })), ...fora]);
-    setOrdenando(true);
-    const r = await salvarOrdemDaVitrine(nova.map((p) => p.id));
-    setOrdenando(false);
-    if (r.error) {
-      qc.setQueryData(chave, antes);
-      return toastErro(r.error);
-    }
-    onMudou();
-  };
-
-  return (
-    <Secao
-      titulo="Produtos na vitrine"
-      texto="Quem entra na vitrine se escolhe em Produtos: abra o produto e marque “Mostrar na Vitrine online”. Aqui ficam a ordem, a categoria e as fotos (até 4, a primeira é a da vitrine)."
-    >
-      {q.isError ? (
-        <BlockError message="A Pólia One não conseguiu abrir os produtos agora." onRetry={() => q.refetch()} />
-      ) : q.isLoading ? (
-        <div className="h-24 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
-      ) : !naVitrine.length ? (
-        <Vazio
-          icone={Store}
-          titulo={q.data?.length ? "Nenhum produto na vitrine ainda" : "Nenhum produto cadastrado ainda"}
-          texto={
-            q.data?.length
-              ? "Abra um produto em Produtos e marque “Mostrar na Vitrine online”. Ele aparece aqui, pra você escolher a ordem e a categoria."
-              : "A vitrine mostra os produtos de Produtos. Cadastre o primeiro e marque “Mostrar na Vitrine online”."
-          }
-          acao={<LinkInterno href="/produtos" className={BTN_ACAO}>Abrir Produtos</LinkInterno>}
-          denso
-        />
-      ) : (
-        <>
-          <p className="font-sans text-[13px] text-[var(--ink-soft)]">
-            {`${naVitrine.length} ${naVitrine.length === 1 ? "produto na vitrine" : "produtos na vitrine"}, nesta ordem.`}{" "}
-            <LinkInterno href="/produtos" className="font-medium text-[var(--secondary-text)] hover:underline">
-              Pôr ou tirar produtos em Produtos
-            </LinkInterno>
-          </p>
-          {naVitrine.length > 0 && (
-            <ol
-              className="divide-y divide-[var(--line)] rounded-xl border border-[var(--line)] bg-[var(--surface)]"
-              aria-label="Produtos na vitrine, na ordem em que aparecem"
-            >
-              {naVitrine.map((p, i) => (
-                <LinhaProduto
-                  key={p.id}
-                  p={p}
-                  userId={userId}
-                  onMudou={onMudou}
-                  posicao={{
-                    numero: i + 1,
-                    primeiro: i === 0,
-                    ultimo: i === naVitrine.length - 1,
-                    ocupado: ordenando,
-                    subir: () => void mover(i, -1),
-                    descer: () => void mover(i, 1),
-                  }}
-                />
-              ))}
-            </ol>
-          )}
-        </>
-      )}
-    </Secao>
-  );
-}
-
-interface Posicao {
-  numero: number;
-  primeiro: boolean;
-  ultimo: boolean;
-  ocupado: boolean;
-  subir: () => void;
-  descer: () => void;
-}
-
 const BTN_SETA =
   "flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--bg)] text-[var(--ink)] hover:border-[var(--secondary-text)] focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)] disabled:opacity-40 disabled:pointer-events-none";
 
@@ -517,13 +494,34 @@ function BannerRotativo({ userId }: { userId: string }) {
   const chave = [CHAVE_BANNERS_CATALOGO, userId];
   const recarregar = () => qc.invalidateQueries({ queryKey: chave });
 
-  const subir = async (arquivo: File | undefined) => {
-    if (!arquivo) return;
-    setOcupado(true);
-    const r = await subirBanner(userId, arquivo, lista);
-    setOcupado(false);
+  // Qualquer tamanho (ONE-239): a imagem abre na janela de corte e só sobe o 1600 x 600.
+  const [origem, setOrigem] = useState<OrigemDoBanner | null>(null);
+  const escolher = (arquivo: File | undefined) => {
     if (input.current) input.current.value = "";
+    if (!arquivo) return;
+    const problema = problemaDaOrigemDoBanner(arquivo.type, arquivo.size);
+    if (problema) return toastErro(problema);
+    const url = URL.createObjectURL(arquivo);
+    const img = new Image();
+    img.onload = () => setOrigem({ url, img, largura: img.naturalWidth, altura: img.naturalHeight });
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      toastErro("A Pólia One não conseguiu abrir essa imagem. Confira se é um JPG, PNG ou WEBP.");
+    };
+    img.src = url;
+  };
+  const fecharCorte = () => {
+    if (origem) URL.revokeObjectURL(origem.url);
+    setOrigem(null);
+  };
+  const subir = async (recorte: RecorteDoBanner) => {
+    if (!origem) return;
+    setOcupado(true);
+    const arquivo = await cortarBanner(origem.img, recorte);
+    const r = arquivo ? await subirBanner(userId, arquivo, lista) : { error: "A Pólia One não conseguiu cortar a imagem. Tenta de novo." };
+    setOcupado(false);
     if (r.error) return toastErro(r.error);
+    fecharCorte();
     toastSucesso("Banner na vitrine.");
     recarregar();
   };
@@ -547,7 +545,7 @@ function BannerRotativo({ userId }: { userId: string }) {
   return (
     <Secao
       titulo="Banner rotativo"
-      texto={`Até ${MAX_BANNERS} imagens que passam sozinhas no topo da vitrine, uma a cada 5 segundos. Cada banner precisa ter exatamente ${BANNER_LARGURA} x ${BANNER_ALTURA} px, em JPG ou PNG de até 3 MB: assim ele aparece inteiro, sem corte, no computador e no celular. Imagem de outro tamanho não sobe. Sem banner, o topo fica como está.`}
+      texto={`Até ${MAX_BANNERS} imagens que passam sozinhas no topo da vitrine, uma a cada 5 segundos. Vale imagem de qualquer tamanho em JPG, PNG ou WEBP: a Pólia mostra o corte em ${BANNER_LARGURA} x ${BANNER_ALTURA} px, que é como o banner aparece na loja, e você escolhe a posição antes de subir. Sem banner, o topo fica como está.`}
     >
       {q.isError ? (
         <BlockError message="A Pólia One não conseguiu abrir os banners agora." onRetry={() => q.refetch()} />
@@ -606,9 +604,9 @@ function BannerRotativo({ userId }: { userId: string }) {
                 ref={input}
                 id="banner-loja"
                 type="file"
-                accept="image/png,image/jpeg"
+                accept="image/png,image/jpeg,image/webp"
                 className="sr-only"
-                onChange={(e) => void subir(e.target.files?.[0])}
+                onChange={(e) => escolher(e.target.files?.[0])}
                 disabled={ocupado}
               />
               <label
@@ -626,234 +624,101 @@ function BannerRotativo({ userId }: { userId: string }) {
           )}
         </div>
       )}
+      {origem && <ModalCorteDoBanner origem={origem} ocupado={ocupado} onCancelar={fecharCorte} onUsar={(r) => void subir(r)} />}
     </Secao>
   );
 }
 
-function LinhaProduto({
-  p,
-  userId,
-  onMudou,
-  posicao,
-}: {
-  p: ProdutoDoCatalogo;
-  userId: string;
-  onMudou: () => void;
-  posicao?: Posicao;
-}) {
-  const input = useRef<HTMLInputElement>(null);
-  const [ocupado, setOcupado] = useState(false);
-  const subir = async (arquivo: File | undefined) => {
-    if (!arquivo) return;
-    setOcupado(true);
-    const r = await subirFotoProduto(userId, p.id, arquivo, p.fotos.map((f) => f.ordem));
-    setOcupado(false);
-    if (input.current) input.current.value = "";
-    if (r.error) return toastErro(r.error);
-    onMudou();
-  };
-  const tirar = async (i: number) => {
-    setOcupado(true);
-    const r = await removerFotoProduto(p.fotos[i]);
-    setOcupado(false);
-    if (r.error) return toastErro(r.error);
-    onMudou();
-  };
-  const idInput = `foto-${p.id}`;
-  // Coleção só existe na loja da marca (site próprio); a Vitrine online filtra por categoria.
-  const lojaDaMarca = useTemLojaDaMarca(userId);
-  return (
-    <li className="p-4 space-y-3">
-      <div className="flex items-center justify-between gap-4">
-        {posicao && (
-          <div className="flex shrink-0 items-center gap-2">
-            <span className="w-6 text-right font-sans text-[13px] font-medium text-[var(--muted)]">{posicao.numero}º</span>
-            <button type="button" className={BTN_SETA} onClick={posicao.subir} disabled={posicao.ocupado || posicao.primeiro} aria-label={`Subir ${p.nome} na vitrine`}>
-              <ArrowUp size={16} aria-hidden="true" />
-            </button>
-            <button type="button" className={BTN_SETA} onClick={posicao.descer} disabled={posicao.ocupado || posicao.ultimo} aria-label={`Descer ${p.nome} na vitrine`}>
-              <ArrowDown size={16} aria-hidden="true" />
-            </button>
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <p className="font-sans text-[14px] font-medium text-[var(--ink)] truncate">{p.nome}</p>
-          <p className="font-sans text-[12px] text-[var(--ink-soft)]">
-            {reais(p.preco)}
-            {p.variacoes ? ` · ${p.variacoes} ${p.variacoes === 1 ? "variação" : "variações"}` : ""}
-            {!p.fotos.length ? " · sem foto ainda" : ""}
-          </p>
-        </div>
-      </div>
-      {p.noCatalogo && (
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          <SeletorCategoria p={p} userId={userId} onMudou={onMudou} />
-          {lojaDaMarca.data === true && <SeletorCategoria p={p} userId={userId} onMudou={onMudou} tipo="colecao" />}
-        </div>
-      )}
-      {p.noCatalogo && (
-        <div className="flex flex-wrap items-center gap-3">
-          {p.fotos.map((f, i) => (
-            <div key={f.id} className="relative">
-              <img src={f.url} alt={`Foto ${i + 1} de ${p.nome}`} className="h-20 w-16 rounded-lg border border-[var(--line)] object-cover" />
-              <button
-                type="button"
-                onClick={() => tirar(i)}
-                disabled={ocupado}
-                className="absolute -right-2 -top-2 flex h-7 w-7 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface)] text-[var(--ink)] hover:text-[var(--danger)]"
-                aria-label={`Tirar a foto ${i + 1} de ${p.nome}`}
-              >
-                <Trash2 size={13} aria-hidden="true" />
-              </button>
-            </div>
-          ))}
-          {p.fotos.length < MAX_FOTOS_PRODUTO && (
-            <>
-              <input ref={input} id={idInput} type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" onChange={(e) => subir(e.target.files?.[0])} disabled={ocupado} />
-              <label
-                htmlFor={idInput}
-                className={`flex h-20 w-16 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line)] font-sans text-[11px] text-[var(--ink-soft)] ${ocupado ? "opacity-50" : "cursor-pointer hover:border-[var(--secondary-text)]"}`}
-              >
-                <ImagePlus size={16} aria-hidden="true" />
-                {ocupado ? "..." : "Foto"}
-              </label>
-            </>
-          )}
-        </div>
-      )}
-    </li>
-  );
+interface OrigemDoBanner {
+  url: string;
+  img: HTMLImageElement;
+  largura: number;
+  altura: number;
 }
 
-const NOVA = "__nova__";
-
 /**
- * Categoria do produto na vitrine (22/11/2026). A cliente filtra a vitrine por
- * ela. Mesma tabela da loja de marca (produto_categorias): criar aqui aparece lá.
- * Com tipo "colecao", o mesmo seletor escolhe a coleção (tema da estampa).
+ * Janela de corte do banner (ONE-239). A prévia usa background-size: cover com a
+ * mesma posição que recorteDoBanner usa pra cortar, então o que aparece aqui é
+ * o que sobe e o que a loja mostra.
  */
-function SeletorCategoria({
-  p,
-  userId,
-  onMudou,
-  tipo = "categoria",
+function ModalCorteDoBanner({
+  origem,
+  ocupado,
+  onCancelar,
+  onUsar,
 }: {
-  p: ProdutoDoCatalogo;
-  userId: string;
-  onMudou: () => void;
-  tipo?: TipoDaCategoria;
+  origem: OrigemDoBanner;
+  ocupado: boolean;
+  onCancelar: () => void;
+  onUsar: (r: RecorteDoBanner) => void;
 }) {
-  const qc = useQueryClient();
-  const todas = useCategoriasDaVitrine(userId);
-  const ehColecao = tipo === "colecao";
-  const palavra = ehColecao ? "coleção" : "categoria";
-  const opcoes = (todas.data ?? []).filter((c) => (ehColecao ? c.tipo === "colecao" : c.tipo !== "colecao"));
-  const atual = ehColecao ? p.colecaoId : p.categoriaId;
-  const [criando, setCriando] = useState(false);
-  const [nome, setNome] = useState("");
-  const [ocupado, setOcupado] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const idSelect = `${tipo}-${p.id}`;
-  const idNova = `${tipo}-nova-${p.id}`;
-
-  const escolher = async (valor: string) => {
-    if (valor === NOVA) {
-      setCriando(true);
-      setErro(null);
-      return;
-    }
-    setOcupado(true);
-    const r = await mudarCategoria(p.id, valor || null, tipo);
-    setOcupado(false);
-    if (r.error) return toastErro(r.error);
-    onMudou();
-  };
-  const criar = async () => {
-    setOcupado(true);
-    setErro(null);
-    const r = await criarCategoria(userId, nome, tipo);
-    if (r.error || !r.id) {
-      setOcupado(false);
-      return setErro(r.error);
-    }
-    await qc.invalidateQueries({ queryKey: chaveCategorias(userId) });
-    const m = await mudarCategoria(p.id, r.id, tipo);
-    setOcupado(false);
-    if (m.error) return toastErro(m.error);
-    setCriando(false);
-    setNome("");
-    toastSucesso(ehColecao ? "Coleção criada." : "Categoria criada.");
-    onMudou();
-  };
-
-  if (criando)
-    return (
-      <div className="space-y-1">
-        <label htmlFor={idNova} className="font-sans text-[13px] font-medium text-[var(--ink)]">
-          Nome da {palavra} nova
-        </label>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            id={idNova}
-            className={`${INPUT} max-w-[260px]`}
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void criar();
-            }}
-            maxLength={60}
-            placeholder={ehColecao ? "Ex.: Natal" : "Ex.: Bolsas"}
-            aria-invalid={!!erro}
-            aria-describedby={erro ? `${idNova}-erro` : undefined}
-            autoFocus
-          />
-          <button type="button" className={BTN_MIUDO} onClick={() => void criar()} disabled={ocupado || !nome.trim()}>
-            {ocupado ? "Criando..." : "Criar"}
-          </button>
-          <button
-            type="button"
-            className="min-h-11 px-2 font-sans text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-            onClick={() => {
-              setCriando(false);
-              setNome("");
-              setErro(null);
-            }}
-          >
+  const [posicao, setPosicao] = useState(50);
+  const recorte = recorteDoBanner(origem.largura, origem.altura, posicao / 100);
+  const vertical = recorte.eixo === "vertical";
+  return (
+    <Modal
+      open
+      onOpenChange={(aberto) => {
+        if (!aberto && !ocupado) onCancelar();
+      }}
+      title="Ajustar o banner"
+      description={`A loja mostra o banner em ${BANNER_LARGURA} x ${BANNER_ALTURA} px. Esta é a parte da imagem que aparece.`}
+      largura="media"
+      footer={
+        <>
+          <button type="button" className={BTN_ACAO_CONTORNO} onClick={onCancelar} disabled={ocupado}>
             Cancelar
           </button>
-        </div>
-        {erro && (
-          <p id={`${idNova}-erro`} role="alert" className="font-sans text-[12px] text-[var(--danger)]">
-            {erro}
+          <button type="button" className={BTN_ACAO} onClick={() => onUsar(recorte)} disabled={ocupado}>
+            {ocupado ? "Subindo..." : "Usar este corte"}
+          </button>
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div
+          role="img"
+          aria-label="Prévia do banner do jeito que vai aparecer na loja"
+          className="aspect-[8/3] w-full rounded-lg border border-[var(--line)] bg-[var(--surface)]"
+          style={{
+            backgroundImage: `url("${origem.url}")`,
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: vertical ? `50% ${posicao}%` : `${posicao}% 50%`,
+          }}
+        />
+        {recorte.eixo ? (
+          <div className="space-y-1">
+            <label htmlFor="posicao-banner" className="font-sans text-[13px] font-medium text-[var(--ink)]">
+              Posição do corte
+            </label>
+            <input
+              id="posicao-banner"
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={posicao}
+              onChange={(e) => setPosicao(Number(e.target.value))}
+              disabled={ocupado}
+              className="w-full accent-[var(--secondary-text)]"
+              aria-valuetext={`${posicao}%, ${vertical ? "de cima pra baixo" : "da esquerda pra direita"}`}
+            />
+            <div className="flex justify-between font-sans text-[12px] text-[var(--muted)]">
+              <span>{vertical ? "Mais pra cima" : "Mais à esquerda"}</span>
+              <span>{vertical ? "Mais pra baixo" : "Mais à direita"}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="font-sans text-[13px] text-[var(--ink-soft)]">A imagem já está na medida do banner e aparece inteira.</p>
+        )}
+        {recorte.sw < BANNER_LARGURA_BOA && (
+          <p className="font-sans text-[13px] text-[var(--ink-soft)]">
+            A imagem é pequena: na loja o banner pode ficar borrado. Fica melhor com pelo menos {BANNER_LARGURA} px de largura.
           </p>
         )}
       </div>
-    );
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <label htmlFor={idSelect} className="font-sans text-[13px] font-medium text-[var(--ink)]">
-        {ehColecao ? "Coleção" : "Categoria"}
-      </label>
-      <select
-        id={idSelect}
-        className={`${INPUT} max-w-[260px] py-2`}
-        value={atual ?? ""}
-        onChange={(e) => void escolher(e.target.value)}
-        disabled={ocupado || todas.isLoading}
-      >
-        <option value="">{ehColecao ? "Sem coleção" : "Sem categoria"}</option>
-        {opcoes.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.nome}
-          </option>
-        ))}
-        <option value={NOVA}>{ehColecao ? "+ Nova coleção" : "+ Nova categoria"}</option>
-      </select>
-      {todas.isError && (
-        <span className="font-sans text-[12px] text-[var(--danger)]">A Pólia One não conseguiu ler as categorias.</span>
-      )}
-    </div>
+    </Modal>
   );
 }
 

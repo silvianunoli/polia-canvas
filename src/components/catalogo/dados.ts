@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { slugDaCategoria } from "@/lib/lojaCombinacoes";
-import { BANNER_TIPOS, FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO, problemaDoBanner, problemaDoFavicon } from "@/lib/loja";
+import { BANNER_ALTURA, BANNER_LARGURA, BANNER_TIPOS, FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO, problemaDoBanner, problemaDoFavicon, type RecorteDoBanner } from "@/lib/loja";
 
 // Dados da tela Vitrine online (rota /catalogo; ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
 // direto pelo Supabase, com RLS de dona (produtos: update; produto_fotos e o
@@ -88,18 +88,6 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
   });
 }
 
-
-/**
- * Grava a ordem da vitrine: a posição de cada id na lista vira catalogo_ordem
- * (1, 2, 3..., o mesmo número da coluna "Ordem" de Produtos). Recebe a lista inteira já na ordem nova, pra não sobrar empate.
- */
-export async function salvarOrdemDaVitrine(idsNaOrdem: string[]) {
-  const resultados = await Promise.all(
-    idsNaOrdem.map((id, i) => supabase.from("produtos").update({ catalogo_ordem: i + 1 } as never).eq("id", id)),
-  );
-  const falhou = resultados.find((r) => r.error);
-  return { error: falhou ? "A Pólia One não conseguiu salvar a ordem agora. Tenta de novo." : null };
-}
 
 /** Troca o item de lugar com o vizinho (-1 sobe, +1 desce). Fora da lista, devolve igual. */
 export function moverNaLista<T>(lista: readonly T[], indice: number, direcao: -1 | 1): T[] {
@@ -280,6 +268,24 @@ async function medidaDaImagem(arquivo: File): Promise<{ largura: number; altura:
   } catch {
     return null;
   }
+}
+
+/**
+ * Corta a imagem em 1600 x 600 no navegador (ONE-239) e devolve um JPG pronto
+ * pra subirBanner. Fundo branco por baixo: PNG transparente não vira preto.
+ */
+export async function cortarBanner(imagem: CanvasImageSource, recorte: RecorteDoBanner): Promise<File | null> {
+  const canvas = document.createElement("canvas");
+  canvas.width = BANNER_LARGURA;
+  canvas.height = BANNER_ALTURA;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.fillRect(0, 0, BANNER_LARGURA, BANNER_ALTURA);
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(imagem, recorte.sx, recorte.sy, recorte.sw, recorte.sh, 0, 0, BANNER_LARGURA, BANNER_ALTURA);
+  const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, "image/jpeg", 0.9));
+  return blob ? new File([blob], "banner.jpg", { type: "image/jpeg" }) : null;
 }
 
 /** Sobe o banner no fim da fila. Mesmo bucket e limite das fotos de produto (3 MB). */
