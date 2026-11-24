@@ -3,7 +3,12 @@ import {
   acaoDaMeta,
   CATEGORIA_INSUMOS,
   custosFixosDoMes,
+  custosFixosDePartida,
   ehCategoriaInsumos,
+  entradasDoMes,
+  mesAnterior,
+  montarFaltaNoMes,
+  salarioDePartida,
   insumosDoMes,
   lerValorReais,
   paraCampoReais,
@@ -453,5 +458,140 @@ describe("acaoDaMeta (QA-29: o 'salvo' que não salvou)", () => {
     expect(acaoDaMeta({ metaId: "m1", editada: false, valor: 3000 })).toBe("manter");
     expect(acaoDaMeta({ metaId: "m1", editada: true, valor: null })).toBe("manter");
     expect(acaoDaMeta({ metaId: null, editada: true, valor: 0 })).toBe("manter");
+  });
+});
+
+describe("mesAnterior", () => {
+  it("volta um mês e vira o ano em janeiro", () => {
+    expect(mesAnterior(11, 2026)).toEqual({ mes: 10, ano: 2026 });
+    expect(mesAnterior(1, 2027)).toEqual({ mes: 12, ano: 2026 });
+  });
+});
+
+describe("custosFixosDePartida (ONE-241: mês pela metade não vira custo do mês)", () => {
+  it("no começo do mês, usa o mês fechado", () => {
+    const lancamentos = [
+      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 }),
+      lanc({ data: "2026-10-10", categoria: "Internet", valor: 100 }),
+      lanc({ data: "2026-11-02", categoria: "Internet", valor: 100 }),
+    ];
+    expect(custosFixosDePartida(lancamentos, 11, 2026)).toEqual({
+      valor: 900,
+      origem: "mes-anterior",
+      doMesAtual: 100,
+      doMesAnterior: 900,
+    });
+  });
+
+  it("quando o mês corrente já passou do fechado, usa o corrente", () => {
+    const lancamentos = [
+      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 }),
+      lanc({ data: "2026-11-05", categoria: "Aluguel", valor: 800 }),
+      lanc({ data: "2026-11-20", categoria: "Marketing", valor: 300 }),
+    ];
+    const r = custosFixosDePartida(lancamentos, 11, 2026);
+    expect(r.valor).toBe(1100);
+    expect(r.origem).toBe("mes-atual");
+  });
+
+  it("dia 1 de janeiro olha dezembro do ano anterior", () => {
+    const lancamentos = [lanc({ data: "2026-12-10", categoria: "Aluguel", valor: 700 })];
+    expect(custosFixosDePartida(lancamentos, 1, 2027).valor).toBe(700);
+  });
+
+  it("insumo, pró-labore e equipamento continuam fora nos dois meses", () => {
+    const lancamentos = [
+      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 500 }),
+      lanc({ data: "2026-10-06", categoria: CATEGORIA_INSUMOS, valor: 900 }),
+      lanc({ data: "2026-10-07", categoria: "Pró-labore", valor: 2000 }),
+    ];
+    expect(custosFixosDePartida(lancamentos, 11, 2026).valor).toBe(500);
+  });
+});
+
+describe("salarioDePartida (ONE-241: pró-labore parcial não vira salário desejado)", () => {
+  it("o salvo na Projeção vem primeiro", () => {
+    expect(
+      salarioDePartida({ salvo: 3000, doPlanejamento: 2500, lancadoMesAnterior: 2000 }),
+    ).toEqual({ valor: 3000, origem: "salvo" });
+  });
+
+  it("sem salvo, usa o do Planejamento", () => {
+    expect(
+      salarioDePartida({ salvo: null, doPlanejamento: 2500, lancadoMesAnterior: 2000 }),
+    ).toEqual({ valor: 2500, origem: "planejamento" });
+  });
+
+  it("sem salvo nem Planejamento, usa o pró-labore do mês fechado", () => {
+    expect(salarioDePartida({ salvo: 0, doPlanejamento: null, lancadoMesAnterior: 2000 })).toEqual({
+      valor: 2000,
+      origem: "mes-anterior",
+    });
+  });
+
+  it("sem nada, começa vazio", () => {
+    expect(salarioDePartida({ salvo: null, doPlanejamento: null, lancadoMesAnterior: 0 })).toEqual({
+      valor: null,
+      origem: null,
+    });
+  });
+});
+
+describe("entradasDoMes", () => {
+  it("soma só as entradas do mês pedido", () => {
+    const lancamentos = [
+      lanc({ data: "2026-11-03", tipo: "entrada", valor: 490 }),
+      lanc({ data: "2026-11-20", tipo: "entrada", valor: 1470 }),
+      lanc({ data: "2026-10-30", tipo: "entrada", valor: 999 }),
+      lanc({ data: "2026-11-10", tipo: "saida", valor: 300 }),
+    ];
+    expect(entradasDoMes(lancamentos, 11, 2026)).toBe(1960);
+  });
+});
+
+describe("montarFaltaNoMes (ONE-241: 'faltam' de verdade)", () => {
+  // sobra de 50 por venda, ticket de 100
+  const base = {
+    custosFixos: 1000,
+    proLaboreDesejado: 2000,
+    metaAlvo: 5000 as number | null,
+    ticketMedio: 100,
+    sobra: 50,
+  };
+
+  it("sem nada entrado, falta o mês inteiro (bate com montarProjecao)", () => {
+    const falta = montarFaltaNoMes({ ...base, jaEntrou: 0 })!;
+    const total = montarProjecao(base)!;
+    expect(falta.empatar.vendas).toBe(total.empatar.vendas);
+    expect(falta.sePagar.vendas).toBe(total.sePagar.vendas);
+    expect(falta.meta!.vendas).toBe(total.meta!.vendas);
+  });
+
+  it("desconta o que já entrou: R$ 1.500 = 15 vendas feitas", () => {
+    const falta = montarFaltaNoMes({ ...base, jaEntrou: 1500 })!;
+    expect(falta.empatar).toEqual({ vendas: 5, faturamento: 500 }); // 20 - 15
+    expect(falta.sePagar).toEqual({ vendas: 45, faturamento: 4500 }); // 60 - 15
+    expect(falta.meta).toEqual({ vendas: 35, faturamento: 3500 }); // 5000 - 1500
+  });
+
+  it("alvo já batido vira zero, nunca negativo", () => {
+    const falta = montarFaltaNoMes({ ...base, jaEntrou: 9000 })!;
+    expect(falta.empatar.vendas).toBe(0);
+    expect(falta.sePagar.vendas).toBe(0);
+    expect(falta.meta).toEqual({ vendas: 0, faturamento: 0 });
+  });
+
+  it("venda fracionada arredonda pra cima", () => {
+    // 20 vendas no mês, entrou o equivalente a 14,5
+    expect(montarFaltaNoMes({ ...base, jaEntrou: 1450 })!.empatar.vendas).toBe(6);
+  });
+
+  it("sem sobra ou sem ticket, não há conta", () => {
+    expect(montarFaltaNoMes({ ...base, sobra: 0, jaEntrou: 0 })).toBeNull();
+    expect(montarFaltaNoMes({ ...base, ticketMedio: 0, jaEntrou: 0 })).toBeNull();
+  });
+
+  it("meta null continua null", () => {
+    expect(montarFaltaNoMes({ ...base, metaAlvo: null, jaEntrou: 100 })!.meta).toBeNull();
   });
 });

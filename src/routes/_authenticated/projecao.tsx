@@ -10,7 +10,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Campo } from "@/components/ui/Campo";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { track } from "@/lib/analytics";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { registrar } from "@/lib/founder-eventos";
@@ -18,14 +18,18 @@ import {
   acaoDaMeta,
   CATEGORIA_EQUIPAMENTO,
   CATEGORIA_INSUMOS,
-  custosFixosDoMes,
+  custosFixosDePartida,
   custoMedio,
+  entradasDoMes,
   insumosDoMes,
   lerValorReais,
   mediaTaxas,
+  mesAnterior,
+  montarFaltaNoMes,
   montarProjecao,
   paraCampoReais,
   proLaboreJaLancado,
+  salarioDePartida,
   separarForaDaCurva,
   sobraPorVenda,
   ticketMedio,
@@ -34,7 +38,8 @@ import {
 import { temNumerosDoMes, tierDosNumeros, tiersPagos } from "@/lib/planos";
 import { buscarMetaDoMes, TITULO_META_DO_MES } from "@/lib/metaDoMes";
 import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
-import type { ProdutoResumo } from "@/lib/projecao.functions";
+import type { FaltaNoMes, ProdutoResumo } from "@/lib/projecao.functions";
+import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
 
 type ProdutoDaProjecao = ProdutoResumo & { nome: string };
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
@@ -51,6 +56,14 @@ export const Route = createFileRoute("/_authenticated/projecao")({
 
 function fmtBRL(v: number): string {
   return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+
+function nomeDoMes(mes: number, ano: number): string {
+  return new Date(ano, mes - 1, 1).toLocaleDateString("pt-BR", { month: "long" });
+}
+
+function vendasTxt(n: number): string {
+  return `${n} ${n === 1 ? "venda" : "vendas"}`;
 }
 
 /**
@@ -76,10 +89,15 @@ function ProjecaoPage() {
     queryKey: ["projecao", userId],
     enabled: !!userId && ehProjete,
     queryFn: async () => {
-      // A Projeção só usa o mês corrente (custos fixos e pró-labore lançado):
-      // filtra no banco e lê inteiro, página por página (QA-24/QA-29). Antes
-      // lia tudo sem paginar e o PostgREST cortava em 1.000 linhas.
-      const mes = intervaloDoMes(anoAtual, mesAtual);
+      // A Projeção usa o mês corrente (o que já entrou) e o mês fechado (custos
+      // fixos e pró-labore de um mês inteiro, ONE-241): filtra no banco e lê
+      // inteiro, página por página (QA-24/QA-29). Antes lia tudo sem paginar e
+      // o PostgREST cortava em 1.000 linhas.
+      const ant = mesAnterior(mesAtual, anoAtual);
+      const mes = {
+        inicio: intervaloDoMes(ant.ano, ant.mes).inicio,
+        fimExclusivo: intervaloDoMes(anoAtual, mesAtual).fimExclusivo,
+      };
       const [lancamentosMes, prodRes, metaRes, perfilRes, planejamentoRes] = await Promise.all([
         lerTodasAsPaginas<LancamentoResumo>((de, ate) =>
           supabase
@@ -159,22 +177,44 @@ function ProjecaoPage() {
   const produtos = useMemo(() => dados?.produtos ?? [], [dados?.produtos]);
   const metaMes = dados?.metaMes ?? null;
 
-  const custosFixosBase = useMemo(
-    () => custosFixosDoMes(lancamentos, mesAtual, anoAtual),
+  const ant = mesAnterior(mesAtual, anoAtual);
+  const nomeMesAtual = nomeDoMes(mesAtual, anoAtual);
+  const nomeMesAnterior = nomeDoMes(ant.mes, ant.ano);
+
+  // ONE-241: o maior entre o mês fechado e o mês corrente (ver custosFixosDePartida).
+  const fixos = useMemo(
+    () => custosFixosDePartida(lancamentos, mesAtual, anoAtual),
     [lancamentos, mesAtual, anoAtual],
   );
-  // Insumo do mês que ficou fora dos custos fixos (só pra linha de ajuda).
+  const custosFixosBase = fixos.valor;
+  // Insumo do mês de onde os custos fixos vieram (só pra linha de ajuda).
   const insumosForaBase = useMemo(
-    () => insumosDoMes(lancamentos, mesAtual, anoAtual),
+    () =>
+      fixos.origem === "mes-anterior"
+        ? insumosDoMes(lancamentos, ant.mes, ant.ano)
+        : insumosDoMes(lancamentos, mesAtual, anoAtual),
+    [lancamentos, fixos.origem, ant.mes, ant.ano, mesAtual, anoAtual],
+  );
+  // ONE-241: o pró-labore lançado no mês corrente não é mais o salário de
+  // partida (pode ser só uma parte); aparece só na linha de ajuda.
+  const proLaboreLancadoNoMes = useMemo(
+    () => proLaboreJaLancado(lancamentos, mesAtual, anoAtual),
     [lancamentos, mesAtual, anoAtual],
   );
-  const proLaboreBase = useMemo(() => {
-    const lancado = proLaboreJaLancado(lancamentos, mesAtual, anoAtual);
-    if (lancado > 0) return lancado;
-    const salvo = dados?.proLaboreSalvo ?? null;
-    if (salvo != null && salvo > 0) return salvo;
-    return dados?.proLaboreDoPlanejamento ?? salvo;
-  }, [lancamentos, mesAtual, anoAtual, dados?.proLaboreSalvo, dados?.proLaboreDoPlanejamento]);
+  const salario = useMemo(
+    () =>
+      salarioDePartida({
+        salvo: dados?.proLaboreSalvo ?? null,
+        doPlanejamento: dados?.proLaboreDoPlanejamento ?? null,
+        lancadoMesAnterior: proLaboreJaLancado(lancamentos, ant.mes, ant.ano),
+      }),
+    [dados?.proLaboreSalvo, dados?.proLaboreDoPlanejamento, lancamentos, ant.mes, ant.ano],
+  );
+  const proLaboreBase = salario.valor;
+  const jaEntrou = useMemo(
+    () => entradasDoMes(lancamentos, mesAtual, anoAtual),
+    [lancamentos, mesAtual, anoAtual],
+  );
   // ONE-122: produto fora da curva sai das médias, a menos que ela peça
   // pra usar todos. A tela mostra quem saiu: a Pólia não esconde a conta.
   const [usarTodosNaMedia, setUsarTodosNaMedia] = useState(false);
@@ -219,6 +259,50 @@ function ProjecaoPage() {
     () => montarProjecao({ custosFixos, proLaboreDesejado, metaAlvo, ticketMedio: ticket, sobra }),
     [custosFixos, proLaboreDesejado, metaAlvo, ticket, sobra],
   );
+  const falta = useMemo(
+    () =>
+      montarFaltaNoMes({
+        custosFixos,
+        proLaboreDesejado,
+        metaAlvo,
+        ticketMedio: ticket,
+        sobra,
+        jaEntrou,
+      }),
+    [custosFixos, proLaboreDesejado, metaAlvo, ticket, sobra, jaEntrou],
+  );
+
+  // ONE-241: cenário com antes e depois. Simulação = mexeu em custos fixos,
+  // ticket ou custo (o "e se"). Salário e meta são valores que ela salva, então
+  // não contam como cenário. O "real" usa os mesmos salário e meta da tela, pra
+  // a diferença mostrar só o efeito do cenário.
+  const emSimulacao = custosFixosTxt != null || ticketTxt != null || custoTxt != null;
+  const faltaReal = useMemo(
+    () =>
+      montarFaltaNoMes({
+        custosFixos: custosFixosBase,
+        proLaboreDesejado,
+        metaAlvo,
+        ticketMedio: ticketBase,
+        sobra: sobraReal,
+        jaEntrou,
+      }),
+    [custosFixosBase, proLaboreDesejado, metaAlvo, ticketBase, sobraReal, jaEntrou],
+  );
+  // Compara em centavos: o campo abre arredondado (898,57) e a média real tem
+  // mais casas (898,5714...), o que sem isso virava "de R$ 898,57 para R$ 898,57".
+  const difere = (a: number, b: number) => Math.round(a * 100) !== Math.round(b * 100);
+  const mudancasDoCenario = [
+    difere(custosFixos, custosFixosBase)
+      ? `custos fixos de ${fmtBRL(custosFixosBase)} para ${fmtBRL(custosFixos)}`
+      : null,
+    difere(ticket, ticketBase)
+      ? `ticket médio de ${fmtBRL(ticketBase)} para ${fmtBRL(ticket)}`
+      : null,
+    difere(custo, custoBase) ? `custo médio de ${fmtBRL(custoBase)} para ${fmtBRL(custo)}` : null,
+  ].filter((m): m is string => m != null);
+  const ticketMais10 = paraCampo(ticketBase * 1.1);
+  const custoMenos10 = paraCampo(custoBase * 0.9);
 
   const validarCampo = (chave: string, valor: string) => {
     const n = lerValorReais(valor);
@@ -230,8 +314,10 @@ function ProjecaoPage() {
     });
   };
 
-  const aplicarCenarioPreco = () => setTicketTxt(paraCampo(ticket * 1.1));
-  const aplicarCenarioCusto = () => setCustoTxt(paraCampo(custo * 0.9));
+  // Os 10% saem sempre do valor real: antes saíam do valor da tela, e dois
+  // cliques davam 21% com o botão ainda dizendo 10%.
+  const aplicarCenarioPreco = () => setTicketTxt(ticketMais10);
+  const aplicarCenarioCusto = () => setCustoTxt(custoMenos10);
   // O salário fica: ele não é cenário, é o que ela quer tirar e ainda vai
   // salvar. Antes "Voltar ao valor real" apagava o que ela tinha acabado de
   // digitar e o "Salvar" seguinte gravava 0 (teste de 08/10/2026).
@@ -339,7 +425,7 @@ function ProjecaoPage() {
       largura="larga"
       eyebrow="Projeção"
       titulo="Quanto vender pra se pagar."
-      subtitulo="Quantas vendas faltam pra empatar, pra se pagar e pra bater a meta do mês."
+      subtitulo={`Quantas vendas ainda faltam em ${nomeMesAtual} pra empatar, pra se pagar e pra bater a meta.`}
     >
       <div>
         {dadosQuery.isLoading ? (
@@ -391,7 +477,8 @@ function ProjecaoPage() {
           <>
             {semCusto && (
               <p className="mt-6 rounded-lg bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
-                Falta cadastrar os seus custos fixos pra saber quanto vender pra se pagar.{" "}
+                Nenhum custo fixo lançado em {nomeMesAnterior} nem em {nomeMesAtual}. Com eles no
+                Financeiro, a conta de quanto vender pra se pagar fica certa.{" "}
                 <Link
                   to="/financeiro"
                   className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
@@ -404,41 +491,57 @@ function ProjecaoPage() {
             <div className="mt-6 rounded-xl border border-[var(--line)] bg-white p-6">
               {/* Cenário editado sem sobra (ticket apagado, custo acima do preço):
                   avisa no lugar das linhas e mantém os campos na tela. */}
-              {!projecao ? (
+              {/* ONE-241: aviso de simulação, pra ela saber que o número de baixo
+                  é do cenário e não do mês dela. */}
+              {emSimulacao && projecao && mudancasDoCenario.length > 0 && (
+                <p className="mb-4 rounded-lg bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
+                  <span className="font-semibold text-[var(--ink)]">Simulação:</span>{" "}
+                  {mudancasDoCenario.join(", ")}. O cadastro não muda.
+                </p>
+              )}
+              {!projecao || !falta ? (
                 <p role="status" className="text-[15px] text-[var(--ink)]">
                   Com esse ticket médio e esse custo, cada venda não dá lucro, então não existe
                   número de vendas que se pague. Ajuste os valores abaixo ou volte ao valor real.
                 </p>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-[16px] text-[var(--ink)]">
-                    Pra empatar:{" "}
-                    <strong>
-                      {projecao.empatar.vendas} vendas ({fmtBRL(projecao.empatar.faturamento)})
-                    </strong>
+                <div className="space-y-3" aria-live="polite">
+                  <p className="text-[13px] text-[var(--muted)]">
+                    {jaEntrou > 0
+                      ? `Em ${nomeMesAtual} já entraram ${fmtBRL(jaEntrou)} no Financeiro. A conta abaixo desconta isso.`
+                      : `Em ${nomeMesAtual} ainda não entrou nada no Financeiro, então a conta abaixo é do mês inteiro.`}
                   </p>
+                  <LinhaFalta
+                    rotulo="Pra empatar"
+                    falta={falta.empatar}
+                    totalNoMes={projecao.empatar.vendas}
+                    real={emSimulacao ? faltaReal?.empatar : undefined}
+                    feito="já empatou"
+                  />
                   {/* Sem pró-labore preenchido a linha repetiria a de empatar: em vez do
                     número, a tela pede o dado que falta. */}
                   {proLaboreDesejado > 0 ? (
-                    <p className="text-[16px] text-[var(--ink)]">
-                      Pra pagar o seu salário ({fmtBRL(proLaboreDesejado)} por mês):{" "}
-                      <strong>
-                        {projecao.sePagar.vendas} vendas ({fmtBRL(projecao.sePagar.faturamento)})
-                      </strong>
-                    </p>
+                    <LinhaFalta
+                      rotulo={`Pra pagar o seu salário (${fmtBRL(proLaboreDesejado)} por mês)`}
+                      falta={falta.sePagar}
+                      totalNoMes={projecao.sePagar.vendas}
+                      real={emSimulacao ? faltaReal?.sePagar : undefined}
+                      feito="as vendas do mês já cobrem"
+                    />
                   ) : (
                     <p className="text-[16px] text-[var(--ink)]">
                       Pra pagar o seu salário: falta dizer quanto você quer tirar por mês. Preenche
                       aqui embaixo que a conta aparece.
                     </p>
                   )}
-                  {projecao.meta ? (
-                    <p className="text-[16px] text-[var(--ink)]">
-                      Pra bater a meta ({fmtBRL(metaAlvo ?? 0)}):{" "}
-                      <strong>
-                        {projecao.meta.vendas} vendas ({fmtBRL(projecao.meta.faturamento)})
-                      </strong>
-                    </p>
+                  {projecao.meta && falta.meta ? (
+                    <LinhaFalta
+                      rotulo={`Pra bater a meta de ${fmtBRL(metaAlvo ?? 0)}`}
+                      falta={falta.meta}
+                      totalNoMes={projecao.meta.vendas}
+                      real={emSimulacao ? (faltaReal?.meta ?? undefined) : undefined}
+                      feito="meta batida"
+                    />
                   ) : (
                     <p className="text-[13px] text-[var(--muted)]">
                       Sem Meta do mês definida ainda.{" "}
@@ -454,14 +557,49 @@ function ProjecaoPage() {
                 </div>
               )}
 
-              <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
+              {/* ONE-241: os cenários moram logo abaixo do resultado. Antes ficavam
+                  depois dos cinco campos e, no celular, o clique mudava um número
+                  que estava duas telas acima, fora da vista. */}
+              <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
+                <button
+                  type="button"
+                  onClick={aplicarCenarioPreco}
+                  aria-pressed={ticketTxt === ticketMais10}
+                  className={`${BTN_MIUDO_ACAO} ${ticketTxt === ticketMais10 ? "bg-[var(--secondary-light)]" : ""}`}
+                >
+                  E se eu cobrasse 10% a mais?
+                </button>
+                <button
+                  type="button"
+                  onClick={aplicarCenarioCusto}
+                  aria-pressed={custoTxt === custoMenos10}
+                  className={`${BTN_MIUDO_ACAO} ${custoTxt === custoMenos10 ? "bg-[var(--secondary-light)]" : ""}`}
+                >
+                  E se meu custo caísse 10%?
+                </button>
+                {(emSimulacao || metaTxt != null) && (
+                  <button
+                    type="button"
+                    onClick={voltarAoValorReal}
+                    className="inline-flex min-h-11 items-center rounded-lg px-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                  >
+                    Voltar ao valor real
+                  </button>
+                )}
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
                 <Campo
                   label="Custos fixos do mês (R$)"
-                  hint={
+                  hint={`${
+                    fixos.origem === "mes-anterior"
+                      ? `Vem de ${nomeMesAnterior}, o último mês fechado. Em ${nomeMesAtual} já saíram ${fmtBRL(fixos.doMesAtual)} até agora.`
+                      : `Saídas de ${nomeMesAtual} até agora, já maiores que as de ${nomeMesAnterior} (${fmtBRL(fixos.doMesAnterior)}).`
+                  } ${
                     insumosForaBase > 0
                       ? `Ficam fora os ${fmtBRL(insumosForaBase)} lançados em ${CATEGORIA_INSUMOS}: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
                       : `Saída em ${CATEGORIA_INSUMOS} fica fora: insumo já está no custo de cada produto. ${CATEGORIA_EQUIPAMENTO} também fica fora.`
-                  }
+                  }`}
                   error={erroValidacao.custosFixos}
                 >
                   <input
@@ -481,7 +619,15 @@ function ProjecaoPage() {
                 </Campo>
                 <Campo
                   label="Quanto você quer tirar por mês (R$)"
-                  hint="É o seu salário do negócio, o que o contador chama de pró-labore."
+                  hint={`É o seu salário do negócio, o que o contador chama de pró-labore.${
+                    salario.origem === "mes-anterior" && proLaboreTxt == null
+                      ? ` Veio do pró-labore de ${nomeMesAnterior}.`
+                      : ""
+                  }${
+                    proLaboreLancadoNoMes > 0
+                      ? ` Em ${nomeMesAtual} já saíram ${fmtBRL(proLaboreLancadoNoMes)} em ${CATEGORIA_PRO_LABORE}.`
+                      : ""
+                  }`}
                   error={erroValidacao.proLabore}
                 >
                   <input
@@ -573,22 +719,6 @@ function ProjecaoPage() {
                 </Campo>
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2 border-t border-[var(--line)] pt-4">
-                <button type="button" onClick={aplicarCenarioPreco} className={BTN_MIUDO}>
-                  E se eu cobrasse 10% a mais?
-                </button>
-                <button type="button" onClick={aplicarCenarioCusto} className={BTN_MIUDO}>
-                  E se meu custo caísse 10%?
-                </button>
-                <button
-                  type="button"
-                  onClick={voltarAoValorReal}
-                  className="inline-flex min-h-11 items-center rounded-lg px-3 text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
-                >
-                  Voltar ao valor real
-                </button>
-              </div>
-
               <button
                 type="button"
                 onClick={() => void confirmar()}
@@ -602,6 +732,50 @@ function ProjecaoPage() {
         )}
       </div>
     </PaginaLogada>
+  );
+}
+
+// Uma linha do resultado (ONE-241): quanto FALTA no mês, o total do mês ao lado
+// e, numa simulação, o número do mês real pra comparar.
+function LinhaFalta({
+  rotulo,
+  falta,
+  totalNoMes,
+  real,
+  feito,
+}: {
+  rotulo: string;
+  falta: FaltaNoMes;
+  totalNoMes: number;
+  real?: FaltaNoMes;
+  feito: string;
+}) {
+  const comparar = real != null && real.vendas !== falta.vendas;
+  return (
+    <p className="text-[16px] text-[var(--ink)]">
+      {rotulo}:{" "}
+      {falta.vendas === 0 && totalNoMes > 0 ? (
+        <>
+          <strong>{feito}</strong>. Eram {vendasTxt(totalNoMes)} no mês.
+        </>
+      ) : (
+        <>
+          {falta.vendas === 1 ? "falta" : "faltam"}{" "}
+          <strong>
+            {vendasTxt(falta.vendas)} ({fmtBRL(falta.faturamento)})
+          </strong>
+          {totalNoMes !== falta.vendas && (
+            <span className="text-[var(--muted)]"> de {totalNoMes} no mês</span>
+          )}
+          .
+        </>
+      )}
+      {comparar && (
+        <span className="block text-[13px] text-[var(--muted)]">
+          No seu mês real: {real.vendas === 0 ? "nenhuma venda faltando" : vendasTxt(real.vendas)}.
+        </span>
+      )}
+    </p>
   );
 }
 

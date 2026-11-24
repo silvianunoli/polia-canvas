@@ -167,6 +167,65 @@ export function proLaboreJaLancado(
     .reduce((acc, l) => acc + Number(l.valor), 0);
 }
 
+export function mesAnterior(mes: number, ano: number): { mes: number; ano: number } {
+  return mes === 1 ? { mes: 12, ano: ano - 1 } : { mes: mes - 1, ano };
+}
+
+// ── Custos fixos de partida (revisão de usabilidade de 24/11/2026, ONE-241) ──
+// Antes a Projeção somava só as saídas lançadas ATÉ HOJE no mês corrente: no
+// dia 3, com só a internet paga, o empate saía em 4 vendas, e no dia 1 a tela
+// dizia "Falta cadastrar os seus custos fixos" pra quem tinha lançado tudo no
+// mês anterior. Agora parte do maior entre o mês fechado e o mês corrente: o
+// mês fechado é o retrato completo, e o corrente ganha quando já passou dele.
+export function custosFixosDePartida(
+  lancamentos: LancamentoResumo[],
+  mes: number,
+  ano: number,
+): {
+  valor: number;
+  origem: "mes-anterior" | "mes-atual";
+  doMesAtual: number;
+  doMesAnterior: number;
+} {
+  const ant = mesAnterior(mes, ano);
+  const doMesAtual = custosFixosDoMes(lancamentos, mes, ano);
+  const doMesAnterior = custosFixosDoMes(lancamentos, ant.mes, ant.ano);
+  return doMesAnterior > doMesAtual
+    ? { valor: doMesAnterior, origem: "mes-anterior", doMesAtual, doMesAnterior }
+    : { valor: doMesAtual, origem: "mes-atual", doMesAtual, doMesAnterior };
+}
+
+// ── Salário de partida (ONE-241) ──
+// "Quanto você quer tirar por mês" é o salário DESEJADO. Antes o campo abria
+// com o pró-labore já lançado no mês corrente, que pode ser só uma parte (R$
+// 500 de um salário de R$ 3.000), e o "Salvar" gravava essa parte como o
+// salário desejado. Ordem agora: o salvo na Projeção, o do Planejamento
+// (Módulo 4), e só então o pró-labore do mês FECHADO, que é um mês inteiro.
+// O lançado no mês corrente não entra mais aqui; a tela só mostra como fato.
+export function salarioDePartida(params: {
+  salvo: number | null;
+  doPlanejamento: number | null;
+  lancadoMesAnterior: number;
+}): { valor: number | null; origem: "salvo" | "planejamento" | "mes-anterior" | null } {
+  if (params.salvo != null && params.salvo > 0) return { valor: params.salvo, origem: "salvo" };
+  if (params.doPlanejamento != null && params.doPlanejamento > 0) {
+    return { valor: params.doPlanejamento, origem: "planejamento" };
+  }
+  if (params.lancadoMesAnterior > 0) {
+    return { valor: params.lancadoMesAnterior, origem: "mes-anterior" };
+  }
+  return { valor: null, origem: null };
+}
+
+// ── O que já entrou no mês (ONE-241) ──
+// Mesma conta da barra da Meta do mês em Metas e no Painel: a soma das
+// entradas do mês no Financeiro.
+export function entradasDoMes(lancamentos: LancamentoResumo[], mes: number, ano: number): number {
+  return lancamentos
+    .filter((l) => l.tipo === "entrada" && pertenceAoMes(l.data, mes, ano))
+    .reduce((acc, l) => acc + Number(l.valor), 0);
+}
+
 export interface ProdutoResumo {
   precoVenda: number;
   precoCusto: number | null;
@@ -348,5 +407,46 @@ export function montarProjecao(params: {
     empatar: item(custosFixos),
     sePagar: item(custosFixos + proLaboreDesejado),
     meta: metaAlvo != null ? itemMeta(metaAlvo) : null,
+  };
+}
+
+// ── Quanto FALTA no mês (ONE-241) ──
+// Título, subtítulo e tutorial prometiam "quantas vendas faltam", mas a tela
+// mostrava o total do mês: no dia 24, com 40 de 62 vendas feitas, seguia "62".
+// Agora desconta o que já entrou.
+// - Empatar e salário (contribuição): cada real que entrou já deixou
+//   sobra/ticket de lucro, então faltam ceil(alvo/sobra - entrou/ticket).
+// - Meta (faturamento): faltam (meta - entrou), dividido pelo preço.
+// A folga de 1e-9 é a mesma de vendasParaFaturar (erro de ponto flutuante).
+export interface FaltaNoMes {
+  vendas: number;
+  faturamento: number;
+}
+
+export function montarFaltaNoMes(params: {
+  custosFixos: number;
+  proLaboreDesejado: number;
+  metaAlvo: number | null;
+  ticketMedio: number;
+  sobra: number;
+  jaEntrou: number;
+}): { empatar: FaltaNoMes; sePagar: FaltaNoMes; meta: FaltaNoMes | null } | null {
+  const { custosFixos, proLaboreDesejado, metaAlvo, ticketMedio: ticket, sobra } = params;
+  if (sobra <= 0 || !(ticket > 0)) return null;
+  const entrou = Math.max(0, params.jaEntrou);
+
+  const contribuicao = (alvo: number): FaltaNoMes => {
+    const vendas = Math.max(0, Math.ceil(alvo / sobra - entrou / ticket - 1e-9));
+    return { vendas, faturamento: vendas * ticket };
+  };
+  const faturar = (alvo: number): FaltaNoMes => {
+    const falta = Math.max(0, alvo - entrou);
+    return { vendas: vendasParaFaturar(falta, ticket) ?? 0, faturamento: falta };
+  };
+
+  return {
+    empatar: contribuicao(custosFixos),
+    sePagar: contribuicao(custosFixos + proLaboreDesejado),
+    meta: metaAlvo != null ? faturar(metaAlvo) : null,
   };
 }
