@@ -328,16 +328,17 @@ const LISTA = [
       {
         titulo: "Cadastrar um produto",
         itens: [
-          'No topo da tela, clique em "+ Produto".',
-          'Preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
-          'Coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, a lista já mostra quanto a marca lucra por venda.',
+          'No topo da tela, clique em "+ Produto". O cadastro abre numa página própria, com "Voltar pros produtos" no topo.',
+          'Em "O produto", preencha o "Nome" e escolha o "Tipo": "Produto físico", "Produto digital" ou "Serviço".',
+          'Em "Preço", coloque o "Preço de venda (R$)" e o "Custo de produção (R$)". Com o custo, o "Resumo do preço", ao lado, e a lista já mostram quanto a marca lucra por venda.',
+          'Pra fazer a conta antes, clique em "Calcular o preço", na seção "Preço". A Calculadora abre ali mesmo, com as abas Produto, Serviço e Encomenda. Clique em "Usar esse preço" e o preço de venda e o custo são preenchidos no cadastro, que continuam dando pra mudar à mão. A conta fica guardada no produto quando você clica em "Salvar produto".',
           'Pra fazer uma promoção, preencha o "Preço promocional (R$)", entre o preço de venda e o custo, com um valor menor que o preço de venda. Ele vira o preço que vale em todo o sistema: a Vitrine online e a Loja da marca cobram ele, o Novo pedido e a Nova venda já vêm com ele, e o lucro da lista, a Projeção e o Raio-x do mês contam com ele. Vazio, vale o preço de venda.',
           'Em "Fotos", clique em "Enviar foto" pra subir até 4 fotos do aparelho (JPG, PNG ou WEBP, até 3 MB). A primeira é a da vitrine; o "X" tira uma foto. Sem foto enviada, dá pra colar o link de uma imagem.',
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. Na lista, a chave "Vitrine" faz o mesmo sem abrir o cadastro.',
           'Com "Mostrar na Vitrine online" marcado, escolha a "Categoria na vitrine" ou crie uma em "+ Nova categoria": a cliente filtra a vitrine por ela. Quem tem a Loja da marca escolhe a "Categoria" na parte "Na loja".',
           'Com preço promocional, a Vitrine online mostra o preço de venda riscado, o promocional em verde ao lado e o selo do desconto, como "-25%".',
-          'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
+          'Ainda no cadastro, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
           'Pra escolher quem aparece primeiro na vitrine, digite um número no campo "Ordem", à esquerda da foto, na lista.',
@@ -368,8 +369,8 @@ const LISTA = [
       {
         titulo: "Mexer num produto que já existe",
         itens: [
-          'No menu "⋯" da linha, "Editar" abre o cadastro de novo.',
-          '"Recalcular preço" abre a Calculadora já com esse produto e guarda o preço novo nele.',
+          'No menu "⋯" da linha, "Editar" abre a página do cadastro de novo.',
+          '"Recalcular preço" abre o mesmo cadastro com a Calculadora já aberta na seção "Preço" e a conta salva preenchida. Ajuste, clique em "Usar esse preço" e depois em "Salvar produto". O preço antigo fica no histórico do produto.',
           'A chave "Ativo" desligada deixa o produto inativo: ele sai da Vitrine e das telas de venda, sem apagar nada, e vai pro filtro "Inativos". Ligar a chave de novo traz ele de volta.',
           'A chave "Vitrine" liga e desliga o produto na Vitrine online. Produto inativo não aparece na Vitrine, mesmo com ela ligada.',
         ],
@@ -411,7 +412,7 @@ const LISTA = [
       {
         pergunta: "O lucro da lista desconta taxa e imposto",
         resposta:
-          'Só quando o preço veio da Calculadora. Use "Recalcular preço", no menu "⋯" da linha, pra entrar com essas porcentagens.',
+          'Só quando o preço veio da Calculadora. Use "Recalcular preço", no menu "⋯" da linha, ou "Calcular o preço" dentro do cadastro, pra entrar com essas porcentagens.',
       },
     ],
   },
@@ -449,8 +450,9 @@ const LISTA = [
       {
         titulo: "Recalcular um produto que já existe",
         itens: [
-          'Em Produtos, no menu do cartão, clique em "Recalcular preço".',
-          'Ajuste os custos e clique em "Guardar o preço novo". O preço antigo fica no histórico do produto.',
+          'Em Produtos, no menu "⋯" da linha, clique em "Recalcular preço". O cadastro do produto abre com a Calculadora já aberta na seção "Preço".',
+          'Ajuste os custos, clique em "Usar esse preço" e depois em "Salvar produto". O preço antigo fica no histórico do produto.',
+          'A Calculadora também abre dentro de qualquer cadastro, em "Calcular o preço". Esta tela fica pra fazer uma conta sem cadastrar nada, como o preço de uma encomenda.',
         ],
       },
     ],

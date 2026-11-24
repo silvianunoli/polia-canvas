@@ -5,19 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { COTAS_CONFERE, temNumerosDoMes } from "@/lib/planos";
+import { COTAS_CONFERE } from "@/lib/planos";
 import { ehPlanoGratis } from "@/lib/planoGratis";
-import { buscarMetaDoMes } from "@/lib/metaDoMes";
-import { intervaloDoMes, lerTodasAsPaginas } from "@/lib/leituraPaginada";
-import { custosFixosPorItem } from "@/lib/custosFixos.functions";
-import { resumoEquipamentos } from "@/lib/equipamentos";
-import { useEquipamentos } from "@/components/produtos/equipamentosDados";
-import type { LancamentoResumo } from "@/lib/resumoContador.functions";
+import { useDadosDaCalculadora } from "@/components/produtos/useDadosDaCalculadora";
 import { Calculadora } from "@/components/produtos/Calculadora";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import type { Prefill, Produto } from "@/components/produtos/tipos";
 import { tipoPrecoDaBusca, type TipoPreco } from "@/lib/primeirosPassos";
-import { toastErro } from "@/lib/toast";
 
 const COLUNAS_PRODUTO =
   "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, canal, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
@@ -64,69 +58,13 @@ function CalculadoraPage() {
   // Cancelada conta como Grátis e o cadeado espera o perfil carregar
   // (antes piscava pra quem paga).
   const ehConfere = ehPlanoGratis(meta);
-  const ehProjete = temNumerosDoMes(meta.plano);
 
   const [prefill, setPrefill] = useState<Prefill | null>(null);
   const [modalAberto, setModalAberto] = useState(false);
 
-  // Valor-hora padrão (modo Encomenda, Pro): persistido em profiles pra
-  // reaproveitar entre os modos Serviço/Encomenda e entre sessões.
-  const valorHoraPadraoQuery = useQuery({
-    queryKey: ["produtos-valor-hora-padrao", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("valor_hora_padrao")
-        .eq("id", userId!)
-        .maybeSingle();
-      return (data?.valor_hora_padrao as number | null) ?? null;
-    },
-  });
-
-  // Meta do mês: mesma fonte que Painel e Financeiro (tabela `metas`).
-  const metaBoaQuery = useQuery({
-    queryKey: ["meta-do-mes", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const { data } = await buscarMetaDoMes(supabase, userId!);
-      return data?.valor_alvo || null;
-    },
-  });
-
-  // Saídas do mês corrente no Financeiro, pro "Puxar do Financeiro" dos custos
-  // fixos. Mesmo recorte da Projeção (mês filtrado no banco, lido página por
-  // página). Leitura opcional: se falhar, o botão só não aparece.
-  const fixosFinanceiroQuery = useQuery({
-    queryKey: ["calculadora-fixos-financeiro", userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const hoje = new Date();
-      const mes = hoje.getMonth() + 1;
-      const ano = hoje.getFullYear();
-      const intervalo = intervaloDoMes(ano, mes);
-      const lancamentos = await lerTodasAsPaginas<LancamentoResumo>((de, ate) =>
-        supabase
-          .from("lancamentos")
-          .select("id, tipo, valor, data, descricao, categoria")
-          .eq("user_id", userId!)
-          .eq("tipo", "saida")
-          .gte("data", intervalo.inicio)
-          .lt("data", intervalo.fimExclusivo)
-          .order("data", { ascending: false })
-          .order("id", { ascending: true })
-          .range(de, ate)
-          .then((r) => ({
-            data: r.data as unknown as LancamentoResumo[] | null,
-            error: r.error,
-          })),
-      );
-      return custosFixosPorItem(lancamentos, mes, ano);
-    },
-  });
-
-  // Reserva da aba Equipamentos (ONE-193). Leitura opcional, como a de cima.
-  const equipamentosQuery = useEquipamentos(userId);
+  // Valor-hora padrão, Meta do mês, fixos do Financeiro e reserva dos
+  // equipamentos: o mesmo hook da calculadora dentro do cadastro de produto.
+  const dados = useDadosDaCalculadora(userId);
 
   // Quantos produtos ativos ela já tem, pra avisar da cota antes de abrir o
   // modal de salvar (só o Grátis tem teto).
@@ -161,21 +99,11 @@ function CalculadoraPage() {
     },
   });
 
-  // "Completar o cadastro" do primeiro preço guardado: o modal do catálogo em edição.
-  const [produtoCompletar, setProdutoCompletar] = useState<Produto | null>(null);
-  const abrirCompletarCadastro = async (id: string) => {
-    if (!userId) return;
-    const { data, error } = await supabase
-      .from("produtos")
-      .select(COLUNAS_PRODUTO)
-      .eq("id", id)
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (error || !data) {
-      toastErro("A Pólia One não conseguiu abrir o cadastro agora. O preço continua guardado.");
-      return;
-    }
-    setProdutoCompletar(data as unknown as Produto);
+  // "Completar o cadastro" do primeiro preço guardado: a página do produto
+  // (ONE-254), a mesma do "Editar" da lista.
+  const abrirCompletarCadastro = (id: string) => {
+    recarregarCatalogo();
+    void navigate({ to: "/produtos/$produtoId", params: { produtoId: id } });
   };
   const recarregarCatalogo = () => {
     void qc.invalidateQueries({ queryKey: ["produtos", userId] });
@@ -203,8 +131,7 @@ function CalculadoraPage() {
 
   const pronto =
     !!userId &&
-    !valorHoraPadraoQuery.isLoading &&
-    !metaBoaQuery.isLoading &&
+    !dados.carregando &&
     !temPrecoQuery.isLoading &&
     !(produtoId && produtoQuery.isLoading);
 
@@ -267,19 +194,19 @@ function CalculadoraPage() {
           setModalAberto(true);
         }}
         salvarBloqueado={cotaAtingida}
-        metaBoa={metaBoaQuery.data ?? null}
+        metaBoa={dados.metaBoa}
         userId={userId}
-        ehProjete={ehProjete}
-        valorHoraPadrao={valorHoraPadraoQuery.data ?? null}
-        valorHoraPadraoCarregando={valorHoraPadraoQuery.isLoading}
-        fixosDoFinanceiro={fixosFinanceiroQuery.data ?? null}
-        reservaEquipamentos={resumoEquipamentos(equipamentosQuery.data ?? []).reservaDoMes}
+        ehProjete={dados.ehProjete}
+        valorHoraPadrao={dados.valorHoraPadrao}
+        valorHoraPadraoCarregando={dados.valorHoraPadraoCarregando}
+        fixosDoFinanceiro={dados.fixosDoFinanceiro}
+        reservaEquipamentos={dados.reservaEquipamentos}
         produtoRecalcular={produtoRecalcular}
         // Catálogo do Grátis cheio (produtos vindos do Planejamento, sem
         // breakdown): o insert seria recusado, fica o fluxo de sempre com o aviso.
         temPreco={(temPrecoQuery.data ?? true) || cotaAtingida}
         onPrimeiroPrecoGuardado={recarregarCatalogo}
-        onCompletarCadastro={(id) => void abrirCompletarCadastro(id)}
+        onCompletarCadastro={abrirCompletarCadastro}
         onCancelarRecalculo={irParaProdutos}
         onAtualizado={() => {
           qc.invalidateQueries({ queryKey: ["produtos", userId] });
@@ -297,20 +224,6 @@ function CalculadoraPage() {
             qc.invalidateQueries({ queryKey: ["produtos", userId] });
             qc.invalidateQueries({ queryKey: ["produtos-total-ativos", userId] });
             setModalAberto(false);
-            irParaProdutos();
-          }}
-        />
-      )}
-
-      {produtoCompletar && userId && (
-        <ModalProduto
-          userId={userId}
-          prefill={null}
-          produtoEdit={produtoCompletar}
-          onClose={() => setProdutoCompletar(null)}
-          onSaved={() => {
-            recarregarCatalogo();
-            setProdutoCompletar(null);
             irParaProdutos();
           }}
         />

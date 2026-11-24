@@ -102,7 +102,25 @@ export function Calculadora({
   temPreco = true,
   onPrimeiroPrecoGuardado,
   onCompletarCadastro,
+  noCadastro,
 }: {
+  /**
+   * Calculadora aberta dentro do cadastro de produto (ONE-254, 24/11/2026). Sem
+   * nome próprio, sem guardar no catálogo e sem salvamento automático: o botão
+   * vira "Usar esse preço" e devolve preço, custo e a composição pro cadastro,
+   * que só grava no "Salvar produto".
+   */
+  noCadastro?: {
+    /** Composição salva no produto (edição) ou a que ela já usou nesta tela. */
+    breakdownInicial: CalculadoraBreakdown | null;
+    /** Aba de abertura sem composição salva: Serviço pro tipo serviço, Produto pro resto. */
+    perfilInicial: "produto" | "servico";
+    onUsar: (r: {
+      precoVenda: number;
+      precoCusto: number | null;
+      breakdown: CalculadoraBreakdown;
+    }) => void;
+  };
   onSalvarComoProduto: (pf: Prefill) => void;
   /** Cota do catálogo cheia: calcular segue livre, só o "Salvar como produto" fecha. */
   salvarBloqueado?: boolean;
@@ -134,7 +152,7 @@ export function Calculadora({
   /** "Completar o cadastro" do primeiro preço guardado: abre o modal do catálogo. */
   onCompletarCadastro?: (produtoId: string) => void;
 }) {
-  const bk = produtoRecalcular?.calculadora_breakdown ?? null;
+  const bk = produtoRecalcular?.calculadora_breakdown ?? noCadastro?.breakdownInicial ?? null;
   const v = (campo: string) => bk?.valores?.[campo] ?? "";
 
   const [perfil, setPerfil] = useState<PerfilCalc>(
@@ -143,8 +161,11 @@ export function Calculadora({
         ? produtoRecalcular.tipo === "servico"
           ? "servico"
           : "produto"
-        : (perfilInicial ?? "produto")),
+        : (noCadastro?.perfilInicial ?? perfilInicial ?? "produto")),
   );
+  // "Usar esse preço" acabou de preencher o cadastro: o aviso some quando a
+  // conta muda de novo.
+  const [usadoNoCadastro, setUsadoNoCadastro] = useState(false);
 
   // ── Perfil Produto ──
   const [materiaPrima, setMateriaPrima] = useState(() => v("materiaPrima"));
@@ -511,6 +532,12 @@ export function Calculadora({
   // zerado também não vira produto nem substitui o preço de um existente.
   const precoNaoSalvavel = calc.invalido || round2(calc.precoSugerido) <= 0;
 
+  // A conta mudou depois do "Usar esse preço": o aviso de "preenchido" sai.
+  const precoDaConta = round2(calc.precoSugerido);
+  useEffect(() => {
+    setUsadoNoCadastro(false);
+  }, [precoDaConta, custoBase, perfil]);
+
   // Com desconto de X%: taxa/imposto são % do preço, então caem junto com ele.
   // Conta em simularDesconto (precificacao.functions.ts): com 100% ou mais o
   // preço vai a zero e o custo continua saindo, então aparece o prejuízo.
@@ -714,8 +741,10 @@ export function Calculadora({
 
   const primeiroPreco = useGuardarPrimeiroPreco({
     userId,
-    ativo: deveGuardarSozinho({ temPreco, recalculando: !!produtoRecalcular, perfil }),
-    pronto: resultadoPronto && perfil !== "encomenda" && !produtoRecalcular,
+    // No cadastro, quem grava é o "Salvar produto": nada de salvar sozinho.
+    ativo:
+      !noCadastro && deveGuardarSozinho({ temPreco, recalculando: !!produtoRecalcular, perfil }),
+    pronto: !noCadastro && resultadoPronto && perfil !== "encomenda" && !produtoRecalcular,
     valores: {
       perfil,
       precoVenda: round2(calc.precoSugerido),
@@ -727,6 +756,7 @@ export function Calculadora({
   // O bloco automático fica no lugar do botão enquanto a conta está na regra,
   // e continua depois de guardar (a releitura de "tem preço" já vê o produto).
   const modoPrimeiroPreco =
+    !noCadastro &&
     perfil !== "encomenda" &&
     !produtoRecalcular &&
     (primeiroPreco.produtoId !== null ||
@@ -739,7 +769,8 @@ export function Calculadora({
   // esse nome; vazio, fica o provisório de sempre. Um estado só, o do hook.
   // Recalculando, o produto já tem nome: o campo some.
   const campoNomeProduto = (onde: PerfilCalc) => {
-    if (produtoRecalcular) return null;
+    // No cadastro o nome é o campo "Nome" do próprio cadastro.
+    if (produtoRecalcular || noCadastro) return null;
     const rotulo =
       onde === "servico"
         ? "Qual serviço?"
@@ -1418,7 +1449,39 @@ export function Calculadora({
                 servico={perfil === "servico"}
               />
             )}
-            {!encomendaTravada && !modoPrimeiroPreco && (
+            {!encomendaTravada && noCadastro && (
+              <div className="mt-5 border-t border-[var(--line)] pt-4">
+                {calc.invalido && (
+                  <p id="calc-usar-motivo" className="mb-3 text-[13px] text-[var(--ink-soft)]">
+                    Pra usar, resolva o aviso logo abaixo do preço.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (precoNaoSalvavel) return;
+                    noCadastro.onUsar({
+                      precoVenda: round2(calc.precoSugerido),
+                      precoCusto: round2(custoBase) || null,
+                      breakdown: buildBreakdown(),
+                    });
+                    setUsadoNoCadastro(true);
+                    track("calculadora_usar_no_cadastro", { perfil });
+                  }}
+                  disabled={precoNaoSalvavel}
+                  aria-describedby={calc.invalido ? "calc-usar-motivo" : undefined}
+                  className={BTN_ACAO}
+                >
+                  Usar esse preço
+                </button>
+                <p className="mt-2 text-[12px] text-[var(--ink-soft)]" aria-live="polite">
+                  {usadoNoCadastro
+                    ? 'Preço de venda e custo preenchidos no cadastro. Só ficam guardados no "Salvar produto".'
+                    : "Preenche o preço de venda e o custo do cadastro. Dá pra mudar à mão depois."}
+                </p>
+              </div>
+            )}
+            {!encomendaTravada && !modoPrimeiroPreco && !noCadastro && (
               <div className="mt-5 border-t border-[var(--line)] pt-4">
                 {calc.invalido && (
                   <p id="calc-salvar-motivo" className="mb-3 text-[13px] text-[var(--ink-soft)]">

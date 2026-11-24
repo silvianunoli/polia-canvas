@@ -75,7 +75,9 @@ import { Route as AuthenticatedComoUsarIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedChamadosIndexRouteImport } from './routes/_authenticated/chamados.index'
 import { Route as AuthenticatedAgendaRedesIndexRouteImport } from './routes/_authenticated/agenda-redes.index'
 import { Route as LojaSlugProdutoRouteImport } from './routes/loja.$slug.$produto'
+import { Route as AuthenticatedProdutosNovoRouteImport } from './routes/_authenticated/produtos_.novo'
 import { Route as AuthenticatedProdutosAnunciosRouteImport } from './routes/_authenticated/produtos_.anuncios'
+import { Route as AuthenticatedProdutosProdutoIdRouteImport } from './routes/_authenticated/produtos_.$produtoId'
 import { Route as AuthenticatedPlannerPedidosRouteImport } from './routes/_authenticated/planner.pedidos'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
@@ -430,10 +432,22 @@ const LojaSlugProdutoRoute = LojaSlugProdutoRouteImport.update({
   path: '/$produto',
   getParentRoute: () => LojaSlugRoute,
 } as any)
+const AuthenticatedProdutosNovoRoute =
+  AuthenticatedProdutosNovoRouteImport.update({
+    id: '/produtos_/novo',
+    path: '/produtos/novo',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedProdutosAnunciosRoute =
   AuthenticatedProdutosAnunciosRouteImport.update({
     id: '/produtos_/anuncios',
     path: '/produtos/anuncios',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedProdutosProdutoIdRoute =
+  AuthenticatedProdutosProdutoIdRouteImport.update({
+    id: '/produtos_/$produtoId',
+    path: '/produtos/$produtoId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedPlannerPedidosRoute =
@@ -598,7 +612,9 @@ export interface FileRoutesByFullPath {
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
+  '/produtos/$produtoId': typeof AuthenticatedProdutosProdutoIdRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
+  '/produtos/novo': typeof AuthenticatedProdutosNovoRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
   '/agenda-redes/': typeof AuthenticatedAgendaRedesIndexRoute
   '/chamados/': typeof AuthenticatedChamadosIndexRoute
@@ -681,7 +697,9 @@ export interface FileRoutesByTo {
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
+  '/produtos/$produtoId': typeof AuthenticatedProdutosProdutoIdRoute
   '/produtos/anuncios': typeof AuthenticatedProdutosAnunciosRoute
+  '/produtos/novo': typeof AuthenticatedProdutosNovoRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
   '/agenda-redes': typeof AuthenticatedAgendaRedesIndexRoute
   '/chamados': typeof AuthenticatedChamadosIndexRoute
@@ -767,7 +785,9 @@ export interface FileRoutesById {
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/_authenticated/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
+  '/_authenticated/produtos_/$produtoId': typeof AuthenticatedProdutosProdutoIdRoute
   '/_authenticated/produtos_/anuncios': typeof AuthenticatedProdutosAnunciosRoute
+  '/_authenticated/produtos_/novo': typeof AuthenticatedProdutosNovoRoute
   '/loja/$slug/$produto': typeof LojaSlugProdutoRoute
   '/_authenticated/agenda-redes/': typeof AuthenticatedAgendaRedesIndexRoute
   '/_authenticated/chamados/': typeof AuthenticatedChamadosIndexRoute
@@ -853,7 +873,9 @@ export interface FileRouteTypes {
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/planner/pedidos'
+    | '/produtos/$produtoId'
     | '/produtos/anuncios'
+    | '/produtos/novo'
     | '/loja/$slug/$produto'
     | '/agenda-redes/'
     | '/chamados/'
@@ -936,7 +958,9 @@ export interface FileRouteTypes {
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/planner/pedidos'
+    | '/produtos/$produtoId'
     | '/produtos/anuncios'
+    | '/produtos/novo'
     | '/loja/$slug/$produto'
     | '/agenda-redes'
     | '/chamados'
@@ -1021,7 +1045,9 @@ export interface FileRouteTypes {
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
     | '/_authenticated/planner/pedidos'
+    | '/_authenticated/produtos_/$produtoId'
     | '/_authenticated/produtos_/anuncios'
+    | '/_authenticated/produtos_/novo'
     | '/loja/$slug/$produto'
     | '/_authenticated/agenda-redes/'
     | '/_authenticated/chamados/'
@@ -1543,11 +1569,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LojaSlugProdutoRouteImport
       parentRoute: typeof LojaSlugRoute
     }
+    '/_authenticated/produtos_/novo': {
+      id: '/_authenticated/produtos_/novo'
+      path: '/produtos/novo'
+      fullPath: '/produtos/novo'
+      preLoaderRoute: typeof AuthenticatedProdutosNovoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/produtos_/anuncios': {
       id: '/_authenticated/produtos_/anuncios'
       path: '/produtos/anuncios'
       fullPath: '/produtos/anuncios'
       preLoaderRoute: typeof AuthenticatedProdutosAnunciosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/produtos_/$produtoId': {
+      id: '/_authenticated/produtos_/$produtoId'
+      path: '/produtos/$produtoId'
+      fullPath: '/produtos/$produtoId'
+      preLoaderRoute: typeof AuthenticatedProdutosProdutoIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planner/pedidos': {
@@ -1696,7 +1736,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
   AuthenticatedPlannerPedidosRoute: typeof AuthenticatedPlannerPedidosRoute
+  AuthenticatedProdutosProdutoIdRoute: typeof AuthenticatedProdutosProdutoIdRoute
   AuthenticatedProdutosAnunciosRoute: typeof AuthenticatedProdutosAnunciosRoute
+  AuthenticatedProdutosNovoRoute: typeof AuthenticatedProdutosNovoRoute
   AuthenticatedAgendaRedesIndexRoute: typeof AuthenticatedAgendaRedesIndexRoute
   AuthenticatedChamadosIndexRoute: typeof AuthenticatedChamadosIndexRoute
   AuthenticatedComoUsarIndexRoute: typeof AuthenticatedComoUsarIndexRoute
@@ -1745,7 +1787,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,
   AuthenticatedPlannerPedidosRoute: AuthenticatedPlannerPedidosRoute,
+  AuthenticatedProdutosProdutoIdRoute: AuthenticatedProdutosProdutoIdRoute,
   AuthenticatedProdutosAnunciosRoute: AuthenticatedProdutosAnunciosRoute,
+  AuthenticatedProdutosNovoRoute: AuthenticatedProdutosNovoRoute,
   AuthenticatedAgendaRedesIndexRoute: AuthenticatedAgendaRedesIndexRoute,
   AuthenticatedChamadosIndexRoute: AuthenticatedChamadosIndexRoute,
   AuthenticatedComoUsarIndexRoute: AuthenticatedComoUsarIndexRoute,

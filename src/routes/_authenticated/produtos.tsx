@@ -20,6 +20,7 @@ import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { COTAS_CONFERE, temNumerosDoMes, temVitrine } from "@/lib/planos";
+import { SELECT_PRODUTO } from "@/components/produtos/colunasProduto";
 import { ehPlanoGratis } from "@/lib/planoGratis";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { BlockError } from "@/components/ui/BlockError";
@@ -27,7 +28,6 @@ import { sobraDoProduto } from "@/lib/precificacao.functions";
 import { precoQueVale, promocionalQueVale } from "@/lib/precoPromocional";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
 import { Switch } from "@/components/ui/switch";
-import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { CHAVE_PRODUTOS_CATALOGO } from "@/components/catalogo/dados";
 import { fmt, nomeBate, TIPO_LABEL, type Produto } from "@/components/produtos/tipos";
@@ -52,9 +52,6 @@ import {
   type DirecaoOrdem,
   type FiltroCatalogo,
 } from "@/lib/catalogoProdutos";
-
-const SELECT_PRODUTO =
-  "id, user_id, nome, tipo, foto_url, preco_venda, preco_custo, descricao, observacao_interna, canal, controla_estoque, no_catalogo, usa_paleta, cor_da_foto, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, pronta_entrega, catalogo_ordem, categoria_id, preco_promocional, arquivado, preco_atualizado_em, historico_precos, calculadora_breakdown, created_at, updated_at";
 
 const CLASSE_ABA =
   "-mb-px inline-flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-[14px] text-[var(--muted)] transition-colors duration-150 hover:text-[var(--ink)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--secondary-text)] data-[state=active]:border-[var(--ink)] data-[state=active]:text-[var(--ink)]";
@@ -126,9 +123,6 @@ function ProdutosPage() {
     [estoqueQuery.data],
   );
 
-  // ── Modal ──
-  const [modalAberto, setModalAberto] = useState(false);
-  const [produtoEdit, setProdutoEdit] = useState<Produto | null>(null);
   const [importarAberto, setImportarAberto] = useState(false);
   // Vitrine online (Premium e Pro): a ordem é a coluna Ordem da lista (ONE-237).
   const ehPro = temVitrine(meta.plano);
@@ -214,20 +208,23 @@ function ProdutosPage() {
   }, [ehConfere, produtos]);
   const cotaAtingida = ehConfere && produtos.length >= COTAS_CONFERE.produtos;
 
+  // Desde 24/11/2026 (ONE-254) o cadastro é uma página, não a janela estreita,
+  // e a Calculadora abre dentro da seção Preço. Recalcular abre o próprio
+  // cadastro com a calculadora aberta, sem sair do produto.
   const abrirAdicionar = () => {
-    setProdutoEdit(null);
-    setModalAberto(true);
+    void navigate({ to: "/produtos/novo" });
   };
 
   const abrirEditar = (p: Produto) => {
-    setProdutoEdit(p);
-    setModalAberto(true);
+    void navigate({ to: "/produtos/$produtoId", params: { produtoId: p.id } });
   };
 
-  // A calculadora é ferramenta própria (/calculadora): recalcular leva pra lá
-  // já com o produto carregado, e ela devolve pra cá ao salvar.
   const abrirRecalcular = (p: Produto) => {
-    void navigate({ to: "/calculadora", search: { produto: p.id } });
+    void navigate({
+      to: "/produtos/$produtoId",
+      params: { produtoId: p.id },
+      search: { calcular: true },
+    });
   };
 
   const recarregarCatalogo = () => {
@@ -540,21 +537,6 @@ function ProdutosPage() {
           )}
         </Abas.Content>
       </Abas.Root>
-
-      {/* ───────── Modal ───────── */}
-      {modalAberto && userId && (
-        <ModalProduto
-          userId={userId}
-          prefill={null}
-          produtoEdit={produtoEdit}
-          onClose={() => setModalAberto(false)}
-          onSaved={() => {
-            recarregarCatalogo();
-            qc.invalidateQueries({ queryKey: ["produto-skus"] });
-            setModalAberto(false);
-          }}
-        />
-      )}
 
       {importarAberto && userId && (
         <ModalImportarProdutos
