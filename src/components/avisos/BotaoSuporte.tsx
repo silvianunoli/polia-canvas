@@ -1,15 +1,20 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { BookOpen, LifeBuoy, MessageSquarePlus, MessagesSquare } from "lucide-react";
+import { BookOpen, Compass, LifeBuoy, MessageSquarePlus, MessagesSquare } from "lucide-react";
+import { useDicasVistas } from "@/hooks/useDicasVistas";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 
 // Suporte à vista no topo (ONE-152). Antes só existia em Configurações > Ajuda,
 // a sétima seção da página. "Abrir um chamado" já chega com o formulário aberto.
+// 24/11/2026: a seção Ajuda saiu de Configurações e o "Rever o tour" veio pra cá
+// (desmarca as boas-vindas e o tour e leva pro Painel, onde eles abrem de novo).
 
 const ITEM =
   "flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-[14px] text-[var(--ink)] no-underline outline-none transition-colors duration-150 data-[highlighted]:bg-[var(--surface)]";
 
 export function BotaoSuporte({ compacto = false }: { compacto?: boolean }) {
+  const { esquecer } = useDicasVistas();
+  const navigate = useNavigate();
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
@@ -47,6 +52,17 @@ export function BotaoSuporte({ compacto = false }: { compacto?: boolean }) {
               <BookOpen size={16} aria-hidden="true" />
               Central de ajuda
             </a>
+          </DropdownMenu.Item>
+          <DropdownMenu.Item
+            className={ITEM}
+            onSelect={() => {
+              esquecer("tour");
+              esquecer("boas-vindas");
+              void navigate({ to: "/painel" });
+            }}
+          >
+            <Compass size={16} aria-hidden="true" />
+            Rever o tour
           </DropdownMenu.Item>
         </DropdownMenu.Content>
       </DropdownMenu.Portal>

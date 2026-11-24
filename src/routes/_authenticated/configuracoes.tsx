@@ -25,12 +25,10 @@ import { statusAssinatura, cancelarAssinatura, abrirPortalCobranca } from "@/lib
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-import { CardEnvioLoja } from "@/components/configuracoes/CardEnvioLoja";
 import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
 import { CardCatalogo } from "@/components/configuracoes/CardCatalogo";
 import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
 import { isNativeApp } from "@/lib/platform";
-import { BotaoReverTour } from "@/components/dicas/BotaoReverTour";
 import { IdentidadeVisual } from "@/components/orcamentos/IdentidadeVisual";
 import { FieldError } from "@/components/ui/FieldError";
 import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
@@ -810,26 +808,11 @@ function ConfiguracoesPage() {
         >
           <div className="space-y-3">
             {/* O Google Calendar saiu da Pólia One em 02/11/2026 (decisão da Sil). */}
-            {/* Mercado Livre e TikTok Shop moram em Marketplaces desde 24/11/2026 (ONE-255). */}
-            <div className="p-4 border border-[var(--line)] rounded-xl">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
-                    Mercado Livre e TikTok Shop
-                  </p>
-                  <p className="font-sans text-[var(--ink-soft)] text-[12px]">
-                    conectar, desconectar e ligar os anúncios agora fica em Marketplaces, dentro do
-                    Cadastro de produtos
-                  </p>
-                </div>
-                <LinkInterno href="/produtos/anuncios" className={BTN_MIUDO}>
-                  Abrir Marketplaces
-                </LinkInterno>
-              </div>
-            </div>
+            {/* Marketplaces (Mercado Livre e TikTok Shop) moram só na tela Marketplaces
+                e o Envio da loja (Melhor Envio) virou subnível da Loja da marca
+                (24/11/2026, pedido da Sil). */}
             <CardRedesSociais userId={userId} />
             <CardCatalogo userId={userId} />
-            <CardEnvioLoja userId={userId} />
             <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
               <p className="font-sans text-[var(--muted)] text-[13px]">
                 Mais integrações em breve.
@@ -1118,26 +1101,10 @@ function ConfiguracoesPage() {
           )}
         </Secao>
 
-        {/* SEÇÃO 7 — AJUDA */}
-        <Secao titulo="Ajuda">
-          <p className="font-sans text-[15px] text-[var(--ink-soft)] mb-4">
-            Dúvida rápida, a Ajuda responde. Coisa que precisa de acompanhamento, abre um chamado.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <LinkInterno href="/ajuda#contato" className={BTN_MIUDO}>
-              Central de ajuda
-            </LinkInterno>
-            <LinkInterno href="/chamados" className={BTN_MIUDO}>
-              Seus chamados
-            </LinkInterno>
-            <LinkInterno href="/como-usar" className={BTN_MIUDO}>
-              Ver os tutoriais
-            </LinkInterno>
-            <BotaoReverTour className={BTN_MIUDO} />
-          </div>
-        </Secao>
+        {/* A seção Ajuda saiu em 24/11/2026 (pedido da Sil): o suporte mora no
+            botão Suporte do topo e no item Suporte do menu lateral. */}
 
-        {/* SEÇÃO 8 — ZONA DE PERIGO */}
+        {/* ZONA DE PERIGO */}
         <section className="mb-8 rounded-2xl border border-[var(--danger)] bg-[var(--danger-soft)] p-6">
           <h2 className="text-[22px] leading-tight text-[var(--danger)]">Excluir conta</h2>
           <p className="mt-2 font-sans text-[14px] text-[var(--ink-soft)]">

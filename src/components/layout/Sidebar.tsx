@@ -26,6 +26,8 @@ import {
   Store,
   Link2,
   Globe,
+  Truck,
+  LifeBuoy,
 } from "lucide-react";
 import { PoliaIcon, PoliaWordmark } from "@/components/brand/PoliaLogo";
 import { registrarEAguardar } from "@/lib/founder-eventos";
@@ -50,10 +52,15 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 // Calculadora saiu do meio da lista e virou subnível, porque o preço nasce no
 // cadastro. "Marketplaces" (antes "Anúncios nos canais", só com canal
 // conectado) aparece pra todas: é ali que se conecta o canal.
-const SUBNIVEIS_PRODUTOS: NavItem[] = [
-  { to: "/calculadora", label: "Calculadora de preço", icon: Calculator },
-  { to: "/produtos/anuncios", label: "Marketplaces", icon: Link2 },
-];
+// Envio da loja (Melhor Envio) virou subnível da Loja da marca em 24/11/2026
+// (pedido da Sil); antes morava em Configurações > Integrações.
+const SUBNIVEIS: Record<string, NavItem[]> = {
+  "/produtos": [
+    { to: "/calculadora", label: "Calculadora de preço", icon: Calculator },
+    { to: "/produtos/anuncios", label: "Marketplaces", icon: Link2 },
+  ],
+  "/loja-da-marca": [{ to: "/loja-da-marca/envio", label: "Envio da loja", icon: Truck }],
+};
 
 // Marca e Mapa de Mercado NÃO ficam aqui: são documentos do planejamento,
 // acessados pelo badge de cada módulo dentro de /planejamento. O Planejamento
@@ -120,14 +127,15 @@ function Body({
 }) {
   const meta = useUserMeta();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const configAtiva = isActive("/configuracoes", pathname) || isActive("/chamados", pathname);
+  const configAtiva = isActive("/configuracoes", pathname);
+  // Suporte (24/11/2026): a seção Ajuda saiu de Configurações e virou item próprio.
+  const suporteAtivo = isActive("/chamados", pathname);
   const tutorialAtivo = isActive("/como-usar", pathname);
   // Selo "2 de 5" ao lado de Planejamento (ONE-112, 11/10/2026): o lembrete
   // diário era um modal em qualquer tela; o selo lembra onde parou sem
   // interromper. Some com os 6 módulos fechados. Só aparece junto do item,
   // que desde 31/10/2026 é só da conta interna.
   const { progresso } = useProgressoPlanejamento();
-  const subnivelAtivo = SUBNIVEIS_PRODUTOS.some((s) => isActive(s.to, pathname));
   // Planner e Caderno (28/10/2026) e Planejamento (31/10/2026) só pra conta interna.
   const acessoInterno = useFerramentasInternas();
   const agendaVisivel = useAgendaRedesVisivel();
@@ -208,9 +216,10 @@ function Body({
               (item.to !== "/agenda-redes" || agendaVisivel) &&
               (item.to !== "/loja-da-marca" || lojaDaMarca.data === true),
           ).map((item) => {
-            // Num subnível o destaque fica nele, não no Cadastro de produtos.
+            // Num subnível o destaque fica nele, não no item de cima.
+            const subniveis = SUBNIVEIS[item.to] ?? [];
             const active =
-              isActive(item.to, pathname) && !(item.to === "/produtos" && subnivelAtivo);
+              isActive(item.to, pathname) && !subniveis.some((s) => isActive(s.to, pathname));
             const Icon = item.icon;
             // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
             // de conteúdo passam pelo guard de tier (são "controle") e só são
@@ -299,11 +308,11 @@ function Body({
             ) : (
               content
             );
-            if (item.to !== "/produtos" || !liberado) return principal;
+            if (!subniveis.length || !liberado) return principal;
             return (
               <div key={item.to} className="contents">
                 {principal}
-                {SUBNIVEIS_PRODUTOS.map((s) => {
+                {subniveis.map((s) => {
                   const subAtivo = isActive(s.to, pathname);
                   const SubIcon = s.icon;
                   const sub = (
@@ -372,6 +381,21 @@ function Body({
           >
             <Settings size={18} aria-hidden="true" />
             <span className={compact ? "sr-only" : undefined}>Configurações</span>
+          </Link>
+          <Link
+            to="/chamados"
+            onClick={onNavigate}
+            aria-current={suporteAtivo ? "page" : undefined}
+            data-track="nav_clicado"
+            data-track-props={JSON.stringify({ destino: "/chamados" })}
+            className={`flex min-h-11 md:min-h-8 items-center gap-3 rounded-lg px-3 text-[13px] no-underline transition-colors ${
+              suporteAtivo
+                ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
+            } ${compact ? "justify-center" : ""}`}
+          >
+            <LifeBuoy size={18} aria-hidden="true" />
+            <span className={compact ? "sr-only" : undefined}>Suporte</span>
           </Link>
           <button
             type="button"

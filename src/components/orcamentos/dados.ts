@@ -167,14 +167,29 @@ export async function trocarLogo(userId: string, arquivo: File, caminhoAntigo: s
     await supabase.storage.from("marca-logos").remove([caminho]);
     return { error };
   }
-  if (caminhoAntigo) await supabase.storage.from("marca-logos").remove([caminhoAntigo]);
+  if (caminhoAntigo) await apagarLogoSeNinguemUsa(userId, caminhoAntigo);
   return { error: null };
 }
 
 export async function removerLogo(userId: string, caminho: string) {
   const { error } = await supabase.from("profiles").update({ logo_path: null }).eq("id", userId);
-  if (!error) await supabase.storage.from("marca-logos").remove([caminho]);
+  if (!error) await apagarLogoSeNinguemUsa(userId, caminho);
   return { error };
+}
+
+/**
+ * A Loja da marca ganhou logo próprio em 24/11/2026 e, na carga inicial, aponta
+ * pro mesmo arquivo do perfil. Trocar o logo aqui não pode apagar o da loja.
+ */
+async function apagarLogoSeNinguemUsa(userId: string, caminho: string) {
+  const { data, error } = await supabase
+    .from("lojas_marca" as never)
+    .select("logo_path")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) return; // sem saber, o arquivo fica
+  if ((data as { logo_path: string | null } | null)?.logo_path === caminho) return;
+  await supabase.storage.from("marca-logos").remove([caminho]);
 }
 
 export const salvarCorMarca = (userId: string, cor: string | null) =>

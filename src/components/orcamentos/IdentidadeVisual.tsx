@@ -6,6 +6,7 @@ import { BTN_ACAO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { track } from "@/lib/analytics";
 import { usoDaCor } from "@/lib/orcamentos";
+import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 import {
   LOGO_MAX_BYTES,
   LOGO_TIPOS,
@@ -22,13 +23,15 @@ const COR_INICIAL = "#7CCBCD";
 
 /**
  * Logo e cor da marca (ONE-129). Aparecem no orçamento que vai pra cliente e
- * na loja do Catálogo; a prévia mostra exatamente o topo do orçamento. Mora em
+ * na Vitrine online; a Loja da marca tem os dela desde 24/11/2026 (página
+ * /loja-da-marca). A prévia mostra exatamente o topo do orçamento. Mora em
  * Configurações desde 31/10/2026 (antes era o topo de /marca, que saiu das
  * usuárias com o Planejamento).
  */
 export function IdentidadeVisual({ userId }: { userId: string }) {
   const qc = useQueryClient();
   const query = useIdentidadeMarca(userId);
+  const temLojaDaMarca = useTemLojaDaMarca(userId);
   const inputArquivo = useRef<HTMLInputElement>(null);
   const corId = useId();
   const hexId = useId();
@@ -137,7 +140,10 @@ export function IdentidadeVisual({ userId }: { userId: string }) {
         Logo e cor
       </h2>
       <p className="mt-1 text-[13px] text-[var(--muted)]">
-        Vão no topo do orçamento que a cliente abre pelo link e na Vitrine online.
+        Junto com o nome do negócio, vão no topo do orçamento que a cliente abre pelo link e na
+        Vitrine online.
+        {temLojaDaMarca.data === true &&
+          " A Loja da marca tem nome e logo próprios, na página dela."}
       </p>
 
       <div className="mt-5 grid gap-6 md:grid-cols-2">

@@ -7,8 +7,9 @@ import { finalizarConexaoMelhorEnvio } from "@/lib/envioLoja.functions";
 import { toastErro, toastSucesso } from "@/lib/toast";
 
 // Volta da autorização do Melhor Envio (endereço de retorno cadastrado no aplicativo da
-// Área Dev). Fora do layout de Configurações: só troca o code pelo token e devolve a dona
-// para Configurações. Sem state, ou com state que não é dela, a conexão é recusada.
+// Área Dev, por isso o endereço continua em /configuracoes). Fora do layout de
+// Configurações: só troca o code pelo token e devolve a dona pra Loja da marca > Envio
+// (24/11/2026). Sem state, ou com state que não é dela, a conexão é recusada.
 
 interface RetornoMeSearch {
   code?: string;
@@ -36,7 +37,7 @@ function RetornoMelhorEnvio() {
     jaRodou.current = true;
     const voltar = () => {
       qc.invalidateQueries({ queryKey: [CHAVE_STATUS_ENVIO] });
-      navigate({ to: "/configuracoes", replace: true });
+      navigate({ to: "/loja-da-marca/envio", replace: true });
     };
     if (!search.code || !search.state) {
       toastErro("A autorização do Melhor Envio não foi concluída. Tenta conectar de novo.");
@@ -45,8 +46,12 @@ function RetornoMelhorEnvio() {
     }
     finalizarConexaoMelhorEnvio({ data: { code: search.code, state: search.state } })
       .then((res) => {
-        if (res.ok) toastSucesso("Melhor Envio conectado. Confira o envio da loja em Integrações.");
-        else toastErro(res.error ?? "A Pólia One não conseguiu confirmar a conexão com o Melhor Envio.");
+        if (res.ok)
+          toastSucesso("Melhor Envio conectado. Confira o CEP, a caixa e o remetente logo abaixo.");
+        else
+          toastErro(
+            res.error ?? "A Pólia One não conseguiu confirmar a conexão com o Melhor Envio.",
+          );
         voltar();
       })
       .catch(() => {
@@ -57,7 +62,7 @@ function RetornoMelhorEnvio() {
   }, []);
 
   return (
-    <PaginaLogada titulo="Melhor Envio" eyebrow="Integrações">
+    <PaginaLogada titulo="Melhor Envio" eyebrow="Envio da loja">
       <p className="font-sans text-[var(--ink-soft)] text-[15px]" role="status" aria-live="polite">
         Conectando o Melhor Envio...
       </p>

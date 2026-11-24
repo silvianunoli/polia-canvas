@@ -38,6 +38,9 @@ export function useTemLojaDaMarca(userId: string | undefined) {
 
 export interface ConteudoDaLojaDaMarca {
   dominio: string;
+  /** Nome e logo próprios da loja (24/11/2026): não vêm de Configurações. */
+  nome: string;
+  logoPath: string | null;
   blocos: unknown;
   titulos: Record<BlocoComTitulo, TituloDoBloco>;
   banners: BannerDaLoja[];
@@ -53,18 +56,22 @@ export function useConteudoDaLojaDaMarca(userId: string | undefined) {
     queryFn: async (): Promise<ConteudoDaLojaDaMarca | null> => {
       const { data, error } = await supabase
         .from("lojas_marca" as never)
-        .select("dominio, conteudo")
+        .select("dominio, nome, logo_path, conteudo")
         .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
       const linha = data as unknown as {
         dominio: string;
+        nome: string | null;
+        logo_path: string | null;
         conteudo: Record<string, unknown> | null;
       };
       const c = linha.conteudo ?? {};
       return {
         dominio: linha.dominio,
+        nome: linha.nome ?? "",
+        logoPath: linha.logo_path,
         blocos: c.blocos,
         titulos: lerTitulos(c.rotulos),
         banners: lerBanners(c.banners),
@@ -111,6 +118,38 @@ export async function salvarVitrineDaLoja(
   }
   const sairam = arquivosQueSairam(bannersAntes, banners);
   if (sairam.length) await supabase.storage.from(BUCKET).remove(sairam);
+  return { error: null };
+}
+
+/**
+ * Grava o nome e o logo da loja. O logo antigo só é apagado do bucket se o perfil
+ * (Logo e cor de Configurações) não usa o mesmo arquivo: na carga inicial os dois
+ * apontam pro mesmo logo.
+ */
+export async function salvarIdentidadeDaLoja(
+  userId: string,
+  nome: string,
+  logoPath: string | null,
+  logoAntes: string | null,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc(
+    "loja_marca_salvar_identidade" as never,
+    { p_nome: nome.trim(), p_logo_path: logoPath } as never,
+  );
+  if (error) {
+    console.error("loja_marca_salvar_identidade", error);
+    return { error: "A Pólia One não conseguiu salvar o nome e o logo da loja. Tenta de novo." };
+  }
+  if (logoAntes && logoAntes !== logoPath) {
+    const { data: perfil } = await supabase
+      .from("profiles")
+      .select("logo_path")
+      .eq("id", userId)
+      .maybeSingle();
+    // Sem conseguir ler o perfil, o arquivo fica: melhor sobrar do que sumir.
+    if (perfil && perfil.logo_path !== logoAntes)
+      await supabase.storage.from(BUCKET).remove([logoAntes]);
+  }
   return { error: null };
 }
 

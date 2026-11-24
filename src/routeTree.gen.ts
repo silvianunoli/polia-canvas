@@ -81,6 +81,7 @@ import { Route as AuthenticatedProdutosProdutoIdRouteImport } from './routes/_au
 import { Route as AuthenticatedPlannerPedidosRouteImport } from './routes/_authenticated/planner.pedidos'
 import { Route as AuthenticatedPlannerSlugRouteImport } from './routes/_authenticated/planner.$slug'
 import { Route as AuthenticatedPlanejamentoCompletoRouteImport } from './routes/_authenticated/planejamento.completo'
+import { Route as AuthenticatedLojaDaMarcaEnvioRouteImport } from './routes/_authenticated/loja-da-marca_.envio'
 import { Route as AuthenticatedComoUsarTourRouteImport } from './routes/_authenticated/como-usar.tour'
 import { Route as AuthenticatedComoUsarSlugRouteImport } from './routes/_authenticated/como-usar.$slug'
 import { Route as AuthenticatedChamadosIdRouteImport } from './routes/_authenticated/chamados.$id'
@@ -468,6 +469,12 @@ const AuthenticatedPlanejamentoCompletoRoute =
     path: '/planejamento/completo',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedLojaDaMarcaEnvioRoute =
+  AuthenticatedLojaDaMarcaEnvioRouteImport.update({
+    id: '/loja-da-marca_/envio',
+    path: '/loja-da-marca/envio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedComoUsarTourRoute =
   AuthenticatedComoUsarTourRouteImport.update({
     id: '/como-usar/tour',
@@ -609,6 +616,7 @@ export interface FileRoutesByFullPath {
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
+  '/loja-da-marca/envio': typeof AuthenticatedLojaDaMarcaEnvioRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
@@ -694,6 +702,7 @@ export interface FileRoutesByTo {
   '/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
+  '/loja-da-marca/envio': typeof AuthenticatedLojaDaMarcaEnvioRoute
   '/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
@@ -782,6 +791,7 @@ export interface FileRoutesById {
   '/_authenticated/chamados/$id': typeof AuthenticatedChamadosIdRoute
   '/_authenticated/como-usar/$slug': typeof AuthenticatedComoUsarSlugRoute
   '/_authenticated/como-usar/tour': typeof AuthenticatedComoUsarTourRoute
+  '/_authenticated/loja-da-marca_/envio': typeof AuthenticatedLojaDaMarcaEnvioRoute
   '/_authenticated/planejamento/completo': typeof AuthenticatedPlanejamentoCompletoRoute
   '/_authenticated/planner/$slug': typeof AuthenticatedPlannerSlugRoute
   '/_authenticated/planner/pedidos': typeof AuthenticatedPlannerPedidosRoute
@@ -870,6 +880,7 @@ export interface FileRouteTypes {
     | '/chamados/$id'
     | '/como-usar/$slug'
     | '/como-usar/tour'
+    | '/loja-da-marca/envio'
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/planner/pedidos'
@@ -955,6 +966,7 @@ export interface FileRouteTypes {
     | '/chamados/$id'
     | '/como-usar/$slug'
     | '/como-usar/tour'
+    | '/loja-da-marca/envio'
     | '/planejamento/completo'
     | '/planner/$slug'
     | '/planner/pedidos'
@@ -1042,6 +1054,7 @@ export interface FileRouteTypes {
     | '/_authenticated/chamados/$id'
     | '/_authenticated/como-usar/$slug'
     | '/_authenticated/como-usar/tour'
+    | '/_authenticated/loja-da-marca_/envio'
     | '/_authenticated/planejamento/completo'
     | '/_authenticated/planner/$slug'
     | '/_authenticated/planner/pedidos'
@@ -1611,6 +1624,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlanejamentoCompletoRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/loja-da-marca_/envio': {
+      id: '/_authenticated/loja-da-marca_/envio'
+      path: '/loja-da-marca/envio'
+      fullPath: '/loja-da-marca/envio'
+      preLoaderRoute: typeof AuthenticatedLojaDaMarcaEnvioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/como-usar/tour': {
       id: '/_authenticated/como-usar/tour'
       path: '/como-usar/tour'
@@ -1733,6 +1753,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedChamadosIdRoute: typeof AuthenticatedChamadosIdRoute
   AuthenticatedComoUsarSlugRoute: typeof AuthenticatedComoUsarSlugRoute
   AuthenticatedComoUsarTourRoute: typeof AuthenticatedComoUsarTourRoute
+  AuthenticatedLojaDaMarcaEnvioRoute: typeof AuthenticatedLojaDaMarcaEnvioRoute
   AuthenticatedPlanejamentoCompletoRoute: typeof AuthenticatedPlanejamentoCompletoRoute
   AuthenticatedPlannerSlugRoute: typeof AuthenticatedPlannerSlugRoute
   AuthenticatedPlannerPedidosRoute: typeof AuthenticatedPlannerPedidosRoute
@@ -1783,6 +1804,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedChamadosIdRoute: AuthenticatedChamadosIdRoute,
   AuthenticatedComoUsarSlugRoute: AuthenticatedComoUsarSlugRoute,
   AuthenticatedComoUsarTourRoute: AuthenticatedComoUsarTourRoute,
+  AuthenticatedLojaDaMarcaEnvioRoute: AuthenticatedLojaDaMarcaEnvioRoute,
   AuthenticatedPlanejamentoCompletoRoute:
     AuthenticatedPlanejamentoCompletoRoute,
   AuthenticatedPlannerSlugRoute: AuthenticatedPlannerSlugRoute,

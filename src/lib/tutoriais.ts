@@ -92,7 +92,7 @@ const LISTA = [
       'A janela abre sozinha uma vez por dia em cada aparelho. Fechou? O botão "Primeiros passos · N de 3", ao lado do botão principal do Painel, abre de novo.',
       "Conta nova começa com 7 dias do Pro. Com um pedido lançado e entregue durante o teste, ele ganha mais 7 dias. O preço não precisa estar calculado.",
       'O nome da marca fica em Configurações, em "Seu negócio", junto com o logo e a cor.',
-      'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados" e "Central de ajuda". No app, os dois ficam na aba Mais.',
+      'No alto da tela ficam o "Suporte" e o sino. O sino junta pedido novo da loja, resposta do suporte e novidade da Pólia One. O "Suporte" leva pra "Abrir um chamado", "Seus chamados", "Central de ajuda" e "Rever o tour". No menu lateral, "Suporte" fica logo abaixo de "Configurações" e abre os chamados. No app, o "Suporte" e o sino ficam na aba Mais.',
     ],
     duvidas: [
       {
@@ -1164,6 +1164,13 @@ const LISTA = [
     interno: true,
     passos: [
       {
+        titulo: "Pôr o nome e o logo da loja",
+        itens: [
+          'Em "Nome e logo da loja", escreva o nome em "Nome da loja" e clique em "Subir logo" (ou "Trocar logo"). Cabe JPG, PNG ou WEBP até 5 MB.',
+          'Clique em "Salvar nome e logo". O nome e o logo aparecem no topo e no rodapé do site da loja. "Tirar" deixa a loja sem logo: no lugar, ela escreve o nome.',
+        ],
+      },
+      {
         titulo: "Trocar os títulos",
         itens: [
           'Em "Títulos dos carrosséis", cada bloco da página inicial tem o título e uma linha pequena em cima, opcional. Vazio, a loja usa o título padrão, que aparece em cinza no campo.',
@@ -1198,6 +1205,8 @@ const LISTA = [
       },
     ],
     bomSaber: [
+      'O nome e o logo da loja são só dela. O "Logo e cor" de Configurações e o nome do negócio continuam valendo pro orçamento e pra Vitrine online, e trocar um não mexe no outro.',
+      'O frete e a etiqueta pelo Melhor Envio ficam em "Envio da loja", logo abaixo de "Loja da marca" no menu lateral: ali se conecta a conta do Melhor Envio e se preenchem o CEP de onde os pacotes saem, a caixa padrão e o remetente.',
       "Os cupons são os mesmos da Vitrine online: o código vale nas duas lojas e os usos somam juntos.",
       "Na loja da marca, o cupom de desconto vale só nos produtos, nunca no frete, e deixa ao menos R$ 1,00 de produtos. O uso conta quando o pagamento entra: compra desistida não gasta o cupom.",
       'Cupom "Só no Pix" aparece no carrinho e no checkout como "Desconto no Pix", e o total no Pix vem destacado. Se a compradora pagar no cartão, paga o preço cheio e o cupom não conta uso.',
@@ -1214,7 +1223,7 @@ const LISTA = [
       {
         pergunta: "Onde mudo o produto, o preço ou a foto",
         resposta:
-          "Em Produtos, inclusive o preço promocional. A Loja da marca cuida da página inicial (títulos, banners e capas) e dos cupons.",
+          "Em Produtos, inclusive o preço promocional. A Loja da marca cuida do nome e do logo da loja, da página inicial (títulos, banners e capas) e dos cupons.",
       },
     ],
   },

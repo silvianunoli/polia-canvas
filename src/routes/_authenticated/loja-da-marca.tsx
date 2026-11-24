@@ -25,6 +25,7 @@ import {
 import {
   chaveColecoes,
   chaveConteudoDaLoja,
+  salvarIdentidadeDaLoja,
   salvarVitrineDaLoja,
   subirImagemDaLoja,
   trocarCapaDaColecao,
@@ -140,7 +141,7 @@ function LojaDaMarcaPage() {
     <PaginaLogada
       eyebrow="Loja da marca"
       titulo="A página inicial da loja."
-      subtitulo="Os títulos dos carrosséis, os banners do topo, a capa de cada coleção e os cupons de desconto. Produto, preço, preço promocional, categoria e coleção de cada produto ficam em Produtos."
+      subtitulo="O nome e o logo da loja, os títulos dos carrosséis, os banners do topo, a capa de cada coleção e os cupons de desconto. Produto, preço, preço promocional, categoria e coleção de cada produto ficam em Produtos."
       largura="larga"
       acao={
         <a className={BTN_MIUDO} href={`https://${dados.dominio}`} target="_blank" rel="noopener">
@@ -149,6 +150,13 @@ function LojaDaMarcaPage() {
       }
     >
       <div className="space-y-6">
+        <NomeELogo
+          userId={userId}
+          nomeSalvo={dados.nome}
+          logoSalvo={dados.logoPath}
+          aoSalvar={() => qc.invalidateQueries({ queryKey: chaveConteudoDaLoja(userId) })}
+        />
+
         <Secao
           titulo="Títulos dos carrosséis"
           texto={`Até ${MAX_TITULO} caracteres. Vazio, a loja usa o título padrão.`}
@@ -217,6 +225,134 @@ function LojaDaMarcaPage() {
         />
       </div>
     </PaginaLogada>
+  );
+}
+
+const MAX_NOME_LOJA = 80;
+
+/**
+ * Nome e logo da loja (24/11/2026, Sil): moram aqui, não em Configurações. O
+ * Logo e cor de Configurações vale pro orçamento e pra Vitrine online.
+ */
+function NomeELogo({
+  userId,
+  nomeSalvo,
+  logoSalvo,
+  aoSalvar,
+}: {
+  userId: string;
+  nomeSalvo: string;
+  logoSalvo: string | null;
+  aoSalvar: () => Promise<unknown>;
+}) {
+  const [nome, setNome] = useState(nomeSalvo);
+  const [logo, setLogo] = useState<string | null>(logoSalvo);
+  const [subindo, setSubindo] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  useEffect(() => {
+    setNome(nomeSalvo);
+    setLogo(logoSalvo);
+  }, [nomeSalvo, logoSalvo]);
+
+  const mudou = nome.trim() !== nomeSalvo || logo !== logoSalvo;
+  const nomeVazio = !nome.trim();
+
+  const subir = async (arquivo: File) => {
+    setSubindo(true);
+    const r = await subirImagemDaLoja(userId, arquivo, "logo");
+    setSubindo(false);
+    if (r.error || !r.path)
+      return toastErro(r.error ?? "A Pólia One não conseguiu subir o logo agora.");
+    setLogo(r.path);
+  };
+
+  const salvar = async () => {
+    if (nomeVazio) return setErro("Escreva o nome da loja.");
+    setErro(null);
+    setSalvando(true);
+    const r = await salvarIdentidadeDaLoja(userId, nome, logo, logoSalvo);
+    setSalvando(false);
+    if (r.error) return setErro(r.error);
+    toastSucesso("Nome e logo salvos. A loja já mostra o que mudou.");
+    await aoSalvar();
+  };
+
+  return (
+    <Secao
+      titulo="Nome e logo da loja"
+      texto="Aparecem no topo e no rodapé do site da loja. São só desta loja: o logo de Configurações continua valendo pro orçamento e pra Vitrine online."
+    >
+      <div className="grid gap-6 sm:grid-cols-[auto_1fr] sm:items-start">
+        <figure className="space-y-2">
+          <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg border border-[var(--line)] bg-white">
+            {logo ? (
+              <img
+                src={urlDaImagemDaLoja(logo)}
+                alt="Logo atual da loja"
+                className="h-full w-full object-contain"
+              />
+            ) : (
+              <ImagePlus size={22} aria-hidden="true" className="text-[var(--muted)]" />
+            )}
+          </div>
+          <figcaption className="flex flex-wrap items-center gap-2">
+            <EscolherImagem
+              rotulo={logo ? "Trocar logo" : "Subir logo"}
+              ocupado={subindo}
+              onArquivo={(f) => void subir(f)}
+            />
+            {logo && !subindo && (
+              <button
+                type="button"
+                className="min-h-11 px-1 font-sans text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+                onClick={() => setLogo(null)}
+              >
+                Tirar
+              </button>
+            )}
+          </figcaption>
+          <p className="font-sans text-[12px] text-[var(--muted)]">
+            JPG, PNG ou WEBP até 5 MB. Sem logo, a loja escreve o nome.
+          </p>
+        </figure>
+        <div className="space-y-3">
+          <Campo
+            label="Nome da loja"
+            error={nomeVazio && mudou ? "Escreva o nome da loja." : undefined}
+          >
+            <input
+              className={INPUT}
+              value={nome}
+              maxLength={MAX_NOME_LOJA}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Ex.: Ateliê Florescer"
+            />
+          </Campo>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              className={BTN_ACAO}
+              onClick={() => void salvar()}
+              disabled={salvando || subindo || !mudou || nomeVazio}
+            >
+              {salvando ? "Salvando..." : "Salvar nome e logo"}
+            </button>
+            {erro && (
+              <p role="alert" className="font-sans text-[13px] text-[var(--danger)]">
+                {erro}
+              </p>
+            )}
+          </div>
+          {mudou && !salvando && (
+            <p className="font-sans text-[12px] text-[var(--muted)]">
+              A loja só muda depois de "Salvar nome e logo".
+            </p>
+          )}
+        </div>
+      </div>
+    </Secao>
   );
 }
 

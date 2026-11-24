@@ -20,7 +20,8 @@ import {
   statusEnvioLoja,
 } from "@/lib/envioLoja.functions";
 
-// Card "Envio da loja" em Configurações > Integrações (ONE-189). Só aparece em conta com
+// Card "Envio da loja" (ONE-189), na tela Loja da marca > Envio desde 24/11/2026 (antes em
+// Configurações > Integrações). Só aparece em conta com
 // loja de marca. Liga o Melhor Envio e guarda o que o frete e a etiqueta precisam: CEP de
 // origem, caixa padrão, remetente (privado) e a retirada (só quem pagou vê as instruções).
 
