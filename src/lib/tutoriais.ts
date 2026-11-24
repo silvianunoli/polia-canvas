@@ -794,15 +794,17 @@ const LISTA = [
     abrir: "Abrir o Raio-x",
     resumo:
       "Com o mês fechado, a Pólia One lê entradas, saídas, meta e produtos e mostra o que puxou o resultado.",
-    trecho: "raiox",
+    // Sem `trecho` desde 24/11/2026 (ONE-243): o clipe mostra a tela antiga,
+    // estreita e com o aviso de IA no topo. Volta quando a cena for regravada.
     passos: [
       {
         titulo: "Gerar o raio-x",
         itens: [
           'Escolha o mês em "Mês do raio-x". A tela já abre no mês passado, que está fechado.',
           'Clique em "Gerar raio-x" e espere a leitura.',
-          'Leia o placar, as causas e as sugestões. Cada sugestão pode levar direto pra tela certa, como "Ver Produtos" ou "Ver Financeiro".',
-          'As leituras anteriores ficam em "Gerações deste mês".',
+          'A leitura vem em três partes: "O que aconteceu", "O que puxou o resultado" e "O que fazer". Cada sugestão pode levar direto pra tela certa, como "Ver Produtos" ou "Ver Financeiro".',
+          'Pra uma leitura nova do mesmo mês, clique em "Gerar de novo". Cada leitura usa uma geração.',
+          'Quando o mês tem mais de uma leitura, todas ficam em "Gerações deste mês".',
         ],
       },
       {

@@ -28,9 +28,13 @@ import { tutorialDaRota, type Tutorial } from "@/lib/tutoriais";
  * ao lado — no Planner cabiam 2 quadros por linha em vez de 3, e no Plano de
  * conteúdo o próprio h1 quebrava em duas linhas.
  *
- * `estreita` fica só onde a medida curta É a função: Marca, Mapa de Mercado,
- * Raio-x (parágrafo gerado) e o módulo do Planejamento. Nessas, alargar aumenta
- * a linha para 110+ caracteres e o olho perde onde estava.
+ * `estreita` fica só onde a medida curta É a função: Marca, Mapa de Mercado e o
+ * módulo do Planejamento. Nessas, alargar aumenta a linha para 110+ caracteres
+ * e o olho perde onde estava.
+ *
+ * O Raio-x saiu dessa lista em 24/11/2026 (ONE-243): a 640px úteis sobrava
+ * metade da área vazia, e só o parágrafo gerado pedia medida curta. Virou
+ * `larga` em 2 colunas, com o texto travado em 68ch por dentro.
  *
  * O Documento do Planejamento saiu dessa lista: parece prosa, mas é um bento de
  * cartões com um bloco de destaque que já trava em 46ch no próprio parágrafo.
