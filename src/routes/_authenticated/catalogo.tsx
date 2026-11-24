@@ -147,7 +147,7 @@ function CatalogoPage() {
 
   if (meta.carregando) {
     return (
-      <PaginaLogada eyebrow="Vitrine online" titulo="A loja da marca.">
+      <PaginaLogada largura="larga" eyebrow="Vitrine online" titulo="A loja da marca.">
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       </PaginaLogada>
     );
@@ -211,6 +211,7 @@ function CatalogoPage() {
 
   return (
     <PaginaLogada
+      largura="larga"
       eyebrow="Vitrine online"
       titulo="A loja da marca, com pedido direto no quadro."
       subtitulo="A cliente escolhe, monta o carrinho e confirma. O pedido entra em Pedidos e ela segue pro WhatsApp da loja."
