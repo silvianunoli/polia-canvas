@@ -143,17 +143,19 @@ export function custoDiretoDoProduto(
   bk: CalculadoraBreakdown | null | undefined,
 ): number {
   const custo = precoCusto ?? 0;
-  if (!bk || bk.perfil === "encomenda") return custo;
+  if (!bk) return custo;
   const n = (s?: string) => (s ? parseFloat(s.replace(",", ".")) || 0 : 0);
   const v = bk.valores;
   const direto =
     bk.perfil === "produto"
       ? n(v.materiaPrima) + n(v.embalagem) + n(v.maoObra) + n(v.outrosDiretos)
-      : n(v.valorHora) * n(v.horas) +
-        n(v.materiais) +
-        n(v.deslocamento) +
-        n(v.ferramentas) +
-        n(v.outrosServico);
+      : bk.perfil === "encomenda"
+        ? diretoDaEncomenda(v, n)
+        : n(v.valorHora) * n(v.horas) +
+          n(v.materiais) +
+          n(v.deslocamento) +
+          n(v.ferramentas) +
+          n(v.outrosServico);
   const rateio = rateioDoBreakdown(bk);
   if (rateio <= 0) return custo;
   const salvoPelaCalculadora = Math.abs(custo - (direto + rateio)) < 0.01;
@@ -188,7 +190,27 @@ export function rateioDoBreakdown(bk: CalculadoraBreakdown | null | undefined): 
   if (bk.perfil === "servico") {
     return calcularRateio({ custosFixosMes: n(v.despesasFixas), qtdMes: n(v.qtdServicos) });
   }
-  return 0;
+  // Encomenda rateia desde 24/11/2026. Breakdown antigo não tem despesasFixas: 0.
+  if (n(v.despesasFixas) <= 0) return 0;
+  return calcularRateio({ custosFixosMes: n(v.despesasFixas), qtdMes: n(v.qtdEncomendas) });
+}
+
+// Material + trabalho + extras de uma encomenda salva (sem o rateio dos fixos).
+function diretoDaEncomenda(v: Record<string, string>, n: (s?: string) => number): number {
+  const lista = (json?: string): Record<string, string>[] => {
+    try {
+      const x = JSON.parse(json || "[]");
+      return Array.isArray(x) ? x : [];
+    } catch {
+      return [];
+    }
+  };
+  const material = lista(v.itensMaterial).reduce(
+    (acc, it) => acc + n(it.quantidade) * n(it.custoUnitario),
+    0,
+  );
+  const extras = lista(v.itensExtras).reduce((acc, it) => acc + n(it.valor), 0);
+  return material + n(v.valorHora) * n(v.horas) + extras;
 }
 
 // ── Detalhamento do custo direto (09/10/2026, perfil Produto) ──
@@ -225,6 +247,13 @@ export interface EncomendaInput {
   horas: number;
   valorHora: number;
   itensExtras: { valor: number }[];
+  /**
+   * Custos fixos do mês e quantas encomendas a marca faz por mês (24/11/2026).
+   * Antes a Encomenda não rateava o fixo e a mesma peça saía mais barata
+   * aqui que no Produto. O salário já entra pela hora, sem pró-labore.
+   */
+  custosFixosMes?: number;
+  qtdMes?: number;
   taxaVendaPct: number;
   impostosPct: number;
   quantoSobraPct: number;
@@ -234,6 +263,7 @@ export interface EncomendaResultado {
   custoMaterial: number;
   custoTrabalho: number;
   custoExtras: number;
+  rateioFixos: number;
   custoTotal: number;
   piso: number;
   precoSugerido: number;
@@ -250,7 +280,11 @@ export function calcularEncomenda(input: EncomendaInput): EncomendaResultado {
   );
   const custoTrabalho = input.horas * input.valorHora;
   const custoExtras = input.itensExtras.reduce((acc, it) => acc + it.valor, 0);
-  const custoTotal = custoMaterial + custoTrabalho + custoExtras;
+  const rateioFixos =
+    (input.custosFixosMes ?? 0) > 0
+      ? calcularRateio({ custosFixosMes: input.custosFixosMes ?? 0, qtdMes: input.qtdMes ?? 0 })
+      : 0;
+  const custoTotal = custoMaterial + custoTrabalho + custoExtras + rateioFixos;
 
   const pctVenda = input.taxaVendaPct + input.impostosPct;
   const pctTotal = pctVenda + input.quantoSobraPct;
@@ -273,6 +307,7 @@ export function calcularEncomenda(input: EncomendaInput): EncomendaResultado {
     custoMaterial,
     custoTrabalho,
     custoExtras,
+    rateioFixos,
     custoTotal,
     piso,
     precoSugerido,

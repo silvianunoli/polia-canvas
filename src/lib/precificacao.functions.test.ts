@@ -104,6 +104,49 @@ describe("calcularEncomenda", () => {
     expect(r.piso).toBe(0);
     expect(r.precoSugerido).toBe(0);
   });
+
+  // Revisão de 24/11/2026: a Encomenda ignorava o aluguel e saía mais barata
+  // que a mesma peça no Produto.
+  it("rateia os custos fixos do mês entre as encomendas", () => {
+    const r = calcularEncomenda(
+      base({
+        itensMaterial: [{ quantidade: 1, custoUnitario: 100 }],
+        custosFixosMes: 600,
+        qtdMes: 30,
+      }),
+    );
+    expect(r.rateioFixos).toBe(20);
+    expect(r.custoTotal).toBe(120);
+  });
+
+  it("sem custos fixos, nada muda (breakdown antigo)", () => {
+    const r = calcularEncomenda(base({ itensMaterial: [{ quantidade: 1, custoUnitario: 100 }] }));
+    expect(r.rateioFixos).toBe(0);
+    expect(r.custoTotal).toBe(100);
+  });
+});
+
+describe("custoDiretoDoProduto na Encomenda com custos fixos", () => {
+  const bk: CalculadoraBreakdown = {
+    perfil: "encomenda",
+    valores: {
+      itensMaterial: JSON.stringify([{ quantidade: "2", custoUnitario: "10" }]),
+      valorHora: "30",
+      horas: "2",
+      itensExtras: JSON.stringify([{ valor: "5" }]),
+      despesasFixas: "600",
+      qtdEncomendas: "30",
+    },
+  };
+
+  it("tira o rateio do custo salvo pela calculadora (a Projeção soma o fixo à parte)", () => {
+    // direto = 20 + 60 + 5 = 85; rateio = 20; salvo = 105
+    expect(custoDiretoDoProduto(105, bk)).toBe(85);
+  });
+
+  it("custo editado à mão depois fica como está", () => {
+    expect(custoDiretoDoProduto(90, bk)).toBe(90);
+  });
 });
 
 describe("taxasDoBreakdown", () => {

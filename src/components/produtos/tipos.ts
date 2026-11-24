@@ -84,6 +84,26 @@ export function fmtData(iso: string) {
   )}/${d.getFullYear()}`;
 }
 
+// Texto digitado num campo de valor, no jeito brasileiro, vira um texto que
+// todo leitor da calculadora entende (parseFloat com vírgula trocada por
+// ponto, aqui e no breakdown salvo). Antes o campo era type="number" e
+// "1.500" de aluguel virava R$ 1,50 sem aviso (revisão de 24/11/2026).
+// - Com vírgula, a vírgula é o decimal e os pontos são de milhar: "1.500,50" → "1500,50".
+// - Sem vírgula, ponto seguido de grupos de 3 dígitos é milhar: "1.500" → "1500".
+//   "1.5" e "12.50" ficam como estão (decimal). "0.500" também (começa com 0).
+// - Espaço e "R$" saem. O resto fica, pra numInvalido apontar o erro.
+export function normalizarDigitado(texto: string): string {
+  const t = texto.replace(/R\$/gi, "").replace(/\s/g, "");
+  if (t.includes(",")) return t.replace(/\./g, "");
+  if (/^-?[1-9]\d{0,2}(\.\d{3})+$/.test(t)) return t.replace(/\./g, "");
+  return t;
+}
+
+/** Valor digitado como número que não deixa custo negativo entrar na conta. */
+export function numPos(s: string) {
+  return Math.max(0, num(s));
+}
+
 export function num(s: string) {
   const v = parseFloat(s.replace(",", "."));
   return Number.isFinite(v) ? v : 0;
@@ -91,10 +111,15 @@ export function num(s: string) {
 
 // "Coloque um número." inline — negativo ou texto não-numérico num campo que
 // já tem algo digitado (campo vazio não é erro, é só ainda-não-preenchido).
-export function numInvalido(s: string): boolean {
-  if (!s.trim()) return false;
-  const v = parseFloat(s.replace(",", "."));
-  return !Number.isFinite(v) || v < 0;
+// Desde 24/11/2026 o campo é texto: "12,5abc" ou "1.2.3" também contam como
+// inválidos (antes o parseFloat lia o começo e seguia calado).
+// `permiteNegativo`: o "Quanto quer lucrar (%)" aceita lucro negativo de
+// propósito, é o que mostra o aviso de preço abaixo do piso.
+export function numInvalido(s: string, permiteNegativo = false): boolean {
+  const t = s.trim();
+  if (!t) return false;
+  const padrao = permiteNegativo ? /^-?(\d+([.,]\d*)?|[.,]\d+)$/ : /^(\d+([.,]\d*)?|[.,]\d+)$/;
+  return !padrao.test(t);
 }
 
 /** Busca do Catálogo de Produtos: sem diferença de maiúscula nem de acento ("lilas" acha "Lilás"). */

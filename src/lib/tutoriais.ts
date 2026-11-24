@@ -432,8 +432,9 @@ const LISTA = [
           'Em "Qual produto?", escreva o nome, como "Caderno A5". No Serviço o campo é "Qual serviço?" e na Encomenda, "Qual encomenda?".',
           'Em "Custos diretos (por unidade)", coloque matéria-prima, embalagem, mão de obra e outros custos de cada peça.',
           'Em "Custos fixos e salário", entre com os custos fixos do mês, o "Pró-labore (seu salário)" e quantas peças a marca vende por mês, somando todos os produtos. O botão "Puxar do Financeiro deste mês" traz os custos fixos que já estão lançados, e "Usar a reserva dos equipamentos" preenche a "Reserva de equipamento" com o total da aba "Equipamentos".',
-          'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e, em "Quanto quer lucrar (%)", o lucro que a marca quer em cada venda.',
-          'O resultado mostra o "Preço sugerido", o custo por unidade, o preço mínimo pra não ter prejuízo e quanto a marca lucra.',
+          'Em "Sobre o preço de venda (%)", coloque a taxa da maquininha ou do marketplace, os impostos e, em "Quanto quer lucrar (%)", o lucro que a marca quer em cada venda. O lucro é uma parte do preço final, não uma porcentagem sobre o custo: com 20%, de cada R$ 100 vendidos, R$ 20 ficam pra marca.',
+          'O resultado mostra o "Preço sugerido", o custo por unidade, o "Preço mínimo (sem lucro)" pra não ter prejuízo e quanto a marca lucra. No Serviço também aparece o preço mínimo.',
+          'Na "Encomenda (sob medida)", os custos fixos do mês entram em "Custos fixos (rateio do mês)", junto com quantas encomendas a marca faz por mês.',
         ],
       },
       {
@@ -457,12 +458,14 @@ const LISTA = [
       'A aba "Encomenda (sob medida)" mostra o preço no Premium e no Pro.',
       "Com a Meta do mês criada, a Calculadora mostra quantas vendas desse produto fecham a meta.",
       'No Premium, "Quanto esse preço deixa em cada canal" compara o lucro por canal, com as taxas salvas em Vendas.',
+      "Os valores aceitam o jeito de escrever do dia a dia: 1.500 é mil e quinhentos, e 12,50 é doze e cinquenta.",
+      "No MEI, o imposto sobre a venda fica em 0: o DAS é um valor fixo e entra nos custos fixos do mês.",
     ],
     duvidas: [
       {
         pergunta: 'Por que o preço aparece como "R$ --"',
         resposta:
-          "As porcentagens de taxa, imposto e lucro somam 100% ou mais. Assim não existe preço que feche a conta. Baixe alguma delas.",
+          'Aparece em três casos, e o motivo fica escrito logo abaixo do preço. Taxa, imposto e lucro somam 100% ou mais, e nenhum preço fecha a conta. Tem custo fixo ou pró-labore sem "Quantas peças a marca vende por mês" preenchido, e o custo inteiro cairia numa peça só. Ou algum campo tem um número que a conta não entende, marcado em vermelho.',
       },
       {
         pergunta: '"Quantas peças a marca vende por mês" é só deste produto',
@@ -746,26 +749,23 @@ const LISTA = [
     rota: "/projecao",
     abrir: "Abrir a Projeção",
     resumo:
-      "Quantas vendas ainda faltam no mês pra empatar, pra pagar o seu salário e pra bater a Meta do mês, e o que muda se o preço ou o custo mexer.",
-    // Sem `trecho` desde 24/11/2026 (ONE-241): o clipe narrado mostra a tela
-    // antiga (total do mês, botões de cenário embaixo). Volta quando a
-    // narração nova sair.
+      "Quantas vendas faltam pra empatar, pra pagar o seu salário e pra bater a Meta do mês, e o que muda se o preço ou o custo mexer.",
+    trecho: "projecao",
     passos: [
       {
         titulo: "Ler a projeção",
         itens: [
-          "Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro, o que já entrou no mês e a Meta do mês.",
-          '"Pra empatar" mostra quantas vendas ainda faltam pra pagar os custos fixos, com o total do mês ao lado.',
+          "Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro e a Meta do mês.",
+          '"Pra empatar" mostra quantas vendas pagam os custos fixos.',
           '"Pra pagar o seu salário" soma o salário aos custos fixos.',
-          '"Pra bater a meta" mostra quantas vendas faltam pra fechar a Meta do mês.',
+          '"Pra bater a meta" mostra quantas vendas fecham a Meta do mês.',
         ],
       },
       {
         titulo: "Testar um cenário",
         itens: [
-          'Clique em "E se eu cobrasse 10% a mais?" ou "E se meu custo caísse 10%?", logo abaixo do resultado. Os 10% saem sempre do valor real.',
-          "Ou mexa nos campos: custos fixos, quanto quer tirar por mês, ticket médio, custo médio e Meta do mês.",
-          'Durante o teste, a tela avisa "Simulação" e mostra embaixo de cada linha o número do seu mês real.',
+          "Mexa nos campos: custos fixos, quanto quer tirar por mês, ticket médio, custo médio e Meta do mês.",
+          'Ou clique em "E se eu cobrasse 10% a mais?" e "E se meu custo caísse 10%?".',
           '"Voltar ao valor real" desfaz o teste.',
           'Gostou do salário e da meta? Clique em "Salvar salário e meta".',
         ],
@@ -773,20 +773,13 @@ const LISTA = [
     ],
     bomSaber: [
       "A Projeção é do Premium e do Pro.",
-      "Precisa de pelo menos um produto com preço. Faltando algo, a tela diz o quê e leva pra lá.",
-      "Os custos fixos partem do último mês fechado. Se o mês atual já gastou mais, vale o mês atual.",
-      "O salário parte do que foi salvo aqui e, sem isso, do pró-labore do mês passado. O pró-labore já tirado neste mês aparece só como informação.",
+      "Precisa de pelo menos um produto com preço e dos custos fixos do mês lançados no Financeiro. Faltando algo, a tela diz o quê e leva pra lá.",
       '"Salvar salário e meta" guarda só esses dois. Os outros campos voltam ao valor real.',
     ],
     duvidas: [
       {
         pergunta: "Por que as vendas da meta são diferentes das de empatar",
         resposta:
-      {
-        pergunta: "O que entra em \"já entraram\"",
-        resposta:
-          "Todas as entradas do mês no Financeiro, a mesma soma que enche a barra da Meta do mês em Metas.",
-      },
           "A meta é o que precisa entrar, então divide pelo preço. Empatar é pagar os custos, então divide pelo lucro de cada venda.",
       },
       {

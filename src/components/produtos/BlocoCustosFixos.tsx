@@ -6,7 +6,7 @@ import {
   somarCustosFixos,
   type ChaveCustoFixo,
 } from "@/lib/custosFixos.functions";
-import { fmt, num } from "./tipos";
+import { fmt, normalizarDigitado, num, numInvalido } from "./tipos";
 
 export type DetalheFixos = Partial<Record<ChaveCustoFixo, string>>;
 
@@ -81,12 +81,13 @@ export function BlocoCustosFixos({
         <Campo
           label="Custos fixos do mês (R$)"
           hint="Aluguel, internet, ferramentas, contador: o que sai todo mês, venda ou não venda."
+          error={numInvalido(total) ? "Coloque um número." : undefined}
         >
           <input
-            type="number"
+            type="text"
             inputMode="decimal"
             value={total}
-            onChange={(e) => onTotal(e.target.value)}
+            onChange={(e) => onTotal(normalizarDigitado(e.target.value))}
             className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
             placeholder="0"
           />
@@ -141,12 +142,19 @@ export function BlocoCustosFixos({
           className="mt-2 grid grid-cols-1 gap-4 rounded-xl border border-[var(--line)] bg-white p-4 sm:grid-cols-2"
         >
           {ITENS_CUSTO_FIXO.map((i) => (
-            <Campo key={i.chave} label={`${i.categoria} (R$)`} hint={i.dica}>
+            <Campo
+              key={i.chave}
+              label={`${i.categoria} (R$)`}
+              hint={i.dica}
+              error={numInvalido(detalhe[i.chave] ?? "") ? "Coloque um número." : undefined}
+            >
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
                 value={detalhe[i.chave] ?? ""}
-                onChange={(e) => onDetalhe({ ...detalhe, [i.chave]: e.target.value })}
+                onChange={(e) =>
+                  onDetalhe({ ...detalhe, [i.chave]: normalizarDigitado(e.target.value) })
+                }
                 className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
                 placeholder="0"
               />

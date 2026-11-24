@@ -38,10 +38,27 @@ import { vendasParaFaturar } from "@/lib/projecao.functions";
 import { Campo } from "@/components/ui/Campo";
 import { BTN_ACAO, BTN_ACAO_CONTORNO } from "@/lib/botoes";
 import { tierDosNumeros, tiersPagos } from "@/lib/planos";
-import { fmt, num, numInvalido, type Prefill, type Produto } from "./tipos";
+import {
+  fmt,
+  normalizarDigitado,
+  num,
+  numInvalido,
+  numPos,
+  type Prefill,
+  type Produto,
+} from "./tipos";
 import { LucroPorCanal } from "./LucroPorCanal";
 
 type PerfilCalc = "produto" | "servico" | "encomenda";
+
+// Dicas dos campos de % (revisão de 24/11/2026). O lucro é "por dentro": quem
+// pensava em % sobre o custo digitava 100 pra dobrar e via "R$ --".
+const DICA_TAXA =
+  "A parte que a maquininha ou o marketplace fica de cada venda. Taxa fixa por venda, como a da Shopee, entra na comparação por canal, abaixo do preço.";
+const DICA_IMPOSTO =
+  "No MEI, deixe 0: o DAS é um valor fixo e entra nos custos fixos. No Simples, a alíquota da faixa da marca.";
+const DICA_LUCRO =
+  "Parte do preço final que fica de lucro, não porcentagem sobre o custo. Com 20%, de cada R$ 100 vendidos, R$ 20 ficam pra marca.";
 
 interface ItemMaterial {
   id: string;
@@ -174,12 +191,14 @@ export function Calculadora({
       ITENS_CUSTO_FIXO.map((i) => [i.chave, v(PREFIXO_FIXO + i.chave)]).filter(([, x]) => x),
     ),
   );
-  const fixosMes = fixosDetalhado ? somarCustosFixos(fixosDetalhe) : num(despesasFixas);
-  const materiaPrimaVal = mpDetalhada ? totalDosInsumos(itensMp) : num(materiaPrima);
-  const embalagemVal = embDetalhada ? totalDosInsumos(itensEmb) : num(embalagem);
+  // numPos: custo negativo digitado não baixa a conta (o campo fica marcado
+  // em vermelho e o preço não é guardado até corrigir).
+  const fixosMes = fixosDetalhado ? somarCustosFixos(fixosDetalhe) : numPos(despesasFixas);
+  const materiaPrimaVal = mpDetalhada ? totalDosInsumos(itensMp) : numPos(materiaPrima);
+  const embalagemVal = embDetalhada ? totalDosInsumos(itensEmb) : numPos(embalagem);
   const maoObraVal = maoObraDetalhada
-    ? maoDeObraPorPeca(num(minutosPorPeca), num(valorHora))
-    : num(maoObra);
+    ? maoDeObraPorPeca(numPos(minutosPorPeca), numPos(valorHora))
+    : numPos(maoObra);
 
   // ── Perfil Encomenda (Pro) ──
   // valorHora/horas são os MESMOS estados do perfil Serviço acima (de propósito:
@@ -194,6 +213,9 @@ export function Calculadora({
   const [taxaVendaE, setTaxaVendaE] = useState(() => v("taxaVendaE"));
   const [impostosE, setImpostosE] = useState(() => v("impostosE"));
   const [quantoSobraPct, setQuantoSobraPct] = useState(() => v("quantoSobraPct"));
+  // Desde 24/11/2026 a Encomenda também rateia os custos fixos (antes o
+  // aluguel ficava de fora e a mesma peça saía mais barata aqui que no Produto).
+  const [qtdEncomendas, setQtdEncomendas] = useState(() => v("qtdEncomendas"));
   const [valorHoraSalvo, setValorHoraSalvo] = useState(false);
   const [salvandoValorHora, setSalvandoValorHora] = useState(false);
   const valorHoraFocusRef = useRef<HTMLInputElement>(null);
@@ -235,16 +257,16 @@ export function Calculadora({
   // Fórmula "preço por dentro": taxa, imposto e lucro são % do PREÇO final,
   // então o preço = custo / (1 − soma_dos_percentuais/100).
   const produtoCalc = useMemo(() => {
-    const custoDireto = materiaPrimaVal + embalagemVal + maoObraVal + num(outrosDiretos);
-    const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: num(qtd) });
+    const custoDireto = materiaPrimaVal + embalagemVal + maoObraVal + numPos(outrosDiretos);
+    const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: numPos(qtd) });
     const rateioSalario = calcularRateio({
       custosFixosMes: 0,
-      proLaboreMes: num(proLabore),
-      qtdMes: num(qtd),
+      proLaboreMes: numPos(proLabore),
+      qtdMes: numPos(qtd),
     });
     const custoUnitario = custoDireto + rateioFixos + rateioSalario;
-    const taxaVendaPct = num(taxaVenda);
-    const impostosPct = num(impostos);
+    const taxaVendaPct = numPos(taxaVenda);
+    const impostosPct = numPos(impostos);
     const pctVenda = taxaVendaPct + impostosPct;
     const pctTotal = pctVenda + num(margem);
     const invalido = pctTotal >= 100;
@@ -283,16 +305,21 @@ export function Calculadora({
   ]);
 
   const servicoCalc = useMemo(() => {
-    const maoDeObra = num(valorHora) * num(horas);
+    const maoDeObra = numPos(valorHora) * numPos(horas);
     const custosProjeto =
-      num(materiais) + num(deslocamento) + num(ferramentas) + num(outrosServico);
-    const rateioFixos = calcularRateio({ custosFixosMes: fixosMes, qtdMes: num(qtdServicos) });
+      numPos(materiais) + numPos(deslocamento) + numPos(ferramentas) + numPos(outrosServico);
+    const rateioFixos = calcularRateio({
+      custosFixosMes: fixosMes,
+      qtdMes: numPos(qtdServicos),
+    });
     const custoTotal = maoDeObra + custosProjeto + rateioFixos;
-    const taxaVendaPct = num(taxaVendaS);
-    const impostosPct = num(impostosS);
+    const taxaVendaPct = numPos(taxaVendaS);
+    const impostosPct = numPos(impostosS);
     const pctVenda = taxaVendaPct + impostosPct;
     const pctTotal = pctVenda + num(margemSeg);
     const invalido = pctTotal >= 100;
+    // O Serviço não mostrava o preço mínimo, que Produto e Encomenda mostram.
+    const precoMinimo = calcularPrecoSugerido(custoTotal, pctVenda);
     const precoSugerido = calcularPrecoSugerido(custoTotal, pctTotal);
     const sobraInput = {
       precoVenda: precoSugerido,
@@ -307,6 +334,7 @@ export function Calculadora({
       custosProjeto,
       rateioFixos,
       custoTotal,
+      precoMinimo,
       precoSugerido,
       taxasReais,
       lucroReais,
@@ -330,21 +358,103 @@ export function Calculadora({
     () =>
       calcularEncomenda({
         itensMaterial: itensMaterial.map((it) => ({
-          quantidade: num(it.quantidade),
-          custoUnitario: num(it.custoUnitario),
+          quantidade: numPos(it.quantidade),
+          custoUnitario: numPos(it.custoUnitario),
         })),
-        horas: num(horas),
-        valorHora: num(valorHora),
-        itensExtras: itensExtras.map((it) => ({ valor: num(it.valor) })),
-        taxaVendaPct: num(taxaVendaE),
-        impostosPct: num(impostosE),
+        horas: numPos(horas),
+        valorHora: numPos(valorHora),
+        itensExtras: itensExtras.map((it) => ({ valor: numPos(it.valor) })),
+        custosFixosMes: fixosMes,
+        qtdMes: numPos(qtdEncomendas),
+        taxaVendaPct: numPos(taxaVendaE),
+        impostosPct: numPos(impostosE),
         quantoSobraPct: num(quantoSobraPct),
       }),
-    [itensMaterial, horas, valorHora, itensExtras, taxaVendaE, impostosE, quantoSobraPct],
+    [
+      itensMaterial,
+      horas,
+      valorHora,
+      itensExtras,
+      fixosMes,
+      qtdEncomendas,
+      taxaVendaE,
+      impostosE,
+      quantoSobraPct,
+    ],
   );
 
-  const calc =
+  // Revisão de 24/11/2026: três motivos pra não mostrar preço nenhum, em vez
+  // de mostrar um preço errado. (1) Taxa + imposto + lucro em 100% ou mais.
+  // (2) Custo fixo ou salário lançado sem "quantas por mês": dividia por 1 e o
+  // aluguel inteiro caía numa peça (e o primeiro preço podia ser guardado
+  // assim). (3) Campo com número inválido ou custo negativo.
+  const qtdDoPerfil =
+    perfil === "produto" ? qtd : perfil === "servico" ? qtdServicos : qtdEncomendas;
+  const temRateio = fixosMes > 0 || (perfil === "produto" && numPos(proLabore) > 0);
+  const faltaQtd = temRateio && numPos(qtdDoPerfil) <= 0;
+  const camposDoPerfil: string[] =
+    perfil === "produto"
+      ? [
+          ...(mpDetalhada ? itensMp.flatMap((i) => [i.pago, i.rende, i.uso]) : [materiaPrima]),
+          ...(embDetalhada ? itensEmb.flatMap((i) => [i.pago, i.rende, i.uso]) : [embalagem]),
+          ...(maoObraDetalhada ? [minutosPorPeca, valorHora] : [maoObra]),
+          outrosDiretos,
+          proLabore,
+          qtd,
+          taxaVenda,
+          impostos,
+        ]
+      : perfil === "servico"
+        ? [
+            valorHora,
+            horas,
+            materiais,
+            deslocamento,
+            ferramentas,
+            outrosServico,
+            qtdServicos,
+            taxaVendaS,
+            impostosS,
+          ]
+        : [
+            ...itensMaterial.flatMap((i) => [i.quantidade, i.custoUnitario]),
+            ...itensExtras.map((i) => i.valor),
+            valorHora,
+            horas,
+            qtdEncomendas,
+            taxaVendaE,
+            impostosE,
+          ];
+  const fixosDigitados = fixosDetalhado ? Object.values(fixosDetalhe) : [despesasFixas];
+  const lucroDigitado =
+    perfil === "produto" ? margem : perfil === "servico" ? margemSeg : quantoSobraPct;
+  const temCampoInvalido =
+    [...camposDoPerfil, ...fixosDigitados].some((s) => numInvalido(s ?? "")) ||
+    numInvalido(lucroDigitado, true);
+
+  const calcBase =
     perfil === "produto" ? produtoCalc : perfil === "servico" ? servicoCalc : encomendaCalc;
+  const pctSomado =
+    perfil === "produto"
+      ? numPos(taxaVenda) + numPos(impostos) + num(margem)
+      : perfil === "servico"
+        ? numPos(taxaVendaS) + numPos(impostosS) + num(margemSeg)
+        : numPos(taxaVendaE) + numPos(impostosE) + num(quantoSobraPct);
+  const fmtPct = (p: number) => `${Math.round(p * 100) / 100}`.replace(".", ",");
+  const motivoSemPreco: string | null = temCampoInvalido
+    ? "Tem campo com número que a conta não entende. Corrija o que está marcado em vermelho."
+    : faltaQtd
+      ? perfil === "produto"
+        ? 'Falta "Quantas peças a marca vende por mês". Sem esse número, o custo fixo e o salário inteiros cairiam numa peça só.'
+        : perfil === "servico"
+          ? 'Falta "Quantos serviços a marca faz por mês". Sem esse número, o custo fixo inteiro cairia num serviço só.'
+          : 'Falta "Quantas encomendas a marca faz por mês". Sem esse número, o custo fixo inteiro cairia numa encomenda só.'
+      : calcBase.invalido
+        ? `Taxa, imposto e lucro somam ${fmtPct(pctSomado)}%. Aqui o lucro é uma parte do preço final, não do custo, então a soma precisa ficar abaixo de 100%. Baixe alguma delas.`
+        : null;
+  // `calc.invalido` passa a valer pros três motivos: todo lugar que escondia o
+  // preço com as porcentagens em 100% esconde também nos outros dois.
+  const calc = { ...calcBase, invalido: motivoSemPreco !== null };
   const custoBase =
     perfil === "produto"
       ? produtoCalc.custoUnitario
@@ -360,15 +470,24 @@ export function Calculadora({
   // sobra (o aviso de preço abaixo do piso já aparece).
   const precoParaMeta = round2(calc.precoSugerido);
   const vendasParaMetaBoa =
-    lucroPorVenda > 0 && metaBoa ? vendasParaFaturar(metaBoa, precoParaMeta) : null;
+    !calc.invalido && lucroPorVenda > 0 && metaBoa
+      ? vendasParaFaturar(metaBoa, precoParaMeta)
+      : null;
   const taxaVendaPctAtual =
     perfil === "produto"
-      ? num(taxaVenda)
+      ? numPos(taxaVenda)
       : perfil === "servico"
-        ? num(taxaVendaS)
-        : num(taxaVendaE);
+        ? numPos(taxaVendaS)
+        : numPos(taxaVendaE);
   const impostosPctAtual =
-    perfil === "produto" ? num(impostos) : perfil === "servico" ? num(impostosS) : num(impostosE);
+    perfil === "produto"
+      ? numPos(impostos)
+      : perfil === "servico"
+        ? numPos(impostosS)
+        : numPos(impostosE);
+  // Custo com rateio dividido por 1 (falta a quantidade) ou campo inválido:
+  // o custo também sai da tela, não só o preço.
+  const escondeCusto = faltaQtd || temCampoInvalido;
 
   // Estados específicos do modo Encomenda (PRD): vazio, parcial (sem
   // valor-hora com horas lançadas) e erro de negócio (preço abaixo do piso).
@@ -379,7 +498,7 @@ export function Calculadora({
     num(horas) <= 0;
   const encomendaSemValorHora = perfil === "encomenda" && num(horas) > 0 && num(valorHora) <= 0;
   const encomendaAbaixoDoPiso =
-    perfil === "encomenda" && !encomendaVazia && num(quantoSobraPct) < 0;
+    perfil === "encomenda" && !encomendaVazia && !calc.invalido && num(quantoSobraPct) < 0;
 
   // Preço abaixo do piso nos perfis Produto e Serviço (sobra pedida negativa):
   // a Encomenda já avisava, os outros dois mostravam "Seu lucro" negativo calado.
@@ -475,6 +594,8 @@ export function Calculadora({
           valorHora,
           horas,
           itensExtras: JSON.stringify(itensExtras),
+          ...fixosParaBreakdown(),
+          qtdEncomendas,
           taxaVendaE,
           impostosE,
           quantoSobraPct,
@@ -678,18 +799,28 @@ export function Calculadora({
         <input
           id={id}
           ref={onde === "encomenda" ? valorHoraFocusRef : undefined}
-          type="number"
+          type="text"
           inputMode="decimal"
           value={valorHora}
-          onChange={(e) => setValorHora(e.target.value)}
+          onChange={(e) => setValorHora(normalizarDigitado(e.target.value))}
           disabled={valorHoraPadraoCarregando && !valorHora}
-          aria-describedby={dica ? `${id}-dica` : undefined}
+          aria-invalid={numInvalido(valorHora) || undefined}
+          aria-describedby={
+            [dica ? `${id}-dica` : "", numInvalido(valorHora) ? `${id}-erro` : ""]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
           className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none disabled:bg-[var(--surface)]"
           placeholder={valorHoraPadraoCarregando && !valorHora ? "carregando..." : "0"}
         />
         {dica && (
           <p id={`${id}-dica`} className="mt-1.5 text-[12.5px] text-[var(--muted)]">
             {dica}
+          </p>
+        )}
+        {numInvalido(valorHora) && (
+          <p id={`${id}-erro`} className="mt-1.5 text-[12.5px] text-[var(--danger)]">
+            Coloque um número.
           </p>
         )}
         {userId && num(valorHora) > 0 && num(valorHora) !== valorHoraPadrao && (
@@ -898,11 +1029,23 @@ export function Calculadora({
           <GrupoCalc titulo="Sobre o preço de venda (%)">
             <CampoNum
               label="Taxa de maquininha / marketplace (%)"
+              dica={DICA_TAXA}
               value={taxaVenda}
               onChange={setTaxaVenda}
             />
-            <CampoNum label="Impostos sobre a venda (%)" value={impostos} onChange={setImpostos} />
-            <CampoNum label="Quanto quer lucrar (%)" value={margem} onChange={setMargem} />
+            <CampoNum
+              label="Impostos sobre a venda (%)"
+              dica={DICA_IMPOSTO}
+              value={impostos}
+              onChange={setImpostos}
+            />
+            <CampoNum
+              label="Quanto quer lucrar (%)"
+              dica={DICA_LUCRO}
+              value={margem}
+              onChange={setMargem}
+              permiteNegativo
+            />
           </GrupoCalc>
         </div>
       ) : perfil === "servico" ? (
@@ -950,13 +1093,25 @@ export function Calculadora({
             </p>
           </GrupoCalc>
           <GrupoCalc titulo="Sobre o preço (%)">
-            <CampoNum label="Taxa / comissão (%)" value={taxaVendaS} onChange={setTaxaVendaS} />
+            <CampoNum
+              label="Taxa / comissão (%)"
+              dica={DICA_TAXA}
+              value={taxaVendaS}
+              onChange={setTaxaVendaS}
+            />
             <CampoNum
               label="Impostos sobre a venda (%)"
+              dica={DICA_IMPOSTO}
               value={impostosS}
               onChange={setImpostosS}
             />
-            <CampoNum label="Quanto quer lucrar (%)" value={margemSeg} onChange={setMargemSeg} />
+            <CampoNum
+              label="Quanto quer lucrar (%)"
+              dica={DICA_LUCRO}
+              value={margemSeg}
+              onChange={setMargemSeg}
+              permiteNegativo
+            />
           </GrupoCalc>
         </div>
       ) : (
@@ -1056,17 +1211,49 @@ export function Calculadora({
             </button>
           </div>
 
+          <GrupoCalc titulo="Custos fixos (rateio do mês)">
+            <div className="sm:col-span-2">
+              <BlocoCustosFixos
+                total={despesasFixas}
+                onTotal={setDespesasFixas}
+                detalhado={fixosDetalhado}
+                onDetalhado={setFixosDetalhado}
+                detalhe={fixosDetalhe}
+                onDetalhe={setFixosDetalhe}
+                doFinanceiro={fixosDoFinanceiro}
+                reservaEquipamentos={reservaEquipamentos}
+              />
+            </div>
+            <CampoNum
+              label="Quantas encomendas a marca faz por mês"
+              dica="Some todas as encomendas e vendas do mês, não só esta. O custo fixo é da marca inteira e se divide entre todas."
+              value={qtdEncomendas}
+              onChange={setQtdEncomendas}
+            />
+            <p className="self-center text-[12.5px] text-[var(--muted)]">
+              O seu salário já entra pelo valor da hora, por isso o pró-labore não aparece aqui.
+            </p>
+          </GrupoCalc>
+
           <GrupoCalc titulo="Sobre o preço (%)">
-            <CampoNum label="Taxa / comissão (%)" value={taxaVendaE} onChange={setTaxaVendaE} />
+            <CampoNum
+              label="Taxa / comissão (%)"
+              dica={DICA_TAXA}
+              value={taxaVendaE}
+              onChange={setTaxaVendaE}
+            />
             <CampoNum
               label="Impostos sobre a venda (%)"
+              dica={DICA_IMPOSTO}
               value={impostosE}
               onChange={setImpostosE}
             />
             <CampoNum
               label="Quanto quer lucrar (%)"
+              dica={DICA_LUCRO}
               value={quantoSobraPct}
               onChange={setQuantoSobraPct}
+              permiteNegativo
             />
           </GrupoCalc>
         </div>
@@ -1111,11 +1298,8 @@ export function Calculadora({
                 </Link>
               </div>
             )}
-            {calc.invalido && (
-              <p className="mt-2 text-[13px] text-[var(--danger)]">
-                As porcentagens (taxas + impostos + lucro) somam 100% ou mais. Reduza alguma pra
-                calcular o preço.
-              </p>
+            {motivoSemPreco && (
+              <p className="mt-2 text-[13px] text-[var(--danger)]">{motivoSemPreco}</p>
             )}
             {encomendaAbaixoDoPiso && (
               <p className="mt-2 text-[13px] text-[var(--danger)]">
@@ -1134,38 +1318,59 @@ export function Calculadora({
                 <>
                   <LinhaCalc
                     label="Custo por unidade"
-                    valor={fmt(round2(produtoCalc.custoUnitario))}
+                    valor={escondeCusto ? "R$ --" : fmt(round2(produtoCalc.custoUnitario))}
                   />
-                  <p className="text-[12px] text-[var(--ink-soft)]">
-                    diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
-                    {fmt(round2(produtoCalc.rateioFixos))}
-                    {produtoCalc.rateioSalario > 0 &&
-                      ` + salário ${fmt(round2(produtoCalc.rateioSalario))}`}
-                  </p>
+                  {!escondeCusto && (
+                    <p className="text-[12px] text-[var(--ink-soft)]">
+                      diretos {fmt(round2(produtoCalc.custoDireto))} + rateio dos fixos{" "}
+                      {fmt(round2(produtoCalc.rateioFixos))}
+                      {produtoCalc.rateioSalario > 0 &&
+                        ` + salário ${fmt(round2(produtoCalc.rateioSalario))}`}
+                    </p>
+                  )}
                   <LinhaCalc
                     label="Preço mínimo (sem lucro)"
-                    valor={fmt(round2(produtoCalc.precoMinimo))}
+                    valor={escondeCusto ? "R$ --" : fmt(round2(produtoCalc.precoMinimo))}
                   />
                 </>
               ) : perfil === "servico" ? (
                 <>
-                  <LinhaCalc label="Custo total" valor={fmt(round2(servicoCalc.custoTotal))} />
-                  <p className="text-[12px] text-[var(--muted)]">
-                    mão de obra {fmt(round2(servicoCalc.maoDeObra))} + custos do projeto{" "}
-                    {fmt(round2(servicoCalc.custosProjeto))}
-                    {servicoCalc.rateioFixos > 0 &&
-                      ` + rateio dos fixos ${fmt(round2(servicoCalc.rateioFixos))}`}
-                  </p>
+                  <LinhaCalc
+                    label="Custo total"
+                    valor={escondeCusto ? "R$ --" : fmt(round2(servicoCalc.custoTotal))}
+                  />
+                  {!escondeCusto && (
+                    <p className="text-[12px] text-[var(--muted)]">
+                      mão de obra {fmt(round2(servicoCalc.maoDeObra))} + custos do projeto{" "}
+                      {fmt(round2(servicoCalc.custosProjeto))}
+                      {servicoCalc.rateioFixos > 0 &&
+                        ` + rateio dos fixos ${fmt(round2(servicoCalc.rateioFixos))}`}
+                    </p>
+                  )}
+                  <LinhaCalc
+                    label="Preço mínimo (sem lucro)"
+                    valor={escondeCusto ? "R$ --" : fmt(round2(servicoCalc.precoMinimo))}
+                  />
                 </>
               ) : (
                 <>
-                  <LinhaCalc label="Custo total" valor={fmt(round2(encomendaCalc.custoTotal))} />
-                  <p className="text-[12px] text-[var(--muted)]">
-                    material {fmt(round2(encomendaCalc.custoMaterial))} + trabalho{" "}
-                    {fmt(round2(encomendaCalc.custoTrabalho))} + extras{" "}
-                    {fmt(round2(encomendaCalc.custoExtras))}
-                  </p>
-                  <LinhaCalc label="Piso (sem prejuízo)" valor={fmt(round2(encomendaCalc.piso))} />
+                  <LinhaCalc
+                    label="Custo total"
+                    valor={escondeCusto ? "R$ --" : fmt(round2(encomendaCalc.custoTotal))}
+                  />
+                  {!escondeCusto && (
+                    <p className="text-[12px] text-[var(--muted)]">
+                      material {fmt(round2(encomendaCalc.custoMaterial))} + trabalho{" "}
+                      {fmt(round2(encomendaCalc.custoTrabalho))} + extras{" "}
+                      {fmt(round2(encomendaCalc.custoExtras))}
+                      {encomendaCalc.rateioFixos > 0 &&
+                        ` + rateio dos fixos ${fmt(round2(encomendaCalc.rateioFixos))}`}
+                    </p>
+                  )}
+                  <LinhaCalc
+                    label="Piso (sem prejuízo)"
+                    valor={escondeCusto ? "R$ --" : fmt(round2(encomendaCalc.piso))}
+                  />
                 </>
               )}
               {/* Com 100% ou mais o preço cai pro custo (calcularPrecoSugerido) e
@@ -1216,7 +1421,7 @@ export function Calculadora({
               <div className="mt-5 border-t border-[var(--line)] pt-4">
                 {calc.invalido && (
                   <p id="calc-salvar-motivo" className="mb-3 text-[13px] text-[var(--ink-soft)]">
-                    Pra guardar, as porcentagens precisam somar menos de 100%.
+                    Pra guardar, resolva o aviso logo abaixo do preço.
                   </p>
                 )}
                 <button
@@ -1355,7 +1560,7 @@ function BlocoPrimeiroPreco({
   } else if (invalido && !guardado) {
     recado = (
       <p className="text-[13px] text-[var(--ink-soft)]">
-        Pra guardar, as porcentagens precisam somar menos de 100%.
+        Pra guardar, resolva o aviso logo abaixo do preço.
       </p>
     );
   } else if (!guardado) {
@@ -1413,20 +1618,25 @@ function CampoNum({
   onChange,
   dica,
   error,
+  permiteNegativo = false,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   dica?: string;
   error?: string;
+  /** Só o "Quanto quer lucrar (%)": lucro negativo mostra o aviso de abaixo do piso. */
+  permiteNegativo?: boolean;
 }) {
+  // Campo de texto desde 24/11/2026: type="number" lia "1.500" como 1,5.
+  const erro = error ?? (numInvalido(value, permiteNegativo) ? "Coloque um número." : undefined);
   return (
-    <Campo label={label} hint={dica} error={error}>
+    <Campo label={label} hint={dica} error={erro}>
       <input
-        type="number"
+        type="text"
         inputMode="decimal"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(normalizarDigitado(e.target.value))}
         className="w-full rounded-lg border border-[var(--line)] px-3 py-2 text-[14px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none"
         placeholder="0"
       />

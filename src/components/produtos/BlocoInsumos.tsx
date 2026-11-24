@@ -2,7 +2,7 @@ import { useId, type ReactNode } from "react";
 import { ChevronDown, ChevronUp, Copy, Plus, Trash2 } from "lucide-react";
 import { Campo } from "@/components/ui/Campo";
 import { custoNaPeca, maoDeObraPorPeca } from "@/lib/precificacao.functions";
-import { fmt, num, numInvalido } from "./tipos";
+import { fmt, normalizarDigitado, num, numInvalido } from "./tipos";
 import { itemParaConta, totalDosInsumos, type ItemInsumo } from "./insumos";
 
 const round2 = (v: number) => Math.round(v * 100) / 100;
@@ -25,12 +25,12 @@ function CampoTotal({
   onChange: (v: string) => void;
 }) {
   return (
-    <Campo label={label} hint={dica}>
+    <Campo label={label} hint={dica} error={numInvalido(value) ? "Coloque um número." : undefined}>
       <input
-        type="number"
+        type="text"
         inputMode="decimal"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(normalizarDigitado(e.target.value))}
         className={INPUT}
         placeholder="0"
       />
@@ -255,10 +255,10 @@ function CampoLinha({
   return (
     <Campo label={label} error={numInvalido(value) ? "Coloque um número." : undefined}>
       <input
-        type="number"
+        type="text"
         inputMode="decimal"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => onChange(normalizarDigitado(e.target.value))}
         className={INPUT}
         placeholder={placeholder}
       />
@@ -334,10 +334,10 @@ export function BlocoMaoDeObra({
             error={numInvalido(minutos) ? "Coloque um número." : undefined}
           >
             <input
-              type="number"
+              type="text"
               inputMode="decimal"
               value={minutos}
-              onChange={(e) => onMinutos(e.target.value)}
+              onChange={(e) => onMinutos(normalizarDigitado(e.target.value))}
               className={INPUT}
               placeholder="0"
             />
