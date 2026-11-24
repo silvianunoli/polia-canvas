@@ -39,8 +39,10 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
+            // Minify desligado (23/11): com ele ligado o app fechava sozinho logo depois do
+            // login no celular da Sil. O app é uma WebView, o ganho de tamanho não compensa.
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig keystorePropsFile.exists() ? signingConfigs.release : signingConfigs.debug
         }
