@@ -5,7 +5,7 @@ import { GradeProdutos } from "@/components/loja/GradeProdutos";
 import { IconeWhatsapp } from "@/components/loja/icones";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { SelosLoja } from "@/components/loja/SelosLoja";
-import { produtosDaCategoria, temFiltroDeCategoria, type LojaPublica } from "@/lib/loja";
+import { BUSCA_LOJA_MINIMO, buscarProdutos, produtosDaCategoria, temFiltroDeCategoria, type LojaPublica } from "@/lib/loja";
 import { linkWhatsapp } from "@/lib/lojaVitrine";
 
 // Vitrine da loja (página inicial de /loja/<endereço>). Loader, head e casca
@@ -23,7 +23,14 @@ function VitrinePage() {
   const temBanner = (loja.banners ?? []).length > 0;
   const [categoria, setCategoria] = useState<string | null>(null);
   const filtro = temFiltroDeCategoria(loja);
-  const lista = filtro ? produtosDaCategoria(loja.produtos, categoria) : loja.produtos;
+  const [busca, setBusca] = useState("");
+  // Busca (ONE-239): só com vitrine grande; soma com a categoria escolhida.
+  const temBusca = loja.produtos.length >= BUSCA_LOJA_MINIMO;
+  const lista = buscarProdutos(filtro ? produtosDaCategoria(loja.produtos, categoria) : loja.produtos, temBusca ? busca : "");
+  const verTodos = () => {
+    setBusca("");
+    setCategoria(null);
+  };
   const mostraCores = loja.mostrarCores && loja.cores.length > 0;
   // Loja só de pronta entrega: selo e passo final sem prazo de produção.
   const todasProntas = loja.produtos.length > 0 && loja.produtos.every((p) => p.prontaEntrega);
@@ -67,6 +74,22 @@ function VitrinePage() {
           </div>
           {loja.produtos.length > 0 && <p>Toque num produto pra ver as fotos, as opções e pôr no carrinho.</p>}
         </div>
+        {temBusca && (
+          <div className="busca-loja" role="search">
+            <label htmlFor="busca-produto" className="sr-only">
+              Buscar produto
+            </label>
+            <input
+              id="busca-produto"
+              type="search"
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              placeholder="Buscar produto"
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+          </div>
+        )}
         {filtro && (
           <div className="categorias" role="group" aria-label="Filtrar por categoria">
             <button type="button" aria-pressed={categoria === null} onClick={() => setCategoria(null)}>
@@ -84,7 +107,14 @@ function VitrinePage() {
             ))}
           </div>
         )}
-        {loja.produtos.length ? (
+        {loja.produtos.length && !lista.length ? (
+          <div className="vazio-loja" role="status">
+            <p>{busca.trim() ? `Nenhum produto com “${busca.trim()}”.` : "Nenhum produto nessa categoria."}</p>
+            <button type="button" className="ver-todos" onClick={verTodos}>
+              Ver todos
+            </button>
+          </div>
+        ) : loja.produtos.length ? (
           <GradeProdutos slug={loja.slug} produtos={lista} />
         ) : (
           <p className="vazio-loja">A vitrine está sendo montada. Volte daqui a pouco pra ver os produtos.</p>

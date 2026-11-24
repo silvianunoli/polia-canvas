@@ -23,6 +23,11 @@ import {
   primeiroNome,
   mudarQuantidade,
   resumoDoCarrinho,
+  descontoDoCupom,
+  normalizarCodigoCupom,
+  codigoCupomValido,
+  problemaDoCupomNovo,
+  rotuloDoCupom,
   selosDaLoja,
   sinalDoPreco,
   validarCheckout,
@@ -41,6 +46,7 @@ const produtos: ProdutoLoja[] = [
     nome: "Bolsa Lua",
     descricao: null,
     preco: 189,
+    precoDe: null,
     fotos: [],
     variacoes: [
       { id: ROSA, nome: "Rosa" },
@@ -48,7 +54,7 @@ const produtos: ProdutoLoja[] = [
     ],
     categoriaId: null, usaPaleta: false, maxCores: 1, precoSobConsulta: false, corSobConsulta: false, tamanhoSobConsulta: false, prontaEntrega: false, esgotado: false,
   },
-  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, maxCores: 1, precoSobConsulta: false, corSobConsulta: false, tamanhoSobConsulta: false, prontaEntrega: false, esgotado: false },
+  { id: CHAVEIRO, nome: "Chaveiro", descricao: null, preco: 30.5, precoDe: null, fotos: [], variacoes: [], categoriaId: null, usaPaleta: false, maxCores: 1, precoSobConsulta: false, corSobConsulta: false, tamanhoSobConsulta: false, prontaEntrega: false, esgotado: false },
 ];
 
 describe("limparCarrinho", () => {
@@ -138,9 +144,9 @@ describe("linhas e resumo", () => {
   });
   it("soma quantidade, subtotal e sinal", () => {
     const linhas = linhasDoCarrinho(itens, produtos);
-    expect(resumoDoCarrinho(linhas, 50)).toEqual({ quantidade: 3, subtotal: 408.5, sinal: 204.25 });
+    expect(resumoDoCarrinho(linhas, 50)).toEqual({ quantidade: 3, subtotal: 408.5, desconto: 0, total: 408.5, sinal: 204.25 });
     expect(resumoDoCarrinho(linhas, 0).sinal).toBe(0);
-    expect(resumoDoCarrinho([], 30)).toEqual({ quantidade: 0, subtotal: 0, sinal: 0 });
+    expect(resumoDoCarrinho([], 30)).toEqual({ quantidade: 0, subtotal: 0, desconto: 0, total: 0, sinal: 0 });
   });
   it("sinal de um produto só", () => {
     expect(sinalDoPreco(189, 50)).toBe(94.5);
@@ -333,6 +339,7 @@ describe("limparCarrinho com várias cores (22/11/2026)", () => {
     nome: "Bolsa Lua",
     descricao: null,
     preco: 189,
+    precoDe: null,
     fotos: [],
     variacoes: [
       { id: "foto", nome: "Cor da foto", hex: null },
@@ -371,5 +378,37 @@ describe("sob consulta (22/11/2026)", () => {
     expect(detalheDoItem({ ...base, corSobConsulta: true, tamanhoSobConsulta: true }, "Rosa")).toBe(
       "Rosa · Cor sob consulta · Tamanho sob consulta",
     );
+  });
+});
+
+describe("cupom no carrinho (ONE-239)", () => {
+  const dezPorCento = { codigo: "NATAL10", tipo: "percentual" as const, valor: 10 };
+  it("porcentagem arredonda nos centavos, igual ao banco", () => {
+    expect(descontoDoCupom(305.8, dezPorCento)).toBe(30.58);
+    expect(descontoDoCupom(89.8, dezPorCento)).toBe(8.98);
+  });
+  it("valor fixo nunca passa do subtotal", () => {
+    expect(descontoDoCupom(10, { codigo: "FRETE", tipo: "valor", valor: 15 })).toBe(10);
+    expect(descontoDoCupom(0, dezPorCento)).toBe(0);
+    expect(descontoDoCupom(50, null)).toBe(0);
+  });
+  it("o sinal sai do total já com desconto", () => {
+    const r = resumoDoCarrinho([{ total: 89.8, quantidade: 2 } as never], 50, dezPorCento);
+    expect(r).toMatchObject({ subtotal: 89.8, desconto: 8.98, total: 80.82, sinal: 40.41 });
+  });
+  it("código vira maiúsculo e sem espaço, e só aceita o formato do banco", () => {
+    expect(normalizarCodigoCupom(" natal 10 ")).toBe("NATAL10");
+    expect(codigoCupomValido("NATAL10")).toBe(true);
+    expect(codigoCupomValido("NA")).toBe(false);
+    expect(codigoCupomValido("NATAL!")).toBe(false);
+  });
+  it("cupom novo com motivo claro", () => {
+    expect(problemaDoCupomNovo({ codigo: "NATAL10", tipo: "percentual", valor: 10, limiteUsos: null })).toBeNull();
+    expect(problemaDoCupomNovo({ codigo: "NATAL10", tipo: "percentual", valor: 100, limiteUsos: null })).toMatch(/menor que 100/);
+    expect(problemaDoCupomNovo({ codigo: "NATAL10", tipo: "valor", valor: 0, limiteUsos: null })).toMatch(/valor/);
+    expect(problemaDoCupomNovo({ codigo: "NATAL10", tipo: "valor", valor: 5, limiteUsos: 1.5 })).toMatch(/inteiro/);
+  });
+  it("rótulo do cupom", () => {
+    expect(rotuloDoCupom(dezPorCento)).toBe("10% de desconto");
   });
 });

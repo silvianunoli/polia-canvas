@@ -237,11 +237,29 @@ export function lerCoresColadas(texto: string): { cores: Array<Omit<CorLoja, "id
   return { cores, ignoradas };
 }
 
+/**
+ * Preço de-por (24/11/2026, ONE-239): o "antes" só vale quando é maior que o
+ * preço de venda. Igual ou menor, a loja mostra só o preço.
+ */
+export function precoDeValido(de: number | string | null | undefined, por: number): number | null {
+  const n = de == null || de === "" ? NaN : Number(de);
+  return Number.isFinite(n) && n > por && por > 0 ? Math.round(n * 100) / 100 : null;
+}
+
+/** O selo "-25%" do preço de-por; null quando não há desconto de pelo menos 1%. */
+export function descontoDoDePor(de: number | null, por: number): number | null {
+  if (de == null || !(de > por) || !(por > 0)) return null;
+  const pct = Math.round((1 - por / de) * 100);
+  return pct >= 1 ? pct : null;
+}
+
 export interface ProdutoLoja {
   id: string;
   nome: string;
   descricao: string | null;
   preco: number;
+  /** Preço "antes", riscado ao lado do preço; null quando não tem (precoDeValido). */
+  precoDe: number | null;
   fotos: string[];
   variacoes: VariacaoLoja[];
   /** Categoria do produto (produto_categorias); null = sem categoria. */
@@ -311,6 +329,25 @@ export function produtosDaCategoria<T extends Pick<ProdutoLoja, "categoriaId">>(
   return categoriaId ? produtos.filter((p) => p.categoriaId === categoriaId) : produtos;
 }
 
+/** A busca da loja só aparece quando a vitrine tem pelo menos isso de produtos. */
+export const BUSCA_LOJA_MINIMO = 8;
+
+const semAcento = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+/**
+ * Busca da loja (24/11/2026, ONE-239): pelo nome, sem ligar pra acento nem
+ * maiúscula, e todas as palavras precisam aparecer ("caneca rosa" acha
+ * "Caneca craquelê rosa"). Termo vazio devolve a lista inteira.
+ */
+export function buscarProdutos<T extends Pick<ProdutoLoja, "nome">>(produtos: T[], termo: string): T[] {
+  const palavras = semAcento(termo).split(/\s+/).filter(Boolean);
+  if (!palavras.length) return produtos;
+  return produtos.filter((p) => {
+    const nome = semAcento(p.nome);
+    return palavras.every((w) => nome.includes(w));
+  });
+}
+
 /** Pedido que a loja manda: produto, variação e quantidade. Preço e nome saem do banco. */
 export const pedidoLojaSchema = z.object({
   slug: z.string().min(3).max(40),
@@ -338,6 +375,8 @@ export const pedidoLojaSchema = z.object({
   endereco: z.string().trim().max(300).optional(),
   presentePara: z.string().trim().max(120).optional(),
   observacao: z.string().trim().max(400).optional(),
+  /** Cupom que a cliente aplicou (ONE-239). O banco confere e calcula o desconto. */
+  cupom: z.string().trim().max(40).optional(),
   turnstileToken: z.string().optional(),
   /** Campo-isca: gente não vê, robô preenche. */
   hp: z.string().optional(),
@@ -356,7 +395,7 @@ export function observacaoDoPedidoLoja(p: Pick<PedidoLoja, "endereco" | "present
 
 export type ResultadoPedidoLoja =
   | { ok: true; repetido: boolean }
-  | { ok: false; motivo: "turnstile" | "whatsapp" | "indisponivel" | "limite" | "invalido" | "erro" };
+  | { ok: false; motivo: "turnstile" | "whatsapp" | "indisponivel" | "limite" | "invalido" | "cupom" | "erro" };
 
 /** "R$ 189" / "R$ 144,50": o jeito que a loja escreve preço. */
 export function reais(v: number): string {
@@ -368,13 +407,17 @@ export function mensagemDoPedido(
   loja: Pick<LojaPublica, "nome" | "sinalPercentual">,
   itens: Array<{ nome: string; variacao: string | null; quantidade: number; preco: number }>,
   dados: { nome: string; whatsapp: string; endereco?: string; presentePara?: string; observacao?: string },
+  cupom?: { codigo: string; desconto: number },
 ): string {
-  const sub = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const bruto = itens.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const desconto = cupom && cupom.desconto > 0 ? Math.min(cupom.desconto, bruto) : 0;
+  const sub = Math.round((bruto - desconto) * 100) / 100;
   const linhas = [`*Pedido pela loja da ${loja.nome}*`, "", `Nome: ${dados.nome}`, `WhatsApp: ${dados.whatsapp}`];
   if (dados.endereco) linhas.push(`Endereço: ${dados.endereco}`);
   if (dados.presentePara) linhas.push(`Presente para: ${dados.presentePara}`);
   linhas.push("", "*Itens*");
   for (const i of itens) linhas.push(`- ${i.nome}${i.variacao ? `, ${i.variacao}` : ""} x${i.quantidade}: ${reais(i.preco * i.quantidade)}`);
+  if (cupom && desconto > 0) linhas.push("", `Subtotal: ${reais(bruto)}`, `Cupom ${cupom.codigo}: - ${reais(desconto)}`);
   linhas.push("", `*Total: ${reais(sub)}*`);
   if (loja.sinalPercentual) linhas.push(`Sinal de ${loja.sinalPercentual}% pra começar: ${reais((sub * loja.sinalPercentual) / 100)}`);
   if (dados.observacao) linhas.push("", `Observações: ${dados.observacao}`);

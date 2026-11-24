@@ -5,14 +5,17 @@ import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { useTurnstile } from "@/hooks/useTurnstile";
 import { reais } from "@/lib/loja";
 import { urlCanonica } from "@/lib/seo";
-import { enviarPedidoLoja } from "@/lib/loja.functions";
+import { conferirCupomLoja, enviarPedidoLoja } from "@/lib/loja.functions";
 import {
   detalheDoItem,
   linkWhatsapp,
   mascararCep,
   mascararWhatsapp,
+  codigoCupomValido,
   mensagemDoErroPedido,
   montarPedido,
+  normalizarCodigoCupom,
+  rotuloDoCupom,
   soDigitos,
   validarCheckout,
   type CampoCheckout,
@@ -80,6 +83,90 @@ function CarrinhoVazio() {
   );
 }
 
+/**
+ * Cupom de desconto no carrinho (24/11/2026, ONE-239). Confere na loja antes
+ * de mostrar o desconto; o banco confere de novo quando grava o pedido.
+ */
+function CampoCupom() {
+  const { loja, cupom, aplicarCupom } = useLojaVitrine();
+  const id = useId();
+  const [texto, setTexto] = useState("");
+  const [erro, setErroCupom] = useState<string | null>(null);
+  const [conferindo, setConferindo] = useState(false);
+
+  const aplicar = async () => {
+    const codigo = normalizarCodigoCupom(texto);
+    if (!codigoCupomValido(codigo)) {
+      setErroCupom("Confira o código: só letras, números, hífen ou sublinhado.");
+      return;
+    }
+    setConferindo(true);
+    setErroCupom(null);
+    try {
+      const c = await conferirCupomLoja({ data: { slug: loja.slug, codigo } });
+      if (!c) {
+        setErroCupom("Esse cupom não existe ou não vale mais.");
+        return;
+      }
+      aplicarCupom(c);
+      setTexto("");
+    } catch {
+      setErroCupom("Não deu pra conferir o cupom agora. Tente de novo em instantes.");
+    } finally {
+      setConferindo(false);
+    }
+  };
+
+  if (cupom)
+    return (
+      <div className="cupom-aplicado" role="status">
+        <span>
+          <b>{cupom.codigo}</b> · {rotuloDoCupom(cupom)}
+        </span>
+        <button type="button" onClick={() => aplicarCupom(null)}>
+          Tirar
+        </button>
+      </div>
+    );
+
+  return (
+    <div className="campo campo-cupom">
+      <label htmlFor={id}>Cupom de desconto</label>
+      <div className="linha-cupom">
+        <input
+          id={id}
+          value={texto}
+          maxLength={40}
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          onChange={(e) => {
+            setTexto(e.target.value);
+            if (erro) setErroCupom(null);
+          }}
+          onKeyDown={(e) => {
+            // Enter aqui aplica o cupom, não confirma o pedido.
+            if (e.key === "Enter") {
+              e.preventDefault();
+              void aplicar();
+            }
+          }}
+          aria-invalid={!!erro}
+          aria-describedby={erro ? `${id}-erro` : undefined}
+        />
+        <button type="button" onClick={() => void aplicar()} disabled={conferindo || !texto.trim()}>
+          {conferindo ? "Conferindo…" : "Aplicar"}
+        </button>
+      </div>
+      {erro && (
+        <p id={`${id}-erro`} className="erro-campo" role="alert">
+          {erro}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Campo({
   id,
   rotulo,
@@ -115,7 +202,7 @@ function Campo({
 }
 
 function Checkout() {
-  const { loja, itens, linhas, resumo, mudar, dados, mudarDados, idDoEnvio, concluir } = useLojaVitrine();
+  const { loja, itens, linhas, resumo, cupom, mudar, dados, mudarDados, idDoEnvio, concluir } = useLojaVitrine();
   const ts = useTurnstile();
   const hpRef = useRef<HTMLInputElement>(null);
   const uid = useId();
@@ -184,7 +271,7 @@ function Checkout() {
       setErro("Confirme a verificação anti-robô acima pra liberar o pedido.");
       return;
     }
-    const corpo = montarPedido(loja.slug, itens, dados, loja.pedeEndereco);
+    const corpo = { ...montarPedido(loja.slug, itens, dados, loja.pedeEndereco), cupom: cupom?.codigo };
     const id = idDoEnvio(corpo);
     setEnviando(true);
     setErro(null);
@@ -265,18 +352,26 @@ function Checkout() {
           </p>
         )}
 
+        <CampoCupom />
+
         <div className="resumo" aria-label="Resumo do pedido">
           <div>
             <span>Subtotal</span>
             <span>{reais(resumo.subtotal)}</span>
           </div>
+          {cupom && resumo.desconto > 0 && (
+            <div>
+              <span>Cupom {cupom.codigo}</span>
+              <span>- {reais(resumo.desconto)}</span>
+            </div>
+          )}
           <div>
             <span>Frete</span>
             <span>a combinar</span>
           </div>
           <div className="total">
             <span>Total</span>
-            <span>{reais(resumo.subtotal)} + frete</span>
+            <span>{reais(resumo.total)} + frete</span>
           </div>
           {resumo.sinal > 0 && (
             <div className="sinal">
@@ -459,7 +554,7 @@ function Checkout() {
           disabled={enviando || !ts.token}
           aria-describedby={esperandoVerificacao ? dicaId : undefined}
         >
-          {enviando ? "Enviando o pedido…" : `Confirmar pedido · ${reais(resumo.subtotal)}`}
+          {enviando ? "Enviando o pedido…" : `Confirmar pedido · ${reais(resumo.total)}`}
         </button>
         {esperandoVerificacao && (
           <p id={dicaId} className="dica">

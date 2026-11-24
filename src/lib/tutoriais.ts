@@ -335,6 +335,7 @@ const LISTA = [
           'Escreva também uma "Descrição curta" e uma "Observação interna", que só aparece pra você.',
           'No Premium e no Pro, marque "Mostrar na Vitrine online" pra o produto aparecer na loja da marca. Na lista, a chave "Vitrine" faz o mesmo sem abrir o cadastro.',
           'Com "Mostrar na Vitrine online" marcado, escolha a "Categoria na vitrine" ou crie uma em "+ Nova categoria": a cliente filtra a vitrine por ela. Quem tem a Loja da marca escolhe a "Categoria" na parte "Na loja".',
+          'Pra mostrar um preço de-por, preencha "Preço antes, riscado (opcional)" com um valor maior que o preço de venda. A vitrine mostra o antes riscado, o preço de venda ao lado e o selo do desconto, como "-25%". A cliente paga o preço de venda.',
           'Ainda na janela, escolha "Sob encomenda" (usa o prazo de produção da loja) ou "Pronta entrega" (sai depois da confirmação). Pronta entrega com o estoque ligado aparece como "Esgotado" quando o saldo zera.',
           'Logo abaixo, "A cliente escolhe a cor da paleta da loja" troca as variações pelas cores da paleta, sem estoque por cor. Em "Quantas cores a cliente pode escolher", escolha "Uma cor só", "Até 2 cores misturadas" ou "Até 3 cores misturadas". Em "Cor da foto (opcional)", escreva a cor que aparece na foto.',
           'Em "Sob consulta na vitrine", marque o que a cliente combina com você pelo WhatsApp. "Preço sob consulta" tira o preço e o carrinho e põe o botão "Consultar o preço no WhatsApp". "Cor sob consulta" e "Tamanho sob consulta" deixam pôr no carrinho, e o pedido chega avisando o que falta combinar.',
@@ -977,6 +978,7 @@ const LISTA = [
       'O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal escolhido em "Onde vendeu".',
       'Pedido da Loja da marca chega com a forma que o Mercado Pago informou (Pix, "Crédito à vista" ou "Crédito parcelado") e com a taxa do Mercado Pago. Pedido da Shopee, do TikTok Shop e do Mercado Livre mostra o nome do marketplace e a taxa dele. Nesses, o pagamento não muda no pedido.',
       'Pedido da Vitrine online chega com a forma "A definir": a cliente combina pelo WhatsApp, e a forma se escolhe depois, no pedido.',
+      'Quando a cliente usa um cupom da Vitrine online, o pedido mostra o "Subtotal", a linha "Cupom" com o desconto e o "Total" já com desconto.',
       'Pedido da vitrine online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Vitrine online". A cliente vira ficha em Clientes, pelo WhatsApp.',
       'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
@@ -1065,6 +1067,15 @@ const LISTA = [
         ],
       },
       {
+        titulo: "Criar um cupom de desconto",
+        itens: [
+          'Em "Cupons de desconto", no bloco "Novo cupom", escreva o "Código" (de 3 a 30 letras ou números, como NATAL10), escolha o "Tipo de desconto" ("Porcentagem (%)" ou "Valor (R$)") e o desconto.',
+          '"Vale até" e "Limite de usos" são opcionais: o cupom para de valer no fim do dia escolhido ou quando chega no limite. Clique em "Criar cupom". Ele salva na hora.',
+          'Na loja, a cliente digita o código no carrinho e clica em "Aplicar". O desconto, o total e o sinal aparecem antes de ela confirmar, e a Pólia confere o cupom de novo quando grava o pedido.',
+          "A chave de cada cupom liga e desliga. Cupom que nunca foi usado tem a lixeira; cupom usado só desliga, pra o pedido antigo continuar mostrando o código.",
+        ],
+      },
+      {
         titulo: "Escolher os produtos, a ordem e as fotos",
         itens: [
           'Os produtos se montam em Produtos. No alto da Vitrine online, o resumo mostra quantos estão na vitrine e quantos estão sem foto, e "Abrir Produtos" leva até lá.',
@@ -1081,6 +1092,8 @@ const LISTA = [
       'Produto de "Pronta entrega" ganha a etiqueta na vitrine. Pedido só com pronta entrega entra em Pedidos com entrega pra hoje; misturado com encomenda, vale o prazo de produção da loja.',
       "A Vitrine online é do Premium e do Pro. No Grátis, a loja fecha e mostra que não está aberta agora; os produtos e as fotos continuam guardados.",
       "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",
+      'Com 8 produtos ou mais, a loja ganha o campo "Buscar produto": ele acha pelo nome, sem ligar pra acento, e soma com a categoria escolhida.',
+      'Pedido com cupom chega em Pedidos com "Cupom" e o valor do desconto, e o Financeiro entra com o total já com desconto.',
     ],
     duvidas: [
       {

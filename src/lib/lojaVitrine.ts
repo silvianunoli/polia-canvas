@@ -3,7 +3,7 @@
 // as máscaras do checkout. Não conhece React nem localStorage; o hook
 // useCarrinhoLoja (components/loja) guarda e lê, e chama daqui.
 import { normalizarWhatsapp } from "@/lib/leads";
-import { opcaoDoItem, type LojaPublica, type PedidoLoja, type ProdutoLoja, type ResultadoPedidoLoja } from "@/lib/loja";
+import { opcaoDoItem, reais, type LojaPublica, type PedidoLoja, type ProdutoLoja, type ResultadoPedidoLoja } from "@/lib/loja";
 
 /** Teto de itens e de quantidade que o pedidoLojaSchema aceita. */
 export const MAX_ITENS_CARRINHO = 50;
@@ -99,16 +99,59 @@ export function linhasDoCarrinho(itens: ItemCarrinho[], produtos: ProdutoLoja[])
 export interface ResumoCarrinho {
   quantidade: number;
   subtotal: number;
+  /** Desconto do cupom (0 sem cupom). */
+  desconto: number;
+  /** Subtotal menos o desconto; o frete fica a combinar, fora da conta. */
+  total: number;
+  /** Sinal sobre o total já com desconto. */
   sinal: number;
 }
 
+/** Cupom que a loja conferiu (cupom_da_loja). O desconto final é do banco. */
+export interface CupomLoja {
+  codigo: string;
+  tipo: "percentual" | "valor";
+  valor: number;
+}
+
+/** Código do jeito que o banco guarda: maiúsculo e sem espaço. */
+export const normalizarCodigoCupom = (t: string) => t.replace(/\s+/g, "").toUpperCase();
+
+/** 3 a 30 letras, números, hífen ou sublinhado (o check de catalogo_cupons.codigo). */
+export const codigoCupomValido = (t: string) => /^[A-Z0-9_-]{3,30}$/.test(t);
+
+/**
+ * Desconto do cupom (24/11/2026, ONE-239). A mesma conta de
+ * registrar_pedido_loja: porcentagem arredondada nos centavos, valor fixo
+ * nunca maior que o subtotal.
+ */
+export function descontoDoCupom(subtotal: number, cupom: CupomLoja | null): number {
+  if (!cupom || !(subtotal > 0)) return 0;
+  const bruto = cupom.tipo === "percentual" ? (subtotal * cupom.valor) / 100 : cupom.valor;
+  return Math.min(arredondar(bruto), subtotal);
+}
+
+/** Como o cupom aparece na loja: "10% de desconto", "R$ 15,00 de desconto". */
+export function rotuloDoCupom(cupom: CupomLoja): string {
+  const valor = cupom.tipo === "percentual" ? `${String(cupom.valor).replace(".", ",")}%` : reais(cupom.valor);
+  return `${valor} de desconto`;
+}
+
 /** Soma das peças, subtotal e o sinal (frete fica a combinar, fora da conta). */
-export function resumoDoCarrinho(linhas: LinhaCarrinho[], sinalPercentual: number): ResumoCarrinho {
+export function resumoDoCarrinho(
+  linhas: LinhaCarrinho[],
+  sinalPercentual: number,
+  cupom: CupomLoja | null = null,
+): ResumoCarrinho {
   const subtotal = arredondar(linhas.reduce((s, l) => s + l.total, 0));
+  const desconto = descontoDoCupom(subtotal, cupom);
+  const total = arredondar(subtotal - desconto);
   return {
     quantidade: linhas.reduce((s, l) => s + l.quantidade, 0),
     subtotal,
-    sinal: sinalPercentual > 0 ? arredondar((subtotal * sinalPercentual) / 100) : 0,
+    desconto,
+    total,
+    sinal: sinalPercentual > 0 ? arredondar((total * sinalPercentual) / 100) : 0,
   };
 }
 
@@ -388,6 +431,8 @@ export function mensagemDoErroPedido(motivo: Extract<ResultadoPedidoLoja, { ok: 
       return "Algum item do carrinho mudou ou saiu da loja. Atualize a página e confira o carrinho.";
     case "limite":
       return "A loja recebeu muitos pedidos deste aparelho hoje. Tente de novo amanhã.";
+    case "cupom":
+      return "Esse cupom não vale mais. Tire o cupom do carrinho ou confira o código com a marca.";
     default:
       return "Não deu pra enviar o pedido agora. Tente de novo em instantes.";
   }
@@ -400,4 +445,16 @@ export function linkWhatsapp(whatsapp: string | null, texto: string): string | n
   const numero = whatsapp ? soDigitos(whatsapp) : "";
   if (numero.length < 10) return null;
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
+/**
+ * Confere o cupom novo na tela da Vitrine (ONE-239) e devolve o motivo, ou
+ * null se pode criar. Mesmas travas do banco (catalogo_cupons).
+ */
+export function problemaDoCupomNovo(c: { codigo: string; tipo: "percentual" | "valor"; valor: number; limiteUsos: number | null }): string | null {
+  if (!codigoCupomValido(c.codigo)) return "Use de 3 a 30 letras, números, hífen ou sublinhado, sem espaço.";
+  if (!(c.valor > 0)) return "Coloque o valor do desconto.";
+  if (c.tipo === "percentual" && c.valor >= 100) return "A porcentagem precisa ser menor que 100%.";
+  if (c.limiteUsos != null && !(Number.isInteger(c.limiteUsos) && c.limiteUsos >= 1)) return "O limite de usos precisa ser um número inteiro, a partir de 1.";
+  return null;
 }

@@ -23,12 +23,14 @@ export interface PedidoLinha extends VendaLinha {
   entregueEm: string | null;
   /** Forma de pagamento gravada; null = a definir (marketplace mostra o nome dele). */
   forma?: string | null;
+  /** Cupom da Vitrine online que a cliente usou (ONE-239); null sem cupom. */
+  cupomCodigo?: string | null;
 }
 
 export const chavePedidos = (userId: string | undefined) => ["pedidos", userId] as const;
 
 const SELECT =
-  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, forma, andamento, entrega_em, entregue_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
+  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, forma, cupom_codigo, andamento, entrega_em, entregue_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
 
 /**
  * Pedidos do quadro: abertos de qualquer data e entregues com entrega
@@ -93,6 +95,7 @@ function paraPedidos(data: unknown): PedidoLinha[] {
       entrega_em: string;
       entregue_em?: string | null;
       forma?: string | null;
+      cupom_codigo?: string | null;
     })[]
   )
     .filter((v) => ehAndamento(v.andamento) && !!v.entrega_em)
@@ -102,6 +105,7 @@ function paraPedidos(data: unknown): PedidoLinha[] {
       entregaEm: v.entrega_em,
       entregueEm: v.entregue_em ?? null,
       forma: v.forma ?? null,
+      cupomCodigo: v.cupom_codigo ?? null,
     }));
 }
 

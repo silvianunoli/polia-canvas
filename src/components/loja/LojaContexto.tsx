@@ -16,6 +16,7 @@ import {
   mudarQuantidade,
   primeiroNome,
   resumoDoCarrinho,
+  type CupomLoja,
   type DadosCheckout,
   type ItemCarrinho,
   type LinhaCarrinho,
@@ -53,6 +54,9 @@ interface ContextoLoja {
   itens: ItemCarrinho[];
   linhas: LinhaCarrinho[];
   resumo: ResumoCarrinho;
+  /** Cupom aplicado no carrinho (ONE-239); vive só na memória da aba. */
+  cupom: CupomLoja | null;
+  aplicarCupom: (cupom: CupomLoja | null) => void;
   adicionar: (produto: ProdutoLoja, variacao: VariacaoLoja | null) => void;
   mudar: (indice: number, quantidade: number) => void;
   aberto: boolean;
@@ -84,6 +88,7 @@ export function LojaVitrineProvider({ loja, children }: { loja: LojaPublica; chi
   const [aviso, setAviso] = useState<string | null>(null);
   const [dados, setDados] = useState<DadosCheckout>(DADOS_VAZIOS);
   const [concluido, setConcluido] = useState<PedidoConcluido | null>(null);
+  const [cupom, setCupom] = useState<CupomLoja | null>(null);
   const envioRef = useRef<{ assinatura: string; id: string } | null>(null);
   const timerAviso = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -155,7 +160,10 @@ export function LojaVitrineProvider({ loja, children }: { loja: LojaPublica; chi
   );
 
   const linhas = useMemo(() => linhasDoCarrinho(itens, loja.produtos), [itens, loja.produtos]);
-  const resumo = useMemo(() => resumoDoCarrinho(linhas, loja.sinalPercentual), [linhas, loja.sinalPercentual]);
+  const resumo = useMemo(
+    () => resumoDoCarrinho(linhas, loja.sinalPercentual, cupom),
+    [linhas, loja.sinalPercentual, cupom],
+  );
 
   // Pedido salvo: monta a mensagem do WhatsApp com o que foi enviado e esvazia
   // o carrinho na hora, pra um item novo não levar os antigos junto num
@@ -167,13 +175,14 @@ export function LojaVitrineProvider({ loja, children }: { loja: LojaPublica; chi
       endereco: enderecoEmLinha(dados, loja.pedeEndereco),
       presentePara: dados.presente && dados.presentePara.trim() ? dados.presentePara.trim() : undefined,
       observacao: dados.observacao.trim() || undefined,
-    });
+    }, cupom ? { codigo: cupom.codigo, desconto: resumo.desconto } : undefined);
     setConcluido({ primeiroNome: primeiroNome(dados.nome), mensagem });
     setItens([]);
+    setCupom(null);
     setDados((d) => ({ ...d, observacao: "", presente: false, presentePara: "" }));
     envioRef.current = null;
     gravarJson(chaveEnvio(loja.slug), null);
-  }, [dados, linhas, loja]);
+  }, [cupom, dados, linhas, loja, resumo.desconto]);
 
   const novoPedido = useCallback(() => {
     setConcluido(null);
@@ -187,6 +196,8 @@ export function LojaVitrineProvider({ loja, children }: { loja: LojaPublica; chi
       itens,
       linhas,
       resumo,
+      cupom,
+      aplicarCupom: setCupom,
       adicionar,
       mudar,
       aberto,
@@ -201,7 +212,7 @@ export function LojaVitrineProvider({ loja, children }: { loja: LojaPublica; chi
       concluir,
       novoPedido,
     }),
-    [loja, itens, linhas, resumo, adicionar, mudar, aberto, aviso, avisar, dados, mudarDados, idDoEnvio, concluido, concluir, novoPedido],
+    [loja, itens, linhas, resumo, cupom, adicionar, mudar, aberto, aviso, avisar, dados, mudarDados, idDoEnvio, concluido, concluir, novoPedido],
   );
 
   return <Contexto.Provider value={valor}>{children}</Contexto.Provider>;

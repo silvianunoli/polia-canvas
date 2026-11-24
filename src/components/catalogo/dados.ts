@@ -159,6 +159,89 @@ export async function criarCategoria(
   return { id: (data as unknown as { id: string }).id, error: null };
 }
 
+// ── cupons de desconto (migration 20261124060000, ONE-239) ──────────────────
+export const CHAVE_CUPONS_CATALOGO = "catalogo-cupons";
+
+export interface CupomDaVitrine {
+  id: string;
+  codigo: string;
+  tipo: "percentual" | "valor";
+  valor: number;
+  validoAte: string | null;
+  limiteUsos: number | null;
+  usos: number;
+  ativo: boolean;
+}
+
+export function useCuponsDaVitrine(userId: string | undefined) {
+  return useQuery({
+    queryKey: [CHAVE_CUPONS_CATALOGO, userId],
+    enabled: !!userId,
+    queryFn: async (): Promise<CupomDaVitrine[]> => {
+      const { data, error } = await supabase
+        .from("catalogo_cupons" as never)
+        .select("id, codigo, tipo, valor, valido_ate, limite_usos, usos, ativo")
+        .eq("user_id" as never, userId! as never)
+        .order("created_at" as never, { ascending: false });
+      if (error) throw error;
+      return ((data ?? []) as unknown as Array<{
+        id: string;
+        codigo: string;
+        tipo: "percentual" | "valor";
+        valor: number | string;
+        valido_ate: string | null;
+        limite_usos: number | null;
+        usos: number;
+        ativo: boolean;
+      }>).map((c) => ({
+        id: c.id,
+        codigo: c.codigo,
+        tipo: c.tipo,
+        valor: Number(c.valor),
+        validoAte: c.valido_ate,
+        limiteUsos: c.limite_usos,
+        usos: c.usos,
+        ativo: c.ativo,
+      }));
+    },
+  });
+}
+
+export interface NovoCupom {
+  codigo: string;
+  tipo: "percentual" | "valor";
+  valor: number;
+  validoAte: string | null;
+  limiteUsos: number | null;
+}
+
+export async function criarCupom(userId: string, c: NovoCupom): Promise<{ error: string | null }> {
+  const { error } = await supabase.from("catalogo_cupons" as never).insert({
+    user_id: userId,
+    codigo: c.codigo,
+    tipo: c.tipo,
+    valor: c.valor,
+    valido_ate: c.validoAte,
+    limite_usos: c.limiteUsos,
+  } as never);
+  if (!error) return { error: null };
+  if (error.code === "23505") return { error: "Já existe um cupom com esse código." };
+  return { error: "A Pólia One não conseguiu criar o cupom agora. Tenta de novo." };
+}
+
+export async function ligarCupom(id: string, ativo: boolean) {
+  const { error } = await supabase.from("catalogo_cupons" as never).update({ ativo } as never).eq("id" as never, id as never);
+  return { error: error ? "A Pólia One não conseguiu mudar o cupom agora." : null };
+}
+
+/** Só some cupom que nunca foi usado; o banco recusa o resto (pedido antigo mostra o código). */
+export async function apagarCupom(id: string) {
+  const { data, error } = await supabase.from("catalogo_cupons" as never).delete().eq("id" as never, id as never).select("id");
+  if (error || !(data as unknown as unknown[] | null)?.length)
+    return { error: "Esse cupom já foi usado e não pode ser apagado. Desligue a chave pra ele parar de valer." };
+  return { error: null };
+}
+
 // ── paleta de cores (migration 20261122180000) ─────────────────────────────
 
 export const CHAVE_CORES_CATALOGO = "catalogo-cores";

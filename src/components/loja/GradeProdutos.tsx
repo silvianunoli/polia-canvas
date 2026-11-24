@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { reais, type ProdutoLoja } from "@/lib/loja";
+import { descontoDoDePor, reais, type ProdutoLoja } from "@/lib/loja";
 import { SemFoto } from "./icones";
 
 /** Cartões da vitrine: a segunda foto aparece no hover (modelo do Lab). */
@@ -18,6 +18,7 @@ export function GradeProdutos({ slug, produtos }: { slug: string; produtos: Prod
 function CartaoProduto({ slug, produto: p }: { slug: string; produto: ProdutoLoja }) {
   const [f1, f2] = p.fotos;
   const opcoes = p.variacoes.length;
+  const desconto = p.precoSobConsulta ? null : descontoDoDePor(p.precoDe, p.preco);
   return (
     <Link to="/loja/$slug/$produto" params={{ slug, produto: p.id }} className="card">
       <div className="foto">
@@ -31,10 +32,24 @@ function CartaoProduto({ slug, produto: p }: { slug: string; produto: ProdutoLoj
             {p.esgotado ? "Esgotado" : "Pronta entrega"}
           </span>
         )}
+        {desconto && <span className="selo-desconto">-{desconto}%</span>}
       </div>
       <div className="txt">
         <h3>{p.nome}</h3>
-        <span className="vl">{p.precoSobConsulta ? "Preço sob consulta" : reais(p.preco)}</span>
+        {p.precoSobConsulta ? (
+          <span className="vl">Preço sob consulta</span>
+        ) : desconto && p.precoDe ? (
+          <span className="vl">
+            <s className="de">
+              <span className="sr-only">De </span>
+              {reais(p.precoDe)}
+            </s>{" "}
+            <span className="sr-only">por </span>
+            {reais(p.preco)}
+          </span>
+        ) : (
+          <span className="vl">{reais(p.preco)}</span>
+        )}
       </div>
       {opcoes > 1 && <p className="opcoes">{opcoes} opções</p>}
     </Link>

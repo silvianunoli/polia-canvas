@@ -13,6 +13,7 @@ import {
   pedidoLojaSchema,
   maxCoresValido,
   opcoesDaPaleta,
+  precoDeValido,
   slugValido,
   type CorLoja,
   type LojaPublica,
@@ -20,6 +21,7 @@ import {
   type ResultadoPedidoLoja,
 } from "@/lib/loja";
 import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
+import { codigoCupomValido, normalizarCodigoCupom, type CupomLoja } from "@/lib/lojaVitrine";
 
 // Loja do catálogo próprio (ONE-148, fases 2 e 3). Mesmo desenho do link de
 // captura (captura.functions.ts): a cliente não tem login, então a leitura e o
@@ -79,7 +81,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, preco_de, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -90,6 +92,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       nome: string;
       descricao: string | null;
       preco_venda: number;
+      preco_de: number | string | null;
       categoria_id: string | null;
       usa_paleta: boolean;
       cor_da_foto: string | null;
@@ -203,6 +206,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
           nome: p.nome,
           descricao: p.descricao,
           preco: Number(p.preco_venda),
+          precoDe: precoDeValido(p.preco_de, Number(p.preco_venda)),
           fotos: fotosPor.get(p.id) ?? [],
           // Com paleta, as opções são as cores da loja (o SKU fica pro estoque).
           variacoes,
@@ -251,6 +255,7 @@ export const enviarPedidoLoja = createServerFn({ method: "POST" })
       p_whatsapp: whatsapp,
       p_observacao: observacaoDoPedidoLoja(data),
       p_ip_hash: await hashDoAparelho(),
+      p_cupom: data.cupom?.trim() || null,
     } as never);
     if (error) {
       console.error("[Loja] registrar_pedido_loja", error.code, error.message);
@@ -259,7 +264,33 @@ export const enviarPedidoLoja = createServerFn({ method: "POST" })
     const res = String(r);
     if (res === "ok" || res === "repetido") return { ok: true, repetido: res === "repetido" };
     if (res === "limite") return { ok: false, motivo: "limite" };
+    if (res === "cupom") return { ok: false, motivo: "cupom" };
     return { ok: false, motivo: "indisponivel" };
+  });
+
+/**
+ * A loja confere o cupom antes de mostrar o desconto (ONE-239). Só lê: quem
+ * grava o desconto é registrar_pedido_loja, que confere de novo. Cupom que não
+ * existe, venceu ou esgotou volta igual (null), sem dizer qual dos três.
+ */
+export const conferirCupomLoja = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ slug: z.string().min(3).max(40), codigo: z.string().trim().min(1).max(40) }).parse(input),
+  )
+  .handler(async ({ data }): Promise<CupomLoja | null> => {
+    const codigo = normalizarCodigoCupom(data.codigo);
+    if (!codigoCupomValido(codigo)) return null;
+    const { data: r, error } = await supabaseAdmin.rpc("cupom_da_loja" as never, {
+      p_slug: data.slug.toLowerCase(),
+      p_codigo: codigo,
+    } as never);
+    if (error) {
+      console.error("[Loja] cupom_da_loja", error.code, error.message);
+      return null;
+    }
+    const c = r as unknown as { codigo?: string; tipo?: string; valor?: number | string } | null;
+    if (!c?.codigo || (c.tipo !== "percentual" && c.tipo !== "valor")) return null;
+    return { codigo: c.codigo, tipo: c.tipo, valor: Number(c.valor) };
   });
 
 // ── tela da dona ───────────────────────────────────────────────────────────

@@ -11,7 +11,13 @@ import {
 } from "@/components/loja/leituraLoja";
 import { useLojaVitrine } from "@/components/loja/LojaContexto";
 import { BeneficiosLoja } from "@/components/loja/SelosLoja";
-import { OPCAO_COR_DA_FOTO, opcaoDasCores, reais, type ProdutoLoja } from "@/lib/loja";
+import {
+  OPCAO_COR_DA_FOTO,
+  descontoDoDePor,
+  opcaoDasCores,
+  reais,
+  type ProdutoLoja,
+} from "@/lib/loja";
 import { linkWhatsapp, sinalDoPreco } from "@/lib/lojaVitrine";
 import { urlPublicaDaLoja } from "@/lib/lojaDoDominio";
 
@@ -99,6 +105,8 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
     );
   };
   const sinal = sinalDoPreco(p.preco, loja.sinalPercentual);
+  // Preço de-por (ONE-239): riscado e com selo só quando o "antes" é maior.
+  const desconto = p.precoSobConsulta ? null : descontoDoDePor(p.precoDe, p.preco);
   const outros = loja.produtos.filter((x) => x.id !== p.id).slice(0, 4);
 
   // Barra fixa de compra no celular: aparece quando o botão principal sai
@@ -187,7 +195,19 @@ function PaginaDoProduto({ produto: p }: { produto: ProdutoLoja }) {
               {p.precoSobConsulta ? (
                 <span className="preco-g consulta">Preço sob consulta</span>
               ) : (
-                <span className="preco-g">{reais(p.preco)}</span>
+                <>
+                  {desconto && p.precoDe && (
+                    <s className="preco-de">
+                      <span className="sr-only">De </span>
+                      {reais(p.precoDe)}
+                    </s>
+                  )}
+                  <span className="preco-g">
+                    {desconto && <span className="sr-only">por </span>}
+                    {reais(p.preco)}
+                  </span>
+                  {desconto && <span className="selo-desconto em-linha">-{desconto}%</span>}
+                </>
               )}
               {sinal > 0 && !p.precoSobConsulta && (
                 <span className="sinal-tag">Comece com {reais(sinal)} de sinal</span>

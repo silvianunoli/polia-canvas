@@ -10,6 +10,9 @@ import {
   opcaoDoItem,
   maxCoresValido,
   pedidoLojaSchema,
+  precoDeValido,
+  buscarProdutos,
+  descontoDoDePor,
   problemaDaOrigemDoBanner,
   recorteDoBanner,
   produtosDaCategoria,
@@ -272,5 +275,49 @@ describe("recorte do banner (ONE-239)", () => {
     expect(problemaDaOrigemDoBanner("image/webp", 1000)).toBeNull();
     expect(problemaDaOrigemDoBanner("image/gif", 1000)).toMatch(/JPG, PNG ou WEBP/);
     expect(problemaDaOrigemDoBanner("image/jpeg", 16 * 1024 * 1024)).toMatch(/15 MB/);
+  });
+});
+
+describe("preço de-por (ONE-239)", () => {
+  it("o antes só vale quando é maior que o preço de venda", () => {
+    expect(precoDeValido("59.9", 44.9)).toBe(59.9);
+    expect(precoDeValido(44.9, 44.9)).toBeNull();
+    expect(precoDeValido(30, 44.9)).toBeNull();
+    expect(precoDeValido(null, 44.9)).toBeNull();
+    expect(precoDeValido("", 44.9)).toBeNull();
+    expect(precoDeValido(10, 0)).toBeNull();
+  });
+
+  it("o selo arredonda a porcentagem e some abaixo de 1%", () => {
+    expect(descontoDoDePor(59.9, 44.9)).toBe(25);
+    expect(descontoDoDePor(100, 99.6)).toBeNull();
+    expect(descontoDoDePor(null, 44.9)).toBeNull();
+  });
+});
+
+describe("busca da loja (ONE-239)", () => {
+  const lista = [{ nome: "Caneca craquelê rosa 325 ml" }, { nome: "Ímã dá teus pulos" }, { nome: "Almofada linda" }];
+  it("acha sem acento e sem maiúscula, com todas as palavras", () => {
+    expect(buscarProdutos(lista, "caneca rosa").map((p) => p.nome)).toEqual(["Caneca craquelê rosa 325 ml"]);
+    expect(buscarProdutos(lista, "IMA").map((p) => p.nome)).toEqual(["Ímã dá teus pulos"]);
+    expect(buscarProdutos(lista, "craquele azul")).toEqual([]);
+  });
+  it("termo vazio devolve tudo", () => {
+    expect(buscarProdutos(lista, "  ")).toHaveLength(3);
+  });
+});
+
+describe("mensagem do pedido com cupom (ONE-239)", () => {
+  it("mostra subtotal, cupom e o total já com desconto", () => {
+    const m = mensagemDoPedido(
+      { nome: "Mundo de Aimer", sinalPercentual: 50 },
+      [{ nome: "Caneca", variacao: null, quantidade: 2, preco: 44.9 }],
+      { nome: "Ana", whatsapp: "(11) 99999-0000" },
+      { codigo: "NATAL10", desconto: 8.98 },
+    );
+    expect(m).toContain("Subtotal: R$ 89,80");
+    expect(m).toContain("Cupom NATAL10: - R$ 8,98");
+    expect(m).toContain("*Total: R$ 80,82*");
+    expect(m).toContain("R$ 40,41");
   });
 });

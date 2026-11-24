@@ -85,6 +85,18 @@ export function ModalPedido({
               <span>{fmt(i.quantidade * i.precoUnitario)}</span>
             </li>
           ))}
+          {pedido.desconto > 0 && (
+            <>
+              <li className="flex justify-between gap-4 border-t border-[var(--line)] pt-1">
+                <span>Subtotal</span>
+                <span>{fmt(pedido.subtotal)}</span>
+              </li>
+              <li className="flex justify-between gap-4">
+                <span>{pedido.cupomCodigo ? `Cupom ${pedido.cupomCodigo}` : "Desconto"}</span>
+                <span>- {fmt(pedido.desconto)}</span>
+              </li>
+            </>
+          )}
           <li className="flex justify-between gap-4 border-t border-[var(--line)] pt-1 font-medium">
             <span>Total</span>
             <span>{fmt(pedido.total)}</span>

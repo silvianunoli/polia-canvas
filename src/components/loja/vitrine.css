@@ -1654,3 +1654,131 @@
     transform: none;
   }
 }
+
+/* Preço de-por (24/11/2026, ONE-239): o "antes" riscado e o selo do desconto. */
+.loja-vitrine .card .vl .de,
+.loja-vitrine .preco-de {
+  color: var(--suave);
+  font-weight: 400;
+  text-decoration: line-through;
+}
+.loja-vitrine .card .vl .de {
+  font-size: 14px;
+  margin-right: 4px;
+}
+.loja-vitrine .preco-de {
+  font-size: 20px;
+  margin-right: 8px;
+}
+.loja-vitrine .selo-desconto {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--destaque);
+  color: var(--destaque-sobre);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.loja-vitrine .selo-desconto.em-linha {
+  position: static;
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.loja-vitrine .card .vl:has(.de) {
+  white-space: normal;
+}
+.loja-vitrine .card .vl .de {
+  white-space: nowrap;
+}
+
+/* Busca da loja (24/11/2026, ONE-239). */
+.loja-vitrine .busca-loja {
+  margin-bottom: 16px;
+  max-width: 480px;
+}
+.loja-vitrine .busca-loja input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--linha);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  font-size: 16px;
+}
+.loja-vitrine .busca-loja input:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+  border-color: var(--texto);
+}
+.loja-vitrine .ver-todos {
+  margin-top: 12px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1.5px solid var(--texto);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.loja-vitrine .ver-todos:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+
+/* Cupom no carrinho (24/11/2026, ONE-239). */
+.loja-vitrine .campo-cupom {
+  margin-top: 16px;
+}
+.loja-vitrine .linha-cupom {
+  display: flex;
+  gap: 8px;
+}
+.loja-vitrine .linha-cupom input {
+  flex: 1;
+  text-transform: uppercase;
+}
+.loja-vitrine .linha-cupom button,
+.loja-vitrine .cupom-aplicado button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1.5px solid var(--texto);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.loja-vitrine .linha-cupom button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.loja-vitrine .linha-cupom button:focus-visible,
+.loja-vitrine .cupom-aplicado button:focus-visible {
+  outline: 2px solid var(--texto);
+  outline-offset: 2px;
+}
+.loja-vitrine .cupom-aplicado {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: var(--destaque-suave);
+  color: var(--texto);
+  font-size: 14px;
+}
+.loja-vitrine .cupom-aplicado button {
+  min-height: 36px;
+  border-width: 1px;
+}
