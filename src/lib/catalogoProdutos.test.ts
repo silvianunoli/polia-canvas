@@ -7,6 +7,7 @@ import {
   filtrarReceitas,
   lerOrdemDigitada,
   mostraTipoNoCard,
+  compararOrdemDaVitrine,
   ordenarCatalogo,
   reposicionar,
 } from "@/lib/catalogoProdutos";
@@ -249,5 +250,38 @@ describe("ordem digitada (coluna Ordem)", () => {
     expect(lerOrdemDigitada("0")).toBe("invalido");
     expect(lerOrdemDigitada("2,5")).toBe("invalido");
     expect(lerOrdemDigitada("10000")).toBe("invalido");
+  });
+});
+
+describe("ordem da vitrine com desempate (ONE-239)", () => {
+  const mesmaHora = "2026-11-10T12:00:00Z";
+  it("numerados primeiro, depois o cadastro mais recente", () => {
+    const lista = [
+      { id: "a", nome: "Velho", created_at: "2026-01-01T00:00:00Z" },
+      { id: "b", nome: "Dois", catalogo_ordem: 2, created_at: "2026-01-01T00:00:00Z" },
+      { id: "c", nome: "Novo", created_at: "2026-06-01T00:00:00Z" },
+      { id: "d", nome: "Um", catalogo_ordem: 1, created_at: "2026-01-01T00:00:00Z" },
+    ];
+    expect([...lista].sort(compararOrdemDaVitrine).map((p) => p.id)).toEqual(["d", "b", "c", "a"]);
+  });
+
+  it("importados juntos saem pelo nome, sem depender da ordem que chegaram", () => {
+    const lista = [
+      { id: "1", nome: "Mouse pad redondo", created_at: mesmaHora },
+      { id: "2", nome: "Almofada linda", created_at: mesmaHora },
+      { id: "3", nome: "caneca imperial", created_at: mesmaHora },
+    ];
+    const ida = [...lista].sort(compararOrdemDaVitrine).map((p) => p.nome);
+    const volta = [...lista].reverse().sort(compararOrdemDaVitrine).map((p) => p.nome);
+    expect(ida).toEqual(["Almofada linda", "caneca imperial", "Mouse pad redondo"]);
+    expect(volta).toEqual(ida);
+  });
+
+  it("mesmo nome e mesma hora: o id decide", () => {
+    const lista = [
+      { id: "z", nome: "Caneca", created_at: mesmaHora },
+      { id: "b", nome: "Caneca", created_at: mesmaHora },
+    ];
+    expect([...lista].sort(compararOrdemDaVitrine).map((p) => p.id)).toEqual(["b", "z"]);
   });
 });

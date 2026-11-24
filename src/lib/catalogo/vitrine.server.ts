@@ -8,6 +8,7 @@
 // conexão do canal catalogo (a mesma do pedido) e só responde no Pro, igual à
 // registrar_pedido_catalogo.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
 import { normalizarDominio } from "@/lib/catalogo";
 import { temProjete } from "@/lib/planos";
 
@@ -72,7 +73,9 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
       preco_venda: number;
       foto_url: string | null;
       catalogo_ordem: number | null;
+      created_at: string;
     }>;
+    lista.sort(compararOrdemDaVitrine);
 
     const ids = lista.map((p) => p.id);
     const { data: fotos } = ids.length

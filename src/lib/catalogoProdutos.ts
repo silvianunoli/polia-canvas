@@ -30,6 +30,7 @@ export const FILTROS_CATALOGO: FiltroCatalogo[] = [
 ];
 
 export interface ProdutoDoCatalogo {
+  id?: string;
   nome: string;
   tipo: string;
   preco_venda: number | string | null;
@@ -42,6 +43,35 @@ export interface ProdutoDoCatalogo {
 }
 
 const semCusto = (p: ProdutoDoCatalogo) => p.preco_custo == null;
+
+/** O mínimo pra ordenar como a vitrine: número da dona, cadastro, nome e id. */
+export interface ItemDaOrdem {
+  id?: string;
+  nome: string;
+  catalogo_ordem?: number | null;
+  created_at: string;
+}
+
+/**
+ * A ordem da vitrine, a mesma em Produtos, na Vitrine online e na loja pública
+ * (24/11/2026, ONE-239). Numerados primeiro, pelo número; os sem número do
+ * cadastro mais recente pro mais antigo. No empate (produtos importados juntos
+ * têm o mesmo created_at), decide o nome e, por fim, o id. Sem o desempate,
+ * cada tela escolhia uma ordem diferente pros 46 produtos da mesma importação.
+ * O SQL de loja_marca_publica repete a regra (migration 20261124040000).
+ */
+export function compararOrdemDaVitrine(a: ItemDaOrdem, b: ItemDaOrdem): number {
+  const na = a.catalogo_ordem ?? null;
+  const nb = b.catalogo_ordem ?? null;
+  if (na != null && nb == null) return -1;
+  if (na == null && nb != null) return 1;
+  if (na != null && nb != null && na !== nb) return na - nb;
+  return (
+    b.created_at.localeCompare(a.created_at) ||
+    a.nome.localeCompare(b.nome, "pt-BR") ||
+    (a.id ?? "").localeCompare(b.id ?? "")
+  );
+}
 
 export type ContagemCatalogo = Record<FiltroCatalogo, number>;
 
@@ -106,17 +136,15 @@ export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
     return null;
   };
   const copia = [...lista];
-  const maisRecente = (a: T, b: T) => b.created_at.localeCompare(a.created_at);
   if (coluna === "ordem") {
     // Numerados primeiro, pelo número; o resto do cadastro mais recente pro
     // mais antigo, a mesma regra da loja pública (loja_marca_publica).
+    // Em "desc", só os números invertem; os sem número seguem no fim.
     return copia.sort((a, b) => {
       const na = a.catalogo_ordem ?? null;
       const nb = b.catalogo_ordem ?? null;
-      if (na == null && nb == null) return maisRecente(a, b) || porNome(a, b);
-      if (na == null) return 1;
-      if (nb == null) return -1;
-      return sinal * (na - nb) || maisRecente(a, b);
+      if (sinal === -1 && na != null && nb != null && na !== nb) return nb - na;
+      return compararOrdemDaVitrine(a, b);
     });
   }
   if (coluna === "nome") return copia.sort((a, b) => sinal * porNome(a, b));

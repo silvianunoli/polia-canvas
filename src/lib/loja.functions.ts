@@ -19,6 +19,7 @@ import {
   type VariacaoLoja,
   type ResultadoPedidoLoja,
 } from "@/lib/loja";
+import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
 
 // Loja do catálogo próprio (ONE-148, fases 2 e 3). Mesmo desenho do link de
 // captura (captura.functions.ts): a cliente não tem login, então a leitura e o
@@ -98,7 +99,10 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       preco_sob_consulta: boolean;
       cor_sob_consulta: boolean;
       tamanho_sob_consulta: boolean;
+      catalogo_ordem: number | null;
+      created_at: string;
     }>;
+    lista.sort(compararOrdemDaVitrine);
     const ids = lista.map((p) => p.id);
 
     const idsCategorias = [...new Set(lista.map((p) => p.categoria_id).filter((c): c is string => !!c))];

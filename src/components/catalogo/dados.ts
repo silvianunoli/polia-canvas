@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { slugDaCategoria } from "@/lib/lojaCombinacoes";
 import { BANNER_ALTURA, BANNER_LARGURA, BANNER_TIPOS, FOTO_MAX_BYTES, FOTO_TIPOS, MAX_BANNERS, MAX_FOTOS_PRODUTO, problemaDoBanner, problemaDoFavicon, type RecorteDoBanner } from "@/lib/loja";
+import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
 
 // Dados da tela Vitrine online (rota /catalogo; ONE-148, fases 2 e 3). Produtos e fotos a dona mexe
 // direto pelo Supabase, com RLS de dona (produtos: update; produto_fotos e o
@@ -58,7 +59,9 @@ export function useProdutosDoCatalogo(userId: string | undefined, habilitado: bo
         catalogo_ordem: number | null;
         categoria_id: string | null;
         colecao_id: string | null;
+        created_at: string;
       }>;
+      lista.sort(compararOrdemDaVitrine);
       const ids = lista.map((p) => p.id);
       if (!ids.length) return [];
       const [{ data: fotos, error: e1 }, { data: skus, error: e2 }] = await Promise.all([

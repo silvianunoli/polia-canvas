@@ -50,6 +50,7 @@ beforeEach(() => {
       preco_venda: "189",
       foto_url: null,
       catalogo_ordem: null,
+      created_at: "2026-11-10T12:00:00Z",
     },
     {
       id: "p2",
@@ -58,6 +59,7 @@ beforeEach(() => {
       preco_venda: "209.9",
       foto_url: "https://loja/amy.webp",
       catalogo_ordem: 2,
+      created_at: "2026-11-01T12:00:00Z",
     },
   ];
   tabelas.produto_fotos = [
@@ -72,15 +74,8 @@ describe("GET /api/catalogo/vitrine", () => {
     expect(r.status).toBe(200);
     expect(r.headers.get("cache-control")).toBe("public, max-age=30");
     const corpo = (await r.json()) as { ok: boolean; produtos: unknown[] };
+    // O numerado vem antes, mesmo o banco devolvendo na outra ordem (ONE-239).
     expect(corpo.produtos).toEqual([
-      {
-        id: "p1",
-        nome: "Bolsa Hailey - Fio de Malha",
-        descricao: "Preto e branco",
-        preco: 189,
-        ordem: null,
-        fotos: ["https://s/pub/u1/p1-a.jpg", "https://s/pub/u1/p1-b.jpg"],
-      },
       {
         id: "p2",
         nome: "Bolsa Amy",
@@ -88,6 +83,14 @@ describe("GET /api/catalogo/vitrine", () => {
         preco: 209.9,
         ordem: 2,
         fotos: ["https://loja/amy.webp"],
+      },
+      {
+        id: "p1",
+        nome: "Bolsa Hailey - Fio de Malha",
+        descricao: "Preto e branco",
+        preco: 189,
+        ordem: null,
+        fotos: ["https://s/pub/u1/p1-a.jpg", "https://s/pub/u1/p1-b.jpg"],
       },
     ]);
     expect(filtros).toContainEqual(["canal_conexoes", "shop_id", "lovelesscrochet.com.br"]);
