@@ -1097,6 +1097,7 @@ const LISTA = [
         itens: [
           'Os produtos se montam em Produtos. No alto da Vitrine online, o resumo mostra quantos estão na vitrine e quantos estão sem foto, e "Abrir Produtos" leva até lá.',
           'Pra pôr ou tirar um produto, abra ele em Produtos e marque "Mostrar na Vitrine online", ou use a chave "Vitrine" na lista. Nome, preço e variações vêm de lá.',
+          'Produto sem foto não aparece na loja, mesmo marcado: a lista de Produtos mostra "sem foto" ao lado da chave "Vitrine". Envie a foto no cadastro do produto e ele entra na loja.',
           'Quem aparece primeiro na vitrine se escolhe no campo "Ordem" da lista de Produtos: primeiro os produtos com número, depois os sem número, do cadastro mais recente pro mais antigo.',
           'A categoria e as fotos ficam no cadastro do produto: "Categoria na vitrine" e "Fotos" (até 4, a primeira é a da vitrine). Quando a categoria separa os produtos (duas categorias, ou uma e produtos sem categoria), a vitrine mostra botões pra cliente filtrar.',
         ],

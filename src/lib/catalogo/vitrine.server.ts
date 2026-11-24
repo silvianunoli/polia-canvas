@@ -10,6 +10,7 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { compararOrdemDaVitrine } from "@/lib/catalogoProdutos";
 import { precoQueVale } from "@/lib/precoPromocional";
+import { fotosParaLoja } from "@/lib/loja";
 import { normalizarDominio } from "@/lib/catalogo";
 import { temProjete } from "@/lib/planos";
 
@@ -93,19 +94,18 @@ export async function responderVitrineCatalogo(request: Request): Promise<Respon
       fotosPor.set(f.produto_id, [...(fotosPor.get(f.produto_id) ?? []), url]);
     }
 
-    const produtos: ProdutoVitrine[] = lista.map((p) => {
-      const daGaleria = fotosPor.get(p.id) ?? [];
-      // Produto antigo, de antes das 4 fotos, só tem foto_url.
-      const legado = p.foto_url?.startsWith("https://") ? [p.foto_url] : [];
-      return {
+    // Produto antigo, de antes das 4 fotos, só tem foto_url (fotosParaLoja).
+    // Sem foto nenhuma, fica fora do site (Sil, 24/11/2026: foto obrigatória).
+    const produtos: ProdutoVitrine[] = lista
+      .map((p) => ({
         id: p.id,
         nome: p.nome,
         descricao: p.descricao,
         preco: precoQueVale(p.preco_venda, p.preco_promocional),
         ordem: p.catalogo_ordem ?? null,
-        fotos: daGaleria.length ? daGaleria : legado,
-      };
-    });
+        fotos: fotosParaLoja(fotosPor.get(p.id), p.foto_url),
+      }))
+      .filter((p) => p.fotos.length > 0);
     // Cache curto: a mudança da dona aparece no site em até meio minuto.
     return resposta(200, { ok: true, produtos }, "public, max-age=30");
   } catch (e) {

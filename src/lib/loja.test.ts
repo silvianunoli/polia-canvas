@@ -11,6 +11,7 @@ import {
   maxCoresValido,
   pedidoLojaSchema,
   buscarProdutos,
+  fotosParaLoja,
   descontoDoDePor,
   problemaDaOrigemDoBanner,
   recorteDoBanner,
@@ -309,5 +310,16 @@ describe("mensagem do pedido com cupom (ONE-239)", () => {
     expect(m).toContain("Cupom NATAL10: - R$ 8,98");
     expect(m).toContain("*Total: R$ 80,82*");
     expect(m).toContain("R$ 40,41");
+  });
+});
+
+describe("foto obrigatória na loja (ONE-239)", () => {
+  it("usa a galeria e, sem galeria, o link https antigo", () => {
+    expect(fotosParaLoja(["a.jpg", "b.jpg"], "https://x/c.jpg")).toEqual(["a.jpg", "b.jpg"]);
+    expect(fotosParaLoja([], "https://x/c.jpg")).toEqual(["https://x/c.jpg"]);
+  });
+  it("sem foto nenhuma devolve vazio, e o produto sai da loja", () => {
+    expect(fotosParaLoja(undefined, null)).toEqual([]);
+    expect(fotosParaLoja([], "http://x/c.jpg")).toEqual([]);
   });
 });

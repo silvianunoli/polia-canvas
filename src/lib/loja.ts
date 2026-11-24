@@ -323,6 +323,15 @@ export function produtosDaCategoria<T extends Pick<ProdutoLoja, "categoriaId">>(
   return categoriaId ? produtos.filter((p) => p.categoriaId === categoriaId) : produtos;
 }
 
+/**
+ * Fotos que a loja mostra: as da galeria (produto_fotos) e, sem galeria, o
+ * link antigo do cadastro (foto_url), só se for https.
+ */
+export function fotosParaLoja(galeria: readonly string[] | undefined, fotoUrl: string | null | undefined): string[] {
+  if (galeria?.length) return [...galeria];
+  return fotoUrl?.startsWith("https://") ? [fotoUrl] : [];
+}
+
 /** A busca da loja só aparece quando a vitrine tem pelo menos isso de produtos. */
 export const BUSCA_LOJA_MINIMO = 8;
 

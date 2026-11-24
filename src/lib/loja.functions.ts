@@ -13,6 +13,7 @@ import {
   pedidoLojaSchema,
   maxCoresValido,
   opcoesDaPaleta,
+  fotosParaLoja,
   slugValido,
   type CorLoja,
   type LojaPublica,
@@ -81,7 +82,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
 
     const { data: prods } = await supabaseAdmin
       .from("produtos")
-      .select("id, nome, descricao, preco_venda, preco_promocional, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
+      .select("id, nome, descricao, preco_venda, preco_promocional, foto_url, categoria_id, usa_paleta, cor_da_foto, pronta_entrega, controla_estoque, max_cores, preco_sob_consulta, cor_sob_consulta, tamanho_sob_consulta, catalogo_ordem, created_at")
       .eq("user_id", c.user_id)
       .eq("arquivado", false)
       .eq("no_catalogo" as never, true as never)
@@ -93,6 +94,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       descricao: string | null;
       preco_venda: number;
       preco_promocional: number | string | null;
+      foto_url: string | null;
       categoria_id: string | null;
       usa_paleta: boolean;
       cor_da_foto: string | null;
@@ -105,14 +107,28 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       catalogo_ordem: number | null;
       created_at: string;
     }>;
-    lista.sort(compararOrdemDaVitrine);
-    const ids = lista.map((p) => p.id);
+    // Foto obrigatória (24/11/2026, Sil: "é obrigatório ter foto cadastrada pra
+    // aparecer na loja ou na vitrine"): produto sem foto fica de fora da loja,
+    // das categorias e do carrinho, mesmo marcado em "Mostrar na Vitrine online".
+    const todos = [...lista].sort(compararOrdemDaVitrine);
+    const { data: fotos } = todos.length
+      ? await supabaseAdmin
+          .from("produto_fotos" as never)
+          .select("produto_id, path, ordem")
+          .in("produto_id", todos.map((p) => p.id))
+          .order("ordem")
+      : { data: [] };
+    const galeriaPor = new Map<string, string[]>();
+    for (const f of (fotos ?? []) as unknown as Array<{ produto_id: string; path: string }>) {
+      const url = urlPublica("produtos-fotos", f.path);
+      if (url) galeriaPor.set(f.produto_id, [...(galeriaPor.get(f.produto_id) ?? []), url]);
+    }
+    const fotosPor = new Map(todos.map((p) => [p.id, fotosParaLoja(galeriaPor.get(p.id), p.foto_url)]));
+    const visiveis = todos.filter((p) => (fotosPor.get(p.id) ?? []).length > 0);
+    const ids = visiveis.map((p) => p.id);
 
-    const idsCategorias = [...new Set(lista.map((p) => p.categoria_id).filter((c): c is string => !!c))];
-    const [{ data: fotos }, { data: skus }, { data: banners }, { data: categorias }, { data: coresBanco }] = await Promise.all([
-      ids.length
-        ? supabaseAdmin.from("produto_fotos" as never).select("produto_id, path, ordem").in("produto_id", ids).order("ordem")
-        : Promise.resolve({ data: [] }),
+    const idsCategorias = [...new Set(visiveis.map((p) => p.categoria_id).filter((c): c is string => !!c))];
+    const [{ data: skus }, { data: banners }, { data: categorias }, { data: coresBanco }] = await Promise.all([
       ids.length
         ? supabaseAdmin
             .from("produto_skus")
@@ -140,7 +156,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         .order("created_at"),
     ]);
     // Saldo só de quem é pronta entrega com estoque ligado: é o que vira "Esgotado".
-    const comSaldo = lista.filter((p) => p.pronta_entrega && p.controla_estoque).map((p) => p.id);
+    const comSaldo = visiveis.filter((p) => p.pronta_entrega && p.controla_estoque).map((p) => p.id);
     const { data: saldos } = comSaldo.length
       ? await supabaseAdmin
           .from("estoque_saldos" as never)
@@ -159,11 +175,6 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
       nome: k.nome,
       hex: k.hex,
     }));
-    const fotosPor = new Map<string, string[]>();
-    for (const f of (fotos ?? []) as unknown as Array<{ produto_id: string; path: string }>) {
-      const url = urlPublica("produtos-fotos", f.path);
-      if (url) fotosPor.set(f.produto_id, [...(fotosPor.get(f.produto_id) ?? []), url]);
-    }
     const varPor = new Map<string, Array<{ id: string; nome: string }>>();
     for (const s of (skus ?? []) as unknown as Array<{ id: string; produto_id: string; variacao: string }>) {
       varPor.set(s.produto_id, [...(varPor.get(s.produto_id) ?? []), { id: s.id, nome: s.variacao }]);
@@ -190,7 +201,7 @@ export const lerLojaPublica = createServerFn({ method: "POST" })
         entregaTexto: c.entrega_texto,
         pedeEndereco: c.pede_endereco,
         aviso: c.aviso,
-        produtos: lista.map((p) => {
+        produtos: visiveis.map((p) => {
           // Cor sob consulta tira a paleta desse produto: a cliente não escolhe cor.
           const usaPaleta = !!p.usa_paleta && cores.length > 0 && !p.cor_sob_consulta;
           const contaSaldo = p.pronta_entrega && p.controla_estoque;

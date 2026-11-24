@@ -941,10 +941,18 @@ function ChaveVitrine({
 }: { produto: Produto; comRotulo?: boolean } & PropsLista) {
   const ligada = !!produto.no_catalogo;
   const inativo = !!produto.arquivado;
+  // Foto obrigatória (Sil, 24/11/2026): ligado e sem foto, não aparece na loja.
+  const semFoto = ligada && !inativo && !produto.foto_url;
   return (
     <label
       className="inline-flex min-h-11 items-center gap-2 text-[13px] text-[var(--ink-soft)]"
-      title={inativo ? "Produto inativo não aparece na Vitrine online." : undefined}
+      title={
+        inativo
+          ? "Produto inativo não aparece na Vitrine online."
+          : semFoto
+            ? "Sem foto, o produto não aparece na loja. Abra o produto e envie uma foto."
+            : undefined
+      }
     >
       <Switch
         checked={ligada && !inativo}
@@ -954,6 +962,7 @@ function ChaveVitrine({
         aria-label={comRotulo ? undefined : `Na Vitrine online: ${produto.nome}`}
       />
       {comRotulo && "Na Vitrine"}
+      {semFoto && <span className="text-[12px] text-[var(--muted)]">sem foto</span>}
     </label>
   );
 }

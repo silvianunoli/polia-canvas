@@ -61,6 +61,16 @@ beforeEach(() => {
       catalogo_ordem: 2,
       created_at: "2026-11-01T12:00:00Z",
     },
+    {
+      // Sem foto nenhuma: fica fora do site (foto obrigatória, ONE-239).
+      id: "p3",
+      nome: "Caneca lisa",
+      descricao: null,
+      preco_venda: "45",
+      foto_url: null,
+      catalogo_ordem: 1,
+      created_at: "2026-11-02T12:00:00Z",
+    },
   ];
   tabelas.produto_fotos = [
     { produto_id: "p1", path: "u1/p1-a.jpg", ordem: 0 },

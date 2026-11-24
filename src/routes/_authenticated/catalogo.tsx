@@ -381,7 +381,7 @@ function ResumoDosProdutos({ userId }: { userId: string }) {
       ? "Contando os produtos da vitrine..."
       : !n
         ? "Nenhum produto na vitrine ainda. Em Produtos, abra o produto e marque “Mostrar na Vitrine online”."
-        : `${n} ${n === 1 ? "produto na vitrine" : "produtos na vitrine"}${semFoto ? `, ${semFoto} sem foto` : ""}. A ordem, as fotos e a categoria ficam em Produtos.`;
+        : `${n} ${n === 1 ? "produto marcado" : "produtos marcados"} pra vitrine${semFoto ? `; ${semFoto} sem foto ${semFoto === 1 ? "fica" : "ficam"} fora da loja até ganhar foto` : ""}. A ordem, as fotos e a categoria ficam em Produtos.`;
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-4">
       <p className="flex items-center gap-2 font-sans text-[14px] text-[var(--ink)]" aria-live="polite">
