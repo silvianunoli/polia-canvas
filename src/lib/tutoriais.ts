@@ -319,10 +319,10 @@ const LISTA = [
   },
   {
     slug: "produtos",
-    nome: "Produtos",
+    nome: "Cadastro de produtos",
     grupo: "Produto, preço e venda",
     rota: "/produtos",
-    abrir: "Abrir Produtos",
+    abrir: "Abrir o Cadastro de produtos",
     resumo: "O catálogo da marca: o que ela vende, quanto custa e quanto lucra em cada venda.",
     passos: [
       {
@@ -484,29 +484,36 @@ const LISTA = [
   },
   {
     slug: "anuncios",
-    nome: "Anúncios nos canais",
+    nome: "Marketplaces",
     grupo: "Produto, preço e venda",
     rota: "/produtos/anuncios",
-    // Conectar o canal e ligar os anúncios também acontece em Configurações.
+    // A volta do login de cada canal passa por /configuracoes/integracoes/*.
     outrasRotas: ["/configuracoes/integracoes"],
-    abrir: "Abrir Anúncios nos canais",
+    abrir: "Abrir Marketplaces",
     resumo:
-      "Liga cada anúncio do Mercado Livre a um produto da Pólia, pra a venda baixar o estoque certo.",
+      "Conecta a loja da marca no marketplace e liga cada anúncio a um produto da Pólia, pra a venda baixar o estoque certo.",
     plano: "Pro",
     passos: [
       {
+        titulo: "Antes de conectar: a conta de vendedora",
+        itens: [
+          "A marca precisa ter conta de vendedora aprovada no marketplace. A Pólia One não cria essa conta: ela lê os anúncios e os pedidos da loja que já existe lá.",
+          "Abra a conta no próprio site do marketplace, com os dados da marca, e espere a aprovação antes de conectar.",
+        ],
+      },
+      {
         titulo: "Conectar o canal de venda",
         itens: [
-          'Abra Configurações e desça até "Integrações".',
+          'No menu, em "Cadastro de produtos", entre em "Marketplaces".',
           'No cartão do Mercado Livre, clique em "Conectar".',
           "Entre na conta da loja e autorize. Use a conta dona da loja, não a de colaboradora.",
-          "Na volta, a Pólia One abre direto a tela de ligar os anúncios.",
+          "Na volta, a Pólia One abre direto a tela de ligar os anúncios. Se a conexão não der certo, ela volta pra Marketplaces com o motivo.",
         ],
       },
       {
         titulo: "Ligar os anúncios aos produtos",
         itens: [
-          'Em Produtos, entre em "Anúncios nos canais" e clique em "Ligar anúncios" no canal.',
+          'Em "Marketplaces", clique em "Ligar anúncios" no cartão do canal.',
           "A Pólia One já sugere o par de cada anúncio, primeiro pelo código (SKU) e depois pelo nome. Confira linha por linha.",
           'Em cada anúncio, escolha o produto da Pólia, "Criar produto novo na Pólia" ou "Não ligar".',
           'Clique em "Salvar N ligações". Nada fica ligado antes disso.',

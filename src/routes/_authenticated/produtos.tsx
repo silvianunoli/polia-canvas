@@ -324,7 +324,7 @@ function ProdutosPage() {
 
   if (produtosQuery.isError) {
     return (
-      <PaginaLogada largura="larga" eyebrow="Produtos" titulo="Seus produtos.">
+      <PaginaLogada largura="larga" eyebrow="Cadastro de produtos" titulo="Seus produtos.">
         <div role="alert">
           <BlockError
             message="A Pólia One não conseguiu ler os seus produtos agora. Nada foi perdido, é só a leitura que falhou."
@@ -340,7 +340,7 @@ function ProdutosPage() {
   // por um instante, como se tudo tivesse sumido.
   if (produtosQuery.isPending) {
     return (
-      <PaginaLogada largura="larga" eyebrow="Produtos" titulo="Seus produtos.">
+      <PaginaLogada largura="larga" eyebrow="Cadastro de produtos" titulo="Seus produtos.">
         <p className="text-[14px] text-[var(--muted)]">Carregando seus produtos…</p>
       </PaginaLogada>
     );
@@ -349,7 +349,7 @@ function ProdutosPage() {
   return (
     <PaginaLogada
       largura="larga"
-      eyebrow="Produtos"
+      eyebrow="Cadastro de produtos"
       titulo="Seus produtos."
       subtitulo="O que você vende, quanto custa e quanto lucra em cada venda."
       acao={

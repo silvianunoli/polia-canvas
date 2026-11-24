@@ -140,7 +140,7 @@ export function LigarAnunciosCanal({
 
   const voltar = (
     <LinkInterno href="/produtos/anuncios" className={BTN_ACAO_CONTORNO}>
-      Voltar para Anúncios nos canais
+      Voltar para Marketplaces
     </LinkInterno>
   );
 

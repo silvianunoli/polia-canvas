@@ -40,7 +40,7 @@ function RetornoMercadoLivre() {
     const voltar = (conectou = false) => {
       qc.invalidateQueries({ queryKey: [CHAVE_STATUS_ML] });
       navigate({
-        to: conectou ? "/produtos/anuncios/mercado-livre" : "/configuracoes",
+        to: conectou ? "/produtos/anuncios/mercado-livre" : "/produtos/anuncios",
         replace: true,
       });
     };
@@ -69,7 +69,7 @@ function RetornoMercadoLivre() {
   }, []);
 
   return (
-    <PaginaLogada titulo="Mercado Livre" eyebrow="Integrações">
+    <PaginaLogada titulo="Mercado Livre" eyebrow="Marketplaces">
       <p className="font-sans text-[var(--ink-soft)] text-[15px]" role="status" aria-live="polite">
         Conectando o Mercado Livre...
       </p>

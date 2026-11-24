@@ -42,10 +42,10 @@ function RetornoTiktok() {
   const [salvando, setSalvando] = useState(false);
 
   // Conectou: vai direto para Ligar anúncios, o próximo passo (VND-39); falhou ou
-  // cancelou: volta para Integrações.
+  // cancelou: volta para Marketplaces (ONE-255), onde fica o botão Conectar.
   const voltar = (conectou = false) => {
     qc.invalidateQueries({ queryKey: [CHAVE_STATUS_TIKTOK] });
-    navigate({ to: conectou ? "/produtos/anuncios/tiktok" : "/configuracoes", replace: true });
+    navigate({ to: conectou ? "/produtos/anuncios/tiktok" : "/produtos/anuncios", replace: true });
   };
 
   useEffect(() => {
@@ -107,7 +107,7 @@ function RetornoTiktok() {
 
   if (lojaParaConfirmar) {
     return (
-      <PaginaLogada titulo="Conectar o TikTok Shop?" eyebrow="Integrações">
+      <PaginaLogada titulo="Conectar o TikTok Shop?" eyebrow="Marketplaces">
         <p className="font-sans text-[var(--ink-soft)] text-[15px] mb-6">
           O TikTok autorizou a loja{" "}
           <strong className="text-[var(--ink)]">{lojaParaConfirmar}</strong>. Conectando, os pedidos
@@ -131,7 +131,7 @@ function RetornoTiktok() {
   }
 
   return (
-    <PaginaLogada titulo="TikTok Shop" eyebrow="Integrações">
+    <PaginaLogada titulo="TikTok Shop" eyebrow="Marketplaces">
       <p className="font-sans text-[var(--ink-soft)] text-[15px]" role="status" aria-live="polite">
         Conectando o TikTok Shop...
       </p>

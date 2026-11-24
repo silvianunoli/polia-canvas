@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Lock } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 import {
   alternarCuidaEstoqueMercadoLivre,
   desconectarMercadoLivre,
@@ -13,9 +13,11 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import { CHAVE_STATUS_ML } from "@/hooks/useCanaisConectados";
+import { GUIA_VENDEDORA } from "./guiasVendedora";
 
-// Card do Mercado Livre em Configurações > Integrações (Fase 3c, VND-30). Só no
-// Pro; some quando o servidor não tem as credenciais. Plano §6.1 e §6.2.
+// Card do Mercado Livre (Fase 3c, VND-30). Mora na tela Marketplaces desde
+// 24/11/2026 (ONE-255), antes em Configurações > Integrações. Só no Pro; some
+// quando o servidor não tem as credenciais. Plano §6.1 e §6.2.
 
 export { CHAVE_STATUS_ML };
 
@@ -76,7 +78,7 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
 
   return (
     <>
-      <div className="p-4 border border-[var(--line)] rounded-xl">
+      <div className="p-4 border border-[var(--line)] rounded-xl bg-white">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="font-sans text-[var(--ink)] text-[14px] font-medium mb-0.5">
@@ -93,7 +95,7 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
           </div>
           {!ml.conectada && !ml.liberado ? (
             <LinkInterno
-              href={`/upgrade?rota=${encodeURIComponent("/configuracoes")}&tier=projete`}
+              href={`/upgrade?rota=${encodeURIComponent("/produtos/anuncios")}&tier=projete`}
               className={BTN_MIUDO}
             >
               <Lock size={13} aria-hidden="true" /> Abre no Pro
@@ -123,13 +125,30 @@ export function CardMercadoLivre({ userId }: { userId: string | undefined }) {
           </p>
         )}
         {!ml.conectada && (
-          <ul className="font-sans text-[var(--ink-soft)] text-[12px] mt-3 space-y-1">
-            <li>A Pólia importa: anúncios, pedidos, tarifas, frete e quantidades.</li>
-            <li>
-              A Pólia não faz: criar anúncio, responder compradora, guardar dados de quem comprou.
-            </li>
-            <li>Antes de conectar: entrar com a conta dona da loja, não com a de colaboradora.</li>
-          </ul>
+          <>
+            <ul className="font-sans text-[var(--ink-soft)] text-[12px] mt-3 space-y-1">
+              <li>
+                Antes de conectar: ter conta de vendedora no Mercado Livre e entrar com a conta dona
+                da loja, não com a de colaboradora.
+              </li>
+              <li>A Pólia importa: anúncios, pedidos, tarifas, frete e quantidades.</li>
+              <li>
+                A Pólia não faz: criar anúncio, responder compradora, guardar dados de quem comprou.
+              </li>
+            </ul>
+            {GUIA_VENDEDORA.mercado_livre && (
+              <a
+                href={GUIA_VENDEDORA.mercado_livre}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-[12px] font-medium text-[var(--secondary-text)] hover:underline"
+              >
+                Como abrir a conta de vendedora no Mercado Livre
+                <ExternalLink size={12} aria-hidden="true" />
+                <span className="sr-only">(abre em outra aba)</span>
+              </a>
+            )}
+          </>
         )}
         {ml.conectada && (
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">

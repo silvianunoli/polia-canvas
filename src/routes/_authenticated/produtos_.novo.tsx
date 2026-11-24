@@ -51,7 +51,7 @@ function NovoProduto() {
   const voltar = () => void navigate({ to: "/produtos" });
 
   return (
-    <PaginaLogada largura="larga" eyebrow="Produtos" titulo="Novo produto.">
+    <PaginaLogada largura="larga" eyebrow="Cadastro de produtos" titulo="Novo produto.">
       {!userId ? (
         <p className="text-[14px] text-[var(--muted)]">Carregando o cadastro...</p>
       ) : (

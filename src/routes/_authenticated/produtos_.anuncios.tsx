@@ -1,94 +1,55 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
-import { LinkInterno } from "@/components/ui/LinkInterno";
-import { useCanaisConectados } from "@/hooks/useCanaisConectados";
-import { BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
+import { useSupabaseSession } from "@/hooks/useSupabaseSession";
+import { CardMercadoLivre } from "@/components/configuracoes/CardMercadoLivre";
+import { CardTiktokShop } from "@/components/configuracoes/CardTiktokShop";
 
-// "Anúncios nos canais" (VND-39, aprovado pela Sil em 26/10): o caminho até
-// "Ligar anúncios" a partir de Produtos, um bloco por canal conectado. Conectar
-// um canal novo continua em Configurações > Integrações.
+// Marketplaces (ONE-255, 24/11/2026, pedido da Sil): era "Anúncios nos
+// canais" (VND-39), que só aparecia com canal já conectado e mandava conectar
+// em Configurações. Agora aparece pra todas e o canal se conecta aqui, com o
+// aviso de que a conta de vendedora vem antes. Ligar os anúncios continua em
+// /produtos/anuncios/mercado-livre e /produtos/anuncios/tiktok.
 
 export const Route = createFileRoute("/_authenticated/produtos_/anuncios")({
-  head: () => ({ meta: [{ title: "Anúncios nos canais · Pólia One" }] }),
-  component: AnunciosNosCanais,
+  head: () => ({ meta: [{ title: "Marketplaces · Pólia One" }] }),
+  component: Marketplaces,
 });
 
-function AnunciosNosCanais() {
-  const { canais, carregando, erro } = useCanaisConectados();
+function Marketplaces() {
+  const { user } = useSupabaseSession();
+  const userId = user?.id;
 
   return (
     <PaginaLogada
-      titulo="Anúncios nos canais"
-      eyebrow="Produtos"
-      subtitulo="Ligue cada anúncio a um produto da Pólia: a venda baixa o estoque certo e o lucro sai por produto."
+      titulo="Marketplaces"
+      eyebrow="Cadastro de produtos"
+      subtitulo="Conecte a loja da marca no Mercado Livre e no TikTok Shop e ligue cada anúncio a um produto da Pólia: a venda baixa o estoque certo e o lucro sai por produto."
     >
-      {carregando && (
-        <p
-          className="font-sans text-[var(--ink-soft)] text-[14px]"
-          role="status"
-          aria-live="polite"
+      <div className="mb-6 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-4">
+        <p className="font-sans text-[14px] font-medium text-[var(--ink)]">
+          Antes de conectar, a conta de vendedora
+        </p>
+        <p className="mt-1 font-sans text-[13px] text-[var(--ink-soft)]">
+          A marca já precisa ter conta de vendedora aprovada em cada canal. A Pólia não cria essa
+          conta: ela lê os anúncios e os pedidos da loja que já existe lá.
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <CardMercadoLivre userId={userId} />
+        <CardTiktokShop userId={userId} />
+      </div>
+
+      <p className="mt-6 font-sans text-[13px] text-[var(--ink-soft)]">
+        Quer entender o passo a passo antes?{" "}
+        <Link
+          to="/como-usar/$slug"
+          params={{ slug: "anuncios" }}
+          className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
         >
-          Buscando os canais conectados...
-        </p>
-      )}
-
-      {!carregando && erro && canais.length === 0 && (
-        <p className="font-sans text-[var(--danger)] text-[14px]" role="alert">
-          A Pólia One não conseguiu ler os canais agora. Recarrega a página para tentar de novo.
-        </p>
-      )}
-
-      {!carregando && !erro && canais.length === 0 && (
-        <div className="space-y-4">
-          <p className="font-sans text-[var(--ink-soft)] text-[14px]">
-            Nenhum canal de venda conectado ainda. Conecta o Mercado Livre ou o TikTok Shop em
-            Configurações e os anúncios aparecem aqui.
-          </p>
-          <LinkInterno href="/configuracoes" className={BTN_ACAO_CONTORNO}>
-            Ir para Integrações
-          </LinkInterno>
-        </div>
-      )}
-
-      {canais.length > 0 && (
-        <div className="space-y-3">
-          {canais.map((c) => (
-            <section
-              key={c.canal}
-              aria-labelledby={`canal-${c.canal}`}
-              className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--line)] bg-white p-4"
-            >
-              <div>
-                <h2
-                  id={`canal-${c.canal}`}
-                  className="font-sans text-[15px] font-medium text-[var(--ink)]"
-                >
-                  {c.nome}
-                  {c.loja ? ` · ${c.loja}` : ""}
-                </h2>
-                <p className="font-sans text-[13px] text-[var(--ink-soft)]">
-                  {c.anunciosLigados === 0
-                    ? "Nenhum anúncio ligado a produto da Pólia ainda."
-                    : `${c.anunciosLigados} ${c.anunciosLigados === 1 ? "anúncio ligado" : "anúncios ligados"} a produtos da Pólia.`}
-                  {c.ultimoSync
-                    ? ` Última sincronização ${new Date(c.ultimoSync).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}.`
-                    : ""}
-                </p>
-              </div>
-              <LinkInterno href={c.href} className={BTN_MIUDO}>
-                Ligar anúncios
-              </LinkInterno>
-            </section>
-          ))}
-          <p className="font-sans text-[12px] text-[var(--muted)]">
-            Conectar outro canal ou desconectar fica em{" "}
-            <LinkInterno href="/configuracoes" className="text-[var(--secondary-text)] underline">
-              Configurações &gt; Integrações
-            </LinkInterno>
-            .
-          </p>
-        </div>
-      )}
+          Ver como funciona a conexão
+        </Link>
+      </p>
     </PaginaLogada>
   );
 }

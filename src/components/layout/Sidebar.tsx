@@ -38,18 +38,22 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useProgressoPlanejamento } from "@/hooks/useProgressoPlanejamento";
 import { TOKEN_BRIDGE_V3 } from "@/lib/uiTokenBridge";
 import { recursoLiberado, tierPagoDaRota, tiersPagos } from "@/lib/planos";
-import { useCanaisConectados } from "@/hooks/useCanaisConectados";
 import { useFerramentasInternas } from "@/hooks/useFerramentasInternas";
 import { rotaVisivel } from "@/lib/ferramentasInternas";
 import { useAgendaRedesVisivel } from "@/components/agenda-redes/comum";
 import { AcoesTopo } from "@/components/avisos/AcoesTopo";
 import { useTemLojaDaMarca } from "@/components/lojaDaMarca/dados";
 
-// Subnível de Produtos (VND-39): só aparece com pelo menos um canal de venda
-// conectado, pra quem não vende em marketplace não ver um item vazio.
-const ANUNCIOS_CANAIS = "/produtos/anuncios";
-
 type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
+
+// Subníveis do Cadastro de produtos (ONE-255, 24/11/2026, pedido da Sil): a
+// Calculadora saiu do meio da lista e virou subnível, porque o preço nasce no
+// cadastro. "Marketplaces" (antes "Anúncios nos canais", só com canal
+// conectado) aparece pra todas: é ali que se conecta o canal.
+const SUBNIVEIS_PRODUTOS: NavItem[] = [
+  { to: "/calculadora", label: "Calculadora de preço", icon: Calculator },
+  { to: "/produtos/anuncios", label: "Marketplaces", icon: Link2 },
+];
 
 // Marca e Mapa de Mercado NÃO ficam aqui: são documentos do planejamento,
 // acessados pelo badge de cada módulo dentro de /planejamento. O Planejamento
@@ -58,7 +62,7 @@ type NavItem = { to: string; label: string; icon: typeof LayoutDashboard };
 const NAV: NavItem[] = [
   { to: "/painel", label: "Painel", icon: LayoutDashboard },
   { to: "/planejamento", label: "Planejamento", icon: Map },
-  { to: "/produtos", label: "Produtos", icon: Package },
+  { to: "/produtos", label: "Cadastro de produtos", icon: Package },
   // Pedidos (GRW-93) no lugar do Planner, que ficou só pra conta interna.
   { to: "/pedidos", label: "Pedidos", icon: ClipboardList },
   // Loja do catálogo (ONE-148), só no Pro: o cadeado vem de recursoLiberado.
@@ -68,7 +72,6 @@ const NAV: NavItem[] = [
   // Agenda das redes (ONE-155): só aparece pra quem o servidor deixa ver.
   { to: "/agenda-redes", label: "Agenda das redes", icon: CalendarClock },
   { to: "/vendas", label: "Vendas", icon: ShoppingBag },
-  { to: "/calculadora", label: "Calculadora", icon: Calculator },
   { to: "/projecao", label: "Projeção e cenários", icon: TrendingUp },
   { to: "/financeiro", label: "Financeiro", icon: Wallet },
   { to: "/raiox", label: "Raio-x do mês", icon: Stethoscope },
@@ -124,8 +127,7 @@ function Body({
   // interromper. Some com os 6 módulos fechados. Só aparece junto do item,
   // que desde 31/10/2026 é só da conta interna.
   const { progresso } = useProgressoPlanejamento();
-  const { canais } = useCanaisConectados();
-  const anunciosAtivo = isActive(ANUNCIOS_CANAIS, pathname);
+  const subnivelAtivo = SUBNIVEIS_PRODUTOS.some((s) => isActive(s.to, pathname));
   // Planner e Caderno (28/10/2026) e Planejamento (31/10/2026) só pra conta interna.
   const acessoInterno = useFerramentasInternas();
   const agendaVisivel = useAgendaRedesVisivel();
@@ -206,9 +208,9 @@ function Body({
               (item.to !== "/agenda-redes" || agendaVisivel) &&
               (item.to !== "/loja-da-marca" || lojaDaMarca.data === true),
           ).map((item) => {
-            // Em "Anúncios nos canais" o destaque fica no subnível, não em Produtos.
+            // Num subnível o destaque fica nele, não no Cadastro de produtos.
             const active =
-              isActive(item.to, pathname) && !(item.to === "/produtos" && anunciosAtivo);
+              isActive(item.to, pathname) && !(item.to === "/produtos" && subnivelAtivo);
             const Icon = item.icon;
             // `recursoLiberado`, não `rotaLiberada`: Raio-x, Projeção e Plano
             // de conteúdo passam pelo guard de tier (são "controle") e só são
@@ -297,40 +299,46 @@ function Body({
             ) : (
               content
             );
-            if (item.to !== "/produtos" || !liberado || canais.length === 0) return principal;
-            const sub = (
-              <Link
-                key={ANUNCIOS_CANAIS}
-                to={ANUNCIOS_CANAIS}
-                onClick={onNavigate}
-                data-track="nav_clicado"
-                data-track-props={JSON.stringify({ destino: ANUNCIOS_CANAIS })}
-                aria-current={anunciosAtivo ? "page" : undefined}
-                className={`flex min-h-11 md:min-h-[24px] md:max-h-9 md:flex-[1_1_0] items-center gap-2 rounded-lg text-[12px] no-underline transition-colors ${
-                  compact ? "justify-center px-3" : "pl-9 pr-3"
-                } ${
-                  anunciosAtivo
-                    ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
-                    : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
-                }`}
-              >
-                <Link2 size={compact ? 16 : 14} aria-hidden="true" />
-                <span className={compact ? "sr-only" : undefined}>Anúncios nos canais</span>
-              </Link>
-            );
+            if (item.to !== "/produtos" || !liberado) return principal;
             return (
               <div key={item.to} className="contents">
                 {principal}
-                {compact ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>{sub}</TooltipTrigger>
-                    <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
-                      Anúncios nos canais
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  sub
-                )}
+                {SUBNIVEIS_PRODUTOS.map((s) => {
+                  const subAtivo = isActive(s.to, pathname);
+                  const SubIcon = s.icon;
+                  const sub = (
+                    <Link
+                      key={s.to}
+                      to={s.to}
+                      onClick={onNavigate}
+                      // O tour do primeiro acesso aponta pra "calculadora".
+                      data-tour={s.to.slice(1)}
+                      data-track="nav_clicado"
+                      data-track-props={JSON.stringify({ destino: s.to })}
+                      aria-current={subAtivo ? "page" : undefined}
+                      className={`flex min-h-11 md:min-h-[24px] md:max-h-9 md:flex-[1_1_0] items-center gap-2 rounded-lg text-[12px] no-underline transition-colors ${
+                        compact ? "justify-center px-3" : "pl-9 pr-3"
+                      } ${
+                        subAtivo
+                          ? "bg-[var(--secondary-light)] font-medium text-[var(--ink)]"
+                          : "text-[var(--ink-soft)] hover:bg-[var(--bg)]"
+                      }`}
+                    >
+                      <SubIcon size={compact ? 16 : 14} aria-hidden="true" />
+                      <span className={compact ? "sr-only" : undefined}>{s.label}</span>
+                    </Link>
+                  );
+                  return compact ? (
+                    <Tooltip key={s.to}>
+                      <TooltipTrigger asChild>{sub}</TooltipTrigger>
+                      <TooltipContent side="right" className="polia-v3" style={TOKEN_BRIDGE_V3}>
+                        {s.label}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    sub
+                  );
+                })}
               </div>
             );
           })}

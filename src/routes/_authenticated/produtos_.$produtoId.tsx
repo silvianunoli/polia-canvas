@@ -53,7 +53,7 @@ function EditarProduto() {
   return (
     <PaginaLogada
       largura="larga"
-      eyebrow="Produtos"
+      eyebrow="Cadastro de produtos"
       titulo={produto ? produto.nome : "Editar produto."}
     >
       {!userId || produtoQuery.isLoading ? (
