@@ -6,6 +6,22 @@ import { BTN_ACAO, BTN_ACAO_CONTORNO, BTN_MIUDO } from "@/lib/botoes";
 import { ANDAMENTOS, ROTULO_ANDAMENTO, rotuloEntrega, type AndamentoPedido } from "@/lib/pedidos";
 import { EtiquetaDoPedido } from "./EtiquetaDoPedido";
 import type { PedidoLinha } from "./dados";
+import {
+  FORMAS_RECEBIMENTO,
+  ROTULO_TAXA,
+  regraEstaVazia,
+  taxaDaVenda,
+  type FormaRecebimento,
+} from "@/lib/taxas";
+import {
+  ehFormaDeRecebimento,
+  liquidoDoPedido,
+  pagamentoVemDoCanal,
+  rotuloDaTaxa,
+  rotuloDoPagamento,
+} from "@/lib/pagamentoPedido";
+import { num } from "@/components/produtos/tipos";
+import { useTaxas } from "@/components/vendas/taxasDados";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[16px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none sm:text-[14px]";
@@ -24,7 +40,9 @@ export function ModalPedido({
   onRemarcar,
   onReceber,
   onCancelar,
+  onPagamento,
   onClose,
+  userId,
 }: {
   pedido: PedidoLinha;
   hoje: string;
@@ -34,7 +52,10 @@ export function ModalPedido({
   onRemarcar: (data: string) => void;
   onReceber: () => void;
   onCancelar: () => void;
+  /** Grava forma e taxa (pedido anotado à mão ou da Vitrine); devolve se salvou. */
+  onPagamento: (forma: FormaRecebimento | null, taxa: number) => Promise<boolean>;
   onClose: () => void;
+  userId: string | undefined;
 }) {
   const [data, setData] = useState(pedido.entregaEm);
   const [confirmarCancelar, setConfirmarCancelar] = useState(false);
@@ -106,6 +127,13 @@ export function ModalPedido({
           )}
         </div>
 
+        <BlocoPagamento
+          pedido={pedido}
+          ocupado={ocupado}
+          onPagamento={onPagamento}
+          userId={userId}
+        />
+
         {pedido.canal === "site" && <EtiquetaDoPedido vendaId={pedido.id} />}
 
         <div className="border-t border-[var(--line)] pt-4">
@@ -169,5 +197,124 @@ export function ModalPedido({
         )}
       </div>
     </Modal>
+  );
+}
+
+/**
+ * Pagamento do pedido (23/11/2026, desenho aprovado pela Sil). Loja da marca
+ * e marketplace chegam prontos do canal e só aparecem. Anotado à mão e Vitrine
+ * escolhem a forma aqui; trocar a forma refaz a taxa pela regra dela, a menos
+ * que a taxa tenha sido digitada.
+ */
+function BlocoPagamento({
+  pedido,
+  ocupado,
+  onPagamento,
+  userId,
+}: {
+  pedido: PedidoLinha;
+  ocupado: boolean;
+  onPagamento: (forma: FormaRecebimento | null, taxa: number) => Promise<boolean>;
+  userId: string | undefined;
+}) {
+  const fixo = pagamentoVemDoCanal(pedido.canal);
+  const formaSalva: FormaRecebimento | "" = ehFormaDeRecebimento(pedido.forma) ? pedido.forma : "";
+  const taxaSalva = pedido.taxaCanal > 0 ? String(pedido.taxaCanal) : "";
+  const [forma, setForma] = useState<FormaRecebimento | "">(formaSalva);
+  const [taxa, setTaxa] = useState(taxaSalva);
+  const [taxaDigitada, setTaxaDigitada] = useState(false);
+  const taxasQuery = useTaxas(fixo ? undefined : userId);
+
+  const valorDaTaxa = num(taxa);
+  const taxaInvalida =
+    !Number.isFinite(valorDaTaxa) ||
+    valorDaTaxa < 0 ||
+    (pedido.total > 0 && valorDaTaxa >= pedido.total);
+  const mudou = forma !== formaSalva || taxa.trim() !== taxaSalva;
+
+  if (fixo) {
+    return (
+      <div className="border-t border-[var(--line)] pt-4">
+        <p className="mb-1 text-[12px] font-medium text-[var(--ink-soft)]">Pagamento</p>
+        <p className="text-[var(--ink)]">{rotuloDoPagamento(pedido.canal, pedido.forma)}</p>
+        <p className="text-[var(--ink-soft)]">
+          {rotuloDaTaxa(pedido.canal)}: {fmt(pedido.taxaCanal)} · fica{" "}
+          {fmt(liquidoDoPedido(pedido.total, pedido.taxaCanal))}
+        </p>
+      </div>
+    );
+  }
+
+  const trocarForma = (nova: FormaRecebimento | "") => {
+    setForma(nova);
+    if (taxaDigitada || !nova || !taxasQuery.isSuccess) return;
+    const regra = taxasQuery.data?.[nova];
+    if (!regraEstaVazia(regra)) {
+      const valor = taxaDaVenda(pedido.total, regra);
+      setTaxa(valor > 0 ? String(valor) : "");
+    }
+  };
+
+  const salvar = async () => {
+    if (taxaInvalida || !mudou) return;
+    const ok = await onPagamento(forma || null, Math.round(valorDaTaxa * 100) / 100);
+    if (ok) setTaxaDigitada(false);
+  };
+
+  return (
+    <div className="border-t border-[var(--line)] pt-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Campo label="Forma de pagamento">
+          <select
+            value={forma}
+            disabled={ocupado}
+            onChange={(e) => trocarForma(e.target.value as FormaRecebimento | "")}
+            className={INPUT}
+          >
+            <option value="">A definir</option>
+            {FORMAS_RECEBIMENTO.map((f) => (
+              <option key={f} value={f}>
+                {ROTULO_TAXA[f]}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo
+          label={`${rotuloDaTaxa(pedido.canal)} (R$)`}
+          hint={
+            taxaInvalida
+              ? undefined
+              : `Fica ${fmt(liquidoDoPedido(pedido.total, valorDaTaxa))} do total de ${fmt(pedido.total)}.`
+          }
+          error={
+            taxaInvalida ? "A taxa precisa ser de 0 até menos que o total do pedido." : undefined
+          }
+        >
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            value={taxa}
+            disabled={ocupado}
+            onChange={(e) => {
+              setTaxa(e.target.value);
+              setTaxaDigitada(true);
+            }}
+            className={INPUT}
+            placeholder="0"
+          />
+        </Campo>
+      </div>
+      {mudou && (
+        <button
+          type="button"
+          onClick={() => void salvar()}
+          disabled={ocupado || taxaInvalida}
+          className={`${BTN_MIUDO} mt-2 min-h-11`}
+        >
+          {ocupado ? "Salvando..." : "Salvar o pagamento"}
+        </button>
+      )}
+    </div>
   );
 }

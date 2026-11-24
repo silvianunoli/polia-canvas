@@ -30,6 +30,7 @@ import {
 } from "@/lib/pedidos";
 import { cancelarVenda, receberVenda } from "@/components/vendas/dados";
 import {
+  definirPagamentoPedido,
   moverPedido,
   recarregarDepoisDoPedido,
   remarcarPedido,
@@ -124,6 +125,29 @@ function QuadroDePedidos() {
     }
     toastSucesso("Data de entrega atualizada.");
     recarregar();
+  };
+
+  const definirPagamento = async (
+    p: PedidoLinha,
+    forma: string | null,
+    taxa: number,
+  ): Promise<boolean> => {
+    setOcupadoId(p.id);
+    setErroDetalhe(null);
+    const { error } = await definirPagamentoPedido(p.id, forma, taxa);
+    setOcupadoId(null);
+    if (error) {
+      console.error("pedido_pagamento", error);
+      setErroDetalhe("A Pólia One não conseguiu salvar o pagamento. Tenta de novo.");
+      return false;
+    }
+    toastSucesso(
+      p.status === "recebida"
+        ? "Pagamento salvo, e o valor no Financeiro foi ajustado."
+        : "Pagamento salvo.",
+    );
+    recarregar();
+    return true;
   };
 
   const receber = async (p: PedidoLinha) => {
@@ -360,7 +384,9 @@ function QuadroDePedidos() {
           onRemarcar={(d) => void remarcar(aberto, d)}
           onReceber={() => void receber(aberto)}
           onCancelar={() => void cancelar(aberto)}
+          onPagamento={(forma, taxa) => definirPagamento(aberto, forma, taxa)}
           onClose={() => setAbertoId(null)}
+          userId={userId}
         />
       )}
     </PaginaLogada>

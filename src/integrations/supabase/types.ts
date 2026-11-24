@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -3276,6 +3276,9 @@ export type Database = {
           p_cliente_nome?: string | null
           p_recebida?: boolean
           p_observacao?: string | null
+          p_canal?: string
+          p_forma?: string | null
+          p_taxa_canal?: number
         }
         Returns: string
       }
@@ -3322,6 +3325,10 @@ export type Database = {
       }
       definir_forma_venda: {
         Args: { p_venda_id: string; p_forma: string | null }
+        Returns: undefined
+      }
+      definir_pagamento_pedido: {
+        Args: { p_venda_id: string; p_forma: string | null; p_taxa: number }
         Returns: undefined
       }
       desfazer_recebimento: {

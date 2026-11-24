@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,6 +20,24 @@ import {
 import { ItemDaVenda, type LinhaItem } from "@/components/vendas/ModalRegistrarVenda";
 import { ModalProduto } from "@/components/produtos/ModalProduto";
 import { registrarPedido } from "./dados";
+import { CANAL_LABEL, type CanalVenda } from "@/lib/vendas";
+import {
+  decidirTaxa,
+  descreverRegra,
+  FORMAS_RECEBIMENTO,
+  regraEstaVazia,
+  ROTULO_TAXA,
+  type FormaRecebimento,
+} from "@/lib/taxas";
+import {
+  CANAIS_DO_PEDIDO,
+  chaveDaTaxa,
+  ehMarketplace,
+  liquidoDoPedido,
+  rotuloDaTaxa,
+} from "@/lib/pagamentoPedido";
+import { chaveTaxas, useTaxas } from "@/components/vendas/taxasDados";
+import { ModalTaxas } from "@/components/vendas/ModalTaxas";
 
 const INPUT =
   "w-full rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[16px] text-[var(--ink)] focus:border-[var(--secondary-text)] focus:outline-none sm:text-[14px]";
@@ -79,6 +97,15 @@ export function ModalNovoPedido({
   const [clienteNome, setClienteNome] = useState("");
   const [entregaEm, setEntregaEm] = useState(() => somarDias(hojeISO(), 1));
   const [recebida, setRecebida] = useState(false);
+  // Onde vendeu, forma e taxa (23/11/2026, pedido da Sil). Marketplace não tem
+  // forma: a taxa vem da regra dele. O resto pega a taxa da regra da forma.
+  const [canal, setCanal] = useState<CanalVenda>("encomenda");
+  const [forma, setForma] = useState<FormaRecebimento | "">("");
+  const [taxa, setTaxa] = useState("");
+  const [taxaManual, setTaxaManual] = useState(false);
+  const [taxaAutomatica, setTaxaAutomatica] = useState(false);
+  const [taxasAbertas, setTaxasAbertas] = useState(false);
+  const taxasQuery = useTaxas(userId);
   const [proximaChave, setProximaChave] = useState(2);
   const [itens, setItens] = useState<LinhaItem[]>([
     { chave: 1, produtoId: "", skuId: "", quantidade: "1", preco: "" },
@@ -116,6 +143,53 @@ export function ModalNovoPedido({
   );
   const semData = !entregaEm;
   const total = totalDaVenda(valores);
+  const marketplace = ehMarketplace(canal);
+  const chave = chaveDaTaxa(canal, forma);
+  const regra = chave ? taxasQuery.data?.[chave] : undefined;
+  const nomeDaRegra = chave ? ROTULO_TAXA[chave] : "";
+  const valorDaTaxa = num(taxa);
+  const taxaInvalida =
+    !Number.isFinite(valorDaTaxa) || valorDaTaxa < 0 || (total > 0 && valorDaTaxa >= total);
+  const { proprios: _proprios, ...taxasFixas } = taxasQuery.data ?? {};
+  const temAlgumaTaxa = Object.values(taxasFixas).some((r) => !regraEstaVazia(r));
+
+  // Mesma regra do Registrar venda (lib/taxas, decidirTaxa): só reescreve a
+  // taxa que a própria Pólia One preencheu; a digitada por ela fica.
+  useEffect(() => {
+    const valor = decidirTaxa({
+      forma: chave ?? "",
+      regra,
+      regrasCarregadas: taxasQuery.isSuccess,
+      digitadaPorEla: taxaManual,
+      taxaEraAutomatica: taxaAutomatica,
+      total,
+    });
+    if (valor == null) return;
+    setTaxa(valor > 0 ? String(valor) : "");
+    setTaxaAutomatica(valor > 0);
+  }, [chave, regra, taxasQuery.isSuccess, taxaManual, taxaAutomatica, total]);
+
+  const dicaDaTaxa = !chave ? (
+    "Escolha a forma e a taxa vem das suas taxas de recebimento."
+  ) : taxasQuery.isPending ? (
+    `Buscando a taxa de ${nomeDaRegra}…`
+  ) : taxasQuery.isError ? (
+    "A Pólia One não conseguiu ler as taxas agora. Digite o valor deste pedido."
+  ) : taxaManual && !regraEstaVazia(regra) ? (
+    <button
+      type="button"
+      onClick={() => setTaxaManual(false)}
+      className="inline-flex min-h-11 items-center font-medium text-[var(--secondary-text)] hover:underline"
+    >
+      Usar a taxa de {nomeDaRegra} ({descreverRegra(regra)})
+    </button>
+  ) : taxaManual ? (
+    "Valor digitado por você."
+  ) : regraEstaVazia(regra) ? (
+    `Sem taxa cadastrada pra ${nomeDaRegra}.`
+  ) : (
+    `${nomeDaRegra}: ${descreverRegra(regra)}.`
+  );
 
   const atualizarItem = (chave: number, mudanca: Partial<LinhaItem>) => {
     setItens((atual) =>
@@ -135,7 +209,7 @@ export function ModalNovoPedido({
 
   const salvar = async () => {
     setTentouSalvar(true);
-    if (erroValidacao || faltaVariacao || semData || salvando) return;
+    if (erroValidacao || faltaVariacao || semData || taxaInvalida || salvando) return;
     setSalvando(true);
     setErro(null);
     const { error } = await registrarPedido({
@@ -151,6 +225,9 @@ export function ModalNovoPedido({
       })),
       recebida,
       observacao: null,
+      canal,
+      forma: marketplace ? null : forma || null,
+      taxaCanal: Math.round(valorDaTaxa * 100) / 100,
     });
     setSalvando(false);
     if (error) {
@@ -166,7 +243,12 @@ export function ModalNovoPedido({
       );
       return;
     }
-    track("pedido_anotado", { itens: itensValidos.length, pago: recebida });
+    track("pedido_anotado", {
+      itens: itensValidos.length,
+      pago: recebida,
+      canal,
+      forma: marketplace ? canal : forma || "a_definir",
+    });
     void registrar("feature_completed", {
       feature: "pedidos",
       propriedades: { acao: "novo_pedido", pago: recebida },
@@ -259,6 +341,23 @@ export function ModalNovoPedido({
               placeholder="ex: Joana"
             />
           </Campo>
+          <Campo label="Onde vendeu">
+            <select
+              value={canal}
+              onChange={(e) => {
+                setCanal(e.target.value as CanalVenda);
+                // Trocar o canal troca a regra: a taxa digitada fica, a automática refaz.
+                if (!taxa.trim()) setTaxaManual(false);
+              }}
+              className={INPUT}
+            >
+              {CANAIS_DO_PEDIDO.map((c) => (
+                <option key={c} value={c}>
+                  {CANAL_LABEL[c]}
+                </option>
+              ))}
+            </select>
+          </Campo>
           <datalist id="pedido-clientes">
             {(clientesQuery.data ?? []).map((c) => (
               <option key={c.id} value={c.nome} />
@@ -333,8 +432,84 @@ export function ModalNovoPedido({
             </fieldset>
           </div>
 
-          <p className="text-[14px] text-[var(--ink)]">
+          <div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {marketplace ? (
+                <div>
+                  <p className="mb-1.5 block text-[12px] font-medium text-[var(--ink-soft)]">
+                    Pagamento
+                  </p>
+                  <p className="flex min-h-11 items-center text-[14px] text-[var(--ink)]">
+                    {CANAL_LABEL[canal]}
+                  </p>
+                  <p className="text-[12px] text-[var(--muted)]">
+                    Quem paga é o marketplace, descontada a taxa dele.
+                  </p>
+                </div>
+              ) : (
+                <Campo label="Forma de pagamento">
+                  <select
+                    value={forma}
+                    onChange={(e) => {
+                      setForma(e.target.value as FormaRecebimento | "");
+                      if (!taxa.trim()) setTaxaManual(false);
+                    }}
+                    className={INPUT}
+                  >
+                    <option value="">A definir</option>
+                    {FORMAS_RECEBIMENTO.map((f) => (
+                      <option key={f} value={f}>
+                        {ROTULO_TAXA[f]}
+                      </option>
+                    ))}
+                  </select>
+                </Campo>
+              )}
+              <Campo
+                label={`${rotuloDaTaxa(canal)} (R$)`}
+                hint={dicaDaTaxa}
+                error={
+                  tentouSalvar && taxaInvalida
+                    ? "A taxa precisa ser um valor de 0 até menos que o total do pedido."
+                    : undefined
+                }
+              >
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  value={taxa}
+                  onChange={(e) => {
+                    setTaxa(e.target.value);
+                    setTaxaManual(true);
+                    setTaxaAutomatica(false);
+                  }}
+                  className={INPUT}
+                  placeholder="0"
+                />
+              </Campo>
+            </div>
+            {taxasQuery.isSuccess && (
+              <button
+                type="button"
+                onClick={() => setTaxasAbertas(true)}
+                className="mt-1 inline-flex min-h-11 items-center text-[13px] font-medium text-[var(--secondary-text)] hover:underline"
+              >
+                {temAlgumaTaxa
+                  ? "Ajustar as taxas de recebimento"
+                  : "Cadastrar as taxas de recebimento"}
+              </button>
+            )}
+          </div>
+
+          <p className="text-[14px] text-[var(--ink)]" aria-live="polite">
             Total do pedido: <b>{fmt(total)}</b>
+            {valorDaTaxa > 0 && !taxaInvalida && (
+              <span className="text-[var(--ink-soft)]">
+                {" "}
+                · taxa {fmt(valorDaTaxa)} · fica {fmt(liquidoDoPedido(total, valorDaTaxa))}
+              </span>
+            )}
             <span className="text-[var(--muted)]">
               {recebida ? " · entra no Financeiro agora" : " · fica a receber até a entrega"}
             </span>
@@ -367,6 +542,17 @@ export function ModalNovoPedido({
             </p>
           )}
         </div>
+      )}
+      {taxasAbertas && (
+        <ModalTaxas
+          userId={userId}
+          onClose={() => setTaxasAbertas(false)}
+          onSaved={() => {
+            setTaxasAbertas(false);
+            void qc.invalidateQueries({ queryKey: chaveTaxas(userId) });
+            toastSucesso("Taxas salvas.");
+          }}
+        />
       )}
     </Modal>
   );

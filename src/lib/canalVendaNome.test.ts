@@ -7,8 +7,9 @@ import { CANAL_LABEL, CANAIS_VENDA } from "./vendas";
 // (canal_venda_nome, VND-40). A tela usa CANAL_LABEL: os dois têm de bater.
 const MIGRATION = path.resolve(
   __dirname,
-  // Última migration que recriou a função (o catálogo online entrou nela, ONE-148).
-  "../../supabase/migrations/20261029200000_catalogo_canal.sql",
+  // Última migration que recriou a função ("Loja da marca" e "Vitrine online",
+  // 23/11/2026, ONE-238).
+  "../../supabase/migrations/20261124020000_pedido_pagamento.sql",
 );
 
 describe("canal_venda_nome", () => {

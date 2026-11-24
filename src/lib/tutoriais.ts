@@ -938,15 +938,18 @@ const LISTA = [
     abrir: "Abrir os Pedidos",
     resumo:
       "Um quadro pronto com cada pedido: a cliente, o que ela pediu, o dia da entrega e se já pagou. Na entrega, o dinheiro entra no Financeiro.",
-    trecho: "pedido-entrega",
     passos: [
       {
         titulo: "Anotar um pedido",
         itens: [
           'No menu, abra "Pedidos" e clique em "Novo pedido". Com o catálogo vazio, clique em "Cadastrar o produto": o cadastro abre ali mesmo e, salvo, o pedido continua.',
           'Em "Cliente", escolha da lista ou digite um nome novo.',
+          'Em "Onde vendeu", escolha o canal: "Encomenda" (o que já vem marcado), Instagram, WhatsApp, "Vitrine online", "Loja da marca", Shopee, TikTok Shop, Mercado Livre e outros.',
           'Escolha o produto do catálogo, a variação (quando tiver) e a quantidade. O preço vem do catálogo. "+ mais um produto" põe outro item no mesmo pedido.',
           'Escolha o dia em "Entrega" e responda "Já pagou?".',
+          'Em "Forma de pagamento", escolha Pix, Dinheiro, Débito, "Crédito à vista", "Crédito parcelado" ou "Link de pagamento", ou deixe "A definir". A taxa vem sozinha pela regra dessa forma nas taxas de recebimento, e dá pra digitar outra por cima.',
+          'Em Shopee, TikTok Shop ou Mercado Livre, o pagamento é o próprio marketplace e a taxa vem da regra dele ("Taxa da Shopee", por exemplo). Sem regra cadastrada, clique em "Cadastrar as taxas de recebimento".',
+          "Embaixo, o total mostra a taxa e quanto fica do pedido.",
           'Clique em "Anotar pedido". Ele entra em "A fazer".',
         ],
       },
@@ -955,6 +958,7 @@ const LISTA = [
         itens: [
           'As colunas são "A fazer", "Em produção", "Pronto" e "Entregue". Arraste o cartão ou use a seta dele.',
           'Clique no cartão pra abrir o pedido. Em "Andamento" dá pra trocar a coluna; ali também se muda o dia da entrega ou se cancela.',
+          'No pedido aberto, o bloco do pagamento mostra a forma e a taxa. Nos pedidos anotados à mão e nos da Vitrine online, troque a "Forma de pagamento" ou a taxa e clique em "Salvar o pagamento". Se o pedido já foi pago, o valor no Financeiro acompanha.',
           'Quando um pedido não pago chega em "Entregue", o cartão pergunta "O dinheiro já entrou?". "Sim, lançar no Financeiro" lança o valor.',
           "No topo, a Pólia One mostra as entregas de hoje, as de amanhã, as atrasadas e quanto entra na semana.",
         ],
@@ -969,8 +973,10 @@ const LISTA = [
       },
     ],
     bomSaber: [
-      "O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal Encomenda.",
-      'Pedido da vitrine online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Catálogo online". A cliente vira ficha em Clientes, pelo WhatsApp.',
+      'O pedido é uma venda: baixa o estoque quando é anotado e aparece em Vendas, no canal escolhido em "Onde vendeu".',
+      'Pedido da Loja da marca chega com a forma que o Mercado Pago informou (Pix, "Crédito à vista" ou "Crédito parcelado") e com a taxa do Mercado Pago. Pedido da Shopee, do TikTok Shop e do Mercado Livre mostra o nome do marketplace e a taxa dele. Nesses, o pagamento não muda no pedido.',
+      'Pedido da Vitrine online chega com a forma "A definir": a cliente combina pelo WhatsApp, e a forma se escolhe depois, no pedido.',
+      'Pedido da vitrine online entra como "a receber", com a entrega marcada pelo prazo de produção da loja, e aparece em Vendas no canal "Vitrine online". A cliente vira ficha em Clientes, pelo WhatsApp.',
       'Pedido pago na hora entra no Financeiro na hora. "Ainda não" deixa o valor a receber até a entrega.',
       "Atrasado é o pedido aberto com o dia da entrega já passado. O cartão avisa em vermelho.",
       '"Entregue" mostra o que foi entregue nos últimos 7 dias, contando a entrega combinada ou o dia em que o pedido chegou em "Entregue". Pedido atrasado que você finaliza hoje continua ali. Os mais antigos continuam em Vendas.',

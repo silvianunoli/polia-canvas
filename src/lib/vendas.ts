@@ -26,11 +26,11 @@ export const CANAL_LABEL: Record<CanalVenda, string> = {
   whatsapp: "WhatsApp",
   presencial: "Presencial ou feira",
   encomenda: "Encomenda",
-  site: "Site",
+  site: "Loja da marca",
   shopee: "Shopee",
   tiktok_shop: "TikTok Shop",
   mercado_livre: "Mercado Livre",
-  catalogo: "Catálogo online",
+  catalogo: "Vitrine online",
   outro: "Outro",
 };
 

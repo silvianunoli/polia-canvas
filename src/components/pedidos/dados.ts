@@ -21,12 +21,14 @@ export interface PedidoLinha extends VendaLinha {
   entregaEm: string;
   /** Quando virou entregue (gatilho no banco); null fora de Entregue. */
   entregueEm: string | null;
+  /** Forma de pagamento gravada; null = a definir (marketplace mostra o nome dele). */
+  forma?: string | null;
 }
 
 export const chavePedidos = (userId: string | undefined) => ["pedidos", userId] as const;
 
 const SELECT =
-  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, andamento, entrega_em, entregue_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
+  "id, canal, data, status, cliente_id, cliente_nome, subtotal, desconto, frete, taxa_canal, custo_envio, total, observacao, forma, andamento, entrega_em, entregue_em, venda_itens(produto_id, produto_nome, variacao, quantidade, preco_unitario, custo_unitario)";
 
 /**
  * Pedidos do quadro: abertos de qualquer data e entregues com entrega
@@ -85,13 +87,21 @@ export function usePedidosDoPeriodo(
 }
 
 function paraPedidos(data: unknown): PedidoLinha[] {
-  return ((data ?? []) as (VendaBanco & { andamento: string; entrega_em: string; entregue_em?: string | null })[])
+  return (
+    (data ?? []) as (VendaBanco & {
+      andamento: string;
+      entrega_em: string;
+      entregue_em?: string | null;
+      forma?: string | null;
+    })[]
+  )
     .filter((v) => ehAndamento(v.andamento) && !!v.entrega_em)
     .map((v) => ({
       ...vendaDoBanco(v),
       andamento: v.andamento as AndamentoPedido,
       entregaEm: v.entrega_em,
       entregueEm: v.entregue_em ?? null,
+      forma: v.forma ?? null,
     }));
 }
 
@@ -104,6 +114,11 @@ export interface NovoPedido {
   itens: { produtoId: string; skuId: string | null; quantidade: number; precoUnitario: number }[];
   recebida: boolean;
   observacao: string | null;
+  /** Onde vendeu (23/11/2026). Sem ele, a RPC grava "encomenda", como antes. */
+  canal?: string;
+  /** Forma de pagamento; null = a definir (e sempre null em marketplace). */
+  forma?: string | null;
+  taxaCanal?: number;
 }
 
 export async function registrarPedido(p: NovoPedido) {
@@ -120,6 +135,18 @@ export async function registrarPedido(p: NovoPedido) {
     p_cliente_nome: p.clienteNome,
     p_recebida: p.recebida,
     p_observacao: p.observacao,
+    ...(p.canal ? { p_canal: p.canal } : {}),
+    p_forma: p.forma ?? null,
+    p_taxa_canal: p.taxaCanal ?? 0,
+  });
+}
+
+/** Troca forma e taxa de um pedido anotado à mão ou da Vitrine (definir_pagamento_pedido). */
+export async function definirPagamentoPedido(vendaId: string, forma: string | null, taxa: number) {
+  return supabase.rpc("definir_pagamento_pedido", {
+    p_venda_id: vendaId,
+    p_forma: forma,
+    p_taxa: taxa,
   });
 }
 
