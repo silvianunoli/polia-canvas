@@ -17,7 +17,9 @@ import {
   mediaTaxas,
   montarProjecao,
   proLaboreJaLancado,
+  outrasSaidasDoMes,
   reservaForaDoFinanceiro,
+  custosFixosComCustosDaMarca,
   separarForaDaCurva,
   sobraPorVenda,
   ticketMedio,
@@ -38,13 +40,15 @@ const lanc = (over: Partial<LancamentoResumo>): LancamentoResumo => ({
 });
 
 describe("custosFixosDoMes", () => {
-  it("soma saídas do mês, excluindo Pró-labore", () => {
+  it("soma só as categorias de custo fixo, sem Pró-labore", () => {
     const lancamentos = [
       lanc({ categoria: "Marketing", valor: 100 }),
+      lanc({ categoria: " espaço (ALUGUEL) ", valor: 800 }),
+      lanc({ categoria: "Reserva de equipamento", valor: 40 }),
       lanc({ categoria: "Pró-labore", valor: 2000 }),
       lanc({ categoria: "Insumos", valor: 50 }),
     ];
-    expect(custosFixosDoMes(lancamentos, 7, 2026)).toBe(150);
+    expect(custosFixosDoMes(lancamentos, 7, 2026)).toBe(940);
   });
 
   it("ignora entradas e lançamentos de outro mês", () => {
@@ -66,13 +70,29 @@ describe("custosFixosDoMes", () => {
     expect(insumosDoMes(lancamentos, 7, 2026)).toBe(1200);
   });
 
-  it("categoria livre com outro nome continua contando (limitação conhecida)", () => {
+  it("Outros, categoria criada na hora e saída sem categoria ficam fora (ONE-251)", () => {
     const lancamentos = [
-      lanc({ categoria: "Insumos", valor: 50 }),
-      lanc({ categoria: "Papel", valor: 30 }),
+      lanc({ categoria: "Internet e telefone", valor: 100 }),
+      lanc({ categoria: "Outros", valor: 300 }),
+      lanc({ categoria: "Estrutura", valor: 50 }),
+      lanc({ categoria: null, valor: 30 }),
     ];
-    expect(custosFixosDoMes(lancamentos, 7, 2026)).toBe(80);
+    expect(custosFixosDoMes(lancamentos, 7, 2026)).toBe(100);
+    expect(outrasSaidasDoMes(lancamentos, 7, 2026)).toBe(380);
     expect(insumosDoMes(lancamentos, 7, 2026)).toBe(0);
+  });
+
+  it("outrasSaidasDoMes não conta insumo, pró-labore, compra de equipamento, entrada nem outro mês", () => {
+    const lancamentos = [
+      lanc({ categoria: CATEGORIA_INSUMOS, valor: 900 }),
+      lanc({ categoria: "Pró-labore", valor: 2000 }),
+      lanc({ categoria: "Compra de equipamento", valor: 1500 }),
+      lanc({ tipo: "entrada", categoria: "Outros", valor: 500 }),
+      lanc({ data: "2026-06-15", categoria: "Outros", valor: 999 }),
+      lanc({ categoria: "Frete", valor: 25.5 }),
+    ];
+    expect(outrasSaidasDoMes(lancamentos, 7, 2026)).toBe(25.5);
+    expect(custosFixosDoMes(lancamentos, 7, 2026)).toBe(0);
   });
 
   it("insumosDoMes ignora entrada e outro mês", () => {
@@ -472,9 +492,9 @@ describe("mesAnterior", () => {
 describe("custosFixosDePartida (ONE-241: mês pela metade não vira custo do mês)", () => {
   it("no começo do mês, usa o mês fechado", () => {
     const lancamentos = [
-      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 }),
-      lanc({ data: "2026-10-10", categoria: "Internet", valor: 100 }),
-      lanc({ data: "2026-11-02", categoria: "Internet", valor: 100 }),
+      lanc({ data: "2026-10-05", categoria: "Espaço (aluguel)", valor: 800 }),
+      lanc({ data: "2026-10-10", categoria: "Internet e telefone", valor: 100 }),
+      lanc({ data: "2026-11-02", categoria: "Internet e telefone", valor: 100 }),
     ];
     expect(custosFixosDePartida(lancamentos, 11, 2026)).toEqual({
       valor: 900,
@@ -486,8 +506,8 @@ describe("custosFixosDePartida (ONE-241: mês pela metade não vira custo do mê
 
   it("quando o mês corrente já passou do fechado, usa o corrente", () => {
     const lancamentos = [
-      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 }),
-      lanc({ data: "2026-11-05", categoria: "Aluguel", valor: 800 }),
+      lanc({ data: "2026-10-05", categoria: "Espaço (aluguel)", valor: 800 }),
+      lanc({ data: "2026-11-05", categoria: "Espaço (aluguel)", valor: 800 }),
       lanc({ data: "2026-11-20", categoria: "Marketing", valor: 300 }),
     ];
     const r = custosFixosDePartida(lancamentos, 11, 2026);
@@ -496,13 +516,13 @@ describe("custosFixosDePartida (ONE-241: mês pela metade não vira custo do mê
   });
 
   it("dia 1 de janeiro olha dezembro do ano anterior", () => {
-    const lancamentos = [lanc({ data: "2026-12-10", categoria: "Aluguel", valor: 700 })];
+    const lancamentos = [lanc({ data: "2026-12-10", categoria: "Espaço (aluguel)", valor: 700 })];
     expect(custosFixosDePartida(lancamentos, 1, 2027).valor).toBe(700);
   });
 
   it("insumo, pró-labore e equipamento continuam fora nos dois meses", () => {
     const lancamentos = [
-      lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 500 }),
+      lanc({ data: "2026-10-05", categoria: "Espaço (aluguel)", valor: 500 }),
       lanc({ data: "2026-10-06", categoria: CATEGORIA_INSUMOS, valor: 900 }),
       lanc({ data: "2026-10-07", categoria: "Pró-labore", valor: 2000 }),
     ];
@@ -599,10 +619,10 @@ describe("montarFaltaNoMes (ONE-241: 'faltam' de verdade)", () => {
 
 describe("reservaForaDoFinanceiro (ONE-251: a parcela da máquina é custo fixo)", () => {
   it("sem reserva lançada, entra a reserva inteira da aba Equipamentos", () => {
-    const lancamentos = [lanc({ data: "2026-10-05", categoria: "Aluguel", valor: 800 })];
-    expect(
-      reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 }),
-    ).toBe(73.59);
+    const lancamentos = [lanc({ data: "2026-10-05", categoria: "Espaço (aluguel)", valor: 800 })];
+    expect(reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 })).toBe(
+      73.59,
+    );
   });
 
   it("desconta a reserva já lançada no Financeiro naquele mês, sem contar duas vezes", () => {
@@ -610,9 +630,9 @@ describe("reservaForaDoFinanceiro (ONE-251: a parcela da máquina é custo fixo)
       lanc({ data: "2026-10-05", categoria: " reserva de equipamento ", valor: 50 }),
       lanc({ data: "2026-11-05", categoria: "Reserva de equipamento", valor: 999 }),
     ];
-    expect(
-      reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 }),
-    ).toBe(23.59);
+    expect(reservaForaDoFinanceiro({ lancamentos, mes: 10, ano: 2026, reservaDoMes: 73.59 })).toBe(
+      23.59,
+    );
   });
 
   it("reserva lançada maior que a da aba não deixa número negativo", () => {
@@ -623,6 +643,67 @@ describe("reservaForaDoFinanceiro (ONE-251: a parcela da máquina é custo fixo)
   });
 
   it("sem equipamento cadastrado, não soma nada", () => {
-    expect(reservaForaDoFinanceiro({ lancamentos: [], mes: 10, ano: 2026, reservaDoMes: 0 })).toBe(0);
+    expect(reservaForaDoFinanceiro({ lancamentos: [], mes: 10, ano: 2026, reservaDoMes: 0 })).toBe(
+      0,
+    );
+  });
+});
+
+describe("custosFixosComCustosDaMarca (ONE-251: Custos da marca com o Financeiro vazio)", () => {
+  const base = {
+    financeiro: 0,
+    reservaForaDoFinanceiro: 0,
+    custosDaMarca: 0,
+    reservaNosCustosDaMarca: 0,
+    reservaDoMes: 0,
+  };
+
+  it("com saída fixa lançada, vale o Financeiro mais a reserva que falta", () => {
+    expect(
+      custosFixosComCustosDaMarca({
+        ...base,
+        financeiro: 900,
+        reservaForaDoFinanceiro: 73.59,
+        custosDaMarca: 1500,
+        reservaDoMes: 73.59,
+      }),
+    ).toEqual({ valor: 973.59, origem: "financeiro", reserva: 73.59 });
+  });
+
+  it("sem saída fixa lançada, usa os Custos da marca com a reserva inteira", () => {
+    expect(
+      custosFixosComCustosDaMarca({
+        ...base,
+        reservaForaDoFinanceiro: 73.59,
+        custosDaMarca: 1200,
+        reservaDoMes: 73.59,
+      }),
+    ).toEqual({ valor: 1273.59, origem: "custos-da-marca", reserva: 73.59 });
+  });
+
+  it("reserva já digitada nos Custos da marca não entra de novo", () => {
+    const r = custosFixosComCustosDaMarca({
+      ...base,
+      custosDaMarca: 1200,
+      reservaNosCustosDaMarca: 50,
+      reservaDoMes: 73.59,
+    });
+    expect(r.reserva).toBe(23.59);
+    expect(r.valor).toBe(1223.59);
+    const maior = custosFixosComCustosDaMarca({
+      ...base,
+      custosDaMarca: 1200,
+      reservaNosCustosDaMarca: 200,
+      reservaDoMes: 73.59,
+    });
+    expect(maior).toEqual({ valor: 1200, origem: "custos-da-marca", reserva: 0 });
+  });
+
+  it("tudo vazio fica em zero, pelo Financeiro", () => {
+    expect(custosFixosComCustosDaMarca(base)).toEqual({
+      valor: 0,
+      origem: "financeiro",
+      reserva: 0,
+    });
   });
 });
