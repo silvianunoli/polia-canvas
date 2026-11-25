@@ -68,11 +68,12 @@ describe("custosFixosPorItem", () => {
     expect(r.contador).toBe(0);
   });
 
-  it("deixa insumo, equipamento e pró-labore de fora e bate com o total da Projeção", () => {
+  it("deixa insumo, equipamento e pró-labore de fora; a Projeção soma tudo menos Outros", () => {
     const r = custosFixosPorItem(lancamentos, 10, 2026);
     const soma = Object.values(r).reduce((a, b) => a + b, 0);
     expect(soma).toBe(1220);
-    expect(soma).toBe(custosFixosDoMes(lancamentos, 10, 2026));
+    // ONE-251 (24/11/2026): "Outros" e categoria criada na hora ficam fora da Projeção.
+    expect(soma - r.outros).toBe(custosFixosDoMes(lancamentos, 10, 2026));
   });
 
   it("reconhece a compra de equipamento sem ligar pra caixa e espaço", () => {

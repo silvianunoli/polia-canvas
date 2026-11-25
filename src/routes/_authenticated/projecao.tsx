@@ -18,6 +18,7 @@ import {
   acaoDaMeta,
   CATEGORIA_EQUIPAMENTO,
   CATEGORIA_INSUMOS,
+  custosFixosComCustosDaMarca,
   custosFixosDePartida,
   custoMedio,
   entradasDoMes,
@@ -27,6 +28,7 @@ import {
   mesAnterior,
   montarFaltaNoMes,
   montarProjecao,
+  outrasSaidasDoMes,
   paraCampoReais,
   proLaboreJaLancado,
   reservaForaDoFinanceiro,
@@ -43,6 +45,8 @@ import type { FaltaNoMes, ProdutoResumo } from "@/lib/projecao.functions";
 import { CATEGORIA_PRO_LABORE } from "@/lib/resumoContador.functions";
 import { resumoEquipamentos } from "@/lib/equipamentos";
 import { useEquipamentos } from "@/components/produtos/equipamentosDados";
+import { useCustosMarca } from "@/components/financeiro/custosMarcaDados";
+import { somarCustosFixos } from "@/lib/custosFixos.functions";
 
 type ProdutoDaProjecao = ProdutoResumo & { nome: string };
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
@@ -199,13 +203,32 @@ function ProjecaoPage() {
   const equipamentosQuery = useEquipamentos(userId, ehProjete);
   const reservaDoMes = resumoEquipamentos(equipamentosQuery.data ?? []).reservaDoMes;
   const mesDosFixos = fixos.origem === "mes-anterior" ? ant : { mes: mesAtual, ano: anoAtual };
-  const reservaEquipamentos = reservaForaDoFinanceiro({
-    lancamentos,
-    mes: mesDosFixos.mes,
-    ano: mesDosFixos.ano,
+  // ONE-251 (decisão da Sil, 24/11): sem saída de custo fixo lançada nos dois
+  // meses, a base vem dos Custos da marca do Financeiro. Se a leitura falhar,
+  // fica no Financeiro (zero) e o aviso de "nenhum custo fixo" aparece.
+  const custosMarcaQuery = useCustosMarca(userId);
+  const custosDaMarca = custosMarcaQuery.data;
+  const baseFixos = custosFixosComCustosDaMarca({
+    financeiro: fixos.valor,
+    reservaForaDoFinanceiro: reservaForaDoFinanceiro({
+      lancamentos,
+      mes: mesDosFixos.mes,
+      ano: mesDosFixos.ano,
+      reservaDoMes,
+    }),
+    custosDaMarca: custosDaMarca?.fixosMes ?? 0,
+    reservaNosCustosDaMarca: somarCustosFixos({
+      equipamento: custosDaMarca?.fixosDetalhe.equipamento,
+    }),
     reservaDoMes,
   });
-  const custosFixosBase = Math.round((fixos.valor + reservaEquipamentos) * 100) / 100;
+  const reservaEquipamentos = baseFixos.reserva;
+  const custosFixosBase = baseFixos.valor;
+  // "Outros" e categorias criadas na hora não entram (ONE-251): só pra dica.
+  const outrasForaBase = useMemo(
+    () => outrasSaidasDoMes(lancamentos, mesDosFixos.mes, mesDosFixos.ano),
+    [lancamentos, mesDosFixos.mes, mesDosFixos.ano],
+  );
   // Insumo do mês de onde os custos fixos vieram (só pra linha de ajuda).
   const insumosForaBase = useMemo(
     () =>
@@ -436,19 +459,30 @@ function ProjecaoPage() {
 
   const semProduto = !dadosQuery.isLoading && produtos.length === 0;
   const semCusto =
-    !dadosQuery.isLoading && !semProduto && fixos.valor === 0 && custosFixosTxt == null;
+    !dadosQuery.isLoading &&
+    !custosMarcaQuery.isLoading &&
+    !semProduto &&
+    fixos.valor === 0 &&
+    baseFixos.origem === "financeiro" &&
+    custosFixosTxt == null;
   // Dica do campo de custos fixos: de onde veio o número, o que ficou fora e a
   // reserva dos equipamentos. Mês anterior zerado não vira "maiores que R$ 0,00".
   const dicaOrigemFixos =
-    fixos.origem === "mes-anterior"
-      ? `Vem das saídas de ${nomeMesAnterior}, o último mês fechado. Em ${nomeMesAtual} já saíram ${fmtBRL(fixos.doMesAtual)} até agora.`
-      : fixos.doMesAnterior > 0
-        ? `Saídas de ${nomeMesAtual} até agora, já maiores que as de ${nomeMesAnterior} (${fmtBRL(fixos.doMesAnterior)}).`
-        : `Saídas de ${nomeMesAtual} até agora. ${comMaiuscula(nomeMesAnterior)} não tem custo fixo lançado no Financeiro.`;
+    baseFixos.origem === "custos-da-marca"
+      ? `Vem dos Custos da marca, no Financeiro: ainda não há custo fixo lançado em ${nomeMesAnterior} nem em ${nomeMesAtual}.`
+      : fixos.origem === "mes-anterior"
+        ? `Vem das saídas de ${nomeMesAnterior}, o último mês fechado. Em ${nomeMesAtual} já saíram ${fmtBRL(fixos.doMesAtual)} até agora.`
+        : fixos.doMesAnterior > 0
+          ? `Saídas de ${nomeMesAtual} até agora, já maiores que as de ${nomeMesAnterior} (${fmtBRL(fixos.doMesAnterior)}).`
+          : `Saídas de ${nomeMesAtual} até agora. ${comMaiuscula(nomeMesAnterior)} não tem custo fixo lançado no Financeiro.`;
   const dicaReserva = equipamentosQuery.isError
     ? " A reserva dos equipamentos não carregou e ficou fora dessa soma."
     : reservaEquipamentos > 0
       ? ` Inclui ${fmtBRL(reservaEquipamentos)} da reserva dos equipamentos (aba Equipamentos, em Produtos).`
+      : "";
+  const dicaOutras =
+    baseFixos.origem === "financeiro" && outrasForaBase > 0
+      ? ` Ficam fora ${fmtBRL(outrasForaBase)} em "Outros" e em categorias criadas na hora: só as categorias de custo fixo entram.`
       : "";
   const dicaFora =
     insumosForaBase > 0
@@ -513,10 +547,14 @@ function ProjecaoPage() {
           <>
             {semCusto && (
               <p className="mt-6 rounded-lg bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink-soft)]">
-                Nenhum custo fixo lançado em {nomeMesAnterior} nem em {nomeMesAtual}. Com eles no
-                Financeiro, a conta de quanto vender pra se pagar fica certa.{" "}
+                Nenhum custo fixo lançado em {nomeMesAnterior} nem em {nomeMesAtual}, e os Custos da
+                marca estão vazios.
+                {outrasForaBase > 0 &&
+                  ` As saídas em "Outros" e em categorias criadas na hora (${fmtBRL(outrasForaBase)}) não contam como custo fixo.`}{" "}
+                Com eles no Financeiro, a conta de quanto vender pra se pagar fica certa.{" "}
                 <Link
                   to="/financeiro"
+                  hash="custos-da-marca"
                   className="font-medium text-[var(--secondary-text)] no-underline hover:underline"
                 >
                   Ir pro Financeiro
@@ -627,7 +665,7 @@ function ProjecaoPage() {
               <div className="mt-5 grid grid-cols-1 gap-4 border-t border-[var(--line)] pt-4 sm:grid-cols-2">
                 <Campo
                   label="Custos fixos do mês (R$)"
-                  hint={`${dicaOrigemFixos}${dicaReserva}${dicaFora}`}
+                  hint={`${dicaOrigemFixos}${dicaReserva}${dicaOutras}${dicaFora}`}
                   error={erroValidacao.custosFixos}
                 >
                   <input

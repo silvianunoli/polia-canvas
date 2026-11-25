@@ -620,7 +620,7 @@ const LISTA = [
         itens: [
           'No topo da tela, escolha o mês e clique em "+ Entrada" ou "+ Saída".',
           'Preencha o "Valor (R$)" e a "Data". A "Descrição" é opcional.',
-          'Escolha a "Categoria". Se nenhuma servir, "+ nova categoria" cria a sua.',
+          'Escolha a "Categoria". Se nenhuma servir, "+ nova categoria" cria a sua. Pra Projeção, só as categorias de custo fixo da lista (como "Espaço (aluguel)", "Internet e telefone" e "Marketing") contam como custo fixo; "Outros" e as criadas na hora ficam fora.',
           'Clique em "Salvar lançamento".',
           'Venda de produto vai por "+ Venda": ela abre o formulário de Vendas e guarda o custo de cada produto, que o "Lucro do mês" desconta.',
           'O que foi lançado no mês fica na aba "Lançamentos". "Todos", "Entradas" e "Saídas" filtram a lista.',
@@ -780,7 +780,7 @@ const LISTA = [
       {
         titulo: "Ler a projeção",
         itens: [
-          'Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro, a reserva da aba "Equipamentos", o que já entrou no mês e a Meta do mês.',
+          'Abra a Projeção. Ela usa os produtos do catálogo, os custos fixos lançados no Financeiro (ou, sem nenhum lançado, os "Custos da marca"), a reserva da aba "Equipamentos", o que já entrou no mês e a Meta do mês.',
           '"Pra empatar" mostra quantas vendas ainda faltam pra pagar os custos fixos, com o total do mês ao lado.',
           '"Pra pagar o seu salário" soma o salário aos custos fixos.',
           '"Pra bater a meta" mostra quantas vendas faltam pra fechar a Meta do mês.',
@@ -801,6 +801,8 @@ const LISTA = [
       "A Projeção é do Premium e do Pro.",
       "Precisa de pelo menos um produto com preço. Faltando algo, a tela diz o quê e leva pra lá.",
       "Os custos fixos partem do último mês fechado. Se o mês atual já gastou mais, vale o mês atual.",
+      'Só as saídas em categorias de custo fixo contam, como "Espaço (aluguel)", "Luz, água e gás", "Internet e telefone", "Ferramentas e assinaturas", "Marketing" e "Contador e imposto fixo". "Outros" e as categorias criadas na hora ficam fora, e o campo mostra quanto ficou.',
+      'Sem nenhum custo fixo lançado no mês fechado nem no atual, a Projeção usa os "Custos da marca", da aba de mesmo nome no Financeiro.',
       'A "Reserva do mês" da aba "Equipamentos" entra nos custos fixos. O que já foi lançado no Financeiro em "Reserva de equipamento" naquele mês é descontado, pra não contar duas vezes.',
       "O salário parte do que foi salvo aqui e, sem isso, do pró-labore do mês passado. O pró-labore já tirado neste mês aparece só como informação.",
       '"Salvar salário e meta" guarda só esses dois. Os outros campos voltam ao valor real.',

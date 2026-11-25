@@ -12,6 +12,8 @@ import {
 import type { CalculadoraBreakdown } from "@/lib/precificacao.functions";
 import { CATEGORIA_PRO_LABORE, pertenceAoMes } from "@/lib/resumoContador.functions";
 import type { LancamentoResumo } from "@/lib/resumoContador.functions";
+import { CATEGORIAS_CUSTO_FIXO } from "@/lib/custosFixos.functions";
+import { ehCategoriaInsumos, ehCompraDeEquipamento } from "@/lib/categoriasForaDosFixos";
 
 // ── Leitura dos campos de reais da Projeção (QA-29) ──
 // Antes era Number(texto.replace(",", ".")): "1.500" (mil e quinhentos, do
@@ -94,59 +96,64 @@ export function acaoDaMeta(params: {
   return params.metaId ? "atualizar" : "criar";
 }
 
-// ── Insumo fora dos custos fixos (decisão da Sil, 07/10/2026) ──
-// Compra de insumo/matéria-prima já entra no custo de CADA produto (é o
-// "custo médio" que sai do ticket pra dar a sobra por venda). Somar essa
-// compra também nos custos fixos contava o mesmo dinheiro duas vezes e
-// inflava o ponto de empate (caderno a R$ 49 com sobra de R$ 19,60, R$ 600 de
-// fixos e R$ 1.000 de insumo: 82 vendas em vez de 31).
-//
-// Mesmo texto do chip padrão de saída do ModalLancamento
-// (components/financeiro/ModalLancamento.tsx, CATEGORIAS_SAIDA). Se o chip
-// for renomeado lá, renomeie aqui. Limitação conhecida: a categoria é texto
-// livre ("+ nova categoria"), então insumo lançado com outro nome ("Papel",
-// "Insumos") continua contando como custo fixo.
-export const CATEGORIA_INSUMOS = "Insumos / estoque";
-
-export function ehCategoriaInsumos(categoria: string | null | undefined): boolean {
-  if (!categoria) return false;
-  return (
-    categoria.trim().toLocaleLowerCase("pt-BR") === CATEGORIA_INSUMOS.toLocaleLowerCase("pt-BR")
-  );
-}
-
-// A compra da máquina acontece uma vez e o preço já entra como reserva por mês
-// (ONE-193). Contar a compra inteira no mês em que foi paga derrubava o lucro e
-// o ponto de empate daquele mês. A mesma string está na RPC
-// marcar_equipamento_comprado: renomear aqui exige migration.
-export const CATEGORIA_EQUIPAMENTO = "Compra de equipamento";
-
-export function ehCompraDeEquipamento(categoria: string | null | undefined): boolean {
-  if (!categoria) return false;
-  return (
-    categoria.trim().toLocaleLowerCase("pt-BR") === CATEGORIA_EQUIPAMENTO.toLocaleLowerCase("pt-BR")
-  );
-}
+// Insumo e compra de equipamento nunca são custo fixo (categoriasForaDosFixos.ts).
+export {
+  CATEGORIA_EQUIPAMENTO,
+  CATEGORIA_INSUMOS,
+  ehCategoriaInsumos,
+  ehCompraDeEquipamento,
+} from "@/lib/categoriasForaDosFixos";
 
 function saidasDoMes(lancamentos: LancamentoResumo[], mes: number, ano: number) {
   return lancamentos.filter((l) => l.tipo === "saida" && pertenceAoMes(l.data, mes, ano));
 }
 
-// Custos fixos = saídas do mês menos pró-labore (tem linha própria), menos
-// insumo (já está no custo de cada produto) e menos compra de equipamento.
+// ── Só categoria de custo fixo conta (decisão da Sil, 24/11/2026, ONE-251) ──
+// Antes valia toda saída menos pró-labore, insumo e compra de equipamento, e
+// "Outros" e qualquer categoria criada na hora ("Frete", "Curso") inflavam o
+// empate. Agora contam só as categorias de custo fixo da Calculadora
+// (CATEGORIAS_CUSTO_FIXO: Espaço, Luz, Internet, Ferramentas, Marketing,
+// Contador, Ajuda fixa, Taxas fixas, Reserva de equipamento). O resto aparece
+// na dica do campo (outrasSaidasDoMes), pra ela conferir o que ficou fora.
+const CATEGORIAS_FIXAS = new Set(CATEGORIAS_CUSTO_FIXO.map(normalizarCategoria));
+
+function normalizarCategoria(c: string): string {
+  return c.trim().toLocaleLowerCase("pt-BR");
+}
+
+export function ehCategoriaDeCustoFixo(categoria: string | null | undefined): boolean {
+  return !!categoria && CATEGORIAS_FIXAS.has(normalizarCategoria(categoria));
+}
+
 export function custosFixosDoMes(
   lancamentos: LancamentoResumo[],
   mes: number,
   ano: number,
 ): number {
   return saidasDoMes(lancamentos, mes, ano)
+    .filter((l) => ehCategoriaDeCustoFixo(l.categoria))
+    .reduce((acc, l) => acc + Number(l.valor), 0);
+}
+
+/**
+ * Saídas do mês que não são custo fixo nem têm linha própria: "Outros",
+ * categoria criada na hora ou sem categoria. Fora da conta, só pra dica.
+ */
+export function outrasSaidasDoMes(
+  lancamentos: LancamentoResumo[],
+  mes: number,
+  ano: number,
+): number {
+  const total = saidasDoMes(lancamentos, mes, ano)
     .filter(
       (l) =>
+        !ehCategoriaDeCustoFixo(l.categoria) &&
         l.categoria !== CATEGORIA_PRO_LABORE &&
         !ehCategoriaInsumos(l.categoria) &&
         !ehCompraDeEquipamento(l.categoria),
     )
     .reduce((acc, l) => acc + Number(l.valor), 0);
+  return Math.round(total * 100) / 100;
 }
 
 // Quanto de insumo do mês ficou fora dos custos fixos (pra tela explicar).
@@ -221,6 +228,31 @@ export function reservaForaDoFinanceiro(params: {
     .filter((l) => ehReservaDeEquipamento(l.categoria))
     .reduce((acc, l) => acc + Number(l.valor), 0);
   return Math.round(Math.max(0, params.reservaDoMes - lancada) * 100) / 100;
+}
+
+// ── Custos da marca quando o Financeiro está vazio (decisão da Sil, 24/11/2026, ONE-251) ──
+// Com saída de custo fixo lançada (no mês fechado ou no corrente), vale o real,
+// mais a reserva que ainda não foi lançada. Sem nenhuma, a Projeção usa os
+// "Custos da marca" do Financeiro (o cadastro que a Calculadora lê). Lá a
+// reserva de equipamento pode já estar digitada no item "Reserva de
+// equipamento": entra só a diferença pra Reserva do mês, pra não somar duas vezes.
+export function custosFixosComCustosDaMarca(p: {
+  financeiro: number;
+  reservaForaDoFinanceiro: number;
+  custosDaMarca: number;
+  reservaNosCustosDaMarca: number;
+  reservaDoMes: number;
+}): { valor: number; origem: "financeiro" | "custos-da-marca"; reserva: number } {
+  const r2 = (v: number) => Math.round(v * 100) / 100;
+  if (p.financeiro > 0 || !(p.custosDaMarca > 0)) {
+    return {
+      valor: r2(p.financeiro + p.reservaForaDoFinanceiro),
+      origem: "financeiro",
+      reserva: p.reservaForaDoFinanceiro,
+    };
+  }
+  const reserva = r2(Math.max(0, p.reservaDoMes - Math.max(0, p.reservaNosCustosDaMarca)));
+  return { valor: r2(p.custosDaMarca + reserva), origem: "custos-da-marca", reserva };
 }
 
 // ── Salário de partida (ONE-241) ──
