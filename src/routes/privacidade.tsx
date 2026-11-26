@@ -382,11 +382,11 @@ function PrivacidadePage() {
               <p>
                 As chaves de acesso de uma conta do TikTok ou do Instagram são apagadas quando a
                 titular desconecta a conta em{" "}
-                <strong className="text-[var(--ink)]">Configurações → Integrações</strong> (no
-                TikTok, a autorização também é revogada na hora) ou quando exclui a conta da Pólia.
-                Ela também pode tirar o acesso pelo próprio app do TikTok ou do Instagram. Os
-                arquivos de um post cancelado são apagados na hora; os dos outros posts ficam
-                guardados enquanto a conta existir.
+                <strong className="text-[var(--ink)]">Agenda das redes</strong> (no TikTok, a
+                autorização também é revogada na hora) ou quando exclui a conta da Pólia. Ela também
+                pode tirar o acesso pelo próprio app do TikTok ou do Instagram. Os arquivos de um
+                post cancelado são apagados na hora; os dos outros posts ficam guardados enquanto a
+                conta existir.
               </p>
 
               <h2 id="internacional">9. Transferência internacional</h2>

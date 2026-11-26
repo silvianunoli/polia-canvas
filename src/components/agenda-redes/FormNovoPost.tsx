@@ -310,12 +310,12 @@ export function FormNovoPost({ userId, redes }: { userId: string; redes: StatusR
         </div>
         {redes.some((r) => !r.conectada) && (
           <p className="mt-1 font-sans text-[12px] text-[var(--muted)]">
-            Rede não conectada liga em{" "}
+            Rede não conectada liga na{" "}
             <LinkInterno
-              href="/configuracoes"
+              href="/agenda-redes"
               className="text-[var(--secondary-text)] hover:underline"
             >
-              Configurações
+              Agenda das redes
             </LinkInterno>
             .
           </p>

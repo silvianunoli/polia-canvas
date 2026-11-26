@@ -11,7 +11,7 @@ import { useStatusRedes } from "@/components/agenda-redes/comum";
 import { FormNovoPost } from "@/components/agenda-redes/FormNovoPost";
 
 // Novo post da Agenda das redes (ONE-155). Mesmas travas da lista: Pro, e só
-// quem o servidor deixa ver; sem rede conectada, manda pra Configurações.
+// quem o servidor deixa ver; sem rede conectada, manda pra Agenda das redes, onde se conecta.
 
 export const Route = createFileRoute("/_authenticated/agenda-redes/novo")({
   head: () => ({ meta: [{ title: "Novo post · Agenda das redes · Pólia One" }] }),
@@ -55,13 +55,13 @@ function NovoPost() {
           }
           texto={
             status.data?.visivel
-              ? "O Instagram e o TikTok da marca se conectam em Configurações, na parte de Integrações."
+              ? "O Instagram e o TikTok da marca se conectam na Agenda das redes."
               : "Ela abre quando o TikTok e o Instagram aprovarem a Pólia."
           }
           acao={
             status.data?.visivel ? (
-              <LinkInterno href="/configuracoes" className={BTN_MIUDO}>
-                Ir pra Configurações
+              <LinkInterno href="/agenda-redes" className={BTN_MIUDO}>
+                Conectar uma rede
               </LinkInterno>
             ) : undefined
           }

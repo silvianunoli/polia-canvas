@@ -9,10 +9,10 @@ import { UpgradeGate } from "@/components/layout/UpgradeGate";
 import { Vazio } from "@/components/layout/Vazio";
 import { BlockError } from "@/components/ui/BlockError";
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
-import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { temProjete } from "@/lib/planos";
 import { toastErro, toastSucesso } from "@/lib/toast";
+import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
 import { cancelarPostRedes, listarPostsRedes, type PostNaLista } from "@/lib/redesPosts.functions";
 import { NOME_REDE } from "../../../supabase/functions/_shared/redesSociais.ts";
 import { ROTULO_STATUS_DESTINO } from "../../../supabase/functions/_shared/redesPosts.ts";
@@ -25,6 +25,8 @@ import {
 
 // Agenda das redes (ONE-155): a lista dos posts agendados, com o status de cada
 // rede. Só Pro; até as revisões do TikTok e da Meta, só admin vê (o servidor decide).
+// Conectar e desconectar o Instagram e o TikTok mora aqui desde 24/11/2026 (antes em
+// Configurações > Integrações, pedido da Sil).
 
 export const Route = createFileRoute("/_authenticated/agenda-redes/")({
   head: () => ({ meta: [{ title: "Agenda das redes · Pólia One" }] }),
@@ -94,16 +96,17 @@ function AgendaRedes() {
       }
     >
       {conectadas.length === 0 ? (
-        <Vazio
-          icone={CalendarClock}
-          titulo="Conecta uma rede pra começar"
-          texto="O Instagram e o TikTok da marca se conectam em Configurações, na parte de Integrações."
-          acao={
-            <LinkInterno href="/configuracoes" className={BTN_MIUDO}>
-              Ir pra Configurações
-            </LinkInterno>
-          }
-        />
+        <section aria-labelledby="contas-redes" className="space-y-3">
+          <div>
+            <h2 id="contas-redes" className="font-cabinet text-[20px] text-[var(--ink)]">
+              Conecta uma rede pra começar
+            </h2>
+            <p className="mt-1 font-sans text-[13px] text-[var(--ink-soft)]">
+              O post sai na conta conectada, no horário marcado.
+            </p>
+          </div>
+          <CardRedesSociais userId={userId} />
+        </section>
       ) : posts.isLoading ? (
         <div className="h-40 animate-pulse rounded-xl bg-[var(--surface)] motion-reduce:animate-none" />
       ) : posts.isError || posts.data?.error ? (
@@ -125,6 +128,14 @@ function AgendaRedes() {
             <LinhaPost key={p.id} post={p} userId={userId} />
           ))}
         </ul>
+      )}
+      {conectadas.length > 0 && (
+        <section aria-labelledby="contas-redes" className="mt-10 space-y-3">
+          <h2 id="contas-redes" className="font-cabinet text-[20px] text-[var(--ink)]">
+            Contas das redes
+          </h2>
+          <CardRedesSociais userId={userId} />
+        </section>
       )}
     </PaginaLogada>
   );

@@ -25,8 +25,6 @@ import { statusAssinatura, cancelarAssinatura, abrirPortalCobranca } from "@/lib
 import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
 import { excluirMinhaConta } from "@/lib/conta.functions";
 import { LinkInterno } from "@/components/ui/LinkInterno";
-import { CardRedesSociais } from "@/components/configuracoes/CardRedesSociais";
-import { CardCatalogo } from "@/components/configuracoes/CardCatalogo";
 import { AvisosNoCelular } from "@/components/configuracoes/AvisosNoCelular";
 import { isNativeApp } from "@/lib/platform";
 import { IdentidadeVisual } from "@/components/orcamentos/IdentidadeVisual";
@@ -801,25 +799,11 @@ function ConfiguracoesPage() {
           </div>
         )}
 
-        {/* SEÇÃO 3 — INTEGRAÇÕES */}
-        <Secao
-          titulo="Integrações"
-          subtitulo="conecta ferramentas de uso diário pra reunir tudo num lugar só."
-        >
-          <div className="space-y-3">
-            {/* O Google Calendar saiu da Pólia One em 02/11/2026 (decisão da Sil). */}
-            {/* Marketplaces (Mercado Livre e TikTok Shop) moram só na tela Marketplaces
-                e o Envio da loja (Melhor Envio) virou subnível da Loja da marca
-                (24/11/2026, pedido da Sil). */}
-            <CardRedesSociais userId={userId} />
-            <CardCatalogo userId={userId} />
-            <div className="p-4 border border-dashed border-[var(--line)] rounded-xl text-center">
-              <p className="font-sans text-[var(--muted)] text-[13px]">
-                Mais integrações em breve.
-              </p>
-            </div>
-          </div>
-        </Secao>
+        {/* A seção Integrações saiu em 24/11/2026 (pedido da Sil). Cada conexão
+            mora na tela que usa: Mercado Livre e TikTok Shop em Marketplaces, Melhor
+            Envio em Loja da marca > Envio da loja, Instagram e TikTok na Agenda das
+            redes. O "Ligar aos Pedidos" do domínio do site antigo do Lab saiu: desde
+            22/11 o domínio próprio serve a Vitrine online (lib/lojaDominio.ts). */}
 
         {/* SEÇÃO 4 — SEGURANÇA */}
         <Secao titulo="Segurança">

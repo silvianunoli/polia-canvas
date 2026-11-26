@@ -1012,7 +1012,6 @@ const LISTA = [
         itens: [
           'Monte a loja em "Vitrine online", no menu. Cada pedido que a cliente confirma na loja entra em "A fazer", com o nome e o WhatsApp dela, os produtos, a variação de cada um e o endereço na observação.',
           "A cliente continua indo pro WhatsApp da loja depois de confirmar. Se ela não mandar a mensagem, o pedido já está guardado aqui.",
-          'Se a marca tem um site próprio feito pela Pólia Lab, ele liga em "Configurações", na parte "Integrações", no cartão "Vitrine online": escreva o domínio (por exemplo, suamarca.com.br) e clique em "Ligar aos Pedidos".',
         ],
       },
     ],
@@ -1238,14 +1237,14 @@ const LISTA = [
     rota: "/agenda-redes",
     abrir: "Abrir a Agenda das redes",
     resumo:
-      "O post da marca preparado uma vez, com o horário marcado, pra sair no Instagram e no TikTok conectados em Configurações.",
+      "O post da marca preparado uma vez, com o horário marcado, pra sair no Instagram e no TikTok da marca, conectados ali mesmo.",
     plano: "Pro",
     interno: true,
     passos: [
       {
         titulo: "Conectar as redes",
         itens: [
-          'Em Configurações, na parte de Integrações, clique em "Conectar" no card do Instagram ou do TikTok e entre com a conta da marca.',
+          'Na Agenda das redes, clique em "Conectar" no card do Instagram ou do TikTok e entre com a conta da marca. Com uma rede conectada, os cards ficam no fim da tela, em "Contas das redes", com o botão "Desconectar".',
           "O Instagram precisa ser conta profissional (comercial ou de criador de conteúdo).",
         ],
       },

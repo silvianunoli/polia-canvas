@@ -13,8 +13,8 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 
-// Cards do TikTok e do Instagram em Configurações > Integrações (Agenda das redes,
-// ONE-154). Só no Pro; somem quando o servidor não tem as credenciais da rede e,
+// Cards do TikTok e do Instagram (Agenda das redes, ONE-154). Moram na tela da
+// Agenda das redes desde 24/11/2026 (antes em Configurações > Integrações). Só no Pro; somem quando o servidor não tem as credenciais da rede e,
 // até as revisões do TikTok e da Meta aprovarem, para quem não é admin.
 
 export const CHAVE_STATUS_REDES = "redes-sociais-status";
@@ -100,7 +100,7 @@ function CardRede({
           </div>
           {!rede.conectada && !liberado ? (
             <LinkInterno
-              href={`/upgrade?rota=${encodeURIComponent("/configuracoes")}&tier=projete`}
+              href={`/upgrade?rota=${encodeURIComponent("/agenda-redes")}&tier=projete`}
               className={BTN_MIUDO}
             >
               <Lock size={13} aria-hidden="true" /> Abre no Pro

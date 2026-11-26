@@ -11,7 +11,9 @@ import { CHAVE_STATUS_REDES } from "@/components/configuracoes/CardRedesSociais"
 // Volta da autorização do TikTok e do Instagram (Agenda das redes, ONE-154).
 // Redirect cadastrado nos portais: /configuracoes/integracoes/redes/tiktok e
 // /configuracoes/integracoes/redes/instagram. Fora do layout de Configurações (o
-// "_" no nome do arquivo): troca o code por token e devolve para Integrações.
+// "_" no nome do arquivo): troca o code por token e devolve pra Agenda das redes,
+// onde a conexão mora desde 24/11/2026. O endereço segue em /configuracoes porque
+// é o que está cadastrado nos portais do TikTok e da Meta.
 
 interface RetornoRedeSearch {
   code?: string;
@@ -49,7 +51,7 @@ function RetornoRede() {
     jaRodou.current = true;
     const voltar = () => {
       qc.invalidateQueries({ queryKey: [CHAVE_STATUS_REDES] });
-      navigate({ to: "/configuracoes", replace: true });
+      navigate({ to: "/agenda-redes", replace: true });
     };
 
     if (!ehRede(rede) || !search.code || !search.state || search.error) {
@@ -76,7 +78,7 @@ function RetornoRede() {
   }, []);
 
   return (
-    <PaginaLogada titulo={nome} eyebrow="Integrações">
+    <PaginaLogada titulo={nome} eyebrow="Agenda das redes">
       <p className="font-sans text-[var(--ink-soft)] text-[15px]" role="status" aria-live="polite">
         Conectando o {nome}...
       </p>
