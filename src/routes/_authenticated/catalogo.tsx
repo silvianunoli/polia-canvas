@@ -55,6 +55,7 @@ import {
   type BannerDaVitrine,
 } from "@/components/catalogo/dados";
 import { CuponsDeDesconto } from "@/components/catalogo/CuponsDeDesconto";
+import { DominioProprio } from "@/components/catalogo/DominioProprio";
 
 // Vitrine online (ONE-148, fases 2 e 3; Premium e Pro desde 22/11/2026, antes só Pro; até essa data o menu
 // chamava de "Catálogo", a rota continua /catalogo). A dona monta a loja da
@@ -251,6 +252,8 @@ function CatalogoPage() {
                 aria-label="Loja aberta"
               />
             </div>
+            {/* Depois de salvar a primeira vez, que é quando a loja ganha endereço. */}
+            {cat && <DominioProprio userId={userId!} slug={cat.slug} />}
           </Secao>
 
           <Secao titulo="Cara da loja" texto="O logo e a cor vêm de Configurações. A capa e as frases são só da loja.">

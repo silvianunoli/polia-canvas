@@ -5,7 +5,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { temProjete } from "@/lib/planos";
 import { normalizarDominio } from "@/lib/catalogo";
 
-// Cartão "Catálogo online" em Configurações > Integrações (ONE-148, fase 1).
+// Ligação do domínio do site antigo do Lab aos Pedidos (ONE-148, fase 1). O cartão
+// saiu de Configurações em 24/11/2026; statusCatalogo continua servindo o bloco
+// "No domínio da marca" da Vitrine online (components/catalogo/DominioProprio.tsx).
 // Ligar = guardar o domínio do catálogo como conexão do canal 'catalogo'. Daí
 // em diante o pedido confirmado no catálogo entra em Pedidos (catalogo/pedido.server.ts).
 // Só no Pro (decisão da Sil, 29/10/2026), como a registrar_pedido_catalogo

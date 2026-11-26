@@ -1135,6 +1135,7 @@ const LISTA = [
       'Produto de "Pronta entrega" ganha a etiqueta na vitrine. Pedido só com pronta entrega entra em Pedidos com entrega pra hoje; misturado com encomenda, vale o prazo de produção da loja.',
       "A Vitrine online é do Premium e do Pro. No Grátis, a loja fecha e mostra que não está aberta agora; os produtos e as fotos continuam guardados.",
       "Cada pedido novo da loja aparece no sino, no alto da tela, com o nome da cliente e o valor.",
+      'Em "Endereço", o bloco "No domínio da marca" pede a loja num endereço próprio, como suamarca.com.br. Quem liga o domínio é o Pólia Lab, como serviço à parte: "Pedir o domínio próprio" abre um chamado já escrito, e a resposta chega em Seus chamados. Com o domínio ligado, o bloco mostra o endereço.',
       'Com 8 produtos ou mais, a loja ganha o campo "Buscar produto": ele acha pelo nome, sem ligar pra acento, e soma com a categoria escolhida.',
       'Pedido com cupom chega em Pedidos com "Cupom" e o valor do desconto, e o Financeiro entra com o total já com desconto.',
       "Cupom de uma categoria, coleção ou produtos escolhidos dá desconto só neles. Se o carrinho não tem nenhum, a loja avisa e o pedido sai sem o cupom.",

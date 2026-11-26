@@ -15,7 +15,12 @@ import { ordenarPorUltimaAtividade, rotuloStatusChamado } from "@/lib/chamados";
 
 export const Route = createFileRoute("/_authenticated/chamados/")({
   // ?novo=1 chega do botão Suporte ("Abrir um chamado") com o formulário aberto.
-  validateSearch: (s: Record<string, unknown>): { novo?: 1 } => (Number(s.novo) === 1 ? { novo: 1 } : {}),
+  // &assunto=dominio chega da Vitrine online ("Pedir o domínio próprio", 26/11/2026)
+  // com o título e o texto já escritos.
+  validateSearch: (s: Record<string, unknown>): { novo?: 1; assunto?: AssuntoChamado } => {
+    if (Number(s.novo) !== 1) return {};
+    return s.assunto === "dominio" ? { novo: 1, assunto: "dominio" } : { novo: 1 };
+  },
   head: () => ({
     meta: [
       { title: "Chamados · Pólia One" },
@@ -24,6 +29,16 @@ export const Route = createFileRoute("/_authenticated/chamados/")({
   }),
   component: ChamadosPage,
 });
+
+type AssuntoChamado = "dominio";
+
+const RASCUNHO: Record<AssuntoChamado, { titulo: string; corpo: string }> = {
+  dominio: {
+    titulo: "Quero a Vitrine online no domínio da marca",
+    corpo:
+      "Quero que a Vitrine online abra no domínio da marca.\n\nO domínio que a marca já tem (ou o que quer registrar): ",
+  },
+};
 
 interface Ticket {
   id: string;
@@ -48,7 +63,7 @@ function ChamadosPage() {
   const { user } = useSupabaseSession();
   const userId = user?.id;
   const qc = useQueryClient();
-  const { novo } = Route.useSearch();
+  const { novo, assunto } = Route.useSearch();
   const navigate = Route.useNavigate();
   const [modalAberto, setModalAberto] = useState(novo === 1);
   // Chegou com ?novo=1 de novo (botão Suporte com a página já aberta): reabre.
@@ -154,6 +169,7 @@ function ChamadosPage() {
       {modalAberto && userId && (
         <ModalNovoChamado
           userId={userId}
+          rascunho={assunto ? RASCUNHO[assunto] : undefined}
           onClose={fecharModal}
           onSaved={() => {
             qc.invalidateQueries({ queryKey: ["chamados-hub", userId] });
@@ -167,15 +183,17 @@ function ChamadosPage() {
 
 function ModalNovoChamado({
   userId,
+  rascunho,
   onClose,
   onSaved,
 }: {
   userId: string;
+  rascunho?: { titulo: string; corpo: string };
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [titulo, setTitulo] = useState("");
-  const [corpo, setCorpo] = useState("");
+  const [titulo, setTitulo] = useState(rascunho?.titulo ?? "");
+  const [corpo, setCorpo] = useState(rascunho?.corpo ?? "");
   const [urgente, setUrgente] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
