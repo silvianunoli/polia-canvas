@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Abas from "@radix-ui/react-tabs";
@@ -11,6 +11,7 @@ import {
   Package,
   Pencil,
   RefreshCw,
+  Trash2,
   Upload,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { useUserMeta } from "@/hooks/useUserMeta";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
 import { Vazio } from "@/components/layout/Vazio";
-import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
+import { BTN_ACAO, BTN_MIUDO, BTN_MIUDO_ACAO } from "@/lib/botoes";
 import { COTAS_CONFERE, temNumerosDoMes, temVitrine } from "@/lib/planos";
 import { SELECT_PRODUTO } from "@/components/produtos/colunasProduto";
 import { ehPlanoGratis } from "@/lib/planoGratis";
@@ -27,6 +28,8 @@ import { BlockError } from "@/components/ui/BlockError";
 import { sobraDoProduto } from "@/lib/precificacao.functions";
 import { precoQueVale, promocionalQueVale } from "@/lib/precoPromocional";
 import { MenuOpcoes } from "@/components/ui/MenuOpcoes";
+import { ConfirmarAcao } from "@/components/ui/ConfirmarAcao";
+import { excluirProdutos, mudarProdutosEmMassa } from "@/components/produtos/acoesEmMassa";
 import { Switch } from "@/components/ui/switch";
 import { ModalImportarProdutos } from "@/components/produtos/ModalImportarProdutos";
 import { CHAVE_PRODUTOS_CATALOGO } from "@/components/catalogo/dados";
@@ -39,7 +42,9 @@ import { useInsumos } from "@/components/produtos/insumosDados";
 import { useEquipamentos } from "@/components/produtos/equipamentosDados";
 import { estoqueBaixo } from "@/lib/vendas";
 import {
+  alvosDaAcao,
   contagemDoCatalogo,
+  contaProdutos,
   direcaoInicial,
   filtrarCatalogo,
   FILTROS_CATALOGO,
@@ -48,6 +53,7 @@ import {
   ordenarCatalogo,
   reposicionar,
   ROTULO_FILTRO,
+  type AcaoEmMassa,
   type ColunaCatalogo,
   type DirecaoOrdem,
   type FiltroCatalogo,
@@ -74,6 +80,14 @@ function lucroPctDoProduto(p: Produto): number | null {
   });
   return sobra ? sobra.pct : null;
 }
+
+/** Como fica cada produto depois da ação em massa, pro aviso de sucesso. */
+const ROTULO_FEITO: Record<AcaoEmMassa, string> = {
+  ativar: "ativo de novo",
+  inativar: "inativo",
+  vitrine_ligar: "na Vitrine",
+  vitrine_desligar: "fora da Vitrine",
+};
 
 type AbaProdutos = "catalogo" | "estoque" | "insumos" | "equipamentos";
 
@@ -322,6 +336,117 @@ function ProdutosPage() {
     return true;
   };
 
+  /*
+   * Seleção e ações em massa (27/11/2026, pedido da Sil): marcar um, vários
+   * ou todos os produtos da lista e ativar, inativar, pôr ou tirar da Vitrine
+   * ou excluir de uma vez. Vale o que está marcado E visível no filtro e na
+   * busca de agora: trocar de filtro desmarca tudo, pra ninguém excluir sem
+   * ver o que estava marcado.
+   */
+  const [selecionados, setSelecionados] = useState<Set<string>>(() => new Set());
+  const [confirmacao, setConfirmacao] = useState<{
+    tipo: "excluir" | "inativar";
+    produtos: Produto[];
+  } | null>(null);
+  const [gravandoEmMassa, setGravandoEmMassa] = useState(false);
+  const marcados = useMemo(
+    () => listaDoFiltro.filter((p) => selecionados.has(p.id)),
+    [listaDoFiltro, selecionados],
+  );
+  const desmarcarTodos = () => setSelecionados(new Set());
+  const trocarFiltro = (f: FiltroCatalogo) => {
+    setFiltro(f);
+    desmarcarTodos();
+  };
+  const alternarMarcado = (p: Produto) =>
+    setSelecionados((atual) => {
+      const novo = new Set(atual);
+      if (novo.has(p.id)) novo.delete(p.id);
+      else novo.add(p.id);
+      return novo;
+    });
+  const todosMarcados = listaDoFiltro.length > 0 && marcados.length === listaDoFiltro.length;
+  const alternarTodos = () =>
+    setSelecionados(todosMarcados ? new Set() : new Set(listaDoFiltro.map((p) => p.id)));
+
+  const gravarEmMassa = async (acao: AcaoEmMassa, alvos: Produto[]): Promise<boolean> => {
+    if (!userId || alvos.length === 0 || gravandoEmMassa) return false;
+    if (acao === "ativar" && ehConfere && produtos.length + alvos.length > COTAS_CONFERE.produtos) {
+      toastErro(
+        `No plano Grátis cabem ${COTAS_CONFERE.produtos} produtos ativos. Hoje são ${produtos.length}, então dá pra ativar até ${Math.max(0, COTAS_CONFERE.produtos - produtos.length)}.`,
+      );
+      return false;
+    }
+    const mudanca =
+      acao === "ativar" || acao === "inativar"
+        ? { arquivado: acao === "inativar" }
+        : { no_catalogo: acao === "vitrine_ligar" };
+    setGravandoEmMassa(true);
+    const { error } = await mudarProdutosEmMassa(
+      userId,
+      alvos.map((p) => p.id),
+      mudanca,
+    );
+    setGravandoEmMassa(false);
+    if (error) {
+      toastErro(
+        acao === "ativar" && ehConfere
+          ? `No plano Grátis cabem ${COTAS_CONFERE.produtos} produtos ativos. Desative algum pra ativar estes.`
+          : "A Pólia One não conseguiu salvar a mudança. Nada foi alterado, tenta de novo.",
+      );
+      return false;
+    }
+    const n = alvos.length;
+    toastSucesso(
+      `${contaProdutos(n)} ${n === 1 ? "ficou" : "ficaram"} ${ROTULO_FEITO[acao]}.` +
+        (acao === "inativar"
+          ? n === 1
+            ? ' Ele está no filtro "Inativos".'
+            : ' Eles estão no filtro "Inativos".'
+          : ""),
+    );
+    desmarcarTodos();
+    recarregarCatalogo();
+    qc.invalidateQueries({ queryKey: [CHAVE_PRODUTOS_CATALOGO, userId] });
+    return true;
+  };
+
+  const pedirAcao = (acao: AcaoEmMassa) => {
+    const alvos = alvosDaAcao(marcados, acao);
+    // Inativar vários pede confirmação; a chave de uma linha segue direta.
+    if (acao === "inativar") setConfirmacao({ tipo: "inativar", produtos: alvos });
+    else void gravarEmMassa(acao, alvos);
+  };
+
+  const confirmarExclusao = async (lista: Produto[]) => {
+    if (!userId) return;
+    const { error, resultado } = await excluirProdutos(userId, lista);
+    if (error || !resultado) {
+      toastErro("A Pólia One não conseguiu excluir agora. Nada foi apagado, tenta de novo.");
+      return;
+    }
+    setConfirmacao(null);
+    desmarcarTodos();
+    recarregarCatalogo();
+    qc.invalidateQueries({ queryKey: [CHAVE_PRODUTOS_CATALOGO, userId] });
+    const { excluidos, bloqueados } = resultado;
+    if (excluidos > 0) {
+      toastSucesso(
+        excluidos === 1 && lista.length === 1
+          ? `"${lista[0].nome}" foi excluído.`
+          : `${contaProdutos(excluidos)} ${excluidos === 1 ? "excluído" : "excluídos"}.`,
+      );
+    }
+    if (bloqueados.length > 0) {
+      const quais = bloqueados.map((b) => `"${b.nome}" (kit ${b.kits})`).join(", ");
+      toastErro(
+        bloqueados.length === 1
+          ? `${quais} não foi excluído porque é peça de um kit. Tire ele do kit e exclua de novo.`
+          : `${contaProdutos(bloqueados.length)} não foram excluídos porque são peça de um kit: ${quais}. Tire eles do kit e exclua de novo.`,
+      );
+    }
+  };
+
   if (produtosQuery.isError) {
     return (
       <PaginaLogada largura="larga" eyebrow="Cadastro de produtos" titulo="Seus produtos.">
@@ -490,7 +615,7 @@ function ProdutosPage() {
                         key={f}
                         type="button"
                         aria-pressed={filtro === f}
-                        onClick={() => setFiltro(f)}
+                        onClick={() => trocarFiltro(f)}
                         className={`${BTN_MIUDO} min-h-11 gap-1.5 ${
                           filtro === f ? "!bg-[var(--secondary)]" : "bg-white"
                         }`}
@@ -531,12 +656,38 @@ function ProdutosPage() {
                   onAtivo={(p, ativo) => void mudarProduto(p, { arquivado: !ativo })}
                   onVitrine={(p, ligada) => void mudarProduto(p, { no_catalogo: ligada })}
                   onOrdem={mudarOrdem}
+                  selecionados={selecionados}
+                  todosMarcados={todosMarcados}
+                  algumMarcado={marcados.length > 0}
+                  onMarcar={alternarMarcado}
+                  onMarcarTodos={alternarTodos}
+                  onExcluir={(p) => setConfirmacao({ tipo: "excluir", produtos: [p] })}
+                />
+              )}
+
+              {marcados.length > 0 && (
+                <BarraDaSelecao
+                  marcados={marcados}
+                  mostrarVitrine={ehPro}
+                  ocupado={gravandoEmMassa}
+                  onAcao={pedirAcao}
+                  onExcluir={() => setConfirmacao({ tipo: "excluir", produtos: marcados })}
+                  onDesmarcar={desmarcarTodos}
                 />
               )}
             </>
           )}
         </Abas.Content>
       </Abas.Root>
+
+      <ConfirmacaoEmMassa
+        confirmacao={confirmacao}
+        onFechar={() => setConfirmacao(null)}
+        onExcluir={confirmarExclusao}
+        onInativar={async (lista) => {
+          if (await gravarEmMassa("inativar", lista)) setConfirmacao(null);
+        }}
+      />
 
       {importarAberto && userId && (
         <ModalImportarProdutos
@@ -573,6 +724,14 @@ interface PropsLista {
   onVitrine: (p: Produto, ligada: boolean) => void;
   /** Grava o número da coluna "Ordem"; devolve false quando não salvou. */
   onOrdem: (p: Produto, texto: string) => Promise<boolean>;
+  /** Marcados pra ação em massa. */
+  selecionados: Set<string>;
+  todosMarcados: boolean;
+  algumMarcado: boolean;
+  onMarcar: (p: Produto) => void;
+  onMarcarTodos: () => void;
+  /** Abre a confirmação de exclusão de um produto só. */
+  onExcluir: (p: Produto) => void;
 }
 
 /**
@@ -582,12 +741,21 @@ interface PropsLista {
  * inverte. No celular, cada produto vira um bloco com as mesmas informações.
  */
 function ListaDeProdutos(props: PropsLista) {
-  const { produtos, ordem, onOrdenar, mostrarVitrine } = props;
+  const { produtos, ordem, onOrdenar, mostrarVitrine, todosMarcados, algumMarcado, onMarcarTodos } =
+    props;
 
   return (
     <>
       {/* Celular: um bloco por produto, as chaves sempre à vista. */}
-      <div className="mt-4 flex flex-wrap items-center gap-2 sm:hidden">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 sm:hidden">
+        <label className="inline-flex min-h-11 items-center gap-2 text-[13px] text-[var(--ink-soft)]">
+          <CaixaDeMarcar
+            marcada={todosMarcados}
+            parcial={algumMarcado && !todosMarcados}
+            onMudar={onMarcarTodos}
+          />
+          Marcar todos
+        </label>
         <label className="flex items-center gap-2 text-[13px] text-[var(--muted)]">
           Ordenar por
           <select
@@ -607,8 +775,16 @@ function ListaDeProdutos(props: PropsLista) {
       </div>
       <ul className="mt-3 flex flex-col gap-2 sm:hidden">
         {produtos.map((p, i) => (
-          <li key={p.id} className="rounded-xl border border-[var(--line)] bg-white p-3">
+          <li
+            key={p.id}
+            className={`rounded-xl border bg-white p-3 ${
+              props.selecionados.has(p.id)
+                ? "border-[var(--secondary-text)]"
+                : "border-[var(--line)]"
+            }`}
+          >
             <div className="flex items-start gap-3">
+              <MarcarProduto produto={p} {...props} />
               <CampoOrdem produto={p} {...props} />
               <FotoDoProduto produto={p} indice={i} />
               <div className="min-w-0 flex-1">
@@ -636,6 +812,20 @@ function ListaDeProdutos(props: PropsLista) {
           </caption>
           <thead className="border-b border-[var(--line)]">
             <tr>
+              <th scope="col" className="w-12 py-2 pl-3 pr-0 text-left">
+                <label className="inline-flex min-h-11 min-w-11 items-center justify-center">
+                  <CaixaDeMarcar
+                    marcada={todosMarcados}
+                    parcial={algumMarcado && !todosMarcados}
+                    onMudar={onMarcarTodos}
+                    rotulo={
+                      todosMarcados
+                        ? "Desmarcar todos os produtos da lista"
+                        : "Marcar todos os produtos da lista"
+                    }
+                  />
+                </label>
+              </th>
               <Cabecalho ordem={ordem} onOrdenar={onOrdenar} coluna="ordem">
                 Ordem
               </Cabecalho>
@@ -675,9 +865,16 @@ function ListaDeProdutos(props: PropsLista) {
               <tr
                 key={p.id}
                 className={`border-t border-[var(--line)] first:border-t-0 ${
-                  p.arquivado ? "bg-[var(--bg)]" : ""
+                  props.selecionados.has(p.id)
+                    ? "bg-[var(--surface)]"
+                    : p.arquivado
+                      ? "bg-[var(--bg)]"
+                      : ""
                 }`}
               >
+                <td className="w-12 py-2 pl-3 pr-0">
+                  <MarcarProduto produto={p} {...props} />
+                </td>
                 <td className="w-20 py-2 pl-3 pr-0">
                   <CampoOrdem produto={p} {...props} />
                 </td>
@@ -977,6 +1174,7 @@ function MenuDoProduto({
   idsSomenteLeitura,
   onEditar,
   onRecalcular,
+  onExcluir,
 }: { produto: Produto } & PropsLista) {
   const somenteLeitura = idsSomenteLeitura.has(produto.id);
   return (
@@ -994,6 +1192,12 @@ function MenuDoProduto({
           icone: RefreshCw,
           onClick: () => onRecalcular(produto),
           desabilitado: somenteLeitura || !!produto.arquivado,
+        },
+        {
+          label: "Excluir",
+          icone: Trash2,
+          onClick: () => onExcluir(produto),
+          destrutivo: true,
         },
       ]}
     />
@@ -1023,5 +1227,188 @@ function LinhaEstoqueDoCard({ skus }: { skus: SkuProduto[] }) {
         </span>
       )}
     </p>
+  );
+}
+
+/* ============== Seleção e ações em massa ============== */
+
+/** Caixa nativa (teclado e leitor de tela de graça); "parcial" é o traço de alguns marcados. */
+function CaixaDeMarcar({
+  marcada,
+  parcial = false,
+  onMudar,
+  rotulo,
+}: {
+  marcada: boolean;
+  parcial?: boolean;
+  onMudar: () => void;
+  rotulo?: string;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = parcial;
+  }, [parcial]);
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={marcada}
+      onChange={onMudar}
+      aria-label={rotulo}
+      className="h-[18px] w-[18px] shrink-0 cursor-pointer accent-[var(--secondary-text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--secondary-text)]"
+    />
+  );
+}
+
+function MarcarProduto({ produto, selecionados, onMarcar }: { produto: Produto } & PropsLista) {
+  return (
+    <label className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center">
+      <CaixaDeMarcar
+        marcada={selecionados.has(produto.id)}
+        onMudar={() => onMarcar(produto)}
+        rotulo={`Marcar ${produto.nome}`}
+      />
+    </label>
+  );
+}
+
+/**
+ * Barra que aparece com algum produto marcado. Fica grudada embaixo da tela
+ * enquanto a lista rola, pra ação estar à mão no fim de uma lista longa. O
+ * botão que não mudaria ninguém (ativar quem já está ativo) fica desligado.
+ */
+function BarraDaSelecao({
+  marcados,
+  mostrarVitrine,
+  ocupado,
+  onAcao,
+  onExcluir,
+  onDesmarcar,
+}: {
+  marcados: Produto[];
+  mostrarVitrine: boolean;
+  ocupado: boolean;
+  onAcao: (acao: AcaoEmMassa) => void;
+  onExcluir: () => void;
+  onDesmarcar: () => void;
+}) {
+  const n = marcados.length;
+  const botao = (acao: AcaoEmMassa, rotulo: string) => {
+    const alvos = alvosDaAcao(marcados, acao).length;
+    return (
+      <button
+        type="button"
+        onClick={() => onAcao(acao)}
+        disabled={ocupado || alvos === 0}
+        className={`${BTN_MIUDO_ACAO} bg-white`}
+      >
+        {rotulo}
+        {alvos > 0 && alvos < n && (
+          <span className="tabular-nums text-[var(--muted)]">{alvos}</span>
+        )}
+      </button>
+    );
+  };
+  return (
+    <div
+      role="region"
+      aria-label="Ações dos produtos marcados"
+      className="sticky bottom-4 z-10 mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--ink)] bg-white p-3"
+    >
+      <p className="mr-2 text-[14px] text-[var(--ink)]" role="status" aria-live="polite">
+        {contaProdutos(n)} {n === 1 ? "marcado" : "marcados"}
+      </p>
+      {botao("ativar", "Ativar")}
+      {botao("inativar", "Inativar")}
+      {mostrarVitrine && botao("vitrine_ligar", "Pôr na Vitrine")}
+      {mostrarVitrine && botao("vitrine_desligar", "Tirar da Vitrine")}
+      <button
+        type="button"
+        onClick={onExcluir}
+        disabled={ocupado}
+        className={`${BTN_MIUDO_ACAO} !border-[var(--danger)] bg-white !text-[var(--danger)] hover:!bg-[var(--danger-soft)]`}
+      >
+        <Trash2 size={14} aria-hidden="true" />
+        Excluir
+      </button>
+      <button
+        type="button"
+        onClick={onDesmarcar}
+        disabled={ocupado}
+        className="ml-auto min-h-11 px-2 text-[13px] text-[var(--secondary-text)] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--secondary-text)] disabled:opacity-60"
+      >
+        Desmarcar
+      </button>
+    </div>
+  );
+}
+
+/** Os nomes no aviso: até 5 por extenso, o resto vira "e mais N". */
+function NomesNaConfirmacao({ produtos }: { produtos: Produto[] }) {
+  const mostrar = produtos.slice(0, 5);
+  const resto = produtos.length - mostrar.length;
+  return (
+    <span className="mt-2 block text-[13px] text-[var(--ink)]">
+      {mostrar.map((p) => `"${p.nome}"`).join(", ")}
+      {resto > 0 && ` e mais ${contaProdutos(resto)}`}.
+    </span>
+  );
+}
+
+function ConfirmacaoEmMassa({
+  confirmacao,
+  onFechar,
+  onExcluir,
+  onInativar,
+}: {
+  confirmacao: { tipo: "excluir" | "inativar"; produtos: Produto[] } | null;
+  onFechar: () => void;
+  onExcluir: (lista: Produto[]) => Promise<void>;
+  onInativar: (lista: Produto[]) => Promise<void>;
+}) {
+  const lista = confirmacao?.produtos ?? [];
+  const n = lista.length;
+  const um = n === 1;
+  if (confirmacao?.tipo === "inativar") {
+    return (
+      <ConfirmarAcao
+        open
+        onOpenChange={(aberto) => !aberto && onFechar()}
+        titulo={`Inativar ${contaProdutos(n)}?`}
+        descricao={
+          <>
+            {um ? "Ele sai" : "Eles saem"} da Vitrine e das telas de venda, com tudo guardado. Dá
+            pra trazer de volta no filtro "Inativos", com "Ativar" ou com a chave "Ativo".
+            <NomesNaConfirmacao produtos={lista} />
+          </>
+        }
+        textoConfirmar={um ? "Inativar produto" : `Inativar ${contaProdutos(n)}`}
+        textoCarregando="Inativando…"
+        onConfirmar={() => onInativar(lista)}
+      />
+    );
+  }
+  return (
+    <ConfirmarAcao
+      open={confirmacao?.tipo === "excluir"}
+      onOpenChange={(aberto) => !aberto && onFechar()}
+      titulo={um ? `Excluir "${lista[0]?.nome ?? ""}"?` : `Excluir ${contaProdutos(n)}?`}
+      descricao={
+        <>
+          <strong className="font-semibold text-[var(--ink)]">
+            A exclusão não pode ser desfeita.
+          </strong>{" "}
+          {um ? "O produto sai" : "Os produtos saem"} do catálogo, da Vitrine e do estoque, junto
+          com fotos, variações e receita. As vendas e os pedidos que já{" "}
+          {um ? "têm ele" : "têm eles"} continuam no histórico, com o nome. Pra só tirar de
+          circulação e poder trazer de volta, use "Inativar".
+          {!um && <NomesNaConfirmacao produtos={lista} />}
+        </>
+      }
+      textoConfirmar={um ? "Excluir produto" : `Excluir ${contaProdutos(n)}`}
+      textoCarregando="Excluindo…"
+      destrutivo
+      onConfirmar={() => onExcluir(lista)}
+    />
   );
 }

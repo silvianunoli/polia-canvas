@@ -658,3 +658,12 @@ Sil, 24/11: "coloque um icone dentro do calendário pra pessoa entender que pode
 - `src/lib/datasEspeciais.ts`, sem banco: feriados nacionais fixos (com Consciência Negra, lei 14.759/2023), Carnaval e Corpus Christi como ponto facultativo e Sexta-feira Santa pela Páscoa; datas do comércio (Dia da Mulher, Consumidor, Páscoa, Mães e Pais no 2º domingo, Namorados, Avós, Cliente, Crianças, Professor, Black Friday no dia depois da 4ª quinta de novembro, Cyber Monday, vésperas de Natal e Ano Novo). Feriado estadual e municipal fora.
 - Na grade, as datas ficam numa linha discreta acima dos chips, sem contar nos 3; filtro "Feriados e datas".
 - O + no canto de cada dia (sm+) e o "Novo lembrete" ao lado de "Hoje" abrem o formulário direto; uma linha com sino explica que dá pra marcar lembrete. Na data do comércio, o sino cria um lembrete "Preparar: <data>" com aviso 1 semana antes.
+
+## 2026-11-27 — Excluir e ações em massa no Cadastro de produtos
+
+Sil, 27/11: "deve ser possivel excluir um produto, deve ser possivel selecionar vários ou todos os produtos de uma vez, deve ser permitido excluir ou inativar 1 ou vários produtos de uma vez, com modal de confirmação [...] ativar ou inativar na vitrine tbm".
+
+- Função `excluir_produtos(uuid[])` (migration 20261127230000, já aplicada no banco): só produtos da própria conta; apaga o histórico de estoque (o RESTRICT de `estoque_movimentos` travava o DELETE); deixa de fora quem é peça de kit e devolve o nome do kit; devolve os caminhos das fotos pro app limpar o bucket. Venda, produção e pedido da loja guardam o nome e ficam no histórico (FK set null ou sem FK). Testada num bloco desfeito no fim, na conta de teste.
+- Lista ganhou caixa de marcar por linha e no título (marca o que o filtro e a busca mostram); trocar de filtro desmarca. Barra embaixo da lista: Ativar, Inativar, Pôr/Tirar da Vitrine (Premium e Pro) e Excluir. Inativar em massa e Excluir pedem confirmação; a chave de uma linha segue direta.
+- Grátis: ativar em massa confere a cota de 5 antes de gravar; o UPDATE é um só, então se a trigger barrar, nada muda.
+- "Excluir" também no menu de cada linha. Tutorial "Cadastro de produtos" atualizado; novidade em 20261127230100 (entra com o deploy).

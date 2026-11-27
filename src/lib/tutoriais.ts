@@ -360,6 +360,17 @@ const LISTA = [
         ],
       },
       {
+        titulo: "Mexer em vários produtos de uma vez",
+        itens: [
+          'Marque a caixa à esquerda de cada produto. A caixa do título da lista marca todos os produtos que o filtro e a busca estão mostrando; no celular, é "Marcar todos".',
+          'Com algum produto marcado, aparece embaixo da lista a barra com "Ativar", "Inativar" e "Excluir". No Premium e no Pro, também "Pôr na Vitrine" e "Tirar da Vitrine".',
+          'O botão que não mudaria nenhum produto marcado fica apagado. Quando só parte dos marcados muda, o número ao lado do nome do botão diz quantos.',
+          '"Inativar" pede confirmação e dá pra desfazer: os produtos vão pro filtro "Inativos" e voltam com "Ativar".',
+          '"Excluir" pede confirmação e não pode ser desfeito. Os produtos saem do catálogo, da Vitrine e do estoque; as vendas e os pedidos continuam no histórico, com o nome.',
+          '"Pôr na Vitrine" vale só pros produtos ativos. Trocar de filtro desmarca tudo, e "Desmarcar", na barra, também.',
+        ],
+      },
+      {
         titulo: "Trazer vários produtos de uma planilha",
         itens: [
           'Clique em "Mais", depois em "Importar planilha" e em "Escolher planilha". Se ajudar, baixe antes a planilha modelo.',
@@ -375,6 +386,8 @@ const LISTA = [
           '"Recalcular preço" abre o mesmo cadastro com a Calculadora já aberta na seção "Preço" e a conta salva preenchida. Ajuste, clique em "Usar esse preço" e depois em "Salvar produto". O preço antigo fica no histórico do produto.',
           'A chave "Ativo" desligada deixa o produto inativo: ele sai da Vitrine e das telas de venda, sem apagar nada, e vai pro filtro "Inativos". Ligar a chave de novo traz ele de volta.',
           'A chave "Vitrine" liga e desliga o produto na Vitrine online. Produto inativo não aparece na Vitrine, mesmo com ela ligada.',
+          'Pra apagar um produto de vez, abra o menu "⋯" da linha e clique em "Excluir". A Pólia One pede confirmação, porque a exclusão não pode ser desfeita: o produto sai do catálogo, da Vitrine e do estoque, com fotos, variações e receita. As vendas e os pedidos que já tinham ele continuam no histórico, com o nome.',
+          'Produto que é peça de um kit não é excluído: o aviso diz qual kit usa ele. Tire ele do kit e exclua de novo.',
         ],
       },
       {

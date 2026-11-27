@@ -133,7 +133,8 @@ export function ordenarCatalogo<T extends ProdutoDoCatalogo>(
   const porNome = (a: T, b: T) => a.nome.localeCompare(b.nome, "pt-BR");
   const sinal = direcao === "asc" ? 1 : -1;
   const numero = (p: T): number | null => {
-    if (coluna === "preco") return p.preco_venda == null ? null : precoQueVale(p.preco_venda, p.preco_promocional);
+    if (coluna === "preco")
+      return p.preco_venda == null ? null : precoQueVale(p.preco_venda, p.preco_promocional);
     if (coluna === "custo") return p.preco_custo == null ? null : Number(p.preco_custo);
     if (coluna === "lucro") return lucroPct(p);
     if (coluna === "status") return p.arquivado ? 1 : 0;
@@ -232,4 +233,31 @@ export function filtrarReceitas<T extends { id: string }>(
   if (filtro === "sem") return produtos.filter((p) => !temReceita(p.id));
   if (filtro === "com") return produtos.filter((p) => temReceita(p.id));
   return [...produtos];
+}
+
+// Ações em massa do Catálogo (27/11/2026, pedido da Sil): marcar vários ou
+// todos os produtos da lista e ativar, inativar, ligar ou desligar na Vitrine
+// ou excluir de uma vez.
+
+export type AcaoEmMassa = "ativar" | "inativar" | "vitrine_ligar" | "vitrine_desligar";
+
+/**
+ * Quem de fato muda com a ação: o que já está do jeito pedido fica de fora,
+ * pra contagem do aviso ser verdadeira. Ligar na Vitrine vale só pra ativo
+ * (inativo não aparece na loja); desligar vale pra todos que estão ligados,
+ * pra o produto não voltar pra loja sozinho quando for reativado.
+ */
+export function alvosDaAcao<T extends ProdutoDoCatalogo>(
+  selecionados: readonly T[],
+  acao: AcaoEmMassa,
+): T[] {
+  if (acao === "ativar") return selecionados.filter((p) => !!p.arquivado);
+  if (acao === "inativar") return selecionados.filter((p) => !p.arquivado);
+  if (acao === "vitrine_ligar") return selecionados.filter((p) => !p.arquivado && !p.no_catalogo);
+  return selecionados.filter((p) => !!p.no_catalogo);
+}
+
+/** "1 produto", "3 produtos". */
+export function contaProdutos(n: number): string {
+  return n === 1 ? "1 produto" : `${n} produtos`;
 }

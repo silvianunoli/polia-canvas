@@ -8,6 +8,8 @@ import {
   lerOrdemDigitada,
   mostraTipoNoCard,
   compararOrdemDaVitrine,
+  alvosDaAcao,
+  contaProdutos,
   ordenarCatalogo,
   reposicionar,
 } from "@/lib/catalogoProdutos";
@@ -272,7 +274,10 @@ describe("ordem da vitrine com desempate (ONE-239)", () => {
       { id: "3", nome: "caneca imperial", created_at: mesmaHora },
     ];
     const ida = [...lista].sort(compararOrdemDaVitrine).map((p) => p.nome);
-    const volta = [...lista].reverse().sort(compararOrdemDaVitrine).map((p) => p.nome);
+    const volta = [...lista]
+      .reverse()
+      .sort(compararOrdemDaVitrine)
+      .map((p) => p.nome);
     expect(ida).toEqual(["Almofada linda", "caneca imperial", "Mouse pad redondo"]);
     expect(volta).toEqual(ida);
   });
@@ -283,5 +288,37 @@ describe("ordem da vitrine com desempate (ONE-239)", () => {
       { id: "b", nome: "Caneca", created_at: mesmaHora },
     ];
     expect([...lista].sort(compararOrdemDaVitrine).map((p) => p.id)).toEqual(["b", "z"]);
+  });
+});
+
+describe("alvosDaAcao", () => {
+  const ativoNaVitrine = p("A", { no_catalogo: true });
+  const ativoFora = p("B", { no_catalogo: false });
+  const inativoLigado = p("C", { arquivado: true, no_catalogo: true });
+  const inativoFora = p("D", { arquivado: true, no_catalogo: false });
+  const todos = [ativoNaVitrine, ativoFora, inativoLigado, inativoFora];
+  const nomes = (l: { nome: string }[]) => l.map((x) => x.nome);
+
+  it("ativar pega só os inativos", () => {
+    expect(nomes(alvosDaAcao(todos, "ativar"))).toEqual(["C", "D"]);
+  });
+  it("inativar pega só os ativos", () => {
+    expect(nomes(alvosDaAcao(todos, "inativar"))).toEqual(["A", "B"]);
+  });
+  it("ligar na Vitrine pega só ativo que está fora", () => {
+    expect(nomes(alvosDaAcao(todos, "vitrine_ligar"))).toEqual(["B"]);
+  });
+  it("desligar da Vitrine pega todo ligado, até o inativo", () => {
+    expect(nomes(alvosDaAcao(todos, "vitrine_desligar"))).toEqual(["A", "C"]);
+  });
+  it("sem seleção, ninguém muda", () => {
+    expect(alvosDaAcao([], "ativar")).toEqual([]);
+  });
+});
+
+describe("contaProdutos", () => {
+  it("singular e plural", () => {
+    expect(contaProdutos(1)).toBe("1 produto");
+    expect(contaProdutos(4)).toBe("4 produtos");
   });
 });
