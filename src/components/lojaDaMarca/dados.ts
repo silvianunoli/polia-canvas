@@ -5,6 +5,7 @@ import { FOTO_TIPOS } from "@/lib/loja";
 import {
   arquivosQueSairam,
   corpoDaVitrine,
+  enderecoDaLoja,
   lerBanners,
   lerTitulos,
   type BannerDaLoja,
@@ -44,6 +45,12 @@ export interface ConteudoDaLojaDaMarca {
   blocos: unknown;
   titulos: Record<BlocoComTitulo, TituloDoBloco>;
   banners: BannerDaLoja[];
+  /** Endereço público do site (site_url ou o domínio). */
+  endereco: string;
+  emBreve: boolean;
+  fraseEmBreve: string;
+  /** Token do link de teste: só a dona lê (RLS). */
+  tokenDeTeste: string;
 }
 
 export const chaveConteudoDaLoja = (userId: string | undefined) =>
@@ -56,7 +63,9 @@ export function useConteudoDaLojaDaMarca(userId: string | undefined) {
     queryFn: async (): Promise<ConteudoDaLojaDaMarca | null> => {
       const { data, error } = await supabase
         .from("lojas_marca" as never)
-        .select("dominio, nome, logo_path, conteudo")
+        .select(
+          "dominio, nome, logo_path, conteudo, em_breve, em_breve_texto, previa_token, site_url",
+        )
         .eq("user_id", userId!)
         .maybeSingle();
       if (error) throw error;
@@ -66,6 +75,10 @@ export function useConteudoDaLojaDaMarca(userId: string | undefined) {
         nome: string | null;
         logo_path: string | null;
         conteudo: Record<string, unknown> | null;
+        em_breve: boolean;
+        em_breve_texto: string | null;
+        previa_token: string;
+        site_url: string | null;
       };
       const c = linha.conteudo ?? {};
       return {
@@ -75,6 +88,10 @@ export function useConteudoDaLojaDaMarca(userId: string | undefined) {
         blocos: c.blocos,
         titulos: lerTitulos(c.rotulos),
         banners: lerBanners(c.banners),
+        endereco: enderecoDaLoja(linha.site_url, linha.dominio),
+        emBreve: linha.em_breve === true,
+        fraseEmBreve: linha.em_breve_texto ?? "",
+        tokenDeTeste: linha.previa_token,
       };
     },
   });
@@ -198,5 +215,36 @@ export async function trocarCapaDaColecao(
   if (error) return { error: "A Pólia One não conseguiu trocar a capa agora." };
   if (colecao.capaPath && colecao.capaPath !== path)
     await supabase.storage.from(BUCKET).remove([colecao.capaPath]);
+  return { error: null };
+}
+
+/** Liga ou desliga o Em breve e grava a frase (vazia, a loja usa "Em breve."). */
+export async function salvarEmBreve(
+  ativo: boolean,
+  frase: string,
+): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc(
+    "loja_marca_salvar_em_breve" as never,
+    { p_ativo: ativo, p_texto: frase.trim() || null } as never,
+  );
+  if (error) {
+    console.error("loja_marca_salvar_em_breve", error);
+    return {
+      error:
+        "A Pólia One não conseguiu salvar agora. Tenta de novo, o que está na tela continua aqui.",
+    };
+  }
+  return { error: null };
+}
+
+/** Gera um link de teste novo; o antigo para de abrir a loja. */
+export async function trocarLinkDeTeste(): Promise<{ error: string | null }> {
+  const { error } = await supabase.rpc("loja_marca_trocar_link_previa" as never);
+  if (error) {
+    console.error("loja_marca_trocar_link_previa", error);
+    return {
+      error: "A Pólia One não conseguiu trocar o link agora. O link de antes continua valendo.",
+    };
+  }
   return { error: null };
 }

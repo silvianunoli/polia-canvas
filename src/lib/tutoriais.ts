@@ -364,7 +364,7 @@ const LISTA = [
         itens: [
           'Marque a caixa à esquerda de cada produto. A caixa do título da lista marca todos os produtos que o filtro e a busca estão mostrando; no celular, é "Marcar todos".',
           'Com algum produto marcado, aparece embaixo da lista a barra com "Ativar", "Inativar" e "Excluir". No Premium e no Pro, também "Pôr na Vitrine" e "Tirar da Vitrine".',
-          'O botão que não mudaria nenhum produto marcado fica apagado. Quando só parte dos marcados muda, o número ao lado do nome do botão diz quantos.',
+          "O botão que não mudaria nenhum produto marcado fica apagado. Quando só parte dos marcados muda, o número ao lado do nome do botão diz quantos.",
           '"Inativar" pede confirmação e dá pra desfazer: os produtos vão pro filtro "Inativos" e voltam com "Ativar".',
           '"Excluir" pede confirmação e não pode ser desfeito. Os produtos saem do catálogo, da Vitrine e do estoque; as vendas e os pedidos continuam no histórico, com o nome.',
           '"Pôr na Vitrine" vale só pros produtos ativos. Trocar de filtro desmarca tudo, e "Desmarcar", na barra, também.',
@@ -387,7 +387,7 @@ const LISTA = [
           'A chave "Ativo" desligada deixa o produto inativo: ele sai da Vitrine e das telas de venda, sem apagar nada, e vai pro filtro "Inativos". Ligar a chave de novo traz ele de volta.',
           'A chave "Vitrine" liga e desliga o produto na Vitrine online. Produto inativo não aparece na Vitrine, mesmo com ela ligada.',
           'Pra apagar um produto de vez, abra o menu "⋯" da linha e clique em "Excluir". A Pólia One pede confirmação, porque a exclusão não pode ser desfeita: o produto sai do catálogo, da Vitrine e do estoque, com fotos, variações e receita. As vendas e os pedidos que já tinham ele continuam no histórico, com o nome.',
-          'Produto que é peça de um kit não é excluído: o aviso diz qual kit usa ele. Tire ele do kit e exclua de novo.',
+          "Produto que é peça de um kit não é excluído: o aviso diz qual kit usa ele. Tire ele do kit e exclua de novo.",
         ],
       },
       {
@@ -1175,9 +1175,18 @@ const LISTA = [
     rota: "/loja-da-marca",
     abrir: "Abrir a Loja da marca",
     resumo:
-      "A página inicial do site próprio da marca: o título de cada carrossel, os banners do topo, a capa de cada coleção e os cupons de desconto, com regra de produto, de Pix ou cartão e de frete grátis.",
+      "A página inicial do site próprio da marca: se a loja está aberta ou em Em breve, com link de teste, o título de cada carrossel, os banners do topo, a capa de cada coleção e os cupons de desconto, com regra de produto, de Pix ou cartão e de frete grátis.",
     interno: true,
     passos: [
+      {
+        titulo: "Deixar a loja em Em breve",
+        itens: [
+          'Em "Loja aberta ou Em breve", marque "Em breve" e escreva a frase em "Frase da página Em breve", até 200 caracteres. Vazia, a página escreve "Em breve.".',
+          'Clique em "Salvar". Em até 1 minuto o site mostra só o logo, a frase e o Instagram da loja. Nenhum produto aparece e ninguém compra.',
+          'Pra testar a loja fechada, use "Seu link de teste": "Copiar link" ou "Abrir". No navegador onde o link for aberto, a loja abre inteira por 30 dias, com uma faixa avisando que é prévia, e a compra funciona de verdade. "Sair da prévia", na faixa, volta pra página Em breve.',
+          'Pra abrir a loja pra todo mundo, marque "Aberta" e clique em "Salvar".',
+        ],
+      },
       {
         titulo: "Pôr o nome e o logo da loja",
         itens: [
@@ -1220,12 +1229,13 @@ const LISTA = [
       },
     ],
     bomSaber: [
+      'O link de teste é só seu: quem tiver ele vê a loja inteira mesmo com Em breve. Se ele foi parar com outra pessoa, "Gerar um link novo" faz o de antes parar de abrir a loja, inclusive onde já foi aberto.',
       'O nome e o logo da loja são só dela. O "Logo e cor" de Configurações e o nome do negócio continuam valendo pro orçamento e pra Vitrine online, e trocar um não mexe no outro.',
       'O frete e a etiqueta pelo Melhor Envio ficam em "Envio da loja", logo abaixo de "Loja da marca" no menu lateral: ali se conecta a conta do Melhor Envio e se preenchem o CEP de onde os pacotes saem, a caixa padrão e o remetente.',
       "Os cupons são os mesmos da Vitrine online: o código vale nas duas lojas e os usos somam juntos.",
       "Na loja da marca, o cupom de desconto vale só nos produtos, nunca no frete, e deixa ao menos R$ 1,00 de produtos. O uso conta quando o pagamento entra: compra desistida não gasta o cupom.",
       'Cupom "Só no Pix" aparece no carrinho e no checkout como "Desconto no Pix", e o total no Pix vem destacado. Se a compradora pagar no cartão, paga o preço cheio e o cupom não conta uso.',
-      'Cupom de frete grátis zera o frete quando o endereço da entrega é num estado ou numa cidade do cupom; a cidade vale com ou sem acento. Em outro endereço, o frete é cobrado e o cupom não conta uso.',
+      "Cupom de frete grátis zera o frete quando o endereço da entrega é num estado ou numa cidade do cupom; a cidade vale com ou sem acento. Em outro endereço, o frete é cobrado e o cupom não conta uso.",
       'No frete grátis, a etiqueta continua sendo paga pela marca: o pedido chega em Pedidos com "Frete grátis pelo cupom" na observação.',
       "Cupom de Pix, de cartão ou de frete grátis não vale na Vitrine online, que não cobra nem calcula frete. Lá, só a regra de produto vale.",
       'O preço "de" riscado aparece sozinho na loja quando o produto tem "Preço promocional" em Produtos. Variação com preço próprio é vendida pelo preço dela, sem promoção.',

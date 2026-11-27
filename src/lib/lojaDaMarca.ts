@@ -169,3 +169,20 @@ export function problemaDosDetalhes(linhas: DetalheDoProduto[]): string | null {
   }
   return null;
 }
+
+// Em breve (27/11/2026): a loja fecha com uma frase da dona, e o link de teste abre a
+// loja inteira só pra quem tem ele.
+export const MAX_FRASE_EM_BREVE = 200;
+
+/** Endereço público do site: o site_url gravado ou, sem ele, o domínio da loja. */
+export function enderecoDaLoja(siteUrl: string | null | undefined, dominio: string): string {
+  return siteUrl && /^https:\/\/[a-z0-9.-]+$/.test(siteUrl) ? siteUrl : `https://${dominio}`;
+}
+
+export const linkDeTeste = (endereco: string, token: string) => `${endereco}/previa/${token}`;
+
+export function problemaDaFraseEmBreve(frase: string): string | null {
+  return frase.trim().length > MAX_FRASE_EM_BREVE
+    ? `A frase passa de ${MAX_FRASE_EM_BREVE} caracteres.`
+    : null;
+}

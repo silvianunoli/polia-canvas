@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ExternalLink, ImagePlus, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, ImagePlus, Trash2 } from "lucide-react";
 import { useSupabaseSession } from "@/hooks/useSupabaseSession";
 import { CuponsDeDesconto } from "@/components/catalogo/CuponsDeDesconto";
 import { PaginaLogada } from "@/components/layout/PaginaLogada";
@@ -12,8 +12,11 @@ import { LinkInterno } from "@/components/ui/LinkInterno";
 import { BTN_ACAO, BTN_MIUDO } from "@/lib/botoes";
 import { toastErro, toastSucesso } from "@/lib/toast";
 import {
+  linkDeTeste,
   MAX_ALT,
   MAX_BANNERS_LOJA_MARCA,
+  MAX_FRASE_EM_BREVE,
+  problemaDaFraseEmBreve,
   MAX_TITULO,
   problemaDoLink,
   problemaParaSalvar,
@@ -25,7 +28,9 @@ import {
 import {
   chaveColecoes,
   chaveConteudoDaLoja,
+  salvarEmBreve,
   salvarIdentidadeDaLoja,
+  trocarLinkDeTeste,
   salvarVitrineDaLoja,
   subirImagemDaLoja,
   trocarCapaDaColecao,
@@ -141,15 +146,23 @@ function LojaDaMarcaPage() {
     <PaginaLogada
       eyebrow="Loja da marca"
       titulo="A página inicial da loja."
-      subtitulo="O nome e o logo da loja, os títulos dos carrosséis, os banners do topo, a capa de cada coleção e os cupons de desconto. Produto, preço, preço promocional, categoria e coleção de cada produto ficam em Produtos."
+      subtitulo="Se a loja está aberta ou em Em breve, o nome e o logo da loja, os títulos dos carrosséis, os banners do topo, a capa de cada coleção e os cupons de desconto. Produto, preço, preço promocional, categoria e coleção de cada produto ficam em Produtos."
       largura="larga"
       acao={
-        <a className={BTN_MIUDO} href={`https://${dados.dominio}`} target="_blank" rel="noopener">
+        <a className={BTN_MIUDO} href={dados.endereco} target="_blank" rel="noopener">
           <ExternalLink size={14} aria-hidden="true" /> Ver a loja
         </a>
       }
     >
       <div className="space-y-6">
+        <AbertaOuEmBreve
+          emBreveSalvo={dados.emBreve}
+          fraseSalva={dados.fraseEmBreve}
+          endereco={dados.endereco}
+          token={dados.tokenDeTeste}
+          aoSalvar={() => qc.invalidateQueries({ queryKey: chaveConteudoDaLoja(userId) })}
+        />
+
         <NomeELogo
           userId={userId}
           nomeSalvo={dados.nome}
@@ -225,6 +238,212 @@ function LojaDaMarcaPage() {
         />
       </div>
     </PaginaLogada>
+  );
+}
+
+/**
+ * Aberta ou Em breve (27/11/2026, Sil): com Em breve, o site mostra só o logo e a frase
+ * e ninguém compra. O link de teste abre a loja inteira no navegador de quem tem ele.
+ */
+function AbertaOuEmBreve({
+  emBreveSalvo,
+  fraseSalva,
+  endereco,
+  token,
+  aoSalvar,
+}: {
+  emBreveSalvo: boolean;
+  fraseSalva: string;
+  endereco: string;
+  token: string;
+  aoSalvar: () => Promise<unknown>;
+}) {
+  const nome = useId();
+  const [emBreve, setEmBreve] = useState(emBreveSalvo);
+  const [frase, setFrase] = useState(fraseSalva);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const [copiado, setCopiado] = useState(false);
+  const [confirmarTroca, setConfirmarTroca] = useState(false);
+  const [trocando, setTrocando] = useState(false);
+
+  useEffect(() => {
+    setEmBreve(emBreveSalvo);
+    setFrase(fraseSalva);
+  }, [emBreveSalvo, fraseSalva]);
+
+  const mudou = emBreve !== emBreveSalvo || frase.trim() !== fraseSalva.trim();
+  const problema = problemaDaFraseEmBreve(frase);
+  const link = linkDeTeste(endereco, token);
+
+  const salvar = async () => {
+    if (problema) return setErro(problema);
+    setErro(null);
+    setSalvando(true);
+    const r = await salvarEmBreve(emBreve, frase);
+    setSalvando(false);
+    if (r.error) return setErro(r.error);
+    toastSucesso(
+      emBreve
+        ? "Salvo. Em até 1 minuto o site mostra a página Em breve."
+        : "Salvo. Em até 1 minuto a loja abre pra todo mundo.",
+    );
+    await aoSalvar();
+  };
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 1500);
+    } catch {
+      toastErro("A Pólia One não conseguiu copiar. Selecione o link e copie à mão.");
+    }
+  };
+
+  const trocar = async () => {
+    setTrocando(true);
+    const r = await trocarLinkDeTeste();
+    setTrocando(false);
+    setConfirmarTroca(false);
+    if (r.error) return toastErro(r.error);
+    toastSucesso("Link novo pronto. O de antes já não abre a loja.");
+    await aoSalvar();
+  };
+
+  const opcao = (valor: boolean, titulo: string, texto: string) => (
+    <label
+      className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3 ${
+        emBreve === valor
+          ? "border-[var(--secondary-text)] bg-[var(--surface)]"
+          : "border-[var(--line)] bg-[var(--bg)]"
+      }`}
+    >
+      <input
+        type="radio"
+        name={nome}
+        className="mt-1 h-4 w-4 accent-[var(--secondary-text)]"
+        checked={emBreve === valor}
+        onChange={() => setEmBreve(valor)}
+      />
+      <span>
+        <span className="block font-sans text-[15px] font-semibold text-[var(--ink)]">
+          {titulo}
+        </span>
+        <span className="block font-sans text-[13px] text-[var(--ink-soft)]">{texto}</span>
+      </span>
+    </label>
+  );
+
+  const LINK_TEXTO =
+    "min-h-11 px-1 font-sans text-[13px] font-medium text-[var(--secondary-text)] hover:underline";
+
+  return (
+    <Secao
+      titulo="Loja aberta ou Em breve"
+      texto="Em breve fecha o site: quem entra vê só o logo, a frase e o Instagram da loja, e nenhum produto aparece nem pode ser comprado."
+    >
+      <fieldset className="grid gap-3 sm:grid-cols-2">
+        <legend className="sr-only">Situação da loja</legend>
+        {opcao(false, "Aberta", "Todo mundo vê os produtos e compra.")}
+        {opcao(true, "Em breve", "O site mostra a página Em breve.")}
+      </fieldset>
+
+      <Campo
+        label="Frase da página Em breve"
+        hint={`Até ${MAX_FRASE_EM_BREVE} caracteres. Vazia, a página escreve "Em breve.".`}
+        error={problema ?? undefined}
+      >
+        <textarea
+          className={`${INPUT} min-h-20`}
+          value={frase}
+          maxLength={MAX_FRASE_EM_BREVE + 20}
+          placeholder="Ex.: A loja abre em dezembro. Até lá, os bastidores ficam no Instagram."
+          onChange={(e) => setFrase(e.target.value)}
+        />
+      </Campo>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          className={BTN_ACAO}
+          onClick={() => void salvar()}
+          disabled={salvando || !mudou || !!problema}
+        >
+          {salvando ? "Salvando..." : "Salvar"}
+        </button>
+        {erro && (
+          <p role="alert" className="font-sans text-[13px] text-[var(--danger)]">
+            {erro}
+          </p>
+        )}
+        {mudou && !salvando && !erro && (
+          <p className="font-sans text-[12px] text-[var(--muted)]">
+            O site só muda depois de "Salvar".
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-2 border-t border-[var(--line)] pt-4">
+        <h3 className="font-sans text-[15px] font-semibold text-[var(--ink)]">Seu link de teste</h3>
+        <p className="font-sans text-[13px] text-[var(--ink-soft)]">
+          Com a loja em Em breve, este link abre a loja inteira no navegador onde for aberto, por 30
+          dias, com uma faixa avisando que é prévia. Dá pra comprar de verdade por ele. Não mande
+          pra ninguém: quem tiver o link vê a loja.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            className={`${INPUT} min-w-0 flex-1 font-mono text-[13px]`}
+            value={link}
+            readOnly
+            aria-label="Link de teste da loja"
+            onFocus={(e) => e.currentTarget.select()}
+          />
+          <button type="button" className={BTN_MIUDO} onClick={() => void copiar()}>
+            {copiado ? (
+              <Check size={14} aria-hidden="true" />
+            ) : (
+              <Copy size={14} aria-hidden="true" />
+            )}
+            {copiado ? "Copiado" : "Copiar link"}
+          </button>
+          <a className={BTN_MIUDO} href={link} target="_blank" rel="noopener noreferrer">
+            <ExternalLink size={14} aria-hidden="true" /> Abrir
+          </a>
+        </div>
+        {confirmarTroca ? (
+          <div
+            className="flex flex-wrap items-center gap-3"
+            role="group"
+            aria-label="Confirmar troca do link"
+          >
+            <p className="font-sans text-[13px] text-[var(--ink)]">
+              O link de agora para de abrir a loja, inclusive onde já foi aberto. Trocar?
+            </p>
+            <button
+              type="button"
+              className={BTN_MIUDO}
+              onClick={() => void trocar()}
+              disabled={trocando}
+            >
+              {trocando ? "Trocando..." : "Trocar o link"}
+            </button>
+            <button
+              type="button"
+              className={LINK_TEXTO}
+              onClick={() => setConfirmarTroca(false)}
+              disabled={trocando}
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <button type="button" className={LINK_TEXTO} onClick={() => setConfirmarTroca(true)}>
+            Gerar um link novo
+          </button>
+        )}
+      </div>
+    </Secao>
   );
 }
 

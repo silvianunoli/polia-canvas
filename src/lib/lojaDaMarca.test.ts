@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   arquivosQueSairam,
+  enderecoDaLoja,
+  linkDeTeste,
+  problemaDaFraseEmBreve,
   corpoDaVitrine,
   detalhesParaSalvar,
   lerBanners,
@@ -112,5 +115,24 @@ describe("detalhes do produto", () => {
       problemaDosDetalhes(Array.from({ length: 21 }, (_, i) => ({ nome: `n${i}`, valor: "v" }))),
     ).not.toBeNull();
     expect(problemaDosDetalhes([{ nome: "Altura", valor: "9,5 cm" }])).toBeNull();
+  });
+});
+
+describe("Em breve e link de teste", () => {
+  it("usa o site_url e cai no domínio quando ele falta ou é torto", () => {
+    expect(enderecoDaLoja("https://mundodeaimer.com.br", "x.lojas.usepolia.com.br")).toBe(
+      "https://mundodeaimer.com.br",
+    );
+    expect(enderecoDaLoja(null, "marca.com.br")).toBe("https://marca.com.br");
+    expect(enderecoDaLoja("javascript:alert(1)", "marca.com.br")).toBe("https://marca.com.br");
+  });
+
+  it("monta o link de teste no endereço da loja", () => {
+    expect(linkDeTeste("https://marca.com.br", "abc")).toBe("https://marca.com.br/previa/abc");
+  });
+
+  it("frase vazia vale (a loja usa a padrão) e frase longa não", () => {
+    expect(problemaDaFraseEmBreve("")).toBeNull();
+    expect(problemaDaFraseEmBreve("x".repeat(201))).toMatch(/200/);
   });
 });
